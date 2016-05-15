@@ -1,0 +1,44 @@
+/*
+  Host name functions
+  Copyright (c) 2016. Francis G. McCabe
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under the
+  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the specific language governing
+  permissions and limitations under the License.
+*/
+
+#ifndef _GO_HOST_H_
+#define _GO_HOST_H_
+
+#include "object.h"
+#include "unicode.h"
+
+/* Host name management and interface */
+string getHostname(string name);
+struct in_addr *getHostIP(string name,int i);
+string getNthHostIP(string name,unsigned long i,string buffer,unsigned long len);
+string machineName(void);
+string machineIP(void);
+logical isIPofHost(string name,unsigned long ip);
+void markHostUnavail(string name);
+
+// The public part of the host class interface
+
+typedef struct _host_object_ *hostPo;
+extern classPo hostClass;
+
+#ifdef VERIFY_OBJECT
+objectPo checkCast(void *c,classPo class);
+
+#define O_HOST(c) ((hostPo)(checkCast((c),hostClass)))
+#else
+#define O_HOST(c) ((hostPo)(c))
+#endif
+
+#endif
