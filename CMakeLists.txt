@@ -3,4 +3,3 @@ project(GoSystem)
 
 add_subdirectory("OOlib")
 add_subdirectory("Engine")
-add_subdirectory("RuleCompiler")

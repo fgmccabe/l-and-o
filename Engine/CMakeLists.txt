@@ -6,7 +6,7 @@ find_package(FLEX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
 
-include_directories("../Headers" "../OOlib/Headers")
+include_directories("Headers" "../Headers" "../OOlib/Headers")
 
 set(SOURCE_FILES
         args.c arith.c boot.c call.c char.c class.c clock.c code.c date.c debug.c dict.c dir.c dynamic.c
