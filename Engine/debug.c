@@ -448,7 +448,7 @@ static char *showOpAnd(ioPo out, char *sep, opAndSpec A,
     case uLt:                             // small literal in upper slot (-128..127)
       outMsg(out, "%s%d", sep, op_sh_val(pcx));
       return ",";
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                             // 16bit literal (-32768..32767)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
     case cSz:                // Structure size

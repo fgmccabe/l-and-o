@@ -7,12 +7,11 @@ typedef enum{
   float_sig='f',                        /* A float */
   number_sig='N',                       /* Any number */
   symbol_sig='s',                       /* Symbol */
-  char_sig='c',                         /* Character */
   string_sig='S',                       /* String */
   logical_sig='l',                      /* Logical value */
   var_sig='$',                          /* Type variable */
-  top_sig='A',                      /* Top value -- of unknown type */
-  opaque_sig='O',                /* An opaque value, has an owner and a value */
+  top_sig='A',                          /* Top value -- of unknown type */
+  opaque_sig='O',                       /* An opaque value, has an owner and a value */
   type_sig='t',                         /* A type variable */
   
   /* Compound type signatures */

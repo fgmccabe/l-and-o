@@ -880,7 +880,7 @@ retCode g__inchar(processPo P, ptrPo a) {
     again:
     switchProcessState(P, wait_io);
     retCode ret = inChar(file, &ch);
-    ptrI Ch = newChar(ch);
+    ptrI Ch = allocateInteger(&P->proc.heap,ch);
     setProcessRunnable(P);
 
     switch (ret) {
@@ -1135,17 +1135,15 @@ retCode g__outch(processPo P, ptrPo a) {
 
     if (isWritingFile(file) != Ok)
       return liberror(P, "__outch", eNOPERM);
-    else if (isvar(deRefI(&a[1])) || !IsChar(tc))
-      return liberror(P, "__outch", eCHRNEEDD);
     else {
       again:
       switchProcessState(P, wait_io);
-      retCode ret = outChar(file, CharVal(charV(tc)));
+      retCode ret = outChar(file, IntVal(tc));
       setProcessRunnable(P);
 
       switch (ret) {
         case Ok:
-          if (CharVal(charV(tc)) == '\n')
+          if (IntVal(tc) == '\n')
             flushFile(file);
           return Ok;
         case Interrupt:

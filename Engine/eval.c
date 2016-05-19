@@ -1193,21 +1193,20 @@ void runGo(register processPo P) {
         continue;
       }
 
-        /* An indexc instruction indexes on characters.
+        /* An indexi instruction indexes on integers.
        The first instruction that follows is taken for the variable case,
        after that is a hash table in the form of a jump table.
-       It is an error for the argument not to be a symbol.
+       It is an error for the argument not to be an integer.
     */
 
-      case indexc: {    /* Ai,max index symbol access */
+      case indexi: {    /* Ai,max index symbol access */
         int max = op_o_val(PCX);
         register ptrI vx = deRefI(&A[op_h_val(PCX)]);
-        register objPo vl = objV(vx);
 
         testA(op_h_val(PCX));
 
-        if (!isvar(vx) && IsChar(vx)) {
-          long ix = (CharVal((charPo) vl)) % max;
+        if (!isvar(vx) && IsInt(vx)) {
+          long ix = (IntVal(vx)) % max;
 
           PC += ix + 1;
         }
@@ -1472,7 +1471,7 @@ void runGo(register processPo P) {
         ptrI aVal = *ptr;
         ptrI tmp = Lits[op_o_val(PCX)];
 
-        assert(inGlobalHeap(objV(Lits[op_o_val(PCX)])) || IsChar(Lits[op_o_val(PCX)]));
+        assert(inGlobalHeap(objV(Lits[op_o_val(PCX)])));
         testA(op_h_val(PCX));
 
         switch (ptg(aVal)) {
@@ -2297,7 +2296,7 @@ void runGo(register processPo P) {
       }
 
       case cSlit: {                        /* match S++,<lit> */
-        assert(inGlobalHeap(objV(Lits[op_o_val(PCX)])) || IsChar(Lits[op_o_val(PCX)]));
+        assert(inGlobalHeap(objV(Lits[op_o_val(PCX)])));
         isSvalid(1);      /* test for validity of S register */
 
         if (mode == readMode) {

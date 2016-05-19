@@ -5,12 +5,15 @@
 #ifndef _OPCODES_H_
 #define _OPCODES_H_
 
+#include "config.h"
+
 #undef instruction
 #define instruction(mnem,op,A1,A2,cmnt) mnem=op,
 
 typedef enum {
 #include "instructions.h"	/* Pick up the instructions specification */
-  illegalOp } opCode;
+  illegalOp
+} opCode;
 
 #undef instruction
 
@@ -23,8 +26,8 @@ typedef enum {
 #define vl_h_mask 0xff000000	/* High byte for the value field */
 #define vl_o_mask 0x00ffff00	/* Label offset operand */
 
-typedef int32 insWord;	/* An instruction word */
-typedef insWord *insPo;	/* A program counter value */
+typedef int32 insWord; /* An instruction word */
+typedef insWord *insPo; /* A program counter value */
 
 #define op_cde(c) ((opCode)(c&op_mask))	/* construct an opcode from a number */
 
@@ -40,34 +43,34 @@ typedef insWord *insPo;	/* A program counter value */
 #define op_ll_val(v) ((long)((v)>>8)) /* get signed long offset */
 
 typedef enum {
- nOp,                                   // No operand
- iAh,                          // input argument register in upper slot (0..255)
- oAh,                         // output argument register in upper slot (0..255)
- iAm,                         // input argument register in middle slot (0..255)
- oAm,                        // output argument register in middle slot (0..255)
- iAl,                                   // input argument register in lower slot
- oAl,                                   // output argument register in lower slot
- iLh,					// input local variable offset (0..255)
- iLm,					// input local variable offset (0..255)
- iLl,					// input local variable offset (0..255)
- iLc,                           // input local variable offset (0..65535)
- oLh,                           // output local variable offset  (0..255)
- oLm,                           // output local variable offset  (0..255)
- oLl,                           // output local variable offset  (0..255)
- oLc,                           // output local variable offset  (0..65535)
- iSt,                           // input at current structure pointer
- oSt,                           // output to current structure pointer
- uAr,                           // Arity in upper slot
- oAr,                           // Resulting arity in upper slot
- uLt,                           // small literal in upper slot (-128..127)
- Lt,                            // 16bit literal (-32768..32767)
- vSz,           		// Size of local variable vector
- lSz,                           // trim local variable vector
- cSz,           		// Structure size
- Es,                            // escape code (0..65535)
- pcr,                           // program counter relative offset (-32768..32767)
- pcl,                           // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
- ltl                            // literal number (0..65535)
+  nOp,                                   // No operand
+  iAh,                         // input argument register in upper slot (0..255)
+  oAh,                        // output argument register in upper slot (0..255)
+  iAm,                        // input argument register in middle slot (0..255)
+  oAm,                       // output argument register in middle slot (0..255)
+  iAl,                                  // input argument register in lower slot
+  oAl,                                 // output argument register in lower slot
+  iLh,					// input local variable offset (0..255)
+  iLm,					// input local variable offset (0..255)
+  iLl,					// input local variable offset (0..255)
+  iLc,                           // input local variable offset (0..65535)
+  oLh,                           // output local variable offset  (0..255)
+  oLm,                           // output local variable offset  (0..255)
+  oLl,                           // output local variable offset  (0..255)
+  oLc,                           // output local variable offset  (0..65535)
+  iSt,                           // input at current structure pointer
+  oSt,                           // output to current structure pointer
+  uAr,                           // Arity in upper slot
+  oAr,                           // Resulting arity in upper slot
+  uLt,                           // small literal in upper slot (-128..127)
+  Ltl,                           // 16bit literal (-32768..32767)
+  vSz,           		// Size of local variable vector
+  lSz,                           // trim local variable vector
+  cSz,           		// Structure size
+  Es,                            // escape code (0..65535)
+  pcr,                        // program counter relative offset (-32768..32767)
+  pcl,              // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
+  ltl                            // literal number (0..65535)
 } opAndSpec;                    // Specification code for an operand
 
 #define oprnd_msk 0xff

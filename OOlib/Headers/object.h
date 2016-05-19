@@ -34,7 +34,7 @@ logical isSubClass(classPo class,classPo parent);
 classPo parentClass(classPo class);
 
 classPo classOfObject(objectPo o);
-logical hasClass(objectPo o, classPo parent);
+logical objectHasClass(objectPo o, classPo parent);
 logical isObject(objectPo o);
 
 uint64 hashCode(objectPo o);

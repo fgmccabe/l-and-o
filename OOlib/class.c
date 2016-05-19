@@ -131,7 +131,7 @@ classPo parentClass(classPo class)
   return class->parent;
 }
 
-logical hasClass(objectPo o, classPo parent)
+logical objectHasClass(objectPo o, classPo parent)
 {
   return isSubClass(o->class,parent);
 }

@@ -69,7 +69,6 @@ static char *skipSig(char *tp) {
     case integer_sig:
     case float_sig:
     case number_sig:
-    case char_sig:
     case symbol_sig:
     case string_sig:
     case top_sig:
@@ -114,8 +113,6 @@ static char *skipSig(char *tp) {
         tp = skipSig(tp);
       return tp;
     }
-    case var_sig:
-      return tp + 1;
     case forall_sig:
       return skipSig(skipSig(tp + 1));
     case poly_sig: {

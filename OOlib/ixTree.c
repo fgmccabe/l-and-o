@@ -241,7 +241,7 @@ static uint64 maskPrefix(uint64 mask, int16 len) {
 }
 
 static treePo mergeWithLeaf(treePo t1, treePo t2) {
-  if (hasClass(O_OBJECT(t2), leafClass)) {
+  if (objectHasClass(O_OBJECT(t2), leafClass)) {
     leafPo l1 = O_LEAF(t1);
     leafPo l2 = O_LEAF(t2);
 
@@ -390,7 +390,7 @@ static uint64 nodeHash(objectPo o) {
 }
 
 static logical nodeEquality(objectPo o1, objectPo o2) {
-  if (hasClass(o2, nodeClass)) {
+  if (objectHasClass(o2, nodeClass)) {
     nodePo n1 = O_NODE(o1);
     nodePo n2 = O_NODE(o2);
     return (logical) (equals(O_OBJECT(n1->node.l1), O_OBJECT(n2->node.l1)) &&
@@ -542,7 +542,7 @@ static treePo mergeNode(treePo t1, treePo t2) {
       default:
         syserr("bad case");
     }
-  } else if (hasClass(O_OBJECT(t2), leafClass)) {
+  } else if (objectHasClass(O_OBJECT(t2), leafClass)) {
     switch (nth4way(m2, cml)) {
       case 0:
         return newNode(cml, cm, mergeTree(n1->node.l1, t2), n1->node.l2, n1->node.r1, n1->node.r2);
@@ -556,7 +556,7 @@ static treePo mergeNode(treePo t1, treePo t2) {
         syserr("bad case");
     }
   } else {
-    assert(hasClass(O_OBJECT(t2), nodeClass));
+    assert(objectHasClass(O_OBJECT(t2), nodeClass));
     nodePo n2 = O_NODE(t2);
 
     return newNode(cml, cm, mergeTree(n1->node.l1, n2->node.l1), mergeTree(n1->node.l2, n2->node.l2),

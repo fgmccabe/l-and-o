@@ -417,7 +417,7 @@ ptrI cmdLineOptions(heapPo H) {
   for (i = 0; i < optCount; i++) {
     pair = objP(allocateObject(H, commaClass));  /* a new option pair */
 
-    tmp = newChar(Options[i].option);
+    tmp = allocateInteger(H,Options[i].option);
     updateArg(objV(pair), 0, tmp);
 
     tmp = newSymbol(Options[i].value);

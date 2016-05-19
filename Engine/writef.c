@@ -48,7 +48,7 @@ retCode wStringChr(ioPo f, codePoint ch) {
     case '\"':
       return outStr(f, "\\\"");
     default:
-      if (ch < ' ' || !isChar(ch))
+      if (ch < ' ')
         return outMsg(f, "\\+%x;", ch);
       else
         return outChar(f, ch);
@@ -116,11 +116,6 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
 
         if (r == Ok)
           r = outChar(f, '\"');
-      }
-      else if (class == charClass) {
-        r = outChar(f, '`');
-        if (r == Ok)
-          r = wStringChr(f, CharVal((charPo) p));
       }
       else if (class == classClass) {
         clssPo cl = (clssPo) p;

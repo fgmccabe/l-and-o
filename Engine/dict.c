@@ -246,7 +246,6 @@ void restartDictionary(globalGcPo G)
   DelHash(currDict);			/* clear down the existing dictionary */
 
   markStandardClasses(G);
-  restartChars(G);
   markPrograms(G);
   
   kmain = scanPtr(G,kmain);

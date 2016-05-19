@@ -413,7 +413,7 @@ void verifyVar(ptrPo ptr, processPo P) {
       case objTg: {                         /* An object mst also be in the heap */
         objPo ref = objV(vx);
 
-        assert(isChr(ref) || inHeap(&P->proc.heap, ref) || inGlobalHeap(ref));
+        assert(inHeap(&P->proc.heap, ref) || inGlobalHeap(ref));
         return;
       }
       default:
@@ -467,7 +467,7 @@ static void verifyTerm(ptrPo ptr, heapPo P) {
         if (P->owner == NULL)
           assert(inGlobalHeap(ref));
         else
-          assert(isChr(ref) || inHeap(P, ref) || inGlobalHeap(ref));
+          assert(inHeap(P, ref) || inGlobalHeap(ref));
         verifyTrm(ref, P);
         return;
       }

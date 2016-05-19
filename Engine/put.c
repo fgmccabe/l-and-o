@@ -725,7 +725,7 @@ static void genOpAnd(genPo S, iPo ins, opAndSpec A, va_list *args) {
       ins->code |= (reg & 0xff) << 24;
       return;
     }
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                             // 16bit literal (-32768..32767)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
     case cSz:                  // Structure size
@@ -867,7 +867,7 @@ static char *dumpOpand(genPo S, ioPo out, iPo ins, char *sep, opAndSpec A) {
     case uLt:                             // small literal in upper slot (-128..127)
       outMsg(out, "%s%d", sep, op_h_val(ins->code));
       return ",";
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                             // 16bit literal (-32768..32767)
       outMsg(out, "%s#%d", sep, op_so_val(ins->code));
       return ",";
     case vSz:                             // Size of local variable vector

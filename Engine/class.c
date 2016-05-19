@@ -194,7 +194,6 @@ void standardClasses(void) {
   falseClass = newEnumSym("go.stdlib#false");
 
   initCodeClass();
-  initCharClass();
   initSymbolClass();
   initStringClass();
   initDynamicClass();
@@ -337,7 +336,6 @@ void markStandardClasses(globalGcPo G) {
   /*
     integerClass = scanPtr(G,integerClass);
     floatClass = scanPtr(G,floatClass);
-  charClass = scanPtr(G,charClass);
   symbolClass = scanPtr(G,symbolClass);
 
   filePtrClass = scanPtr(G,filePtrClass);

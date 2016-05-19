@@ -273,7 +273,7 @@ static char *testBreak(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case uAr:                             // Arity in upper slot
     case oAr:                             // Arity in upper slot
     case uLt:                             // small literal in upper slot (-128..127)
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                              // 16bit literal (-32768..32767)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
     case cSz:        // Structure size
@@ -517,7 +517,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     }
     case oAr:        //  Output arity in upper slot
     case uLt:                             // small literal in upper slot (-128..127)
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                              // 16bit literal (-32768..32767)
     case vSz:                             // Size of local variable vector
     case cSz:                        // Structure size
       return NULL;
@@ -672,7 +672,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     }
 
     case uLt:                             // small literal in upper slot (-128..127)
-    case Lt:                              // 16bit literal (-32768..32767)
+    case Ltl:                              // 16bit literal (-32768..32767)
       return NULL;
     case vSz: {                            // Size of local variable vector
       unsigned int i;

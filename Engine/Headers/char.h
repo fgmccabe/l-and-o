@@ -18,40 +18,6 @@
 
 #include "word.h"
 
-/* Character structure */
-typedef struct _char_record_ {
-  ptrI sign;				/* == charMark */
-  codePoint uni;				/* The character itself */
-} charRec, *charPo;
-
-extern ptrI charClass;			/* charClass is a special class */
-
-static inline logical isChr(objPo p)
-{
-  return hasClass(p,charClass);
-}
-
-static inline logical IsChar(ptrI x)
-{
-  return HasClass(x,charClass);
-}
-
-static inline charPo charV(ptrI x)
-{
-  assert(isobj(x) && IsChar(x));
-  return (charPo)objV(x);
-}
-
-static inline codePoint CharVal(charPo p)
-{
-  assert(isChr((objPo)p));
-
-  return p->uni;
-}
-
-void initCharClass(void);
-void restartChars(globalGcPo G);
-ptrI newChar(const codePoint ch);
 retCode wStringChr(ioPo f,codePoint ch);
 
 retCode g_isCcChar(processPo P,ptrPo a);         /* Other, Control */

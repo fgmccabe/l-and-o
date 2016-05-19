@@ -332,7 +332,7 @@ retCode g_int2str(processPo P, ptrPo a) {
     integer base = isFloat(objV(a2)) ? (integer) floatVal(floatV(a2)) : integerVal(intV(a2));
     logical sign = (logical) (base < 0);
     integer width = isFloat(objV(a3)) ? (integer) floatVal(floatV(a3)) : integerVal(intV(a3));
-    codePoint pad = CharVal(charV(a4));
+    codePoint pad = IntVal(a4);
     logical left = (logical) (width < 0);
     byte buffer[128];
     byte result[128];

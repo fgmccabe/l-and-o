@@ -251,23 +251,15 @@ static inline clssPo ClassOf(ptrI X) {
   return classOf(objV(X));
 }
 
-#if 0
 static inline logical hasClass(objPo p,ptrI class)
 {
   return p->class==class;
 }
-#endif
 
-#define hasClass(p, cl) (logical)((p)->class==(cl))
-
-#if 0
 static inline logical HasClass(ptrI x,ptrI class)
 {
-  return isobj(x) && hasClass(objV(x),class);
+  return (logical)(isobj(x) && hasClass(objV(x),class));
 }
-#endif
-
-#define HasClass(x, cl) (logical)((objV(x))->class==(cl))
 
 static inline long objectSize(objPo p) {
   clssPo class = classOf(p);
@@ -299,25 +291,17 @@ static inline long objectArity(objPo o) {
   return class->arity;
 }
 
-#if 0
 static inline long classArity(clssPo class)
 {
   return class->arity;
 }
-#endif
-#define classArity(cl) ((cl)->arity)
 
-
-#if 0
 static inline ptrPo objectArgs(objPo o)
 {
   assert(isObjct(o));
 
   return o->args;
 }
-#else
-#define objectArgs(o) (((objPo)(o))->args)
-#endif
 
 static inline ptrPo nthArg(objPo o, long ix) {
   assert(ix >= 0 && ix < objectArity(o));
