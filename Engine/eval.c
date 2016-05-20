@@ -261,6 +261,7 @@ void runGo(register processPo P) {
           break;
         case Fail:
           backTrack();
+          break;
         default:;
       }
     }
@@ -1383,6 +1384,7 @@ void runGo(register processPo P) {
             restRegs();
             continue;
         }
+        continue;
       }
 
       case uAY: {      /* unify A[h],Y[X] */
@@ -1391,15 +1393,15 @@ void runGo(register processPo P) {
 
         switch (uni(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
           case Ok:
-            continue;
+            break;
           case Fail:
             backTrack();
-            continue;
+            break;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
             restRegs();
-            continue;
         }
+        continue;
       }
 
       case uAS: {      /* unify A[h],S++ */
@@ -1495,6 +1497,7 @@ void runGo(register processPo P) {
             backTrack();
             continue;
         }
+        continue;
       }
 
       case uAcns: {    /* unify A[h],f(_,..,_) */
@@ -1720,8 +1723,8 @@ void runGo(register processPo P) {
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
             restRegs();
-            continue;
         }
+        continue;
       }
 
       case uYS: {                          /* unify Y[X],S++ */
@@ -1748,8 +1751,8 @@ void runGo(register processPo P) {
           }
           else
             *H++ = val;
-          continue;
         }
+        continue;
       }
 
       case ucYS: {        /* unify Y[X],S++ with occurs check on write*/
@@ -1777,8 +1780,8 @@ void runGo(register processPo P) {
           else {
             *H++ = val;
           }
-          continue;
         }
+        continue;
       }
 
       case uSlit: {      /* unify S++,<lit> */
@@ -2034,8 +2037,8 @@ void runGo(register processPo P) {
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
             restRegs();
-            continue;
         }
+        continue;
       }
 
       case cAY: {      /* match A[h],Y[X] */
@@ -2044,15 +2047,15 @@ void runGo(register processPo P) {
 
         switch (mtch(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
           case Ok:
-            continue;
+            break;
           case Fail:
             backTrack();
-            continue;
+            break;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
             restRegs();
-            continue;
         }
+        continue;
       }
 
       case cAS: {      /* match A[h],S++ */
@@ -2103,8 +2106,8 @@ void runGo(register processPo P) {
           }
           default:
             backTrack();
-            continue;
         }
+        continue;
       }
 
       case cAcns: {    /* match A[h],f(_,..,_) */
@@ -2228,8 +2231,8 @@ void runGo(register processPo P) {
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
             restRegs();
-            continue;
         }
+        continue;
       }
 
       case cYS: {                          /* match Y[X],S++ */
@@ -2632,8 +2635,8 @@ static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
         default:
           strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
           P->proc.errorCode = eUNIFY;
-          return Error;
       }
+      return Error;
     }
     default:
       strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
@@ -2721,6 +2724,7 @@ static retCode test(ptrPo T1, ptrPo T2) {
         }
       }
     }
+    return Error;
     default:
       return Fail;
   }
@@ -2804,6 +2808,7 @@ static retCode mtch(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
           P->proc.errorCode = eUNIFY;
           return Error;
       }
+      return Error;
     }
     default:
       strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
@@ -2864,6 +2869,7 @@ static retCode ident(ptrPo T1, ptrPo T2) {
         default:
           return Error;
       }
+      return Error;
     }
     default:
       return Error;
@@ -2957,6 +2963,7 @@ comparison compTerm(ptrPo T1, ptrPo T2) {
           case fwdTg:
             return incomparible;
         }
+        return incomparible;
       }
       case fwdTg:
         return incomparible;

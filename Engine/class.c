@@ -1,17 +1,17 @@
 /* 
-  Class management module
-  (c) 2000-2007 F.G. McCabe
+ Class management module
+ (c) 2000-2007 F.G. McCabe
 
-  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-  except in compliance with the License. You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software distributed under the
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  KIND, either express or implied. See the License for the specific language governing
-  permissions and limitations under the License.
-*/
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the specific language governing
+ permissions and limitations under the License.
+ */
 
 #include "config.h"		/* pick up standard configuration header */
 #include <string.h>
@@ -84,18 +84,14 @@ void initClass() {
   loadedPackages = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
 
   // The first class record has to be created carefully
-  specialClass = newSpecialClass("#special", spSizeFun, spCompFun,
-                                 spOutFun, spCopyFun,
-                                 spScanFun, spHashFun);
+  specialClass = newSpecialClass("#special", spSizeFun, spCompFun, spOutFun, spCopyFun, spScanFun, spHashFun);
   specialClassPo sClass = (specialClassPo) objV(specialClass);
 
-  classClass = newSpecialClass("#class", clSizeFun,
-                               clCompFun, clOutFun, clCopyFun,
-                               clScanFun, clHashFun);
+  classClass = newSpecialClass("#class", clSizeFun, clCompFun, clOutFun, clCopyFun, clScanFun, clHashFun);
   specialClassPo class = (specialClassPo) objV(classClass);
 
-  class->class = specialClass;    /* class is a special class */
-  sClass->class = specialClass;    /* specialClass is a special class! */
+  class->class = specialClass; /* class is a special class */
+  sClass->class = specialClass; /* specialClass is a special class! */
 }
 
 // Return the size of a class object
@@ -126,7 +122,7 @@ static retCode clScanFun(specialClassPo class, specialHelperFun helper, void *c,
 
 static objPo clCopyFun(specialClassPo class, objPo dst, objPo src) {
   long size = clSizeFun(class, src);
-  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
+  memmove((void * ) dst, (void * ) src, size * sizeof(ptrI));
 
   return (objPo) (((ptrPo) dst) + size);
 }
@@ -142,7 +138,7 @@ static long spSizeFun(specialClassPo class, objPo o) {
 
   specialClassPo cl = (specialClassPo) o;
 
-  return CellCount(sizeof(specialClassRec) + sizeof(byte) * (strlen((char *) cl->name) + 1));
+  return CellCount(sizeof(specialClassRec) + sizeof(byte) * (strlen((char * ) cl->name) + 1));
 }
 
 static comparison spCompFun(specialClassPo class, objPo o1, objPo o2) {
@@ -164,7 +160,7 @@ static retCode spScanFun(specialClassPo class, specialHelperFun helper, void *c,
 
 static objPo spCopyFun(specialClassPo class, objPo dst, objPo src) {
   long size = spSizeFun(class, src);
-  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
+  memmove((void * ) dst, (void * ) src, size * sizeof(ptrI));
 
   return (objPo) (((ptrPo) dst) + size);
 }
@@ -220,8 +216,7 @@ ptrI newClassDef(const string name, long arity) {
 
     hashPut(classes, className(new), (void *) def);
     return def;
-  }
-  else {
+  } else {
     assert(classArity((clssPo) objV(def)) == arity);
     return def;
   }
@@ -255,16 +250,15 @@ ptrI newEnumSymbol(const string fun) {
   return objP(allocateObject(&globalHeap, eClass));
 }
 
-ptrI newSpecialClass(const char *name,
-                     classSizeFun sizeFun, classCompFun compFun,
-                     classOutFun outFun, classCpyFun copyFun,
-                     classScanFun scanFun, classHashFun hashFun) {
+ptrI newSpecialClass(const char *name, classSizeFun sizeFun, classCompFun compFun, classOutFun outFun,
+    classCpyFun copyFun, classScanFun scanFun, classHashFun hashFun) {
   size_t slen = strlen(name);
   byte buff[slen + 1];
 
-  strncpy((char *) buff, name, slen);
+  strncpy((char * ) buff, name, slen);
 
-  specialClassPo new = (specialClassPo) malloc(sizeof(specialClassRec) + (uniStrLen(buff) + 1) * sizeof(byte));
+  specialClassPo new = (specialClassPo) malloc(
+      sizeof(specialClassRec) + (uniStrLen(buff) + 1) * sizeof(byte));
 
   new->class = specialClass;
   new->sizeFun = sizeFun;
@@ -319,7 +313,7 @@ static retCode markSpecialClass(void *n, void *r, void *c) {
 }
 
 void markStandardClasses(globalGcPo G) {
-  DInfoRec help = {G, NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL)};
+  DInfoRec help = { G, NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL) };
   hashPo currClassTable = classes;
 
   classes = help.newDict;
@@ -334,16 +328,16 @@ void markStandardClasses(globalGcPo G) {
   errorClass = scanPtr(G, errorClass);
 
   /*
-    integerClass = scanPtr(G,integerClass);
-    floatClass = scanPtr(G,floatClass);
-  symbolClass = scanPtr(G,symbolClass);
+   integerClass = scanPtr(G,integerClass);
+   floatClass = scanPtr(G,floatClass);
+   symbolClass = scanPtr(G,symbolClass);
 
-  filePtrClass = scanPtr(G,filePtrClass);
-  threadClass = scanPtr(G,threadClass);
-  procClass = scanPtr(G,procClass);
+   filePtrClass = scanPtr(G,filePtrClass);
+   threadClass = scanPtr(G,threadClass);
+   procClass = scanPtr(G,procClass);
 
-  dynamicClass = scanPtr(G,dynamicClass);
-  */
+   dynamicClass = scanPtr(G,dynamicClass);
+   */
 
   suspClass = scanPtr(G, suspClass);
   varClass = scanPtr(G, varClass);
@@ -353,29 +347,28 @@ void markStandardClasses(globalGcPo G) {
   ProcessTable(markSpecialClass, specialClasses, &help);
 }
 
-static string computeClassFileName(string path, long pathLen,
-                                   string className, string version,
-                                   string fn, long fLen);
+static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
+    long fLen);
 
-retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
-                    ptrPo loaded, string errorMsg, long msgSize) {
+retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV, ptrPo loaded, string errorMsg,
+    long msgSize) {
   packagePo ldFlag = (packagePo) hashGet(loadedPackages, SymVal(symbV(request)));
 
   if (ldFlag != NULL) {
-    if (rqV != emptySymbol) if (uniCmp(SymVal(symbV(rqV)), ldFlag->version) == 0)
-      return Ok;
-    else {
-      outMsg(logFile, "invalid version of package already loaded: %w:%U,"
-        "version %w expected\n", &request, ldFlag->version, &rqV);
-      return Error;
-    }
+    if (rqV != emptySymbol)
+      if (uniCmp(SymVal(symbV(rqV)), ldFlag->version) == 0)
+        return Ok;
+      else {
+        outMsg(logFile, "invalid version of package already loaded: %w:%U,"
+            "version %w expected\n", &request, ldFlag->version, &rqV);
+        return Error;
+      }
     else
       return Ok;
-  }
-  else {
+  } else {
     byte fbuffer[MAX_FILE_LEN];
-    string fn = computeClassFileName(path, uniStrLen(path), SymVal(symbV(request)), SymVal(symbV(rqV)), fbuffer,
-                                     NumberOf(fbuffer));
+    string fn = computeClassFileName(path, uniStrLen(path), SymVal(symbV(request)), SymVal(symbV(rqV)),
+        fbuffer, NumberOf(fbuffer));
     ioPo file = fn != NULL ? openInFile(fn, rawEncoding) : NULL;
     byte ch;
 
@@ -388,7 +381,7 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
       retCode ret = Ok;
       ptrI scratch = kvoid;
       ptrI package = kvoid;
-      ptrI version = kvoid;    /* version of the loaded package */
+      ptrI version = kvoid; /* version of the loaded package */
       ptrI imports = kvoid;
       ptrI defined = kvoid;
       rootPo root = gcAddRoot(H, &scratch);
@@ -399,24 +392,22 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
       gcAddRoot(H, &imports);
       gcAddRoot(H, &defined);
 
-      if ((ch = inB(file)) == '#') {      /* look for standard #!/.... header */
+      if ((ch = inB(file)) == '#') { /* look for standard #!/.... header */
         if ((ch = inB(file)) == '!') {
-          while (inByte(file, &ch) == Ok && ch != NEW_LINE);                      // consume the interpreter statement
-        }
-        else {
+          while (inByte(file, &ch) == Ok && ch != NEW_LINE)
+            ;                      // consume the interpreter statement
+        } else {
           putBackByte(file, ch);
           putBackByte(file, '#');
         }
-      }
-      else
+      } else
         putBackByte(file, ch);
 
       if (fileStatus(file) == Ok) {
         ret = decodeTerm(file, &globalHeap, H, &package, errorMsg, msgSize);
 
         if (package != request) {
-          outMsg(logFile, "loaded package: %w not what was expected %w\n",
-                 &package, &request);
+          outMsg(logFile, "loaded package: %w not what was expected %w\n", &package, &request);
           return Error;
         }
 
@@ -426,7 +417,7 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
 
         if (version != rqV && rqV != emptySymbol && version != universal) {
           outMsg(logFile, "invalid version of package: %w:%w,"
-            "version %w expected\n", &request, &version, &rqV);
+              "version %w expected\n", &request, &version, &rqV);
           return Error;
         }
 
@@ -475,32 +466,28 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
                 gcRemoveRoot(H, subRoot);
 
                 switch (ret) {
-                  case Ok:
-                    break;
-                  default:
-                  case Error:
-                    outMsg(logFile, "Failed to load package %U, "
-                             "[version: %U] requested by %U\n",
-                           SymVal(symbV(import)), SymVal(symbV(vers)),
-                           SymVal(symbV(request)));
-                    break;
-                  case Space:
-                    outMsg(logFile, "Not enough heap space to load package %U, "
-                             "[version: %U] requested by %U\n",
-                           SymVal(symbV(import)), SymVal(symbV(vers)),
-                           SymVal(symbV(request)));
-                    break;
+                case Ok:
+                  break;
+                default:
+                case Error:
+                  outMsg(logFile, "Failed to load package %U, "
+                      "[version: %U] requested by %U\n", SymVal(symbV(import)), SymVal(symbV(vers)),
+                      SymVal(symbV(request)));
+                  break;
+                case Space:
+                  outMsg(logFile, "Not enough heap space to load package %U, "
+                      "[version: %U] requested by %U\n", SymVal(symbV(import)), SymVal(symbV(vers)),
+                      SymVal(symbV(request)));
+                  break;
                 }
-              }
-              else
+              } else
                 outMsg(logFile, "invalid version info import package "
-                  "spec %w, requested by %w\n", &imports, &request);
+                    "spec %w, requested by %w\n", &imports, &request);
               imps = deRefI(listTail(objV(imps)));
             }
-          }
-          else if (!identical(imports, emptyList))
+          } else if (!identical(imports, emptyList))
             outMsg(logFile, "invalid import package spec %w, "
-              "requested by %w\n", &imports, &request);
+                "requested by %w\n", &imports, &request);
         }
 
         while (ret == Ok) {
@@ -517,11 +504,9 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
                 if (debugging)
                   outMsg(logFile, "program %w loaded\n", &symb);
 #endif
-              }
-              else
+              } else
                 outMsg(logFile, "code expected, not: %#,4w in code file", &scratch);
-            }
-            else
+            } else
               outMsg(logFile, "invalid entry: %#,4w in code file", &scratch);
           }
         }
@@ -542,8 +527,7 @@ retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV,
         return Ok;
       else
         return ret;
-    }
-    else {
+    } else {
       strMsg(errorMsg, msgSize, "package %U not found", SymVal(symbV(request)));
       return Eof;
     }
@@ -571,34 +555,34 @@ retCode g__classload(processPo P, ptrPo a) {
 
         gcAddRoot(H, &loaded);
 
-        switchProcessState(P, wait_io);  /* Potentially nec. to wait */
+        switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
-        retCode ret = classLoader(H, stringVal(stringV(A1)), pname, deRefI(&a[3]), &loaded,
-                                  P->proc.errorMsg, NumberOf(P->proc.errorMsg));
+        retCode ret = classLoader(H, stringVal(stringV(A1)), pname, deRefI(&a[3]), &loaded, P->proc.errorMsg,
+            NumberOf(P->proc.errorMsg));
         setProcessRunnable(P);
 
         switch (ret) {
-          case Error: {
-            byte msg[MAX_MSG_LEN];
+        case Error: {
+          byte msg[MAX_MSG_LEN];
 
-            strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
-            return raiseError(P, msg, eNOTFND);
-          }
-          case Eof: {
-            byte msg[MAX_MSG_LEN];
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          return raiseError(P, msg, eNOTFND);
+        }
+        case Eof: {
+          byte msg[MAX_MSG_LEN];
 
-            strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
-            return raiseError(P, msg, eNOFILE);
-          }
-          case Ok:
-            return equal(P, &a[4], &loaded);
-          case Fail:
-            return Fail;
-          case Space:
-            outMsg(logFile, "Out of heap space, increase and try again\n%_");
-            return liberror(P, "__ensure_loaded", eSPACE);
-          default:
-            return liberror(P, "__ensure_loaded", eINVAL);
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          return raiseError(P, msg, eNOFILE);
+        }
+        case Ok:
+          return equal(P, &a[4], &loaded);
+        case Fail:
+          return Fail;
+        case Space:
+          outMsg(logFile, "Out of heap space, increase and try again\n%_");
+          return liberror(P, "__ensure_loaded", eSPACE);
+        default:
+          return liberror(P, "__ensure_loaded", eINVAL);
         }
       }
     }
@@ -621,11 +605,11 @@ void showPackages(void) {
   flushOut();
 }
 
-static logical trimDirs(string path, string request, string buffer, long len,
-                        string suffix);
+static logical trimDirs(string path, string request, string buffer, long len, string suffix);
 
 // Attempt to compute a file name to load a package from, based on a list of paths to try
-static string computeClassFileName(string path, long pathLen, string className, string version, string fn, long fLen) {
+static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
+    long fLen) {
   long len = pathLen;
   int16 bLen = (int16) (fLen - strlen(".goc") - 1);
   byte buffer[MAX_FILE_LEN];
@@ -649,8 +633,7 @@ static string computeClassFileName(string path, long pathLen, string className, 
         pthBuffer[i] = '\0';
       }
       p = next + 1;
-    }
-    else {
+    } else {
       for (i = 0; p < pathLen && i < bLen; i++)
         pthBuffer[i] = buffer[i] = path[p++];
       pthBuffer[i] = '\0';
@@ -662,7 +645,7 @@ static string computeClassFileName(string path, long pathLen, string className, 
     }
 
     if (buffer[i - 1] != '/')
-      buffer[i++] = '/';      /* Join the path segment with a / */
+      buffer[i++] = '/'; /* Join the path segment with a / */
 
     for (; *c != '\0' && i < bLen; i++, c++) {
       if (*c == '.')
@@ -674,13 +657,12 @@ static string computeClassFileName(string path, long pathLen, string className, 
     if (uniStrLen(version) > 0)
       strMsg(&buffer[i], fLen - i, ".%U.goc", version);
     else
-      strMsg(&buffer[i], fLen - i, ".goc");  /* we drop through if no version */
+      strMsg(&buffer[i], fLen - i, ".goc"); /* we drop through if no version */
 
     if (filePresent(buffer)) {
       uniCpy(fn, fLen, buffer);
       return fn;
-    }
-    else {
+    } else {
       byte fBuffer[MAX_FILE_LEN];
       byte suffix[MAX_FILE_LEN];
 
@@ -705,18 +687,17 @@ static string computeClassFileName(string path, long pathLen, string className, 
 
 static void reverse(string str);
 
-static logical trimDirs(string path, string request, string buffer, long len,
-                        string suffix) {
+static logical trimDirs(string path, string request, string buffer, long len, string suffix) {
   byte pathBrks[MAX_FILE_LEN];
   byte reqBrks[MAX_FILE_LEN];
   long pCount = 0, rCount = 0;
 
   long i = 0, mx = uniStrLen(path);
   string pth = &pathBrks[NumberOf(pathBrks) - 1];
-  *--pth = '\0';      /* We are going to reverse this */
+  *--pth = '\0'; /* We are going to reverse this */
 
-  for (i = 0; i < mx; i++) {      /* We split the path into a sequence */
-    if (path[i] != '/')      /* of segments */
+  for (i = 0; i < mx; i++) { /* We split the path into a sequence */
+    if (path[i] != '/') /* of segments */
       *--pth = path[i];
     else {
       reverse(pth);
@@ -730,7 +711,7 @@ static logical trimDirs(string path, string request, string buffer, long len,
   if (uniStrLen(pth) != 0)
     pCount++;
   else
-    pth++;        /* remove the empty chunk */
+    pth++; /* remove the empty chunk */
 
   mx = uniStrLen(request);
 
@@ -738,13 +719,12 @@ static logical trimDirs(string path, string request, string buffer, long len,
     if (request[i] == '.') {
       reqBrks[i] = '\0';
       rCount++;
-    }
-    else
+    } else
       reqBrks[i] = request[i];
   }
   reqBrks[i] = '\0';
 
-  if (pCount > 0 && rCount > 0) {  /* look for an overlapping segments */
+  if (pCount > 0 && rCount > 0) { /* look for an overlapping segments */
     string p = pth;
     string r = reqBrks;
     for (i = 0; i < rCount; i++) {
@@ -753,11 +733,10 @@ static logical trimDirs(string path, string request, string buffer, long len,
         if (uniCmp(p, r) != 0)
           goto exLoop;
         p += uniStrLen(p) + 1;
-        r += uniStrLen(r) + 1;    /* step on to the next string */
+        r += uniStrLen(r) + 1; /* step on to the next string */
       }
     }
-    exLoop:
-    if (p != pth) {        /* We had a sucessful match */
+    exLoop: if (p != pth) { /* We had a sucessful match */
       long preSeg = &pathBrks[NumberOf(pathBrks)] - p;
 
       uniNCpy(buffer, len, path, preSeg);
@@ -765,7 +744,7 @@ static logical trimDirs(string path, string request, string buffer, long len,
       for (i = 0; i < rCount; i++) {
         uniAppend(buffer, &preSeg, len, r);
         uniTack(buffer, len, "/");
-        r += uniStrLen(r) + 1;    /* step on to the next string */
+        r += uniStrLen(r) + 1; /* step on to the next string */
       }
       uniAppend(buffer, &preSeg, len, r);
       uniAppend(buffer, &preSeg, len, suffix);

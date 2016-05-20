@@ -16,8 +16,7 @@
 #ifndef _IO_STR_H_
 #define _IO_STR_H_
 
-#include "unicode.h"
-#include "object.h"
+#include "io.h"
 
 typedef struct _string_buffer_ *strBufPo;
 extern classPo strBufferClass;

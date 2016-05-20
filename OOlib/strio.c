@@ -31,10 +31,6 @@ static void StringInit(objectPo list, va_list *args);
 
 static retCode stringInBytes(ioPo f, byte *ch, long count, long *actual);
 
-static retCode stringOutChar(ioPo f, codePoint ch);
-
-static retCode stringUngetChar(ioPo f, codePoint ch);
-
 static retCode stringOutBytes(ioPo f, byte *b, long count, long *actual);
 
 static retCode stringBackByte(ioPo f, byte b);
@@ -51,7 +47,7 @@ static retCode stringSeek(ioPo f, long count);
 
 static retCode stringClose(ioPo f);
 
-StringClassRec StringClass = {
+BufferClassRec StringClass = {
   {
     (classPo) &IoClass,                      /* parent class is io object */
     "string",                               /* this is the string class */

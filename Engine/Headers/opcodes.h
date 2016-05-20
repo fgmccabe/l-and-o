@@ -6,16 +6,7 @@
 #define _OPCODES_H_
 
 #include "config.h"
-
-#undef instruction
-#define instruction(mnem,op,A1,A2,cmnt) mnem=op,
-
-typedef enum {
-#include "instructions.h"	/* Pick up the instructions specification */
-  illegalOp
-} opCode;
-
-#undef instruction
+#include "ops.h"
 
 /* All these assume a 32-bit word; anything else must be re-engineered */
 

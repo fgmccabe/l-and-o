@@ -1265,6 +1265,7 @@ ptrI goObject(heapPo H, ptrI T) {
             break;
           case Space:
             syserr("ran out of heap space in newObject");
+            break;
           default:
             syserr("problem in newObject"); /* should never happen */
         }

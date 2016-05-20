@@ -1,0 +1,226 @@
+/*
+ Buffer implementation
+ Copyright (c) 2016. Francis G. McCabe
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the specific language governing
+ permissions and limitations under the License.
+ */
+
+#include "stringBufferP.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdarg.h>
+
+/* Set up the buffer file class */
+
+static void initBufferClass(classPo class, classPo req);
+
+static void BufferDestroy(objectPo o);
+
+static void BufferInit(objectPo list, va_list *args);
+
+static retCode bufferInBytes(ioPo f, byte *ch, long count, long *actual);
+
+static retCode bufferOutBytes(ioPo f, byte *b, long count, long *actual);
+
+static retCode bufferBackByte(ioPo f, byte b);
+
+static retCode bufferAtEof(ioPo io);
+
+static retCode bufferInReady(ioPo f);
+
+static retCode bufferOutReady(ioPo f);
+
+static retCode bufferFlusher(ioPo f, long count);
+
+static retCode bufferSeek(ioPo f, long count);
+
+static retCode bufferClose(ioPo f);
+
+BufferClassRec BufferClass = { { (classPo) &IoClass, /* parent class is io object */
+"buffer", /* this is the buffer class */
+NULL, initBufferClass, /* Buffer class initializer */
+O_INHERIT_DEF, /* Buffer object element creation */
+BufferDestroy, /* Buffer objectdestruction */
+O_INHERIT_DEF, /* erasure */
+BufferInit, /* initialization of a buffer object */
+sizeof(BufferObject), /* size of a buffer object */
+NULL, /* pool of buffer values */
+O_INHERIT_DEF,                        // No special hash function
+    O_INHERIT_DEF,                        // No special equality
+    PTHREAD_ONCE_INIT, /* not yet initialized */
+    PTHREAD_MUTEX_INITIALIZER }, { }, { bufferInBytes, /* inByte  */
+bufferOutBytes, /* outBytes  */
+bufferBackByte, /* backByte */
+bufferAtEof, /* at end of file? */
+bufferInReady, /* readyIn  */
+bufferOutReady, /* readyOut  */
+bufferFlusher, /* flush  */
+bufferSeek, /* seek  */
+bufferClose /* close  */
+} };
+
+classPo strBufferClass = (classPo) &BufferClass;
+
+static void initBufferClass(classPo class, classPo req) {
+}
+
+// IO initialization should already be done at this point
+static void BufferInit(objectPo o, va_list *args) {
+  bufferPo f = O_BUFFER(o);
+
+  // Set up the buffer pointers
+  f->buffer.pos = 0;
+  setEncoding(O_IO(f), va_arg(*args, ioEncoding)); /* set up the encoding */
+  f->buffer.buffer = va_arg(*args, string);
+  f->buffer.len = va_arg(*args, long); /* set up the buffer */
+  f->io.mode = va_arg(*args, ioState); /* set up the access mode */
+  f->buffer.resizeable = va_arg(*args, logical); /* is this buffer resizeable? */
+}
+
+static void BufferDestroy(objectPo o) {
+  bufferPo str = O_BUFFER(o);
+  if (str->buffer.resizeable)
+    free(str->buffer.buffer);
+}
+
+// Implement class buffer functions
+
+static retCode bufferSeek(ioPo io, long count) {
+  bufferPo f = O_BUFFER(io);
+
+  if (count >= 0 && count < f->buffer.pos) {
+    f->buffer.pos = count;
+    return Ok;
+  } else
+    return Fail;
+}
+
+static retCode bufferInBytes(ioPo io, byte *ch, long count, long *actual) {
+  retCode ret = Ok;
+  long remaining = count;
+  bufferPo f = O_BUFFER(io);
+
+  while (remaining > 0) {
+    if (f->buffer.pos >= f->buffer.len) {
+      if (remaining == count)
+        ret = Eof;
+      break;
+    } else {
+      *ch++ = f->buffer.buffer[f->buffer.pos++];
+      remaining--;
+    }
+  }
+  *actual = count - remaining;
+
+  return ret;
+}
+
+static retCode bufferOutBytes(ioPo io, byte *b, long count, long *actual) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos + count >= f->buffer.len) {
+    if (f->buffer.resizeable) {
+      long nlen = f->buffer.len + (f->buffer.len >> 1) + count; /* allow for some growth */
+      byte *nbuff = realloc(f->buffer.buffer, sizeof(byte) * nlen);
+      if (nbuff != NULL) {
+        f->buffer.buffer = nbuff;
+        f->buffer.len = nlen;
+      } else
+        syserr("could not allocate more space for buffer");
+    } else {
+      return Ok; /* Silently drop actual output */
+    }
+  }
+
+  for (int ix = 0; ix < count; ix++)
+    f->buffer.buffer[f->buffer.pos++] = b[ix];
+  return Ok;
+}
+
+static retCode bufferBackByte(ioPo io, byte b) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos > 0) {
+    f->buffer.buffer[--f->buffer.pos] = b;
+    return Ok;
+  } else
+    return Error;
+}
+
+static retCode bufferAtEof(ioPo io) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos < f->buffer.len)
+    return Ok;
+  else
+    return Eof;
+}
+
+static retCode bufferInReady(ioPo io) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos < f->buffer.len)
+    return Ok;
+  else
+    return Eof;
+}
+
+static retCode bufferOutReady(ioPo io) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos < f->buffer.len)
+    return Ok;
+  else {
+    if (f->buffer.resizeable)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+static retCode bufferFlusher(ioPo io, long count) {
+  return Ok;
+}
+
+static retCode bufferClose(ioPo io) {
+  destroyObject(O_OBJECT(io)); /* this will get rid of all the buffer objects attributes */
+  return Ok;
+}
+
+retCode clearBuffer(bufferPo in) {
+  in->buffer.pos = 0;
+  in->io.inBpos = in->io.inCpos = 0;
+  return Ok;
+}
+
+bufferPo newStringBuffer() {
+  byte name[] = { '<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0 };
+  byte *buffer = (byte*) malloc(sizeof(byte) * 128);
+
+  return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, 128, ioWRITE, True));
+}
+
+bufferPo fixedStringBuffer(string buffer, long len) {
+  byte name[] = { '<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0 };
+  return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, len, ioWRITE, False));
+}
+
+string getTextFromBuffer(long *actual, bufferPo s) {
+  *actual = s->buffer.pos;
+
+  return s->buffer.buffer;
+}
+
+long bufferSize(bufferPo s) {
+  return s->buffer.pos;
+}

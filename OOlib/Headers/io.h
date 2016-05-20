@@ -16,6 +16,7 @@
 #define _IO_LIB_H_
 
 #include "utils.h"
+#include "unicode.h"
 #include "retcode.h"
 #include "integer.h"
 #include "logical.h"

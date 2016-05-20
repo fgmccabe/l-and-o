@@ -28,21 +28,21 @@ typedef struct _string_class_ {
   LockClassPart lockPart;
   IoClassPartRec ioPart;              /* the io part of the class information */
   StringClassPartRec stringPart;
-} StringClassRec;
+} BufferClassRec;
 
-extern StringClassRec StringClass; /* the standard pointer to an String class record */
+extern BufferClassRec StringClass; /* the standard pointer to an String class record */
 
 typedef struct _string_part_{           /* The string specific part of a string object */
   byte *buffer;                         /* The data buffer */
   long pos;
   long len;
   logical resizeable;                   /* Is this string object resizeable? */
-} StringPart;
+} BufferPart;
 
 typedef struct _string_buffer_ {
   ObjectRec object;                     /* object level of the io structure */
   IoPart io;                            /* Io level of io object */
-  StringPart string;                    /* String level of string object */
+  BufferPart string;                    /* String level of string object */
 } StringObject;
 
 #endif

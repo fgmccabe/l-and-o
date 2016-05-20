@@ -32,6 +32,8 @@ set(SOURCE_FILES
         pipe.c
         pool.c
         sockets.c
+        stringBuffer.c
+        stringReader.c
         strio.c
         timer.c
         unichar.c

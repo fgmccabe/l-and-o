@@ -103,6 +103,7 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
             break;
           default:;
         }
+        break;
       case nextBreak:    /* nothing to do here */
       case nextFail:
         break;
@@ -202,6 +203,7 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
           case 'q':
             outMsg(logFile, "terminating go session");
             go_exit(0);
+            break;
 
           case 'c':
             cmdCounter = cmdCount(cmdLine + 1);
