@@ -1053,7 +1053,7 @@ in
   | APPLY(Lc,IDEN(_,"::"),_) => 
       APPLY(Lc,IDEN(Lc,"{}"),[WffFieldDef(Tp)])
   | APPLY(Lc,IDEN(_,":"),_) => 
-      APPLY(Lc,IDEN(Lc,"{}"),[WffFieldDef(Tp)])
+      APPLY(Lc,IDEN(Lc,"{}"),[WffFieldDef(Tp)])":"
   | APPLY(Lc,IDEN(_,"|"),_) => 
       APPLY(Lc,IDEN(Lc,"{}"),[WffFieldDef(Tp)])
   | APPLY(Lc,IDEN(_,"=>"),_) => 

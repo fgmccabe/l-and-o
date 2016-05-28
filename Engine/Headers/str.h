@@ -18,7 +18,8 @@
 
 /* Symbol structure */
 typedef struct _string_record_ {
-  ptrI class;                            // == stringClass
+  ptrI class;                             // == stringClass
+  long size;                              // Length of the string
   byte data[ZEROARRAYSIZE];               // The string contents
 } stringRec, *stringPo;
 
@@ -53,8 +54,7 @@ static inline string StringVal(stringPo p) {
 
 static inline uint64 StringLen(stringPo p) {
   assert(isString((objPo) p));
-
-  return uniStrLen(p->data);
+  return p->size;
 }
 
 extern ptrI allocateString(heapPo H, string buff, long len);

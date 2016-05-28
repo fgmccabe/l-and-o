@@ -17,6 +17,7 @@
 #define _POOL_H_
 
 #include <sys/types.h>
+#include "logical.h"
 
 /* Data structure pool management */
 typedef struct _pool_ *poolPo;

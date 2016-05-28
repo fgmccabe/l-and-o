@@ -1,4 +1,4 @@
-lexer is package{
+0lexer is package{
   private import location
   private import operators
   private import stream
@@ -81,7 +81,7 @@ lexer is package{
             case '\n' is skipToNxTok(nxSt(St))
             case _ default is lineComment(nxSt(St))
           }
-     |  lineComment(St) default is nxTok(St)
+     |  lineComment(St) default is skipToNxTok(St)
 
     fun blockComment(St) where hedChar(St) has value hCh is
           switch hCh in {

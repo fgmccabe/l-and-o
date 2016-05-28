@@ -28,6 +28,5 @@ retCode debug_stop(processPo p,ptrI prog,insPo pc,ptrI cprog,insPo cpc,ptrPo a,p
 		   trailPo trail,
 		   ptrI prefix);
 		   
-void showInstructions(codePo code,insPo pc,unsigned long count);
 
 #endif

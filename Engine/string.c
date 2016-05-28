@@ -98,6 +98,7 @@ ptrI allocateString(heapPo H, string m, long count) {
   stringPo new = (stringPo) allocate(H, len);
 
   new->class = stringClass;
+  new->size = count;
   strncpy((char *) new->data, (char *) m, count);
   return objP(new);
 }

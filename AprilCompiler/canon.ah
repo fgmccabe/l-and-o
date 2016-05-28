@@ -7,7 +7,6 @@ canonTerm ::= idnt(string)
  | symb(string)
  | intgr(number)
  | float(number)
- | ch(char)
  | strg(string)
  | mtch(canonTerm)                                -- match, don't unify
  | bild(canonTerm)                                -- an output-only mode

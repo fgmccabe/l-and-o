@@ -36,8 +36,7 @@ typedef struct bucket {
 } BucketRec;
 
 typedef struct _hashtable_ {
-  long size;
-  /* The number of entries in the table */
+  long size; // The number of entries in the table
   long entries;
   /* how many entries do we have? */
   bucketPo *table;

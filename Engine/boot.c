@@ -135,8 +135,6 @@ ptrI defineSpecialProg(const char *name)
   return obj;
 }
 
-
-
 static void defineResumeProgs(void)
 {
   int ar;
@@ -178,9 +176,11 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
   default:
     logMsg(logFile,"corrupt or no boot file found in %U: %U",classPath,errorMsg);
     go_exit(EXIT_FAIL);
+    return;
   case Eof:
     logMsg(logFile,"no boot file found in path %U",classPath);
     go_exit(EXIT_FAIL);
+    return;
   case Ok:{
     gcRemoveRoot(&globalHeap,gcRoot);
 

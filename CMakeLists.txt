@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(GoSystem)
+project(LandO)
 
 add_subdirectory("OOlib")
 add_subdirectory("HeaderGenerator")

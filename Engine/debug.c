@@ -1,19 +1,20 @@
 /* 
-  Instruction-level debugging of Go! code
-  Copyright (c) 2016. Francis G. McCabe
+ Instruction-level debugging of Go! code
+ Copyright (c) 2016. Francis G. McCabe
 
-  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-  except in compliance with the License. You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software distributed under the
-  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  KIND, either express or implied. See the License for the specific language governing
-  permissions and limitations under the License.
-*/
+ Unless required by applicable law or agreed to in writing, software distributed under the
+ License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the specific language governing
+ permissions and limitations under the License.
+ */
 #include "go.h"
 #include "debug.h"
+#include "disass.h"
 #include "esc.h"
 
 logical tracing = True;
@@ -41,8 +42,7 @@ void showReg(ptrPo a, char *name, integer reg) {
         else
           outMsg(logFile, "_%x", ptr);
         return;
-      }
-      else {
+      } else {
         outMsg(logFile, "_%x->", ptr);
         ptr = (ptrPo) *ptr;
       }
@@ -59,26 +59,20 @@ long cmdCounter = 0;
 #ifdef EXECTRACE
 
 static long cmdCount(string cmdLine) {
-  long count = (long) parseInteger(cmdLine, strlen((char*)cmdLine));
+  long count = (long) parseInteger(cmdLine, strlen((char*) cmdLine));
   if (count == 0)
-    return 1;      /* never return 0 */
+    return 1; /* never return 0 */
   else
     return count;
 }
 
 static processPo focus = NULL;
 
-/* non-null implies only interested in this */
-static insPo dissass(byte *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B,
-                     ptrPo hBase, ptrPo hLimit);
-
 static pthread_mutex_t debugMutex = PTHREAD_MUTEX_INITIALIZER;
 
-retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y,
-                   ptrPo S, long Svalid, rwmode mode,
-                   choicePo B, choicePo SB, choicePo T,
-                   ptrPo hBase, ptrPo H, trailPo trail,
-                   ptrI prefix) {
+retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S,
+    long Svalid, rwmode mode, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail,
+    ptrI prefix) {
   byte ch;
   static byte cmdLine[256] = "n";
   codePo code = codeV(prog);
@@ -89,36 +83,36 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
 
   if (focus == NULL || focus == p) {
     switch (waitingFor) {
-      case nextIns:
+    case nextIns:
+      cmdCounter--;
+      break;
+    case nextSucc:
+      switch (op_cde(*pc)) {
+      case succ:
         cmdCounter--;
         break;
-      case nextSucc:
-        switch (op_cde(*pc)) {
-          case succ:
-            cmdCounter--;
-            break;
-          case kawlO:
-          case kawl:
-            cmdCounter++;
-            break;
-          default:;
-        }
+      case kawlO:
+      case kawl:
+        cmdCounter++;
         break;
-      case nextBreak:    /* nothing to do here */
-      case nextFail:
-        break;
+      default:
+        ;
+      }
+      break;
+    case nextBreak: /* nothing to do here */
+    case nextFail:
+      break;
     }
 
     if (tracing || cmdCounter <= 0) {
       byte pref[MAX_SYMB_LEN];
       ptrPo Lits = codeLits(code);
 
-      strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w",
-             &prefix, pcCount, &Lits[0]);
+      strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &prefix, pcCount, &Lits[0]);
       dissass(pref, code, pc, a, y, S, mode, B, hBase, H);
 
-      outMsg(logFile, "\ncPC=%w[%d],B=%x,SB=%x,T=%x,Y=%x[%d],",
-             &codeLits(ccode)[0], cpc - codeIns(ccode), B, SB, T, y, envSize(cpc));
+      outMsg(logFile, "\ncPC=%w[%d],B=%x,SB=%x,T=%x,Y=%x[%d],", &codeLits(ccode)[0], cpc - codeIns(ccode), B,
+          SB, T, y, envSize(cpc));
       if (Svalid > 0)
         outMsg(logFile, "S=%x(%d),", S, Svalid);
       else if (mode == writeMode)
@@ -131,181 +125,181 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
       flushFile(logFile);
     }
 
-    if (cmdCounter <= 0) {    /* do we need to stop? */
-      while (debugging && cmdCounter <= 0) {  /* prompt the user */
+    if (cmdCounter <= 0) { /* do we need to stop? */
+      while (debugging && cmdCounter <= 0) { /* prompt the user */
         byte *ln = cmdLine;
         outMsg(logFile, " => ");
         flushOut();
 
-        retCode res = inByte(stdIn,&ch);
+        retCode res = inByte(stdIn, &ch);
 
         if (ch != '\n' && res == Ok) {
           do {
             *ln++ = ch;
-            res = inByte(stdIn,&ch);
+            res = inByte(stdIn, &ch);
           } while (ch != '\n' && res == Ok);
           *ln++ = '\0';
         }
 
         switch (cmdLine[0]) {
-          case ' ':
-            cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextIns;
-            tracing = True;
-            break;
-          case 'n':
-            cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextIns;
-            tracing = False;
-            break;
-          case 'N':
-            cmdCounter = cmdCount(cmdLine + 1);
-            switch (op_cde(*pc)) {
-              case kawlO:
-              case kawl:
-              case lkawlO:
-              case lkawl:
-              case dlkawlO:
-              case dlkawl:
-                waitingFor = nextSucc;
-                break;
-              default:
-                waitingFor = nextIns;
-            }
-            tracing = False;
-            break;
-
-          case '\n':
-            cmdCounter = 1;
-            waitingFor = nextIns;
-            break;
-
-          case 'x':    /* wait for a success */
-            cmdCounter = cmdCount(cmdLine + 1);
+        case ' ':
+          cmdCounter = cmdCount(cmdLine + 1);
+          waitingFor = nextIns;
+          tracing = True;
+          break;
+        case 'n':
+          cmdCounter = cmdCount(cmdLine + 1);
+          waitingFor = nextIns;
+          tracing = False;
+          break;
+        case 'N':
+          cmdCounter = cmdCount(cmdLine + 1);
+          switch (op_cde(*pc)) {
+          case kawlO:
+          case kawl:
+          case lkawlO:
+          case lkawl:
+          case dlkawlO:
+          case dlkawl:
             waitingFor = nextSucc;
             break;
-
-          case 'f':
-            focus = p;
-            outMsg(logFile, "Focussing on program %w\n", &p->proc.thread);
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            break;
-
-          case 'F':
-            pthread_mutex_unlock(&debugMutex);
-            return Fail;
-
-          case 'u':
-            focus = NULL;
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            break;
-
-          case 'q':
-            outMsg(logFile, "terminating go session");
-            go_exit(0);
-            break;
-
-          case 'c':
-            cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextBreak;
-            tracing = False;
-            break;
-
-          case 't':
-            waitingFor = nextBreak;
-            tracing = True;
-            cmdCounter = 1;
-            break;
-
-          case 'S':
-            SymbolDebug = True;
-            debugging = False;
-            interactive = True;
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            break;
-
-          case 'a': {    /* dump an argument register */
-            showReg(a, "A", parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1])));
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-          }
-
-          case 'y': {    /* dump a local variable */
-            integer off = parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1]));
-
-            outMsg(logFile, "Y[%ld] = %w\n", off, &y[-off]);
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-          }
-
-          case 'r': {    /* show all registers */
-            unsigned int i;
-            int Ylen = envSize(cpc);
-
-            for (i = 1; i <= B->AX; i++)
-              outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
-
-            for (i = 1; i <= Ylen; i++)
-              outMsg(logFile, "%Y[%d]=%w\n", i, &y[-i]);
-
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-          }
-
-          case 'P': {    /* Display all processes */
-            displayProcesses();
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-          }
-          case 's':    /* Show a stack trace of this process */
-            p->proc.B = B;
-            p->proc.C = (callPo) y;
-            p->proc.cPC = cpc;
-            stackTrace(p);
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9': {
-            cmdCounter = cmdCount(cmdLine);
-            waitingFor = nextIns;
-            continue;
-          }
-
-          case 'i': {              /* Show the following instructions */
-            long count = cmdCount(cmdLine + 1);
-            insPo tmpPc = pc;
-            insPo limit = &code->data[code->size];
-
-            while (count-- > 0 && tmpPc < limit) {
-              tmpPc = dissass(NULL, codeV(prog), tmpPc, a, y, S, dummyMode, B, NULL, NULL);
-              outMsg(logFile, "\n");
-            }
-            strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-            continue;
-          }
-
           default:
-            outMsg(logFile, "'n' = step, 'N' = step over, 'c' = continue, 't' = trace mode, 'q' = stop\n");
-            outMsg(logFile, "'x' = step until success, 'F' = force backtrack\n");
-            outMsg(logFile, "'<n>' = step <n>\n");
-            outMsg(logFile, "'i <count> = list <count> instructions\n");
-            outMsg(logFile, "'S' = symbolic mode\n");
-            outMsg(logFile, "'r' = show registers, 'a <n>' = show A[n], 'y <n>' = show Y[n]\n");
-            outMsg(logFile, "'s' = show stack trace\n");
-            outMsg(logFile, "'P' = show all processes\n");
-            outMsg(logFile, "'f' = focus on this process\n");
-            outMsg(logFile, "'u' = unfocus \n");
+            waitingFor = nextIns;
+          }
+          tracing = False;
+          break;
 
-            continue;
+        case '\n':
+          cmdCounter = 1;
+          waitingFor = nextIns;
+          break;
+
+        case 'x': /* wait for a success */
+          cmdCounter = cmdCount(cmdLine + 1);
+          waitingFor = nextSucc;
+          break;
+
+        case 'f':
+          focus = p;
+          outMsg(logFile, "Focussing on program %w\n", &p->proc.thread);
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          break;
+
+        case 'F':
+          pthread_mutex_unlock(&debugMutex);
+          return Fail;
+
+        case 'u':
+          focus = NULL;
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          break;
+
+        case 'q':
+          outMsg(logFile, "terminating go session");
+          go_exit(0);
+          break;
+
+        case 'c':
+          cmdCounter = cmdCount(cmdLine + 1);
+          waitingFor = nextBreak;
+          tracing = False;
+          break;
+
+        case 't':
+          waitingFor = nextBreak;
+          tracing = True;
+          cmdCounter = 1;
+          break;
+
+        case 'S':
+          SymbolDebug = True;
+          debugging = False;
+          interactive = True;
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          break;
+
+        case 'a': { /* dump an argument register */
+          showReg(a, "A", parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1])));
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+        }
+
+        case 'y': { /* dump a local variable */
+          integer off = parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1]));
+
+          outMsg(logFile, "Y[%ld] = %w\n", off, &y[-off]);
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+        }
+
+        case 'r': { /* show all registers */
+          unsigned int i;
+          int Ylen = envSize(cpc);
+
+          for (i = 1; i <= B->AX; i++)
+            outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
+
+          for (i = 1; i <= Ylen; i++)
+            outMsg(logFile, "%Y[%d]=%w\n", i, &y[-i]);
+
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+        }
+
+        case 'P': { /* Display all processes */
+          displayProcesses();
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+        }
+        case 's': /* Show a stack trace of this process */
+          p->proc.B = B;
+          p->proc.C = (callPo) y;
+          p->proc.cPC = cpc;
+          stackTrace(p);
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9': {
+          cmdCounter = cmdCount(cmdLine);
+          waitingFor = nextIns;
+          continue;
+        }
+
+        case 'i': { /* Show the following instructions */
+          long count = cmdCount(cmdLine + 1);
+          insPo tmpPc = pc;
+          insPo limit = &code->data[code->size];
+
+          while (count-- > 0 && tmpPc < limit) {
+            tmpPc = dissass(NULL, codeV(prog), tmpPc, a, y, S, dummyMode, B, NULL, NULL);
+            outMsg(logFile, "\n");
+          }
+          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
+          continue;
+        }
+
+        default:
+          outMsg(logFile, "'n' = step, 'N' = step over, 'c' = continue, 't' = trace mode, 'q' = stop\n");
+          outMsg(logFile, "'x' = step until success, 'F' = force backtrack\n");
+          outMsg(logFile, "'<n>' = step <n>\n");
+          outMsg(logFile, "'i <count> = list <count> instructions\n");
+          outMsg(logFile, "'S' = symbolic mode\n");
+          outMsg(logFile, "'r' = show registers, 'a <n>' = show A[n], 'y <n>' = show Y[n]\n");
+          outMsg(logFile, "'s' = show stack trace\n");
+          outMsg(logFile, "'P' = show all processes\n");
+          outMsg(logFile, "'f' = focus on this process\n");
+          outMsg(logFile, "'u' = unfocus \n");
+
+          continue;
         }
       }
       pthread_mutex_unlock(&debugMutex);
@@ -314,180 +308,6 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
   }
   pthread_mutex_unlock(&debugMutex);
   return Ok;
-}
-
-#endif /* EXECTRACE */
-
-
-#ifdef EXECTRACE    /* only compiled if debugging */
-
-#undef instruction
-#define instruction(Nm, Cd, A1, A2, Cmt) \
-  case Nm:                      /* Cmt */\
-  return outIns(logFile,#Nm,A1,A2,code,pc,pcx,a,y,S,mode,B,hBase,hLimit);
-
-static insPo outIns(ioPo out, char *Nm, opAndSpec A1, opAndSpec A2,
-                    codePo code, insPo pc, insWord pcx,
-                    ptrPo a, ptrPo y, ptrPo S,
-                    rwmode mode, choicePo B, ptrPo hBase, ptrPo hLimit);
-
-
-/* disassemble instruction at pc */
-static insPo dissass(byte *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B,
-                     ptrPo hBase, ptrPo hLimit) {
-  register insWord pcx = *pc;
-
-  if (pref != NULL)
-    outMsg(logFile, "%U", pref);
-
-  switch (pcx & op_mask) {
-#include "instructions.h"
-
-    default:      /* illegal instruction */
-      outMsg(logFile, "unknown[%x]", pcx);
-      return pc + 1;
-  }
-}
-
-#ifdef EXECTRACE
-
-void showInstructions(codePo code, insPo pc, unsigned long count) {
-  insPo tmpPc = pc;
-
-  while (count-- > 0) {
-    tmpPc = dissass(NULL, code, tmpPc, NULL, NULL, NULL, dummyMode, NULL, NULL, NULL);
-    outMsg(logFile, "\n");
-  }
-  flushFile(logFile);
-}
-
-#endif
-
-static char *showOpAnd(ioPo out, char *sep, opAndSpec A,
-                       insWord pcx,
-                       rwmode mode, ptrPo a, ptrPo y, ptrPo S, ptrPo Lits,
-                       ptrPo hBase, ptrPo hLimit) {
-  switch (A) {
-    case nOp:                             // No operand
-      return sep;
-    case iAh:                             // input argument register in upper slot (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sA[%d]", sep, op_h_val(pcx));
-      else
-        outMsg(out, "%sA[%d]=%,3w", sep, op_h_val(pcx), &a[op_h_val(pcx)]);
-      return ",";
-    case oAh:                             // output argument register in upper slot (0..255)
-      outMsg(out, "%sA[%d]", sep, op_h_val(pcx));
-      return ",";
-    case iAm:                             // input argument register in middle slot (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sA[%d]", sep, op_m_val(pcx));
-      else
-        outMsg(out, "%sA[%d]=%,3w", sep, op_m_val(pcx), &a[op_m_val(pcx)]);
-      return ",";
-    case oAm:                             // output argument register in middle slot (0..255)
-      outMsg(out, "%sA[%d]", sep, op_m_val(pcx));
-      return ",";
-    case iAl:                             // input argument register in lower slot (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sA[%d]", sep, op_l_val(pcx));
-      else
-        outMsg(out, "%sA[%d]=%,3w", sep, op_l_val(pcx), &a[op_l_val(pcx)]);
-      return ",";
-    case oAl:                             // output argument register in lower slot (0..255)
-      outMsg(out, "%sA[%d]", sep, op_l_val(pcx));
-      return ",";
-
-    case iLh:                             // input local variable offset (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sY[%d]", sep, op_h_val(pcx));
-      else
-        outMsg(out, "%sY[%d]=%,3w", sep, op_h_val(pcx), &y[-op_h_val(pcx)]);
-      return ",";
-    case iLm:                             // input local variable offset (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sY[%d]", sep, op_m_val(pcx));
-      else
-        outMsg(out, "%sY[%d]=%,3w", sep, op_m_val(pcx), &y[-op_m_val(pcx)]);
-      return ",";
-    case iLl:                             // input local variable offset (0..255)
-      if (mode == dummyMode)
-        outMsg(out, "%sY[%d]", sep, op_l_val(pcx));
-      else
-        outMsg(out, "%sY[%d]=%,3w", sep, op_l_val(pcx), &y[-op_l_val(pcx)]);
-      return ",";
-    case iLc:                             // input local variable offset (0..65535)
-      if (mode == dummyMode)
-        outMsg(out, "%sY[%d]", sep, op_o_val(pcx));
-      else
-        outMsg(out, "%sY[%d]=%,3w", sep, op_o_val(pcx), &y[-op_o_val(pcx)]);
-      return ",";
-    case oLh:                             // output local variable offset (0..255)
-      outMsg(out, "%sY[%d]", sep, op_h_val(pcx));
-      return ",";
-    case oLm:                             // output local variable offset (0..255)
-      outMsg(out, "%sY[%d]", sep, op_m_val(pcx));
-      return ",";
-    case oLl:                             // output local variable offset (0..255)
-      outMsg(out, "%sY[%d]", sep, op_l_val(pcx));
-      return ",";
-    case oLc:                             // output local variable offset  (0..65535)
-      outMsg(out, "%sY[%d]", sep, op_o_val(pcx));
-      return ",";
-    case iSt:                             // input at current structure pointer
-      if (mode == readMode)
-        outMsg(out, "%sS++=%,3w", sep, S);
-      else
-        outMsg(out, "%sS++", sep);
-      return ",";
-    case oSt:                             // output to current structure pointer
-      outMsg(out, "%sS++", sep);
-      return ",";
-    case oAr:                             // Output arity in upper slot
-    case uAr:                             // Arity in upper slot
-      outMsg(out, "%s#%d", sep, op_sh_val(pcx));
-      return ",";
-    case uLt:                             // small literal in upper slot (-128..127)
-      outMsg(out, "%s%d", sep, op_sh_val(pcx));
-      return ",";
-    case Ltl:                             // 16bit literal (-32768..32767)
-    case vSz:                             // Size of local variable vector
-    case lSz:                             // Size of local variable vector
-    case cSz:                // Structure size
-      outMsg(out, "%s%d", sep, op_o_val(pcx));
-      return ",";
-    case Es:                              // escape code (0..65535)
-      outMsg(out, "%s%s", sep, escapeName(op_o_val(pcx)));
-      return ",";
-    case pcr:                             // program counter relative offset (-32768..32767)
-      outMsg(out, "%spc%+d", sep, op_so_val(pcx));
-      return ",";
-    case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
-      outMsg(out, "%spc%+d", sep, op_ll_val(pcx));
-      return ",";
-    case ltl:                             // literal number (0..65535)
-      outMsg(out, "%s%,3w", sep, &Lits[op_o_val(pcx)]);
-      return ",";
-    default:
-      syserr("Problem in generating showing type");
-      return NULL;
-  }
-}
-
-
-static insPo outIns(ioPo out, char *Nm, opAndSpec A1, opAndSpec A2,
-                    codePo code, insPo pc, insWord pcx,
-                    ptrPo a, ptrPo y, ptrPo S,
-                    rwmode mode, choicePo B, ptrPo hBase, ptrPo hLimit) {
-  char *sep = " ";
-  ptrPo Lits = codeLits(code);
-
-  outMsg(out, "[%d]: %s", pc - code->data, Nm);
-
-  sep = showOpAnd(out, sep, A1, pcx, mode, a, y, S, Lits, hBase, hLimit);
-  sep = showOpAnd(out, sep, A2, pcx, mode, a, y, S, Lits, hBase, hLimit);
-
-  return pc + 1;
 }
 
 #endif /* EXECTRACE */

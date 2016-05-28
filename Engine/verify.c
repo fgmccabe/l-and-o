@@ -16,7 +16,7 @@
 
 #include "go.h"
 #include <stdio.h>
-#include "debug.h"
+#include "disass.h"
 #include "esc.h"
 
 typedef struct {
@@ -28,22 +28,22 @@ typedef struct _segment_ *segPo;
 
 typedef struct _segment_ {
   Var args[GO_REGS];
-  long lCount;                           //  number of locals in use 
-  varPo locals;        //  entry state for this segment
-  unsigned long arity;          //  Arity of the code
-  unsigned long strcount;        //  number of valid structure references
-  long litCount;    //  number of literals
-  unsigned int lclHp;          //  how much local heap can we allocate?
-  unsigned int gblHp;         //  how much global heap can we allocate?
-  logical inited;       //  Has the segment's variables been initialized?
-  logical checked;      //  Has this segment been checked?
-  codePo cde;            //  Pointer to the code structure itself
-  insPo pc;        //  base intruction of this segment
-  unsigned long insCount;         //  No. of instructions in this segment
-  segPo prev;        //  previous physical segment
-  segPo next;        //  next physical segment
+  long lCount;                      //  number of locals in use
+  varPo locals;                     //  entry state for this segment
+  unsigned long arity;              //  Arity of the code
+  unsigned long strcount;           //  number of valid structure references
+  long litCount;                    //  number of literals
+  unsigned int lclHp;               //  how much local heap can we allocate?
+  unsigned int gblHp;               //  how much global heap can we allocate?
+  logical inited;                   //  Has the segment's variables been initialized?
+  logical checked;                  //  Has this segment been checked?
+  codePo cde;                       //  Pointer to the code structure itself
+  insPo pc;                         //  base intruction of this segment
+  unsigned long insCount;           //  No. of instructions in this segment
+  segPo prev;                       //  previous physical segment
+  segPo next;                       //  next physical segment
   segPo alt;
-  unsigned long entryPoints;       //  how many entry points are there here?
+  unsigned long entryPoints;        //  how many entry points are there here?
 } segRecord;
 
 typedef struct {
