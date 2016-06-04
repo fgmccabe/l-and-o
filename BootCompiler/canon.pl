@@ -51,6 +51,12 @@ showTerm(enum(_,Nm),O,E) :-
   appStr("'",O,O1),
   appStr(Nm,O1,O2),
   appStr("'",O2,E).
+showTerm(record(_,Defs,Others,Types),O,E) :-
+  appStr("{ ",O,O1),
+  showTypeDefs(Types,O1,O2),
+  showDefs(Defs,O2,O3),
+  showOthers(Others,O3,O4),
+  appStr(" }",O4,E).
 showTerm(true(_),O,E) :-
   appStr("true",O,E).
 showTerm(false(_),O,E) :-
@@ -157,6 +163,18 @@ showDef(predicate(Lc,Nm,Type,Clauses),O,E) :-
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O7),
   showClauses(Clauses,O7,E),!.
+showDef(defn(Lc,Nm,Ptn,Tp,Value),O,E) :-
+  appStr("var definition: ",O,O1),
+  appStr(Nm,O1,O2),
+  appStr("|:",O2,O3),
+  showType(Tp,O3,O4),
+  appStr(" @ ",O4,O5),
+  showLocation(Lc,O5,O6),
+  appStr("\n",O6,O7),
+  showTerm(Ptn,O7,O8),
+  appStr(" = ",O8,O9),
+  showTerm(Value,O9,O10),
+  appStr(".\n",O10,E).
 showDef(class(Lc,Nm,Type,Rules),O,E) :-
   appStr("class: ",O,O1),
   appStr(Nm,O1,O2),

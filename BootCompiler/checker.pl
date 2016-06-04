@@ -151,32 +151,35 @@ processStmts([St|More],ProgramType,Defs,Dx,Env,Path) :-
   processStmts(More,ProgramType,D0,Dx,Env,Path).
 
 processStmt(St,funType(AT,RT),[equation(Lc,Nm,Ptn,Cond,Exp)|Defs],Defs,E,_) :- 
-  pushScope(E,Env),
   isBinary(St,Lc,"=>",L,R),!,
   splitHead(L,Nm,Args,C),
-  typeOfPtns(Args,AT,Env,E0,Ptn),
+  pushScope(E,Env),
+  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
   checkCond(C,E0,E1,Cond),
   typeOfExp(R,RT,_,E1,Exp).
 processStmt(St,predType(AT),[clause(Lc,Nm,Ptn,Cond,Body)|Defs],Defs,E,_) :- 
-  pushScope(E,Env),
   isBinary(St,Lc,":-",L,R),!,
   splitHead(L,Nm,Args,C),
-  typeOfPtns(Args,AT,Env,E0,Ptn),
+  pushScope(E,Env),
+  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 processStmt(St,predType(AT),[strong(Lc,Nm,Ptn,Cond,Body)|Defs],Defs,E,_) :- 
-  pushScope(E,Env),
   isBinary(St,Lc,":--",L,R),!,
   splitHead(L,Nm,Args,C),
-  typeOfPtns(Args,AT,Env,E0,Ptn),
+  pushScope(E,Env),
+  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 processStmt(St,predType(AT),[clause(Lc,Nm,Ptn,Cond,true(Lc))|Defs],Defs,E,_) :- 
-  pushScope(E,Env),
   splitHead(St,Nm,Args,C),!,
-  typeOfPtns(Args,AT,Env,E0,Ptn),
-  checkCond(C,E0,_,Cond),
-  locOfAst(St,Lc).
+  pushScope(E,Env),
+  locOfAst(St,Lc),
+  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
+  checkCond(C,E0,_,Cond).
+processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
+  isBinary(St,Lc,"=",L,R),!,
+  checkDefn(Lc,L,R,Tp,Def,Env).
 processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,"<=",L,R),
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
@@ -190,11 +193,18 @@ processStmt(St,Tp,[classBody(Lc,Nm,Op,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isName(L,Nm),!,
   pushScope(E,Env),
   typeOfPtn(L,Tp,Env,E0,Op),
-  checkClassBody(Nm,Tp,R,E0,Stmts,Others,Types,Path).
+  subPath(Path,Nm,ClassPath),
+  checkClassBody(Tp,R,E0,Stmts,Others,Types,_,ClassPath).
 processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
-  checkClassBody(Nm,Tp,R,E1,Stmts,Others,Types,Path).
+  checkClassBody(Tp,R,E1,Stmts,Others,Types,_,Path).
+
+checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Ptn,Value),Env) :-
+  isIden(L,_,Nm),
+  pushScope(Env,E),
+  typeOfPtn(L,Tp,Env,_,Ptn),
+  typeOfExp(R,Tp,_,E,Value).
 
 checkClassHead(Term,Tp,Env,Ex,Nm,Ptn) :-
   isName(Term,Nm),!,
@@ -204,19 +214,18 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   splitHead(Term,Nm,A,C),!,
   locOfAst(Term,Lc),
   pushScope(Env,E0),
-  typeOfPtns(A,AT,E0,E1,Args),
+  typeOfPtns(A,AT,Lc,E0,E1,Args),
   checkCond(C,E1,Ex,Cond),
   Hd = apply(Lc,con(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
-checkClassBody(Nm,ClassTp,Body,Env,Defs,Others,Types,Path) :-
+checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   isBraceTuple(Body,Lc,Els),
   getTypeFace(ClassTp,Env,Fields),
   pushScope(Env,Base),
-  subPath(Path,Nm,ClassPath),
   declareVar("this",vr("this",ClassTp),Lc,Base,ThEnv),
   thetaEnv(ClassPath,Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
-  computeExport(Defs,Private,_,Types).
+  computeExport(Defs,Private,BodyDefs,Types).
 
 declareFields([],_,Env,Env).
 declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
@@ -245,6 +254,9 @@ generalizeStmts([Cl|Stmts],Env,[predicate(Lc,Nm,Tp,[Cl|Clses])|Defs],Dx) :-
   collectClauses(Stmts,S0,Nm,Clses),
   pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Defs,Dx).
+generalizeStmts([defn(Lc,Nm,Ptn,Value)|Stmts],Env,[defn(Lc,Nm,Ptn,Tp,Value)|Defs],Dx) :-
+  pickupVarType(Nm,_,Env,Tp),!,
+  generalizeStmts(Stmts,Env,Defs,Dx).
 generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
   isRuleForClass(Cl,Lc,Nm),!,
   collectClassRules(Stmts,S0,Nm,Rules),
@@ -299,11 +311,11 @@ typeOfPtn(P,Tp,Env,Ex,where(Ptn,Cond)) :-
 typeOfPtn(tuple(Lc,"()",[A]),Tp,Env,Ex,tuple(Lc,Args)) :-
   genTpVars(A,ArgTps),
   sameType(Tp,tupleType(ArgTps),Env),
-  typeOfPtns(A,ArgTps,Env,Ex,Args).
+  typeOfPtns(A,ArgTps,Lc,Env,Ex,Args).
 typeOfPtn(tuple(Lc,"()",A),Tp,Env,Ex,tuple(Lc,Args)) :-
   genTpVars(A,ArgTps),
   sameType(Tp,tupleType(ArgTps),Env),
-  typeOfPtns(A,ArgTps,Env,Ex,Args).
+  typeOfPtns(A,ArgTps,Lc,Env,Ex,Args).
 typeOfPtn(tuple(Lc,"[]",A),Tp,Env,Ex,Term) :-
   findType("list",Env,ListTp),
   ListTp = typeExp(_,[ElTp]),
@@ -314,7 +326,7 @@ typeOfPtn(Term,Tp,Env,Ex,apply(Lc,Op,Args)) :-
   \+ (isIden(F,N), isKeyword(N)),
   typeOfExp(F,topType,classType(ArgTps,ClassT),Env,Op),
   sameType(Tp,ClassT,Env),
-  typeOfPtns(A,ArgTps,Env,Ex,Args).
+  typeOfPtns(A,ArgTps,Lc,Env,Ex,Args).
 
 typeOfPtn(T,Tp,Env,Env,pVoid) :-
   locOfAst(T,Lc),
@@ -342,10 +354,16 @@ varPttrn(Lc,_,enum(VNm,VT),Tp,Env,enum(Lc,VNm)) :-
 varPttrn(Lc,Nm,V,Tp,_,pVoid) :-
   reportError("illegal variable: %s/%s : %s",[Nm,V,Tp],Lc).
 
-typeOfPtns([],[],Env,Env,[]).
-typeOfPtns([A|Els],[ATp|Tps],Env,Ex,[Ptn|More]) :-
+typeOfPtns([],[],_,Env,Env,[]).
+typeOfPtns([A|_],[],_,Env,Env,[]) :-
+  locOfAst(A,Lc),!,
+  reportError("too many arguments: %s",[A],Lc).
+typeOfPtns([],[T|_],Lc,Env,Env,[]) :-!,
+  reportError("not enough arguments, expecting a %s",[T],Lc).
+typeOfPtns([A|Els],[ATp|Tps],_,Env,Ex,[Ptn|More]) :-
   typeOfPtn(A,ATp,Env,E0,Ptn),
-  typeOfPtns(Els,Tps,E0,Ex,More).
+  locOfAst(A,Lc),
+  typeOfPtns(Els,Tps,Lc,E0,Ex,More).
 
 typeOfListPtn([],Lc,_,Tp,Env,Env,Term) :-
   typeOfExp(name(Lc,"[]"),Tp,_,Env,Term).
@@ -408,7 +426,7 @@ typeOfExp(Term,ET,funType(ArgTps,RTp),Env,lambda(Lc,Args,Cond,Res)) :-
   genTpVars(A,ArgTps),
   newTypeVar("_R",ResType),
   checkType(Lc,funType(ArgTps,ResType),ET,Env),
-  typeOfPtns(A,ArgTps,Env,E0,Args),
+  typeOfPtns(A,ArgTps,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   typeOfExp(R,ResType,RTp,E1,Res).
 typeOfExp(Term,ET,predType(ArgTps),Env,clause(Lc,Args,Cond,Body)) :-
@@ -416,7 +434,7 @@ typeOfExp(Term,ET,predType(ArgTps),Env,clause(Lc,Args,Cond,Body)) :-
   splitHead(L,"()",A,C), !,
   genTpVars(A,ArgTps),
   checkType(Lc,predType(ArgTps),ET,Env),
-  typeOfPtns(A,ArgTps,Env,E0,Args),
+  typeOfPtns(A,ArgTps,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 typeOfExp(Term,ET,ListTp,Env,Exp) :-
@@ -432,9 +450,9 @@ typeOfExp(tuple(Lc,A),ET,tupleType(ElTypes),Env,tuple(Lc,Els)) :-
   genTpVars(A,ArgTps),
   checkType(Lc,tupleType(ArgTps),ET,Env),
   typeOfExps(A,ArgTps,ElTypes,Env,Els).
-typeOfExp(Term,ET,Tp,Env,record(Lc,Fields)) :-
-  isBraceTuple(Term,Lc,Els),!,
-  typeOfRecord(Els,ET,Tp,Env,Fields).
+typeOfExp(Term,ET,Tp,Env,Record) :-
+  isBraceTuple(Term,Lc,_),!,
+  typeOfRecord(Lc,Term,ET,Tp,Env,Record).
 typeOfExp(Term,ET,Tp,Env,apply(Lc,Fun,Args)) :-
   isRoundTerm(Term,Lc,F,A), 
   genTpVars(A,ArgTps),
@@ -455,6 +473,12 @@ recordAccessExp(Lc,Rc,Fld,ET,Tp,Env,dot(Lc,Rec,Fld)) :-
   fieldInFace(Face,Fld,Lc,FTp),!,
   freshen(FTp,AT,_,Tp), % the record is this to the right of dot.
   checkType(Lc,ET,Tp,Env). % dot is contra variant!
+
+typeOfRecord(Lc,Rec,ClassTp,Tp,Env,record(Lc,Defs,Others,Types)) :-
+  gensym("anonClass",ClassPath),
+  checkClassBody(ClassTp,Rec,Env,Defs,Others,Types,Fields,ClassPath),
+  Tp = faceType(Fields),
+  (subType(Tp,ClassTp,Env),!; reportError("record type %s not consistent with %s",[Tp,ClassTp],Lc)).
 
 fieldInFace(Fields,Nm,_,Tp) :-
   is_member((Nm,Tp),Fields),!.
@@ -572,7 +596,7 @@ checkCond(Term,Env,Ex,call(Lc,Pred,Args)) :-
   isRoundTerm(Term,Lc,F,A),
   genTpVars(A,ArgTps),
   typeOfExp(F,predType(ArgTps),_,Env,Pred),
-  typeOfPtns(A,ArgTps,Env,Ex,Args).
+  typeOfPtns(A,ArgTps,Lc,Env,Ex,Args).
 
 checkConds([C],Env,Ex,Cond) :-
   checkCond(C,Env,Ex,Cond).
@@ -593,6 +617,8 @@ exportDef(class(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
 exportDef(typeDef(_,Nm,Tp),Private,Fields,Fields,Types,Tx) :-
   (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Tp)|Tx]).
+exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
+  (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
 
 faceOfType(Lc,Env,Rules,Face) :-
   pickTypeTemplate(Rules,Tmplate),

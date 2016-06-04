@@ -20,5 +20,14 @@ a{
  assert p("a","b"), gp("a","d").
 
  assert gp(x,y) *> m(y).
+
+ fred:string.
+ fred = "fred".
+
+ xx : ()=>{p:(string,string){}. n:string}.
+ xx() => {
+  p("alpha","beta").
+  n = fred.
+ }
 }.
 
