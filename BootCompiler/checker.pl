@@ -177,32 +177,37 @@ processStmt(St,predType(AT),[clause(Lc,Nm,Ptn,Cond,true(Lc))|Defs],Defs,E,_) :-
   typeOfPtns(Args,AT,Env,E0,Ptn),
   checkCond(C,E0,_,Cond),
   locOfAst(St,Lc).
-processStmt(St,Tp,[enumRule(Lc,Nm,Op,Repl)|Defs],Defs,E,_) :- 
+processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,"<=",L,R),
-  isName(L,Nm),!,
-  pushScope(E,Env),
-  typeOfPtn(L,Tp,Env,E0,Op),
-  typeOfExp(R,E0,topType,_,Repl).
-processStmt(St,classType(AT,_),[labelRule(Lc,Nm,Args,Cond,Repl)|Defs],Defs,E,_) :- 
-  isBinary(St,Lc,"<=",L,R),
-  splitHead(L,Nm,Args,C),!,
-  pushScope(E,Env),
-  typeOfPtns(Args,AT,Env,E0,Args),
-  checkCond(C,E0,E1,Cond),
+  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
   typeOfExp(R,E1,topType,_,Repl).
-processStmt(St,Tp,[enumBody(Lc,Nm,Op,Stmts,Others,Types)|Defs],Defs,E,Path) :-
+processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :- 
+  isBinary(St,Lc,"<<",L,R),
+  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
+  typeOfExp(R,E1,topType,_,Repl).
+processStmt(St,Tp,[classBody(Lc,Nm,Op,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   isName(L,Nm),!,
   pushScope(E,Env),
   typeOfPtn(L,Tp,Env,E0,Op),
   checkClassBody(Nm,Tp,R,E0,Stmts,Others,Types,Path).
-processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Args,Cond,Stmts,Others,Types)|Defs],Defs,E,Path) :-
+processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
-  splitHead(L,Nm,A,C),!,
-  pushScope(E,Env),
-  typeOfPtns(A,AT,Env,E0,Args),
-  checkCond(C,E0,E1,Cond),
+  checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
   checkClassBody(Nm,Tp,R,E1,Stmts,Others,Types,Path).
+
+checkClassHead(Term,Tp,Env,Ex,Nm,Ptn) :-
+  isName(Term,Nm),!,
+  pushScope(Env,E0),
+  typeOfPtn(Term,Tp,E0,Ex,Ptn).
+checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
+  splitHead(Term,Nm,A,C),!,
+  locOfAst(Term,Lc),
+  pushScope(Env,E0),
+  typeOfPtns(A,AT,E0,E1,Args),
+  checkCond(C,E1,Ex,Cond),
+  Hd = apply(Lc,con(Lc,Nm),Args),
+  (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
 checkClassBody(Nm,ClassTp,Body,Env,Defs,Others,Types,Path) :-
   isBraceTuple(Body,Lc,Els),
@@ -268,10 +273,9 @@ collectClassRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
 collectClassRules([],[],_,[]).
 
 
-isRuleForClass(enumRule(Lc,Nm,_,_),Lc,Nm).
-isRuleForClass(labelRule(Lc,Nm,_,_,_),Lc,Nm).
-isRuleForClass(enumBody(Lc,Nm,_,_,_,_),Lc,Nm).
-isRuleForClass(classBody(Lc,Nm,_,_,_,_,_),Lc,Nm).
+isRuleForClass(labelRule(Lc,Nm,_,_),Lc,Nm).
+isRuleForClass(overrideRule(Lc,Nm,_,_),Lc,Nm).
+isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
 
 typeOfPtn(N,Tp,Env,Ex,Term) :- 
   isIden(N,Lc,Nm),

@@ -178,38 +178,23 @@ showClassRules([Rl|Rules],O,E) :-
   showClassRule(Rl,O,O1),
   showClassRules(Rules,O1,E).
 
-showClassRule(labelRule(_,Nm,Args,Cond,Repl),O,E) :-
-  appStr(Nm,O,O1),
-  appStr("(",O1,O2),
-  showTerms(Args,O2,O3),
-  appStr(") :: ",O3,O4),
-  showTerm(Cond,O4,O5),
-  appStr(" <= ",O5,O6),
-  showTerm(Repl,O6,O7),
-  appStr(".\n",O7,E).
-showClassRule(enumRule(_,Nm,_,Repl),O,E) :-
-  appStr(Nm,O,O1),
+showClassRule(labelRule(_,_,Hd,Repl),O,E) :-
+  showTerm(Hd,O,O1),
   appStr(" <= ",O1,O2),
   showTerm(Repl,O2,O3),
   appStr(".\n",O3,E).
-showClassRule(enumBody(_,Nm,_,Stmts,Others,Types),O,E) :-
-  appStr(Nm,O,O1),
+showClassRule(overrideRule(_,_,Hd,Repl),O,E) :-
+  showTerm(Hd,O,O1),
+  appStr(" << ",O1,O2),
+  showTerm(Repl,O2,O3),
+  appStr(".\n",O3,E).
+showClassRule(classBody(_,_,Hd,Stmts,Others,Types),O,E) :-
+  showTerm(Hd,O,O1),
   appStr(" .. {\n",O1,O2),
   showTypeDefs(Types,O2,O3),
   showDefs(Stmts,O3,O4),
   showOthers(Others,O4,O5),
   appStr("}\n",O5,E).
-showClassRule(classBody(_,Nm,Args,Cond,Stmts,Others,Types),O,E) :-
-  appStr(Nm,O,O1),
-  appStr("(",O1,O2),
-  showTerms(Args,O2,O3),
-  appStr(") :: ",O3,O4),
-  showTerm(Cond,O4,O5),
-  appStr(" .. {\n",O5,O6),
-  showTypeDefs(Types,O6,O7),
-  showDefs(Stmts,O7,O8),
-  showOthers(Others,O8,O9),
-  appStr("}\n",O9,E).
 
 showEquations([],O,O).
 showEquations([Eq|Rest],O,E) :-
