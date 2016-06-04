@@ -1,0 +1,337 @@
+\chapter{Grammars and Parsing}
+\label{grammar}
+\index{logic grammars}
+\lettrine[nindent=0.1em]{O}{ne of the earliest applications} of \prolog was in parsing natural language text.\note{In fact, parsing was \emph{the} application for which the first \prolog -- Marseille Prolog -- was designed in 1975.} And so, like most logic programming systems, \go adopts the Definite Clause Grammar notation to express grammars of various kinds.
+
+Apart from supporting applications that require parsing, \go also uses its grammar notation to help with one of the trickiest aspects of building applications: acquiring input. The central idea being that we can use a parsing metaphor to acquire and condition text input into a form that is more readily useable by the application.  For this purpose, the grammar expression (see Section~\vref{expression:grammarexp}) and the grammar query (see Section~\vref{goal:grammar}) are key features that allow text strings to be parsed with the result being incorporated as normal values.
+
+\begin{aside}
+In \go, acquiring input is made more difficult because the use of strong and static typing makes it difficult to support general input and output of arbitrary values. What we do instead is make it easier for the programmer to write such modules.
+\end{aside}
+
+\section{Grammar rules}
+\index{logic grammars!rules}
+\index{rule!logic grammar}
+\label{grammar:rule}
+Parsing, using any kind of grammar notation, is formally expressed as attempting to replace an input string with a single top-level grammar symbol; for example, if we had a grammar to parse arithmetic expressions, then the query:
+\begin{alltt}
+\ldots,(exp() --> "3+4*5"),\ldots
+\end{alltt}
+expresses the constraint that the string \q{"3+4*5"} can be \emph{reduced} to the non-terminal \q{exp()}. 
+
+A significant part of the power of logic grammars derives from the fact that non-terminals can have parameters. These parameters can both guide the parsing -- providing context dependency -- and construct output -- providing parse trees. Thus, a more typical use of a logic grammar would be to parse the input \emph{and} to construct an answer:
+\begin{alltt}
+\ldots,(exp(A) --> "3+4*5"),\ldots
+\end{alltt}
+
+Program\vref{programs:exp} is a grammar that can parse simple arithmetic expressions.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+exp:[integer]-->string.
+exp(X) --> [D], \{ __isNdChar(D), X=__digitCode(D) \}.
+exp(A) --> exp(X), "+", exp(Y), A=X+Y.
+exp(A) --> exp(X), "*", exp(Y), A=X*Y.
+exp(X) --> "(",exp(X),")".
+\end{alltt}
+\vspace{-2ex}
+\caption{Simple numeric expression grammar}
+\label{programs:exp}
+\end{program}
+In grammar rules, ter\-mi\-nal symbols are either string literals, or list expressions, such as \q{[D]}. Non-terminals have an applicative form; such as \q{exp(X)}. Where a semantic condition is required, the goal that expresses the constraints is enclosed in braces. For example, the semantic condition \q{\{\_\_isNdChar(D)\}} uses the built-in predicate \q{\_\_isNdChar} -- which is true of the decimal digit characters in the Unicode standard -- to look for decimal digits.
+
+The most general form of a logic grammar rule takes the form:
+\begin{alltt}
+L\sub1,\ldots,L\subn --> R\sub1,\ldots,R\sub{k}
+\end{alltt}
+where the L\subi and R\sub{j} are either \firstterm{terminals}{An atomic element of a stream that a grammar is processing.} or \firstterm{non-terminals}{A part of a grammar that is itself defined by other grammar rules.}. The distinction is that terminal symbols may appear in the input stream and non-terminal symbols may not.
+
+However, for a combination of pragmatic and utilitarian reasons, we restrict \go grammar rules to a more simplified form:
+\begin{alltt}
+NT(P\sub1,\ldots,P\subn),T\sub1,\ldots,T\sub{m} --> R\sub1,\ldots,R\sub{l}
+\end{alltt}
+where \q{NT(P\sub1,\ldots,P\subn)} is a non-terminal, \emph{T\subi} are all terminal symbols and \emph{R\sub{j}} are either terminals or non-terminals. Either of or both \emph{m} and \emph{l} may be zero, but every grammar rule must be `about' a particular non-terminal.
+
+The restriction to a single non-terminal in the head of a grammar rule is not significant for the large majority of string processing applications.
+
+This, rather dry, definition of the semantics of a grammar rule tends to hide the most common use of rules: to parse strings. Expressed as a parsing rule, the grammar rule:
+\begin{alltt}
+NT(P\sub1,\ldots,P\subn),\emph{Rep} --> \emph{Body}.
+\end{alltt}
+ can be read as:
+\begin{quote}
+To parse a \q{\emph{NT}(\emph{A\sub1},\ldots\emph{A\subn})} in the input, it is sufficient parse a \emph{Body}, and replace it by \emph{Rep}
+\end{quote}
+If the replacement \emph{Rep} is empty -- which is the typical case -- then it is omitted.
+
+The stream of data that is processed by a grammar rule is typically a \q{string} -- i.e., a list of \q{char}acters. However, in general, the stream may be represented by any kind of sequence. The only requirement in \go is that the stream implements the \q{list[]} interface.
+
+Logic grammars are quite expressive, and quite compact. They are more expressive, for example, than LALR(x) grammars -- which are the basis of many parser generator tools such as Yacc. For example, the grammar in Program~\vref{programs:palin} can parse a palindromic string -- and return the first half of it -- something that is not directly expressible in Yacc.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+palin:[list[t]]-->list[t].
+palin([C,..L]) --> [C], palin(L), [C].
+palin([]) --> [].
+\end{alltt}
+\vspace{-2ex}
+\caption{A grammar that parses palindromes}
+\label{programs:palin}
+\end{program}
+
+\begin{aside}
+The reason that logic grammars are so powerful is that logic grammars can be context sensitive -- something that LALR(x) grammars cannot be. Such context sensitivity is not expressible as a degree of look ahead -- the x in LARL(x) -- required to parse the language.
+
+At the same time, the grammar parsers that are produced from the logic grammar notation may not be quite as efficient as the bottom-up parsers produced from LALR(1) grammars.
+\end{aside}
+
+\index{numeric@\q{numeric} grammar}
+\go has a number of standard grammars, available from the \q{stdparse} library, including the very useful \q{numeric} non-terminal that parses numeric values. In combination with the standard expression \q{\%\%} -- see section~\vref{expression:grammarexp} -- we can use expressions such as:
+\begin{alltt}
+numeric \%\% "34.45"
+\end{alltt}
+whose value is the number \q{34.45} to convert between text data and \q{number}s.
+
+
+\section{Basic grammar conditions}
+\index{logic grammars!basic conditions}
+\subsection{Terminal grammar condition}
+\label{grammar:terminal}
+
+\index{logic grammars!terminal}
+A \emph{terminal grammar condition} represents a item that is expected in the input stream -- it corresponds to a terminal symbol; although \go grammars may parse streams other than \q{char}acter streams. The general form of a terminal grammar condition is a list of terms -- each of which represents a separate term that should appear in the input list for the grammar rule to be satisfied.
+
+Logic grammars naturally permit terminal symbols to be denoted by variables:
+\begin{alltt}
+pick:[t]-->list[t].
+pick(X) --> [X].
+\end{alltt}
+as well as literal \q{char}acters and other terms:
+\begin{alltt}
+dotspace:[]-->string.
+dotspace() --> [`.,` ].
+\end{alltt}
+
+For grammar rules over strings, a \q{string} literal may act as a terminal grammar condition. For example, the string literal \q{"+"} in
+\begin{alltt}
+exp(A) --> exp(X), "+", exp(Y), A=X+Y.
+\end{alltt}
+denotes that the \q{+} character must be present in the stream -- between the \q{exp} representing the \q{X} and \q{Y} sub-expressions respectively. The condition \q{A=X+Y} allows the \q{exp} grammar to return a value through the argument.
+
+The special case of the empty list, or empty string, is often used to denote a grammar condition which does not consume any input:
+\begin{alltt}
+foo:[]-->list[t].
+foo() --> [].
+\end{alltt}
+
+\subsection{Non-terminal grammar condition}
+\label{grammar:nonterminal}
+
+\index{logic grammars!non terminal}
+A \emph{non-terminal grammar condition} is of the form \q{\emph{NT(A\sub1,\ldots,A\subn)}} and consists of the application of a grammar program \q{\emph{NT}} to arguments \q{A\sub1},\ldots,\q{A\subn}. It represents a `call' to the \q{\emph{NT}} grammar program and succeeds if the \q{\emph{NT}} grammar can successfully parse the input stream.
+
+Like other forms of logic grammars, \go grammar's non-terminal symbols may take arguments, which are unified rather than simply input. This has great utility from a programmer's perspective as it allows a grammar to simultaneously parse a stream and to construct some kind of parse tree via `back substitution' of the variables in the grammar rules.
+
+\subsection{Class relative grammar call}
+\label{grammar:dot}
+\index{logic grammars!non terminal!relative to class}
+The class relative variant of the non-terminal invokes a grammar condition defined within a class.
+
+\begin{alltt}
+\emph{O}.NT(A\sub1,\ldots,A\subn)
+\end{alltt}
+denotes a grammar condition where the grammar rules for \q{NT} are defined within the class identified by the label term \q{\emph{O}}.
+
+
+\subsection{Equality condition}
+\label{grammar:equality}
+
+\index{logic grammars!equality condition}
+\index{type inference!equality definition}
+An equality definition grammar condition has no effect other than to ensure that two terms are equal. Typically, this is done to establish the value of an intermediate variable:
+\index{operator!\q{=}}
+\begin{alltt}
+\emph{Ex\sub1} = \emph{Ex\sub2}
+\end{alltt}
+
+\subsection{Inequality condition}
+\label{grammar:notequality}
+
+\index{inequality}
+\index{operator!\bsl=@\q{\bsl=}}
+\index{logic grammars!inequality}
+The \q{\bsl=} grammar condition is satisfied if the values of two expressions are \emph{not} unifiable. The form of an inequality grammar condition is:
+\begin{alltt}
+\emph{T\sub1} \bsl= \emph{T\sub2}
+\end{alltt}
+
+
+\subsection{Grammar goal}
+\label{grammar:goal}
+
+\index{logic grammars!goal condition}
+A \emph{grammar goal} is a goal, enclosed in braces -- \q{\{\emph{Goal}\}} and represents a predicate or condition to be applied as part of the parsing process. Grammar goals do not `consume' any of the string input; nor do they directly influence the type of stream that the grammar rule consumes.
+
+\section{Combination grammar conditions}
+\subsection{Sequence}
+\label{grammar:sequence}
+The most basic grammar combination is, of course, the sequence. Two or more grammar conditions separated by commas, as in the body of \q{plus}:
+\begin{alltt}
+plus() --> left(), "+", right().
+\end{alltt}
+represent a sequence of elements in the input stream.
+
+Like a single grammar rule:
+\begin{alltt}
+unit() --> foo().
+\end{alltt}
+which successfully parses a stream if \q{foo()} parses the \emph{entire} stream, a sequence grammar condition must also parse the whole stream -- however, the \emph{partitioning} of the stream into pieces is not determined. In the \q{plus} example, the entire stream must be parsed into a \q{left()} and \q{right()} portion -- with a literal \q{+} in between. However, where the \q{+} occurs in the stream is potentially non-deterministic. Thus, for the grammar query:
+\begin{alltt}
+\ldots,(plus() --> "1+2+3"),\ldots
+\end{alltt}
+there may two successful parses of the string \q{"1+2+3"} -- one where \q{left()} parses just \q{"1"} and \q{right()} parses \q{"2+3"} and another parse where \q{left()} parses \q{"1+2"} and \q{right()} parses just \q{"3"}.
+
+\begin{aside}
+One of the standard techniques for minimizing ambiguity is to partition the grammar so that any given terminal is only read by one rule. Of course, that may not always be possible; however, for an arithmetic expression parser we would use rules such as in program~\vref{parse:arithmetic}.
+\end{aside}
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+exp:[number]-->string.
+exp(X) --> plus(X).
+
+plus:[number]-->string.
+plus(A) --> times(X), "+", times(Y), A=X+Y.
+plus(X) --> times(X).
+
+times:[number]-->string.
+times(A) --> prim(X), "*", prim(Y), A=X*Y.
+times(X) --> prim(X).
+
+prim:[number]-->string.
+prim(X) --> identifier(I), {lookup(I,X)}.
+prim(X) --> numb(X).
+prim(X) --> "(",exp(X),")".
+\end{alltt}
+\vspace{-2ex}
+\caption{A grammar for expressions}\label{parse:arithmetic}
+\end{program}
+
+\subsection{Disjunction}
+\label{grammar:disjunction}
+
+\index{logic grammars!disjunction}
+\index{operator!\char'174@\q{\char'174}}
+A grammar \emph{disjunction} is a pair of grammar conditions, separated by \q{|}'s: written:
+\begin{alltt}
+plus() --> left(), ("+"|"-"), right().
+\end{alltt}
+The parentheses are required for disjunctive grammar conditions.
+
+A grammar disjunction succeeds if either arm of the disjunction is able to parse the input stream; in this case, \q{plus()} is looking for a \q{left()}, followed either by a \q{+} or \q{-} literal character and followed, in turn, by a \q{right()}.
+
+\subsection{Conditional grammar}
+\label{grammar:conditional}
+
+\index{logic grammars!conditional}
+\index{conditional!logic grammars}
+\index{operator!\char'174 \char'77@\q{\char'174\char`\ \char'77}}
+A \emph{conditional} grammar condition is a triple of a three grammar conditions; the first is a test, depending on whether it succeeds either the `then' branch or the `else' branch is taken.  Conditionals are written: \q{\emph{T}?\emph{G\sub1}|\emph{G\sub2}} This can be read as:
+\begin{quote}
+if \emph{T} succeeds, then try \emph{G\sub1}, otherwise try \emph{G\sub2}.
+\end{quote}
+Only one solution of \emph{T} is attempted; i.e., it is as though \emph{T} were implicitly a one-of grammar condition.
+
+Note that the test may `consume' some of the input; the `then' branch of the conditional grammar only sees the input after the test. However, the else branch is expected to parse the entire input.
+
+\subsection{Negated grammar condition}
+\label{grammar:negation}
+
+\index{negation!in logic grammars}
+\index{logic grammars!negated}
+A \emph{negated} grammar condition is a grammar condition, prefixed by the \nasf operator (negation-as-failure), succeeds if the included grammar condition \emph{does not} parse the input stream.
+
+In effect, the negated grammar condition is a kind of negative look-ahead -- it succeeds if the input does \emph{not} start with the negated grammar.
+
+
+\subsection{Iterated grammar}
+\label{grammar:iterator}
+\index{iterated grammar condition}
+\index{logic grammars!iteration}
+\index{operator!*@\q{*}}
+The iterator grammar condition solves a common problem with logic grammars: how to encapsulate a sub-sequence; without the relatively tedious requirement of writing a special grammar non-terminal to handle it.
+
+For example, the common definition of a program identifier reads something like:
+\begin{quote}
+the first character must a letter, then followed by an arbitrary sequence of letters and digits
+\end{quote}
+Such a definition is hard to capture in regular logic grammars and worse, often requires a cut to get the correct semantics.
+
+A grammar iterator applies a grammar to the stream repeatedly, and returns the result as a list. It is written:
+\begin{alltt}
+\emph{Gr} * \emph{Exp} \uphat \emph{LstVar}
+\end{alltt}
+This grammar succeeds if the grammar \q{\emph{Gr}} -- which may be any combination of terminals and non-terminals -- successfully parses some portion of the stream any number of times. The `result' is returned in \q{\emph{LstVar}} -- which consists of a list constructed from \q{\emph{Exp}} -- each element of \q{\emph{LstVar}} represents a successful parse of a successive portion of the input with \q{\emph{Gr}}.
+
+The informal rule for identifiers we described above can be captured using the grammar iterator illustrated in program~\vref{grammar:iden}.
+\index{identifier@\q{identifier} grammar}
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+identifier:[token]-->string.
+identifier(ID([C,..L])) --> letter(C),
+      (letter(X)|digit(X))*X^L
+\end{alltt}
+\vspace{-2ex}
+\caption{A grammar for identifiers}\label{grammar:iden}
+\end{program}
+
+\begin{aside}
+The grammar iterator captures one of the key essentials of regular expression notation -- the star iterator. 
+\end{aside}
+
+\section{Special grammar conditions}
+
+\subsection{error handler}
+\label{grammar:errorhandler}
+
+\index{error handling!in logic grammars}
+\index{logic grammars!error handling}
+\index{keyword!onerror@\q{onerror}}
+\index{onerror@\q{onerror}!grammar condition}
+A grammar condition may be protected by an error handler in a similar way to expressions and goals. An \q{onerror} grammar condition takes the form:
+
+\begin{alltt}
+\emph{G} onerror (\emph{P\sub1} --> \emph{G\sub1} | \ldots{} | \emph{P\subn} --> \emph{G\subn})
+\end{alltt}
+In such an expression, \emph{G}, \emph{G\subi} are all grammar conditions, and the types of \emph{P\subi} is of the standard error type \q{exception[]}.
+
+Semantically, an \q{onerror} grammar condition has the same meaning as the `protected' condition \emph{G}; unless a run-time problem arose in the evaluation of \emph{G}. In this case, an error exception would be raised (of type \q{exception}); and the parse of \emph{G} is terminated and one of the error handling clauses is used instead. The first clause in the handler that unifies with the raised error is the one that is used; and the success or failure of the protected grammar depends on the success or failure of the selected grammar rule in the error recovery clause.
+
+\subsection{Raise exception}
+\label{grammar:raise}
+
+\index{logic grammars!raise exception}
+\index{raise@\q{raise} exception!in logic grammars}
+The \q{raise} exception grammar condition does not parse any input; it terminates processing of the input and raises an exception. If the exception is caught by an \q{onerror} grammar condition then parsing is continued at that level; otherwise the entire parse is aborted and the exception is caught at a higher level.
+
+The argument of an \q{raise} grammar condition is a \q{exception} expression.
+
+\begin{aside}
+Judicious use of the \q{onerror} grammar form can greatly ameliorate one of logic grammar's greatest practical difficulties: recovering from errors. Logic grammars are based on the normal backtracking behavior of clauses; and this can be a very powerful tool for expressing grammars in a high-level style.
+
+However, backtracking across `correct' input is perhaps legitimate, backtracking across erroneous input (as in the case of parsing a program with a syntax error in it) can cause a great deal of unnecessary backtracking. Adjusting a normal logic grammar to gracefully handle erroneous input is a tedious and ugly process: typically involving the use of cuts in a Prolog-based system.
+
+By explicitly raising an exception when erroneous input is detected, and by catching it with an appropriate \q{onerror} clause, we can add error handling and recovery to a \go grammar in a more accurate and succinct manner.
+\end{aside}
+
+\subsection{End of file}
+\label{grammar:eof}
+
+\index{logic grammars!end of file condition}
+The \q{eof} grammar condition is satisfied only at the end of the input. For example, the grammar rule:
+\begin{alltt}
+tok(TERM) --> ".", eof.
+\end{alltt}
+is satisfied only if the last character in the string being parsed is a period.
+

@@ -1,0 +1,340 @@
+\chapter{Sample programs}
+\label{sample}
+In this appendix we collect together some of the complete programs from the main text.
+
+\section{Directory}
+The directory example is developed in Chapter~\vref{directory}. It is also a key component of the ballroom example from Chapter~\vref{dance}.
+\begin{alltt}
+directory\{  import go.io.  import go.mbox.  import go.dynamic.  attVal ::= none.         -- Constructors given externally  attribute ::= attr(symbol,attVal).  private  DSreply ::= inform(list[list[attribute]]) | ok.  private  DSmessage ::= reg(list[attribute],dropbox[DSreply])    | search(list[attribute],list[symbol],
+             dropbox[DSreply]).                directory \typearrow \{    find:[list[attribute],list[symbol]]=>
+           list[list[attribute]].    register:[list[attribute]]*  \}.  private dir_server:[mailbox[DSmessage]]@>thread.  dir_server(_) <= thread().  dir_server(Mbx)..\{    start() -> directory_server().    creator() => this.    matches:[list[t],list[t]]\{\}.    matches(D,E) :-        A in E *> A in D.        description:dynamic[list[attribute]]=dynamic([]).    directory_server:[]*.    directory_server() ->      case Mbx.next() in (        reg(Descr,Rep) ->
+          description.add(Descr);
+          Rep.post(ok)      | search(SDescr, AttrNms,Client) ->          Client.post(inform(\{ extract(Desc,AttrNms) ..
+            (Desc::matches(Desc,SDescr)) in 
+                description.ext()\}))      );      directory_server().    extract:[list[attribute],list[symbol]]=>
+                list[attribute].    extract(Descr,Nms) =>      \{attr(Nm,A) .. (Nm::attr(Nm,A) in Descr) in Nms\}.  \}.  private  dBox:mailbox[DSmessage] = mailbox().  \$\{
+    -- We create the standard server
+    -- when the directory package is loaded    _ = dir_server(dBox)  \}.  client:[]@>directory.  client()..\{    mH:mailbox[DSreply] = mailbox().    register(Desc) ->      sync\{
+        dBox.dropbox().post(reg(Desc,mH.dropbox()));        mH.msg(ok)
+      \}.
+          find(Desc,Atts) =>      valof\{        sync \{           dBox.dropbox().post(search(Desc,Atts,
+                              mH.dropbox()));          mH.msg(inform(L));        \};        valis L     \}  \}\}
+\end{alltt}
+
+\section{Ballroom}
+\label{sample:ballroom}
+The ballroom example is developed in Chapter~\vref{dance}. This program references the package \q{directory} which is defined above.
+
+\begin{verbatim}
+/* * The dance card scenario */ dance{  import go.io.  import go.stdparse.  import go.unit.  import go.mbox.  import directory.    danceProto ::= shallWe(symbol,dropbox[danceProto]) |                  whyNot(symbol,dropbox[danceProto]) |                  rainCheck(symbol,dropbox[danceProto]).    dancer<~ {toTheDance:[directory]*. name:[]=>symbol}.  -- define attribute value type locally  drop:[dropbox[danceProto]]@=attVal.  drop(X)..{    show()=>X.show().  }.  gender:[symbol]@=attVal.  gender(X)..{    show()=>explode(X).  }.  id:[string]@=attVal.  id(X)..{    show()=>X.  }.  phemail:[integer]@>dancer.  phemail(Limit)..{    partners:list[(symbol,dropbox[danceProto])] := [].    name()=>implode("Female "<>Limit.show()).    toTheDance(dir) ->      D = mailbox();      dir.register([attr('gender',gender('phemail')),                    attr('loc',drop(D.dropbox())),                    attr('id',id("Female "<>
+                         Limit.show()))]);      stdout.outLine(explode(name())<>
+                     " ready to dance with "<>
+                     Limit.show()<>" partners");      dance(D).    dance:[mailbox[danceProto]]*.    dance(D)::listlen(partners)<Limit ->      case D.next() in (        shallWe(Who,Mail) ->          partners := [(Who,Mail),..partners];          Mail.post(whyNot(name(),D.dropbox()));          dance(D)      ).    dance(D) ->       stdout.outLine(explode(name())<>
+                     " has cards marked for "<>
+                     {Who..(Who,_)in partners}.show());      hangOut(D).    hangOut:[mailbox[danceProto]]*.    hangOut(D) ->      case D.next() in (        shallWe(_,M) ->             M.post(rainCheck(name(),D.dropbox()))       );       hangOut(D).  }.    mail:[symbol]@>dancer.  mail(Name)..{    dancers:list[(symbol,dropbox[danceProto])] := [].    name() => Name.        toTheDance(dir) ->      L = dir.find([attr('gender',gender('phemail'))],
+                     ['loc','id']);      Bx = mailbox();      ( E in L *>        markCard(E,Bx));      stdout.outLine("Dancer "<>explode(Name)<>                     " has marked the cards of "<> 
+                     {Who..(Who,_)in dancers}.show()).    markCard:[list[attribute],mailbox[danceProto]]*.    markCard(Desc,Dx)::attr('loc',drop(P)) in Desc ->      P.post(shallWe(Name,Dx.dropbox()));      case Dx.next() in (        whyNot(Who,P) -> 
+          dancers := [(Who,P),..dancers];          stdout.outLine(explode(Name)<>
+                         " marked the card of "<>
+                         explode(Who))      | rainCheck(Who,P) -> 
+          stdout.outLine(explode(Who)<>
+                         " too busy to go with "<>
+                         explode(Name))      ).    markCard(Desc,_) ->        stdout.outLine(Desc.show()<>" has no location").  }.  ballRoom:[integer,integer]*.  ballRoom(M,F) ->      Dx = client();			 -- directory client      spawnFems(F,Dx);      waitForMen(spawnMen(M,Dx)).      spawnFems:[integer,directory]*.  spawnFems(0,_) -> {}.  spawnFems(K,D) -> 
+    spawn{ phemail(K).toTheDance(D)};
+    spawnFems(K-1,D).    spawnMen:[integer,directory]=>list[thread].  spawnMen(0,_) => [].  spawnMen(K,D) => 
+    [spawn{
+       mail(implode("Male "<>K.show())).toTheDance(D)
+     },..spawnMen(K-1,D)].    waitForMen:[list[thread]]*.  waitForMen([]) -> {}.  waitForMen([M,..en]) ->      waitfor(M);      stdout.outLine(M.show()<>" done");      waitForMen(en).  dancetest:[integer,integer]@=harness.  dancetest(_,_) <= harness.  dancetest(M,F)..{    doAction() ->        ballRoom(M,F)  }.  main([]) ->      checkUnit(dancetest(4,4)).  main([M,F]) ->      checkUnit(dancetest(naturalOf%%M,naturalOf%%F)).}.
+\end{verbatim}
+
+\section{Sudoku}
+\label{sample:sudoku}
+The sudoku program is developed in Chapter~\vref{sudoku}. It consists of two packages: the \q{square} package which implements the basic square array, and the main solver itself.
+
+\subsection{Sudoku square}
+\label{sample:sudoku:square}
+The \q{square} package implements a polymorphic square array package: offering access to rows, columns and quadrants of an array. The elements of the array are represented using a linear list; this is clearly not the most efficient; however, it was sufficient for the needs of the solver.
+
+\begin{verbatim}
+square{
+  -- Implement a model that can access a square
+  -- as a set of rows, a set of columns 
+  -- or a set of quadrants
+  import go.showable.
+  import go.io.
+  import go.stdparse.
+
+  square[t] <~ { 
+        colOf:[integer]=>list[t]. 
+        rowOf:[integer]=>list[t].
+        quadOf:[integer]=>list[t].
+        cellOf:[integer,integer]=>t.
+        row:[integer]{}.
+        col:[integer]{}.
+        quad:[integer]{}.
+      }.
+
+  square:[list[t]]@>square[t].
+  square(Init)..{
+    Els:list[t] = Init.
+    Sz:integer = itrunc(sqrt(listlen(Init))).
+    Sq:integer = itrunc(sqrt(Sz)).
+    S2:integer = Sq*Sq*Sq.
+
+    intRange:[integer,integer+]{}.
+    intRange(1,_).
+    intRange(J,Mx) :- Mx>1,intRange(K,Mx-1),J=K+1.
+
+    row(I) :- intRange(I,Sz).
+    col(I) :- intRange(I,Sz).
+    quad(I) :- intRange(I,Sz).
+
+    rowOf(I) => front(drop(Els,(I-1)*Sz),Sz).
+
+    colOf(Col) => clOf(drop(Els,Col-1)).
+
+    clOf:[list[t]] => list[t].
+    clOf([]) => [].
+    clOf([El,..L]) => [El,..clOf(drop(L,Sz-1))].
+
+    -- The expression
+    -- ((i-1) quot sqrt(Sz))*Sz^1.5+((i-1)mod sqrt(Sz))
+    -- is the index of the first elemnt of the ith quadrant
+    -- Sz^1.5 is the number of elements in a quadrant
+    quadOf(i) => valof{
+                 Ix = ((i-1) quot Sq)*S2+imod((i-1),Sq)*Sq;
+                 valis qdOf(drop(Els,Ix),Sq)
+               }.
+
+    qdOf:[list[t],integer] => list[t].
+    qdOf(_,0)=>[].
+    qdOf(Table,Cnt) => 
+        front(Table,Sq)<>qdOf(drop(Table,Sz),Cnt-1).
+    
+    cellOf(Row,Col) => nth(Els,(Row-1)*Sz+(Col-1)).
+
+    show() => showSquare(Els).flatten("").
+
+    showSquare:[list[t]]=>dispTree.
+    showSquare(L) => n(showRow(0,L)).
+
+    showRow:[integer,list[t]]=>list[dispTree].
+    showRow(Sz,[]) => [s("|\n")].
+    showRow(Sz,L) => [s("|\n"),..showRow(0,L)].
+    showRow(Ix,[El,..L]) => 
+      [s(El.show()),..showRow(Ix+1,L)].
+  }.
+
+  parseCell[t] <~ { parse:[t]-->string }.
+
+  parseSquare:[square[t],parseCell[t]]-->string.
+  parseSquare(Sq,P) --> 
+        skip(), parseList(L,P), Sq = square(L).
+
+  parseList:[list[t],parseCell[t]]-->string.
+  parseList([],_) --> "[]".
+  parseList([El,..Rest],P) -->
+        "[", skip(), P.parse(El), skip(),
+             parseMore(Rest,P).
+
+  parseMore:[list[t],parseCell[t]]-->string.
+  parseMore([El,..Rest],P) --> 
+        ",", P.parse(El), skip(), parseMore(Rest,P).
+  parseMore([],_) --> "]".
+  parseMore([],_) --> eof.
+
+  skip:[]-->string.
+  skip() --> [X],{whiteSpace(X)}, skip().
+  skip() --> "#",skipToEol(),skip().
+  skip() --> "".
+
+  skipToEol:[]-->string.
+  skipToEol() --> "\n".
+  skipToEol() --> [C],{__isZlChar(C)}.
+  skipToEol() --> [C], {\+__isZlChar(C)}, skipToEol().
+  skipToEol() --> eof.
+
+}
+\end{verbatim}
+
+\subsection{Sudoku solver}
+\label{sample:sudoku:solver}
+The solver included here is an extension of the solver developed in Chapter~\vref{sudoku}. Mainly it includes code that can be used to parse a string representation of the problem and it also includes code for displaying results.
+
+\begin{verbatim}
+/* A program to solve sudoku puzzles
+   (c) 2006 F.G. McCabe
+ 
+   This program is free software; you can redistribute it 
+   and/or modify it under the terms of the GNU General 
+   Public License as published by the Free Software 
+   Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be 
+  useful, but WITHOUT ANY WARRANTY; without even 
+  the implied warranty of MERCHANTABILITY or FITNESS 
+  FOR A PARTICULAR PURPOSE.  See the GNU General 
+  Public License for more details.
+
+  You should have received a copy of the GNU General 
+  Public License along with this program; if not, write to 
+  the Free Software Foundation, Inc., 59 Temple Place, 
+  Suite 330, Boston, MA  02111-1307  USA
+
+  Contact: Francis McCabe <frankmccabe@mac.com>
+ */
+sudoku{
+  import go.io.
+  import go.setlib.
+  import go.showable.
+  import go.unit.
+  import square.
+  import go.stdparse.
+
+  -- Each cell in the table is represented by a constraint
+  
+  constr <~ { curr:[]=>list[integer]. 
+      remove:[integer]*. 
+      assign:[integer]*. 
+  }.
+  
+  constr:[list[integer]]@>constr.
+  constr(L0)..{
+    L:list[integer] := L0.
+
+    curr()=>L.
+    remove(K) ->
+        ( K in L ? 
+            L := L \ [K]).
+    assign(K) ->
+        ( K in L ? 
+            L := [K]).
+
+    show()::L=[] => " {} ".
+    show() => " "<>L.head().show()<>sh(L.tail(),L.head()).
+
+    sh:[list[integer],integer]=>string.
+    sh([],_) => "".
+    sh([I,..Ir],K)::I=K+1 => "-"<>cSh(Ir,I).
+    sh([I,..Ir],_) => ","<>I.show()<>sh(Ir,I).
+    
+    cSh:[list[integer],integer]=>string.
+    cSh([],I) => I.show().
+    cSh([I,..Ir],J)::J+1=I => cSh(Ir,I).
+    cSh(Ir,I) => I.show()<>sh(Ir,I).
+  }.
+
+  let[t] <~ { val:[]{}. }.
+
+  cycle:[square[constr]]{}.
+  cycle(T):-
+      (:let[logical]..{
+         done :logical := true.
+
+         filter:[list[constr]]*.
+         filter(Set) ->
+             ( El in Set *>
+               ( El.curr()=[K] ?
+                 ((Ot::Ot.curr()!=[K]) in Set, 
+                         K in Ot.curr() *>
+                    Ot.remove(K);
+                    done := false
+                 )
+               )
+             );
+             ( unique(Set,Ot,U) *>
+               Ot.assign(U);
+               done:=false
+             ).
+
+         filterRows:[square[constr]]*.
+         filterRows(Table) ->
+             ( Table.row(i) *>
+               filter(Table.rowOf(i))).
+
+         filterCols:[square[constr]]*.
+         filterCols(Table) ->
+             ( Table.col(i) *>
+               filter(Table.colOf(i))).
+         
+         filterQuads:[square[constr]]*.
+         filterQuads(Table) ->
+             ( Table.col(i) *>
+               filter(Table.quadOf(i))).
+
+         val() :-
+             action{
+               filterRows(T);
+               filterCols(T);
+               filterQuads(T);
+               istrue done
+             }.
+       }).val().
+
+  solve:[square[constr]]*.
+  solve(Table)->
+      ( cycle(Table) ?
+          {}
+      | stdout.outLine("After cycle");
+        stdout.outLine(Table.show());
+        solve(Table)).
+
+
+  -- unique of a list of lists of integers L
+  -- is true of some U 
+  -- if U is in only one of the non-trivial sets of L
+  -- A set is non-trivial if it has more than one element
+  unique:[list[constr],constr,integer]{}.
+  unique(L,O,U) :- 
+      append(F,[O,..B],L),
+      Cn = O.curr(),
+      listlen(Cn)>1,
+      U in Cn, \+ (E in F, U in E.curr()),
+      \+ (E in B, U in E.curr()).
+
+  parseConstr:[list[integer]]@>parseCell[constr].
+  parseConstr(Deflt)..{
+    parse(C) --> 
+        naturalOf(I), 
+        {I = 0 ? C=constr(Deflt) | C = constr([I])}.
+  }.
+
+  parseSudoku:[square[constr]]-->string.
+  parseSudoku(Sq) --> skip(), naturalOf(I), skip(),",",
+      skip(), parseSquare(Sq,parseConstr(iota(1,I))).
+
+  testSudoku:[string]@=harness.
+  testSudoku(_)<=harness.
+  testSudoku(Text)..{
+    doAction() ->
+        T = parseSudoku%%Text;
+        stdout.outLine("Original");
+        stdout.outLine(T.show());
+        solve(T);
+        stdout.outLine("Solved");
+        stdout.outLine(T.show()).
+  }.
+
+  main(_) ->
+      checkUnit(testSudoku("9,[0,0,1,0,2,0,0,0,0,"
+                           "0,0,7,5,0,0,0,0,0,"
+                           "0,3,0,0,0,0,1,7,0,"
+                           "0,0,0,0,0,0,5,0,0,"
+                           "1,0,6,0,0,0,9,0,2,"
+                           "0,0,5,9,3,8,6,0,0,"
+                           "0,0,0,0,0,0,0,8,4,"
+                           "3,0,4,0,1,0,2,9,0,"
+                           "0,0,0,4,0,0,3,0,1]")).
+  main(_) ->
+      checkUnit(testSudoku("9,[0,0,0,0,0,2,1,7,0,
+                           0,0,7,0,0,5,0,0,0,
+                           0,0,0,0,6,0,0,0,0,
+                           0,0,4,9,0,0,0,0,0,
+                           0,2,0,1,0,0,0,9,8,
+                           0,0,0,0,5,4,0,0,6,
+                           0,8,0,5,3,0,0,6,0,
+                           0,7,3,2,0,9,0,0,0,
+                           0,1,5,0,0,0,3,0,9]")).
+}
+\end{verbatim}

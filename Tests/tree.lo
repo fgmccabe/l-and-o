@@ -1,0 +1,63 @@
+/*
+ * this test a number of aspects of classes, and type inference
+ */
+tree{
+  import io.
+  import unit.
+
+  comp <~ {
+    less:(this){}.
+    eq:(this){}
+  }.
+
+  -- Define the tree type's interface
+  all a<~comp ~~ 
+    tree[a] <~ {
+	    insert:(a)=>tree[a]. /* ::sorted(this). insert::sorted(this)=>sorted(this). */ 
+	    empty:(){}.
+    }.
+
+  comp <~ thing.
+
+  em : all a<~comp ~~ tree[a].
+  em..{
+    insert(a) => nd(em,a,em).
+    empty().
+  }.
+
+  -- This should not work, temp hack
+  integer <~ comp.
+
+  nd:all T<~comp ~~ (tree[T],T,tree[T])<=>tree[T].
+  nd(L,B,R)..{
+    insert(E)::E.eq(B) => this.
+    insert(E)::E.less(B) => nd(L.insert(E),B,R).
+    insert(E)::\+E.less(B) => nd(L,B,R.insert(E)).
+    empty() :- false.
+  }.
+
+  II:all a <~ comp ~~ (a)<=>comp.
+  II(N)..{
+    less(II(A)) :- N.less(A).
+    eq(II(N)).
+  }.
+
+  harness <~ { test: (){}}.
+
+  testree:harness.
+ -- testree<=harness.
+  testree..{
+    test() :-
+        T0 .= em.insert(II(1)),
+        T1 .= T0.insert(II(3)),
+        T2 .= T1.insert(II(2)).
+
+        /*
+        stdout.outLine("T0=$(T0.show())"),
+        stdout.outLine("T1=$(T1.show())"),
+        stdout.outLine("T2=$(T2.show())").
+        */
+  }.
+        
+  -- assert checkUnit(testree).
+}

@@ -1,0 +1,12 @@
+*.toc
+*.idx
+*.ilg
+*.ind
+*.lop
+*.aux
+*.log
+*.pdf
+*.lot
+Makefile
+Makefile.in
+.DS_Store

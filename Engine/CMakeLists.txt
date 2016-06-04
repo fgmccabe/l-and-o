@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(goEngine)
+project(loEngine)
 
 find_package(BISON)
 find_package(FLEX)
@@ -16,6 +16,6 @@ set(SOURCE_FILES
         verify.c writef.c
         main.c)
 
-add_executable(go ${SOURCE_FILES})
-target_link_libraries(go ooio)
+add_executable(lo ${SOURCE_FILES})
+target_link_libraries(lo ooio)
 

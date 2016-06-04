@@ -1,4 +1,6 @@
-:- module(location,[locOf/2, mergeLoc/3]).
+:- module(location,[locOf/2, mergeLoc/3,showLocation/3]).
+
+:- use_module(misc).
 
 locOf(idTok(_,Lc),Lc).
 locOf(integerTok(_,Lc),Lc).
@@ -8,3 +10,11 @@ locOf(stringTok(_,Lc),Lc).
 locOf(terminal,missing).
 
 mergeLoc(loc(Ln,LnOff,Co1,_),loc(_,_,Co2,Len),loc(Ln,LnOff,Co1,Len1)) :- Len1 is Co2-Co1+Len.
+
+showLocation(loc(Ln,Col,_,Sz),O,E) :-
+  appInt(Ln,O,O1),
+  appStr(":",O1,O2),
+  appInt(Col,O2,O3),
+  appStr("(",O3,O4),
+  appInt(Sz,O4,O5),
+  appStr(")",O5,E).

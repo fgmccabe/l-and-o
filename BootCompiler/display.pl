@@ -1,4 +1,4 @@
-:-module(dispAst,[dispAst/4,dispAstTerm/3,display/2]).
+:-module(display,[dispAst/4,dispAstTerm/3,display/2]).
 :- use_module(operators).
 :- use_module(misc).
 
@@ -7,11 +7,12 @@ dispAstTerm(Msg,Term,Pr) :- write(Msg), display(Term,Pr), nl().
 display(Term,Pr) :- dispAst(Term,Pr,Chrs,[]), string_chars(Res,Chrs), write(Res).
 
 dispAst(name(_,Nm),_,O,E) :- appStr(Nm,O,E).
+dispAst(integer(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
 dispAst(long(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
 dispAst(float(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
-dispAst(string(_,S),_,['"'|O],E) :- appStr(S,O,O1), appStr(S,O1,O2), appStr(O2,"""",E).
-dispAst(display(_,Term),_,['<','<'|O],E) :- dispAst(Term,O,['>','>'|E]).
-dispAst(format(_,Term,Fmt),_,['<','<'|O],E) :- dispAst(Term,O,O1), 
+dispAst(string(_,S),_,['"'|O],E) :- appStr(S,O,O1), appStr("""",O1,E).
+dispAst(display(_,Term),Pr,['<','<'|O],E) :- dispAst(Term,Pr,O,['>','>'|E]).
+dispAst(format(_,Term,Fmt),Pr,['<','<'|O],E) :- dispAst(Term,Pr,O,O1), 
     string_chars(Fmt,FChrs),
     concat([':'|FChrs],O2,O1),
     concat(['>','>'],E,O2).
@@ -47,10 +48,8 @@ dispAst(app(_,Op,A),_,O,E) :- dispAst(Op,0,O,O1), dispAst(A,0,O1,E).
 
 bracket("()","(",")",", ",1000).
 bracket("[]","[","]",", ",1000).
-bracket("{}","{","}",". ",2000).
+bracket("{}","{","}",".\n",2000).
 bracket("<||>","<|","|>",". ",2000).
-
-appStr(Str,O,E) :- string_chars(Str,Chrs), concat(Chrs,E,O).
 
 writeEls([],_,_,O,O) :- !.
 writeEls([H|M],Pr,Sep,O,E) :- dispAst(H,Pr,O,O1), writeMoreEls(M,Pr,Sep,O1,E).

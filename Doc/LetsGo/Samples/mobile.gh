@@ -1,0 +1,15 @@
+/*
+ * Interface type for mobile agents 
+ */
+
+-- This is the interface a mobile agent must expose
+mbAgent[] ~> {
+  exec:(outFile[])*.
+  visit:(handle)*.
+}.
+
+-- This is the interface a base station exposes
+mbShell[] ~> {
+  get:((symbol)=>cell[any]).    -- get an environment variable
+  set:(symbol,any)*            -- set one
+}.

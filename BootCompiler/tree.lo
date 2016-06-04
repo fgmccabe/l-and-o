@@ -1,0 +1,24 @@
+/*
+ * test the type constructor form of a type definition
+ */
+
+tree{
+  all T ~~ tree[T] <~ { label:[]=>T }.
+
+  em: tree[_].
+  em..{
+    label()=> raise _.
+  }.
+
+  nd: all T ~~ (tree[T],T,tree[T])~>tree[T].
+  nd(L,B,R)..{
+    label()=>B.
+  }.
+
+  walk: all t ~~ (tree[t])=>list[t].
+  walk(nd(L,B,R)) => walk(L)<>[B]<>walk(R).
+
+  (<>): all t ~~ (list[t],list[t])=>list[t].
+  []<>X=>X.
+  [E,..X]<>Y=>[E,..X<>Y].
+}

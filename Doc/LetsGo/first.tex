@@ -1,0 +1,491 @@
+\chapter{My first \go program}
+\label{first}
+
+\section{Hello World}
+\lettrine{T}{raditionally}, the first program used to introduce a new programming language is the `hello world' program, and who are we to disagree? Program~\vref{hello-prog} shows a simple version of this program, which, as we shall see, must be in a file named \q{"hello.go"}.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+hello\{
+  import go.io.
+  
+  main:[list[string]]*.
+  main(_) ->
+    stdout.outLine("hello world").
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{Hello World\label{hello-prog}}
+\end{program}
+
+\noindent
+\index{input/output!stdout@\q{stdout} channel}
+The main action in our Hello World program revolves around the definition of the \q{main} program. This is defined using an \firstterm{action rule}{An action rule is a part of an action procedure.}. The body of the action rule is the \firstterm{action}{An action is an activity that a program may perform. \go actions are distinguished from predicates; the latter are not generally permitted to achieve side-effects other than the satisfiability of some condition.}:
+\begin{alltt}
+stdout.outLine("hello world")
+\end{alltt}
+This action invokes the \q{outLine} method of the \q{stdout} object; resulting in the desired output on the standard output. The \q{stdout} object is not exactly part of the language, but it is part of a standard library that is accessed by \q{import}ing the system's \q{go.io} package.
+
+The \q{main} program has two statements associated with it: a type declaration and the action procedure rule itself. All programs must be declared in \go, however there is an additional restriction on the \q{main} program: its type must be as stated in this program -- an action procedure that takes a \q{list} of \q{string}s.
+
+In so far as this is an action-oriented program, the structure of this program is common for many \go programs: it consists of a \emph{package} called -- in this case -- \q{hello}; together with a set of rule programs. \go has several kinds of rule programs, including, of course, clauses defining predicates. The definition of the \q{main} action procedure is what marks the package as an executable program.
+
+The first statement of the \q{hello} package is an \q{import} statement. This `brings in' to scope a set of definitions that give access to the I/O system of \go. Packages may include rule programs, types, constants, variables and classes. The standard I/O channels \q{stdin}, \q{stdout} and \q{stderr} are defined in the \q{go.io} package -- which also includes a range of other useful programs for accessing files.
+
+Program file names are slightly constrained in \go: a file that contains a given package must have a file name that matches the package name. In the case of the program in Program~\vref{hello-prog}, the fact that we have labeled it as the \q{hello} package -- in the first line of the file -- means that it should be held in the file \q{hello.go}. More generally, package names may consist of dotted sequences of names; such as \q{go.io}. The \q{go.io} package must be located in the file \q{io.go}, itself located in a directory called \q{go} -- i.e., the \q{go.io} package's source must in a file called \q{.../go/io.go}.
+
+File channels such as \q{stdin} and \q{stdout} are \firstterm{objects}{An object is theory, or collection of related facts, identified by a term known as a \emph{label}.}. The \q{stdout} object has a number of methods associated with it, the \q{outLine} method is an action that accepts a string as an argument and displays the string as a separate line on the output. Other methods exposed by \q{stdout} include \q{outStr} which writes a string without appending a new-line to the end and \q{outCh} which writes a single character.
+
+\begin{aside}
+If you are a \prolog programmer there will not be very much that is familiar to you in this program! That is because there is no `logic' in it. In \go, we make an effort to separate actions from logical axioms -- this helps to clarify the program and also helps us to ensure higher security in our programs.
+\end{aside}
+
+\subsection{Compiling and running}
+\label{first:compiling}
+\index{compiling programs}
+\go is a compiled language; which means that we prepare our programs in a file, invoke the compiler and execute it as separate activities. There is no equivalent of \prolog's consult; nor of \prolog's command monitor.
+
+In order to compile the \q{hello} program we place it in a file -- \q{hello.go} -- and compile it with the \q{goc} command:
+\begin{alltt}
+\emph{UnixPrompt}\% goc hello.go
+\end{alltt}
+This creates the file \q{hello.goc} which we can execute using the \q{go} command:
+\begin{alltt}
+\emph{UnixPrompt}\% go hello
+hello world
+\emph{UnixPrompt}\%
+\end{alltt}
+Note that when we run a program we do not mention the file name that contains the compiled code but merely a package name. This is because the close association between package names and files allows us to focus on the logical program structure rather than the physical files used to contain the program.
+
+\paragraph{Debugging and tracing}
+\index{debugging}
+By default, the \go compiler does not generate code that permits a \go program to be debugged. However, when compiled with the \q{-g} option, a \go program has included in it code that can support debugging and tracing:
+\begin{alltt}
+\% goc -g hello.go
+\end{alltt}
+Again, by default, even if a program has debugging code in it, the \go run-time engine will ignore it. To trace and debug a program you need to run it with the \q{-g} option:
+\begin{alltt}
+[rootThread] rule main 1
+[rootThread] line file:/\ldots/hello.go 5
+[rootThread] call outLine/1
+[rootThread] (go.Debug)? X
+outLine([`h,`e,`l,`l,`o,` ,`w,`o,`r,`l,`d])
+
+[rootThread] (go.Debug)? 
+hello, world!
+[rootThread] return outLine/1
+[rootThread] leave main 1
+\end{alltt}
+The lines ending with \q{(go.Debug)?} are prompt lines; the built-in debugger supports a limited range of debugging commands which are described more fully in \cite{fgm:go:05}. Pressing the carriage return steps the debugger to the next point in the debugged program.
+
+The lines of the form
+\begin{alltt}
+[rootThread] line file:/\ldots/hello.go 5
+\end{alltt}
+indicate that we are executing the root thread -- called \q{rootThread} -- and which source text the program currently is executing. In this case, it refers to the file \q{hello.go} and line 5.
+
+The line:
+\begin{alltt}
+[rootThread] call outLine/1
+\end{alltt}
+shows that a call to an action procedure \q{outLine} is about to be entered. Only the arity of the call is displayed by default: if the arguments to the call are large then displaying the whole call quickly becomes tedious. However, the \q{X} command to the debugger causes it to display the actual call itself in full.
+
+The other line in the trace that is relevant is the \q{rule} line:
+\begin{alltt}
+[rootThread] mail rule 1
+\end{alltt}
+This is indicating that the first rule for the \q{main} action procedure has been entered. The corresponding
+\begin{alltt}
+[rootThread] leave main 1
+\end{alltt}
+shows that the \q{main} program is completing -- via its first rule.
+
+
+
+\chapter{A Second \go Program}
+While the Hello World program introduces many of the features of \go, it is hardly typical of most knowledge intensive applications. In our next program we look at a use of \go's object oriented notation for knowledge representation.
+
+In Program~\ref{first:engine} we define a \firstterm{class}{A labeled theory is a set of axioms that is `about' some topic of interest.} about \q{engine}s. A class is a set of axioms that is `about' some topic of interest; in this case we focus on two properties of train engines: their maximum power and their source of fuel.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+engine\{
+  engine \impl \{ power:[]=>number. \}.
+
+  engine:[number,symbol]\conarrow{}engine.
+  engine(Power,Fuel) .. \{
+    power()=>Power.
+    
+    fuel:[]=>symbol.
+    fuel()=>Fuel.
+  \}.
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{About engines}
+\label{first:engine}
+\end{program}
+
+\noindent
+The \q{engine} package introduces two key elements: a new \emph{type definition} and a \emph{class definition}.
+
+\go's type system is based on a few concepts: the \emph{type term}, the \emph{type interface} and the \emph{subtype relationship} between type terms. The statement:
+\begin{alltt}
+engine \impl{} \{ power:[]=>number. \}.
+\end{alltt}
+has two effects: it introduces a new type symbol -- \q{engine} -- into the current scope and it associates an interface with the \q{engine} type.
+
+An interface is a kind of contract between a provider and a user of a class. In this case, the \q{engine} interface defines one element: a function called \q{power} that returns a \q{number}. This means that any entity claiming to be an \q{engine}, or claiming to implement the \q{engine} interface, will provide the \q{power} function. The type interface statement is the most basic of \go's type statements. We will see some of the other kinds of type statement below.
+
+\index{class!accessors}
+\index{class!instance variables (lack of)}
+\begin{aside}
+All the elements in a type interface must be \emph{programs} of one kind or another. This means that functions, predicates, action proceures, grammars may be included in a type interface.
+This means that the only way of accessing a class if by executing a program of some kind. There is no equivalent, in \go, of the publicly accessible \emph{instance variable} -- all such fields must be wrapped up using accessor programs: \q{put}ters and \q{get}ters.
+\end{aside}
+\begin{aside}
+In addition to the kinds of programs mentioned above, it is also possible to have a \emph{class} constructor in a type interface; however, that is an advanced topic that we will address in Section~\vref{lo:inner}.
+\end{aside}
+
+\noindent
+A \go class links three things together: the particular set of axioms and programs that defines the logic of the class, a \emph{constructor} term and a \emph{type}. Unlike most OO languages, classes do not themselves define types in \go. Instead, when a class is defined, we indicate the type and the interface supported by the class. A given type may have many classes that support that type -- a fact that we will make use of in this chapter.
+
+Like other program elements, a class has to be declared. The type declaration for a class takes the form:
+\begin{alltt}
+engine:[number,symbol]\conarrow{}engine.
+\end{alltt}
+which means that
+\begin{quote}
+\q{engine} is a constructor of two arguments -- a \q{number} and a \q{symbol} -- and such constructor terms are of type \q{engine}.
+\end{quote}
+
+The class itself is defined as a \emph{labeled theory} -- a set of axioms and other program elements associated with a class constructor. Class constructors are directly analogous to terms in \prolog. Within the \emph{class body} of the \q{engine} definition, the variables \q{Power} and \q{Fuel} which are mentioned in the constructor are \emph{in scope} -- i.e., program rules can and do mention them.
+
+Note that in the \q{engine} class body we did not need to declare the type of \q{power}. This is because this is part of the interface contract for the \q{engine} type -- its definitions must be consistent with the declaration in the \q{engine} type. 
+
+On the other hand, the \q{fuel} function is local to the \q{engine} class and must be declared. Any additional definitions in a class body that are not mentioned in the interface must have declarations associated with them.
+
+\begin{aside}
+Although we used the identifier \q{engine} in three quite distinct ways in Program~\vref{first:engine}, the compiler is able to sort out the different uses: as a package name, as a type name and as constructor for a class label.  This reduces the need for inventing new names.
+\end{aside}
+
+\section{Logic and Objects}
+\index{Logic and Objects}
+\go's class system is based on the Logic and Objects (\LO) system introduced in \cite{fgm:92}. \LO is a system of multiple theories -- each identified by a term: the label term. The central concept in \LO is that an object is characterized by what we know to be true of it. Think of all that you know to be true of your cat (say); that collection of facts is somewhat separate from all that you know to be true of the C programming language (again, say). We formalize this by describing what we do know and by assigning labels to the different concepts.
+
+\subsection{Labels and symbols}
+Standard first order logic assumes that all relevant known facts can be accessed as a single set of facts. However, it is not realistic, from a knowledge engineering perspective, to put \emph{all} the known facts into a relatively flat set of relations: the world is simply not best understood in that way. Humans \emph{partition} the world -- a process known as \emph{objectifying} -- making objects out of the continuum. A better model for knowledge representation respects this and makes it easy to partition known facts into groups. I.e., a complete logic mind consists of a large collection of facts, partitioned into multiple theories.
+
+The labeled theories concept arose as a way of dealing with these multiple theories without delving into higher order logics. The key technical idea is simple -- we can avoid the explicit management of sets of axioms by re-using the standard logic technique for labeling individual relations with predicate symbols. In this case we use symbols to identify whole theories.  For example, we might have a \q{moggy} label for all the things known about our cat, and the label \q{C\_language} when referring to what we know of ``C''. The label is not technically part of the collection of facts, just as a predicate symbol is not part of the relation it identifies.
+
+This approach has the substantial benefit of ensuring that the complete multiple theory notation is first order.
+
+The \LO notation takes this simple idea and builds a complete language for dealing with multiple theories; including establishing relationships between theories such as inheritance. The other innovation in the \LO notation is the use of general terms as opposed to simple symbols for identifying theories. This does not affect the fundamental logic of the notation but greatly enhances the utility; since, as we shall see, it becomes possible to describe general theories about whole classes of entities.
+
+\subsection{\LO as an ontology language}
+There is a significant difference in philosophy between the \LO approach to knowledge representation and that seen in classic Knowledge Representation languages (of which OWL\cite{owl:04} is a modern variant). In that approach, the world is assumed to be already partitioned into objects; and the task of representing the world therefore reduces to identifying relevant subsets of the world of objects and of \emph{classifying} a found object by associating it with one of these subsets.
+
+The classifying world-view is powerful but has some problems -- particularly where it becomes difficult to classify an entity: this can be due to the non-object nature of the entity and/or due to uncertainty as to which category to classify something. A good example of the former is water: water is clearly an entity but it is very difficult to count or otherwise delineate its object boundaries. A good example of the second difficulty is Winograd's famous pink elephant  -- i.e., when does a small elephant with a short snout, short legs and small ears stop being an elephant and start becoming a pig?
+
+\section{Types}
+As we noted earlier, all \go programs are type checked. Type safety is a simple but quite powerful tool for ensuring the correctness of programs. Of course, it is not guaranteed that type safe programs are also semantically correct; but proving type correctness eliminates a large number of \emph{silly} errors. Type declarations also act as a simple form of documentation: making it clear what kinds of inputs are expected of programs and what kind of results will be returned.
+
+At the same time, it must be said that imposing type safety can significantly impact the initial ease of writing programs: defining types and declaring the types of programs is an additional burden not familiar to \prolog programmers. Our defense of this burden is that it is much better -- and cheaper -- to catch errors before a product ships to a customer. Such an uncaught error can be sufficiently costly to bankrupt companies and/or to cause major disasters.
+
+\go's type system is based on type terms, type interfaces and the subtype relation. What this means is that every expression and program has a type associated with it. That type takes the form of a \emph{type term}. Type terms are technically logic terms, but they never participate in a program's execution: they are a strictly compile-time phenomenon. To emphasize this, type terms are written differently to normal terms: with square brackets surrounding any arguments.
+
+For example, the type associated with string values is:
+\begin{alltt}
+list[char]
+\end{alltt}
+This type term denotes a list of \q{char}acters.
+
+Like all program elements, types themselves must also be declared, using a \firstterm{type definition}{A statement that introduces a new type into the current scope. Type definitions are associated with an \emph{interface} -- a suite of names and types that are expected to be defined by any class that implements the type.}. The statement:
+\begin{alltt}
+engine \typearrow \{ power:[]=>number. \}.
+\end{alltt}
+in program~\vref{first:engine} defines a new type term -- \q{engine}. 
+
+This statement also has a second purpose -- of defining an interface. This interface represents a contract: any class claiming to be an \q{engine} must provide implementations of the function \q{power}. The type term
+\begin{alltt}
+[]=>number
+\end{alltt}
+denotes a function type -- from zero arguments to a \q{number}.
+
+Type definitions may be more elaborate, including the possibility of declaring that a new type is a sub-type of another type. For example, the statements:
+\begin{alltt}
+gasEngine \typearrow \{ miles\_per\_gallon:[]=>number \}.
+gasEngine \typearrow engine.
+\end{alltt} 
+define the \q{gasEngine} type -- as a sub-type of \q{engine} with an additional interface element of the \q{miles\_per\_gallon} function. The complete interface for \q{gasEngine} merges \q{engine}'s interface with any additional elements -- such as the \q{miles\_per\_gallon} function
+
+Types are used when checking that the arguments of a program match the contract specified for the program. For example, the arguments of a function call can (generally) be any value whose type is a sub-type of the corresponding element of the function's type.
+
+\begin{aside}
+The rules for typing arguments can be a little subtle; due primarily to the nature of logic programming itself. For function arguments and action procedures, arguments may be sub-types of the declared types -- a \q{gasEngine} may be passed into any function that expects an \q{engine}. 
+
+For relations, and for patterns in general, the types must match exactly. The reason for this is that with a relation, information may flow bidirectionally -- either input or output. However, as we shall see in Section~\vref{type:modes}, it is possible to modify these assumptions for particular circumstances.
+\end{aside}
+
+
+\section{Classes}
+Program~\vref{first:engine} is, of course, trivial: we simply define two `methods' which return the maximum power of the engine and its source of fuel. The first of these is a function, defined by an \firstterm{equation}{An equation is a rule used to define a function. For example, the \q{dbl} function can be defined by the equation \q{dbl(X)=>X*2}.}. \go uses equations to form functions, in the case of the \q{power} function:
+\begin{alltt}
+power()=>Power.
+\end{alltt}
+there is only one equation, but, in general, there can be any number of equations in a function. \go places a restriction on rule programs that all of the rules -- in this equations -- are \emph{contiguous} in the text, and that they are all of the same \emph{type} -- including arity.
+
+A class is introduced with a type declaration; as we saw in Program~\ref{first:engine}:
+\begin{alltt}
+engine:[number,symbol]\conarrow{}engine.
+\end{alltt}
+This declares that the \q{engine} class implements the \q{engine} interface -- of course this is verified by the compiler. The \q{engine} constructor is also declared to take two arguments a \q{number} and a \q{symbol}. This type definition also has the effect of declaring that terms of the form
+\begin{alltt}
+engine(23,'coal')
+\end{alltt}
+are of type \q{engine}.
+
+So, in summary, three of the main elements of a class definition are the \emph{label term}, the \emph{type declaration} and the \emph{class body}. The latter contains the rules that make up the algorithmic and logical core of the class. A given class body may have any number of rules and other definitions within it; however, the type declaration governs how objects of this class may be used. 
+
+\index{class!using}
+To use a class means to evaluate some kind of query relative to the facts defined within the class. We can find out how much power a coal-fired engine has with the dot expression:
+\begin{alltt}
+engine(23,'coal').power()
+\end{alltt}
+Of course, in this case, the answer is pretty redundant because it is in the label:
+\begin{alltt}
+23
+\end{alltt}
+'dot'-queries can take the form of expressions, predicates and grammar parse requests.
+
+A \emph{label} in a dot-query may be of two forms: it may be a normal label term or it may be an object reference.
+
+To construct an \q{engine} object reference we simply use \q{engine} label term just like a normal term. For example, we can denote a `steam engine' with the expression:
+\begin{alltt}
+engine(1000,'coal')
+\end{alltt}
+This is a term, and is a label that identifies a particular theory about train engines. Given a label, we can invoke its theory's elements with the dot operator; thus \q{\emph{Exp}.fuel} accesses the \q{fuel} value of \q{\emph{Exp}}.
+
+\subsection{Classes with state}
+Not all entities are stateless the way that the \q{engine} in Program~\ref{first:engine} suggests. For example, the actual amount of power an engine is delivering may vary, and may be persistently influenced by prior interaction.
+
+To support a stateful realization of a class, we differentiate the stateful class constructor compared to statefree class constructors. Instead of using the \conarrow{} operator for the class type, we use the \sconarrow{} operator. For example, Program~\vref{first:var:engine} defines a stateful \q{varEngine} class.
+\begin{program}[bt]
+\vspace{0.5ex}
+\begin{alltt}
+engine\{
+  engine \impl \{ power:[]=>float. pedal:[float]*. 
+              miles_per_gallon:]=>float \}.
+
+  varEngine:[float]\sconarrow{}engine.   -- a stateful engine class
+  varEngine(Th)..\{
+    throttle:float := Th.    -- throttle should be 0<=th<1
+    power()=>250.0*throttle.
+
+    miles_per_gallon()=>20.0/throttle.
+  
+    pedal(S)::0.0=<S,S=<1 -> throttle:=S.
+    pedal(_)->\{\}.            -- ignore other settings
+  \}.
+\}
+\end{alltt}
+\caption{A Variable power engine}
+\vspace{-2ex}
+\label{first:var:engine}
+\end{program}
+
+A stateful class has different rules to a statefree class: in addition to functions, predicates and other programs, a stateful class body may include constants and variables. For example, in Program~\ref{first:var:engine}, the object variable \q{throttle} is a reassignable variable that represents the current throttle setting.
+
+Variables and constants appearing in a class body must have \q{ground} values (unlike regular logical terms which can have unbound elements and can also \emph{share} such variables.
+
+\begin{aside}
+The term \emph{constant} may be slightly misleading. A better term would, perhaps, have been \emph{single assignment variable} -- since their definitions can include an arbitrary amount of computation to determine. However, that is a bit of a mouthful, and constants also serve the same role as constants in languages such as ``C''.
+\end{aside}
+
+\noindent
+Another restriction on variables and constants is that they are never directly exported by a class -- they are not permitted to appear in a type interface. To access a variable or constant from outside the class the type interface must include appropriate accessing functions and adjustment procedures. For example, the \q{pedal} action procedure in this program can be used to adjust the power setting of the \q{engine}.
+
+There are several reasons for this restriction, not the least of which is that directly accessible instance variables in a normal OO language is a major source of bugs and extraneous dependencies. In this case, the \q{pedal} action procedure allows adjustment to the throttle, but enforces validity constraints on the value of the \q{throttle}.
+
+The \q{pedal} action procedure introduces another feature of \go's notation: the guard. The \q{pedal} action procedure consists of two rules, the first rule:
+\begin{alltt}
+pedal(S)::0.0=<S,S=<1 -> throttle:=S.
+\end{alltt}
+adjusts the \q{throttle} variable to a new value; but it has a \firstterm{guard}{A guard is a condition on the applicability of a rule. It is written as \q{\emph{Ptn}::\emph{Cond}}, the meaning of which is that \q{\emph{Ptn}} applies if the pattern matches end the condition \q{\emph{Cond}} holds.} on it:
+\begin{alltt}
+0.0=<S,S=<1
+\end{alltt}
+This pair of relation queries ensures that the rule will only fire if the new throttle setting is in the range [0,1]. Any attempt to use the \q{pedal} action procedure with a value outside this range will cause the first rule to fail to apply; resulting in the second rule being used which does nothing.
+
+Guards are a very useful technique for incorporating semantic tests into a pattern match. They can be used wherever a pattern occurs in the head of a rule.
+
+\subsubsection{Referential transparency, or the lack of it}
+\index{referential transparency}
+\index{stateful class}
+There are other differences between statefree theories and stateful objects. The former may be freely used as patterns in rules; whereas stateful labels are not permitted to be used as patterns. Furthermore, each occurrence of a stateful label denotes a \emph{different} individual -- equality is not syntactic for stateful objects. For a stateful class, an equality such as:
+\begin{alltt}
+varEngine(0.0)=varEngine(0.0)
+\end{alltt}
+is \emph{false}. For a statefree class, such as the \q{engine} class defined in Program~\vref{first:engine}, an equality such as:
+\begin{alltt}
+engine(10.0,'diesel') = engine(10.0,'diesel')
+\end{alltt}
+is \emph{always} true. We will explore these issues in greater depth in later chapters.
+
+\subsubsection{Other ways of representing state}
+\go has a range of tools for representing updatable values: we have seen object variables; there are also package variables (variables defined at the package level rather than in a class), \q{cell} values, \q{dynamic} relations, \q{hash} tables, \q{stack}s and more. Object and package variables are part of \go's syntax, whereas \q{cell}s, \q{dynamic} relations and others are part of the \go library and are accessed by \q{import}ing the relevant package.
+
+\subsection{Engines and trains}
+An engine is not the same thing as a train; on the other hand a train \emph{has} an engine as well as a number of coaches. We might capture this, and other useful facts about trains, in a \q{train} class as in program~\vref{first:train}.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+train\{
+  import engine.    -- access the engine package
+  
+  train \impl \{ journey_time:(number)=>number.
+             coaches:[integer]\{\} \}.
+              
+  train:[engine]\conarrow{}train.
+  train(E) .. \{
+    speed:[]=>number.
+    speed()::this.coaches(Length) => E.power()/Length.
+   
+    coaches(1).
+    journey_time(D) => D/speed().
+  \}
+\}
+\end{alltt}
+\caption{A generic train class\label{first:train}}
+\vspace{-2ex}
+\end{program}
+This program introduces a number of features: conditional equations, clauses and the use of the \q{this} keyword.
+
+The \q{train} type exposes two elements in its interface: a function -- \q{journey\_time} -- for computing the length of time it takes for the train to travel some distance and a predicate -- \q{coaches} -- which is a single-argument relation that represents the length of the train in terms of the number of its coaches.
+
+The \q{E} parameter of the \q{train} label is interesting in that we are passing in to the \q{train} theory another theory. Of course, technically we are simply passing in another term; but from a programming point of view the role of the \q{E} term is to access a specific \q{engine} theory. This theory is accessed when determining the speed of the \q{train}: its \q{speed} is determined by the \q{power} of the engine \q{E} as well as the length of the train itself.
+
+Although \go is not higher-order, passing in theory labels as arguments to rules or in labels is highly reminiscent of passing functions as arguments -- which is a standard aspect of higher order functional programming languages. In some ways it is more powerful as we are able to pass in a complete collection of definitions in a single parameter -- manipulating entire theories. However, we should emphasize again that \go is not a higher order language. 
+
+The definition of \q{coaches} in program~\vref{first:train} is an example of a relation definition. \go supports a clausal notation that is very similar to that in \prolog; with some restrictions.\note{The most obvious restriction is the non-existence of \prolog's cut operator.} In this case, \q{coaches} is a simple unary-predicate with just one clause in it.
+
+The type expression
+\begin{alltt}
+[integer]\{\}
+\end{alltt}
+occurring in the type definition for \q{train} is our way of writing a relation type -- in this case a unary relation over \q{integer}s.
+
+The definition of the function \q{speed} is interesting too. Normally, the speed of a train is dependent on many factors -- the terrain that the train is passing through, the load that the coaches impose on the engine and even the regulatory environment. We have simplified the normal calculation to dividing the power of the engine by the number of coaches in the train.
+
+\subsubsection{Inheritance and aggregation}
+There are two fundamental relationships exhibited by classes and objects: specialization and aggregation; or \emph{is-a} and \emph{has-a} relationships. OO languages support these with inheritance and inclusion. We have seen a powerful example of inclusion -- in Program~\vref{first:train} -- with the \q{E} argument of the \q{train} label; and \go's class notation supports inheritance in the form of \emph{class rules}. 
+
+Class rules are used to express the inheritance relationship between two classes; for example, we can define the \q{scotsman} class (a.k.a. Flying Scotsman) as a theory that inherits from the \q{train} theory and a class body that conveys additional specific information; in this case the number of coaches in the train.
+
+\begin{program}[tbh]
+\vspace{0.5ex}
+\begin{alltt}
+scotsman:[]\conarrow{}train.
+scotsman <= train(steamLoco).
+scotsman .. \{
+  coaches(4).
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{The Flying Scotsman\label{first:scotsman}}
+\end{program}
+
+Program~\vref{first:scotsman} shows how we can combine the use of class rules with a class body. Program~\vref{first:steam} shows a similar example where there is no class body: all the essential information about steam locomotives is captured in the inheritance class rule -- and in the patterns and expressions appearing in the class rule.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+steamLoco:[]\conarrow{}engine.
+steamLoco <= engine(1500,'coal').
+\end{alltt}
+\vspace{-2ex}
+\caption{A steam engine is coal-fired\label{first:steam}}
+\end{program}
+Since \q{steamLoco} has no definitions to override, it does not need a class body; although, of course, it still needs a type declaration.
+
+If a class has both a class body and one or more class rules, then any definitions in the class body \emph{override} any inherited definitions. In the \q{scotsman} case in program~\vref{first:scotsman}, the local definition for the \q{coaches} predicate will override the inherited definition within the \q{train} class.
+
+\subsection{The \q{this} keyword}
+\index{this@\q{this} keyword}
+Like the \q{pedal} action procedure in Program~\vref{first:var:engine}, the \q{speed} function in Program~\vref{first:train} is defined using a guard. The condition 
+\begin{alltt}
+this.coaches(Length)
+\end{alltt}
+is a relational query, which is satisfied relative to the \q{this} object -- which in turn is a name for the object identified by the \q{train} class label. \go supports inheritance and the \q{train} class may be sub-classed, the \q{this} keyword refers to the actual object as created. 
+
+By default, calling a program in a rule in a class body will always result in calling the program mentioned in the same class body -- if it exists. This is true even if the class has been sub-classed and there is an alternate definition of the program in a sub-class. Using the \q{this} keyword in the \q{speed} definition ensures that the definition used is one accessed from the final or last sub-class when the object reference was created.
+
+\begin{aside}
+This default is the opposite of the common default in OO programming languages -- where, by default, a call to a method always refers to the most recently overridden version of the method. 
+
+We justify our approach on two grounds: permitting a method to be overridden puts at risk the semantics of other programs defined within the same class body: the overridden method (which may have been written by a different programmer) might have incompatible semantics compared to the version defined locally. We prefer that that risk be minimized and that the programmer be explicit when wishing to refer to any overridden versions.
+
+Our second reason is that it is considerably easier to generate efficient code using \go's overriding semantics.
+\end{aside}
+
+In program~\vref{first:flying} we bring all the elements together into an executable program, with a simple \q{main} action procedure which creates a \q{scotsman} object and computes a journey time.
+\begin{program}[bt]
+\vspace{0.5ex}
+\begin{alltt}
+ scotsman\{
+  import go.io.
+  import go.stdparse.
+  import train.
+  import engine.
+
+  steamLoco:[]\conarrow{}engine.
+  steamLoco <= engine(1000,'coal').
+
+  electricLoco:[]\conarrow{}engine.
+  electricLoco <= engine(2000,'electricity').
+
+  scotsman:[]\conarrow{}train.
+  scotsman <= train(steamLoco).
+  scotsman:train..\{
+    coaches(4).
+  \}.
+  
+  main([Dist]) ->
+      D = numeric\%\%Dist;
+      O = scotsman;
+      stdout.outLine("The Flying Scotsman takes "<>
+        O.journey_time(D).show()<>"hours to do "<>
+        D.show()<>" miles").
+\}.
+\end{alltt}
+\vspace{-2ex}
+\caption{A complete train\label{first:flying}}
+\end{program}
+This program also demonstrates another feature of a top-level program in \go. The \q{main} procedure has an argument -- \q{[Dist]} -- which will be used to match against the list of arguments given when we run the program. The type of a \q{main} action procedure must be:
+\begin{alltt}
+[list[string]]*
+\end{alltt}
+or, equivalently
+\begin{alltt}
+[list[list[char]]]*
+\end{alltt}
+I.e., \q{main} is an action procedure that takes a \q{list} of \q{string}s as its argument. When the \q{scotsman} program is run, the list of command line arguments used to run the program is supplied to \q{main} as a list of strings. Our \q{scotsman} program insists that exactly one argument is given when run; otherwise the \go run-time will report an error.
+
+In order to make use of command line arguments it is often necessary to parse the strings into other kinds of values -- most commonly \q{number}s. The \q{stdparse} standard library package offers a number of common parsing programs, including \q{numeric} which can be used to parse a string as a \q{number}.
+
+The expression
+\begin{alltt}
+numeric\%\%Dist
+\end{alltt}
+amounts to a request to the \q{numeric} grammar to parse the \q{Dist} string into a \q{number}. \go supports a grammar notation that is based on logic grammars; we introduce it in Chapter~\vref{grammar}. The \q{\%\%} expression notation makes using pre-defined grammars such as \q{numeric} straightforward.
+
+\begin{aside}
+Another useful string conversion offered by the \q{go.stdparse} package is \q{integerOf} -- which parses a \q{string} into an \q{integer}. 
+
+Another example is from the \q{go.datelib} package, which offers the \q{rfc822\_date} grammar to parse a date, such as:
+\begin{alltt}
+Mon, 25 Apr 2005 12:12:34 PDT
+\end{alltt}
+which is in RFC 822 format, into a standard \go \q{date} object.
+\end{aside}
+
+Our second \go program is useful in its illustration of \go's knowledge representation features. We have seen many of the elements that make up \go programs. However, \go is also a \emph{distributed} and \emph{multi-threaded} programming language.

@@ -1,6 +1,6 @@
-#line 2 "/Users/fgm/Projects/GoSystem/OOlib/token.c"
+#line 2 "/Users/fgm/Projects/LandO/OOlib/token.c"
 
-#line 4 "/Users/fgm/Projects/GoSystem/OOlib/token.c"
+#line 4 "/Users/fgm/Projects/LandO/OOlib/token.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -720,7 +720,7 @@ static string newStr(char *text){
   }
 
 
-#line 724 "/Users/fgm/Projects/GoSystem/OOlib/token.c"
+#line 724 "/Users/fgm/Projects/LandO/OOlib/token.c"
 
 #define INITIAL 0
 #define comment 1
@@ -981,7 +981,7 @@ YY_DECL
 #line 85 "token.l"
 
 
-#line 985 "/Users/fgm/Projects/GoSystem/OOlib/token.c"
+#line 985 "/Users/fgm/Projects/LandO/OOlib/token.c"
 
     yylval = yylval_param;
 
@@ -1397,7 +1397,7 @@ YY_RULE_SETUP
 #line 185 "token.l"
 ECHO;
 	YY_BREAK
-#line 1401 "/Users/fgm/Projects/GoSystem/OOlib/token.c"
+#line 1401 "/Users/fgm/Projects/LandO/OOlib/token.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(comment):
 case YY_STATE_EOF(string):

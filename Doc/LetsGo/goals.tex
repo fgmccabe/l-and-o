@@ -1,0 +1,535 @@
+\chapter{Relations and Queries}
+\label{goals}
+\lettrine[findent=-0.2em,nindent=0.3em]{A}{t its heart,} \go is a logic programming language; predicates and relational programs are the center piece of the language.
+
+\section{Relations}
+\label{relations}
+
+\begin{program}[bt]
+\vspace{0.5ex}
+\begin{alltt}
+parent:[string,string]\{\}.
+parent("Hr","Fr").
+parent("Mg","Fr").
+\ldots
+parent("Fr","S").
+parent("Mk","S").
+
+ancestor:[string,string]\{\}.
+ancestor(Parent,Child) :- parent(Parent,Child).
+ancestor(Ancestor,Child) :- parent(Ancestor,Int),
+  ancestor(Int,Child).
+\end{alltt}
+\vspace{-2ex}
+\caption{The \q{ancestor} relation\label{goal:ancestor}}
+\end{program}
+
+\index{relation definition}
+A \firstterm{relation definition}{is a set of clauses that defines a predicate.} within a class body or package takes the form a sequence of clauses. As with all program elements, \go requires that all the clauses for a particular predicate are grouped together into a contiguous block.
+
+\index{rule!fact}
+A \firstterm{fact}{is a clause which has an empty body. It is normally written as a clause with neither an arrow nor a body: \q{\emph{P}(A\sub1,\ldots,A\subn)}.} is a clause whose body is empty. It is usually written as just a head with no arrow. For example, the \q{parent} predicate defined in Program~\ref{goal:ancestor} consists of a series of facts whereas the \q{ancestor} predicate
+is defined using as a combination of a fact and a recursive rule. The way to read a clause such as:
+\begin{alltt}
+ancestor(A,C) :- parent(A,I), ancestor(I,C).
+\end{alltt}
+is
+\begin{quote}
+If \q{A} is a \q{parent} of \q{I}, and \q{I} is an \q{ancestor} of \q{C}, then \q{A} is an ancestor of \q{C}.
+\end{quote}
+I.e., clauses are read backwards -- from the right to the left. However, they are \emph{used} from left to right:
+\begin{quote}
+To prove that some \q{G} is an \q{ancestor} of \q{C}, show that \q{G} is a \q{parent} of some \q{I} and then show that \q{I} is an \q{ancestor} of \q{C}.
+\end{quote}
+
+The clause notation in \go is very similar to the clause notation in \prolog; except that there are some differences arising from the basic difference between \go and \prolog -- strong typing, no explicit cuts and so on.
+
+\subsection{Relations and types}
+\label{relation:types}
+Like functions, all relations must be declared; typically using a type declaration statement of the form:
+\begin{alltt}
+ancestor:[symbol,symbol]\{\}.
+\end{alltt}
+The type declaration statement associated with a relation need not be textually next to the definition itself; although it often is in our programs.
+
+By default, the arguments of a relation have a \emph{bi-directional} mode (\q{-+}) -- using unification, data can flow in either direction. Associated with the bi-directional mode is the constraint that the types of arguments to relations must be \emph{equal} to the declared type.
+
+If an argument of the relation type is marked with a different mode, input mode say, then instead of using unification, matching will be used for that argument. Conversely, if an argument is marked as output then the argument \emph{must} be unbound at the point of entering the relation. If an output argument is non-variable then the evaluation will \emph{fail}.
+
+\subsubsection{Mixing predicates and functions}
+We can mix predicates and functions also. For example, instead of a \q{parent} relation, we might have defined a \q{childrenOf} function -- from a parent to a list of children, giving rise to an alternate form for the \q{ancestor} predicate:
+\begin{alltt}
+childrenOf:[string]=>list[string].
+childrenOf("Hr") => ["Fr","An","Ch"].
+
+ancestor:[string,string]\{\}.
+ancestor(P,C) :- C in childrenOf(P).
+ancestor(P,C) :- I in childrenOf(P), ancestor(I,C).
+\end{alltt}
+Any expressions that appear in the arguments of a relational query will be evaluated \emph{before} attempting to solve the query itself. So, for example, if we had the query:
+\begin{alltt}
+\ldots,married(fatherOf('bill'),motherOf('bill')),\ldots
+\end{alltt}
+then the expressions
+\begin{alltt}
+fatherOf('bill')
+\end{alltt}
+and
+\begin{alltt}
+motherOf('bill')
+\end{alltt}
+will be evaluated before trying to solve the \q{married} query itself.
+
+\subsection{Strong clauses}
+\index{rule!strong clause}
+\index{strong clauses}
+\label{program:clause:strong}
+There is a variation on the form of a relation that uses \firstterm{strong clause}{a \emph{strong clauses} is a clause written using a longer form of arrow: \q{:--} with an if-and-only-if semantics. A definition of a predicate using strong clauses has an if-and-only-if form: each clause in the definition is assumed to be mutually exclusive. It is not permitted to mix regular clauses with strong clauses in a single definition.}s. A strong clause is written like a clause except that a longer arrow -- \q{:--} -- is used instead of the normal arrow.
+
+Strong clauses have an if-and-only-if semantics: when solving a goal, whose predicate is defined using strong clauses, then each of the clauses in the definition is assumed to be mutually exclusive: if one clause matches then none of the others in the program will be considered.
+
+\index{guarded pattern}
+\index{expression!guard}
+\index{guard!in strong clause}
+Strong clauses are most useful when the relation being defined naturally falls into mutually exclusive cases. For example, one \emph{might} argue that to be a parent involves either being a mother or being a father:
+\begin{alltt}
+parent:[string,string]\{\}.
+parent(X,Y) :-- mother(X,Y).
+parent(X,Y) :-- father(X,Y).
+\end{alltt}
+Unfortunately, this definition is not quite correct, as the semantics of strong clauses implies that if the head of the clause matches the call then other rules will not be considered. A more accurate rendition is:
+\begin{alltt}
+parent:[string,string]\{\}.
+parent(X,Y) :: mother(X,Y) :-- true.
+parent(X,Y) :: father(X,Y) :-- true.
+\end{alltt}
+This combines the strong clause with the appropriate guard condition to ensure the correct selection of a mutually exclusive case of parenthood.
+
+\index{strong clause!not mixing with regular}
+\go does not permit mixing strong clauses with regular clauses; either all the clauses in a predicate definition are regular, or they are all strong. This is due to the inherent assumption that strong clauses denote mutual exclusion; whereas regular clauses do not imply that.
+
+\section{Query evaluation}
+\label{relation:evaluation}
+\go uses a left-to-right depth-first evaluation for evaluating queries. Each condition in the body of a clause is solved in turn; and for each condition, the clauses for that predicate are also tried in order.
+
+Unlike functions -- and action procedures -- solving queries can involve a significant amount of search. Using a clause to try to solve a particular sub-query does not itself commit the system to that clause -- it may be that in order to solve a later sub-query an earlier choice must be undone and the associated sub-query be re-attempted. This process is called \emph{backtracking}.
+
+\begin{description}
+\item[Argument Evaluation]
+The arguments to a query are evaluated prior to any attempt to solve the query. As with function calls, \go does not define the order of evaluation of arguments; programmers should not rely on any order.
+\item[Clause Selection]
+A relation is defined as a sequence of clauses. The clauses are attempted in the order that they are written; although the compiler is free to optimize search.
+
+By default, the modes of the arguments of a relation are \emph{bidirectional}. A bidirectional mode implies that the pattern is \emph{unified} against the corresponding argument of the query.
+
+If the mode is \emph{input} then the head pattern is \emph{matched} against the argument (no variables in the actual argument will be side-effected in a match).
+
+If the mode is \emph{output} then the actual argument \emph{must} be a variable. If it is not, then the clause selection will \emph{fail} for this clause.
+
+If the mode is \emph{super input} then, if the actual argument is variable then the query evaluation \emph{suspends} for that query. When the variable is instantiated the query will be re-attempted.
+
+If there are guards in the head, then they are evaluated in a manner that is analogous to sub-goal evaluation -- except that such guard evaluation is considered to be part of clause selection.
+
+Note that the order of evaluation of unification, matching and guard evaluation is \emph{not} defined. In fact, the standard compiler does \emph{not} follow a simple left-to-right (or right-to-left) order for unification and guard evaluation.
+
+If no clause in the relation is successfully selected then the query \emph{fails}.
+
+If the relation is defined using \emph{strong} clauses -- see Section~\vref{program:clause:strong} -- then once a clause has been successfully selected then no other clause in the relation will be considered; even if a subsequent query fails that might cause an alternative to be considered.
+
+\item[Sub-goal Evaluation]
+Once a clause has been selected, the body of the clause is entered. Query evaluation continues by solving the queries in the body in a left-to-right order.
+
+If the body is empty, or when the last query in the body has succeeded, then the query itself is considered to have succeeded.
+
+\item[Backtracking]
+If no clause is successfully selected in a query evaluation then that query fails. When a query fails then computation of the query \emph{backtracks}.
+
+Backtracking involves unwinding the computation to a prior point in the evaluation where there is a choice remaining in clauses to apply to a query. This unwinding will involve undoing the binding of variables -- but will \emph{not} involve the undoing of any other actions taken.
+
+Note that backtracking can, and often does, involve revisiting a query that previously succeeded and looking for another clause to select to solve that query. 
+
+Such failures can cascade: when a previously solved query is revisited it may fail also (there may be no further selectable clauses to solve that query). In which case the failure propagates backwards from that solved query.
+
+All queries are rooted in either in an action or in a guard. In the former case, if the query fails then the action will itself fail -- if necessary by raising an exception. In the case of a guard then the guard failing normally means that some selection of a rule is failing.
+
+One of the key advantages of the backtracking evaluation strategy is its simplicity and efficiency. However, it should be noted that there are many circumstances for which backtracking will give very poor performance. For that reason, \go should not be viewed as a \emph{problem solver}\note{\go is quite a good language for \emph{writing} problem solvers. See Chapter~\vref{meta} for one simple approach to writing a problem solver.}
+directly; even if the logic notation might suggest it.
+
+\item[Handling Exceptions]
+Normal query evaluation does not result in an exception being raised. However, a query might involve an exception since expressions and actions can raise exceptions.
+
+Like backtracking, handling exceptions also involves unwinding evaluation -- to a point where the exception is captured by an \q{onerror} form. If an exception is captured by an error handling query then, when such an exception is handled, computation is unwound to the capture point in a similar way to backtracking. 
+
+An exception is handled by attempting to match an error handling clause against the exception token and, if a match succeeds, computation proceeds normally by evaluating the queries in the error handling clause. If none of the error handling clauses are selected then the error is propagated back to a prior exception handler.
+\end{description}
+
+\section{Basic queries}
+\label{goal:basic}
+\go has a range of query conditions that is similar in scope to the range of expression types. 
+\subsection{True/false goal}
+\index{true/false goal}
+\index{query!true@\q{true}/\q{false}}
+The \emph{true} query is written as \q{true}. Of course, a \q{true} query is trivially solvable. Its main purpose is when combined with other queries, in particular the conditional query (see section~\vref{goal:conditional}).
+
+The complementary \q{false} query is impossible to solve. It too is mostly used in combination with other query types. However, it does have an additional role. In class bodies that are required to implement a defined interface, it may be that a particular relation \emph{has no} natural definition at a particular level. It may be, for example, that the class is intended to be sub-classed and the relation should be defined within the sub-classes.
+
+However, to satisfy the requirements of the type interface \emph{some} definition is needed; for that a \q{false} definition can be useful. For example, in Program~\vref{goal:abstract}, the type interface requires a definition of the \q{no\_of\_legs} relation. But the number of legs is not defined for all animals, since there is a large variety -- ranging from zero, through one, two, four and many legs.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+animal \impl \{ no_of_legs:[integer]\{\}. \ldots \}.
+
+abstractAnimal:[]\conarrow{}animal.
+abstractAnimal..\{
+  no_of_legs(_) :- false.
+  ...
+\}
+\end{alltt}
+\vspace{-2ex}
+\label{goal:abstract}\caption{An abstract \q{animal} class}
+\end{program}
+The definition of \q{no\_of\_legs} in this program cannot be used to solve any queries -- its role is simply to satisfy the type interface contract.
+
+\subsection{Predication}
+\label{goal:predication}
+
+\index{predication}
+\index{query!predication}
+A \firstterm{predication}{A query condition in the form of a \emph{predicate} applied to zero or more arguments.} consists of a predicate applied to a sequence of arguments enclosed in parentheses: \q{P(A\sub1,\ldots,A\subn)}. Some standard predicates are also available as operators; for example the goal:
+\begin{alltt}
+X in L
+\end{alltt}
+is really syntactic `sugar' for the goal
+\begin{alltt}
+(in)(X,L)
+\end{alltt}
+(The parentheses are required to suppress the normal interpretation of the identifier \q{in} as an operator.)
+
+Predications are required to be type safe: the type of the arguments must be consistent with the type of the predicate itself.
+
+\subsection{Label reference}
+\label{query:dot}
+\index{query!dot query}
+\index{object!dot query}
+\index{operator!.@\q{.}}
+
+A label reference query is a way of accessing a definition encapsulated in a class. Recall that, logically, a class is identified by a \emph{class label}. So, a query of the form:
+\begin{alltt}
+\emph{Exp}.\emph{Rel}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+represents the evaluation of the relational query
+\begin{alltt}
+\emph{Rel}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+in the context of the theory identified by the value of \emph{Exp}. \go imposes a restriction on label reference queries that the label \emph{Exp} must not be a variable at the time that the dot query is attempted.
+
+In practice there are two forms of \emph{Exp}: in one case \emph{Exp} evaluates to an \emph{object} -- a value constructed by a stateful class constructor (see Section~\vref{expression:object:new}) -- and in other cases \emph{Exp} evaluates to a regular statefree term.
+
+In both cases the query proceeds relative to the definitions introduced in the class referenced by the label.
+
+\subsection{Equality}
+\label{goal:equality}
+
+\index{equality}
+\index{query!equality}
+The \q{=} predicate is a distinguished predicate that is pre-defined in the language. It is used to test whether two expressions are equal:
+\begin{alltt}
+\emph{E\sub1} = \emph{E\sub2}
+\end{alltt}
+An equality is solvable if the two term expressions can be unified together -- i.e., if their values can be made identical. Of course, it is also required that the types of \q{\emph{E\sub 1}} and \q{\emph{E\sub2}} be the same.
+
+\subsection{Inequality}
+\label{goal:notequality}
+
+\index{inequality}
+\index{query!inequality}
+\index{operator!\bsl=@\q{\bsl=}}
+The \q{\bsl=} predicate is also a distinguished predicate in \go -- it is solvable if the two expressions are \emph{not} equal. The form of an inequality is:
+\begin{alltt}
+\emph{T\sub1} \bsl= \emph{T\sub2}
+\end{alltt}
+An inequality is type safe if the two elements have the same type.
+
+\subsection{Match query}
+\label{goal:match}
+
+\index{match query}
+\index{query!match test}
+\index{operator!.=@\q{.=}}
+The \q{.=} predicate is a distinguished predicate that mirrors the kind of \emph{matching} that characterises the left hand sides of equations and other rules. The form of a match test is:
+\begin{alltt}
+\emph{P\sub1} .= \emph{T\sub2}
+\end{alltt}
+A match query is similar to a unifyability test with a crucial exception: the match test will \emph{fail} if unification of the pattern and expression would require that any unbound variables in the expression become bound. I.e., the match test may bind variables in the left hand side but not in the right hand side.
+
+This can be very useful in situations where it is known that the `input' data may have variables in it and it is not desireable to side-effect the input.
+
+\subsection{Identicality query}
+\label{goal:identical}
+
+\index{identicality test}
+\index{query!identicality test}
+\index{operator!==@\q{==}}
+The \q{==} predicate is a distinguished predicate that is satisfied if the two terms are `already' equal -- without requiring any substitution of terms for variables. The form of a identicality test is:
+\begin{alltt}
+\emph{E\sub1} == \emph{E\sub2}
+\end{alltt}
+Note that the identicality test is applied \emph{after} evaluating the two expressions. An identicality test will \emph{fail} if unification of the two expressions would require that any unbound variables in either expression become bound. I.e., the identicality test may not bind any variables.
+
+\subsection{Sub-class of query}
+\label{goal:subclass}
+\index{query!sub class test}
+\index{inherits goal}
+\index{operator!<=@\q{<=}}
+
+The \q{<=} query condition is used to verify that a given object expression is an `instance of' a given label term:
+\begin{alltt}
+\emph{Ex} <= \emph{Lb}
+\end{alltt}
+This goal succeeds if the value of the expression \emph{Ex} is an object which is either already unifiable with \emph{Lb}, or is defined by a class that inherits from a class \emph{Sp} that satisfies the predicate
+\begin{alltt}
+\emph{Sp} <= \emph{Lb}
+\end{alltt}
+Note that the query:
+\begin{alltt}
+\emph{Lb} <= \emph{Lb}
+\end{alltt}
+will \emph{always} succeed -- even for stateful object labels. This represents one way of recovering information about the original label associated with a stateful object constructor.
+
+\section{Combination queries}
+\label{goals:combination}
+
+These query conditions combine one or more other query conditions in order to achieve some particular combination. For example, the conditional query uses a test condition to decide which of two queries should be applicable.
+
+\subsection{Conjunction}
+\label{goal:conjunction}
+\index{query!conjunction}
+\index{conjunction goal}
+
+A \firstterm{conjunction}{A conjunction is a sequence of queries, all of which must be satisfied for the conjunction to be statisfied.} is a sequence of query conditions, separated by \q{,}'s. For a conjunctive query to be satisfied, all of the sub-queries must be satisfied.
+
+\go attempts to solve the sub-queries in a conjunction in a strict left-to-right order.
+
+\subsection{Disjunction}
+\label{goal:disjunction}
+
+\index{query!disjunction}
+\index{disjunctive goal}
+\index{operator!\char'174@\q{\char'174}}
+A \firstterm{disjunction}{A disjunction is a pair of conditions, either of which may be satisfied for the disjunction to be satisfied. Note that \go does not permit the conclusion of a rule to be a disjunction.} is a pair of query conditions, separated by \q{|}'s; and is solvable if either half is solvable. 
+
+The disjunction query is required to be parenthesised; although they can be stacked together to form a disjunctive sequence. 
+
+The \go engine will backtrack between the two arms of a disjunctive query if it is necessary: if the first arm of a disjunction does not work, or if a later sub-query forces a re-evaluation, then the second arm will be tried.
+
+In fact, disjunctive queries are really a form of convenience; they can be re-written using auxiliary relation definitions. For example, the clause:
+\begin{alltt}
+married\_parent:[string,string]\{\}.
+married\_parent(X,Y) :-
+    ( father(X,Y) | mother(X,Y)),
+    married(X,\_).
+\end{alltt}
+can be re-written using a new predicate \q{choice3245}:
+\begin{alltt}
+married\_parent:[string,string]\{\}.
+married\_parent(X,Y) :- choice3245(X,Y), married(X,\_).
+
+choice3245:[string,string]\{\}.
+choice3245(X,Y) :- father(X,Y)
+choice3245(X,Y) :- mother(X,Y).
+\end{alltt}
+assuming that \q{choice3245} is a new predicate not defined anywhere else in the program.
+\begin{aside}
+In fact, the \go compiler performs exactly this transformation to programs containing disjunctive queries. Many of \go's higher-level combinations are transformed into simpler forms before being compiled into low-level code.
+
+You can see this \emph{canonical} form by invoking the \go compiler \q{goc} with a \q{-dx} option:
+\begin{alltt}
+\% goc -dx \emph{file}.go
+\end{alltt}
+Be aware, though, that this can result in quite a lot of output.
+\end{aside}
+
+\subsection{Conditional}
+\label{goal:conditional}
+
+\index{query!conditional}
+\index{conditional!query}
+\index{query!if-then-else}
+\index{if-then-else query}
+\index{operator!\char'174 \char'77@\q{\char'174\char`\ \char'77}}
+A \firstterm{conditional query}{is a triple of sub-queries -- the first is a \emph{test} and the other two are \emph{then} and \emph{else} alternatives. If the \emph{test} is satisfied, then the conditional is satisfied if the \emph{then} sub-query is; otherwise the \emph{else} sub-query should be satisfied.}  is a triple of sub-queries -- a \emph{test} query and the \emph{then} and \emph{else} queries. The \emph{test} is used to determine which of the \emph{then} or \emph{else} sub-queries should be applicable.
+
+If the \emph{test} is satisfied, then the conditional is satisfied if the \emph{then} sub-query is; otherwise the \emph{else} sub-query should be satisfied.  Conditional queries are written: 
+\begin{alltt}
+(\emph{T}?\emph{G\sub1}|\emph{G\sub2})
+\end{alltt}
+The parentheses are required. This can be read as:
+\begin{quote}
+if \emph{T} succeeds, then try \emph{G\sub1}, otherwise try \emph{G\sub2}.
+\end{quote}
+Only one solution of \emph{T} is attempted; i.e., if the test \emph{T} is solvable, then there is a \emph{committment} to solving the \emph{then} arm of the conditional. Should this prove to be unsolvable, then the conditional as a whole is also unsolvable: there is no attempt to re-solve the test, and nor is any attempt made to solve the \emph{else} part of the conditional.
+
+Like disjunctions, many instances of conditional queries can be replaced by explicit calls to auxiliary predicates. However, the translation is somewhat more complex -- a conditional such as:
+\begin{alltt}
+\ldots,(X>Y?foo(X)|bar(Y)),\ldots
+\end{alltt}
+becomes:
+\begin{alltt}
+\ldots,cond2345(X,Y),\ldots
+\end{alltt}
+where \q{cond2345} is defined using strong clauses:
+\begin{alltt}
+cond2345(X,Y)::X>Y :-- foo(X).
+cond2345(X,Y) :-- bar(Y).
+\end{alltt}
+\begin{aside}
+This author is somewhat skeptical of the merits of extensive use of conditionals in programs. The reason is that it easily leads to deeply nested programs with many layers of parentheses; such programs can be difficult to read.
+
+We suggest moderation in all things, including conditionals.
+\end{aside}
+
+
+\subsection{Negation}
+\label{goal:negation}
+
+\index{query!negated}
+\index{negated goal}
+\index{negation as failure}
+\index{operator!\bsl+@\q{\bsl+}}
+A \emph{negated query condition} is one prefixed by the operator \nasf. \go implements negation in terms of failure to prove positive -- i.e., it is negation-by-failure \cite{klc:78}.
+
+Due to the \firstterm{negation-as-failure}{A form of negation in which a failure to prove the positive of a query leads to assuming the negation. For example, by failing to prove that \q{'Joe'} is married to \q{'Jill'}, we infer that they are not married. It is a simple technique for implementing negation but which has some logical issues -- mainly that, in general, the lack of evidence is not the same as evidence of lack.} semantics, it is never possible for a negated goal to result in variables in other goals becoming further instantiated.
+
+\begin{aside}
+There is much heated debate over the merits of negation-as-failure. On the one hand, it is not exactly the same as logical negation -- in general it is not possible to infer evidence of a negative from the absence of evidence of the positive. On the other hand, there are many cases where it is a very convenient shorthand. Furthermore, classical negation can be very expensive computationally.
+
+Since \go is a programming language, not a theorem prover, we prefer the pragmatic approach of negation-as-failure. It has been our experience that negation-as-failure has rarely led to unfortunate consequences for programmers. However, programmer beware, as it were, negation-as-failure is not the same as classical negation.
+\end{aside}
+
+\subsection{Single solution query}
+\label{goal:oneof}
+
+\index{query!one-of}
+\index{one-of goal}
+\index{query!single solution}
+\index{operator!"!@\pling}
+A \firstterm{one-of query}{is one which is only satisfiable once. More accurately, only one way of satisfying is ever attempted; if there are alternatives they are never found.} is a query for which only one solution is required. A one-of sub-query suffixed by the operator \q{!}:
+\begin{alltt}
+\ldots,parent(X,Y)!,\ldots
+\end{alltt}
+Such a query would be considered solved if there were a single instance of a \q{parent} satisfying the known values of \q{X} and \q{Y}. If there were actually others, they would not be looked for by the query evaluator.
+
+The \q{!} query -- together with strong clauses -- represents the closest that \go comes to providing the functionality of \prolog's cut operator. This is a deliberate choice: \prolog's cut operator is very powerful, but quite low-level; and can lead to somewhat bizarre and hard to debug behavior. \go's limited choice operators are higher-level than cut and lead to more predictable behavior.
+
+\begin{aside}
+As with conditionals, we recommend only sparing use of the \q{!} operator. If it seems that a particular program requires a large number of \q{!} marks to `make it work'; we humbly suggest that the programmer is probably not using \go's rich language appropriately: perhaps the program should be expressed more in functional terms than in relational terms.
+\end{aside}
+
+\subsection{Forall query}
+\label{goal:forall}
+Sometimes it is important to know that a query is, in some sense, universally true, rather than individually true. For example, one set is a \emph{subset} of another if \emph{every} element of the first is also an element of the second set. It would not be enough, for example, to show that there are elements in common between the two sets.
+
+\index{query!forall}
+\index{forall!query}
+\index{operator!*>@\q{*>}}
+\index{universally true condition}
+The closest that \go comes to such universal queries is the \firstterm{forall query}{is satisfied if every solution to the left hand sub-query is also a solution to the right hand sub-query. Since forall is based on negation, it can never result in variables in other goals being bound.}.
+A forall query takes the form:
+\begin{alltt}
+(\emph{G\sub1} *> \emph{G\sub2})
+\end{alltt}
+The parentheses are required if the \q{*>} query is part of a conjunction of queries in a clause body (say).
+
+Such a query is satisfied if every solution of \emph{G\sub1} implies that \emph{G\sub2} is satisfied also. For example, the condition:
+\begin{alltt}
+subset(L1,L2) :- (X in L1 *> X in L2).
+\end{alltt}
+tests that for every possible solution to \q{X in L1} leads to \q{X in L2} being true also: i.e., that the list \q{L1} is a subset of the list \q{L2}.
+
+The forall query is one way in which a certain kind of iteration can be established very simply. However, such disjunctive iterations are not the same, nor are they as general as, conjunctive or recursive iterations. The latter kind of iteration is well served, for example, with the bounded set expression (see Section~\vref{expression:bounded}).
+
+\begin{aside}
+\index{*>@\q{*>} query!shared variables}
+In the \q{subset} rule above, there are three variables in the \q{*>} query: \q{X}, \q{L1} and \q{L2}. The \q{X} variable is local to the \q{*>} query and so its meaning is fairly obvious: it is used to carry the element from one list to be checked against the second list.
+
+\end{aside}
+
+\section{Special query conditions}
+\label{goals:special}
+
+As with expressions, there are a number of special forms of sub-query; serving similar functions for the evaluation of queries as the special expressions do for expression evaluation.
+
+\subsection{Grammar query}
+\label{goal:grammar}
+
+\index{grammar query}
+\index{query!parse}
+\index{parsing query}
+\index{operator!-->@\q{-->}}
+A grammar query is an invocation of a grammar on a stream -- the query succeeds if it is possible to parse the stream appropriately. The form of a grammar query is:
+\begin{alltt}
+\ldots,(\emph{Grammar} --> \emph{Stream}),\ldots
+\end{alltt}
+Such a query is satisfied if the \emph{Grammar} completely parses the \emph{Stream}. Note that it would be the responsibility of the \emph{Grammar} to consume any leading and trailing `spaces' (if the stream is a string). The \emph{Grammar} may be a single call to a grammar non-terminal; or it may be a sequence of grammar non-terminals and terminals. In the latter case the sequence will need to be enclosed in parentheses.
+
+A variation of this condition can be used to parse a front portion of a stream, leaving a remainder stream:
+\begin{alltt}
+\ldots,(\emph{Grammar} --> \emph{Stream}\tilda{}\emph{Remainder}),\ldots
+\end{alltt}
+This parse query is satisfied if the front portion of \emph{Stream} is parseable with the non-terminal \emph{Grammar}, and the remainder of the stream is represented by the expression \emph{Remainder}. This is directly analogous to the parse expression discussed in Section~\vref{expression:grammarexp}.
+
+
+\subsection{Action query}
+\label{goal:special:action}
+
+\index{action@\q{action} query}
+\index{query!action@\q{action}}
+\index{keyword!action@\q{action}}
+An action query is one which requires the execution of an action to succeed. It is analogous to the \q{valof} expression (see Section~\vref{expression:valof}). The form of an \q{action} query is:
+\begin{alltt}
+\ldots,action\{ \emph{A\sub1};\ldots;\emph{A\sub{i-1}};istrue \emph{C};\emph{A\sub{i+1}};\ldots;\emph{A\subn}\},\ldots
+\end{alltt}
+where \q{\emph{C}} is a relation query. If \q{\emph{C}} is satisfied then the \q{action} goal is also satisfied.
+
+Typically, if present, the \q{istrue} action is placed at the end of the action sequence. There may be more than one \q{istrue} action in a \q{action} body; however, all \emph{executed} \q{istrue} actions must be satisfied. In all cases, the \q{action} expression terminates when the last action has completed.
+
+If there is no \q{istrue} action within the sequence, then the \q{action} goal \emph{succeeds} -- i.e., as though there were a \q{istrue true} action at the end of the action sequence.
+
+\index{istrue@\q{istrue} relation query}
+\index{keyword!valof@\q{valof}}
+\go requires that the \q{istrue} action is `visible' in the action sequence: it is not permitted for the \q{istrue} to be embedded in an action rule invoked during the execution of the \q{action} body.
+
+\section{Errors, exceptions and recovery}
+\label{goal:error}
+As for expressions, we distinguish the normal failure of a query from an abnormal failure. For built-in library relations, an abnormal failure will arise when the use of the library predicate is such that we cannot guarantee a safe result and it seems that regular failure would be confusing.
+
+\subsection{Error handler}
+\label{goal:errorhandler}
+
+\index{query!handling errors}
+\index{error handling!in queries}
+\index{keyword!onerror@\q{onerror}}
+\index{onerror@\q{onerror}!query}
+A sub-query may be protected by an error handler in a similar way to expressions. An \q{onerror} query takes the form:
+
+\begin{alltt}
+\emph{Goal} onerror
+ (\emph{P\sub1} :- \emph{G\sub1}
+ | \ldots{}
+ | \emph{P\subn} :- \emph{G\subn})
+\end{alltt}
+In such a query, \emph{Goal}, \emph{G\subi} are all queries, and the types of \emph{P\subi} is of the standard type \q{exception}.
+
+Semantically, an \q{onerror} query has the same meaning as \emph{Goal}; unless a run-time problem arises in the evaluation of \emph{Goal}. In this case, an error exception would be raised (of type \q{exception}); and the evaluation of \emph{Goal} is terminated and one of the error handling clauses is used instead. The first clause in the handler that unifies with the raised error is the one that is used; and the success or failure of the protected goal depends on the success or failure of the goal in the error recovery clause.
+
+Note that a `run-time problem' \emph{does not} include normal failure. It may be unfortunate, but failure to prove a query is not considered to be a run-time problem. If an error-handled sub-query fails, then the entire query also fails normally. However, if an exception is \q{raise}d; either by a library program which cannot guarantee a safe value or by an explicit use of the \q{raise} primitive, then and only then will the error handler clauses be activated.
+
+\subsection{\q{raise} exception condition}
+\label{goal:special:exception}
+
+\index{query!raise@\q{raise} exception}
+\index{raise@\q{raise} exception!in query}
+\index{keyword!raise@\q{raise}}
+The \q{raise} sub-query neither succeeds nor fails. Instead it raises an error which should be caught by an enclosing \q{onerror} form.
+
+The argument of a \q{raise} goal is an \q{exception} expression; as discussed in Section~\vref{expression:errorrecovery}.

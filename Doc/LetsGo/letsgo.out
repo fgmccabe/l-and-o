@@ -1,0 +1,227 @@
+\BOOKMARK [0][-]{chapter*.1}{Preface}{}
+\BOOKMARK [0][-]{chapter*.13}{List of Programs}{}
+\BOOKMARK [0][-]{chapter*.14}{List of Figures}{}
+\BOOKMARK [-1][-]{part.1}{I Getting started}{}
+\BOOKMARK [0][-]{chapter.1}{My first Go! program}{part.1}
+\BOOKMARK [1][-]{section.1.1}{Hello World}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.1.1}{Compiling and running}{section.1.1}
+\BOOKMARK [0][-]{chapter.2}{A Second Go! Program}{part.1}
+\BOOKMARK [1][-]{section.2.1}{Logic and Objects}{chapter.2}
+\BOOKMARK [2][-]{subsection.2.1.1}{Labels and symbols}{section.2.1}
+\BOOKMARK [2][-]{subsection.2.1.2}{L\046O as an ontology language}{section.2.1}
+\BOOKMARK [1][-]{section.2.2}{Types}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Classes}{chapter.2}
+\BOOKMARK [2][-]{subsection.2.3.1}{Classes with state}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.2}{Engines and trains}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.3}{The this keyword}{section.2.3}
+\BOOKMARK [-1][-]{part.2}{II Programming in Go!}{}
+\BOOKMARK [0][-]{chapter.3}{Multi-threaded programs}{part.2}
+\BOOKMARK [1][-]{section.3.1}{A Directory interface}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.1.1}{Types for a directory}{section.3.1}
+\BOOKMARK [2][-]{subsection.3.1.2}{The directory interface type}{section.3.1}
+\BOOKMARK [2][-]{subsection.3.1.3}{A directory client}{section.3.1}
+\BOOKMARK [1][-]{section.3.2}{A dynamic directory}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.2.1}{Dynamic relations}{section.3.2}
+\BOOKMARK [2][-]{subsection.3.2.2}{A directory class}{section.3.2}
+\BOOKMARK [1][-]{section.3.3}{A directory party}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.3.1}{Spawning multiple threads}{section.3.3}
+\BOOKMARK [2][-]{subsection.3.3.2}{Lots of listers}{section.3.3}
+\BOOKMARK [1][-]{section.3.4}{Multi-threaded access to the directory}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.4.1}{Thread-safe libraries}{section.3.4}
+\BOOKMARK [0][-]{chapter.4}{Let's Go! to the Ball}{part.2}
+\BOOKMARK [1][-]{section.4.1}{A negotiation protocol}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.1.1}{Message communication in Go!}{section.4.1}
+\BOOKMARK [2][-]{subsection.4.1.2}{Negotiation messages}{section.4.1}
+\BOOKMARK [1][-]{section.4.2}{A mail agent}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.2.1}{A mail proposal}{section.4.2}
+\BOOKMARK [2][-]{subsection.4.2.2}{A mail class}{section.4.2}
+\BOOKMARK [1][-]{section.4.3}{A phemail agent}{chapter.4}
+\BOOKMARK [1][-]{section.4.4}{The Ballroom}{chapter.4}
+\BOOKMARK [1][-]{section.4.5}{Summing up}{chapter.4}
+\BOOKMARK [0][-]{chapter.5}{Programming interpreters}{part.2}
+\BOOKMARK [1][-]{section.5.1}{A simple logic language}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.1.1}{Representing language elements}{section.5.1}
+\BOOKMARK [2][-]{subsection.5.1.2}{Escaping into regular Go!}{section.5.1}
+\BOOKMARK [1][-]{section.5.2}{Dynamic family relationships}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.2.1}{Dynamic relations}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.2}{Family ancestors}{section.5.2}
+\BOOKMARK [1][-]{section.5.3}{Family trees}{chapter.5}
+\BOOKMARK [0][-]{chapter.6}{Sudoku}{part.2}
+\BOOKMARK [1][-]{section.6.1}{Sudoku Strategy}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.1.1}{Selecting a single solution}{section.6.1}
+\BOOKMARK [2][-]{subsection.6.1.2}{Unique elements}{section.6.1}
+\BOOKMARK [2][-]{subsection.6.1.3}{Cycling}{section.6.1}
+\BOOKMARK [1][-]{section.6.2}{Representing a sudoku puzzle}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.2.1}{Representing choices}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.2}{A Sudoku Square}{section.6.2}
+\BOOKMARK [1][-]{section.6.3}{Solving the Sudoku puzzle}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.3.1}{Constraint filters}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.2}{A filter cycle}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.3}{Putting it all together}{section.6.3}
+\BOOKMARK [-1][-]{part.3}{III Go! in detail}{}
+\BOOKMARK [0][-]{chapter.7}{Types}{part.3}
+\BOOKMARK [1][-]{section.7.1}{Type terms}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.1.1}{A lattice of types}{section.7.1}
+\BOOKMARK [2][-]{subsection.7.1.2}{Type variables}{section.7.1}
+\BOOKMARK [2][-]{subsection.7.1.3}{Polymorphism and type quantification}{section.7.1}
+\BOOKMARK [2][-]{subsection.7.1.4}{Type modes}{section.7.1}
+\BOOKMARK [2][-]{subsection.7.1.5}{Type interfaces}{section.7.1}
+\BOOKMARK [1][-]{section.7.2}{Type inference}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.2.1}{Inferring object types}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.2}{Type annotations}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.3}{Safe polymorphic types}{section.7.2}
+\BOOKMARK [1][-]{section.7.3}{Algebraic data types}{chapter.7}
+\BOOKMARK [1][-]{section.7.4}{Standard types}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.4.1}{thing type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.2}{char type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.3}{symbol type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.4}{integer type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.5}{float type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.6}{number type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.7}{logical type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.8}{Tuple type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.9}{list[] type}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.10}{Function types}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.11}{Class constructor types}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.12}{Predicate types}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.13}{Action types}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.14}{Grammar types}{section.7.4}
+\BOOKMARK [1][-]{section.7.5}{Dealing with syntax errors}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.5.1}{The phases and kinds of error}{section.7.5}
+\BOOKMARK [2][-]{subsection.7.5.2}{Invalid arguments to a program}{section.7.5}
+\BOOKMARK [2][-]{subsection.7.5.3}{Singleton variables}{section.7.5}
+\BOOKMARK [2][-]{subsection.7.5.4}{Implicit exporting of private types}{section.7.5}
+\BOOKMARK [0][-]{chapter.8}{Functions, Patterns and Expressions}{part.3}
+\BOOKMARK [1][-]{section.8.1}{Functions}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.1.1}{Functions and types}{section.8.1}
+\BOOKMARK [2][-]{subsection.8.1.2}{Expression evaluation}{section.8.1}
+\BOOKMARK [1][-]{section.8.2}{Patterns}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.2.1}{Symbols}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.2}{Characters}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.3}{Numbers}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.4}{List notation}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.5}{Strings}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.6}{Tuples}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.7}{Class label constructors}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.8}{Guarded Pattern}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.9}{Tau patterns}{section.8.2}
+\BOOKMARK [1][-]{section.8.3}{Variables}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.3.1}{Scope of identifiers}{section.8.3}
+\BOOKMARK [2][-]{subsection.8.3.2}{Singleton and anonymous variables}{section.8.3}
+\BOOKMARK [1][-]{section.8.4}{Evaluable expressions}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.4.1}{Function call}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.2}{Conditional expressions}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.3}{Case expression}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.4}{Object Reference}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.5}{Object creation}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.6}{Bag of expression}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.7}{Bounded set expression}{section.8.4}
+\BOOKMARK [2][-]{subsection.8.4.8}{Sub-thread spawn}{section.8.4}
+\BOOKMARK [1][-]{section.8.5}{Special expressions}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.5.1}{Parse expression}{section.8.5}
+\BOOKMARK [2][-]{subsection.8.5.2}{Type annotation}{section.8.5}
+\BOOKMARK [2][-]{subsection.8.5.3}{Valof expressions}{section.8.5}
+\BOOKMARK [1][-]{section.8.6}{Errors, exceptions and recovery}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.6.1}{Error recovery expression}{section.8.6}
+\BOOKMARK [2][-]{subsection.8.6.2}{Raise Exception}{section.8.6}
+\BOOKMARK [0][-]{chapter.9}{Relations and Queries}{part.3}
+\BOOKMARK [1][-]{section.9.1}{Relations}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.1.1}{Relations and types}{section.9.1}
+\BOOKMARK [2][-]{subsection.9.1.2}{Strong clauses}{section.9.1}
+\BOOKMARK [1][-]{section.9.2}{Query evaluation}{chapter.9}
+\BOOKMARK [1][-]{section.9.3}{Basic queries}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.3.1}{True/false goal}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.2}{Predication}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.3}{Label reference}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.4}{Equality}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.5}{Inequality}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.6}{Match query}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.7}{Identicality query}{section.9.3}
+\BOOKMARK [2][-]{subsection.9.3.8}{Sub-class of query}{section.9.3}
+\BOOKMARK [1][-]{section.9.4}{Combination queries}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.4.1}{Conjunction}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.2}{Disjunction}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.3}{Conditional}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.4}{Negation}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.5}{Single solution query}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.6}{Forall query}{section.9.4}
+\BOOKMARK [1][-]{section.9.5}{Special query conditions}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.5.1}{Grammar query}{section.9.5}
+\BOOKMARK [2][-]{subsection.9.5.2}{Action query}{section.9.5}
+\BOOKMARK [1][-]{section.9.6}{Errors, exceptions and recovery}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.6.1}{Error handler}{section.9.6}
+\BOOKMARK [2][-]{subsection.9.6.2}{raise exception condition}{section.9.6}
+\BOOKMARK [0][-]{chapter.10}{Procedures and Actions}{part.3}
+\BOOKMARK [1][-]{section.10.1}{Action Procedures}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.1.1}{Action rules and types}{section.10.1}
+\BOOKMARK [2][-]{subsection.10.1.2}{Action rule execution}{section.10.1}
+\BOOKMARK [1][-]{section.10.2}{Basic actions}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.2.1}{Empty action}{section.10.2}
+\BOOKMARK [2][-]{subsection.10.2.2}{Equality definition}{section.10.2}
+\BOOKMARK [2][-]{subsection.10.2.3}{Pattern match}{section.10.2}
+\BOOKMARK [2][-]{subsection.10.2.4}{Assignment}{section.10.2}
+\BOOKMARK [2][-]{subsection.10.2.5}{Call procedure}{section.10.2}
+\BOOKMARK [1][-]{section.10.3}{Combination actions}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.3.1}{Action sequence}{section.10.3}
+\BOOKMARK [2][-]{subsection.10.3.2}{Class relative invocation}{section.10.3}
+\BOOKMARK [2][-]{subsection.10.3.3}{Query action}{section.10.3}
+\BOOKMARK [2][-]{subsection.10.3.4}{Conditional action}{section.10.3}
+\BOOKMARK [2][-]{subsection.10.3.5}{Forall action}{section.10.3}
+\BOOKMARK [2][-]{subsection.10.3.6}{Case action}{section.10.3}
+\BOOKMARK [1][-]{section.10.4}{Special actions}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.4.1}{valis Action}{section.10.4}
+\BOOKMARK [2][-]{subsection.10.4.2}{istrue Action}{section.10.4}
+\BOOKMARK [2][-]{subsection.10.4.3}{error handler}{section.10.4}
+\BOOKMARK [2][-]{subsection.10.4.4}{raise exception action}{section.10.4}
+\BOOKMARK [2][-]{subsection.10.4.5}{Sub-thread spawn}{section.10.4}
+\BOOKMARK [2][-]{subsection.10.4.6}{Synchronized action}{section.10.4}
+\BOOKMARK [0][-]{chapter.11}{Grammars and Parsing}{part.3}
+\BOOKMARK [1][-]{section.11.1}{Grammar rules}{chapter.11}
+\BOOKMARK [1][-]{section.11.2}{Basic grammar conditions}{chapter.11}
+\BOOKMARK [2][-]{subsection.11.2.1}{Terminal grammar condition}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.2}{Non-terminal grammar condition}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.3}{Class relative grammar call}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.4}{Equality condition}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.5}{Inequality condition}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.6}{Grammar goal}{section.11.2}
+\BOOKMARK [1][-]{section.11.3}{Combination grammar conditions}{chapter.11}
+\BOOKMARK [2][-]{subsection.11.3.1}{Sequence}{section.11.3}
+\BOOKMARK [2][-]{subsection.11.3.2}{Disjunction}{section.11.3}
+\BOOKMARK [2][-]{subsection.11.3.3}{Conditional grammar}{section.11.3}
+\BOOKMARK [2][-]{subsection.11.3.4}{Negated grammar condition}{section.11.3}
+\BOOKMARK [2][-]{subsection.11.3.5}{Iterated grammar}{section.11.3}
+\BOOKMARK [1][-]{section.11.4}{Special grammar conditions}{chapter.11}
+\BOOKMARK [2][-]{subsection.11.4.1}{error handler}{section.11.4}
+\BOOKMARK [2][-]{subsection.11.4.2}{Raise exception}{section.11.4}
+\BOOKMARK [2][-]{subsection.11.4.3}{End of file}{section.11.4}
+\BOOKMARK [0][-]{chapter.12}{Logic and Objects}{part.3}
+\BOOKMARK [1][-]{section.12.1}{Class notation}{chapter.12}
+\BOOKMARK [2][-]{subsection.12.1.1}{Class types}{section.12.1}
+\BOOKMARK [2][-]{subsection.12.1.2}{Class body}{section.12.1}
+\BOOKMARK [2][-]{subsection.12.1.3}{Special elements in stateful class bodies}{section.12.1}
+\BOOKMARK [2][-]{subsection.12.1.4}{Inheritance and Class rules}{section.12.1}
+\BOOKMARK [1][-]{section.12.2}{Accessing and using classes}{chapter.12}
+\BOOKMARK [2][-]{subsection.12.2.1}{Creating objects}{section.12.2}
+\BOOKMARK [2][-]{subsection.12.2.2}{this object}{section.12.2}
+\BOOKMARK [1][-]{section.12.3}{Inner Classes}{chapter.12}
+\BOOKMARK [2][-]{subsection.12.3.1}{Anonymous classes}{section.12.3}
+\BOOKMARK [0][-]{chapter.13}{Packages and Programs}{part.3}
+\BOOKMARK [1][-]{section.13.1}{Package format}{chapter.13}
+\BOOKMARK [2][-]{subsection.13.1.1}{Package constants}{section.13.1}
+\BOOKMARK [2][-]{subsection.13.1.2}{Package variables}{section.13.1}
+\BOOKMARK [2][-]{subsection.13.1.3}{Package initialization}{section.13.1}
+\BOOKMARK [2][-]{subsection.13.1.4}{Package exports}{section.13.1}
+\BOOKMARK [1][-]{section.13.2}{Importing packages}{chapter.13}
+\BOOKMARK [2][-]{subsection.13.2.1}{Indirect imports of packages}{section.13.2}
+\BOOKMARK [2][-]{subsection.13.2.2}{Package reference}{section.13.2}
+\BOOKMARK [1][-]{section.13.3}{Top-level main programs}{chapter.13}
+\BOOKMARK [1][-]{section.13.4}{Standard Packages}{chapter.13}
+\BOOKMARK [-1][-]{part.4}{IV Appendices}{}
+\BOOKMARK [0][-]{appendix.A}{Sample programs}{part.4}
+\BOOKMARK [1][-]{section.A.1}{Directory}{appendix.A}
+\BOOKMARK [1][-]{section.A.2}{Ballroom}{appendix.A}
+\BOOKMARK [1][-]{section.A.3}{Sudoku}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.3.1}{Sudoku square}{section.A.3}
+\BOOKMARK [2][-]{subsection.A.3.2}{Sudoku solver}{section.A.3}
+\BOOKMARK [0][-]{section*.75}{Bibliography}{part.4}
+\BOOKMARK [0][-]{section*.76}{Index}{part.4}

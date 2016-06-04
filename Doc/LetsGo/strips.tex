@@ -1,0 +1,197 @@
+\chapter{Planning with STRIPS}
+\label{strips}
+
+A key element of many agent applications is the planning of a sequence of actions. This is often broken down into two phases: constructing a plan and executing it. These are related in that often well intentioned plans do not work as advertised; and therefore when executing a plan the preconditions for some or all of the actions may need to be verified, and re-planning may be required. 
+
+In this chapter we look at implementing one of the classic approaches to planning -- namely a STRIPS planner. The STRIPS style of planner assumes a world of discrete actions, discrete goals and observable properties of the world. Each action is characterized by the set of facts that it `adds' to the world -- i.e., makes true if the action is successful -- and the set of facts that it deletes -- i.e., makes false if the action is unsuccessful. Each action is also associated with a set of pre-conditions -- observed properties of the world that must be true for the action to have meaning.
+
+For example, in the blocks world, picking up a block requires that the block is clear -- no block is stacked on top of it -- and that its on the table. If the pickup is successful, then it will no longer be on the table, and will no longer be clear -- in the sense that its not possible to stack blocks `in the hand'; and so \q{clear} really means that it is permitted to stack a block on top of it.
+\begin{aside}
+Another key assumption in the STRIPS model is that there are no other active agents in the world that can also act. This assumption is clearly invalidated in any multi-agent scenario; however, for an agent planning its internal activities the single-actor assumption is often reasonable.
+\end{aside}
+
+\section{Robbie's world of blocks}
+\label{strips:blocks}
+Our demonstration of our planner is the classic one of a robot -- called Robbie -- being able to manipulate blocks: by picking them, stacking and unstacking and so on.
+\begin{aside}
+This world should not be confused with anything realistic. However, it's primary purpose here is show how knowledge about a specific domain is integrated with a generic planning engine.
+
+For example, we do not attempt to address how Robbie might be able to perceive that a given block is stacked on another. This is a non-trivial problem, requiring typically the ablity to interpret a scene via a video camera.
+\end{aside}
+For the simple blocks world the \q{blockActs} type captures the range of available actions:
+\begin{alltt}
+blockActs ::= stack(symbol,symbol)
+    | unstack(symbol,symbol)
+    | pickup(symbol)
+    | putdown(symbol).
+\end{alltt}
+we use symbols to identify the various blocks we may encounter.
+
+The \q{blockPred} type names the possible predicates in the blocks world:
+\begin{alltt}
+blockPred ::= clear(symbol)
+    | holding(symbol)
+    | ontable(symbol)
+    | on(symbol,symbol)
+    | handempty.
+\end{alltt}
+In effect, we are limited to sensing whether a block is \q{clear}, whether it is on the table and so on. Other potentially important properties of blocks, such as their shape, size, weight, color and so on, are not modeled here. Although it would be a relatively simple extension to do so, the art of designing and effective system lies as much in what we \emph{do not} design as in what we do construct.
+
+Just as we simplify the potential properties of blocks, the possible actions that the execution engine (a.k.a. blocks world robot) can take is also simplified: it is possible to stack blocks on top of each other, to unstack a block from a stack, to pick up a block, and to put it on the table. These actions are quite high-level from the perspective of a physical device manipulating real blocks; these actions would have to be broken down into simpler activations of the robot's mechanical muscles.
+
+\subsection{The \q{stripsWorld} interface}
+\label{strips:world}
+The \q{stripsWorld} type definition:
+\begin{alltt}
+stripsWorld[A,G] \impl \{
+  strips_rule:[A,list[G],list[G],list[G]]\{\}.
+\}.
+\end{alltt}
+expresses the contract that the domain-specific part of the system must fulfill. In order for the generic planner to be able to know what the legal operations are in a given domain, it is given a class that implements this type. The \q{strips\_rule} predicate defines the planning operators themselves.
+
+Note that \q{strips\_rule} is a predicate and not a function because a given set of goals may have more than one action associated with it. It is not permissible for the same action to be mentioned in more than one \q{strips\_rule} clause: that would imply that the action had more than one set of preconditions and consequences.
+
+\subsection{The blocks planning domain}
+Our \q{robbie} class, in Program~\vref{strips:robbie}, captures Robbie's possible actions in the world as rules in the \q{strips\_rule} relation.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+robbie\{
+  import go.setlib.
+  import strips.
+
+  robbie:[]\conarrow{}stripsWorld.
+  robbie..\{
+    strips\_rule(stack(X,Y),
+              [clear(Y),holding(X)],
+              [on(X,Y),clear(X),handempty],
+              [clear(Y),holding(X)]).
+    strips\_rule(unstack(X,Y),
+              [on(X,Y),clear(X),handempty],
+              [clear(Y),holding(X)],
+              [on(X,Y),clear(X),handempty]).
+    strips\_rule(pickup(X),
+              [ontable(X),clear(X),handempty],
+              [holding(X)],
+              [ontable(X),clear(X),handempty]).
+    strips\_rule(putdown(X),
+              [holding(X)],
+              [ontable(X),clear(X),handempty],
+              [holding(X)]).
+  \}.
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{Operators in Robbie's world}
+\label{strips:robbie}
+\end{program}
+Each \q{strips\_rule} in the \q{robbie} class defines the preconditions of the action, the positive effects on the world and the negative effects. For example, the \q{stack} action requires that the block is in the hand of the robot and that the target is \q{clear}. The positive effects are that the newly stacked block is \q{clear} and that the robot's hand is empty. The negative effects are that the target block is no longer \q{clear} and that the robot is no longer \q{holding} the stacked block.\note{For the sake of clarity and simplicity we have assumed that the planner will only plan using primitive actions.}
+
+Although the modeled world of blocks is not permitted to contain predicates with variables, there is no such restriction on the description of the action rules; nor on possible descriptions of the modeled world. This permits \go's descriptions of the possible actions to be very compact; while at the same time simplifying the logic of the modeled world.
+
+Other domains would have different actions, with a different language of conditions. For example, an application in terms of eCommerce might have actions around searching for suitable vendors and purchasing goods.
+
+Note that Program~\vref{strips:robbie} defines the range of actions as a `fixed' relation; but there is nothing intrinsic in this. One might wish to extend this to include a more dynamic, learnable, range of actions.
+
+\section{A simple STRIPS planner}
+\label{strips:strips}
+
+Program~\vref{strips:planner} shows a simple planning program that uses a \q{strips\_rule} database as its source of actions. This program should not be considered to be a sophisticated planner: it is more of a specification than an effective algorithm.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+strips\{
+  planner[A,G] \impl \{
+    plan:[list[G],list[G]]=>list[A]
+  \}.
+
+  stripsWorld[A,G] \impl \{
+    strips_rule:[A,list[G],list[G],list[G]]\{\}.
+    holds:[G]\{\}.
+    do:[A]*.
+  \}.
+
+  stripsPlanner:[stripsWorld[A,G]]\conarrow{}planner[A,G].
+  stripsPlanner(W:stripsWorld[A,G])..\{
+    plan(Init,Goal)::strips(Init,Goal,[],Plan) => Plan.
+
+    -- This is a progressive planner,
+    -- planning forwards from the state to the goal
+    strips:[list[G],list[G],list[A],list[A]]\{\}.
+    strips(State,Goal,_,[]):-
+      subset(Goal,State).
+    strips(State,Goal,Forbidden,[Ac,..Plan]) :-
+      W.strips_rule(Ac,Prec,Adds,Dels),
+      subset(Prec,State),
+      \nasf{} Ac in Forbidden,
+      strips((State\union{}Adds)\difference{}Dels,Goal,[Ac,..Forbidden],Plan).
+   \}.
+  \}
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A simple STRIPS planner}
+\label{strips:planner}
+\end{program}
+The main part of this program is the \q{strips} relation defined within the \q{stripsPlanner} class. The first \q{strips} rule says that we have finished the plan if the set of out-standing goals is already satisfied in the modeled state of the world. A goal is satisfied  by being in the state.
+
+The second \q{strips} clause picks an action operator whose pre-conditions have been met, and whose action has not yet been tried, and plans forward from there.
+
+Note that the state is represented as a pair: a set of facts that is true in the state and a current list of \q{Forbidden} actions. This latter list is there to avoid loops of actions being repeated forever.
+
+The somewhat complex expression:
+\begin{alltt}
+(State\union{}Adds)\difference{}Dels)
+\end{alltt}
+computes a new state in terms of the intermediate state arrived at by performing the action, and a list of new facts -- the \q{Adds} -- that are now true and the list of removed facts -- \q{Dels} -- that are no longer true in the new state.
+
+An expression of the form \q{\emph{A} \union{} \emph{B}} represents the set (represented as a list) of the elements of \q{\emph{A}} unioned with the elements of \q{\emph{B}}. Similarly, an expression of the form: \q{\emph{A} \difference{} \emph{B}} denotes the difference of the two sets. Both the \union{} and the \q{difference} operators are part of the \q{setlib} library that is part of the standard distribution of \go.
+
+This planner directly constructs plans that are valid instances of the \q{actType} type, as defined in Program~\vref{strips:prog-type}. This facilitates the integration of the planner with a possible action executor, a topic we look at in Section~\vref{strips:exec}.
+
+Note that if the planner fails to solve a sub-goal, then a different sub-goal is picked. This has the effect of potentially producing an ordering of actions that is quite different to the original list of goals. It is also one of the greatest sources of inefficiency in the planner -- blindly searching through the space of goals until a particular combination works. More sophisticated planner algorithms, such as goal regression based planners, would attempt to preserve partially successful plans in order to reduce the total cost of planning.
+
+If no plan can be constructed then the \q{plan} function will raisew an \q{"unexpected failure"} error exception; which should be caught by the invoking program.
+
+The algorithm in Program~\vref{strips:planner} has the merit of being short, and easy to explain; it is, however, not really a good example of an efficient planner. However, with the program structure that we have established, it should be relatively straightforward to replace the \q{planner} module with a more sophisticated planner -- a regression planner for example -- without compromising the rest of an application that uses planners.
+
+% \section{Executing plans}
+% \label{strips:exec}
+
+% Planning a sequence of action steps is not sufficient to achieve a goal -- the actions must also be performed! Of course, for real-world interactions, it is not guaranteed that an action produces the expected results; furthermore, in the presence of other agents, the world may evolve during the execution of a plan -- with the potential for invalidating some or all of the assumptions made during planning.
+
+% Our task in this section is to develop an \emph{action} interpreter that can execute plans; with possible re-planning when the world no longer matches the expectations of the agent. In Program~\vref{prog-script} we build on the ideas in the meta-interpreter in Chapter~\vref{meta} to construct an execution interpreter.
+
+% \begin{program}
+% \vspace{0.5ex}
+% \begin{alltt}
+% execPlan\{
+%   import go.io.
+%   import planAct.
+%   import strips.
+
+%   runPlan[A,G]\impl\{
+%     exec:[planAct[A,G]]*.
+%   \}.
+
+%   planRun:[world[A,G]]\conarrow{}runPlan[A,G].
+%   planRun(W)\{
+%     exec(prim(Prec,Act)::W.holds(Prec)) -> W.do(Act).
+%     exec(single(G,_)) -> exec(W.plan(G)). -- replan
+%     exec(seq(L)) -> E in L *> exec(E).
+%     exec(choice(Tst,A1,_)::W.holds(Tst)) -> exec(A1).
+%     exec(choice(_,_,A2)) -> exec(A2).
+%     exec(subplan(Name)) -> exec(W.which(Name)).
+%   \}
+% \}
+% \end{alltt}
+% \vspace{-2ex}
+% \caption{A simple script executor}
+% \label{prog-script}
+% \end{program}
+
+% The first action rule for \q{exec} executes a \q{prim}itive action by requesting that the `world' object -- represented by the \q{W} argument of \q{run} -- execute the action. However, it only does so if the required precondition still holds: in the real world not all actions are successful, and, furthermore, other agents may have caused interference with the world view.
+
+% In the event that the required precondition does not hold anymore, the planner is invoked on the original precondition to see if an alternate plan can be constructed. This is a very simplistic approach to recovery; as it may be that a higher-level goal needs to be reconsidered. A better approach may be to set specific recovery points that the executor would re-plan from.
+
+% The other rules for \q{exec} are straightforward: we execute a sequence by iterating over the elements of the sequence, we execute a \q{choice} by considering the test, and we execute a \q{subplan} by retrieving the plan and executing it.

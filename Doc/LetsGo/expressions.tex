@@ -1,0 +1,1123 @@
+\chapter{Functions, Patterns and Expressions}
+\label{expressions}
+\lettrine[nindent=0.1em]{G}{o! has a rich range} of expressions. This serves several purposes: it makes it easier for programmers to program in ways that fit the problems at hand and it makes it more likely that programmers will pick the \emph{same} way to express a given concept -- and thus promotes reusability of code.
+
+\index{arithmetic in logic}
+\begin{aside}
+If you need convincing, consider, as a poster example, arithmetic. Even if there were no standard way of expressing calculations we would still expect that programmers would need to write programs that perform arithmetic.   Each approach at implementing arithmetic would tend to be different as each programmer found his or her own solutions. This diversity would, in turn, make it harder for programmers to read each others' programs -- apart from the wasted effort in duplicated code.
+
+Although arithmetic seems like an extreme example, in fact, in the early days of logic programming, that is precisely what happened: many early systems had no built-in arithmetic functionality. Instead, we were expected to build arithmetic based on the standard Peano\note{However, machine arithmetic is less flexible and not oriented to problem solving as is axiomatized arithmetic.} axiomatization.
+
+Of course, in the case of arithmetic operators, standardized approaches to arithmetic became fairly quickly established. Unfortunately, in the eyes of this author, the approach adopted was both less logical and less practical for most programs.
+\end{aside}
+
+\go has expressions for arithmetic, it also has expressions for common list manipulations and other forms such as the \q{valof}/\q{valis} expression which allows expressions to be computed as a result of an action sequence. This chapter focuses on the different forms of expression and on how functions are written; not so much on the functions available from package libraries.
+
+\section{Functions}
+\label{expression:function}
+\index{function}
+\index{equation}
+Functions are, of course, intimately connected with expressions. \go functions are written using an equation notation:
+\index{append@\q{append} function}
+\begin{alltt}
+append:[list[t],list[t]]=>list[t].
+append([],X) => X.
+append([E,..X],Y) => [E,..append(X,Y)].
+\end{alltt}
+This defines the \q{append} function in terms of two cases: the first equation applies if the first argument is the empty list, and the second equation applies if the first argument is a non-empty list pair (see Section~\vref{expression:lists}).
+
+The left hand side of an equation is a \emph{pattern}; and the right hand side is an expression. Patterns are similar to expressions; but have some restrictions: mainly that the elements of the pattern are essentially data structures. Section~\vref{expression:pattern} covers the set of available patterns.
+
+Functions can be defined in two distinct places -- at the top-level of a package or within class bodies. The former are \emph{package functions} whereas the latter are \emph{class methods}. Apart from how a function is accessed, its location within the class hierarchy or as a package function primarily affects the resources the function has access to -- other functions, global variables and so on.
+\index{class!anonymous}
+\begin{aside}
+An interesting variation is the function that is defined within an inner or an anonymous class (see Section~\vref{lo:anonymous}). Such a function comes very close to being a \emph{lambda function}.
+\end{aside}
+Whether the function is a package-level function or a class-level function, the equations that define it should be contiguous.
+\begin{aside}
+This contiguity requirement is really a guard against a certain kind of insidious error: where a statement within a group is somehow misspelt. Without the contiguity constraint, this error would often go unnoticed by the programmer and compiler -- which can lead to hard to diagnose bugs.
+\end{aside}
+
+\subsection{Functions and types}
+\label{function:types}
+All functions must be \emph{declared}, using a statement similar to:
+\begin{alltt}
+append:[list[t],list[t]]=>list[t].
+\end{alltt}
+Normally, a type declaration statement that is in the same scope as the function itself. However, if a function is defined in a class body, and if the function is implementing one of the methods of the class's type interface, then that type interface serves as the declaration for the function.
+
+A function's equations are checked to be consistent with its declaration. This involves checking the left hand side of each equation for consistency with the expected argument types, and the right hand side is checked against the return type of the function.
+
+The rules for checking argument patterns are subtly different to other type checking contexts. The types of arguments in the head pattern of an equation must be \emph{equal} to the corresponding argument of the function type.
+
+If the head of the equation type checks, then the type of the right hand side of the equation is inferred, and checked to be \emph{less than or equal to} the result type of the function. The reason for this is that value returned by a function must \emph{honor the contract} declared for the function; which is expressed as being a sub-type of the declared return type. 
+
+On the other hand, the head pattern of the equation must be of \emph{equal type} for two interacting reasons. Clearly the pattern of a function should not make any assumptions beyond that declared for the function; this leads to the constraint:
+\begin{alltt}
+lhs-type \typearrow typeOf(head)
+\end{alltt}
+On the other hand, any variables in the head that are referenced in the right hand side can assume the preconditions of the function type; this means that they at least honor the type contract:
+\begin{alltt}
+typeOf(head) \typearrow lhs-type
+\end{alltt}
+these two constraints lead to
+\begin{alltt}
+typeOf(head) = lhs-type
+\end{alltt}
+hence the condition that the pattern type must equal the types of the arguments of the function type.
+
+\subsection{Expression evaluation}
+\index{pattern matching}
+\index{unification!v.s. pattern matching}
+Function evaluation proceeds in three phases: the evaluation of the arguments to the function (if there are any), the identification of which equation to use in reducing the function call, and the evaluation of the replacement expression. In the event of an exception being raised, there is a fourth phase to handle the exception.
+
+\begin{description}
+\item[Argument evaluation]
+Before a function can be entered the arguments to the function call must be evaluated. \go is a strict language: the arguments to the function call are always fully evaluated prior to any attempt to apply the equations to the call.
+
+\go does not define the order of evaluation of individual arguments to the function call. This is a particular issue when those expressions involve \q{action}s that may interfere with each other. If this is an issue with your program then do not do it!
+
+\item[Equation selection]
+A function is defined as a sequence of equations. Logically, these are tried in the order that they are written (although the compiler optimizes the search for many cases).
+
+An equation is applied by matching the evaluated arguments of the call with the patterns defined in the left-hand-side of the equation -- together with any guards in the head.
+
+By default, arguments to functions have an \emph{input} mode of use. This affects the way that the argument is processed during evaluation: input moded arguments are matched against -- as opposed to be unified against.
+
+The matching process is similar to unification except that it is one-way: only variables in the equations' patterns are allowed to be bound to values. This is one of the ways that functions and equations are distinct from clauses and predicates.
+
+For example, a call to \q{append} of the form:
+\begin{alltt}
+append(U,[1,2,3])
+\end{alltt}
+will cause a certain amount of problems with the \q{append} function defined above. The reason is that both \q{append} equations match the first argument against non-variable patterns; unification would permit the variable \q{U} to be bound -- either to the empty list in the first equation or to a non-empty list in the second. Matching permits neither binding, and matching \emph{fails} in both cases. The result is that neither equation would apply and a run-time exception would be raised by the call.
+
+This matching v.s.~unification mode of activation reflects the intuition that functions are normally associated with a flow of information -- from arguments to results. On the other hand, clauses and relations are essentially bi-directional -- it is not predetermined what the flow of information should be when a relation query is attempted.
+
+\index{guard!in equation}
+Functional equations can have a more elaborate form than the \q{append} function above. Equations may have \emph{guards} associated with them: using the normal guard \q{::} notation. The guard in:
+\begin{alltt}
+partition(Ky,[E,..L],L1,L2)::Ky>=E =>
+    partition(Ky,L,[E,..L1],L2).
+\end{alltt}
+is satisfied if the key value -- \q{Ky} -- is greater than the head of the list -- \q{E}. If not, then both the guard and the match fail.
+
+\item[Entering the equation]
+Once a matching equation is found the replacement expression on the right hand side of the equation is evaluated; and its value becomes the value of the function all expression itself.
+
+Note that only the first equation that matches is used. Other equations that are written later on in the sequence will not be tried.
+\index{function!on failure}
+\index{error!function failure}
+If none of the equations in a function match then an \q{'eFAIL'} error exception is \q{raise}d:
+\begin{alltt}
+error("partition failed to match at line XXX",'eFAIL')
+\end{alltt}
+
+\item[Handling exceptions]
+If an exception is raised during function evaluation, then normal execution is suspended. It is actually unraveled up to a previous point where an error handler is in force. Error handlers can be defined for expressions -- see Section~\vref{expression:error} -- as well as other kinds of evaluations. An expression error handler has a similar form to a function definition: it is a series of equations that must match the exception token.
+
+Once a matching error equation is found the computation proceeds normally \emph{with the replacement expression in the error handling equation}.
+\end{description}
+
+\section{Patterns}
+\label{expression:pattern}
+Patterns represent an important aspect of \go. Patterns are used in the heads of rules (equations, clauses etc. all use patterns in their head) as well as in other expressions that rely on patterns -- the bounded set expression for example (see Section~\vref{expression:bounded}).
+
+Patterns include statefree constructor term patterns, literal numbers, variables, the guarded pattern and the tau pattern. 
+
+There are two \emph{modes} of use of patterns: unification and matching. Patterns that occur in the heads of clauses and grammars are unified against. Patterns that occur in the heads of equations and action procedures (and some other situations) are \emph{matched} against. 
+
+
+\subsection{Symbols}
+\label{expression:symbol}
+
+Literal symbols can be both a pattern and an expression. 
+
+\index{expression!symbol}
+\index{symbol!literal expression}
+A symbol is written as a sequence of characters -- not including the new-line or other control characters -- enclosed in single quotes. Symbols are one of the primitive data types of \go, and have the type \type{symbol}.
+
+For example, 
+\begin{alltt}
+'A symbol'
+\end{alltt}
+is a \q{symbol}.
+
+\index{type!symbol@\q{symbol}}
+The \q{symbol} type symbol is use to denote symbol values and expressions. Note that the \q{symbol} type refers to the \emph{general} class of symbols -- literals of which are written as identifiers surrounded by single quote characters. The other main class of symbols -- those introduced within type definitions -- are not covered by the type \q{symbol}; nor are they written with single quotes.
+
+I.e., the type of:
+\begin{alltt}
+'true'
+\end{alltt}
+is \q{symbol}; whereas the type of the symbol
+\begin{alltt}
+true
+\end{alltt}
+is \q{logical}, not \q{symbol}. The reason being that the \q{true} identifier is defined in an algebraic type definition as shown in section~\vref{types:logical}. 
+
+\subsection{Characters}
+\label{expression:character}
+
+\index{expression!character}
+\index{character!literal}
+\index{`@\q{`} character}
+A character literal is written as a back-tick character followed by the character itself; which may be a string character reference. Characters are one of the core data types of \go: lists of \q{char}acters form the basis of \go's string notation. Character literals may also be used patterns and expressions.
+
+Some examples of \q{char} literals are:
+\begin{alltt}
+`a `B `\bsl{}n `\bsl+3232;
+\end{alltt}
+
+\index{syntax!lexical}
+\index{Unicode}
+\index{character!reference}
+The character expression \q{`\bsl{}n} denotes a new-line character; it is an example of a \firstterm{character reference}{a character reference is an expression that denotes a literal character}. A character reference is an expression that denotes a literal character. 
+
+\go supports C-style character references -- such as \q{\bsl{}n} -- and Unicode-style \cite{unicode:30} character references -- such as \q{\bsl{}+3232;}. A Unicode-style character reference simply encodes the character's Unicode code point value -- as a hexadecimal number. The full form of a Unicode reference is:
+\begin{alltt}
+\bsl{}+\emph{hexdigits};
+\end{alltt}
+This notation includes 8 bit characters, 16 bit as well as a potential future expansion of 32 bit character codes.
+
+\go is Unicode compliant in the sense that it uses Unicode character codes internally to represent character data and the \go compiler and run-time engine can interpret I/O streams of UTF-8 bytes and UTF-16 words as Unicode. In addition, the I/O library allows input and output streams to support various kinds of character encoding.
+
+\begin{aside}
+Although \go is a Unicode-based language, all of the the characters used within the \emph{language definition} of \go\ -- such as the built-in operators and syntactic features -- are contained within the ASCII subset of the Unicode character set. Thus, \go can be used in an ASCII-based environment. However, \go supports non-ASCII identifiers and non-ASCII number expressions.
+\end{aside}
+
+\subsection{Numbers}
+\label{expression:number}
+\index{expression!number}
+\index{number expression}
+\index{number@\q{number} type}
+\index{type!number@\q{number}}
+
+\go partitions numbers into two categories: \q{integer}s and \q{float}ing point numbers. Both of these are sub-types of the \q{number} type; however, neither \q{integer} nor \q{float} are sub-types of each other. This reflects the common reality that integral and non-integral \q{number} values are represented differently.
+
+There are various ways of writing integer literals: as decimal integers, hexadecimal numbers and character codes.
+
+\subsubsection{Integers}
+\label{expression:integer}
+\index{integer}
+An integer is written as a sequence of decimal digit characters -- with an optional leading minus sign to denote negative integers. Although the standard ASCII digit characters are likely to be the most common digit characters used, there are approximately 250 decimal digit characters in the Unicode standard! The \go parser supports the use of any Unicode decimal digit characters in constructing a number; however, the \go system only uses ASCII digits when displaying numbers.
+
+\paragraph{Hexadecimal numbers}
+\index{integer!hexadecimal}
+A hexadecimal number is written with a leading \q{0x} followed by hexadecimal digits. Note that, unlike regular integers, \go requires that hexadecimal numbers use only the ASCII digit characters, together with upper-case or lower-case letters \q{A} to \q{F}.
+
+\begin{alltt}
+0xffff 0xabd 0x0
+\end{alltt}
+are all integers, of type \q{integer}, written using hexadecimal notation.
+
+\paragraph{Character codes}
+\index{integer!character code}
+\index{Unicode!character code}
+It is also possible to specify an integer as the Unicode code value of a character. Such an \q{integer} is written with a leading \q{0c} followed by a single character reference. Thus, for example, the literal:
+\begin{alltt}
+0cA
+\end{alltt}
+is the number 65 -- as the Unicode code point value associated with upper-case \q{A} is 65. Similarly, \q{0c\bsl{}n} is the \q{integer} 10, as the character \q{\bsl{}n} refers to the new-line character -- whose code value is 10. The value of
+\begin{alltt}
+0c\bsl{}+2334;
+\end{alltt}
+is, of course, the same as:
+\begin{alltt}
+0x2334
+\end{alltt}
+
+\subsubsection{Floating point numbers}
+\index{floating point}
+\index{number!floating point}
+\go distinguishes floating point numbers from integral values by the fact that floating point numbers always have a decimal point: i.e., a floating point number is written as a fractional number followed by an optional exponent expression. Example floating point numbers include:
+\begin{alltt}
+34.56 2.0e45 2.04E-99
+\end{alltt}
+Since the period character has so many uses in \go, there are some special rules for them. In the case of a floating point number there may be no spaces on either side of the period; i.e., the program text:
+\begin{alltt}
+34 . 23
+\end{alltt}
+does \emph{not} denote the number 34.23; it is three tokens: the integer 34, the rule terminator \q{\dotspace} and the integer 23.
+
+Floating point literals are of type \q{float}, a sub-type of \q{number}.
+
+\subsection{List notation}
+\label{expression:lists}
+\index{lists}
+\index{expression!list}
+
+\go has two standard data constructor types: lists and tuples. In addition, of course, it is possible to define additional data constructors using type definitions and classes.
+
+A list is a sequence of values. The defining characteristic of a list is that the first element of the list -- called  the \emph{head} of the list -- and the remaining sequence of elements after the head -- called the \emph{tail} of the list -- are available in a single constant step of computation. This distinguishes lists from arrays -- where every element is available in constant time although arrays are not easily extended -- and sets where each element may take $\log{}(n)$ time to access and there is only one occurrence of each element.
+
+Lists are a very important structuring tool for the \go programmer.
+
+Lists are written as a sequence of comma-separated expressions enclosed in square brackets. For example, the list
+\begin{alltt}
+[1,2,3]
+\end{alltt}
+is a list of three \q{number}s: 1, 2 and 3, as is the expression:
+\begin{alltt}
+[1,1+1,1+1+1]
+\end{alltt}
+
+\paragraph{List pattern notation}
+\index{lists!pattern}
+In addition to the list literal, \go supports a form of \emph{list pattern}. Like lists in many other languages, the fundamental unit in a list is a \emph{list pair} consisting of a head element and a tail list:
+\begin{alltt}
+[\emph{H},..\emph{T}]
+\end{alltt}
+There is a close correspondence between list patterns and list terms: the expression:
+\begin{alltt}
+[1,[2,[3,..[]]]
+\end{alltt}
+is equivalent to the list \q{[1,2,3]}.
+
+Other forms of list pattern are also interesting. For example, the list pattern:
+\begin{alltt}
+[1,2,3,..X]
+\end{alltt}
+denotes a list whose first three elements are known but whose tail is represented by the variable \q{X}. It is one of the magic aspects of logic programming that unifying \q{X} with \q{[4,5]} say, will have the effect of completing the above list pattern to
+\begin{alltt}
+[1,2,3,4,5]
+\end{alltt}
+
+\paragraph{The \q{list[]} type}
+\index{type!list}
+\index{lists!type of}
+List terms are of the \q{list[]} type (see Section~\vref{types:list}). The \q{list[]} type is polymorphic -- the type argument denotes the type of the elements of the list.
+
+The number lists above have type \q{list[integer]} because \q{1},\q{2} etc. are all \q{integer}s.
+
+\go requires that all elements of a list have the same type; hence where the lists:
+\begin{alltt}
+[1,2,4] \mbox{\rm and} ['a','b','er']
+\end{alltt}
+are legal, whereas the list:
+\begin{alltt}
+[1,'a',4]
+\end{alltt}
+\index{lists!heterogenous elements}
+is not because the middle element is a \q{symbol} whereas the first and third are \q{numbers}. However, see the discussion on heterogeneous values (see Section~\vref{directory:types}) on how to have lists with heterogeneous elements.
+
+\subsection{Strings}
+\label{token:string}
+\label{expression:string}
+\index{expression!strings}
+\index{strings!lists of characters}
+\index{lists!of characters are strings}
+\index{syntax!strings}
+In \go, strings are a shorthand for lists of \q{char}. String literals are written as a sequence of string characters -- not including new-line or paragraph separator characters -- surrounded by \q{"} marks.
+
+For example, the string literal:
+\begin{alltt}
+"this is a string"
+\end{alltt}
+has 16 characters in it and is equivalent to the list:
+\begin{alltt}
+[`t,`h,`i,`s,` ,`i,`s,` ,`a,` ,`s,`t,`r,`i,`n,`g]
+\end{alltt}
+and the empty string \q{""} is equivalent to
+\begin{alltt}
+[]:list[char]
+\end{alltt}
+i.e., an empty list with a type annotation (see Section~\vref{expression:typeannotation}) that it's type is list of \q{char}s.
+
+\index{strings!new lines in}
+\begin{aside}
+The reason for not permitting new-lines to occur in string literals or symbols is that that enables a particularly silly kind of syntax error to be picked up easily: a missing quote will always generate a syntax error at the end of the line. The restriction does not affect the possible string literals, as it is always possible to use \q{\bsl{}n} to indicate a new-line character.
+\end{aside}
+
+The \go compiler \emph{concatenates} sequences of string literals together into a single string literal. For example, the sequence:
+\begin{alltt}
+"a" "b" "c"
+\end{alltt}
+is equivalent to the \q{string} literal
+\begin{alltt}
+"abc"
+\end{alltt}
+This is very convenient for storing long strings in a program source text: each line of the string can be represented separately and laid out in a way that is consistent with the formatting of the rest of the program:
+\begin{alltt}
+myMessage("This is the first line\bsl{}n"
+          "of a somewhat long\bsl{}n"
+          "multi-line string\bsl{}n"
+          "that is really just a single argument\bsl{}n").
+\end{alltt}
+
+\index{strings!for formatting I/O}
+Being based on lists, \go strings are very flexible; normal list processing programs can also be used to process strings. For example, to concatenate two strings we simply use the standard list append function:
+\begin{alltt}
+"the first part"<>" the second part"
+\end{alltt}
+We can use the standard \q{in} predicate to search a string for a given character:
+\begin{alltt}
+`a in "sample string"
+\end{alltt}
+The iterative action:
+\begin{alltt}
+X in "sample string" *>
+  stdout.outLine("Char is "<>X.show())
+\end{alltt}
+will result in a series of lines in the standard output:
+\begin{alltt}
+Char is `s
+Char is `a
+\ldots
+Char is `g
+\end{alltt}
+We can even define a palindromic string:
+\index{palindrom@\q{palindrome}}
+\begin{alltt}
+palindrome(X) :- app(F,R,X), reverse(F,R).
+\end{alltt}
+For this definition we cannot use the standard list append \q{<>} since it is a function and \q{palindrome} requires a relational form of append. 
+
+\subsection{Tuples}
+\label{expression:tuples}
+
+\index{expression!tuple}
+\index{tuple}
+Tuples are aggregations of terms written as sequences separated by commas. Unlike lists, the individual elements of a tuple do \emph{not} need to be of the same type. Again, unlike lists, tuples are fixed length -- there is no equivalent of the list pattern for tuples.
+
+The primary role for tuples is as a kind of ad hoc aggregator of values: anonymous records if you will. For example, a dictionary may be thought of as a list of pairs: of keys and values. We can define the dictionary search function in a single line:
+\index{search@\q{search}}
+\begin{alltt}
+search(Key,D)::(Key,Value) in D => Value
+\end{alltt}
+using 2-tuples to represent the pairs in the dictionary. Such aggregations of data can be very handy as they do not require the extra overhead of defining the dictionary pair type -- either as a class or as an algebraic type.
+
+\index{type!tuple}
+\index{tuple!type of}
+The type of a tuple is also a \q{,} type term (see Section~\vref{types:tuple}).
+
+
+\subsection{Class label constructors}
+\label{pattern:constructor}
+Statefree class labels are the closest approximation \go has to \prolog's terms. If there is a class defined as:
+\begin{alltt}
+person:[string] \conarrow person.
+person(name)..\{
+  \ldots
+\}
+\end{alltt}
+we can then use the \q{person} constructor in patterns; for example in the function \q{nameOf}:
+\begin{alltt}
+nameOf:[person]=>string.
+nameOf(person(N))=>N.
+\end{alltt}
+
+Enumerated symbols are similar to constructors, where the class was defined using an enumerated symbol instead:
+\begin{alltt}
+noone:[] \conarrow person.
+noone..\{
+  \ldots
+\end{alltt}
+With this definition, we might add an extra equation to the \q{nameOf} function:
+\begin{alltt}
+nameOf(noone) => "noone".
+\end{alltt}
+\begin{aside}
+\go does not distinguish enumerated symbols from statefree ze\-ro-ar\-gu\-ment constructor functions. This means that the above definition for \q{noone} could also have been written:
+\begin{alltt}
+noone:[] \conarrow person.
+noone()..\{
+  \ldots
+\end{alltt}
+\end{aside}
+
+\index{type!stateful}
+\index{constructor!stateful}
+Note that terms declared using the stateful constructor type definition may \emph{not} be used in patterns -- the compiler will report an error in such cases.
+
+\begin{aside}
+The reason for this restruction is that stateful values inherently have no \emph{referential transparency}. That means that two syntactically identical stateless terms always denote the same individual, but two identical stateful expressions \emph{do not} denote the same value.
+
+For example, the condition:
+\begin{alltt}
+[1,2] = [1,2]
+\end{alltt}
+is always true, but the condition:
+\begin{alltt}
+cell([1,2]) = cell([1,2])
+\end{alltt}
+is \emph{not} true since \q{cell} is a stateful value and can therefore change.
+
+Of course, the query:
+\begin{alltt}
+cell([1,2]).get() = cell([1,2]).get()
+\end{alltt}
+may evaluate successfully if the \q{cell}s have their original values still.
+\end{aside}
+
+\subsection{Guarded Pattern}
+\label{expression:guard}
+
+\index{guard!in pattern}
+\index{pattern!guarded}
+A \firstterm{guarded pattern}{A guarded pattern is one which has a predicate or semantic test attached to it: the pattern only has meaning if the guard is satisfied.} takes the form
+\begin{alltt}
+\emph{Ptn}::\emph{Query}
+\end{alltt}
+\index{type inference!guarded pattern}
+\begin{aside}
+\index{operator!::@\q{::}}
+Note that the priority of \q{::} means that, in many cases, the guarded pattern must be enclosed in parentheses particularly when the guarded pattern is itself the argument of a constructor function. 
+\end{aside}
+One of the most important uses of guarded pattern is in rules, such as equations and action rules. For example, in:
+\begin{alltt}
+fact(N) :: N>1 => N*fact(N-1).
+\end{alltt}
+Logically, a guarded pattern means the same as the pattern denoted by \emph{Ptn} with the extra condition that the any pattern match or unification requires that \emph{Query} is true. If \emph{Query} is not satisfiable then the match with \emph{Ptn} will fail.
+
+\index{sqrt@\q{sqrt} relation}
+Pragmatically, guarded patterns address cases where pattern matches cannot be naturally expressed as a purely syntactic patterns: semantic conditions are needed to capture desired constraints. For example, the clause:
+\begin{alltt}
+sqrt((N::N>0),S) :- S*S=N.
+\end{alltt}
+uses a guarded pattern in the head of the clause to express the semantic constraint that square roots of negative numbers make no sense.
+
+Guarded patterns are mostly mappable to expressions with the guard expressed in a normal body goal; for example the \q{sqrt} clause above can be reasonably rewritten as:
+\begin{alltt}
+sqrt(N,S) :- N>0, S*S=N.
+\end{alltt}
+however, guarded patterns capture the intended relationship between the guard and the pattern more effectively than a goal which may be interspersed with other goals. Furthermore, guarded patterns are essential in the context of strong clauses (see Section~\vref{program:clause:strong}), equations and action rules (see Chapter~\vref{actions}) which do not have natural failure modes. In such rules, a guarded term in the left hand side of the rule cannot always be mapped to an explicit condition on the right hand side.
+
+\subsection{Tau patterns}
+\label{expression:tau}
+\index{expression!tau pattern}
+\index{tau pattern}
+\index{operator!\char'100@\q{\char'100}}
+A tau pattern is a way of expressing a condition on an object directly in a pattern (tau patterns are not allowed as general expressions):
+\begin{alltt}
+foo(O@bar()) :- \ldots
+\end{alltt}
+Such a pattern only succeeds if \q{O} is an object which has the \q{bar} predicate in its interface, and that predicate is satisfied. I.e., it is equivalent to the guarded pattern:
+\begin{alltt}
+foo(O::O.bar()) :- \ldots
+\end{alltt}
+Apart from the minor syntactic saving, the major purpose of the tau pattern is to permit a more abstract style of programming. In particular, they can be used when matching against objects that may have different constructors. For example, the \q{list[]} type interface may be implemented in a number of ways -- not only the built-in list notation. Writing a program that works for any value implementing the \q{list[]} interface is made easier and more natural with tau patterns. For example, the \q{join} function:
+\begin{alltt}
+join(O@eof(),P) => P.
+join(O@hdtl(H,T),P) => O.cons(H,join(T,P)).
+\end{alltt}
+will work with \emph{any} implementation of the \q{list[]} interface, not only the list notation. See Section~\vref{types:list} for a more complete description of the \q{list[]} type interface.
+
+A variation of the tau pattern is where the object being matched against is not itself required. In this case, the prefix form of the tau is permitted:
+\begin{alltt}
+foo(@bar()) :- \ldots
+\end{alltt}
+is equivalent to:
+\begin{alltt}
+foo(\_@bar()) :- \ldots
+\end{alltt}
+
+\begin{aside}
+For more general programming, tau patterns are an important tool in the programmer's armory. Using tau patterns guards against the real possibility of needing to change a class definition (and the form of its constructors) without changing all the references to that constructor.
+\end{aside}
+
+\section{Variables}
+\label{expression:variable}
+
+\index{expression!variable}
+\index{variable}
+Variables are written as identifiers; the notation for identifiers is a variation on the standard identifier form\note{I.e., a letter followed by zero or more letters or digits.} taking into account the extended possibilities offered by Unicode.
+
+All identifiers which have not been defined as class constructors, names of programs, declared as enumerated symbols, or constructor functions in an algebraic type definition are considered to be variables. \go does not have a variable convention to distinguish variables; instead we use the context of the identifier to distinguish them. Note that normal \q{symbol}s (see Section~\vref{expression:symbol}) are always surrounded by single quotes and cannot be confused with variables.
+
+\index{type inference!variable}
+\index{variable!type inference}
+All variables are associated with a type. It is possible for a variable to not have a value and yet still have a type associated with it; the bounded-ness state of a variable is different to whether the type of the variable is ground or not. It is also possible to have a variable whose type is ground but whose value is unknown; conversely is it possible (in polymorphic programs) to have variables have ground values but with unidentified types.
+
+\subsection{Scope of identifiers}
+\label{variable:scope}
+
+\index{variable!scope}
+\index{identifier!scope}
+\go does not require that variables in rules be explicitly introduced -- simply, an identifier occurring in a pattern or expression that does not have a prior declaration is assumed to be a variable. However, there are rules that define the \emph{scope} of a variable: i.e., the textual range across which occurrences of the same name are considered to refer to the same variable.
+
+For identifiers such as program names, type names and class names, introduced in the body of a class or package, they are in scope across the entire class body or package -- there is no implied scope arising from the order of declarations. For variables in rules, the scope of the variable is the entire rule.
+
+A variable may be \emph{free} in a rule -- this means that its scope encompasses the rule as well as other, enclosing, program fragments. The main source of free variables in a rule are \emph{label variables} of the class in which the rule is embedded. For example, in:
+\begin{alltt}
+lbl:[integer] \conarrow foo.
+lbl(X)..\{
+  bar(X) :- X<10.
+\}
+\end{alltt}
+the variable \q{X} is \emph{free} in the \q{bar} clause. The reason is that \q{X} is also a variable occurring in the label \q{lbl(X)} of the class that the \q{bar} clause is embedded.
+
+\paragraph{Holes in scope}
+\index{variable!scope!holes in}
+\index{identifier!scope!holes in}
+A hole in the scope of an identifier  -- where an inner use of an identifier can hide an outer variable with the same name -- can occur when the inner definition occurs in a class body. There are two situations where this may occur: where a definition in a class body redefines a package name of some kind, as in:
+\begin{alltt}
+pkg\{
+  pVar:integer = 10.
+  
+  pClass:[]\conarrow{}foo.
+  pClass..\{
+    pVar:[T]=>T.
+    pVar(U)=>U.
+  \}
+\}
+\end{alltt}
+where the \q{pVar} identifier is defined twice: once as a package constant and secondly as a function within the \q{pClass} class body. These are different identifiers and may have different types.
+
+The inner \q{pVar} masks out the outer \q{pVar}, throughout the former's natural scope which is the \q{pClass} class body. However, in the case of package names, we can recover the outer reference using the package reference notation:
+\begin{alltt}
+pkg\{
+  pVar:integer = 10.
+  
+  pClass:[]\conarrow{}foo.
+  pClass..\{
+    pVar:[T]=>T.
+    pVar(U) => U.
+    
+    other(X) :- X=pkg\hash{}pVar.   -- package-level pVar
+  \}
+\}
+\end{alltt}
+\index{operator!\#@\hash}
+The package reference notation is explained further in section~\vref{package:reference}.
+
+\index{anonymous class}
+\index{class!anonymous}
+Inner and anonymous classes (see Section~\vref{lo:inner}) can also introduce holes in the scope of identifiers: programs defined within an inner class body will hide outer names -- including outer variables:
+\begin{alltt}
+pkg\{
+  pVar:integer = 10.               -- package variable
+  
+  pClass:[]\conarrow{}foo.
+  pClass..\{
+    sQ:[integer]=>integer.
+    sQ(X) => X*X.
+    
+    pVar:[integer]=>foo.
+    pVar(X) => :foo..\{    -- pVar hides outer pVar
+      X:[]=>symbol.       -- hides X from pVar rule
+      X()=>'bb'.
+      sQ:[]\{\}.
+      sQ().               -- hides sQ function in pClass
+    \}.
+  \}.
+\}
+\end{alltt}
+\index{variable!free}
+\index{free variables}
+\begin{aside}
+The main issue to be aware of is not the unexpected hiding of names but the unexpected \emph{free}ness of variables. Most variables occurring in rules are local to the rule, but variables that also occur in labels are \emph{not} local to the rule. This can have some unexpected results:
+\begin{alltt}
+lbl:[list[t]]\conarrow{}foo[t].
+lbl(L)..\{
+  ruler:[list[t]]=>list[t].
+  ruler([E,..L]) => adjust(E,ruler(L)).
+  ruler([])=>[].
+\}
+\end{alltt}
+The \q{L} variable referenced in the first \q{ruler} equation is \emph{not} a local variable to the \q{ruler} function but is free and is, in fact, bound by the \q{lbl(L)} label of the class.
+
+It can be easy to miss these kinds of variable references in large and complex programs. For that reason, it is a good idea to use a naming convention distinguishing rule variables from label variables.
+\end{aside}
+
+\subsection{Singleton and anonymous variables}
+\label{expression:variable:anonymous}
+\index{variable!singleton occurrence}
+A singleton variable is one which has only one occurrence. \go has a specific notation for singleton variables: the \q{\_} identifier. Underscore variables are automatically singleton -- each underscore identifier denotes a separate variable.
+
+Anonymous variables are very useful in patterns as often not all elements of a matched structure are needed in every rule. For example, in the \q{mem} program in Program~\vref{expression:mem}, the first rule is only interested in the head element of the list -- the tail is represented by an underscore -- and, conversely, in the second rule the head of the list is not important but the tail is.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+mem(E,[E,.._]).       -- the tail is not important here
+mem(E,[_,..L]) :-     -- the head is not important here
+  mem(E,L).
+\end{alltt}
+\vspace{-2ex}
+\caption{List \q{mem}bership program}
+\label{expression:mem}
+\end{program}.
+
+Since a singleton variable can often represent a typo, the \go compiler reports a warning about such occurrences. This warning is suppressed for underscore variables and also for variables whose first letter is an underscore. This latter convention is quite useful as it reminds the reader that a particular variable is intended to be singleton.
+
+\section{Evaluable expressions}
+\label{expression:evaluable}
+
+In addition to most of the patterns described above, a call to a program can make use of \firstterm{evaluable expressions}{An evaluable expression is one whose value is not necessary directly reflected in the syntax of the expression itself. The simplest form of evaluable expression is the function call: \q{2+3} has as its value the term \q{5} -- which is not unifiable with \q{2+3}.}. Evaluable expressions have a value that is not a direct reflection of the syntax of the expressions themselves. For example, \q{2+3} has the value \q{5} -- which makes \q{+} evaluable -- whereas the value of the expression \q{[1,2]} is, simply, \q{[1,2]}.
+
+\go supports a number of such expression form, included the function call, guarded expressions, action expressions, type annotated expressions and expressions relating to objects.
+
+\begin{aside}
+All the patterns mentioned in section~\vref{expression:pattern} are also legitimate instances of expression. The main exceptions to this are \emph{guarded patterns} and \emph{tau patterns}; neither of these forms make sense as expressions since they are fundamentally forms of \emph{test}.
+
+On the whole, the language of expressions is far richer than the language of patterns: there are more expressions that are not valid patterns than vice-versa.
+\end{aside}
+
+\subsection{Function call}
+\label{expression:applicative}
+\index{function call}
+\index{expression!function call}
+A function represents the application of a function to a set of arguments, i.e., it is an expression of the form:
+\begin{alltt}
+\emph{Fun}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+
+\paragraph{Strict evaluation}
+\index{function!evaluation order}
+\index{evaluation order!in expressions}
+\go is a strict order evaluation language -- arguments to functions are always evaluated prior to evaluating the function call itself. The only exception to this are some of the cases documented in this chapter; most notably the \emph{conditional expression} (see section~\vref{expression:conditional}) where only one of the conditional arms will be evaluated -- depending on the conditional test.
+
+\paragraph{Type inference}
+\index{function call!type of}
+Depending on any mode annotations attached to the function's type, normally the arguments to a function call must have a type that is a sub-type of the type declared for the function. Where a function is polymorphic, then all occurrences of the type variable must correspond to the same type -- which may impose a stronger constraint than simply the sub-type constraint.
+
+If the function's type argument has a bidirectional mode attached to it, then its argument must be \emph{equal} to the declared type. In the case that a function has an output-moded argument, then any actual arguments in that position should be \emph{greater} than or equal to the declared type.
+
+\subsection{Conditional expressions}
+\label{expression:conditional}
+
+\index{conditional!expression}
+\index{expression!conditional}
+\index{operator!\char'174 \char'77@\q{\char'174\char`\ \char'77}}
+A \firstterm{conditional expression}{A conditional expression is one which takes one of two values depending on the truth of a test condition.} takes one of two values depending on the outcome of a test. Conditional expressions are written:
+\begin{alltt}
+(\emph{Query}?\emph{E\sub{then}}|\emph{E\sub{else}})
+\end{alltt}
+Note that the parentheses are required. 
+
+To evaluate a conditional expression the success or failure of the \emph{Query} is used to determine which branch of the conditional to evaluate. If \emph{Query} succeeds, then the value of the conditional expression is the value of the `then' branch -- \emph{E\sub{then}} -- otherwise it is the value of the `else' branch -- \emph{E\sub{else}}. \emph{Query} is evaluated in a `one-of' context -- only one solution for \emph{Query} is attempted.
+
+For example, we can define a \q{min} function using conditional expressions:
+\begin{alltt}
+min(X,Y) => (X<Y ? X | Y).
+\end{alltt}
+Note that there is a certain asymmetry about the \emph{E\sub{then}} and \emph{E\sub{else}} arms of the conditional expression. If \emph{Query} succeeds and it instantiates one or more variables as it does so, then these values are `available' in evaluating \emph{E\sub{then}}; but (clearly) they are not available to \emph{E\sub{else}}.
+
+The type of a conditional expression is formed from the \emph{least upper bound} of the types of \emph{E\sub{then}} and \emph{E\sub{else}}.
+
+\subsection{Case expression}
+\label{expression:case}
+\index{expression!case@\q{case}}
+\index{case@\q{case}!expression}
+The \q{case} expression is a generalization of the conditional expression; the governing expression is evaluated (once) and then compared against the patterns in a series of equations.
+
+For example, we can define the \q{app} function in terms of a \q{case} expression:
+\begin{alltt}
+app(X,Y) => case X in (
+  [] => Y
+| [E,..U] => [E,..app(U,Y)]
+).
+\end{alltt}
+In general, the \q{case} expression consists of a series of potentially guarded equations:
+\begin{alltt}
+case \emph{Exp} in (
+  \emph{P\sub1}::\emph{G\sub1} => \emph{Ex\sub1}
+| \ldots
+| \emph{P\subn}::\emph{G\subn}  => \emph{Ex\subn}
+)
+\end{alltt}
+The expression \q{\emph{Exp}} is evaluated and then \emph{matched} against the patterns \q{\emph{P\subi}} in turn -- together with any associated guard -- until one matches successfully. At that point the associated expression \q{\emph{Ex\subi}} is evaluated and returned as the value of the \q{case}.
+
+If \emph{none} of the patterns match then an error will be raised.
+
+A \q{case} expression has a similar character to calling an auxiliary function -- one that is defined inline rather than separately. In fact, that is how the compiler analyses a \q{case} expression: by creating the auxiliary function.
+
+\begin{aside}
+From a design perspective, \q{case} expressions can be a useful way of highlighting a case analysis -- different expressions for different cases. However, complex nesting of expressions can also lead to harder to read programs.
+\end{aside}
+
+\subsection{Object Reference}
+\label{expression:dot}
+\index{dot expression}
+\index{object!dot expression}
+\index{operator!.@\q{.}}
+\index{class!accessing method}
+
+A dot expression is a way of accessing a definition encapsulated in a class. Recall that, logically, a class is a theory consisting of functions, predicates and so on. So, an expression of the form:
+\begin{alltt}
+\emph{Exp}.\emph{Fun}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+represents the evaluation of the function call
+\begin{alltt}
+\emph{Fun}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+in the context of the theory identified by the value of \emph{Exp}.
+
+In practice there are two forms of \emph{Exp}: in one case \emph{Exp} evaluates to an \emph{object} -- a value associated with a stateful class constructor -- and in other cases \emph{Exp} evaluates to a regular stateless term which identifies a specific class theory. The form and effect of the dot expression is the same in both cases: the function is evaluated in a context that is defined by the class's definition.
+
+\go imposes a restriction on dot expressions that the object \emph{Exp} must not be unbound at the time that the dot expression is evaluated.
+
+\paragraph{Dot expressions and type inference}
+\index{type!dot expression}
+It is worth noting that \go's type inference is strong enough to make inferences about types on the left hand side of a dot expression. For example, given an expression such as:
+\begin{alltt}
+O.f(23)
+\end{alltt}
+the type inference system can \emph{infer} that the type of \q{O} is consistent with:
+\begin{alltt}
+T\sub{O} \impl \{ f:[integer]=>T\sub{x} \}
+\end{alltt}
+where T\sub{O} is the type of \q{O} and T\sub{x} is the type of the entire expression. I.e., we can infer that \q{O} has to have an \q{f} method associated with it, and that that method is a function from \q{integer}s to some type, and the latter type is the type of the whole expression.
+
+
+\subsection{Object creation}
+\label{expression:object:new}
+\index{expression!object creation}
+\index{object!creation}
+
+We noted in Section~\vref{pattern:constructor} that label constructors function in a very similar manner to \prolog terms. However, where the label's type is a stateful type, then the semantics of a label term expression quite different to the \prolog term and is closer to the Object Oriented concept of \emph{object creation}.
+
+For example:
+\begin{alltt}
+\emph{C}(E\sub1,\ldots,E\subn)
+\end{alltt}
+where \q{\emph{C}} is a stateful class constructor and \emph{E\subi} are the label arguments to the class constructor, results in a new object being created.
+
+When a new stateful object is created, any internal constants and variables are initialized (see Sections~\vref{lo:constant} and \vref{lo:variable}). 
+
+\index{class!rule}
+The distinction between objects and classes is somewhat blurred in \go. In fact, a more accurate view of the semantics of object creation is, approximately, to create a new class obeying the class rule:
+\begin{alltt}
+\emph{C\hash124352} <= \emph{C}(E\sub1,\ldots,E\subn)
+\end{alltt}
+where \q{\emph{C\hash124352}} is a new symbol that is the returned value of the constructor expression. The new class inherits from \q{\emph{C}(E\sub1,\ldots,E\subn)} in the same way that any class rule defines inheritance.
+
+\begin{aside}
+One immediate implication of this story is that any \emph{variables} occurring in \q{E\subi} are standardized apart by the object creation. I.e., they become separate from the original variables occurring in the object construction expression. Should the originals be further instantiated this would have no effect on the newly created object.
+
+Similarly, if a method within \q{C} tries to modify a variable in \q{E\subi} this can have no effect on either the original expressions or, in fact, on the object itself.
+\end{aside}
+
+For example, given a class definition:
+\begin{alltt}
+belief:[list[bF]] \sconarrow beliefStore[bF].
+belief(I)..\{
+  bfs:dynamic[bF] = dynamic(I).
+  
+  iBelieve(X) :- bfs.mem(X).
+\}.
+\end{alltt}
+where the \q{beliefStore} type is something like:
+\begin{alltt}
+beliefStore[T] \impl \{
+  iBelieve:[T]\{\}
+\}
+\end{alltt}
+then a new belief store is created -- with an initial set of beliefs -- when an expression of the form:
+\begin{alltt}
+belief([])
+\end{alltt}
+is evaluated.
+
+In this case, along with the new instance of the \q{belief} class, the value of the class constant \q{bfs} in the \q{belief} class is also evaluated. This in turn creates a new object -- the empty \q{dynamic} relation used to hold the set of beliefs.
+
+\subsection{Bag of expression}
+\label{expression:bagof}
+\index{expression!bag}
+\index{bag expression}
+\index{operator!\char'174\char'174@\q{\char'174\char'174}}
+The \firstterm{bag of}{A bag of expression is an expression that denotes a list of elements -- each being the result of satisfying a predicate condition. For example, to compute the \q{male} children of \q{'fred'} use \\ \q{\{X\char'174\char'174male(X),father('fred',X)\}}} expression is a `cousin' of the guarded expression -- instead of a single expression which is defined if a goal is satisfied, a bag of expression represents the list of all the possible answers to a question. The bag of expression is written:
+\begin{alltt}
+\{ \emph{Ex} || \emph{Query} \}
+\end{alltt}
+The value of a bag of expression is a list consisting of a copy of the value of \emph{Ex} for each way that \emph{Query} can be satisfied. The order of elements in the resulting list is the same as the order that \emph{Query} gives rise to possible solutions. It is of course possible for there to be multiple occurrences of a given value (hence the term `bag of').
+
+\paragraph{Variables in bags}
+may arise when the bound \emph{Ex}pression is not completely ground for one or more of the solutions of \emph{Query}. The list returned will also contain variables. More precisely, the bag-of algorithm works as follows:
+\begin{enumerate}
+\item
+The \emph{Query} is evaluated. If no solution to \emph{Query} is possible, then the value of \q{\{\emph{Ex}||\emph{Query}\}} is the empty list.
+\item
+Each time a solution to \emph{Query} is found, a `frozen copy' of \emph{Ex} is computed -- in the context of the solution to \emph{Query}. This involves taking copies of any variables in \emph{Ex} to produce new variables.
+
+After the \emph{Ex} value is computed, a failure is forced to attempt to find additional solutions to \emph{Query}.
+\item
+After the last solution to \emph{Query} has been found, the list of solutions found is `thawed' and returned as the value of the bag expression.
+\end{enumerate}
+This results in a list of solutions where any unbound variables are effectively replaced by fresh variables not associated with other variables in the program.
+
+\subsection{Bounded set expression}
+\label{expression:bounded}
+\index{expression!bounded set}
+\index{bounded set expression}
+The \firstterm{bounded set}{A bounded set expression is an expression of the form:\\
+\q{\{ \emph{Ex} .. \emph{Ptn} in \emph{List} \}}\\
+which results in evaluating the bound expression \emph{Ex} for every successful match of \emph{Ptn} in the input \emph{List}. Bounded set expressions are similar to bag-of expressions, except that they are always governed by a bounding list -- hence the name -- and are evaluated using a recursive iteration rather than by backtracking over possible solutions.} expression is similar in form, and in some cases use, to the \emph{bag of} expression. However, it owes its origin to a different style of programming and has quite different semantics.
+
+The general form of the bounded set expression\note{A more accurate term would be bounded \emph{list} expression, but that seems clumsy.} is:
+\begin{alltt}
+\{ \emph{Ex} .. \emph{P\sub1} in \emph{L\sub1}, \emph{P\sub2} in \emph{L\sub2}, \ldots{}\emph{P\subn} in \emph{L\subn}\}
+\end{alltt}
+The value of a bounded set expression is a list; one element for each case where there is a matching instance of every \emph{P\subi} in the lists \emph{L\subi}. The element of the result set is obtained by evaluating \emph{Ex} in the context of the successful matches.
+
+The main difference between bounded set expressions and regular bag expressions is that the former constructs a list from `base' lists; whereas bag of expressions do not need a base list. For example the expression:
+\begin{alltt}
+\{ X*X .. X in [1,2,-3,4] \}
+\end{alltt}
+will return a list of `squares':
+\begin{alltt}
+[1,4,9,16]
+\end{alltt}
+We can actually give an expansion of the bounded set expression in terms of regular \go; for example the expression above can be interpreted as:
+\begin{alltt}
+bounded34568([1,2,-3,4])
+\end{alltt}
+where \q{bounded34568} is a new identifier not occurring anywhere else in the program and is defined as:
+\begin{alltt}
+bounded34568([]) => [].
+bounded34568([X,..L]) => [X*X,.. bounded34568(L)].
+bounded34568([_,..L]) => bounded34568(L).
+\end{alltt}
+Note the last \q{bounded34568} equation above: this allows the pattern \emph{Ptn} to fail to match elements of the list -- resulting in  a gap in the result list.
+
+Bounded set expressions can be used as a \go equivalent of functional map. A functional map applies a function to elements of a list -- constructing a new list from the results. However, in fact, bounded set expressions are more powerful because the output list may be smaller than the input list. Using bounded set expressions we can \emph{filter} a list for elements that match a condition. For example, the expression:
+\begin{alltt}
+\{ X .. (X::X<10) in [1,2,3,50,23,2] \}
+\end{alltt}
+will return the list:
+\begin{alltt}
+[1,2,3,2]
+\end{alltt}
+
+\begin{aside}
+The bounded set expression, and the bag of set expression, have a foundation in set theory: they correspond to the bounded set abstraction and the unbounded set abstraction respectively. The mathematics of bounded set abstractions and set abstractions parallels the \go operators: bounded set abstractions are always relative to a fixed set; whereas the unbounded set abstraction need not have a $X\in{}S$ condition.
+\end{aside}
+
+We can use bounded set expressions to define a particularly elegant version of quicksort; as in Program~\vref{expression:quicksort}.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+sort([])=>[].
+sort([E,..L]) => 
+  sort(\{X..(X::X<E) in L\})<>[E,..sort(\{X..(X::X>=E) in L\})]
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{Quicksort using bounded sets\label{expression:quicksort}}
+\end{program}
+
+
+\paragraph{Variables in bounded set expressions} are handled somewhat differently to variables in bag-of expressions. Unbound variables in the value of a bounded set expression may arise from two `sources': variables occurring in the bound expression (\emph{Ex} above) and variables occurring in the `binding list'. Unbound variables occurring in the \emph{Ex} part of a bounded set expression -- and which are \emph{not} shared with the \emph{Ptn} -- will be different for each successful match of the pattern. Variables occuring in the binding list \emph{will} be shared and reflected in the value.
+
+By looking at the expansion for bounded set expressions we can confirm what will happen in the computed list if there is a variable in an element of \emph{List}, it may be referenced in the result list also. For example, in the expression:
+\begin{alltt}
+\{X..(X::\nasf{}emptyNode(X)) in [empty,node(U,V),node(A,empty)]\}
+\end{alltt}
+assuming the relevant definitions:
+\begin{alltt}
+tree ::= empty | node(tree,tree).
+\ldots
+emptyNode(empty).
+\end{alltt}
+the resulting list is:
+\begin{alltt}
+[node(U,V), node(A,empty)]
+\end{alltt}
+where \q{U}, \q{V} and \q{A} are the \emph{same} variables as in the original list. This is quite different to the bag of expression where all the variables in the result are `new' variables not occurring elsewhere.
+
+Similarly, there may be global variables -- variables belonging to an outer scope -- these too will be shared in the computed value.
+
+Finally note, however, that due again to the semantics of the expansion, if the input list has a top-level variable, the \emph{P\subi} are \emph{not} permitted to instantiate the input lists. This may have the effect of eliding such elements from the output -- except where the \emph{P\subi} is itself a variable.
+
+\subsection{Sub-thread \q{spawn}}
+\label{expression:spawn}
+
+\index{spawn@\q{spawn} sub-thread}
+\index{expression!spawn@\q{spawn} sub-thread}
+\index{keyword!spawn@\q{spawn}}
+\index{multi-threaded programs}
+A \firstterm{spawn expression}{a spawn expression is one that results in the spawning of a new thread of activity.} is used to spawn an action as a sub-thread. The form of a \q{spawn} expression is:
+\begin{alltt}
+spawn \{ \emph{Action} \}
+\end{alltt}
+The value of a \q{spawn} is the \q{thread} identifier of the sub-thread created. 
+
+The spawned sub-thread executes its action independently of the invoking thread; and may terminate after or before the `parent'. 
+
+The \q{thread} type is a standard \go type; it has the definition:
+\begin{alltt}
+thread \impl \{ start:()*, creator:[]=>thread \}.
+\end{alltt}
+In normal situations, a \go program would not have literal \q{thread} expressions -- they are generated automatically as a result of spawning sub-threads. 
+
+
+\section{Special expressions}
+\label{expression:special}
+
+There are a number of special kinds of expressions in \go, these include parse expressions, type annotated expressions and action expressions.
+
+\subsection{Parse expression}
+\label{expression:grammarexp}
+\index{expression!parse}
+\index{parse expression}
+\index{operator!\%\%@\q{\%\%}}
+The counterpart of a term display expression is the term parse expression. It is used to parse a \q{string} into a normal value; but actually reduces to the invocation of a parse grammar on the \q{string}.
+
+A parse expression takes the form:
+\begin{alltt}
+\emph{NonTerminal} \%\% \emph{Stream}
+\end{alltt}
+denotes a request to parse the \emph{Stream} using the grammar \emph{Nonterminal}. \emph{NonTerminal} must be a single argument grammar that is defined over the type of \emph{Stream}. The value returned by the \q{\%\%} expression is the value found in \emph{NonTerminal}'s single argument.
+
+In effect, it is equivalent to a guarded expression:
+\begin{alltt}
+(\emph{X} :: \emph{NonTerminal}(\emph{X}) --> \emph{Stream})
+\end{alltt}
+\q{\emph{NonTerminal}} itself must be defined using grammar rules (see Chapter~\vref{grammar}).
+
+A common use of the parse expression involves parsing strings to extract numeric values. The standard \q{numeric} grammar (available from the \q{go.stdparse} package) parses strings and `returns' in its single argument a number:
+\begin{alltt}
+X = numeric\%\%"3.14"
+\end{alltt}
+
+The parse of \q{\emph{NonTerminal}} only succeeds if the \q{\emph{NonTerminal}} grammar successfully parses the entire contents of \emph{Stream}. A variation of the grammar expression is useful for those cases where it is not necessary to parse the whole stream:
+\begin{alltt}
+\emph{NonTerminal} \%\% \emph{Stream}\tilda{}\emph{Remainder}
+\end{alltt}
+In this case \q{\emph{Remainder}} is unified with the remaining portion of \emph{Stream} -- of course, \q{\emph{NonTerminal}} must successfully parse at least some part of the stream. So, for example, if we wanted to pinch off a number from a string, and return the remainder part of the string, we could use:
+\begin{alltt}
+X=numeric\%\%"3.14 more characters"\tilda{}R
+\end{alltt}
+and \q{X} would be bound to the \q{number} 3.14 and \q{R} would be bound to the \q{string}
+\begin{alltt}
+" more characters"
+\end{alltt}
+
+\subsection{Type annotation}
+\label{expression:typeannotation}
+\index{expression!type annotation}
+\index{type annotation}
+A \firstterm{type annotated expression}{An expression in which the type of the expression is explicitly documented. Although not restricted to identifiers; a common case is for marking a variable with the variable's expected type}  takes the form:
+\begin{alltt}
+\emph{Ex}:\emph{Type}
+\end{alltt}
+A type annotated expression has the same value as its non-annotated component. The only effect of the type annotation is to add a type constraint to the expression. Type annotations are only rarely required within a normal \go program; however, they can serve as additional documentation.
+
+Related to this type annotation is the \emph{type cast} annotation:
+\begin{alltt}
+\emph{Ex}\tcast\emph{Type}
+\end{alltt}
+This expression allows the \q{\emph{Ex}} expression to be treated as though it were a \emph{Type} expression.
+
+\subsection{Valof expressions}
+\label{expression:valof}
+
+\index{expression!valof@\q{valof}}
+\index{valof@\q{valof} expression}
+A \firstterm{valof expression}{A valof expression is one where the value of the expression can only be computed as a result of performing some actions.} is used to compute expressions whose values depend on a series of actions rather than applying operators to sub-expressions. 
+
+For example, the \q{counter} class in Program~\vref{expression:counter}, defines a simple counter function that always returns a new number every time it is called.
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+counter:[integer]\sconarrow{}count.
+counter(I)..\{
+  X:integer := I.           -- initial value of the counter
+  
+  next() => valof\{
+    X := X+1;
+    valis X
+  \}
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A \q{counter} class with a \q{next} function}
+\label{expression:counter}
+\end{program}
+This class could be used as a \emph{counter factory}; each instance is a separate counter and every time \q{next} is called from an instance it will generate a new number.
+
+In general, a \q{valof} expression is written:
+\begin{alltt}
+valof\{ \emph{A\sub1};\ldots;\emph{A\sub{i-1}};valis \emph{Ex};\emph{A\sub{i+1}};\ldots;\emph{A\subn}\}
+\end{alltt}
+The \q{valis} action may occur anywhere within the body of the \q{valof}, it denotes the \emph{value} of the \q{valof} expression; although typically the \q{valis} action is placed at the end of the action sequence. There may be more than one \q{valis} action in a \q{valof} body; however, all executed \q{valis} actions must all agree on their value as well as their type. In all cases, the \q{valof} expression terminates when the last action has completed.
+
+\go requires that the \q{valis} action is `visible' in the action sequence: it is not permitted for the \q{valis} to be embedded in an action rule invoked during the execution of the \q{valof} body.
+
+The type of a \q{valof}/\q{valis} expression is the type of the expression evaluated by the \q{valis} action(s). If there is more than one \q{valis} in the body the they must all return expressions of the same type.
+
+Since actions may include conditionally executed actions it is possible that a \q{valof} may terminate \emph{without} executing any \q{valis} action. In that case the \q{valof} expression returns an unbound variable as its value. Note that although no \q{valis} action may be executed, the \q{valof}/\q{valis} still has a \emph{type} -- which is determined by all the \q{valis} actions visible in the action sequence.
+
+\section{Errors, exceptions and recovery}
+\label{expression:error}
+\index{failures and errors}
+Although \go's type system ensures that programs are type-safe; it is still possible for a program to fail at run-time. Given \go's background in logic programming, it is worth discussing what failure means for a \go application. 
+
+For pragmatic, software engineering, reasons, we distinguish between \emph{normal} failures and \emph{abnormal} failures. A normal failure is one where there is an acceptable alternative action; an abnormal failure has no immediately acceptable alternative. For example, a predicate test in the body of a clause or equation:
+\begin{alltt}
+fact:[integer]=>integer.
+fact(0) => 1.
+fact(N) :: N>0 => N*fact(N-1).
+\end{alltt}
+\index{fact@\q{fact} function}
+usually has an acceptable outcome, both for the case where the predication succeeds  -- i.e., use the equation -- and where it does not succeed -- i.e., use a different equation.
+
+On the other hand, supposing that \q{fact} above were called with \q{-1} as an argument: \q{fact(-1)}. In that case, \emph{none} of the equations for \q{fact} would apply. That results in the situation where the \q{fact(-1)} expression does not have a value; and causes a failure. This is an example of an \emph{abnormal failure}. Instead of just failing -- and relying on backtracking to locate an alternate computation -- the \go language specifies that an \emph{exception} be raised for such situations. I.e., expressions have values, and if we cannot compute a value for the expression then that is an abnormal failure and must be distinguished.
+
+\go handles regular failure by backtracking, and handles abnormal failure by raising an exception, and relying on an error recovery mechanism to recover from the exception.
+
+\subsection{Error recovery expression}
+\label{expression:errorrecovery}
+
+\index{onerror@\q{onerror}!expression}
+\index{error handling!in expressions}
+An \firstterm{error recovery expression}{an error recovery expression is an expression which includes a handler for any run-time errors that may arise during the evaluation of the expression.} is an expression which includes a `handler' for dealing with any run-time exceptions that may arise. The form of such an expression is:
+\begin{alltt}
+\emph{Ex} onerror (\emph{P\sub1} => \emph{E\sub1} | \ldots{} | \emph{P\subn} => \emph{E\subn})
+\end{alltt}
+In such an expression, the types of \emph{Ex}, \emph{E\subi} should all agree, and the types of \emph{P\subi} is of the standard error type \q{exception[]}.
+
+Semantically, an \q{onerror} expression always evaluates to the head expression \emph{Ex}; unless a run-time problem arose in its evaluation. In this case, an error exception would be raised (of type \q{exception[]}); and the evaluation of \emph{Ex} is terminated and one of the error handling equations is used instead. The first equation in the handler that unifies with the raised error is the one that is used; and the value of the expression as a whole is the value returned by that handler equation.
+
+There are variants of the \q{onerror} syntactic construct that correspond to an action, goal as well as expression.  Since error handlers may be nested to an arbitrary depth, it is always the inner-most active \q{onerror} construction that takes precedence when an error is raised.
+
+The type definition for \q{exception} is:
+\index{exception@\q{exception} type}
+\begin{alltt}
+exception \impl{} \{ cause:[]\funarrow{}string, code:[]\funarrow{}symbol \}
+\end{alltt}
+where \q{code} is intended to be an internal code denoting the exception type and \q{cause} is a human-readable explanation of the exception. In addition to the standard \q{exception} type, there is also a standard \emph{implementation} of the \q{exception[]} type: the \q{error()} class:
+\index{error@\q{error} class}
+\begin{alltt}
+error:[string,symbol] \conarrow exception.
+error(Cause,Code)..\{
+  cause()=>Cause.
+  code()=>Code.
+  show()=>"error: "<>Cause<>": ("<>\_\_errorcode(Code)<>")"
+\}.
+\end{alltt}
+\go defines a number of standard error symbols with a standard interpretation; for example the symbol \q{'eINSUFARG'} is raised when a standard function expects one of its arguments to have a value and it is given an unbound variable instead.
+
+\subsection{Raise Exception}
+\label{expression:exception}
+
+\index{raise@\q{raise} exception!in expression}
+A \firstterm{raise exception expression}{an exception expression is not a `real' expression -- it has no value. Instead, it causes a run-time exception to be raised -- which in turn must be caught by an error handler in an error recovery expression.} is used to force an exception into the evaluation. A \q{raise} takes the form:
+\begin{alltt}
+raise \emph{Ex}
+\end{alltt}
+
+\begin{program}[htb]
+\vspace{0.5ex}
+\begin{alltt}
+fact\{
+  fact:[integer]=>integer.
+  fact(N)::N>0,integral(N) => fct(N).
+  fact(N) => raise error(N.show()<>"should be >0",'eFAIL').
+  
+  private fct:[integer]=>integer.
+    fct(1) => 1.
+    fct(N) => N*fct(N-1).
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A \q{fact}orial package}
+\label{expression:fact}
+\end{program}
+Exception expressions do not return a value; instead, the current evaluation is terminated with a raised error exception -- the value of \emph{Ex} (which must be of type \q{exception[]}).
+\begin{aside}
+The \q{raise} expression is a boon for library writers, who will want to report errors in a controlled manner. For example, if the \q{fact} function were to be packaged in a library, the writer may wish to check for boundary conditions and report any problems explicitly. Program~\vref{expression:fact} is an example of how one might do this in a consistent way.
+\end{aside}
+
+
+

@@ -1,0 +1,73 @@
+\chapter{Renting cars}
+\label{rental}
+
+In a world of services and integration across the Internet a primary purpose of the technology is to enable people to carry out \emph{tasks}; especially tasks that involve distributed resources. One of the many tasks that we have to go through when planning a trip is arranging local transportation. If our destination is a major city, like London or New York, then we can rely on the local infrastructure -- such as subways, buses and taxis. However, in many places and for many purposes a car rental is often the best choice.
+
+Planning a car rental may involve a significant amount of effort -- comparing prices and features and availability across multiple car rental agencies is tedious and time consuming. Having tools to simplify that process could be a great help to travelers.
+
+A car rental is a classic example of a perishable good --  a car that has not been rented on a given day represents an irretrievable loss: the car-rental-day cannot be recovered. Hence, a car rental service has a desire to maximize the utilization of its fleet, whilst still providing sufficient service so that its customers continue to be loyal.
+
+\section{The Car Rental scenario}
+\label{rental:scenario}
+
+Car rental services, like many others, often attempt to boost their revenue by providing a higher-quality of service to their customers. Fundamentally, that means meeting more of the customers' needs than the basic means of transportation. Classic examples of this include in-car navigation systems, mobile telephones, alternate drop-off locations, child safety seats and chauffeurs; none of which may be `essential' to the core business, but any of which may significantly increase the utility of the car to the customer.
+
+Additional features may also involve the car rental agency attempting to predict the \emph{use} to which the customer is putting the car to, and supporting that -- for example with ski packages, or even boat trailers. The range of possible extensions to the core car rental is very large; and essentially open: a car rental service has every incentive to be opportunistic, responding to the dynamic business conditions a given rental office is in. 
+
+Of course, this opportunism applies to customers as well as car rental agencies. A passenger stepping off a plane may decide that the weather is good enough to warrant hiring a car to go to the beach!
+
+\subsection{A conversation with a car rental agency}
+Imagine that we had an agent that was an expert in hiring cars. And suppose that we were going skiing in a part of the world that we had never been to before, and needed a car. If our agents were really able to work for us, we might be witness to a conversation such as:
+\begin{alltt}
+ourAgent: I need a car
+  RentalAgent: When, and where?
+ourAgent: Denver, CO, March 10th
+  RentalAgent: Which class of car?
+ourAgent: Big and Heavy
+  RentalAgent: Thats fine; perhaps an SUV?
+ourAgent: How much?
+  RentalAgent: Not too expensive. 
+  RentalAgent: Maybe you'd like "Map Me"\tm?
+ourAgent: How did you know?
+  RentalAgent: Its on special also.
+ourAgent: What's the total?
+  RentalAgent: \$xxx
+ourAgent: I'll take it.
+  RentalAgent: There's a 10\% discount if you book today
+ourAgent: I'll take that too.
+\end{alltt}
+Of course, a conversation between computer systems if likely to be more like that in Figure~\vref{rental:conversation}.
+\begin{figure}
+\begin{alltt}
+ourAgent: inform(newTopic("SRO::carRental"))\note{Standard Rental Ontology}
+  RentalAgent: request(inform(valueOf("SRO::location")))
+OurAgent: inform(equals(valueOf("SRO::location"),
+                        "SGO::Denver,CA"))\note{Standard Geographic Ontology}
+  RentalAgent: request(inform(valueOf("SRO::rentalStartDate")))
+ourAgent: inform(equals(valueOf("SRO::rentalStartDate"),
+                        "SDO::3-10-03"))
+  RentalAgent: request(inform(valueOf("SRO::rentalEndDate")))
+ourAgent: inform(equals(valueOf("SRO::rentalEndDate"),
+                        "SDO::3-15-03"))
+  RentalAgent: request(inform(valueOf("SRO::carClass")))
+ourAgent: inform(if(conj([classOf(Car,X),sizeOf(X,Sz),
+                          isBigNheavy(Sz)]),
+                   equals(valueOf("SRO::carClass"),Car)))
+  RentalAgent: inform(conj([classOf("SUV","SRO::SUV-Class"),
+                          sizeOf("SRO::SUV-Class",Sz),
+                          isBigNheavy(Sz)]))
+ourAgent: request(inform(valueOf("SRO::rentalPrice")))
+  RentalAgent: inform(equals(valueOf("SRO::rentalPrice"),
+                             dollar(1000)))
+  RentalAgent: inform(available("AutoRent::MapMe"))
+ourAgent: request(valueOf("SRO::inCarNavigationSystem"))
+  RentalAgent: inform(equals(valueOf("AutoRent::MapMe")
+                             dollar(56)))
+\ldots  
+\end{alltt}
+\caption{A conversation between agents\label{rental:conversation}}
+\end{figure}
+
+\subsection{Elements of negotiation}
+One of the differences between a conversation such as that above and most conventional inter-machine conversations is that it is much more open. Although there is a significant amount of request-response style traffic, there is also an element of \emph{information volunteering}.
+

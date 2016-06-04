@@ -1,0 +1,996 @@
+This is pdfTeXk, Version 3.141592-1.40.3 (Web2C 7.5.6) (format=pdflatex 2007.5.18)  7 OCT 2007 20:49
+entering extended mode
+ %&-line parsing enabled.
+**letsgo.tex
+(./letsgo.tex
+LaTeX2e <2005/12/01>
+Babel <v3.8h> and hyphenation patterns for english, usenglishmax, dumylang, noh
+yphenation, arabic, basque, bulgarian, coptic, welsh, czech, slovak, german, ng
+erman, danish, esperanto, spanish, catalan, galician, estonian, farsi, finnish,
+ french, greek, monogreek, ancientgreek, croatian, hungarian, interlingua, ibyc
+us, indonesian, icelandic, italian, latin, mongolian, dutch, norsk, polish, por
+tuguese, pinyin, romanian, russian, slovenian, uppersorbian, serbian, swedish, 
+turkish, ukenglish, ukrainian, loaded.
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/book.cls
+Document Class: book 2005/09/16 v1.4f Standard LaTeX document class
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/fleqn.clo
+File: fleqn.clo 1998/08/17 v1.1c Standard LaTeX option (flush left equations)
+\mathindent=\dimen102
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/bk10.clo
+File: bk10.clo 2005/09/16 v1.4f Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@chapter=\count80
+\c@section=\count81
+\c@subsection=\count82
+\c@subsubsection=\count83
+\c@paragraph=\count84
+\c@subparagraph=\count85
+\c@figure=\count86
+\c@table=\count87
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen103
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/alltt.sty
+Package: alltt 1997/06/16 v2.0g defines alltt environment
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/tools/varioref.sty
+Package: varioref 2006/05/13 v1.4p package for extended references (FMi)
+\c@vrcnt=\count88
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/tools/xspace.sty
+Package: xspace 2006/05/08 v1.12 Space after command names (DPC,MH)
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2000/07/18 v2.13 AMS math features
+\@mathmargin=\skip43
+
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2007/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0
+\@emptytoks=\toks14
+\ex@=\dimen104
+))
+(/usr/local/texlive/2007/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d
+\pmbraise@=\dimen105
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 1999/12/14 v2.01 operator names
+)
+\inf@bad=\count89
+LaTeX Info: Redefining \frac on input line 211.
+\uproot@=\count90
+\leftroot@=\count91
+LaTeX Info: Redefining \overline on input line 307.
+\classnum@=\count92
+\DOTSCASE@=\count93
+LaTeX Info: Redefining \ldots on input line 379.
+LaTeX Info: Redefining \dots on input line 382.
+LaTeX Info: Redefining \cdots on input line 467.
+\Mathstrutbox@=\box26
+\strutbox@=\box27
+\big@size=\dimen106
+LaTeX Font Info:    Redeclaring font encoding OML on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
+\macc@depth=\count94
+\c@MaxMatrixCols=\count95
+\dotsspace@=\muskip10
+\c@parentequation=\count96
+\dspbrk@lvl=\count97
+\tag@help=\toks15
+\row@=\count98
+\column@=\count99
+\maxfields@=\count100
+\andhelp@=\toks16
+\eqnshift@=\dimen107
+\alignsep@=\dimen108
+\tagshift@=\dimen109
+\tagwidth@=\dimen110
+\totwidth@=\dimen111
+\lineht@=\dimen112
+\@envbody=\toks17
+\multlinegap=\skip44
+\multlinetaggap=\skip45
+\mathdisplay@stack=\toks18
+LaTeX Info: Redefining \[ on input line 2666.
+LaTeX Info: Redefining \] on input line 2667.
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/tools/longtable.sty
+Package: longtable 2004/02/01 v4.11 Multi-page Table package (DPC)
+\LTleft=\skip46
+\LTright=\skip47
+\LTpre=\skip48
+\LTpost=\skip49
+\LTchunksize=\count101
+\LTcapwidth=\dimen113
+\LT@head=\box28
+\LT@firsthead=\box29
+\LT@foot=\box30
+\LT@lastfoot=\box31
+\LT@cols=\count102
+\LT@rows=\count103
+\c@LT@tables=\count104
+\c@LT@chunks=\count105
+\LT@p@ftn=\toks19
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/latexsym.sty
+Package: latexsym 1998/08/17 v2.2e Standard LaTeX package (lasy symbols)
+\symlasy=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
+(Font)                  U/lasy/m/n --> U/lasy/b/n on input line 47.
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/makeidx.sty
+Package: makeidx 2000/03/29 v1.0m Standard LaTeX package
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks20
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2006/02/20 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/usr/local/texlive/2007/texmf/tex/latex/config/graphics.cfg
+File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
+)
+Package graphics Info: Driver file: pdftex.def on input line 90.
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2007/01/08 v0.04d Graphics/color for pdfTeX
+\Gread@gobject=\count106
+))
+\Gin@req@height=\dimen114
+\Gin@req@width=\dimen115
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/nomencl/nomencl.sty
+Package: nomencl 2005/09/22 v4.2 Nomenclature package (LN)
+\nomlabelwidth=\dimen116
+\nom@tempdim=\dimen117
+\nomitemsep=\skip50
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/tools/multicol.sty
+Package: multicol 2006/05/18 v1.6g multicolumn formatting (FMi)
+\c@tracingmulticols=\count107
+\mult@box=\box32
+\multicol@leftmargin=\dimen118
+\c@unbalance=\count108
+\c@collectmore=\count109
+\doublecol@number=\count110
+\multicoltolerance=\count111
+\multicolpretolerance=\count112
+\full@width=\dimen119
+\page@free=\dimen120
+\premulticols=\dimen121
+\postmulticols=\dimen122
+\multicolsep=\skip51
+\multicolbaselineskip=\skip52
+\partial@page=\box33
+\last@line=\box34
+\mult@rightbox=\box35
+\mult@grightbox=\box36
+\mult@gfirstbox=\box37
+\mult@firstbox=\box38
+\@tempa=\box39
+\@tempa=\box40
+\@tempa=\box41
+\@tempa=\box42
+\@tempa=\box43
+\@tempa=\box44
+\@tempa=\box45
+\@tempa=\box46
+\@tempa=\box47
+\@tempa=\box48
+\@tempa=\box49
+\@tempa=\box50
+\@tempa=\box51
+\@tempa=\box52
+\@tempa=\box53
+\@tempa=\box54
+\@tempa=\box55
+\c@columnbadness=\count113
+\c@finalcolumnbadness=\count114
+\last@try=\dimen123
+\multicolovershoot=\dimen124
+\multicolundershoot=\dimen125
+\mult@nat@firstbox=\box56
+\colbreak@box=\box57
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/index/index.sty
+Package: index 2004/01/20 v4.2beta Improved index support (dmj)
+\@indexbox=\insert233
+\indexproofstyle=\toks21
+) (./nap.sty
+Package: nap 2004/4/14 v1.0 package for formatting books in the Network Agent P
+ress style
+\critwidth=\dimen126
+\episize=\dimen127
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2007/02/07 v6.75r Hypertext links for LaTeX
+\@linkdim=\dimen128
+\Hy@linkcounter=\count115
+\Hy@pagecounter=\count116
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2007/02/07 v6.75r Hyperref: PDFDocEncoding definition (HO)
+)
+(/usr/local/texlive/2007/texmf/tex/latex/config/hyperref.cfg
+File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2006/08/22 v2.4 Connects package keyval with LaTeX options (
+HO)
+)
+Package hyperref Info: Option `hyperindex' set `true' on input line 2238.
+Package hyperref Info: Option `linktocpage' set `true' on input line 2238.
+Package hyperref Info: Hyper figures OFF on input line 2288.
+Package hyperref Info: Link nesting OFF on input line 2293.
+Package hyperref Info: Hyper index ON on input line 2296.
+Package hyperref Info: Plain pages OFF on input line 2303.
+Package hyperref Info: Backreferencing ON on input line 2306.
+
+Implicit mode ON; LaTeX internals redefined
+Package hyperref Info: Bookmarks ON on input line 2444.
+(/usr/local/texlive/2007/texmf-dist/tex/latex/hyperref/backref.sty
+Package: backref 2006/10/06 v1.27 Bibliographical back referencing
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/ltxmisc/url.sty
+\Urlmuskip=\muskip11
+Package: url 2005/06/27  ver 3.2  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 2599.
+\Fld@menulength=\count117
+\Field@Width=\dimen129
+\Fld@charsize=\dimen130
+\Choice@toks=\toks22
+\Field@toks=\toks23
+Package hyperref Info: Hyper figures OFF on input line 3102.
+Package hyperref Info: Link nesting OFF on input line 3107.
+Package hyperref Info: Hyper index ON on input line 3110.
+Package hyperref Info: backreferencing ON on input line 3115.
+Package hyperref Info: Link coloring OFF on input line 3122.
+\Hy@abspage=\count118
+\c@Item=\count119
+\c@Hfootnote=\count120
+)
+*hyperref using driver hpdftex*
+(/usr/local/texlive/2007/texmf-dist/tex/latex/hyperref/hpdftex.def
+File: hpdftex.def 2007/02/07 v6.75r Hyperref driver for pdfTeX
+\Fld@listcount=\count121
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/tocbibind/tocbibind.sty
+Package: tocbibind 2003/03/13 v1.5g extra ToC listings
+
+
+Package tocbibind Note: The document has chapter divisions.
+
+
+Package tocbibind Note: Using chapter style headings, unless overridden.
+
+) (/usr/local/texlive/2007/texmf-dist/tex/latex/tocloft/tocloft.sty
+Package: tocloft 2003/09/26 v2.3c parameterised ToC, etc., typesetting
+
+
+Package tocloft Note: The document has chapter divisions.
+
+\cftparskip=\skip53
+\cftbeforetoctitleskip=\skip54
+\cftaftertoctitleskip=\skip55
+\cftbeforepartskip=\skip56
+\cftpartnumwidth=\skip57
+\cftpartindent=\skip58
+\cftbeforechapskip=\skip59
+\cftchapindent=\skip60
+\cftchapnumwidth=\skip61
+\cftbeforesecskip=\skip62
+\cftsecindent=\skip63
+\cftsecnumwidth=\skip64
+\cftbeforesubsecskip=\skip65
+\cftsubsecindent=\skip66
+\cftsubsecnumwidth=\skip67
+\cftbeforesubsubsecskip=\skip68
+\cftsubsubsecindent=\skip69
+\cftsubsubsecnumwidth=\skip70
+\cftbeforeparaskip=\skip71
+\cftparaindent=\skip72
+\cftparanumwidth=\skip73
+\cftbeforesubparaskip=\skip74
+\cftsubparaindent=\skip75
+\cftsubparanumwidth=\skip76
+\cftbeforeloftitleskip=\skip77
+\cftafterloftitleskip=\skip78
+\cftbeforefigskip=\skip79
+\cftfigindent=\skip80
+\cftfignumwidth=\skip81
+\c@lofdepth=\count122
+\c@lotdepth=\count123
+\cftbeforelottitleskip=\skip82
+\cftafterlottitleskip=\skip83
+\cftbeforetabskip=\skip84
+\cfttabindent=\skip85
+\cfttabnumwidth=\skip86
+) (/usr/local/texlive/2007/texmf-dist/tex/latex/floatflt/floatflt.sty
+Package: floatflt 1997/07/16 v. 1.31
+\c@OptionTest=\count124
+\figbox=\box58
+\tabbox=\box59
+\pagebox=\box60
+\ffigcount=\count125
+\ftabcount=\count126
+\fftest=\count127
+\hangcount=\count128
+\nosuccesstryfig=\count129
+\nosuccesstrytab=\count130
+\figgutter=\dimen131
+\tabgutter=\dimen132
+\htdone=\dimen133
+\pageht=\dimen134
+\startpageht=\dimen135
+\tabbredd=\dimen136
+\floatfltwidth=\dimen137
+\fltitemwidth=\dimen138
+\outputpretest=\toks24
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count131
+\float@exts=\toks25
+\float@box=\box61
+\@float@everytoks=\toks26
+\@floatcapt=\box62
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/ltxmisc/shadow.sty
+Package: shadow 2003/02/19 v1.3 shadow boxes (M.O.)
+\txtwdth=\dimen139
+\sht=\dimen140
+\shw=\dimen141
+\shbox=\box63
+\sboxsep=\dimen142
+\sboxrule=\dimen143
+\sdim=\dimen144
+)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/ltxmisc/boxedminipage.sty)
+(/usr/local/texlive/2007/texmf-dist/tex/latex/footmisc/footmisc.sty
+Package: footmisc 2005/03/17 v5.3d a miscellany of footnote facilities
+\FN@temptoken=\toks27
+\footnotemargin=\dimen145
+
+
+LaTeX Warning: Command \@footnotetext  has changed.
+               Check if current package is valid.
+
+\c@pp@next@reset=\count132
+\c@@fnserial=\count133
+Package footmisc Info: Declaring symbol style bringhurst on input line 817.
+Package footmisc Info: Declaring symbol style chicago on input line 818.
+Package footmisc Info: Declaring symbol style wiley on input line 819.
+Package footmisc Info: Declaring symbol style lamport-robust on input line 823.
+
+Package footmisc Info: Declaring symbol style lamport* on input line 831.
+Package footmisc Info: Declaring symbol style lamport*-robust on input line 840
+.
+) (./manfnt.sty
+Package: manfnt 1999/07/010.2LaTeX2e manfnt package
+\dbend@height=\skip87
+) (./bussproofs.sty
+Proof Tree (bussproofs) style macros. Version 0.7.
+\theLevel=\count134
+\myMaxLevel=\count135
+\myBoxA=\box64
+\myBoxB=\box65
+\myBoxC=\box66
+\myBoxD=\box67
+\myBoxLL=\box68
+\myBoxRL=\box69
+\thisAboveSkip=\dimen146
+\thisBelowSkip=\dimen147
+\newScoreStart=\dimen148
+\newScoreEnd=\dimen149
+\newCenter=\dimen150
+\displace=\dimen151
+\leftLowerAmt=\dimen152
+\rightLowerAmt=\dimen153
+\scoreHeight=\dimen154
+\scoreDepth=\dimen155
+) (./lettrine.sty
+File: lettrine.sty 2004/05/22 v1.6 (D. Flipo)
+\c@DefaultLines=\count136
+\DefaultFindent=\dimen156
+\DefaultNindent=\dimen157
+\DefaultSlope=\dimen158
+\L@lbox=\box70
+\L@tbox=\box71
+\c@L@lines=\count137
+\L@Pindent=\dimen159
+\L@Findent=\dimen160
+\L@Nindent=\dimen161
+\L@lraise=\dimen162
+\L@first=\dimen163
+\L@next=\dimen164
+\L@slope=\dimen165
+\L@height=\dimen166
+\LettrineWidth=\dimen167
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/lettrine/lettrine.cfg))
+(/usr/local/texlive/2007/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+\fancy@headwidth=\skip88
+\f@ncyO@elh=\skip89
+\f@ncyO@erh=\skip90
+\f@ncyO@olh=\skip91
+\f@ncyO@orh=\skip92
+\f@ncyO@elf=\skip93
+\f@ncyO@erf=\skip94
+\f@ncyO@olf=\skip95
+\f@ncyO@orf=\skip96
+)
+\@glossaryfile=\write3
+\openout3 = `letsgo.glo'.
+
+
+Writing glossary file letsgo.glo 
+\idxtitle@default=\toks28
+\tf@default=\write4
+\openout4 = `letsgo.idx'.
+
+Package index Info: Writing index file letsgo.idx on input line 23.
+(./letsgo.aux (./preface.aux) (./first.aux) (./directory.aux) (./dance.aux)
+(./meta.aux) (./sudoku.aux) (./types.aux) (./expressions.aux) (./goals.aux)
+(./actions.aux) (./grammar.aux) (./lo.aux) (./packages.aux) (./programs.aux))
+\openout1 = `letsgo.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+
+(/usr/local/texlive/2007/texmf-dist/tex/context/base/supp-pdf.tex
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count138
+\scratchdimen=\dimen168
+\scratchbox=\box72
+\nofMPsegments=\count139
+\nofMParguments=\count140
+\MPscratchCnt=\count141
+\MPscratchDim=\dimen169
+\MPnumerator=\count142
+\everyMPtoPDFconversion=\toks29
+)
+Package hyperref Info: Link coloring OFF on input line 26.
+ (/usr/local/texlive/2007/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2006/12/27 v2.28 Cross-referencing by name of section
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/oberdiek/refcount.sty
+Package: refcount 2006/02/20 v3.0 Data extraction from references (HO)
+)
+\c@section@level=\count143
+)
+LaTeX Info: Redefining \ref on input line 26.
+LaTeX Info: Redefining \pageref on input line 26.
+
+(./letsgo.out) (./letsgo.out)
+\@outlinefile=\write5
+\openout5 = `letsgo.out'.
+
+\@float@every@program=\toks30
+\c@program=\count144
+LaTeX Font Info:    Try loading font information for U+lasy on input line 67.
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/ulasy.fd
+File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
+) [1
+
+
+{/usr/local/texlive/2007/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 81.
+
+(/usr/local/texlive/2007/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 81.
+
+Underfull \hbox (badness 10000) in paragraph at lines 80--83
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 90--94
+
+ []
+
+[2] [3] [4
+
+]
+\openout2 = `preface.aux'.
+
+ (./preface.tex
+Underfull \vbox (badness 1057) has occurred while \output is active []
+
+ [5
+
+
+]
+
+Package Fancyhdr Warning: \headheight is too small (6.95831pt): 
+ Make it at least 12.0pt.
+ We now make it that large for the rest of the document.
+ This may cause the page layout to be inconsistent, however.
+
+[6] [7] [8]
+
+LaTeX Warning: Reference `glossary' on page ix undefined on input line 96.
+
+[9]
+
+LaTeX Warning: Reference `install' on page x undefined on input line 103.
+
+) [10] (./letsgo.toc [11
+
+
+] [12] [13] [14] [15] [16])
+\tf@toc=\write6
+\openout6 = `letsgo.toc'.
+
+ [17] [18
+
+] (./letsgo.lop
+[19
+
+])
+\tf@lop=\write7
+\openout7 = `letsgo.lop'.
+
+ [20] (./letsgo.lof)
+\tf@lof=\write8
+\openout8 = `letsgo.lof'.
+
+ [21
+
+
+] [22
+
+] [1
+
+] [2]
+\openout2 = `first.aux'.
+
+ (./first.tex
+Chapter 1.
+LaTeX Font Info:    Try loading font information for OMS+cmtt on input line 9.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 9.
+
+LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead
+(Font)              for symbol `textbraceleft' on input line 9.
+
+Package hyperref Info: bookmark level for unknown program defaults to 0 on inpu
+t line 18.
+[3
+
+
+] [4] [5] [6]
+Chapter 2.
+[7
+
+] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18] [19]) [20] [21
+
+
+]
+[22]
+\openout2 = `directory.aux'.
+
+ (./directory.tex
+Chapter 3.
+[23
+
+
+] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36] [37]
+[38] [39]) [40] [41]
+\openout2 = `dance.aux'.
+
+ (./dance.tex [42
+
+
+
+]
+Chapter 4.
+<dcard.jpg, id=1679, 72.27pt x 106.9596pt>
+File: dcard.jpg Graphic file (type jpg)
+ <use dcard.jpg> [43pdfTeX warning (ext4): destination with the same identifier
+ (name{figure.4.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.18 
+      <./dcard.jpg>] [44] [45]
+<protocol.pdf, id=1697, 585.18423pt x 105.39174pt>
+File: protocol.pdf Graphic file (type pdf)
+ <use protocol.pdf> [46pdfTeX warning (ext4): destination with the same identif
+ier (name{figure.4.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.114 T
+       hese constructors follow the same pattern as the \q{shallWe} construc...
+ <./protocol.pdf>] [47] [48] [49] [50] [51] [52] [53]) [54]
+\openout2 = `meta.aux'.
+
+ (./meta.tex
+Chapter 5.
+[55
+
+
+
+] [56]
+Underfull \vbox (badness 1655) has occurred while \output is active []
+
+ [57]
+[58] [59] [60] [61] <familytree.pdf, id=1824, 435.62952pt x 205.76674pt>
+File: familytree.pdf Graphic file (type pdf)
+
+<use familytree.pdf> [62pdfTeX warning (ext4): destination with the same identi
+fier (name{figure.5.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.317 \end{program}
+                    <./familytree.pdf>] [63]) [64]
+\openout2 = `sudoku.aux'.
+
+ (./sudoku.tex
+Chapter 6.
+<unsolved.pdf, id=1851, 405.515pt x 402.50375pt>
+File: unsolved.pdf Graphic file (type pdf)
+ <use unsolved.pdf>
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [65
+
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{figure.6.1}) 
+has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.22 
+      <./unsolved.pdf>] <sixth.pdf, id=2071, 401.5pt x 183.68625pt>
+File: sixth.pdf Graphic file (type pdf)
+
+<use sixth.pdf> <seven.pdf, id=2073, 401.5pt x 183.68625pt>
+File: seven.pdf Graphic file (type pdf)
+ <use seven.pdf>
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[66pdfTeX warning (ext4): destination with the same identifier (name{figure.6.2
+}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.51 T
+      hat means that we can infer that the $8^{th}$ cell must contain the nu...
+ <./sixth.pdf>] <one.pdf, id=2129, 401.5pt x 183.68625pt>
+File: one.pdf Graphic file (type pdf)
+ <use one.pdf>
+[67pdfTeX warning (ext4): destination with the same identifier (name{figure.6.3
+}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.73 \end{enumerate}
+                    pdfTeX warning (ext4): destination with the same identifier
+ (name{figure.6.4}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.73 \end{enumerate}
+                     <./seven.pdf> <./one.pdf>] [68] [69] [70]
+<elements.pdf, id=2258, 510.90875pt x 158.5925pt>
+File: elements.pdf Graphic file (type pdf)
+ <use elements.pdf>
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[71] [72pdfTeX warning (ext4): destination with the same identifier (name{figur
+e.6.5}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.229 
+       <./elements.pdf>] <quadrant.pdf, id=2357, 511.9125pt x 278.03876pt>
+File: quadrant.pdf Graphic file (type pdf)
+
+<use quadrant.pdf> [73pdfTeX warning (ext4): destination with the same identifi
+er (name{figure.6.6}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.258 
+       <./quadrant.pdf>] [74] [75] [76] [77] [78] [79]) [80] [81
+
+
+] [82]
+\openout2 = `types.aux'.
+
+
+(./types.tex
+Chapter 7.
+[83
+
+
+] [84] <lattice.pdf, id=2532, 450.68375pt x 177.66376pt>
+File: lattice.pdf Graphic file (type pdf)
+ <use lattice.pdf>
+[85pdfTeX warning (ext4): destination with the same identifier (name{figure.7.1
+}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.53 
+      <./lattice.pdf>] <dynrel.pdf, id=2558, 275.0275pt x 178.6675pt>
+File: dynrel.pdf Graphic file (type pdf)
+
+<use dynrel.pdf> [86pdfTeX warning (ext4): destination with the same identifier
+ (name{figure.7.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.74 
+      <./dynrel.pdf>] [87] [88] [89] [90] [91] [92] [93] [94] [95] [96]
+[97] [98] [99] [100] [101] [102] [103] [104]
+<number.pdf, id=2676, 149.55574pt x 152.56898pt>
+File: number.pdf Graphic file (type pdf)
+ <use number.pdf> [105pdfTeX warning (ext4): destination with the same identifi
+er (name{figure.7.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.685 \begin{alltt}
+                    <./number.pdf>] [106] [107] [108] [109] [110] [111]
+[112] [113] [114]) [115]
+\openout2 = `expressions.aux'.
+
+ (./expressions.tex [116
+
+
+
+]
+Chapter 8.
+[117] [118] [119] [120] [121] [122] [123] [124] [125] [126] [127] [128]
+[129] [130] [131] [132] [133] [134] [135] [136] [137] [138] [139] [140]
+[141] [142] [143] [144] [145] [146] [147]) [148]
+\openout2 = `goals.aux'.
+
+ (./goals.tex
+Chapter 9.
+[149
+
+
+
+] [150] [151] [152] [153] [154] [155] [156] [157] [158] [159] [160]
+[161] [162]) [163]
+\openout2 = `actions.aux'.
+
+ (./actions.tex [164
+
+
+
+]
+Chapter 10.
+[165] [166] [167] [168] [169] [170] [171] [172] [173] [174] [175] [176])
+[177]
+\openout2 = `grammar.aux'.
+
+ (./grammar.tex [178
+
+
+
+]
+Chapter 11.
+[179] [180] [181] [182] [183] [184] [185] [186]) [187]
+\openout2 = `lo.aux'.
+
+ (./lo.tex [188
+
+
+
+]
+Chapter 12.
+<bird.pdf, id=3162, 289.08pt x 254.95451pt>
+File: bird.pdf Graphic file (type pdf)
+ <use bird.pdf> [189] [190pdfTeX warning (ext4): destination with the same iden
+tifier (name{figure.12.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.56 \begin{alltt}
+                   <./bird.pdf>] [191] [192] [193] [194] [195]
+
+LaTeX Warning: Reference `lo:bird2' on page 196 undefined on input line 248.
+
+[196] [197] [198] [199] [200] [201] [202]) [203]
+\openout2 = `packages.aux'.
+
+ (./packages.tex [204
+
+
+
+]
+Chapter 13.
+[205] [206] [207] [208] <packages.pdf, id=3300, 686.565pt x 300.12328pt>
+File: packages.pdf Graphic file (type pdf)
+
+<use packages.pdf> [209]
+
+LaTeX Warning: Reference `vmeta' on page 210 undefined on input line 176.
+
+[210pdfTeX warning (ext4): destination with the same identifier (name{figure.13
+.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \endgroup \set@typeset@protect 
+l.196 
+       <./packages.pdf>] [211] [212]) [213] [214
+
+
+] [215] [216]
+\openout2 = `programs.aux'.
+
+ (./programs.tex
+Appendix A.
+[217
+
+
+]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [218]
+[219]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [220]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [221]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [222]
+[223]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [224]
+[225]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [226]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [227]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [228]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [229])
+[230] (./letsgo.bbl (./letsgo.brf)
+\tf@brf=\write9
+\openout9 = `letsgo.brf'.
+
+) [231
+
+
+
+] [232
+
+]
+! Undefined control sequence.
+l.207 \printglossary
+                    [1.5in]
+? 
+[233] [234
+
+] (./letsgo.ind [235
+
+] [236] [237] [238] [239] [240] [241
+
+])
+(./letsgo.aux (./preface.aux) (./first.aux) (./directory.aux) (./dance.aux)
+(./meta.aux) (./sudoku.aux) (./types.aux) (./expressions.aux) (./goals.aux)
+(./actions.aux) (./grammar.aux) (./lo.aux) (./packages.aux) (./programs.aux))
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 6810 strings out of 94073
+ 89091 string characters out of 1162984
+ 174029 words of memory out of 1500000
+ 9193 multiletter control sequences out of 10000+50000
+ 16125 words of font info for 66 fonts, out of 1200000 for 2000
+ 645 hyphenation exceptions out of 8191
+ 34i,12n,51p,1227b,532s stack positions out of 5000i,500n,6000p,200000b,5000s
+pdfTeX warning (dest): name{Hfootnote.16} has been referenced but does not ex
+ist, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.15} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.14} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.13} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.12} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.11} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.10} has been referenced but does not exis
+t, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.9} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.8} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.7} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.6} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.5} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.4} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.3} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.2} has been referenced but does not exist
+, replaced by a fixed one
+
+pdfTeX warning (dest): name{Hfootnote.1} has been referenced but does not exist
+, replaced by a fixed one
+
+</usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmbx10.pfb></usr/loc
+al/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmbx12.pfb></usr/local/texliv
+e/2007/texmf-dist/fonts/type1/bluesky/cm/cmcsc10.pfb></usr/local/texlive/2007/t
+exmf-dist/fonts/type1/bluesky/cm/cmitt10.pfb></usr/local/texlive/2007/texmf-dis
+t/fonts/type1/bluesky/cm/cmmi10.pfb></usr/local/texlive/2007/texmf-dist/fonts/t
+ype1/bluesky/cm/cmmi5.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1/blues
+ky/cm/cmmi7.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmr1
+0.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmr12.pfb></us
+r/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmr17.pfb></usr/local/te
+xlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmr5.pfb></usr/local/texlive/2007/
+texmf-dist/fonts/type1/bluesky/cm/cmr6.pfb></usr/local/texlive/2007/texmf-dist/
+fonts/type1/bluesky/cm/cmr7.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1
+/bluesky/cm/cmr8.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm
+/cmsy10.pfb></usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmsy7.pf
+b></usr/local/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmti10.pfb></usr/l
+ocal/texlive/2007/texmf-dist/fonts/type1/bluesky/cm/cmti8.pfb></usr/local/texli
+ve/2007/texmf-dist/fonts/type1/bluesky/cm/cmtt10.pfb></usr/local/texlive/2007/t
+exmf-dist/fonts/type1/bluesky/cm/cmtt12.pfb></usr/local/texlive/2007/texmf-dist
+/fonts/type1/bluesky/cm/cmtt8.pfb></usr/local/texlive/2007/texmf-dist/fonts/typ
+e1/hoekwater/manfnt/manfnt.pfb>
+Output written on letsgo.pdf (263 pages, 1507991 bytes).
+PDF statistics:
+ 4198 PDF objects out of 4296 (max. 8388607)
+ 672 named destinations out of 1000 (max. 131072)
+ 1903 words of extra memory for PDF output out of 10000 (max. 10000000)
+

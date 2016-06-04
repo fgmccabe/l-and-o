@@ -1,0 +1,552 @@
+\begin{theindex}
+
+  \item \q {*>} query
+    \subitem shared variables, \hyperpage{161}
+  \item \q {`} character, \hyperpage{122}
+
+  \indexspace
+
+  \item accessing elements of a super class, \hyperpage{196}
+  \item action, \hyperpage{165}
+    \subitem \q {istrue} action, \hyperpage{173}
+    \subitem assignment, \hyperpage{169}
+    \subitem basic, \hyperpage{168}
+    \subitem \q {case}, \hyperpage{172}
+    \subitem class relative action, \hyperpage{170}
+    \subitem combined, \hyperpage{170}
+    \subitem conditional, \hyperpage{171}
+    \subitem empty, \hyperpage{168}
+    \subitem equality definition, \hyperpage{168}
+    \subitem error handling, \hyperpage{173}
+    \subitem forall, \hyperpage{172}
+    \subitem invoke procedure, \hyperpage{170}
+    \subitem on failure, \hyperpage{167}
+    \subitem pattern match, \hyperpage{169}
+    \subitem query, \hyperpage{171}
+      \subsubitem resources, \hyperpage{171}
+    \subitem raise exception, \hyperpage{173}
+    \subitem rule, \hyperpage{165}
+    \subitem sequence, \hyperpage{170}
+    \subitem \q {spawn} sub-thread, \hyperpage{174}
+    \subitem \q {sync} action, \hyperpage{174}
+    \subitem type, \hyperpage{110}
+    \subitem \q {valis} action, \hyperpage{173}
+  \item \q {action} query, \hyperpage{48}, \hyperpage{162}
+  \item action rule
+    \subitem evaluation, \hyperpage{166}
+  \item annotation
+    \subitem with mode of use, \hyperpage{91}
+  \item anonymous class, \hyperpage{79}, \hyperpage{133}, 
+		\hyperpage{201}
+  \item \q {append} function, \hyperpage{118}
+  \item arithmetic in logic, \hyperpage{117}
+  \item assignment action, \hyperpage{169}
+
+  \indexspace
+
+  \item bag expression, \hyperpage{139}
+  \item basic actions, \hyperpage{168}
+  \item \q {bird} class, \hyperpage{199}
+  \item bounded set expression, \hyperpage{32}, \hyperpage{140}
+
+  \indexspace
+
+  \item \q {case}
+    \subitem action, \hyperpage{172}
+    \subitem expression, \hyperpage{136}
+  \item \q {char} type, \hyperpage{103}
+  \item character
+    \subitem literal, \hyperpage{122}
+    \subitem reference, \hyperpage{122}
+  \item circular chains of \q {import}s, \hyperpage{208}
+  \item class
+    \subitem accessing definitions, \hyperpage{198}
+    \subitem accessing method, \hyperpage{137}
+    \subitem accessors, \hyperpage{8}
+    \subitem anonymous, \hyperpage{118}, \hyperpage{133}, 
+		\hyperpage{201}
+      \subsubitem free variable in, \hyperpage{202}
+    \subitem assignment in, \hyperpage{50}
+    \subitem body, \hyperpage{192}
+    \subitem constant, \hyperpage{193}
+      \subsubitem groundedness, \hyperpage{193}
+    \subitem constructor type, \hyperpage{108}
+    \subitem evaluating constants, \hyperpage{193}
+    \subitem inheritance and types, \hyperpage{195}
+    \subitem inner, \hyperpage{200}
+    \subitem instance variables (lack of), \hyperpage{8}
+    \subitem notation, \hyperpage{189}
+    \subitem polymorphic, \hyperpage{197}
+    \subitem rule, \hyperpage{138}, \hyperpage{195}
+    \subitem type, \hyperpage{190}
+    \subitem using, \hyperpage{12}
+  \item compiling programs, \hyperpage{4}
+  \item conditional
+    \subitem action, \hyperpage{171}
+    \subitem expression, \hyperpage{136}
+    \subitem logic grammars, \hyperpage{185}
+    \subitem query, \hyperpage{159}
+  \item conjunction goal, \hyperpage{157}
+  \item constants in packages, \hyperpage{204}
+  \item constructor
+    \subitem stateful, \hyperpage{129}
+  \item contents of a package, \hyperpage{204}
+  \item creating objects, \hyperpage{198}
+
+  \indexspace
+
+  \item debugging, \hyperpage{5}
+  \item directory
+    \subitem client, \hyperpage{27}
+    \subitem interface, \hyperpage{26}
+    \subitem registering with, \hyperpage{51}
+    \subitem type, \hyperpage{24}
+  \item disjunctive goal, \hyperpage{158}
+  \item dot expression, \hyperpage{137}
+  \item \q {dropbox[]} type, \hyperpage{44}
+  \item \q {dynamic} relation, \hyperpage{29}
+    \subitem variables in, \hyperpage{61}
+
+  \indexspace
+
+  \item \q {eFAIL} exception, \hyperpage{167}, \hyperpage{171}
+  \item empty action, \hyperpage{168}
+  \item enumerated symbols, \hyperpage{101}
+  \item equality, \hyperpage{156}
+  \item equation, \hyperpage{118}
+  \item error
+    \subitem action failure, \hyperpage{167}
+    \subitem close brace expected, \hyperpage{111}
+    \subitem definition error, \hyperpage{113}
+    \subitem function failure, \hyperpage{121}
+    \subitem ill-formed error, \hyperpage{113}
+    \subitem invalid arguments, \hyperpage{114}
+    \subitem parse error, \hyperpage{111}
+    \subitem type error, \hyperpage{113}
+  \item \q {error} class, \hyperpage{147}
+  \item error handling
+    \subitem in actions, \hyperpage{173}
+    \subitem in expressions, \hyperpage{146}
+    \subitem in logic grammars, \hyperpage{186}
+    \subitem in queries, \hyperpage{163}
+  \item evaluation order
+    \subitem in expressions, \hyperpage{135}
+    \subitem in packages, \hyperpage{206}
+  \item \q {exception} type, \hyperpage{147}
+  \item executing a \go program, \hyperpage{209}
+  \item export
+    \subitem implicit export of type, \hyperpage{115}
+  \item expression
+    \subitem bag, \hyperpage{139}
+    \subitem bounded set, \hyperpage{140}
+    \subitem \q {case}, \hyperpage{136}
+    \subitem character, \hyperpage{122}
+    \subitem conditional, \hyperpage{136}
+    \subitem function call, \hyperpage{135}
+    \subitem guard, \hyperpage{151}
+    \subitem list, \hyperpage{125}
+    \subitem number, \hyperpage{123}
+    \subitem object creation, \hyperpage{138}
+    \subitem parse, \hyperpage{143}
+    \subitem \q {spawn}, \hyperpage{53}
+    \subitem \q {spawn} sub-thread, \hyperpage{142}
+    \subitem strings, \hyperpage{126}
+    \subitem symbol, \hyperpage{122}
+    \subitem tau pattern, \hyperpage{130}
+    \subitem tuple, \hyperpage{128}
+    \subitem type annotation, \hyperpage{144}
+    \subitem \q {valof}, \hyperpage{144}
+    \subitem variable, \hyperpage{131}
+
+  \indexspace
+
+  \item \q {fact} function, \hyperpage{146}
+  \item failures and errors, \hyperpage{145}
+  \item files and packages, \hyperpage{203}
+  \item \q {float} type, \hyperpage{105}
+  \item floating point, \hyperpage{124}
+  \item forall
+    \subitem action, \hyperpage{53}, \hyperpage{172}
+    \subitem query, \hyperpage{32}, \hyperpage{161}
+  \item format of a package, \hyperpage{203}
+  \item free variables, \hyperpage{134}
+    \subitem in anonymous classes, \hyperpage{202}
+  \item function, \hyperpage{118}
+    \subitem evaluation order, \hyperpage{135}
+    \subitem on failure, \hyperpage{121}
+    \subitem type, \hyperpage{108}
+  \item function call, \hyperpage{135}
+    \subitem type of, \hyperpage{136}
+
+  \indexspace
+
+  \item \q {go.mbox} package, \hyperpage{44}
+  \item grammar query, \hyperpage{161}
+  \item guard
+    \subitem in action rule, \hyperpage{165}, \hyperpage{167}
+    \subitem in equation, \hyperpage{120}
+    \subitem in pattern, \hyperpage{129}
+    \subitem in strong clause, \hyperpage{151}
+    \subitem in synchronized action, \hyperpage{176}
+  \item guarded pattern, \hyperpage{151}
+
+  \indexspace
+
+  \item heterogeneous values, \hyperpage{25}
+
+  \indexspace
+
+  \item identicality test, \hyperpage{157}
+  \item identifier
+    \subitem package reference, \hyperpage{208}
+    \subitem scope, \hyperpage{132}
+      \subsubitem holes in, \hyperpage{132}
+  \item \q {identifier} grammar, \hyperpage{186}
+  \item if-then-else query, \hyperpage{159}
+  \item \q {import} directive, \hyperpage{207}
+  \item importing packages, \hyperpage{207}
+  \item inequality, \hyperpage{156}, \hyperpage{183}
+  \item inference
+    \subitem of types of terms, \hyperpage{96}
+  \item inheritance, \hyperpage{195}
+    \subitem multiple, \hyperpage{196}
+    \subitem types, \hyperpage{195}
+  \item inherits goal, \hyperpage{157}
+  \item initialization
+    \subitem static, \hyperpage{194}
+  \item inner class, \hyperpage{200}
+  \item input/output
+    \subitem \q {stdout} channel, \hyperpage{3}
+  \item integer, \hyperpage{123}
+    \subitem character code, \hyperpage{124}
+    \subitem hexadecimal, \hyperpage{124}
+  \item \q {integer} type, \hyperpage{104}
+  \item interface, \hyperpage{94}
+    \subitem importance of, \hyperpage{vi}
+  \item \q {istrue} action, \hyperpage{173}
+  \item \q {istrue} relation query, \hyperpage{162}
+  \item iterated grammar condition, \hyperpage{185}
+
+  \indexspace
+
+  \item keyword
+    \subitem \q {action}, \hyperpage{162}
+    \subitem \q {import}, \hyperpage{207}
+    \subitem \q {onerror}, \hyperpage{163}, \hyperpage{173}, 
+		\hyperpage{186}
+    \subitem \q {private}, \hyperpage{38}, \hyperpage{206}
+    \subitem \q {raise}, \hyperpage{163}, \hyperpage{173}
+    \subitem \q {spawn}, \hyperpage{142}, \hyperpage{174}
+    \subitem \q {sync}, \hyperpage{174, 175}
+    \subitem \q {timeout}, \hyperpage{175}
+    \subitem \q {valof}, \hyperpage{162}
+
+  \indexspace
+
+  \item \q {list[]} type, \hyperpage{106}
+  \item lists, \hyperpage{125}
+    \subitem heterogenous elements, \hyperpage{126}
+    \subitem of characters are strings, \hyperpage{126}
+    \subitem pattern, \hyperpage{125}
+    \subitem type of, \hyperpage{126}
+  \item Logic and Objects, \hyperpage{9}, \hyperpage{189}
+  \item logic grammars, \hyperpage{179}
+    \subitem basic conditions, \hyperpage{182}
+    \subitem conditional, \hyperpage{185}
+    \subitem disjunction, \hyperpage{184}
+    \subitem end of file condition, \hyperpage{187}
+    \subitem equality condition, \hyperpage{183}
+    \subitem error handling, \hyperpage{186}
+    \subitem goal condition, \hyperpage{183}
+    \subitem inequality, \hyperpage{183}
+    \subitem iteration, \hyperpage{185}
+    \subitem negated, \hyperpage{185}
+    \subitem non terminal, \hyperpage{182}
+      \subsubitem relative to class, \hyperpage{183}
+    \subitem raise exception, \hyperpage{187}
+    \subitem rules, \hyperpage{179}
+    \subitem terminal, \hyperpage{182}
+    \subitem type, \hyperpage{110}
+  \item \q {logical} type, \hyperpage{106}
+
+  \indexspace
+
+  \item \q {mail} class, \hyperpage{49}
+  \item \q {mailbox[]} type, \hyperpage{45}
+  \item \q {main} program, \hyperpage{209}
+  \item match query, \hyperpage{49}, \hyperpage{156}
+  \item message communication, \hyperpage{44}
+  \item meta programming techniques, \hyperpage{55}
+  \item methods in an object, \hyperpage{198}
+  \item mode
+    \subitem \q {+} input use, \hyperpage{92}
+    \subitem \q {-} output use, \hyperpage{93}
+    \subitem \q {-+} bidirectional use, \hyperpage{91}
+  \item modes of use, \hyperpage{91}
+  \item modules
+    \subitem \go packages, \hyperpage{203}
+  \item multi-threaded programs, \hyperpage{142}, \hyperpage{174}
+  \item multiple \q {sync} action, \hyperpage{175}
+  \item multiple inheritance, \hyperpage{196}
+
+  \indexspace
+
+  \item name of package, \hyperpage{203}
+  \item negated goal, \hyperpage{159}
+  \item negation
+    \subitem in logic grammars, \hyperpage{185}
+  \item negation as failure, \hyperpage{159}
+  \item negotiation between agents, \hyperpage{45}
+  \item notification and \q {sync}, \hyperpage{176}
+  \item number
+    \subitem floating point, \hyperpage{124}
+  \item \q {number} type, \hyperpage{105}, \hyperpage{123}
+  \item number expression, \hyperpage{123}
+  \item \q {numeric} grammar, \hyperpage{181}
+
+  \indexspace
+
+  \item object
+    \subitem accessing elements, \hyperpage{198}
+    \subitem class body, \hyperpage{192}
+    \subitem class rule, \hyperpage{195}
+    \subitem created, \hyperpage{199}
+    \subitem creation, \hyperpage{138}, \hyperpage{198}
+    \subitem dot expression, \hyperpage{137}
+    \subitem dot query, \hyperpage{155}
+    \subitem garbage collection, \hyperpage{198}
+    \subitem inherited elements, \hyperpage{196}
+    \subitem multiple inheritance, \hyperpage{196}
+    \subitem \q {this} keyword, \hyperpage{199}
+  \item object ordered computing, \hyperpage{vi}
+  \item one-of goal, \hyperpage{160}
+  \item \q {onerror}
+    \subitem action, \hyperpage{173}
+    \subitem expression, \hyperpage{146}
+    \subitem grammar condition, \hyperpage{186}
+    \subitem query, \hyperpage{163}
+  \item operator
+    \subitem \pling , \hyperpage{160}
+    \subitem \q {*}, \hyperpage{185}
+    \subitem \q {*>}, \hyperpage{32}, \hyperpage{53}, \hyperpage{161}, 
+		\hyperpage{172}
+    \subitem \q {-->}, \hyperpage{110}, \hyperpage{161}
+    \subitem \q {->}, \hyperpage{175}
+    \subitem \q {.}, \hyperpage{137}, \hyperpage{155}
+    \subitem \q {.=}, \hyperpage{49}, \hyperpage{156}, \hyperpage{169}
+    \subitem \q {::}, \hyperpage{129}
+    \subitem \q {:=}, \hyperpage{169}, \hyperpage{205, 206}
+    \subitem \q {;}, \hyperpage{170}
+    \subitem \q {<=}, \hyperpage{157}
+    \subitem \q {=}, \hyperpage{168}, \hyperpage{204}
+    \subitem \q {==}, \hyperpage{157}
+    \subitem \q {=>}, \hyperpage{108}
+    \subitem \hash , \hyperpage{133}, \hyperpage{208}
+    \subitem \q {\%\%}, \hyperpage{143}, \hyperpage{209}
+    \subitem \q {\bsl +}, \hyperpage{159}
+    \subitem \q {\bsl =}, \hyperpage{156}, \hyperpage{183}
+    \subitem \q {\char '100}, \hyperpage{130}
+    \subitem \q {\char '174}, \hyperpage{158}, \hyperpage{184}
+    \subitem \q {\char '174\char `\ \char '77}, \hyperpage{136}, 
+		\hyperpage{159}, \hyperpage{171}, \hyperpage{185}
+    \subitem \q {\char '174\char '174}, \hyperpage{139}
+    \subitem \pling , \hyperpage{171}
+    \subitem \q {=}, \hyperpage{183}
+  \item order of definitions, \hyperpage{204}
+
+  \indexspace
+
+  \item package
+    \subitem constant in, \hyperpage{204}
+    \subitem file names of packages, \hyperpage{203}
+    \subitem format, \hyperpage{203}
+    \subitem importing of, \hyperpage{207}
+    \subitem indirect \q {import}, \hyperpage{207}
+    \subitem name, \hyperpage{203}
+    \subitem order of definitions in, \hyperpage{204}
+    \subitem recursive \q {import} not permitted, \hyperpage{208}
+    \subitem reference, \hyperpage{208}
+    \subitem standard, \hyperpage{210}
+    \subitem variables in, \hyperpage{205}
+  \item \q {palindrome}, \hyperpage{127}
+  \item parse expression, \hyperpage{143}
+  \item parsing query, \hyperpage{161}
+  \item pattern
+    \subitem guarded, \hyperpage{129}
+  \item pattern matching, \hyperpage{119}
+  \item \phemail class, \hyperpage{51}
+  \item polymorphic classes, \hyperpage{197}
+  \item polymorphic type
+    \subitem conventions, \hyperpage{29}
+  \item predicate
+    \subitem forall query, \hyperpage{32}
+  \item predicate type, \hyperpage{109}
+  \item predication, \hyperpage{155}
+  \item \q {private} keyword, \hyperpage{38}
+  \item procedure, \hyperpage{165}
+  \item procedure call, \hyperpage{170}
+  \item procedure definition, \hyperpage{165}
+
+  \indexspace
+
+  \item query
+    \subitem \q {action}, \hyperpage{162}
+    \subitem conditional, \hyperpage{159}
+    \subitem conjunction, \hyperpage{157}
+    \subitem disjunction, \hyperpage{158}
+    \subitem dot query, \hyperpage{155}
+    \subitem equality, \hyperpage{156}
+    \subitem forall, \hyperpage{161}
+    \subitem handling errors, \hyperpage{163}
+    \subitem identicality test, \hyperpage{157}
+    \subitem if-then-else, \hyperpage{159}
+    \subitem inequality, \hyperpage{156}
+    \subitem match test, \hyperpage{156}
+    \subitem negated, \hyperpage{159}
+    \subitem one-of, \hyperpage{160}
+    \subitem parse, \hyperpage{161}
+    \subitem predication, \hyperpage{155}
+    \subitem \q {raise} exception, \hyperpage{163}
+    \subitem single solution, \hyperpage{160}
+    \subitem sub class test, \hyperpage{157}
+    \subitem \q {true}/\q {false}, \hyperpage{154}
+
+  \indexspace
+
+  \item \q {raise} exception
+    \subitem in action, \hyperpage{173}
+    \subitem in expression, \hyperpage{147}
+    \subitem in logic grammars, \hyperpage{187}
+    \subitem in query, \hyperpage{163}
+  \item referential transparency, \hyperpage{15}
+  \item relation definition, \hyperpage{149}
+  \item representing dynamic relations, \hyperpage{59}
+  \item representing logical formulae, \hyperpage{55}
+  \item resources in query action, \hyperpage{171}
+  \item rule
+    \subitem action rule, \hyperpage{165}
+    \subitem fact, \hyperpage{149}
+    \subitem logic grammar, \hyperpage{179}
+    \subitem strong clause, \hyperpage{151}
+
+  \indexspace
+
+  \item \q {search}, \hyperpage{128}
+  \item sequence of actions, \hyperpage{170}
+  \item set expression
+    \subitem bounded, \hyperpage{32}
+  \item sharing across threads, \hyperpage{174}
+  \item \q {sort} function, \hyperpage{202}
+  \item \q {spawn} sub-thread, \hyperpage{142}, \hyperpage{174}
+  \item special actions, \hyperpage{172}
+  \item \q {sqrt} relation, \hyperpage{130}
+  \item standard packages, \hyperpage{210}
+  \item stateful class, \hyperpage{15}
+  \item strings
+    \subitem for formatting I/O, \hyperpage{127}
+    \subitem lists of characters, \hyperpage{126}
+    \subitem new lines in, \hyperpage{126}
+  \item strong clause
+    \subitem not mixing with regular, \hyperpage{152}
+  \item strong clauses, \hyperpage{151}
+  \item Sudoku, \hyperpage{65}
+    \subitem solving the puzzle, \hyperpage{74}
+    \subitem strategy, \hyperpage{66}
+  \item Suduko
+    \subitem representing the square, \hyperpage{70}
+  \item super variable, \hyperpage{196}
+  \item symbol
+    \subitem enumerated, \hyperpage{101}
+    \subitem literal expression, \hyperpage{122}
+  \item \q {symbol} type, \hyperpage{104}
+  \item \q {sync}
+    \subitem action, \hyperpage{174}
+    \subitem notification, \hyperpage{176}
+    \subitem with multiple guards, \hyperpage{175}
+    \subitem with timeout, \hyperpage{175}
+  \item synchronized action, \hyperpage{174}
+  \item syntax
+    \subitem lexical, \hyperpage{122}
+    \subitem strings, \hyperpage{126}
+
+  \indexspace
+
+  \item tau pattern, \hyperpage{130}
+  \item test goal
+    \subitem in conditional action, \hyperpage{171}
+  \item \q {this} keyword, \hyperpage{18}
+  \item \q {this} object, \hyperpage{199}
+  \item thread-safe libraries, \hyperpage{40}, \hyperpage{177}
+  \item \q {timeout} in \q {sync}, \hyperpage{175}
+  \item true/false goal, \hyperpage{154}
+  \item tuple, \hyperpage{128}
+    \subitem type of, \hyperpage{106}, \hyperpage{128}
+  \item type
+    \subitem action, \hyperpage{110}
+    \subitem \q {char}, \hyperpage{103}
+    \subitem class constructor, \hyperpage{108}
+    \subitem class inheritance, \hyperpage{195}
+    \subitem dealing with errors, \hyperpage{111}
+    \subitem dot expression, \hyperpage{138}
+    \subitem \q {float}, \hyperpage{105}
+    \subitem function, \hyperpage{108}
+    \subitem grammar, \hyperpage{110}
+    \subitem inference, \hyperpage{96}
+    \subitem \q {integer}, \hyperpage{104}
+    \subitem interface, \hyperpage{94}
+    \subitem list, \hyperpage{126}
+    \subitem \q {list}, \hyperpage{106}
+    \subitem \q {logical}, \hyperpage{106}
+    \subitem mode, \hyperpage{91}
+    \subitem \q {number}, \hyperpage{105}, \hyperpage{123}
+    \subitem object type, \hyperpage{97}
+    \subitem polymorphism, \hyperpage{88}
+    \subitem predicate, \hyperpage{109}
+    \subitem stateful, \hyperpage{129}
+    \subitem \q {symbol}, \hyperpage{104}, \hyperpage{122}
+    \subitem \q {thing}, \hyperpage{103}
+    \subitem tuple, \hyperpage{106}, \hyperpage{128}
+  \item type annotation, \hyperpage{144}
+  \item type definition
+    \subitem enumerated symbols, \hyperpage{101}
+  \item type inference
+    \subitem equality definition, \hyperpage{183}
+    \subitem guarded pattern, \hyperpage{129}
+    \subitem variable, \hyperpage{131}
+  \item type quantification, \hyperpage{89}
+  \item type terms, \hyperpage{84}
+  \item type variables
+    \subitem in a class, \hyperpage{197}
+    \subitem in a constructor function, \hyperpage{102}
+
+  \indexspace
+
+  \item Unicode, \hyperpage{122}
+    \subitem character code, \hyperpage{124}
+  \item unification
+    \subitem v.s. pattern matching, \hyperpage{119}
+  \item universally true condition, \hyperpage{161}
+  \item using \q {sync} with guards, \hyperpage{176}
+
+  \indexspace
+
+  \item \q {valis} action, \hyperpage{173}
+  \item \q {valof} expression, \hyperpage{144}
+    \subitem returning a value, \hyperpage{173}
+  \item variable, \hyperpage{131}
+    \subitem constructor, \hyperpage{192}
+    \subitem free, \hyperpage{134}, \hyperpage{202}
+    \subitem in \q {dyamic} relations, \hyperpage{61}
+    \subitem in class body, \hyperpage{193}
+    \subitem in packages, \hyperpage{205}
+    \subitem object
+      \subsubitem evaluation of, \hyperpage{194}
+      \subsubitem groundedness, \hyperpage{194}
+    \subitem scope, \hyperpage{132}
+      \subsubitem holes in, \hyperpage{132}
+    \subitem sharing across threads, \hyperpage{174}
+    \subitem singleton occurrence, \hyperpage{114}, \hyperpage{134}
+    \subitem super, \hyperpage{196}
+    \subitem type inference, \hyperpage{131}
+
+\end{theindex}

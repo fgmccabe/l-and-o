@@ -1,0 +1,143 @@
+\chapter{Message communication}
+\label{message}
+
+One of \go's standard packages is the message communication package -- \q{go.mbox}.
+
+
+A client registers a description with the directory with a registration message by sending a \q{register} message to the directory:
+\begin{alltt}
+register(
+   [attr('name',??("sally")),attr('role',??("dancer")),
+    attr('gender',??(female))]) >> DS
+\end{alltt}
+The general form of a message send action is:
+\begin{alltt}
+\emph{Msg} >> \emph{handle}
+\end{alltt}
+where \emph{Msg} is any legal \go term, and \emph{handle} is the identity of a \go \emph{mailbox}. 
+
+This is an action, executed in the context of an action rule or other action sequence, and its effect is to send the term:
+\begin{alltt}
+register(
+   [attr('name',??("sally")),attr('role',??("dancer")),
+    attr('gender',??(female))])
+\end{alltt}
+to the mailbox channel held in the variable \q{DS}.
+
+Threads are identified in \go using process \q{handle}s. Thread handles use the \q{hdl} constructor term which has two arguments: the \emph{root} name of the thread and the \emph{thread} identifier -- both are \q{symbol}s. For example, our directory server might have the handle:
+\begin{alltt}
+hdl('server','directory')
+\end{alltt}
+where \q{'directory'} is the root name and \q{'server'} is the thread name of the handle. Normally a thread \q{handle} is automatically generated, however it is also possible to manually construct one; in this case that will be useful to permit clients to `know' what process the directory server is.
+
+Program~\vref{dir:publish} shows a simple example of a client program publishing a description with a directory server with a well-known name.
+\begin{program}
+\begin{alltt}
+publish .. \{
+  publish() ->
+    register(
+   [attr('name',??("sally")),attr('role',??("dancer")),
+    attr('gender',??(female)),
+    attr('name',??(self))]) >> hdl('server','directory').
+\}
+\end{alltt}
+\caption{A client that publishes\label{dir:publish}}
+\end{program}
+Our directory server is particularly simple-minded: it will accept a publication from anyone, and will not send back any response to the publishing client.
+
+
+
+
+
+
+
+
+\index{inter-thread communication}
+\index{message!based communication}
+\index{sending and receiving messages}
+Message passing is the main way that \go permits threads, even spawned sub-threads, to communicate with each other.  Note that the reason for this is that debugging and verifying programs with `hidden' side-effects (via the shared data base) is considerably more difficult than when using explicit message passing. In addition, shared values are impractical when the threads are not on the same host; thus direct memory sharing systems are not transparent to the location of the parallel threads.
+
+\subsection{Message send}
+\label{action:send}
+\index{message!sending}
+\index{action!message send}
+A message is sent from one thread to another by means of the {\tt >>} built-in action. A message send action takes the form:
+\begin{alltt}
+\emph{Term} >> \emph{To}
+\end{alltt}
+where \emph{Term} is the message to be sent to process \emph{To} -- which is a \q{handle}.
+
+\go does \emph{not} require that the message sent be ground; however it \emph{does} require that the type of the message is ground. The reason for this restriction is that the message is implicitly encapsulated as an \q{any} value.
+
+Note, however, that the target of a message send \emph{must} be ground; otherwise the \go system cannot deliver the message to an unknown recipient.
+
+The sending process is given no immediate response to a message send; unless the sender process does not have permission to send messages. If required -- which is often -- the sender should wait for a response using a message receive action. 
+
+\subsection{Message receive}
+\label{action:receive}
+
+\index{message!receiving}
+\index{action!message receive}
+\index{receiving messages}
+\index{thread message queue}
+A message can be retrieved from a thread's message queue using
+a \firstterm{message receive}{A message receive action is one that completes by receiving a message of the correct form; and removing it from the thread's message queue.} action. A message receive action takes the form:
+\begin{alltt}
+( \emph{P\sub1} << \emph{F\sub1} -> \emph{A\sub1}
+| 
+| \emph{P\subn} << \emph{F\subn} -> \emph{A\subn}
+)
+\end{alltt}
+where each \emph{P\subi} indicates a message pattern to receive and the corresponding \emph{A\sub{i}} the action to take on receiving such a message. Note that the parentheses around the message rules are necessary in a message receive action.
+
+The \q{P\subi} are the \emph{guards} of the receive clauses. The entire message receive completes if there is a message in the message buffer that matches one of the \q{P\subi} patterns. The message queue of the process will be scanned from the beginning looking for such a message, and the patterns will be tested against each message in the buffer in the order in which they are given.
+
+As soon as a message is found that satisfies one of the guards, the message is removed from the message buffer and the corresponding \q{A$_i$} of the message receive clause is executed. There is no backtracking on the selection of the receive clause or the removal of the message.
+
+A message receive choice never fails. If it does not succeed with the current contents of the message queue it suspends until a  message arrives that satisfies one of the message rule guards.  Suspension waiting for an acceptable message is the primary form of thread control in \go.
+
+The degenerate form of message receive, where there is only one message rule, and its body is empty, corresponds to the simple message receive:
+\begin{alltt}
+( \emph{Msg} << \emph{sender} -> \{\} )
+\end{alltt}
+can be replaced by:
+\begin{alltt}
+\emph{Msg} << \emph{sender}
+\end{alltt}
+in the body of an action rule.
+
+\index{message!guards in message receive}
+Guarded terms are often useful in the context of a message receive: they can be used to extend the pattern with semantic as opposed to purely syntactic conditions. For example, the message receive action:
+\begin{alltt}
+\ldots;(N::N<Q) << S;\ldots
+\end{alltt}
+looks for a \q{number} from sub-thread \q{S} whose value is less than the value of the variable \q{Q}. Numeric messages that are greater than \q{Q}, or messages from sub-threads whose \q{handle}s do not unify with \q{S}, will \emph{not} be picked up by this message receive.
+
+\subsubsection{Timeouts in message receive}
+\index{message!timeout}
+\index{Timing out a message receive}
+
+It is possible to `time out' a message receive -- by using a special form of message receive rule: the \q{timeout} clause. The form of a message receive with a timeout is:
+\begin{alltt}
+(\emph{MsgRule\sub1} | \ldots{} ) timeout (\emph{TimeExp} -> \emph{TimeOutAction})
+\end{alltt}
+If there is no message that matches any of the guarded patterns in \emph{MsgRule\subi} by the time that \emph{TimeExp} seconds has expired, then the message receive `times out' and the \emph{TimeOutAction} is executed. The \q{timeout} expression refers to a number of seconds (it may be fractional) of real elapsed time; it does not refer to processor time.
+
+The start time of time-out is calculated from just before there is any attempt to read any messages; and the timeout is invoked only if there are no messages in the message queue -- at the time that the message receive is entered -- that match any of the patterns. I.e., if there is a message in the message that matches one of the patterns, then the timeout clause is effectively ignored. Setting the \q{timeout} to 0 seconds is effectively `peeking' at the message queue to see if there is currently a matching message.
+
+\emph{Warning:}
+\begin{quote}
+\index{Why \q{timeout}s are bad for your program's health}
+Using \q{timeout} clauses without care in the choice of timeout values is likely to result in programs that have bugs that are hard to detect -- since there is always some non-determinism in the order of execution in multi-threaded applications. Furthermore, especially for networked applications, computing the appropriate values to assign for timeouts is likely to be problematic given the enormous variation in network latency delays.
+\end{quote}
+
+\paragraph{Semantics of message receive}
+Message receives involve a search of the message buffer -- it is not required that the first message in the queue matches. If a later message matches then the intervening messages are retained in the message queue for subsequent retrieval. This allows a process to receive messages from any process while continuing to focus on only those messages of immediate interest.\note{This is a similar message handling model to that of {\tt April} and {\tt Erlang}.}
+
+One might ask if there is a relationship between message receive and \q{sync}hronized action. After all, the message queue associated with a thread does represent a shared resource: other threads write messages to the end of the queue and the message queue's owner thread reads from the front of the queue. Even the message receive choice action is reminiscent of the choice \q{sync} action.
+
+While it \emph{is possible} to construct a mapping of \go's message receive choice in terms of \q{sync} actions, it is complex. The reason is that the various choices in a message choice are considered in parallel: for each message in the queue, each of the alternatives is considered. Only if none of the message choices patterns fires do we move on to consider the next message in the queue. On the other hand, \q{sync} actions would naturally considers the various choices \emph{sequentially}: the first rule that fires for \emph{any} message in the queue will fire. However, that form of message receive semantics leads to a kind of unfair search in the message queue that can lead to hard to find bugs.
+
+
+
+  

@@ -7,7 +7,7 @@
 
 parse(Tks,T,RTks) :-
     term(Tks,2000,T,Tks1),!,
-    checkToken(Tks1,RTks,term(_),"missing terminator, got %w").
+    checkTerminator(Tks1,RTks).
 
 term(Tks,Pr,T,Toks) :-
     termLeft(Tks,Pr,Left,LftPr,Tks1),
@@ -61,12 +61,12 @@ legalNextRight([longTok(_,_)|_],_).
 legalNextRight([floatTok(_,_)|_],_).
 
 term00([idTok(I,Lc)|Toks],T,Toks) :- 
-      (isOperator(I,_), \+lookAhead(rpar(_),Toks), !, reportError("unexpected operator: %w",[I],Lc),T=void(Lc);
+      (isOperator(I,_), \+lookAhead(rpar(_),Toks), !, reportError("unexpected operator: %s",[I],Lc),T=void(Lc);
       T = name(Lc,I)).
 term00([lpar(Lc0),rpar(Lc2)|Toks],tuple(Lc,"()",[]),Toks) :- mergeLoc(Lc0,Lc2,Lc).
 term00([lpar(Lcx)|Tks],T,Toks) :- term(Tks,2000,Seq,Tks2), checkToken(Tks2,Toks,rpar(Lcy),"missing close parenthesis, got %w"), mergeLoc(Lcx,Lcy,Lc), tupleize(Seq,Lc,"()",T).
 term00([lbra(Lc0),rbra(Lc2)|Toks],tuple(Lc,"[]",[]),Toks) :- mergeLoc(Lc0,Lc2,Lc).
-term00([lbra(_)|Tks],T,Toks) :- term(Tks,2000,Seq,Tks2), checkToken(Tks2,Toks,rbra(_),"mising close bracket, got %w"), listize(Seq,T).
+term00([lbra(Lcx)|Tks],T,Toks) :- term(Tks,2000,Seq,Tks2), checkToken(Tks2,Toks,rbra(Lcy),"mising close bracket, got %w"), mergeLoc(Lcx,Lcy,Lc), tupleize(Seq,Lc,"[]",T).
 term00([lbrce(Lc0),rbrce(Lc2)|Toks],tuple(Lc,"{}",[]),Toks) :- mergeLoc(Lc0,Lc2,Lc).
 term00([lbrce(Lcx)|Tks],tuple(Lc,"{}",Seq),Toks) :- terms(Tks,Tks2,Seq), checkToken(Tks2,Toks,rbrce(Lcy),"missing close brace, got %w"), mergeLoc(Lcx,Lcy,Lc).
 term00([lqpar(Lcx)|Tks],unary(Lc,"<||>",T),Toks) :- term(Tks,2000,T,Tks2), checkToken(Tks2,Toks,rpar(Lcy),"missing close parenthesis, got %w"),mergeLoc(Lcx,Lcy,Lc).
@@ -117,10 +117,6 @@ tupleize(app(_,name(_,","),tuple(_,"()",[L,R])), Lc, Op, tuple(Lc,Op,[L|Rest])) 
     getTupleArgs(R,Rest).
 tupleize(T,Lc,Op,tuple(Lc,Op,[T])).
 
-listize(app(Lc,name(_,","),tuple(_,"()",[L,R])), First) :- !, binary(Lc,",..",L,Rest,First), listize(R,Rest).
-listize(app(Lc,name(_,",.."),tuple(_,"()",[L,R])), First) :- !, binary(Lc,",..",L,R,First).
-listize(T,Out) :- locOfAst(T,Lc), binary(Lc, ".", T, name(Lc,"[]"),Out).
-
 getTupleArgs(app(_,name(_,","),tuple(_,"()",[L,R])), [L|Rest]) :-
     getTupleArgs(R,Rest).
 getTupleArgs(T,[T]).
@@ -137,6 +133,11 @@ printAhead([Tk|_]) :- writeln(Tk).
 
 checkToken([Tk|Toks],Toks,Tk,_) :- !.
 checkToken([Tk|Toks],Toks,_,Msg) :- locOfToken(Tk,Lc), reportError(Msg,[Tk],Lc).
+
+checkTerminator([],[]).
+checkTerminator(Toks,Toks) :- Toks = [rbrce(_)|_].
+checkTerminator(Tks,RTks) :-
+    checkToken(Tks,RTks,term(_),"missing terminator, got %w").
 
 handleInterpolation([segment(Str,Lc)],_,string(Lc,Str)).
 handleInterpolation(Segments,Lc,interString(Lc,Inters)) :- stringSegments(Segments,Inters).

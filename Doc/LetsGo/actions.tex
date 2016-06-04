@@ -1,0 +1,485 @@
+\chapter{Procedures and Actions}
+\label{actions}
+\index{action}
+\lettrine[findent=-0.1em,nindent=0.2em]{A}{ctions are central} to any significant computer application; and the design of \go reflects this reality. However, we try to enforce a separation between `behavioral' programs and `pure' programs in order to gain better clarity in the overall application. 
+
+Actions may only be invoked in a limited set of circumstances and action rules look different to clauses. In addition, action rules may have access to system resources -- such as the file and communications systems -- which are not immediately available to predicate programs or function programs.
+
+\begin{aside}
+At times it may seem that the majority of the code of a given application is \emph{action} code. If that is true for your application, so be it. The action language in \go is at least as powerful as the action language of other programming language; furthermore, the rule-oriented nature of \go lends itself to a case-oriented approach to designing action procedures -- which is as useful for describing actions as it is for describing functions and relations.
+\end{aside}
+
+\section{Action Procedures}
+\label{procedure}
+\index{procedure definition}
+\index{action!rule}
+\index{rule!action rule}
+\index{procedure}
+An \firstterm{action procedure}{An action procedure is a program, written as a set of action rules, that denotes a behavior of the program. Certain activities, such as reading files and sending messages, are only available as actions.} is a program, written as a set of action rules, that denotes a behavior of the program. Action procedures are the recommended tool for writing `behavioral' code in \go. Certain activities, such as reading files and sending messages, are only available as actions. 
+
+Program~\ref{action:count} is an example of a program that opens up a file and displays the number of lines it contains to the standard output.
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+count\{
+  import go.io.
+  
+  read:[inChannel,integer]*.
+  read(File,Count) -> 
+      loop(0,Count, File).
+  
+  loop:[integer,integer,inChannel]*.
+  loop(Count,Count,File) :: File.eof() -> \{\}.
+  loop(soFar,Count,File) -> _ = File.inLine("\bsl{}n"); 
+      loop(soFar+1,Count,File).
+     
+   main([Fl]) ->
+      read(openInFile(Fl,utf8Encoding),Count);
+      stdout.outLine(Count.show()<>" lines in "<>Fl).
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{An action procedure for counting lines in a file\label{action:count}}
+\end{program}
+
+\index{guard!in action rule}
+As we can see in the \q{loop} action procedure, action rules may have guards associated with them. The guard acts in addition to any patterns in the head of the action rule to constrain the applicability of the rule. In this case the intent is for the \q{loop} to terminate when the \q{File} has been read to the end of file -- \q{eof()} is a standard part of the file interface.
+
+\subsection{Action rules and types}
+\label{action:types}
+An action procedure is declared using a statement of the form:
+\begin{alltt}
+loop:[integer,integer,inChannel]*
+\end{alltt}
+Like functions, the default mode for action procedure arguments is \emph{input}. Also, like functions, this implies that the patterns in action rules are \emph{matched} against the corresponding input argument.
+
+It is possible to establish a \emph{bi-directional} mode for an action procedure argument -- using the \q{-+} suffix in the type declaration -- or even an \emph{output} mode -- using the \q{-} suffix.
+
+\begin{aside}
+Unlike functions, where the concept of an \emph{output argument} seems a  violation of the core functional abstraction, it is quite normal for an action procedure to return values in output arguments. There is no functional notation for action procedures; yet they too need to return results at times.
+\end{aside}
+
+\subsection{Action rule execution}
+\label{action:evaluate}
+\index{action rule!evaluation}
+The execution of an action proceeds in three phases (like expressions and queries): evaluations of the arguments to an action, selection of an action procedure rule and the execution of the sequence of actions in the body of the action rule. In what follows we focus on the process for evaluating calls to action rules; individual actions are discussed in later sections.
+
+\begin{description}
+\item[Argument evaluation]
+Before an action procedure can be entered the arguments to the call must be evaluated. This is achieved by normal expression evaluation semantics as discussed in Chapter~\vref{expressions}.
+
+\item[Action rule selection]
+
+An action procedure is defined as a sequence of action rules. When reducing an action call these action rules are tried in the order that they are written (although the compiler optimizes the search for many cases).
+
+By default, the mode for an argument to an action procedure is \emph{input}; although occasionally it is useful to have an \emph{output} moded argument.
+
+A pattern in the head of an action rule that is associated with an input mode will result in a \emph{match} against the corresponding argument of the action call. An input moded pattern will not be permitted to bind any variables appearing in the call. If a match would require that, as in the call
+\begin{alltt}
+\ldots{};act(X);\ldots{}
+\end{alltt}
+being applied to the action rule:
+\begin{alltt}
+act([A,..B]) -> \ldots
+\end{alltt}
+then the match will \emph{fail}, and that action rule will be rejected.
+
+A pattern in the head which is associated with an \emph{output} argument has exactly complementary semantics: the match will succeed \emph{only} if the actual argument is unbound (it may be bound to another variable).
+
+\index{guard!in action rule}
+Action rules can have \emph{guards} associated with them: using the normal guard \q{::} notation. This is fairly common in action rules as semantic preconditions are often critical to the semantics of the action rule.
+
+If the match of head patterns against the actual arguments of an action fail then the rule is skipped and the next rule is attempted. If none of the action rules apply then an \q{'eFAIL'} exception is raised: actions are not permitted to fail in the same way that a relational query can fail.
+\index{action!on failure}
+\index{error!action failure}
+\index{eFAIL@\q{eFAIL} exception}
+
+\item[Entering the action rule]
+Once a matching rule is found the actions in the body of the rule are executed. Note that, once a rule is chosen, no alternative rules will be considered for that action call. In backtracking terms this is referred to \emph{shallow} backtracking vs \emph{deep} backtracking. Query evaluation may involve deep backtracking, action execution may not.
+
+Actions in the body of an action rule are executed in a sequential order -- from left to right. Technically, it is the \q{;} operator that is the action sequencer.
+
+\item[Handling exceptions]
+If an exception is raised during execution, then normal execution is suspended. Exceptions can arise from expression evaluation as well as from action execution. When an exception is raised, execution is unraveled to the most recently entered error handling form -- regardless of the source of the error.
+
+An exception can be captured as an \q{onerror} action; in which case the error handler takes the form of a specialized action procedure -- whose argument is the token that denotes the exception. If that action procedure has a rule that matches the token then execution continues with the body of that error handler. The original computation -- up to the point of the handler -- is discarded; although any actions that have been performed are \emph{not} unwound.
+
+If the error handler's rule do not match the exception token then the exception is propagated outwards. It is quite possible in that situation for the final capturing error handler to be \emph{not} associated with an action.
+\end{description}
+
+\section{Basic actions}
+\label{action:basic}
+
+\index{action!basic}
+\index{basic actions}
+
+\subsection{Empty action}
+\label{action:empty}
+
+\index{empty action}
+\index{action!empty}
+The empty action is written simply as an empty pair of braces: \q{\{\}}; and has no effect. It is primarily used in action rules and other contexts that require an action and we wish to signal that no action is required.
+
+\subsection{Equality definition}
+\label{action:equality}
+
+\index{action!equality definition}
+An equality definition action has no effect other than to ensure that two terms are equal. Typically, this is done to establish the value of an intermediate variable:
+\index{operator!=@\q{=}}
+\begin{alltt}
+\emph{Ex\sub1} = \emph{Ex\sub2}
+\end{alltt}
+As with equality goals, an equality action is type safe if the types of the two expressions are the same.  Note, however, that unlike equality queries, an equality action should not fail. If it turns out that the two expressions are not unifiable then an unexpected failure exception will be raised.
+
+\subsection{Pattern match}
+\label{action:match}
+
+\index{action!pattern match}
+A pattern match action is the same as a pattern match goal (see Section~\vref{goal:match}) -- it matches a pattern against an expression. Like the equality action, it primary role is to establish the value of an intermediate variable:
+\index{operator!.=@\q{.=}}
+\begin{alltt}
+\emph{Ptn} .= \emph{Ex}
+\end{alltt}
+Note, like equality definitions, a pattern match action is not permitted to fail -- if the pattern is incompatible with the expression then unexpected failure exception will be raised.
+
+\subsection{Assignment}
+\label{action:assignment}
+\index{action!assignment}
+\index{assignment action}
+An assignment action reassigns a value to an object or package variable. Object variables are those introduced with a \q{:=} declaration in the class body, and package variables are similarly introduced in the main body of a package.
+
+Assignments are written using the \q{:=} operator:
+\index{operator!:=@\q{:=}}
+\begin{alltt}
+\emph{V\sub1} := \emph{Ex\sub2}
+\end{alltt}
+As with equality goals, an assginment action is type safe if the types of the variable is the same as teh type of the expression.
+
+Object and package variables have a particular restriction: their values must be completely ground. 
+\begin{aside}
+The reason for this is that object and package variables can be shared by multiple threads, and variables occurring in the value associated with an object variable could not be so shared. Furthermore, if, for some reason, the assignment action were backtracked over, or an exception raised, the assignment is \emph{not} undone on failure or exception recovery.
+\end{aside}
+
+The standard packages \q{cell} and \q{dynamic} offer a way of having permanent variables with embedded logical variables. \q{dynamic} supports a dynamically modifiable relation abstraction and \q{cell} supports a special kind of dynamic relation: one in which there can be only one tuple.
+
+\subsection{Call procedure}
+\label{action:invoke}
+
+\index{action!invoke procedure}
+\index{procedure call}
+A procedure call is an action of the form:
+\begin{alltt}
+\emph{Proc}(\emph{A\sub1},\ldots,\emph{A\subn})
+\end{alltt}
+where \q{\emph{Proc}} is the name of an action procedure that is in the current scope.
+
+A procedure call is evaluated by matching the patterns of the action rules for \q{\emph{Proc}} against the evaluated arguments \q{\emph{A\subi}}. The first action whose argument patterns \emph{P\subi} match the corresponding arguments \emph{A\subi} and whose guard is satisfied is used to reduce the procedure call to the body of the corresponding action rule. I.e., if the matching action rule were of the form:
+\begin{alltt}
+\emph{Proc}(\emph{P\sub1},\ldots,\emph{P\subn}) :: \emph{Guard} -> \emph{Rhs}
+\end{alltt}
+then the procedure call action is reduced to:
+\begin{alltt}
+\emph{Rhs}
+\end{alltt}
+with any variables in \emph{Rhs} replaced by value extracted during the matching process and/or as a result of satisfying the \emph{Guard}. 
+
+
+\section{Combination actions}
+\label{action:combine}
+\index{action!combined}
+
+\subsection{Action sequence}
+\label{action:sequence}
+
+\index{action!sequence}
+\index{sequence of actions}
+\index{operator!;@\q{;}}
+A sequence of actions is written as a sequence of actions separated by semi-colons:
+\begin{alltt}
+\emph{A\sub1};\emph{A\sub2};\ldots;\emph{A\subn}
+\end{alltt}
+The actions in a sequence are executed in order.
+
+\subsection{Class relative invocation}
+\label{action:dot}
+\index{action!class relative action}
+A variation on the regular invoke action is the 'dot'-invocation -- or class relative action. An action of the form:
+\begin{alltt}
+\emph{O}.P(A\sub1,\ldots,A\subn)
+\end{alltt}
+denotes that the action:
+\begin{alltt}
+P(A\sub1,\ldots,A\subn)\end{alltt}
+is to be executed relative to the class program identified by the label term \q{\emph{O}}.
+
+Note that an explicit class relative action like this is the point at which the \q{this} keyword is defined (see section~\vref{objects:this}). Throughout the execution of \q{P(A\sub1,\ldots,A\subn)} the value of \q{this} is set to \emph{O} -- unless, of course, a class relative action is invoked during its execution.
+
+\subsection{Query action}
+\label{action:goal}
+
+\index{action!query}
+\index{operator!\pling}
+The query action allows a query to be used as an action -- perhaps to answer a question in the middle of an action sequence. It is written as the query surrounded by braces, or as a goal suffixed by the one-of operator: \q{!}:
+\begin{alltt}
+\{ \emph{G} \}
+\end{alltt}
+or
+\begin{alltt}
+\emph{G} !
+\end{alltt}
+
+\index{eFAIL@\q{eFAIL} exception}
+The \emph{G} query is expected to \emph{succeed}; if it does not then an \q{'eFAIL'} error exception will be raised. If it is possible that a query action might fail then consider using the conditional action with the query as its governing test.
+
+In keeping with this, only the first solution to the \emph{G} will be considered -- i.e., it is as though the \emph{G} were a `one-of' \emph{G}.
+
+\index{resources in query action}
+\index{action!query!resources}
+A goal condition in an action sequence does \emph{not} have any automatic access to the resources available to the action rule. In particular, access to the file system and other system resources are not inherited by the goal condition. 
+
+
+\subsection{Conditional action}
+\label{action:conditional}
+\index{action!conditional}
+\index{conditional!action}
+\index{operator!\char'174 \char'77@\q{\char'174\char`\ \char'77}}
+The conditional action allows a programmer to specify one of two (or more) actions to take depending on whether a particular condition holds. 
+
+\index{test goal!in conditional action}
+A \firstterm{conditional action}{A conditional action consists of a test query and two alternate actions -- \emph{then} and \emph{else} alternatives. If the \emph{test} is satisfied, then the \emph{then} action is executed; otherwise the \emph{else} action is executed.} consists of a test query; and, depending on whether it succeeds or fails, either the `then' action branch or the `else' action branch is taken.  Conditional actions are written:
+\begin{alltt}
+(\emph{T}?\emph{A\sub1}|\emph{A\sub2})
+\end{alltt}
+The parentheses are required. This can be read as:
+\begin{quote}
+if \emph{T} succeeds, then execute \emph{A\sub1}, otherwise execute \emph{A\sub2}.
+\end{quote}
+Only one solution of \emph{T} is attempted; i.e., it is as though \emph{T} were implicitly a one-of goal.
+
+\subsection{Forall action}
+\label{action:forall}
+\index{action!forall}
+\index{forall!action}
+\index{operator!*>@\q{*>}}
+The forall action repeats an action for each solution to a predicate test.
+
+The form of the forall action is:
+\begin{alltt}
+(\emph{T}*>\emph{A})
+\end{alltt}
+The parentheses are required. The forall can be read as:
+\begin{quote}
+For each answer that satisfies \emph{T} execute \emph{A}.
+\end{quote}
+
+The forall action is quite similar in meaning to a \q{while} in regular programming languages -- the main difference being that the forall iterates through the \emph{alternatives} for solving the governing condition.
+
+\subsection{Case action}
+\label{action:case}
+\index{action!case@\q{case}}
+\index{case@\q{case}!action}
+The \q{case} action performs one of a selection of actions depending on the value of the governing expressions and a series of case clauses. The form of the \q{case} action is:
+\begin{alltt}
+case \emph{Exp} in (
+  \emph{P\sub1} -> \emph{A\sub1}
+| \ldots
+| \emph{P\subn} -> \emph{A\subn}
+)
+\end{alltt}
+The expression \q{\emph{Exp}} is evaluated -- once -- and then \emph{matched} against the patterns \q{\emph{P\subi}} in turn, until one matches successfully. At that point the associated action \q{\emph{A\subi}} is entered.
+
+If \emph{none} of the patterns match then an \q{'eFAIL'} exception will be raised.
+
+A \q{case} action has a similar character to calling an auxiliary procedure -- one that is defined inline rather than separately. In fact, that is how the compiler analyses a \q{case} action: by creating the auxiliary action procedure.
+
+\section{Special actions}
+\label{action:special}
+
+\index{special actions}
+The special actions include error handling and process spawning.
+
+\subsection{\q{valis} Action}
+\label{action:valis}
+
+\index{action!valis@\q{valis} action}
+\index{valis@\q{valis} action}
+\index{valof@\q{valof} expression!returning a value}
+The \q{valis} action is used to `export' a value from an action sequence when it is part of a \q{valof} expression. The argument of the \q{valis} action is an expression; and the type of the expression becomes the type of the \q{valof} expression that the \q{valis} is embedded in.
+
+\q{valis} is legal within an \q{action} goal or \q{valof} statement sequence; however, there may be any number of \q{valis} statements in such a statement sequence. Executing \q{valis} \emph{does not} terminate the action body, furthermore, if more than one \q{valis} is executed then they must all agree (unify) on their reported value.
+
+
+\subsection{\q{istrue} Action}
+\label{action:istrue}
+
+\index{action! istrue@\q{istrue} action}
+\index{istrue@\q{istrue} action}
+\index{valof@\q{valof} expression!returning a value}
+The \q{istrue} action is used to `export' a truth value from an action sequence when it is part of an \q{action} query. The argument of the \q{istrue} action is a relation query -- which is queried -- looking for just one solution -- as part of the evaluation of the \q{action}.
+
+\q{istrue} is legal within an \q{action} goal; however, there may be any number of \q{istrue} statements in such a statement sequence. Executing \q{istrue} \emph{does not} terminate the action body, furthermore, if more than one \q{istrue} is executed then they must all be satisfied for the \q{action} as a whole to be.
+
+\subsection{error handler}
+\label{action:errorhandler}
+
+\index{action!error handling}
+\index{error handling!in actions}
+\index{onerror@\q{onerror}!action}
+\index{keyword!onerror@\q{onerror}}
+An action may be protected by an error handler in a similar way to expressions and queries. An \q{onerror} action takes the form:
+
+\begin{alltt}
+\emph{Action} onerror (\emph{P\sub1} -> \emph{A\sub1} | \ldots{} | \emph{P\subn} -> \emph{A\subn})
+\end{alltt}
+In such an expression, \emph{Action}, \emph{A\subi} are all actions, and the types of \emph{P\subi} is of the standard error type \q{exception}.
+
+Semantically, an \q{onerror} action has the same meaning as \emph{Action}; unless a run-time problem arose in the evaluation. In this case, an error exception would be raised (of type \q{exception}); and the evaluation of \emph{Action} is terminated and one of the error handling clauses is used instead. The first clause in the handler that unifies with the raised error is the one that is used.
+
+\subsection{\q{raise} exception action}
+\label{action:exception}
+
+\index{action!raise exception}
+\index{raise@\q{raise} exception!in action}
+\index{keyword!raise@\q{raise}}
+The \q{raise} action raises an exception which should be `caught' by an enclosing \q{onerror} form. The enclosing \q{onerror} form need not be an action: it may be within an \q{onerror} expression or query -- it is simply the most recently enclosing \q{onerror} handler that is triggered. 
+
+The argument of an \q{raise} action is an \q{exception} expression.
+
+\subsection{Sub-thread spawn}
+\label{action:spawn}
+
+\index{spawn@\q{spawn} sub-thread}
+\index{action!spawn@\q{spawn} sub-thread}
+\index{keyword!spawn@\q{spawn}}
+\index{multi-threaded programs}
+The \q{spawn} action spawns a sub-thread; it is similar to the \q{spawn} expression -- except that the \q{thread} identifier of the spawned sub-thread is not returned in the \q{spawn} action.
+
+The form of a \q{spawn} action is:
+\begin{alltt}
+spawn \{ \emph{Action} \}
+\end{alltt}
+The sub-thread executes its action independently of, and in parallel with, the invoking thread; and may terminate after or before the `parent'. 
+
+\subsection{Synchronized action}
+\label{action:sync}
+
+\index{sync@\q{sync}!action}
+\index{action!sync@\q{sync} action}
+\index{keyword!sync@\q{sync}}
+\index{synchronized action}
+\index{sharing across threads}
+\index{variable!sharing across threads}
+The \q{sync} action is used to synchronize access to a shared stateful object. The \q{sync} action is only defined for stateful objects.\note{Note that this, unfortunately, is not always easily determined at compile-time.}
+
+Within a method definition, i.e., an action in an action rule that is embedded in a class body, if the object being shared is the same as the object associated with the method, we can write a \q{sync}hronized action:
+\begin{alltt}
+sync\{
+  \emph{Action}
+\}
+\end{alltt}
+If a \q{sync}hronized action is required to synchronize on a different object, or if the action is not part of a method definition, then we use:
+The form of the \q{sync} action is:
+\begin{alltt}
+sync(\emph{Object}) \{ \emph{Action} \}
+\end{alltt}
+where \emph{Object} is the shared object and \emph{Action} is the action.
+
+The effect of a \q{sync}hronized action is to ensure that only one process is able to access the object during the execution of \emph{Action}.
+
+More accurately, only one process is permitted to execute any synchronized action associated with the object. If another process attempts to synchnronize on the object then it will be blocked until the \emph{Action} has either terminated normally or terminated via an exception.
+
+\subsubsection{\q{sync} with timeout}
+\index{sync@\q{sync}!with timeout}
+\index{keyword!timeout@\q{timeout}}
+For more complex scenarios it may be necessary to only block for a limited time on a \q{sync}. We can attach  a \q{timeout} clause  to the \q{sync} action which will be triggered if the time expires before being able to enter the \q{sync} block itself. This form of \q{sync} takes the form:
+\begin{alltt}
+sync\{ \emph{Action} \}
+  timeout (\emph{timeExp} -> \emph{TimeoutAction})
+\end{alltt}
+within a method definition, or
+\begin{alltt}
+sync(\emph{Object})\{ \emph{Action} \} 
+  timeout (\emph{timeExp} -> \emph{TimeoutAction})
+\end{alltt}
+for the general case.
+
+Note that the \emph{timeExp} is an \emph{absolute} time; normally it will be expressed using an expression based on the value of the standard function \q{now()}:
+\begin{alltt}
+\ldots;
+  sync\{
+    stdout.outLine("Hey, I'm fine")
+  \}
+  timeout (now()+0.3) -> 
+    stdout.outLine("Phooey, I failed"))
+  ;\ldots
+\end{alltt}
+\begin{aside}
+When a \q{timeout} has been triggered, it is because it was not possible to \emph{acquire the lock} on the shared object in time. Therefore, the programmer should be somewhat cautious in the actions performed in the \q{timeout} clause: its action \emph{is not synchronized}.
+
+The excessive use of \q{timeout} clauses is not good programming style: their use should be restricted to cases where there is unavoidable uncertainty such as when interacting with a human user, or interacting with applications spread across the Internet.
+\end{aside}
+
+\subsubsection{\q{sync} choice action}
+\label{action:sync:choice}
+\index{multiple \q{sync} action}
+\index{sync@\q{sync}!with multiple guards}
+\index{timeout@\q{timeout} in \q{sync}}
+\index{keyword!sync@\q{sync}}
+\index{operator!->@\q{->}}
+For more complex scenarios there may be more than one alternative action to take -- on acquiring synchronization on an object. I.e., there may be different guards, and different actions to take depending on which guard is fired. In that case we can use the \q{sync} choice action.
+
+The `full' version of the \q{sync} action allows for the possibility of multiple guards and a \q{timeout}. This form of \q{sync} takes the form:
+\begin{alltt}
+sync\{
+  \emph{Guard\sub1} -> \emph{Action\sub1}
+| \emph{Guard\sub2} -> \emph{Action\sub2}
+\}
+timeout (\emph{timeExp} -> \emph{TimeoutAction})
+\end{alltt}
+within a method definition, or
+\begin{alltt}
+sync(\emph{Object})\{
+  \emph{Guard\sub1} -> \emph{Action\sub1}
+| \emph{Guard\sub2} -> \emph{Action\sub2}
+\ldots
+\} timeout (\emph{timeExp} -> \emph{TimeoutAction})
+\end{alltt}
+for the general case.
+
+The \q{timeout} clause is optional.
+
+The simple \q{sync} action
+\begin{alltt}
+sync\{ \emph{Action} \}
+\end{alltt}
+is equivalent to:
+\begin{alltt}
+sync(this)\{ true -> \emph{Action} \}
+\end{alltt}
+
+The \q{sync} choice action synchronizes on the object and then selects one of the choices depending on which of the guards in the choice `fires' first. If none of them fire, the \q{sync} is blocked as though it were not able to acquire the synchronization lock. If there is an active \q{timeout} choice, then the \q{timeout} clause will be taken when it fires.
+
+\index{guard!in synchronized action}
+\index{using \q{sync} with guards}
+\index{notification and \q{sync}}
+\index{sync@\q{sync}!notification}
+\paragraph{Notification}
+A \q{sync} choice action can be used to achieve a kind of notification: for example a \q{sync}ed action of the form:
+\begin{alltt}
+sync(O)\{
+  listlen(O.get())>0) -> \emph{Action}
+\}
+\end{alltt}
+will only execute \emph{Action} if the object \q{O} can be synchronized with and the length of the list in \q{O} is greater than 0. If either is false then the action suspends. If a different thread is able to ensure that \q{O.get()} is non-empty then this action can be resumed. Assuming that the list is indeed empty initially, then the effect is that \emph{Action} will be executed as soon as it becomes non-empty: in effect \emph{notifying} the thread that the shared resource has non-trivial data in it.
+
+\begin{aside}
+The usual warnings about deadlock apply to the \q{sync} action; especially when \q{sync} actions are nested. However, if the programmer ensures that all \q{sync} nested actions have the same order of stateful objects then deadlock will not occur as a result of using \q{sync}.
+
+The central message about the use of \q{sync} is that it makes for an excellent way of resolving access contention for shared resources. On the other hand, \q{sync} is a perfectly terrible technique for \emph{coordinating} multiple threads of activity. The reason is that there is no direct way of establishing a \emph{rendezvous} of two or more threads with \q{sync}. For that, we recommend looking at the \q{go.mbox} message communication standard library.
+\end{aside}
+
+\index{thread-safe libraries}
+Using \q{sync} judiciously allows us to construct \emph{thread-safe} libraries. A thread-safe library is a program that is written to ensure that any threads which can access shared read/write variables defined within the thread properly `gate' access to the variables with \q{sync} statements.
+
+Recall that \q{spawn}ed threads see the same package and object variables as their parents. Since this can obviously lead to contention problems when two threads attempt to access and/or update a shared variable, a key motivation of the \q{sync} operator is to prevent this.
+

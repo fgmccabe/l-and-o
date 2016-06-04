@@ -1,0 +1,12 @@
+/*
+ * The public type interface for the directory service 
+ */
+ 
+  attribute ::= attr(symbol,any).
+  DSmessage ::= register(attribute[])
+      | registered(symbol)
+      | deregister(symbol)
+      | subscribe(attribute[],sumbol[])
+      | search(attribute[],symbol[])
+      | inform(attribute[])
+      | end.

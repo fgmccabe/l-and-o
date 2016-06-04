@@ -1,0 +1,9 @@
+\chapter{XML, SOAP and all that}
+\label{soap}
+
+Any significant application that interacts over the Internet will be required, at some point, to be able to process XML data. In addition, Web services represent an increasingly important technique for exposing functionality in standardized ways -- i.e., if you want to let other people use your application then offering a Web services-based interface is an important tool for doing so.
+
+\section{\go and XML}
+\label{xml:xml}
+\index{XML}
+\go has a standard library that enables processing in XML, called \q{xml.gof}. This module offers several programs, the most important of which are a grammar to parse a \q{string} as an XML document and a function to display a \q{xmlDOM} tree in XML. The parser is not `full' XML: it does not permit or recognize DTD declarations for example, but it does has support for name spaces. The \q{xmlParse} parser is oriented at processing XML messages and machine-readable documents rather than XML-as-cut-down-SGML documents. 

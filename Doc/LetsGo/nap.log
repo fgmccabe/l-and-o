@@ -1,0 +1,48 @@
+This is pdfeTeX, Version 3.141592-1.30.4-2.2 (Web2C 7.5.5) (format=pdflatex 2006.3.14)  29 JAN 2007 22:02
+entering extended mode
+\write18 enabled.
+**nap.sty
+(./nap.sty
+LaTeX2e <2003/12/01>
+Babel <v3.8d> and hyphenation patterns for american, french, german, ngerman, d
+utch, italian, norsk, portuges, spanish, swedish, nohyphenation, loaded.
+
+LaTeX Warning: You have requested package `',
+               but the package provides `nap'.
+
+Package: nap 2004/4/14 v1.0 package for formatting books in the Network Agent P
+ress style
+\critwidth=\dimen102
+\episize=\dimen103
+
+! LaTeX Error: \thechapter undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.130 \renewcommand\thechapter
+                              {\arabic{chapter}}
+? 
+! Emergency stop.
+ ...                                              
+                                                  
+l.130 \renewcommand\thechapter
+                              {\arabic{chapter}}
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+ 
+Here is how much of TeX's memory you used:
+ 68 strings out of 95137
+ 595 string characters out of 1183013
+ 2045165 words of memory out of 4500000
+ 3312 multiletter control sequences out of 10000+50000
+ 3938 words of font info for 15 fonts, out of 2000000 for 2000
+ 58 hyphenation exceptions out of 5000
+ 9i,0n,10p,98b,14s stack positions out of 5000i,500n,6000p,200000b,40000s
+PDF statistics:
+ 0 PDF objects out of 300000
+ 0 named destinations out of 131072
+ 1 words of extra memory for PDF output out of 10000
+No pages of output.

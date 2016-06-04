@@ -1,33 +1,25 @@
-:-module(wff,[wffModule/2]).
+:-module(wff,[wffModule/1]).
 :-use_module(errors).
 :-use_module(abstract).
 :-use_module(misc).
 :-use_module(keywords).
 
-wffModule(Fl,Term) :- 
-    isBraceTerm(Term,Mod,Els),!,
-    wwfModuleName(Fl,Mod),
-    wffThetaEnv(Els).
-wffModule(_,Term) :-
+wffModule(Term) :- 
+    isBraceTerm(Term,P,Els),
+    wffPackageName(P),
+    wffThetaEnv(Els),!.
+wffModule(Term) :-
     locOfAst(Term,Lc),
-    reportError("Invalid module: %w",[Term],Lc).
-
-extractPackageName(Fl,Name) :-
-    (string_concat(Prefix,".gol",Fl), segment(Prefix,'/',Segs),last(Segs,Name);
-      segment(Fl,'/',Segs),last(Segs,Name)).
-
-verifyModuleName(Fl,Name) :-
-  (string_concat(Prefix,".gol",Fl), segment(Prefix,"/",FlSegs) ; segment(Fl,"/",FlSegs)),
-  reverse(FlSegs,Segs),
-  verifyName(Name,Segs).
+    reportError("Invalid module: %s",[Term],Lc).
 
 verifyName(Nm,[Seg|Rest]) :- isBinary(Nm,".",L,name(_,Seg)), verifyName(L,Rest).
 verifyName(name(_,Seg),[Seg|_]).
 
-wwfModuleName(Fl,Mod) :- verifyModuleName(Fl,Mod).
-
-wffPackageName(Term) :- isBinary(Term,".",L,R), isName(L,_), wffPackageName(R).
-wffPackageName(Term) :- isName(Term,_).
+wffPackageName(Term) :- isIden(Term,_).
+wffPackageName(Term) :- isString(Term,_).
+wffPackageName(Name) :- 
+  locOfAst(Name,Lc),
+  reportError("Module %s not valid",[Name],Lc).
 
 wffThetaEnv([]).
 wffThetaEnv([Pri|Stmts]) :- 
@@ -38,97 +30,52 @@ wffThetaEnv([St|Stmts]) :-
     wffThetaEnv(Stmts).
 
 wffStmt(St) :-
+  wffImportSt(St).
+wffStmt(St) :-
   isAlgebraicTypeDef(St).
+wffStmt(St) :-
+  isTypeAssertion(St).
 wffStmt(St) :-
   isTypeAnnotation(St).
 wffStmt(St) :-
-  wffFunctionDefn(St).
+  isAssertion(St).
+wffStmt(St) :-
+  wffDefinition(St).
+wffStmt(St) :-
+  wffEquation(St).
+wffStmt(St) :- wffLabelRule(St).
+wffStmt(St) :- wffClass(St).
 wffStmt(St) :- wffClause(St).
-wffStmt(St) :- locOfAst(St,Lc), reportError("Cannot understand %w",[St],Lc).
+wffStmt(St) :- locOfAst(St,Lc), reportError("Cannot understand statement %s",[St],Lc).
 
-wffTypeExp(name(_,_)).
+wffImportSt(St) :- isUnary(St,"import",P), wffPackageName(P).
+
+wffTypeExp(T) :- wffIden(T).
 wffTypeExp(T) :- isSquare(T,_,A), wffTypeExps(A).
 wffTypeExp(T) :- isBinary(T,"=>",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
-wffTypeExp(T) :- braceTuple(T,_,A), wffFaceTypes(A).
+wffTypeExp(T) :- isBinary(T,"<=>",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
+wffTypeExp(T) :- isBraceTerm(T,L,[]),isTuple(L,A), wffTypeExps(A).
+wffTypeExp(T) :- isBraceTuple(T,_,A), wffFaceTypes(A).
+wffTypeExp(T) :- isQuantified(T,V,Tp), wffTypeQuants(V,[],_), wffTypeExp(Tp).
+wffTypeExp(T) :- locOfAst(T,Lc), reportError("Cannot understand type %s",[T],Lc).
+
+wffTypeQuants(P,Q,QQ) :- isBinary(P,",",L,R), wffTypeQuants(L,Q,Q0), wffTypeQuants(R,Q0,QQ).
+wffTypeQuants(V,Q,[Nm|Q]) :- isBinary(V,"<~",L,Up), isBinary(L,"<~",Lw,Vr), isName(Vr,Nm), wffTypeExp(Lw), wffTypeExp(Up).
+wffTypeQuants(V,Q,[Nm|Q]) :- isBinary(V,"<~",Vr,Up), isName(Vr,Nm), wffTypeExp(Up).
+wffTypeQuants(N,Q,[Nm|Q]) :- isName(N,Nm).
 
 wffFaceTypes([]).
 wffFaceTypes([F|A]) :- isTypeAnnotation(F), wffFaceTypes(A).
 
 wffTypeExps([]).
-wffTypeExps([T|L]) :- wffTypeExp(T), wffTypeExps(L).
+wffTypeExps([T|L]) :- wffTypeArg(T), wffTypeExps(L).
 
-convertTypeDef(St,[InheritThing,InheritShow|Elements],Tail) :-
-  isAlgebraicTypeDef(St,Lc,Head,Body),
-  binary(Lc,"<~",Head,name(Lc,"showable"),InheritShow),
-  binary(Lc,"<~",Head,name(Lc,"thing"),InheritThing),
-  convertConstructors(Body,Head,Elements,Tail).
-
-convertConstructors(Pair,Head,Elements,Tail) :-
-  isBinary(Pair,"|",L,R),
-  convertConstructors(L,Head,Elements,L1),
-  convertConstructors(R,Head,L1,Tail).
-convertConstructors(Term,Head,Elements,Tail) :-
-  convertConstructor(Term,Head,Elements,Tail).
-
-convertConstructor(name(Lc,Nm),Tp,[TpRule,InheritRule,Body|Tail],Tail) :-
-  binary(Lc,":",name(Lc,Nm),Tp,TpRule),
-  binary(Lc,"<=",name(Lc,Nm),name(Lc,"thing"),InheritRule), /* Inherit from thing */
-
-  unary(Lc,"dS",string(Lc,Nm),StrValue),
-  roundTerm(Lc,"display",[name(Lc,"_")],Hd),
-  binary(Lc,"=>",Hd,StrValue,ShowFun),
-
-  braceTuple(Content,Lc,[ShowFun]),
-  binary(Lc,"..",name(Lc,Nm),Content,Body).
-convertConstructor(Con,Tp,[TpRule,InheritRule,Body|Tail],Tail) :-
-  isRound(Con,Nm,ArgTypes), /* Construct con:(T1,..,Tn)=>Tp */
-  funType(Lc,ArgTypes,Tp,FT),
-  binary(Lc,name(Lc,Nm),FT,TpRule),
-  PrVar = name(Lc,"__0"),       /* Construct con(__1,..,__n) <= thing */
-  genArgShow(Lc,1,PrVar,ArgTypes,Args,Exps),
-  roundTerm(Lc,Nm,Args,ConHead),
-  binary(Lc,"<=",ConHead,name(Lc,"thing"),InheritRule),
-  unary(Lc,"dS",")",Close),    /* Construct con(__1,..,__n) .. { disp(Pr) => ...__i.disp(Pr)... } */
-  binary(Lc,",..",Close,name(Lc,"[]"),Term),
-  assembleDisplayArgs(Lc,Term,Exps,ArgDisps),
-  unary(Lc,"dS","(",Open),
-  binary(Lc,",..",Open,ArgDisps,AD1),
-  unary(Lc,"dS",Nm,NmD),
-  binary(Lc,",..",NmD,AD1,DispArgs),
-  unary(Lc,"dSeq",DispArgs,Result),
-  roundTerm(Lc,"display",[PrVar],Hd),
-  binary(Lc,"=>",Hd,Result,DispFun),
-  braceTuple(Lc,[DispFun],Content),
-  binary(Lc,"..",ConHead,Content,Body).
-
-genArgShow(_,_,_,[],[],[]).
-genArgShow(Lc,No,Pr,[_|Tps],[V|Args],[ShowV|Exps]) :-
-  genVar(Lc,No,V,NxNo),
-  roundTerm(Lc,"display",[Pr],ShCall),
-  binary(Lc,".",V,ShCall,ShowV),
-  genArgShow(Lc,NxNo,Pr,Tps,Args,Exps).
-
-genVar(Lc,No,name(Lc,Name),NxNo) :-
-  number_string(NN,No),
-  string_concat("__",NN,Name),
-  NxNo is No+1.
-
-assembleDisplayArgs(_,Term,[],Term).
-assembleDisplayArgs(Lc,Term,[Exp|Exps],Disp) :-
-  assembleDisplayArgs(Lc,Term,Exps,DispExp),
-  unary(Lc,"dS",",",Comma),
-  binary(Lc,",..",Comma,DispExp,E1),
-  binary(Lc,",..",Exp,E1,Disp).
-
-hasType(Lc,Nm,Tp,St) :- binary(Lc,":",name(Lc,Nm),Tp,St).
-
-funType(Lc,Args,Res,Tp) :- binary(Lc,"=>",tuple(Lc,Args),Res,Tp).
-genericType(Lc,Nm,Args,Tp) :- squareTerm(Lc,Nm,Args,Tp).
-
-thingType(name(Lc,"thing"),Lc).
-
-showType(Lc,FT) :-
-  funType(Lc,[name(Lc,"integer")],name(Lc,"SString"),FT).
+wffTypeArg(T) :- isUnary(T,"+",TT), !, wffTypeExp(TT).
+wffTypeArg(T) :- isUnary(T,"++",TT), !, wffTypeExp(TT).
+wffTypeArg(T) :- isUnary(T,"-",TT), !, wffTypeExp(TT).
+wffTypeArg(T) :- isUnary(T,"+-",TT), !, wffTypeExp(TT).
+wffTypeArg(T) :- isUnary(T,"-+",TT), !, wffTypeExp(TT).
+wffTypeArg(T) :- wffTypeExp(T).
 
 isPrivate(Term,T,Lc) :- isUnary(Term,"private",T), locOfAst(T,Lc).
 
@@ -137,38 +84,114 @@ isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_).
 
 isTypeAnnotation(Term) :-
   isBinary(Term,":",L,R),
-  (wffIden(L) ; isRound(L,ClNm,Args), \+isKeyword(ClNm), wffPtns(Args)),
+  wffIden(L),
   wffTypeExp(R).
 
-wffFunctionDefn(Term) :-
-  isBinary(Term,"=>",Hd,Result),
-  isBinary(Hd,"::",Head,Cond),
-  isRound(Head,Fn,Args),
-  \+isKeyword(Fn),
-  wffPtns(Args),
-  wffCond(Cond),
+isTypeAssertion(St) :-
+  isQuantified(St,V,Inner),!,
+  wffTypeQuants(V,[],Q),
+  isBinary(Inner,"<~",L,R),
+  wffTypeHead(L,Q),
+  wffTypeExp(R).
+isTypeAssertion(St) :-
+  isBinary(St,"<~",L,R),
+  wffTypeHead(L,[]),
+  wffTypeExp(R).
+
+wffTypeHead(T,Q) :-
+  isIden(T,Lc,_),
+  (Q=[] ; reportError("quantifiers not permitted for type %s",[T],Lc)).
+wffTypeHead(T,Q) :-
+  isSquare(T,_,A),
+  locOfAst(T,Lc),
+  checkHeadTypes(A,Q,Lc).
+wffTypeHead(T,_) :-
+  locOfAst(T,Lc),
+  reportError("invalid type in definition: %s",[T],Lc).
+
+checkHeadTypes([],[],_) :- !.
+checkHeadTypes([],_,Lc) :- reportError("too many quantifiers",[],Lc).
+checkHeadTypes([V|L],Q,Lc) :-
+  isIden(V,VLc,VN),!,
+  (is_member(VN,Q) ; reportError("type arg %s not quantified",[V],VLc)),
+  subtract(VN,Q,QQ),
+  checkHeadTypes(L,QQ,Lc).
+checkHeadTypes([V|L],Q,Lc) :-
+  locOfAst(V,VLc),
+  reportError("invalid type arg in definition %s",[V],VLc),
+  checkHeadTypes(L,Q,Lc).
+
+isAssertion(St) :-
+  isUnary(St,"assert",A),
+  wffCond(A).
+
+wffDefinition(Term) :-
+  isBinary(Term,"=",Hd,Result),
+  wffHead(Hd),
   wffExp(Result).
-wffFunctionDefn(Term) :-
-  isBinary(Term,"=>",Head,Result),
-  isRound(Head,Fn,Args),
-  \+isKeyword(Fn),
-  wffPtns(Args),
+
+wffEquation(Term) :-
+  isBinary(Term,"=>",Hd,Result),
+  wffHead(Hd),
   wffExp(Result).
 
 wffClause(Term) :- 
   isBinary(Term,":-",Head,Body),
+  wffHead(Head),
+  wffCond(Body).
+wffClause(Term) :- 
+  isBinary(Term,":--",Head,Body),
+  wffHead(Head),
+  wffCond(Body).
+wffClause(Head) :- wffHead(Head).
+
+wffHead(Head) :-
+  isBinary(Head,"::",H,C),
+  wffHead(H),
+  wffCond(C).
+wffHead(Head) :-
   isRound(Head,Op,Args),
   \+ isKeyword(Op),
-  wffPtns(Args),
-  wffCond(Body).
-wffClause(Term) :-
-  isRound(Term,Op,Args),
-  \+ isKeyword(Op),
   wffPtns(Args).
+wffHead(Head) :- wffIden(Head).
+
+wffLabelRule(Term) :-
+  isBinary(Term,"<=",L,R),
+  wffHead(L),
+  wffLabelReplacement(R).
+wffLabelRule(Term) :-
+  isBinary(Term,"<<",L,R),
+  wffHead(L),
+  wffLabelReplacement(R).
+
+wffLabelReplacement(Term) :-
+  isBinary(Term,"~",L,R),
+  wffLabelReplacement(L),
+  wffExclusions(R).
+wffLabelReplacement(Term) :- 
+  wffExp(Term).
+wffLabelReplacement(T) :- locOfAst(T,Lc), reportError("Cannot understand label expression %s",[T],Lc).
+
+wffExclusions(Term) :- 
+  isSquareTuple(Term,_,A),
+  wffPtns(A).
+
+wffClass(Term) :-
+  isBinary(Term,"..",L,R),
+  wffPtn(L),
+  isBraceTuple(R,_,Els),
+  wffThetaEnv(Els).
 
 wffExps([]).
+wffExps([T]) :-
+  isBinary(T,".,,",L,R),
+  wffExp(L),
+  wffExp(R).
 wffExps([P|T]) :- wffExp(P), wffExps(T).
 
+wffExp(name(_,"this")).
+wffExp(name(_,"true")).
+wffExp(name(_,"false")).
 wffExp(name(_,K)) :- \+isKeyword(K).
 wffExp(name(Lc,K)) :- isKeyword(K), reportError("unexpected keyword: %s",[K],Lc).
 wffExp(integer(_,_)).
@@ -190,8 +213,9 @@ wffExp(T) :- isBinary(T,"-",L,R), wffExp(L), wffExp(R).
 wffExp(T) :- isBinary(T,"*",L,R), wffExp(L), wffExp(R).
 wffExp(T) :- isBinary(T,"/",L,R), wffExp(L), wffExp(R).
 wffExp(T) :- isBinary(T,"%",L,R), wffExp(L), wffExp(R).
+wffExp(T) :- isBinary(T,"%%",L,R), wffExp(L), wffExp(R).
 wffExp(T) :- isRoundTerm(T,Op,Args), wffExp(Op), wffExps(Args).
-wffExp(T) :- locOfAst(T,Lc), reportError("expression %w not well formed",[T],Lc).
+wffExp(T) :- locOfAst(T,Lc), reportError("expression %s not well formed",[T],Lc).
 
 wffStringSegments([]).
 wffStringSegments([S|M]) :- wffStringSegment(S), wffStringSegments(M).
@@ -206,16 +230,26 @@ wffCond(C) :- isBinary(C,",",L,R), wffCond(L), wffCond(R).
 wffCond(C) :- isBinary(C,"|",L,R), isBinary(L,"?",T,Th), wffCond(T),wffCond(Th),wffCond(R).
 wffCond(C) :- isBinary(C,"|",L,R), wffCond(L), wffCond(R).
 wffCond(C) :- isUnary(C,"!",R), wffCond(R).
+wffCond(C) :- isUnary(C,"\\+",R), wffCond(R).
 wffCond(C) :- isBinary(C,"*>",L,R), wffCond(L), wffCond(R).
 wffCond(C) :- isTuple(C,[Cx]), wffCond(Cx).
+wffCond(C) :- isBinary(C,"=",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"==",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"\\=",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"!=",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"<",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"=<",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,">",L,R), wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,">=",L,R), wffExp(L),wffExp(R).
 wffCond(C) :- isBinary(C,".=",L,R), wffPtn(L),wffExp(R).
 wffCond(C) :- isBinary(C,"=.",L,R), wffExp(L),wffPtn(R).
-wffCond(C) :- isBinary(C,Comp,L,R), member(Comp,["==","!=","<=","-->"]),wffExp(L),wffExp(R).
+wffCond(C) :- isBinary(C,"in",L,R), wffPtn(L),wffExp(R).
 wffCond(C) :- isRoundTerm(C,Op,Args), wffExp(Op), wffExps(Args).
+wffCond(T) :- locOfAst(T,Lc), reportError("Cannot understand condition %s",[T],Lc).
 
-wffPtns([]).
-wffPtns([P|T]) :- wffPtn(P), wffPtns(T).
-
+wffPtn(name(_,"this")).
+wffPtn(name(_,"true")).
+wffPtn(name(_,"false")).
 wffPtn(name(_,O)) :- \+ isKeyword(O).
 wffPtn(integer(_,_)).
 wffPtn(long(_,_)).
@@ -225,16 +259,21 @@ wffPtn(interString(Lc,_)) :- reportError("interpolated string not allowed in pat
 wffPtn(tuple(_,"()",A)) :- wffPtns(A).
 wffPtn(tuple(_,"[]",A)) :- wffPtns(A).
 wffPtn(tuple(Lc,"{}",_)) :- reportError("not permitted as pattern",[],Lc).
+wffPtn(T) :- isBinary(T,"::",L,R), wffPtn(L), wffCond(R).
+wffPtn(T) :- isUnary(T,"@",R), wffCond(R). /* Tau pattern */
+wffPtn(T) :- isBinary(T,"#",L,R), wffPackageName(L), wffPtn(R).
 wffPtn(T) :- isRoundTerm(T,Op,Args), wffExp(Op), wffPtns(Args).
+wffPtn(T) :- locOfAst(T,Lc), reportError("Cannot understand pattern %s",[T],Lc).
 
-wffIden(Nm) :- ifthen(isName(Nm,_),
-    true,
-    (locOfAst(Nm,Lc),
-    reportError("expecting identifier %w",[Nm],Lc))).
+wffPtns([]).
+wffPtns([T]) :-
+  isBinary(T,".,,",L,R),
+  wffPtn(L),
+  wffPtn(R).
+wffPtns([P|T]) :- wffPtn(P), wffPtns(T).
 
-privatize(_,[],Els,Els).
-privatize(Lc,[St|More],[unary(Lc,"private",St)|Tail]) :- privatize(Lc,More,Tail).
-
+wffIden(Nm) :- isName(Nm,_),\+isKeyword(Nm).
+wffIden(Id) :- isTuple(Id,[Nm]), isName(Nm,_), \+ isKeyword(Nm).
 
 ifthen(T,Th,_) :- T, !, Th.
 ifthen(_,_,El) :- El.

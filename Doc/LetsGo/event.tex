@@ -1,0 +1,9 @@
+\chapter{Event Calculus}
+\label{event}
+
+The Event Calculus is a notation invented in the 1980's by Bob Kowalski and Marek Sergot. It addresses a key area in modeling dynamic systems: the relationship between \emph{events} and \emph{what is known}. For example, if a company receives an invoice, that is an event; however, the consequences of that event flow in the form of the fact that the company now owes money to the issuer of the invoice -- provided of course that the invoice is a legitimate one.
+
+The foundation of the Event Calculus is based on three legs: the concept of an \emph{event} -- which is a recognizable phenomenon occurring at a single point in time -- a \emph{fluent} -- which is a predicate that is true of a certain period of time -- and logic programming; most notably it relies on the \emph{closed world assumption} to permit inferences about what is true at any particular period in time. The axioms for the Event Calculus are a straightforward elaboration of the relationship between events and fluents.
+
+One area which the Event Calculus does not explicate very well is the recognition of events themselves. In the case of the invoice arriving on a manager's desk, for example, there are certain preconditions that must be satisfied by the piece of paper (or email, or fax) before the message counts as an invoice. However, the concept of \emph{expectation} is at least as important as the concepts of event and fluent.
+

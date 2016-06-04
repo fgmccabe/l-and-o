@@ -1,0 +1,18 @@
+/*
+ * Type definition for the action executor 
+ */
+ 
+ -- A is the domain type of the actions, G is the domain predicate type
+ actType[A,G] ::= 
+   prim(metaTp[G],A)
+ | choice(metaTp[G],actType[A,G],actType[A,G])
+ | seq(list[actType[A,G]])
+ | subplan(symbol).
+
+actions[A,G] ~> {
+  strips_rule:(A,list[metaTp[G]],list[metaTp[G]],list[metaTp[G]]){}.
+  do:(A)*.
+  which:((symbol)=>actType[A,G]).
+}.
+actions[_,G] ~> clauses[G].
+ 

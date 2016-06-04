@@ -1,0 +1,210 @@
+\documentclass[fleqn,10pt,openright]{book}
+\usepackage{alltt,varioref,xspace,amsmath,longtable,latexsym,makeidx}
+\usepackage[final]{graphicx}
+\usepackage[refpage]{nomencl}
+\usepackage{multicol}
+\usepackage{index}
+\usepackage{nap}
+\usepackage[pdftex=true,letterpaper=true,backref=page,hyperindex=true,pagebackref=true,linktocpage=true]{hyperref}
+\usepackage[nottoc]{tocbibind}
+\usepackage[titles]{tocloft}
+\usepackage{floatflt}
+\usepackage{float}
+\usepackage{shadow,boxedminipage}
+\usepackage[perpage,flushmargin]{footmisc}
+\usepackage{manfnt}
+\usepackage{bussproofs}
+\usepackage{lettrine}
+\usepackage{fancyhdr}
+
+\title{\Huge Let's Go!}
+\author{Francis G. M$^\mbox{c}$Cabe}
+\makeglossary
+\makeindex
+%\proofmodetrue
+
+\begin{document}
+
+\floatstyle{ruled}
+\floatname{program}{Program}
+\newfloat{program}{hbt}{lop}[chapter]
+
+\newcommand{\go}{\q{Go!}\xspace}
+\newcommand{\april}{{\tt April}\xspace}
+\newcommand{\prolog}{\q{Prolog}\xspace}
+\newcommand{\gcl}{\go Content Language\xspace}
+\newcommand{\LO}{\q{L\&O}\xspace}
+\newcommand{\new}{{\tt \char'044}\xspace}
+\newcommand{\union}{{\tt \bsl/}\xspace}
+\newcommand{\intersection}{{\tt /\bsl}\xspace}
+\newcommand{\difference}{{\tt \bsl}\xspace}
+\newcommand{\typearrow}{{\mbox{\tt <\tilda}}\xspace}
+\newcommand{\tcast}{{\mbox{\tt \uphat}}\xspace}
+\newcommand{\lblcast}{{\mbox{\tt \char`^\char`^}}\xspace}
+\newcommand{\funarrow}{{\mbox{\tt =>}}\xspace}
+\newcommand{\classarrow}{{\mbox{\tt <=}\xspace}}
+\newcommand{\conarrow}{{\mbox{\tt @=}\xspace}}
+\newcommand{\sconarrow}{{\mbox{\tt @>}\xspace}}
+\newcommand{\classtype}{{\mbox{\tt <=}\xspace}}
+\newcommand{\actsynopsis}[1]{{\tt #1*}\par\vskip1ex\noindent}
+\newcommand{\libsynopsis}[1]{{\tt include "sys:go/#1".}\vskip1ex\noindent}
+\newcommand{\safegoal}[2]{\ensuremath{\emph{#1}~\tinfers{}\/\mbox{\emph{safe$_P$($#2$)}}}}
+\newcommand{\safeact}[2]{\ensuremath{\emph{#1}~\tinfers{}\/\mbox{\emph{safe$_A$($#2$)}}}}
+\newcommand{\grammprd}[3]{\ensuremath{\emph{#1}~\tinfers{} {\emph{safe$_G$($#2$)}}\leadsto#3}}
+\newcommand{\safegrammar}[3]{\ensuremath{\emph{#1}~\tinfers{}\mbox{\emph{safe$_G$($#2$,$#3$)}}}}
+\newcommand{\extends}[4]{\ensuremath{\emph{#1}~\tinfers{}\/\mbox{\emph{extends\sub{\theta}}(#2)=[#3,..#4]}}}
+\newcommand{\typeblw}[3]{\ensuremath{\emph{#1}~\tinfers{}#2\preceq #3}}
+
+\frontmatter
+\thispagestyle{empty}
+\newcommand{\HRule}{\rule{\linewidth}{1mm}}
+\vspace*{\stretch{1}}
+\begin{flushright}
+\HRule
+\\
+\Huge Let's Go!
+\\[1ex]
+\huge Francis G. M$^{\mbox{\Large c}}$Cabe
+\HRule
+\end{flushright}
+\vspace*{\stretch{2}}
+\begin{center}
+{\Large\textsc{Network Agent Press}}\\
+\textsc{Palo Alto, California}
+\end{center}
+\newpage{}
+\thispagestyle{empty}
+{
+\parindent=0in
+\parskip=1ex
+{\bf\large Let's Go!}\\
+Copyright \copyright{} 2007 Francis G. M$^c$Cabe\\
+ISBN 0-9754449-1-3\\
+
+\vspace*{\stretch{1}}
+Many of the designations used by manufacturers and sellers to distinguish their products are claimed as trademarks. Where Network Agent Press is aware of such trademark claims, and where referenced in this text, the designations have been printed in caps, or initial caps.
+
+While every precaution has been taken in the preparation of this book, the publisher assumes no responsibility for errors or omissions, or for damages resulting from the use of information contained therein.
+
+\vspace*{4ex}
+Network Agent Press\\
+Palo Alto, California\\
+Contact frankmccabe@mac.com\\
+}
+
+\newpage{}
+\pagestyle{empty}
+\vspace*{\stretch{1}}
+\begin{center}
+\emph{For Miko and Stephen, without whom, none of this makes sense}
+\end{center}
+\vspace*{\stretch{2}}
+
+\cleardoublepage
+
+\pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter\ #1}{}} \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyhf{} % delete current setting for header and footer
+\fancyhead[LE,RO]{\bfseries\thepage}
+\fancyhead[LO]{\bfseries\rightmark}
+\fancyhead[RE]{\bfseries\leftmark}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\addtolength{\headheight}{0.5pt} % make space for the rule
+
+\fancypagestyle{plain}{
+% 
+\fancyhead{} % get rid of headers on plain pages 
+\renewcommand{\headrulewidth}{0pt} % and the line
+} 
+%\pagestyle{headings}
+
+\include{preface}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter. #1}{}} 
+
+\makeatletter
+\renewcommand{\@pnumwidth}{2.5em}
+\renewcommand{\@tocrmarg}{2.7em}
+\makeatother
+
+\markboth{Contents}{Contents}
+
+\tableofcontents
+
+\cleardoublepage
+\markboth{List of Programs}{List of Programs}
+\addcontentsline{toc}{chapter}{List of Programs}
+\listof{program}{List of Programs}
+
+\cleardoublepage
+\markboth{List of Figures}{List of Figures}
+\addcontentsline{toc}{chapter}{List of Figures}
+\listof{figure}{List of Figures}
+\markboth{}{}
+
+\mainmatter
+\part{Getting started}
+\label{gettingStarted}
+\include{first}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+
+\part{Programming in \go}
+\label{programming}
+\include{directory}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{dance}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{meta}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+%\include{strips}
+%\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{sudoku}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+
+\part{\go in detail}
+\label{inDetail}
+
+\include{types}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{expressions}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{goals}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{actions}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{grammar}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{lo}
+\addtocontents{lop}{\protect\addvspace{1ex}}
+\include{packages}
+
+%\include{message}
+
+%\part{Programming in \go}
+%\label{agentProgramming}
+%\include{strips}
+%\include{mobile}
+%\include{xmlsoap}
+
+\part[Appendices]{Appendices}
+
+\appendix
+%\include{install}
+\include{programs}
+
+\backmatter
+\bibliographystyle{alpha}
+\bibliography{../LogicBib}
+
+% To generate the glossary do:
+% latex letsgo
+% makeindex letsgo.glo -s nomencl.ist -o letsgo.gls 
+% latex letsgo (a few more times)
+\cleardoublepage
+\renewcommand{\nomname}{Glossary}
+\renewcommand{\nompreamble}{\addcontentsline{toc}{chapter}{Glossary}\label{glossary}}
+\markboth{\MakeUppercase\nomname}{\MakeUppercase\nomname}
+\printglossary[1.5in]
+\cleardoublepage
+\printindex
+\end{document}

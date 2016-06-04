@@ -1,0 +1,36 @@
+\begin{thebibliography}{TUC00}
+
+\bibitem[Cla78]{klc:78}
+K.L. Clark.
+\newblock Negation as failure.
+\newblock In H.~Gallaire and J.~Minker, editors, {\em Logic and Databases},
+  pages 293--322. Plenum press, 1978.
+
+\bibitem[Hin69]{hindley:69}
+R.~Hindley.
+\newblock The principal type scheme of an object in combinatory logic.
+\newblock {\em Trans. AMS}, 146:29--60, 1969.
+
+\bibitem[McC92]{fgm:92}
+F.G. McCabe.
+\newblock {\em Logic and Objects}.
+\newblock Prentice-Hall International, 1992.
+
+\bibitem[McC05]{fgm:go:05}
+F.~G. McCabe.
+\newblock {\em Go! Reference Manual}, beta-13 edition, 2005.
+
+\bibitem[Mil78]{milner:78}
+Robin Milner.
+\newblock A theory of type polymorphism in programming.
+\newblock {\em Computer and System Sciences}, 17(3):348--375, 1978.
+
+\bibitem[owl04]{owl:04}
+Owl web ontology language oveview, 2004.
+
+\bibitem[TUC00]{unicode:30}
+{T}he~{U}nicode {C}onsortium.
+\newblock {\em {T}he {U}nicode {S}tandard {V}ersion 3.0}.
+\newblock Addison-Wesley, 2000.
+
+\end{thebibliography}

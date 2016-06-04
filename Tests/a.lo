@@ -1,0 +1,19 @@
+a{
+ a:all t ~~ (list[t],list[t])=>list[t].
+ a([],X) => X.
+ a([E,..X],Y) => [E,..a(X,Y)].
+
+ assert a([1,2,3],[4,5,6]) = [1,2,3,4,5,6].
+
+ p:(string,string){}.
+ p("a","b").
+ p("c","b").
+ p("b","d").
+ p("g","d").
+
+ gp:(string,string){}.
+ gp(x,y) :-- p(x,z), p(z,y).
+
+ assert p("a","b"), gp("a","d").
+}.
+

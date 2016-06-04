@@ -1,4 +1,4 @@
-:-module(keywords, [keyword/1,isKeyword/1]).
+:-module(keywords, [keyword/1,isKeyword/1,isRuleKeyword/1]).
 
   isKeyword(X):- keyword(X), !.
 
@@ -14,11 +14,12 @@
   keyword("^").
   keyword("^^").
   keyword("~").
+  keyword("~~").
   keyword("=").
   keyword("==").
   keyword(".=").
-  keyword(":=").
   keyword("=>").
+  keyword("<=>").
   keyword("->").
   keyword(":-").
   keyword(":--").
@@ -30,31 +31,36 @@
   keyword("*").
   keyword("/").
   keyword("+").
+  keyword("%").
   keyword("$").
   keyword("*>").
   keyword("\\+").
   keyword("\\=").
   keyword("!=").
   keyword(".").
-  keyword("%").
   keyword("%%").
   keyword("@").
   keyword("@@").
   keyword("in").
-  keyword("case").
-  keyword("valof").
-  keyword("valis").
-  keyword("istrue").
   keyword("true").
   keyword("false").
-  keyword("fail").
-  keyword("action").
-  keyword("spawn").
-  keyword("onerror").
-  keyword("sync").
-  keyword("raise").
-  keyword("timeout").
+  keyword("this").
   keyword("import").
-  keyword("opaque").
-  keyword("$meta").
   keyword("#").
+
+  isRuleKeyword(X):- ruleKeyword(X), !.
+
+  ruleKeyword("::").
+  ruleKeyword("..").
+  ruleKeyword("~~").
+  ruleKeyword("=>").
+  ruleKeyword("<=>").
+  ruleKeyword("->").
+  ruleKeyword(":-").
+  ruleKeyword(":--").
+  ruleKeyword("-->").
+  ruleKeyword("::=").
+  ruleKeyword("<=").
+  ruleKeyword("<~").
+
+

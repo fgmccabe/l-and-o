@@ -1,0 +1,134 @@
+\chapter{Debugging \go programs}
+\label{debugging}
+\index{debugging}
+\lettrine[nindent=0.1em]{I}{n order} to debug a \go program\note{Debugging \go
+  programs is not in its final form, as of this writing.} it is necessary to
+compile it with debugging options enabled. The simplest option is the \q{-g}
+flag. This results in the compiler adding additional code to the program to
+generate debugging information for all programs in the package. It also results
+in a substantial expansion of the code size; and a concomitant reduction in
+performance.
+
+Often it is not necessary to debug all the programs in a package. The \q{-gb \emph{PrgName}} option turns on debugging for just \q{\emph{PrgName}}.\note{The compiler is a little crude about this: it will turn on debugging for \emph{any} program called \q{\emph{PrgName}}.}
+
+The \q{-gb} option can be used any number of times, to enable different functions to be debugged. In fact, the \q{-g} option is short for \q{-gb *}.
+
+When a program is executed, by default no debugging information is generated -- even if it is compiled with debugging code enabled. To actually generate debugging traces and actions you must execute the \go program using the \q{-g} flag.
+
+
+\section{Using the default \q{go.debug} package}
+\label{debug:default}
+\index{using the built-in debugger}
+
+The default debugger is a simple debugger that allows source-level tracing of the program being debugged and for simple displays of the internal state of the system. 
+
+The default debugger will not generate any debugging trace unless the \go program is invoked with the \q{-g} option:
+\begin{alltt}
+\emph{UnixPrompt}\% go -g \emph{package}
+\end{alltt}
+
+Once invoked, it displays information in the form:
+\begin{alltt}
+[\emph{thread-name}] \emph{flag} \emph{name} \emph{args}
+\end{alltt}
+where \emph{thread-name} is a short form of the thread \q{handle} currently executing, \emph{flag} is a short string indicating the kind of debugging message:
+\begin{description}
+\item[prove] This is used when calling a predicate. The form of the message displayed is analogous to:
+\begin{alltt}
+[thread#0] prove pred(wall_front(_839BFC))
+\end{alltt}
+The arguments to the call show their values just before entering the predicate.
+
+\item[proved] This is used when a predicate succeeds. The form of the message displayed is analogous to:
+\begin{alltt}
+[thread#0] proved pred(wall_front(false))
+\end{alltt}
+The arguments to the call show their values just after successfully solving the predicate call.
+
+\item[retry] This is used when a predicate or grammar call has to be re-tried. This normally aries if the call was successfully solved at least once and a subsequent failure forces a re-try -- to find an alternative solution. The form of the message displayed is analogous to:
+\begin{alltt}
+[thread#0] retry pred(wall_front(false))
+\end{alltt}
+The arguments to the call show their values just before attempting another solution of the predicate call.
+
+\item[not proved] This is used when a predicate fails. This arises if either the predicate fails to find any solution, or if a subsequent attempt to find an alternative solution fails.  The form of the message displayed is analogous to:
+\begin{alltt}
+[thread#0] not proved pred(wall_front(_839BFC))
+\end{alltt}
+The arguments to the call show their values just before failing the predicate call -- which is also the same as their values before entering the goal.
+
+\item[eval] This is used when calling a function.  An \q{eval} debug message is analogous to:
+\begin{alltt}
+[thread#1] eval goldCell.get ()
+\end{alltt}
+The arguments to the call show their values just before calling the function.
+
+\item[return] This is used when reporting the result of a function call. The form of a \q{return} message is:
+\begin{alltt}
+[thread#1] return goldCell.get ((2, 3))
+\end{alltt}
+Note that the \q{return} message displays the \emph{result} of the function, not the arguments of the call.
+
+\item[exec] This is used when entering an action procedure. An \q{exec} debug message is analogous to:
+\begin{alltt}
+[thread#1] exec stdout.outLine ("Gold in cell: (2, 3)")
+\end{alltt}
+
+\item[finish] This is used when an action procedure has completed. A \q{finish} debug message is analogous to:
+\begin{alltt}
+[thread#1] exit stdout.outLine ("Gold in cell: (2, 3)")
+\end{alltt}
+This will show the state of any arguments after the execution of the action procedure.
+
+\item[parse] This is used when entering a grammar non-terminal.
+\item[parsed] This is used when reporting a successful parse.
+\item[defn] This is used when reporting the value of a variable.
+\item[line] This is used when reporting that control is at a line in the source program. \go also displays the \emph{line} information so indicate the current source file and line number representing the location of the program.
+\end{description}
+
+When the debugger pauses for input, a range of commands may be accepted:
+\begin{description}
+\item[n \emph{count}]
+This moves the program for \emph{count} lines before pausing again.
+\item[f]
+This causes the debugger to focus on the current thread and to ignore any debugging information in other threads.
+\item[u]
+This causes the debugger to un-focus, and to display debugging information for all threads that are executing programs with debugging code compiled.
+\item[q]
+This causes the debugger to force the entire \go session to terminate.
+\item[t]
+This causes the debugger to switch to a tracing mode -- debugging information is displayed but the user is never prompted again.
+\item[c]
+This causes the debugger to stop displaying debugging information. Program execution continues as though debugging were disabled. Note that there is still some performance degradation since the run-time system is still executing `debugging code'.
+\item[a \emph{reg}]
+Shows the contents of an argument register.
+\item[y \emph{reg}]
+Shows the contents of a local variable register.
+\item[e \emph{off}]
+Shows the contents of a free variable.
+\item[r]
+Shows the contents of all the available registers.
+\item[m]
+Shows any messages that are pending for the current thread.
+\item[p]
+Displays information about all the active threads in the system.
+\item[P]
+Displays information about all the threads in the system; including inactive threads.
+\item[s]
+Displays a `stack trace' of the current process.
+\item[?]
+Any other input will result in a reminder of the available commands being displayed.
+\end{description}
+
+\section{Using \go with Emacs}
+\label{emacs:go}
+
+There is some support for using Emacs to edit and debug \go programs. The \q{go} mode understands the \go syntax sufficiently to make formatting programs simpler and included with the installation is a simple interface to the \go debugger that allows you to watch the execution of a program in the editor window.
+
+\subsection{Setting up for emacs}
+\label{emacs:setup}
+
+
+
+\subsection{\q{go-mode}}
+\label{emacs:go-mode}

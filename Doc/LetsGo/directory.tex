@@ -1,0 +1,629 @@
+\chapter{Multi-threaded programs}
+\label{directory}
+\lettrine{G}{o! is a multi-paradigm programming} language -- we have already seen support for actions, predicates, functions, and objects. In this chapter we build on these and explore some of \go's multi-threading capabilities. The directory package described in this chapter is used further in Chapter~\ref{dance}.
+
+Central to many distributed applications is the directory.
+A directory stores descriptions of entities in a central location. Clients can access this information -- both to \emph{publish} descriptions to advertise capabilities and to \emph{search} for entities. Often the directory service and clients are on different computers (sometimes a long distance separates them); and we will see some of how to do that in \go. It should be noted that the directory we describe in this chapter is not really intended to be a replacement for commercial services such as LDAP; our task here is to illustrate more features of \go.
+
+\section{A Directory interface}
+\label{directory:interface}
+
+The primary service that a directory must support is \emph{search}. After all, the purpose of a directory is to act as a well-known repository of information that can help seekers. Thus, in developing our interface to the directory, we need to keep that uppermost in mind.
+
+Hard on the heels of the concept of search comes that of \emph{search query} or \emph{search criteria} -- how is the seeker to find the sought? The approach taken by many commercial directory services is the \emph{partial description}. In this approach a search query is simply a partial description of what we are looking for and the search answer is a set of (hopefully) more complete descriptions.
+\begin{aside}
+This is not the only way to organize search. Another way is to build a \emph{query language} -- which may be as rich as SQL or as simple as keyword lookup.
+\end{aside}
+
+This leads us, inevitably, to the question of how we describe entries in the directory. One simple model for a description is a list of attribute value pairs. The attribute name is generally symbolic -- based on a generally shared understanding of the meaning of the names. Some directories require that values are strings; especially for public directories that are shared across networks.
+
+We will be using our directory for internal purposes and we will be able to allow attribute values to be of arbitrary ground type; but in many directories, the entries are \q{string} values.
+
+\subsection{Types for a directory}
+\label{directory:types}
+\index{directory!type}
+Our directory stores descriptions as lists of attributes. Each attribute consists of a name and a value. The values stored in our directory are somewhat \emph{opaque} to the directory itself, although not of course to our directory's clients. We capture this with 
+\begin{alltt}
+attVal \typearrow \{\}.
+\end{alltt}
+or, equivalently,
+\begin{alltt}
+attVal \typearrow thing.
+\end{alltt}
+This type is essentially a marker definition: there is no interface being defined and we know nothing else about the \q{attVal} type. This type definition will allow our directory to store values, and compare them -- using unification. But we will not be able to query \q{attVal} values; or invoke other methods on them.
+
+The attribute/value pair itself is defined using an \emph{algebraic type definition}:
+\begin{alltt}
+attr ::= at(symbol,attVal).
+\end{alltt}
+This defines the \q{attr} type together with a single statefree \emph{constructor} for the type -- the constructor function \q{at}. This constructor has two arguments a \q{symbol} -- which is the attribute name -- and an \q{attVal} value -- the attribute value.
+
+We have already seen one way of defining types in \go, using statements such as:
+\begin{alltt}
+engine \typearrow \{ power:[]=>number \}.
+\end{alltt}
+The \q{::=} form of type definition is actually a combination of this kind of type definition -- where the interface is empty -- and an equally empty class definition. Thus the type definition for \q{attr} above is equivalent to:
+\begin{alltt}
+attr \typearrow thing.
+at:[symbol,attVal]\conarrow{}attr.
+\end{alltt}
+Types introduced using the \q{::=} statement are \emph{algebraic types}. Such type definitions are useful where there is no intention to use constructors as object constructors but more like \prolog terms.
+
+\paragraph{Representing heterogeneous values}
+\index{heterogeneous values}
+In our definition of the \q{attVal} type above, we gave no hint of an interface for it, nor did we give any constructors for the type. One might ask what use is such a type?
+
+In \go, type consistency requires that every element of a list has to have the same type. The list expression:
+\begin{alltt}
+[12,'a',"a string"]
+\end{alltt}
+is \emph{not} type consistent, and the \go compiler will raise an error, since \q{12} is an \q{integer}, \q{'a'} is a \q{symbol} and \q{"a string"} is a \q{string} -- which is itself a synonym for \q{list[char]}. \go requires that all the elements of a \q{list[]} have the same type, clearly not what is happening here.
+
+One way of handling such heterogeneous values is to capture them with specific constructors -- for the \q{attVal} type in our case. For example, we might define some classes to handle \q{integer}s, \q{symbol}s and \q{string}s. Program~\vref{dir:heter} does this, defining the constructors \q{aI}, \q{aS} and \q{aStr}.
+\begin{program}[b]
+\vspace{0.5ex}
+\begin{alltt}
+aI:[integer]\conarrow{}attVal.
+aS:[symbol]\conarrow{}attVal.
+aStr:[string]\conarrow{}attVal.
+aI(_)<=thing.
+aS(_)<=thing.
+aStr(_)<=thing.
+\end{alltt}
+\vspace{-2ex}
+\caption{Various encapsulating classes}
+\label{dir:heter}
+\end{program}
+\begin{aside}
+Note that the class definitions for \q{aI}, \q{aS} and \q{aStr} is defined entirely by inheritance: they are defined using single class rules that inherit from the standard \q{thing} class. This is feasable because \q{attVal} itself is a kind of \emph{marker} type which sub-types the standard \q{thing} \emph{type}, but without adding any elements to \q{thing}'s type interface. 
+\end{aside}
+
+Given these class definitions, we can encapsulate our list elements thus:
+\begin{alltt}
+[aI(12),aS('a'),aStr("a string")]
+\end{alltt}
+From the typing perspective, every element of this list has the same type -- \q{attVal}. The heterogeneous nature of the list is hidden by virtue of enclosing the values in specific constructors; all of whom are of the same \q{attVal} type.
+
+To recover the values from such a heterogeneous list requires access to the \q{aI}, \q{aS} and \q{aStr} classes. However, if the only operation on \q{attVal}s is equality -- such as would be involved in search -- then we do not need to recover the values within the directory itself. Of course, clients will need to unpack these values; we discuss this below. The \q{attVal} type is opaque to the directory, but that is sufficient for the directory's purposes. Hence, this approach allows us to build our directory separately from any clients.
+
+In our case, directory entries will take the form of lists of \q{at} constructors:
+\begin{alltt}
+[at('name',aStr("fred")), at('gender',aG(male))]
+\end{alltt}
+but our directory program will never need to know the specific forms of attribute values.
+
+\begin{aside}
+The definitions in Program~\vref{dir:heter} make use of \firstterm{anonymous variable}{An anonymous variable, written as \q{\_}, denotes a different variable for each occurrence of the identifier. That, in turn, means that anonymous variables are never shared. Anonymous variables are used as a kind of don't care value where it is neither known nor important what the actual value should be.}s -- written using a single underscore character: \q{\_}. An anonymous variable is simply a filler -- often used in patterns to denote an argument whose value is not needed.
+
+The \go compiler supports anonymous variable in two ways: each occurrence of an \q{\_} is treated as a separate variable; and if any non-anonymous variable only occurs once it prints a warning message. This warning message often indicates a typo.
+\end{aside}
+
+\subsection{The directory interface type}
+\label{directory:type}
+\index{directory!interface}
+The normal pattern of using a directory has two aspects: a client registers with the directory, perhaps publishing a description of itself so that other clients can locate it, and it searches the directory for other clients. Not all clients of a directory both publish descriptions and search for other clients. A classic scenario is that a service provider registers and publishes descriptions of itself, whereas a service requestor searches for service providers.
+
+The operational interface of our directory can be captured in a type definition:
+\begin{alltt}
+directory \typearrow{} \{
+  find:[list[attr],list[symbol]]=>list[list[attr]],
+  register:[list[attr]]*
+\}
+\end{alltt}
+This type interface has two elements: a function to \q{find} descriptions and an action \q{register} that permits new registrations to be entered.
+
+Note the form of the \q{find} method -- it has two arguments: a \q{list} of \q{attr} descriptions and a \q{list} of \q{symbol}s. The latter is intended to act as a signal to the directory indicating which elements of the description the client is interested in. It can be wasteful to return the entire description if the client is only interested in a small part of it.
+
+The return value of the \q{find} function is a \q{list[]} of \q{list[]}s of \q{attr}s. This is a consequence of the nature of directory searches. There never can be a guarantee that there are \emph{any} entries in the directory that match the client's search criteria; nor is it possible to guarantee that there is exactly one entry. Additionally, some criteria are not normally expressible in directory searches; for example, the client may wish to find the cheapest price or the fastest delivery. 
+
+As a result, our directory is expected to return a \q{list[]} of the matching entries it can find; and the client is then expected to further process the result with its own filtering. Hence the returned value from \q{find} is a \q{list[]} of \q{list[]}s of \q{attr}s.
+
+\begin{aside}
+Of course, we should also permit entries to be deleted and edited. Furthermore, we should support some kind of security model that will permit the owners of registered entries to control who can see what parts of their description and to prevent unauthorized modifications of descriptions.  We will not do either of these in this directory example.
+\end{aside}
+
+\subsection{A directory client}
+\label{directory:client}
+Following good software engineering practice we will show how a client can use a directory without having any idea of how its implemented. Later we will see how to implement a directory to this interface.
+
+\index{directory!client}
+The precise choice of attributes to publish in a description is, of course, quite important. A description is only effective to the extent that potential searchers understand them in a way that is consistent with the intention of the publisher. To systematize such choices we recommend the use of shared ontologies. For now we wish to illustrate directories rather than knowledge representation, so we use the attributes \q{'name'}, \q{'role'} and \q{'gender'} -- with associated encapsulation classes -- in the hope that their meaning is obvious.
+
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+sally.client\{
+  import directory.       -- access directory interface
+
+  gender ::= male | female.
+  aG:[gender]\conarrow{}attVal.
+  aG(_)<=thing.           -- define encapsulation of gender
+  
+  register:[]*.
+  register() ->
+    dir.register([at('name',aStr("sally")),
+                  at('role',aStr("dancer")),
+                  at('gender',aG(female))]).
+  
+  partners:[]=>list[list[attr]].
+  partners() =>
+    dir.find([at('gender',aG(male)),
+              at('role',aStr("dancer"))],['name']).
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A directory client}
+\label{directory:sally}
+\end{program}  
+Program~\vref{directory:sally} shows a fragment of a sample client of our directory service. This example assumes that the directory interface can be found in the \q{directory} package and which also exports a standard directory entity -- called \q{dir}.
+
+Note that Program~\ref{directory:sally} introduces a type \q{gender}, which is defined as an algebraic type with \emph{enumerated symbols}:
+\begin{alltt}
+gender ::= male | female.
+\end{alltt}
+This defines the symbols \q{male} and \q{female} to be of type \q{gender}. Such symbols are analogous to degenerate constructor functions -- i.e., constructor functions that have no arguments may be written as simple identifiers.
+
+The essence of this client package, is to allow the \q{sally} agent to publish \q{name}, \q{role} and \q{gender} so that other agents may find it. This is, of course, not the entire code of \q{sally} -- for one thing we do not know what use the agent may make of the results of the search for \q{partner}s. 
+
+\begin{aside}
+Recall that the name of a package also determines the location of the file to some extent. This package is called \q{sally.client}; its source, will be located in the file
+\begin{alltt}
+\ldots/sally/client.go
+\end{alltt}
+\end{aside}
+
+\section{A \q{dynamic} directory}
+A directory is required to store descriptions and to retrieve them. There are any number of ways of storing information -- from the completely na\"ive to the sophisticated use of shared databases. We will use \go's \q{dynamic} relations to store our descriptions; no doubt that our implementation tends towards the na\"ive rather than the sophisticated.
+
+\subsection{Dynamic relations}
+\label{directory:dynamic}
+\index{dynamic@\q{dynamic} relation}
+A \firstterm{dynamic relation}{A dynamic relation is one which can be modified by inserting and deleting tuples dynamically. \go's dynamic relations are restricted to simple facts -- it is not permitted to dynamically modify rules.} is a \emph{relation} which can be dynamically modified by inserting new tuples and/or deleting existing tuples.
+
+\begin{aside}
+As soon as the words \emph{dynamic} and \emph{relation} are paired together, a certain kind of logical purist is likely to raise his or her eyebrows. We cannot help that: we need to model a dynamically changing world and the relation concept seems to be the closest fit to our requirements.
+\end{aside}
+
+\noindent
+\go's dynamic relations allow one to test for the \q{mem}bership of a tuple in the relation, as well as \q{add}ing new tuples and \q{del}eting them. The full interface of a \q{dynamic} relation is quite extensive, however the part that we are interested in is:
+\begin{alltt}
+dynamic[T] \typearrow{} \{
+  mem:[T]\{\}. add:[T]*. del:[T]*. ext:[]=>list[T]. \ldots
+\}
+\end{alltt}
+The \q{ext} function returns a list of all the tuples in the dynamic relation. We will make a lot of use of this function when we implement the \q{find} function below.
+
+This is our first example of a \emph{polymorphic} type definition; although not our first polymorphic type (that honors goes to the \q{list[]} type). A \q{dynamic} relation can hold values of any type -- the only constraint is that all the elements are the \emph{same} type. This constraint is expressed using \emph{type variables} in a polymorphic type interface. In the \q{dynamic[]} type definition above, the identifier \q{T} is a type variable; which is mentioned several times: in the type constructor template and in the various methods in the interface.
+
+\index{polymorphic type!conventions}
+\begin{aside}
+To help distinguish polymorphic types from non-polymorphic types in the text, we use the notation \q{\emph{type}[]} to denote a polymorphic type, and simply \q{\emph{type}} to denote a non-polymorphic type.
+\end{aside}
+
+Any value of type \q{dynamic[]} must also be associated with a type binding for the polymorphic type variable. Thus the type term denoting the type of a dynamic relation where all the entries are \q{string} is:
+\begin{alltt}
+dynamic[string]
+\end{alltt}
+In our directory we are storing lists of attributes, and so our \q{dynamic[]} relation will have the type:
+\begin{alltt}
+dynamic[list[attr]]
+\end{alltt}
+I.e., each element of the \q{dynamic} relation is a list; and the extension of the directory's \q{dynamic} relation contents will be a \q{list[list[attr]]} value.
+
+\go's type system ensures that, for a \q{dynamic} relation of this type, the \q{add} method (say) will take as its single argument a \q{list[attr]} value (or a sub-type of that). Similarly, all the uses of \q{mem}, \q{del} etc. will also be verified against this constraint.
+
+\paragraph{Creating a \q{dynamic[]} relation}
+To use \q{dynamic} relations we have to import the \q{go.dynamic} package. Actually creating a new dynamic relation is done simply by mentioning the \q{dynamic} constructor in an expression. Our server has one dynamic relation -- \q{descr} -- which is used to store clients' descriptions:
+\begin{alltt}
+import go.dynamic.
+
+\ldots
+    descr:dynamic[list[attr]] = dynamic([]).
+\ldots
+\end{alltt}
+The argument of the \q{dynamic} constructor is a list of the initial entries in the dynamic relation. As our server starts off empty, we initially have no entries in the \q{descr} dynamic relation.
+
+
+\subsection{A \q{directory} class}
+Recall that the \q{directory} interface has two methods: a \q{register} action and a \q{find} function. Using \q{dynamic}, we can build our directory class in just a few lines of code, as shown in Program~\vref{directory:directory}.
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+directory:[]\sconarrow{}directory.    -- define the directory class
+directory..\{
+  descr:dynamic[list[attr]] = dynamic([]).
+  
+  register(D) -> descr.add(D).
+  
+  find(Desc,S) =>
+    \{ extract(E,S) .. (E::match(Desc,E)) in descr.ext() \}.
+    
+  match:[list[attr],list[attr]]\{\}.
+  match(Desc,Entry) :-
+    at(A,V) in Desc *> at(A,V) in Entry.
+  
+  extract:[list[symbol],list[attr]]=>list[attr].
+  extract(E,Q) => \{ at(K,V) .. (at(K,V)::K in Q) in E \}.
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A \q{directory} class}
+\label{directory:directory}
+\end{program}
+Note that our \q{directory} is inherently a stateful entity -- and we use the \sconarrow{} constructor form of the type declaration for the \q{directory} class. This permits us to use the \q{descr} variable in the class body and makes \q{directory} a stateful class.
+
+\subsubsection{The \q{register} action}
+Let us look at the \q{register} action first, as it is the simplest. When a client \q{register}s a description with the directory, this is mapped simply to a request to the \q{descr} dynamic relation to \q{add} the new description:
+\begin{alltt}
+register(D) -> descr.add(D).
+\end{alltt}
+This would need some elaboration if we were to address some of the comments above about modifying entries and securing them; but for our example this simple rule is sufficient.
+
+\subsubsection{The \q{find} function}
+The \q{find} function is considerably more complex than the \q{register} action; and it introduces a number of new syntactic features of \go. However, in essence, the requirements for \q{find} are simple:
+\begin{quote}
+Given a description in terms of a list of \q{attr}s, for each entry in the \q{descr} database:
+\begin{enumerate}
+\item
+see if the entry has all the required attributes -- both the attribute type and its value
+\item
+if the item matches the description, extract from the entry those attributes requested by the client.
+\end{enumerate}
+\end{quote}
+
+\paragraph{Bounded set expression}
+\index{bounded set expression}
+\index{set expression!bounded}
+The search is achieved in Program~\ref{directory:directory} by the \q{find} function. The braced expression on the right hand side of the equation for \q{find} is a \emph{bounded set expression}:
+\begin{alltt}
+\{extract(E,S)..(E::match(Desc,E)) in descr.ext()\}
+\end{alltt}
+which returns a list of all the entries in the \q{descr} dynamic relation that \q{match} the query. The \q{ext()}ent of a \q{dynamic[]} relation is simply a list of all the entries in the relation. \q{descr.ext()} is, then, a list of all the descriptions held in the directory.
+
+The bounded set expression matches each element of that list against the guarded pattern
+\begin{alltt}
+E::match(Desc,E)
+\end{alltt}
+Recall that this pattern means ``a \q{E} such that \q{match(Desc,E)} is true''. For each successful match, the expression
+\begin{alltt}
+extract(E,S)
+\end{alltt}
+is evaluated, and that value is part of the resulting bounded set expression.
+
+So, informally, the bounded set expression is
+\begin{quote}
+a list of extracted descriptions, one for each of the elements of the \q{description} dynamic relation that \q{match}es \q{Desc}.
+\end{quote}
+The bounded set expression is a very powerful higher-level operator in \go. In fact, we use it twice in this simple program; but without it we would have to define at least two recursive programs to iterate over the descriptions.
+
+Note that we had to give declarations for the \q{match} and \q{extract} programs; but not for \q{find} and \q{register}. This is because \q{match} and \q{extract} are not in the published interface for the \q{directory}; whereas \q{find} and \q{register} are.
+
+\paragraph{Forall conditions}
+\index{forall!query}
+\index{predicate!forall query}
+\index{operator!*>@\q{*>}}
+An entry in the description matches the search query if every attribute value of the search query is present and equal to an attribute in the entry. This condition is captured in the \q{match} relation definition:
+\begin{alltt}
+match(Desc,Entry) :- at(A,V) in Desc *> at(A,V) in Entry
+\end{alltt}
+The \q{*>} operator denotes a \emph{forall} relation condition; it is satisfied if 
+\begin{alltt}
+at(A,V) in Entry
+\end{alltt}
+is satisfied for every possible solution to
+\begin{alltt}
+at(A,V) in Desc
+\end{alltt}
+The \q{*>} operator is another kind of iteration -- used for checking entire relations.
+
+Note that \q{in} is a standard predicate that is satisfied of elements of a list. Although \q{in} is built-in, its possible to define \q{in} using a pair of clauses, as in:
+\begin{program}
+\vspace{0.5ex}
+\begin{alltt}
+(in):[t,list[t]]\{\}.  -- declare type of in
+X in [X,.._].
+X in [_,..Y] :- X in Y.
+\end{alltt}
+\vspace{-2ex}
+\caption{The standard \q{in} predicate\label{standard:in}}
+\end{program}
+
+\begin{aside}
+The \q{*>} operator is also available as an \emph{action}; in which case it is equivalent to a kind of while-loop: the action on the right hand side is performed for every possible solution to the controlling predicate.
+\end{aside}
+
+\noindent
+The final piece of the \q{find} function is the \q{extract} auxiliary function. This extracts from the entry in the \q{descr} relation a sub-set of the  \q{attr} elements that are mentioned in the entry:
+\begin{alltt}
+\{ at(K,V) .. (at(K,V)::K in Q) in E \}
+\end{alltt}
+This, too, is a bounded set expression, this time with a nested \q{in} predicate within the guard:
+\begin{alltt}
+at(K,V)::K in Q
+\end{alltt}
+This pattern reads:
+\begin{quote}
+match the term \q{at(K,V)}, such that \q{K in Q} is satisfied
+\end{quote}
+I.e., it will only match attributes whose key -- \q{K} -- is in the list of required keys.
+
+The \q{extract} bounded set expression is acting as a \emph{filter} -- we are looking for those elements of the entry \q{E} whose attribute names are in the query list \q{Q}. This shows some of the power of the bounded set expression -- not only can we process a list to obtain a new list, we can also filter the list; removing from it elements we do not need.
+
+\section{A directory party}
+In Chapter~\vref{dance} we will see a more elaborate example of an application that makes use of directories. However, for now, let us see a sample program that illustrates the use of directories for their own sakes. 
+
+First of all, note that Program~\vref{directory:directory} is almost complete as a package. All that is needed is to wrap the \q{directory} class into a real package including the \q{directory} interface.  Program~\vref{directory:package} shows such a package -- which has been augmented to make it thread-safe (see Section~\vref{dir:thread:safe}).
+
+Recall that the fundamental operations involving directories are publishing and searching. To illustrate an agent publishing in a directory we offer Program~\vref{directory:publish}. Since our directory is particularly simple minded, it doesn't matter that the publishing agent finishes shortly after publishing some information about \q{'name'}s, \q{'skills'} and so on.
+
+Following the style introduced earlier, we will use two class constructors -- \q{aSk} and \q{aD} -- to encapsulate \q{list}s of \q{symbol}s (skills) and \q{date} values respectively:
+\begin{alltt}
+aSk:[list[symbol]]\conarrow{}attVal.
+aSk(_) <= thing.
+
+aD:[date]\conarrow{}attVal.
+aD(_)<=thing.
+\end{alltt}
+The class definition
+\begin{alltt}
+aD(_) <= thing.
+\end{alltt}
+defines the implementation of \q{aD} completely in terms of the standard class \q{thing}. Since the \q{attVal} type does not introduce any additional requirements, this is a safe way of introducing a new constructor for the \q{attVal} class.
+
+To make the information published slightly less monotonous, we randomized the published list of skills, using a list of \q{rawSkills} as the base. The  guarded pattern:
+\begin{alltt}
+(X::rand(2)>1)
+\end{alltt}
+in the expression
+\begin{alltt}
+at('skills',aSk(\{X .. (X::rand(2)>1) in rawSkills\}))
+\end{alltt}
+acts as a simple randomizer. On average, the predicate 
+\begin{alltt}
+rand(2)>1
+\end{alltt}
+will be true about 50\% of the time. Thus the bounded set expression will randomly pick about half of the elements from the \q{rawSkills} set.
+
+\begin{aside}[\dbend\dbend]
+The types of the constructors \q{aSk} and \q{aD} for the \q{attVal} type above are \emph{not polymorphic}. This is for a good reason, polymorphism in this context is dangerous.
+
+For example, the \go compiler would object to a type declaration such as:
+\begin{alltt}
+aXX:[t]\conarrow{}attVal.
+\end{alltt}
+The reason for this is that with such a type definition it would be possible to defeat the type system -- were it permitted. Consider the -- somewhat introverted -- function:
+\begin{alltt}
+unwrap(aXX(X))=>X
+\end{alltt}
+At first glance, this seems fine; and might have the type signature:
+\begin{alltt}
+unwrap:[attVal]=>t.
+\end{alltt}
+However, this is definitely not safe. Such a function could be used to 'return' a value of any type:
+\begin{alltt}
+unwrap(X)+3,
+\end{alltt}
+The type system would permit this because the return type of \q{unwrap} is unconstrained and therefore can be unified with \q{integer}.
+
+However, the value of \q{X} may not be such that it unwraps to an \q{integer}:
+\begin{alltt}
+X = aS('funny')\ldots{}unwrap(X)+3
+\end{alltt}
+If permitted, this would lead to a run-time exception as we tried to add 3 to a symbol.
+
+As it happens, the \go type system rejects the function type for \q{unwrap} as being unsafe; and it similarly rejects the type declaration for the \q{aXX} constructor as also being type unsafe.
+\end{aside}
+
+
+
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+publish\{
+  import directory.
+  import go.datelib.   -- access time2date
+  
+  aSk:[list[symbol]]\conarrow{}attVal.
+  aSk(_)<=thing.
+
+  aD:[date]\conarrow{}attVal.
+  aD(_)<=thing.
+  
+  rawSkills:list[symbol]=['wood','science',
+                          'economics','smith','teacher'].
+
+  publish:[integer]*.
+  publish(0) -> \{\}.
+  publish(Count) ->
+      stdout.outLine("Publishing "<>Count.show());
+      dir.register([at('name',aStr("pub "<>Count.show())),
+                    at('when',aD(time2date(now()))),
+                    at('skills',aSk(\{X .. (X::rand(2)>1) in 
+                                       rawSkills\}))]);
+      delay(rand(2));
+      publish(Count-1).
+\}.
+\end{alltt}
+\vspace{-2ex}
+\caption{A simple publishing agent}
+\label{directory:publish}
+\end{program}
+
+
+\subsection{Spawning multiple threads}
+When we wish to execute a thread of activity in parallel with other actions we can use the \q{spawn} action. Previewing our main program a little (see Program~\vref{directory:main}), we can see that if we wanted to execute the \q{publish} action in parallel with other activities we \q{spawn} a sub-thread to perform it:
+\begin{alltt}
+main(\_) ->
+  \ldots;
+  spawn\{ publish(irand(10)) \}; 
+  \ldots
+\end{alltt}
+The argument of the \q{spawn} is an action that is executed concurrently with the main action; which carries on to normal completion. Both the spawned action and the parent spawning action will continue to execute simultaneously.\note{Well, actually, on a single processor machine they will be time-shared in an arbitrary way. On a multi-processor machine it is quite possible for the actions to be executing simultaneously.}
+
+A \q{spawn}ed action may share variables with its caller; however, once the thread is spawned any variables that are local to the rule become separate and affecting one will not affect the other -- \emph{except} for assignable variables which continue to be shared between the spawning action and the \q{spawn}ed thread.
+
+\subsection{Lots of listers}
+One of the simplest things that a client can do with a directory is to list it. 
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+lister\{
+  import directory.
+  import go.io.
+  import go.datelib.
+  
+  lister:[list[symbol]]*.
+  lister(K) ->
+    stdout.outLine(K.show());
+    (D in dir.find([],K) *> 
+          stdout.outLine(showEntry(D)));
+    delay(rand(1));
+    lister(K).
+  
+  private showEntry:[list[attr]]=>string.
+  showEntry([]) => [].
+  showEntry([E,..L]) => showAtt(E)<>"; "<>showEntry(L).
+
+  private showAtt:[attr]=>string.
+  showAtt(at('when',aD(D))) => D.show().
+  showAtt(at('name',aStr(W))) => W.
+  showAtt(at('skills',aSk(L))) => L.show().
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A directory \q{lister} package}
+\label{directory:lister}
+\end{program}
+Program~\vref{directory:lister} shows a package with two action procedures that can be used to list the contents of the directory. The \q{lister} action procedure takes a attribute name and displays the result of a directory search based on that attribute:
+\begin{alltt}
+lister(K) ->
+    stdout.outLine(K.show());
+    (D in dir.find([],K) *> 
+       stdout.outLine(showEntry(D)));
+    delay(rand(1));
+    lister(K).
+\end{alltt}
+The \q{lister} action procedure does not  terminate naturally -- as after it has finished displaying a listing it waits for a short while -- for a random time less than one second  -- and then starts again. The \q{lister} procedure uses an auxiliary function -- \q{showEntry} -- to help format the display of the directory entry in a slightly easier to read form.
+
+\index{private@\q{private} keyword}
+\index{keyword!private@\q{private}}
+Since \q{showEntry} -- and \emph{its} auxiliary \q{showAtt} -- are not really part of the intended product of the \q{lister} package we have marked the type declarations for these functions with the \q{private} keyword. This has the effect of suppressing the otherwise automatic export of these programs from the package. Any package \q{import}ing the \q{lister} package will not have access to them.
+
+\begin{aside}
+Any package element: types, programs or variables, can be marked \q{private}. Marking a type as private may have interesting consequences if any programs that rely on the type are exported. The compiler prints a warning when it detects this situation.
+\end{aside}
+
+\noindent
+If \q{lister} is given an empty list, then it will have the effect of displaying all that is known about a given entry.  We signal this by making the request part of the search an empty list -- this is a signal to \q{extract}, defined in Program~\vref{directory:package}, to return the entire description.
+
+We pull together all the pieces of our example in a main package that \q{import}s all the relevant pieces and starts off the sequence by \q{spawn}ing off a \q{publish}er and a number of \q{lister}s -- see Program~\vref{directory:main} for a listing of the program.
+\begin{program}[tb]
+\vspace{0.5ex}
+\begin{alltt}
+party\{
+  import directory.
+  import lister.
+  import publish.
+  import go.io.
+  
+  main(_) ->
+    spawn\{ publish(10) \};
+    spawn\{ lister(['name','when']) \};
+    spawn\{ lister(['name','skills']) \};
+    lister([]).
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A \q{directory} party}
+\label{directory:main}
+\end{program}
+To run this, simply do:
+\begin{alltt}
+\% go party
+\end{alltt}
+at the command line.
+
+The way that the \q{party} program is written implies that it will continue to run indefinitely; on the whole it is not good practice to deliberately write programs that do not terminate by themselves. To terminate our directory party will require a \q{\uphat{}C} -- which will have the effect of terminating the execution of the entire \go program.
+
+\section{Multi-threaded access to the directory}
+One of the reasons that we have a shared directory is so that different clients can access a common resource to locate one another; this is especially important in distributed applications. However, without some kind of sequentializing barrier to accessing the directory, it is dangerous to permit different threads to see the directory. This is the classic multiple update problem.
+
+\go has a few techniques and features that can be employed to make multiple accesses to a shared resource safe. The most basic is the \q{sync} action; within a class body, an action such as:
+\begin{alltt}
+register(D) -> sync\{ descr.add(D) \}.
+\end{alltt}
+will \emph{sequentialize} access to the object that this is a method in: only one thread at a time may enter any \q{sync} action associated with the object. 
+
+In order to fully protect the \q{directory}, we need to ensure that all the methods are similarly protected; in this case we should modify \q{find} as follows:
+\begin{alltt}
+find(Desc,S) => valof\{
+    sync\{
+      valis\{ extract(E,S) .. 
+               (E::match(Desc,E)) in descr.ext()\}
+    \}
+  \}.
+\end{alltt}
+The \q{sync} within the \q{find} function will ensure that during its computation no client can modify the directory or \q{find} a description until this computation is completed.
+
+Note the use of \q{valof/valis} here. \q{sync} is an \emph{action}, and so we need to rewrite \q{find} to make use of it. A \q{valof} expression achieves its value by means of executing actions -- with a corresponding \q{valis} action to determine the \q{valof} expression's value (see Section~\vref{expression:valof}).
+
+\go does not permit synchronization on just any object. It requires that the object has a stateful interface. The \q{directory} interface was declared to be stateful, and so it is safe to \q{sync}hronize access to it.
+
+\go's \q{sync} actions are quite a bit more powerful than we have shown here. Included in the notation is the \emph{conditional} \q{sync}; something that we visit further in section~\vref{action:sync}.
+
+\begin{program}[t]
+\vspace{0.5ex}
+\begin{alltt}
+directory\{
+  import go.dynamic.
+  
+  attVal \impl \{\}.    -- an opaque type for attribute values
+  attr ::= at(symbol,attVal).  
+  
+  directory \impl \{
+    find:[list[attr],list[symbol]]=>list[list[attr]],
+    register:[list[attr]]*
+  \}.
+
+  directory:[]\sconarrow{}directory.
+  directory..\{
+    descr:dynamic[list[attr]] = dynamic([]).  
+    register(D) -> sync\{ descr.add(D) \}.  
+    find(Desc,S) => valof\{
+      sync\{
+        valis \{ extract(E,S) .. 
+          (E::match(Desc,E)) in descr.ext() \}
+      \}
+    \}.    
+
+    match:[list[attr],list[attr]]\{\}.
+    match(Desc,Entry) :- 
+      at(A,V) in Desc *> at(A,V) in Entry.
+  
+    extract:[list[symbol],list[attr]]=>list[attr].
+    extract(E,[]) => E.    -- the whole entry
+    extract(E,Q) => \{ at(K,V) .. (at(K,V)::K in Q) in E \}.
+  \}.
+  
+  dir:directory = directory().      -- a standard directory
+\}
+\end{alltt}
+\vspace{-2ex}
+\caption{A \q{directory} package}
+\label{directory:package}
+\end{program}
+
+\subsection{Thread-safe libraries}
+\label{dir:thread:safe}
+\index{thread-safe libraries}
+Many of \go's standard packages are \emph{thread safe}. I.e., they are safe to use in a multi-threaded context as they use internal \q{sync}hronization. One example of a thread-safe library is the \q{dynamic} package itself. 
+
+One might ask, in that case, whether we needed to wrap our \q{register} action and \q{find} function in \q{sync} actions. In the \q{find} function, the computation proceeds by matching all the elements of the \q{description} dynamic relation; this list is determined by the expression:
+\begin{alltt}
+descr.ext()
+\end{alltt}
+This function call \emph{is} \q{sync}hronized, since \q{dynamic} is a thread-safe package. To the extent that other functions and actions within the \q{directory} class access the \q{descr} -- in particular the \q{register} action and other parallel calls to \q{find} -- they will be serialized in their access to the \q{descr} relation.
+
+So, for our \q{directory} class, the answer is that we probably do not need to introduce our own \q{sync}hronization. However, should we have a modify operation, such as inserting a new attribute in a description, then that would require a \q{sync} action to cover several accesses to the \q{descr} relation: one to find out the existing description and another to update it. In effect, we need to have a \emph{transactional} view of the shared relation. Such a multi-part transaction requires separate \q{sync}hronization, even if the individual operations are already thread-safe.
+
+

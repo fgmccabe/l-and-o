@@ -1,0 +1,29 @@
+ancestor{
+  import go.io.
+  import go.unit.
+
+  parent:(string,string){}.
+  parent("a","b").
+  parent("a","c").
+  parent("c","d").
+  parent("c","e").
+  parent("e","f").
+
+  ancestor:(string,string){}.
+  ancestor(X,Y) :- parent(X,Y).
+  ancestor(X,Y) :- parent(X,Z), ancestor(Z,Y).
+
+  ancestorTester:harness.
+
+  ancestorTester <= harness.
+  ancestorTester..{
+    test() :- parent("a","b"),        -- define the tests to be applied here
+                \+parent("b","a"),
+                ancestor("a","f"),
+                \+ancestor("f",_).
+
+    show()=> "ancestor test".
+  }.
+                                        
+  main(_) :- checkUnit(ancestorTester).
+}

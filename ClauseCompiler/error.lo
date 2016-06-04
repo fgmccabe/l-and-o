@@ -1,0 +1,13 @@
+/*
+ * The base exception class module
+ */
+
+error{
+  syserror <~ { cause:()=>string. code:()=>string. }.
+
+  error: (string,string) ~> syserror.
+  error(Cause,Code)..{
+    cause()=>Cause.
+    code()=>Code.
+  }
+}

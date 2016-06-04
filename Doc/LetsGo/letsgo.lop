@@ -1,0 +1,72 @@
+\contentsline {program}{\numberline {1.1}{\ignorespaces Hello World}}{3}{program.1.1}
+\contentsline {program}{\numberline {2.1}{\ignorespaces About engines}}{7}{program.2.1}
+\contentsline {program}{\numberline {2.2}{\ignorespaces A Variable power engine}}{14}{program.2.2}
+\contentsline {program}{\numberline {2.3}{\ignorespaces A generic train class}}{16}{program.2.3}
+\contentsline {program}{\numberline {2.4}{\ignorespaces The Flying Scotsman}}{17}{program.2.4}
+\contentsline {program}{\numberline {2.5}{\ignorespaces A steam engine is coal-fired}}{17}{program.2.5}
+\contentsline {program}{\numberline {2.6}{\ignorespaces A complete train}}{19}{program.2.6}
+\addvspace {1ex}
+\contentsline {program}{\numberline {3.1}{\ignorespaces Various encapsulating classes}}{25}{program.3.1}
+\contentsline {program}{\numberline {3.2}{\ignorespaces A directory client}}{28}{program.3.2}
+\contentsline {program}{\numberline {3.3}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt directory}}{directory}} class}}{31}{program.3.3}
+\contentsline {program}{\numberline {3.4}{\ignorespaces The standard {\texorpdfstring {\unhbox \voidb@x \hbox {\tt in}}{in}} predicate}}{33}{program.3.4}
+\contentsline {program}{\numberline {3.5}{\ignorespaces A simple publishing agent}}{36}{program.3.5}
+\contentsline {program}{\numberline {3.6}{\ignorespaces A directory {\texorpdfstring {\unhbox \voidb@x \hbox {\tt lister}}{lister}} package}}{37}{program.3.6}
+\contentsline {program}{\numberline {3.7}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt directory}}{directory}} party}}{39}{program.3.7}
+\contentsline {program}{\numberline {3.8}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt directory}}{directory}} package}}{41}{program.3.8}
+\contentsline {program}{\numberline {4.1}{\ignorespaces The standard {\texorpdfstring {\unhbox \voidb@x \hbox {\tt dropbox}}{dropbox}} type interface}}{45}{program.4.1}
+\contentsline {program}{\numberline {4.2}{\ignorespaces The standard {\texorpdfstring {\unhbox \voidb@x \hbox {\tt mailbox}}{mailbox}} type interface}}{45}{program.4.2}
+\contentsline {program}{\numberline {4.3}{\ignorespaces The message types in the {\texorpdfstring {\unhbox \voidb@x \hbox {\tt dance}}{dance}} protocol}}{46}{program.4.3}
+\contentsline {program}{\numberline {4.4}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt mail}}{mail}}\xspace dancer class}}{50}{program.4.4}
+\contentsline {program}{\numberline {4.5}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt phemail}}{phemail}}\xspace dancer class}}{52}{program.4.5}
+\contentsline {program}{\numberline {4.6}{\ignorespaces Top-level of Ballroom simulation}}{54}{program.4.6}
+\addvspace {1ex}
+\contentsline {program}{\numberline {5.1}{\ignorespaces The interpreter interface}}{56}{program.5.1}
+\contentsline {program}{\numberline {5.2}{\ignorespaces The {\texorpdfstring {\unhbox \voidb@x \hbox {\tt conj}}{conj}} class}}{56}{program.5.2}
+\contentsline {program}{\numberline {5.3}{\ignorespaces Disjunction and negation}}{57}{program.5.3}
+\contentsline {program}{\numberline {5.4}{\ignorespaces Interpreted rules}}{57}{program.5.4}
+\contentsline {program}{\numberline {5.5}{\ignorespaces Intepreted addition}}{58}{program.5.5}
+\contentsline {program}{\numberline {5.6}{\ignorespaces Parent package}}{59}{program.5.6}
+\contentsline {program}{\numberline {5.7}{\ignorespaces Dynamic interpreted relations}}{60}{program.5.7}
+\contentsline {program}{\numberline {5.8}{\ignorespaces Interpreted rules}}{61}{program.5.8}
+\contentsline {program}{\numberline {5.9}{\ignorespaces Interpreted ancestry}}{62}{program.5.9}
+\contentsline {program}{\numberline {5.10}{\ignorespaces Interpreted family tree}}{63}{program.5.10}
+\addvspace {1ex}
+\contentsline {program}{\numberline {6.1}{\ignorespaces Recording choices in a cell}}{69}{program.6.1}
+\contentsline {program}{\numberline {6.2}{\ignorespaces Top-level of a {\texorpdfstring {\unhbox \voidb@x \hbox {\tt square}}{square}} class}}{71}{program.6.2}
+\contentsline {program}{\numberline {6.3}{\ignorespaces Accessing a {\texorpdfstring {\unhbox \voidb@x \hbox {\tt rowOf}}{rowOf}} the square}}{72}{program.6.3}
+\contentsline {program}{\numberline {6.4}{\ignorespaces Accessing a {\texorpdfstring {\unhbox \voidb@x \hbox {\tt colOf}}{colOf}} the square}}{73}{program.6.4}
+\contentsline {program}{\numberline {6.5}{\ignorespaces Accessing the rows of a quadrant}}{74}{program.6.5}
+\contentsline {program}{\numberline {6.6}{\ignorespaces Finding the right quadrant}}{75}{program.6.6}
+\contentsline {program}{\numberline {6.7}{\ignorespaces Elimination filter}}{75}{program.6.7}
+\contentsline {program}{\numberline {6.8}{\ignorespaces Filtering for singletons}}{76}{program.6.8}
+\contentsline {program}{\numberline {6.9}{\ignorespaces Finding unique choices}}{77}{program.6.9}
+\contentsline {program}{\numberline {6.10}{\ignorespaces Filtering for unique choices}}{77}{program.6.10}
+\contentsline {program}{\numberline {6.11}{\ignorespaces Apply filters}}{78}{program.6.11}
+\contentsline {program}{\numberline {6.12}{\ignorespaces Solving the sudoku}}{79}{program.6.12}
+\addvspace {1ex}
+\addvspace {1ex}
+\contentsline {program}{\numberline {7.1}{\ignorespaces The {\texorpdfstring {\unhbox \voidb@x \hbox {\tt list[\_]}}{list[\_]}} type interface}}{107}{program.7.1}
+\contentsline {program}{\numberline {8.1}{\ignorespaces List {\texorpdfstring {\unhbox \voidb@x \hbox {\tt mem}}{mem}}bership program}}{135}{program.8.1}
+\contentsline {program}{\numberline {8.2}{\ignorespaces Quicksort using bounded sets}}{142}{program.8.2}
+\contentsline {program}{\numberline {8.3}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt counter}}{counter}} class with a {\texorpdfstring {\unhbox \voidb@x \hbox {\tt next}}{next}} function}}{145}{program.8.3}
+\contentsline {program}{\numberline {8.4}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt fact}}{fact}}orial package}}{147}{program.8.4}
+\addvspace {1ex}
+\contentsline {program}{\numberline {9.1}{\ignorespaces The {\texorpdfstring {\unhbox \voidb@x \hbox {\tt ancestor}}{ancestor}} relation}}{149}{program.9.1}
+\contentsline {program}{\numberline {9.2}{\ignorespaces An abstract {\texorpdfstring {\unhbox \voidb@x \hbox {\tt animal}}{animal}} class}}{155}{program.9.2}
+\addvspace {1ex}
+\contentsline {program}{\numberline {10.1}{\ignorespaces An action procedure for counting lines in a file}}{166}{program.10.1}
+\addvspace {1ex}
+\contentsline {program}{\numberline {11.1}{\ignorespaces Simple numeric expression grammar}}{180}{program.11.1}
+\contentsline {program}{\numberline {11.2}{\ignorespaces A grammar that parses palindromes}}{181}{program.11.2}
+\contentsline {program}{\numberline {11.3}{\ignorespaces A grammar for expressions}}{184}{program.11.3}
+\contentsline {program}{\numberline {11.4}{\ignorespaces A grammar for identifiers}}{186}{program.11.4}
+\addvspace {1ex}
+\contentsline {program}{\numberline {12.1}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt bird}}{bird}} class}}{190}{program.12.1}
+\contentsline {program}{\numberline {12.2}{\ignorespaces A {\texorpdfstring {\unhbox \voidb@x \hbox {\tt birdness}}{birdness}} type}}{196}{program.12.2}
+\contentsline {program}{\numberline {12.3}{\ignorespaces A simple {\texorpdfstring {\unhbox \voidb@x \hbox {\tt queue}}{queue}} class}}{197}{program.12.3}
+\contentsline {program}{\numberline {12.4}{\ignorespaces An inner parasite}}{200}{program.12.4}
+\contentsline {program}{\numberline {12.5}{\ignorespaces An exported inner parasite}}{201}{program.12.5}
+\contentsline {program}{\numberline {12.6}{\ignorespaces A quick {\texorpdfstring {\unhbox \voidb@x \hbox {\tt sort}}{sort}} function}}{202}{program.12.6}
+\addvspace {1ex}
+\addvspace {1ex}

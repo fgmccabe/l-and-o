@@ -1,0 +1,254 @@
+\chapter{I/O in \go}
+\label{io}
+
+As with most modern languages I/O is not part of the language specification per se. The reason for this is that the different potential platforms for computation are so wildly different that a single model for I/O cannot fit all cases. However, \go does come with a standard I/O package. This chapter summarizes some of the standard I/O facilities of \go; especially those that we use in this book.
+
+In order to use the standard file system it is necessary to include a reference to the \q{go.io} package. We saw this in our very first program:
+\begin{alltt}
+hello\{
+  import go.io.
+  
+  main(_) ->
+    stdout.outLine("hello world").
+\}
+\end{alltt}
+By \q{import}ing the \q{go.io} package we make available a set of classes that can be not be used for accessing files but also a range of TCP communication. In addition, it also gives us access to the three standard files corresponding to \q{stdout}, \q{stdin} and \q{stderr}.
+
+%\section{Files, names and URIs}
+%\label{io:url}
+
+%\go file names are based on the URI file naming convention, as defined in \cite{RFC1738}. A URI encodes not only the file name but also the \firstterm{file transport protocol}{A file transport protocol is a protocol used to transfer the contents of file. Examples supported by \go include \q{file:} and \q{sys:}; other examples include \q{ftp:} and \q{http:}.} required to access the file. Common protocols include \q{file:} which refers to a file on the local file system, \q{http:} which is used to access files provided by a WWW server and \q{ftp:} which is used to access files using FTP service.
+
+%The format of a URI as understood by \go has the general form:
+%\begin{alltt}
+%\emph{proto}://\emph{host}/\emph{file}
+%\end{alltt}
+%where \emph{proto} is one of \q{file}, \q{sys}, \q{http} or \q{ftp}, \emph{host} is either a hostname expressed using standard DNS notation or an IP address expressed using `quads'.\footnote{The precise transports understood by \go may vary.}
+
+%If the \emph{host} is empty then the current or \q{localhost} is assumed.
+
+%\begin{description}
+%\item[file]
+%The form of a \q{file} URL is:
+%\begin{alltt}
+%file://\emph{host}/\emph{file}
+%\end{alltt}
+%The \q{file} protocol is used when accessing the local file system. \go enforces its own access rights management; and it may be that a given process is not permitted to access a certain file even if the top-level \go application is permitted. 
+
+%The \emph{host} may be empty,\footnote{The current version of \go ignores the host specification; however we require the extra \q{'/'} in order to conform to RFC1738.}
+
+%A relative file name is one that does not start with a leading \q{'/'} character.  \emph{relative} file names areinterpreted relative to a \emph{current working directory}.
+
+%For example, a \q{file} file identifier referring to a file \q{myFile} in the current working directory may be referred to using the file descriptor:
+%\begin{alltt}
+%file:///myFile
+%\end{alltt}
+
+%If no protocol token is given, then it is assumed that \q{file:///} is pre\-pended to the URI. Thus the \q{myFile} file may also be identified with:
+%\begin{alltt}
+%myFile
+%\end{alltt}
+
+%\item[sys]
+%The \q{sys} protocol is used when accessing system libraries. It is a read-only file system -- \go applications are not permitted to open \q{sys} files with write access.
+
+%The form of a \q{sys} URL is  somewhat simpler than the \q{file} URL, as no host name is permitted:
+%\begin{alltt}
+%sys:\emph{file}
+%\end{alltt}
+%The actual interpretation of a \q{sys} URL depends on the setting of certain internal variables -- it is typically established at the time that the \go engine in built. However, it is also possible to override it with a command-line option (see Reference Manual).
+
+%\item[http]
+%The \q{http} protocol uses the standard HTTP 0.9 protocol to request a WWW server to access a file. Although normally a WWW server is used to `deliver' HTML files, other types of file may be handled by WWW servers.
+
+%The form of an \q{http} URL is:
+%\begin{alltt}
+%http://\emph{host}/\emph{path}?\emph{query}
+%\end{alltt}
+%where the \emph{path} typically specifies a file path and, in the case that the URL refers to an `active' resource, the optional \emph{query} gives parameters to the resource's provider.
+
+%\item[ftp]
+%The \q{ftp} protocol uses the FTP protocol to access a file.\footnote{Not currently implemented.} 
+
+%The form of an \q{ftp} URL is:
+%\begin{alltt}
+%ftp://\emph{user}:\emph{pass}@\emph{host}/\emph{path};\emph{type}=\emph{code}
+%\end{alltt}
+%where the \emph{user} and \emph{pass}word specify a user and password and where \emph{code} is one of \q{A}, \q{I} or \q{D}. The \emph{user} and \emph{pass} are optional, in which case \q{anonymous} and the value of the 
+%expression:
+%\begin{alltt}
+%\${USER}@`hostname`
+%\end{alltt}
+%is used to fabricate an email address that is supplied as the password to the FTP server.
+%\end{description}
+
+\subsection{UNICODE and encoding}
+\index{UNICODE}
+\index{files:character encoding}
+\go supports Unicode internally and in its access to the file system. Internally, the story for Unicode support is relatively simple: all characters are represented as 16 bit Unicode value. However, externally the Unicode story is somewhat more complex; as a \go program is typically required to be able to read a mix of ASCII data, raw byte data, 16 bit Unicode (UTF16) and 8 bit Unicode (UTF8).
+
+Each file channel is associated with an encoding type which indicates the mapping between the internal representations and the date represented in the file. The \q{ioEncoding} type is a standard built-in type and is defined:
+\begin{alltt}
+ioEncoding ::= rawEncoding | 
+   utf16Encoding | utf16SwapEncoding |
+   utf8Encoding |
+   unknownEncoding.
+\end{alltt}
+Most often you will be using either the \q{rawEncoding} -- which corresponds to byte-oriented access to external files -- and \q{utf8Encoding} -- which is the default encoding for text files. 
+
+The \q{unknownEncoding} style is most useful for reading data. The Unicode standard encourages the use of a sentinel character at the beginning of a text file. If present, the sentinel character is used by \go to automatically determine if the encoding is actually one of \q{utf16Encoding} or \q{utf16SwapEncoding}. If no sentinel is present, then this ecoding defaults to \q{rawEncoding}. For an output channel, this is equivalent to \q{rawEncoding}.
+
+\subsection{Standard file interface}
+\label{io:file-type}
+There are two standard interfaces associated with open files: \q{inChannel[]} and \q{outChannel[]}. These define the valid operations for input files and output files respectively.
+
+The \q{inChannel[]} type interface summarized in Table~\vref{infile:methods}.
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Method&Type&Description\\
+\hline
+\q{inCh}&\q{()=>char}&Next character\\
+\q{inBytes}&\q{(number)=>list[number]}&Next N bytes\\
+\q{inB}&\q{()=>number}&Next byte\\
+\q{inLine}&\q{(string)=>string}&Read a line\\
+\q{inText}&\q{(string)=>string}&Read text block\\
+\q{decode}&\q{()=>any}&read encoded term\\
+\q{eof}&\q{()\{\}}&End of file test\\
+\q{close}&\q{()*}&Close file channel\\
+\q{setEncoding}&\q{(ioEncoding)*}&Change encoding\\
+\hline
+\end{tabular}
+\end{center}
+\caption{The \q{inChannel[]} interface\label{infile:methods}}
+\end{table}
+
+The \q{outChannel[]} interface is summarized in Table~\vref{outfile:methods}.
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Method&Type&Description\\
+\hline
+\q{outCh}&\q{(char)*}&Write \q{char}acter to file\\
+\q{outB}&\q{(number)*}&Write a byte to file\\
+\q{outBytes}&\q{(list[number])*}&Write list of bytes\\
+\q{outStr}&\q{(string)*}&Write a string to file\\
+\q{outLine}&\q{(string)*}&Write a line\\
+\q{encode}&\q{(any)*}&write an encoded term\\
+\q{close}&\q{()*}&Close the file channel\\
+\q{setEncoding}&\q{(ioEncoding)*}&Change encoding\\
+\hline
+\end{tabular}
+\end{center}
+\caption{The \q{outChannel[]} interface\label{outfile:methods}}
+\end{table}
+
+\section{Accessing files}
+There are a range of functions for accessing files on the local file system -- both for reading and for writing. Although in some senses opening a file is better viewed as an \emph{action}, for convenience, the \q{go.io} system packages file opening operations as \emph{functions}. 
+
+To open a text file for input, assuming that it is a UTF8 encoded file, we would use the function call:
+\begin{alltt}
+openInFile(\emph{YourFileName},utf8Encoding)
+\end{alltt}
+The returned value of this function is an \emph{input channel} object that will support one of the operations highlighted in table~\vref{infile:methods}.
+
+There is a variety of functions dedicated to opening files to write to: \q{openOutFile}, \q{openAppendFile} open a file for writing and appending respectively. 
+
+There are other ways of opening files, and of opening connections to remote TCP-based servers. However, we refer you to the \go Reference Manual for details on these variations.
+
+
+\section{Input and output}
+
+\subsection{Reading data}
+\label{io:reading}
+
+\go supports reading single characters, bytes, byte sequences, lines of text and a special encoded term format. The latter is a kind of \emph{term serialization} of \go terms.
+
+The \q{inCh} function that is part of the \q{inChannel} interface returns the next \q{char}acter in the file. If there is no more data in the file, then calling this function will cause an error exception to be raised.
+
+\begin{aside}
+Whether \q{inCh} returns the next character, or the next byte, of the input channel depends on the encoding of the file. If the file is being read in \q{rawEncoding}, then \q{inCh} will always read the next byte -- as a \q{char}. If the encoding is \q{utf8Encoding} (say) then \q{inCh} will read enough bytes -- up to 4 bytes are possible in the UTF8 encoding -- to read a valid character.
+\end{aside}
+
+Handling the end-of-file condition is a key part of processing files. A safety-first approach to reading involves building a test for end-of-file before attempting to read; as in Program~\vref{io:slurp}.
+
+\begin{program}
+\begin{alltt}
+slurp(I,S)::I.eof() -> S=[].
+slurp(I,S) -> S=[I.inCh(),..Sx]; slurp(I,Sx)
+\end{alltt}
+\caption{Slurping a file with an \q{eof} test\label{io:slurp}}
+\end{program}
+On the other hand we can read with a test, and handle the error with an error handling clause; which is the approach taken in Program~\vref{io:errslurp}.
+\begin{program}
+\begin{alltt}
+grab(I,Stream) -> 
+  (Stream=[I.inCh(),..S];grab(I,S))
+  onerror (
+    error(_,'eEOF') -> Stream=[]
+  )
+\end{alltt}
+\caption{Error handling and I/O\label{io:errslurp}}
+\end{program}.
+This program is perhaps less elegant than Program~\vref{io:slurp}; however, it is more generalizable to other kinds of error that can arise in processing files.
+
+Another interesting input function is the \q{inLine} function. \q{inLine} reads a single line of text from the input channel and returns it as a string. \q{inLine} has an argument that denotes the string of characters that signals the end of a line of text. The function returns the list of characters up to -- but not including -- the terminating string, or end-of-file.
+
+For example, to read a line that is terminated by the new-line character, use:
+\begin{alltt}
+\emph{file}.inLine("\bsl{}n")
+\end{alltt}
+
+\subsection{Writing data}
+\label{io:writing}
+
+Writing to a file is done using a range of action procedures that can write a single character, a single byte, a string or a serialized term.
+
+\section{Standard I/O channels}
+\label{io:standard}
+The standard version of the I/O package includes three already opened files: \q{stdout} and \q{stderr} which are output files and \q{stdin} which is an input file. 
+
+The \q{stdin} value is an \q{inFile[]} object that represents the standard input to the \go application. Reading from \q{stdin} has the same effect as reading from the standard input.
+
+The \q{stdout} value is an \q{outFile[]} object that represents the standard output from the \go application. Writing to \q{stdout} has the effect of writing to the system's standard output.
+
+The \q{stderr} value is an \q{outFile[]} object that represents the standard error output channel from the \go application. 
+
+\section{TCP services}
+\label{io:tcp}
+
+\go has simple though powerful tools both for connecting to a TCP server and for allowing a \go program to become a TCP service.
+
+\paragraph{Connecting to remote services}
+Connecting to a remote TCP service requires two channels: an input channel for accepting input from the remote service and an output channel for writing to the service.
+
+We can use the \q{tcpConnect} \emph{action procedure} to connect to a TCP service. The action:
+\begin{alltt}
+\ldots; tcpConnect(\emph{host},\emph{port},\emph{inC},\emph{oC});\ldots
+\end{alltt}
+connects to the TCP \emph{host} at \emph{port}, resulting in two new objects \emph{inC} and \emph{oC} that represent the `input' channel -- i.e., data coming from the remote connection is read via the \param{iC} channel -- and the `output' channel; via which data is sent to the remote connection.
+
+
+\paragraph{Setting up a TCP server}
+
+To set up a TCP server, we use the \q{tcpServer} action procedure.
+
+\actsynopsis{tcpServer(\param{port}:\type{number},\par\param{R}:\type{(string,string,number,inFile,outFile)*})}
+
+This action establishes a new TCP server that is listening on the specified \param{port}. 
+
+When a remote client successfully establishes a connection with a \go server then the user defined \param{R} action procedure is invoked to `process' the data coming from the remote client.
+
+The type template for the \param{R} procedure is:
+\begin{alltt}
+(string,string,number,inFile,outFile)*
+\end{alltt}
+where the first argument is a string that identifies the host name associated with the remote client, the second is its IP address -- expressed as a string in standard quad form, the third is the local port number of the connection. The last two arguments are the input file channel and the output file channel objects respectively. The server procedure reads data from the client from the input file channel and responds to the client via the output file channel -- using the normal channel methods.
+
+When the \param{R} action procedure terminates the connection to the remote client will be closed -- unless it already been closed through an error in the I/O handling.
+
+Note that \param{R} is executed \emph{in a separate thread} -- this enables the \q{tcpServer} to continue listening for additional connections.
+
+Note that the \q{tcpServer} action does not normally terminate -- unless it was not possible to establish the TCP listening port or unless a permission predicate raises an exception during a test of an incoming connection. If it is desired, it is possible to spawn a separate thread whose purpose is to establish and execute the \q{tcpServer}, while other threads continue with application activities.

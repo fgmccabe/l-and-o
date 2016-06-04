@@ -1,0 +1,108 @@
+\begin{theglossary} 
+
+ \nomgroup{A}
+
+  \item [{\bf action}]\begingroup An action is an activity that a program may perform. \go actions are distinguished from predicates; the latter are not generally permitted to achieve side-effects other than the satisfiability of some condition.\nomeqref {1.0}
+		\nompageref{3}
+  \item [{\bf action procedure}]\begingroup An action procedure is a program, written as a set of action rules, that denotes a behavior of the program. Certain activities, such as reading files and sending messages, are only available as actions.\nomeqref {10.0}
+		\nompageref{165}
+  \item [{\bf action rule}]\begingroup An action rule is a part of an action procedure.\nomeqref {1.0}
+		\nompageref{3}
+  \item [{\bf anonymous variable}]\begingroup An anonymous variable, written as \q {\_}, denotes a different variable for each occurrence of the identifier. That, in turn, means that anonymous variables are never shared. Anonymous variables are used as a kind of don't care value where it is neither known nor important what the actual value should be.\nomeqref {3.0}
+		\nompageref{26}
+  \item [{\bf bag of}]\begingroup A bag of expression is an expression that denotes a list of elements -- each being the result of satisfying a predicate condition. For example, to compute the \q {male} children of \q {'fred'} use \\ \q {\{X\char '174\char '174male(X),father('fred',X)\}}\nomeqref {8.0}
+		\nompageref{139}
+  \item [{\bf basket}]\begingroup A basket type lattice is one where every chain is exactly three elements long; meaning that there is no significant subtype relationship between non-trivial type elements.\nomeqref {7.0}
+		\nompageref{86}
+  \item [{\bf bounded set}]\begingroup A bounded set expression is an expression of the form:\\ \q {\{ \emph {Ex} .. \emph {Ptn} in \emph {List} \}}\\ which results in evaluating the bound expression \emph {Ex} for every successful match of \emph {Ptn} in the input \emph {List}. Bounded set expressions are similar to bag-of expressions, except that they are always governed by a bounding list -- hence the name -- and are evaluated using a recursive iteration rather than by backtracking over possible solutions.\nomeqref {8.0}
+		\nompageref{140}
+  \item [{\bf chain}]\begingroup A chain is a sequence of types where for each pair of types in the link \emph {T\subi } and \emph {T\sub {i+1}} it known that \emph {T\subi } is a subtype of \emph {T\sub {i+1}}. All types are in a chain of at least three elements: \q {void}, the type itself and \q {top}.\nomeqref {7.0}
+		\nompageref{86}
+  \item [{\bf character reference}]\begingroup a character reference is an expression that denotes a literal character\nomeqref {8.0}
+		\nompageref{122}
+  \item [{\bf class}]\begingroup A labeled theory is a set of axioms that is `about' some topic of interest.\nomeqref {2.0}
+		\nompageref{7}
+  \item [{\bf class label}]\begingroup A class label is a term that is associated with a theory -- a set of axioms that collectively describes a concept.\nomeqref {12.0}
+		\nompageref{192}
+  \item [{\bf conditional action}]\begingroup A conditional action consists of a test query and two alternate actions -- \emph {then} and \emph {else} alternatives. If the \emph {test} is satisfied, then the \emph {then} action is executed; otherwise the \emph {else} action is executed.\nomeqref {10.0}
+		\nompageref{171}
+  \item [{\bf conditional expression}]\begingroup A conditional expression is one which takes one of two values depending on the truth of a test condition.\nomeqref {8.0}
+		\nompageref{136}
+  \item [{\bf conditional query}]\begingroup is a triple of sub-queries -- the first is a \emph {test} and the other two are \emph {then} and \emph {else} alternatives. If the \emph {test} is satisfied, then the conditional is satisfied if the \emph {then} sub-query is; otherwise the \emph {else} sub-query should be satisfied.\nomeqref {9.0}
+		\nompageref{159}
+  \item [{\bf conjunction}]\begingroup A conjunction is a sequence of queries, all of which must be satisfied for the conjunction to be statisfied.\nomeqref {9.0}
+		\nompageref{157}
+  \item [{\bf constructor functions}]\begingroup A constructor function is a special function that is used to denote composite data values of a user-defined type. Logically, a constructor function is a term -- we use constructor functions as a kind of data-structuring tool. Mathematically, a constructor function is simply a bijective function -- i.e., one that is guaranteed to be defined and have a unique inverse.\nomeqref {7.0}
+		\nompageref{101}
+  \item [{\bf conversation}]\begingroup a conversation is a sequence of messages that occur between two (or more) message exchanging agents.\nomeqref {4.0}
+		\nompageref{45}
+  \item [{\bf disjunction}]\begingroup A disjunction is a pair of conditions, either of which may be satisfied for the disjunction to be satisfied. Note that \go does not permit the conclusion of a rule to be a disjunction.\nomeqref {9.0}
+		\nompageref{158}
+  \item [{\bf dynamic relation}]\begingroup A dynamic relation is one which can be modified by inserting and deleting tuples dynamically. \go 's dynamic relations are restricted to simple facts -- it is not permitted to dynamically modify rules.\nomeqref {3.0}
+		\nompageref{29}
+  \item [{\bf enumerated symbols}]\begingroup symbols which are introduced in a type definition. Unlike regular symbols, enumerated symbols are not written surrounded by quotes\nomeqref {7.0}
+		\nompageref{101}
+  \item [{\bf equation}]\begingroup An equation is a rule used to define a function. For example, the \q {dbl} function can be defined by the equation \q {dbl(X)=>X*2}.\nomeqref {2.0}
+		\nompageref{12}
+  \item [{\bf error recovery expression}]\begingroup an error recovery expression is an expression which includes a handler for any run-time errors that may arise during the evaluation of the expression.\nomeqref {8.0}
+		\nompageref{146}
+  \item [{\bf evaluable expressions}]\begingroup An evaluable expression is one whose value is not necessary directly reflected in the syntax of the expression itself. The simplest form of evaluable expression is the function call: \q {2+3} has as its value the term \q {5} -- which is not unifiable with \q {2+3}.\nomeqref {8.0}
+		\nompageref{135}
+  \item [{\bf fact}]\begingroup is a clause which has an empty body. It is normally written as a clause with neither an arrow nor a body: \q {\emph {P}(A\sub 1,\ldots ,A\subn )}.\nomeqref {9.0}
+		\nompageref{149}
+  \item [{\bf forall query}]\begingroup is satisfied if every solution to the left hand sub-query is also a solution to the right hand sub-query. Since forall is based on negation, it can never result in variables in other goals being bound.\nomeqref {9.0}
+		\nompageref{161}
+  \item [{\bf guard}]\begingroup A guard is a condition on the applicability of a rule. It is written as \q {\emph {Ptn}::\emph {Cond}}, the meaning of which is that \q {\emph {Ptn}} applies if the pattern matches end the condition \q {\emph {Cond}} holds.\nomeqref {2.0}
+		\nompageref{14}
+  \item [{\bf guarded pattern}]\begingroup A guarded pattern is one which has a predicate or semantic test attached to it: the pattern only has meaning if the guard is satisfied.\nomeqref {8.0}
+		\nompageref{129}
+  \item [{\bf meta programming}]\begingroup A style of programming that leverages the relationship between the name or description of an entity and the entity itself. A common use of meta-programming is the \emph {interpreter}; which is a program that interprets a data structure that represents a program, allowing computation with that represented program. Another common example is the use of `class of' operators that allow introspection of objects.\nomeqref {5.0}
+		\nompageref{55}
+  \item [{\bf negation-as-failure}]\begingroup A form of negation in which a failure to prove the positive of a query leads to assuming the negation. For example, by failing to prove that \q {'Joe'} is married to \q {'Jill'}, we infer that they are not married. It is a simple technique for implementing negation but which has some logical issues -- mainly that, in general, the lack of evidence is not the same as evidence of lack.\nomeqref {9.0}
+		\nompageref{160}
+  \item [{\bf non-terminals}]\begingroup A part of a grammar that is itself defined by other grammar rules.\nomeqref {11.0}
+		\nompageref{180}
+  \item [{\bf objects}]\begingroup An object is theory, or collection of related facts, identified by a term known as a \emph {label}.\nomeqref {1.0}
+		\nompageref{4}
+  \item [{\bf one-of query}]\begingroup is one which is only satisfiable once. More accurately, only one way of satisfying is ever attempted; if there are alternatives they are never found.\nomeqref {9.0}
+		\nompageref{160}
+  \item [{\bf package}]\begingroup A package is a group of related definitions and programs that is compiled and loaded as a single unit. Packages may contain variables, classes, rules and types. Packages are accessed with the \q {import} statement.\nomeqref {13.0}
+		\nompageref{203}
+  \item [{\bf polymorphic}]\begingroup A polymorphic type is one which is quantified. For example:\\ \q {[s]=>list[s]}\\ is a type expression that denotes a polymorphic function type. A function of this type can be applied to any kind of argument type (\q {\emph {A\sub {t}}} say), and the result of a function application will have type \q {list[\emph {A\sub {t}}]}\nomeqref {7.0}
+		\nompageref{88}
+  \item [{\bf predication}]\begingroup A query condition in the form of a \emph {predicate} applied to zero or more arguments.\nomeqref {9.0}
+		\nompageref{155}
+  \item [{\bf raise exception expression}]\begingroup an exception expression is not a `real' expression -- it has no value. Instead, it causes a run-time exception to be raised -- which in turn must be caught by an error handler in an error recovery expression.\nomeqref {8.0}
+		\nompageref{147}
+  \item [{\bf relation definition}]\begingroup is a set of clauses that defines a predicate.\nomeqref {9.0}
+		\nompageref{149}
+  \item [{\bf spawn expression}]\begingroup a spawn expression is one that results in the spawning of a new thread of activity.\nomeqref {8.0}
+		\nompageref{142}
+  \item [{\bf strong clause}]\begingroup a \emph {strong clauses} is a clause written using a longer form of arrow: \q {:--} with an if-and-only-if semantics. A definition of a predicate using strong clauses has an if-and-only-if form: each clause in the definition is assumed to be mutually exclusive. It is not permitted to mix regular clauses with strong clauses in a single definition.\nomeqref {9.0}
+		\nompageref{151}
+  \item [{\bf super variable}]\begingroup A super variable is a variable that is in scope in a class body only and which denotes the object associated with the super class -- as designated by a class rule. For each class rule in a class definition there is a super variable -- of the same name as the super class -- which is accessed as though it were a normal object. Using super vairables it is possible to directly access a super class's elements even if they have been locally overridden.\nomeqref {12.0}
+		\nompageref{196}
+  \item [{\bf terminals}]\begingroup An atomic element of a stream that a grammar is processing.\nomeqref {11.0}
+		\nompageref{180}
+  \item [{\bf type annotated expression}]\begingroup An expression in which the type of the expression is explicitly documented. Although not restricted to identifiers; a common case is for marking a variable with the variable's expected type\nomeqref {8.0}
+		\nompageref{144}
+  \item [{\bf type assignment}]\begingroup A mapping from an expression to a type term\nomeqref {7.0}
+		\nompageref{85}
+  \item [{\bf type constraints}]\begingroup a type constraint is a predicate that must be satisfied if the program is to be \emph {type safe}.\nomeqref {7.0}
+		\nompageref{85}
+  \item [{\bf type definition}]\begingroup A statement that introduces a new type into the current scope. Type definitions are associated with an \emph {interface} -- a suite of names and types that are expected to be defined by any class that implements the type.\nomeqref {2.0}
+		\nompageref{11}
+  \item [{\bf type expression}]\begingroup A term that \emph {denotes} a type. A simple type expression would be something like the symbol \q {char} -- which denotes the type of character expressions. A more complex example would be \q {list[char]} which denotes lists of characters -- i.e., strings\nomeqref {7.0}
+		\nompageref{83}
+  \item [{\bf type inference}]\begingroup Type inference is the process by which a type expression can be \emph {automatically} assigned to an identifier or expression \emph {without} requiring that the type of the identifier be explicitly declared.\nomeqref {7.0}
+		\nompageref{84}
+  \item [{\bf type interface}]\begingroup An interface is associated with a type that defines the legal operations on values of that type. More specifically, the interface defines the expressions possible on the right hand side of a `dot' expression.\nomeqref {7.0}
+		\nompageref{84}
+  \item [{\bf type lattice}]\begingroup a partial ordering with an identified \q {top} element that is bigger than all others, and a bottom element \q {void} that is smaller than all other elements.\nomeqref {7.0}
+		\nompageref{85}
+  \item [{\bf valof expression}]\begingroup A valof expression is one where the value of the expression can only be computed as a result of performing some actions.\nomeqref {8.0}
+		\nompageref{144}
+  \item [{\bf virtual type}]\begingroup A type that has no explicit class constructors. Virtual types can therefore only be realized by class constructors for \emph {sub-types} of the virtual type.\nomeqref {7.0}
+		\nompageref{105}
+
+\end{theglossary}

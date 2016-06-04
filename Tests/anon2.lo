@@ -1,0 +1,54 @@
+/*
+ * Testing inner classes with inheritance 
+*/
+anon2{
+  import go.io.
+  import go.unit.
+
+  bf <~ { mem:(symbol){}. }.
+
+  beliefs(list[symbol]):bf.
+  beliefs(I)..{                         -- A simple belief store
+    mem(X) :- X in I.
+  }.
+
+  ot <~ { bfs:()=>bf. }.			            -- a bfs has a belief store
+
+  outer(list[symbol]):ot.
+  outer(X)..{
+    b:bf.
+    b=beliefs(X).
+    bfs()=>b.
+  }.
+
+  foo <~ { iBelieve:(symbol){}. }.       -- A foo can believe things
+
+  XX <~ { belief:(symbol){}. }.          -- An XXX can be checked, and has beliefs
+  XX <~ ot.
+
+  inner(list[symbol]) : XX.
+  inner(X) <= outer(X).			            -- inner inherits its belief store
+  inner(Bfs) .. {
+    belief(B) :- bfs().mem(B).		      -- we believe things that are in our belief store
+
+    OO:foo.                             -- inner class - is a foo
+    OO..{
+          iBelieve(B) :- belief(B).     -- inherited from outer (i.e., enclosing class)
+      }.
+    checkMe() :-			                  -- check my beliefs
+      belief(B) *> OO.iBelieve(B).
+  }.
+
+  anon:harness.
+  anon<=harness.                        -- test harness
+  anon..{
+    doPred() :-
+        II = inner(['A','C','D']),     -- what do we believe?
+        II.belief('A'),
+        \+ II.belief('B').
+  }.
+
+  assert checkUnit(anon).
+}
+
+    

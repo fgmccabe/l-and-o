@@ -1,0 +1,286 @@
+\chapter{Fun with mobile agents}
+\label{mobile}
+\index{Mobile agent}
+\index{Agent!mobile}
+
+\go is not intentionally designed to make programming \firstterm{mobile agents}{A \emph{mobile agent} is a program that can propagate itself to execute on different hosts. The difference between a mobile agent and a virus is that normally mobile agents require special host support -- and a difference in intent.}  easy; however, as we shall see, it is not difficult to do. The reason is that a combination of message passing and programs being first class entities naturally leads to a straightforward technique for implementing mobile agents.
+
+\paragraph{Don't do this at home}
+First of all a warning: the difference between a mobile agent and a virus is often very slight: it is a matter of intention. The mobile agents that we will write here though are different to viruses in the sense that they require active support of the host: without a \emph{very} cooperative host, our mobile agents will be dead on arrival.
+
+\section{The elements of a mobile agent}
+The core features of \go that make programming mobile agents easy are the fact that programs are first class entities and message passing. The combination of these means that we can pass programs in messages. It is a short step from passing a program in a message to a mobile agent: all that is required is the ability and willingness of the recipient of the message to execute the received program.
+
+\index{mobile agent!recursive form}
+Program~\vref{mobile:p1} is a simple agent program that will attempt to propagate itself.
+\begin{program}
+\begin{alltt}
+mobile .. \{
+  include "sys:go/stdlib.gof".
+  include "sys:include/io.gh".
+
+  mbProto ::= exec((outFile[])*).
+
+  mobile([]) -> \{\}.
+  mobile([P,..laces]) ->
+    exec(((Oc)->Oc.outLine("I am "{}<>self^0);
+                mobile(laces)))>>P.
+\}
+\end{alltt}
+\caption{A simple mobile agent\label{mobile:p1}}
+\end{program}
+The \q{mobile} action procedure has a single argument -- a list of `places' to visit. In the case that the list is empty then the \q{mobile} action will simply terminate.\sidenote{Again, a notable distinction between our mobile programs and viruses.} In the case that the list is non-empty, then the action body of the second rule is to send the message:
+\begin{alltt}
+exec(((Oc)->Oc.outLine("I am "{}<>self^0);mobile(laces)))
+\end{alltt}
+to the process identified by the first element of the list. The \q{exec} constructor is defined in the type definition:
+\begin{alltt}
+mbProto ::= exec((outFile[])*).
+\end{alltt}
+\q{exec} has a single argument -- which is a single argument action procedure. The argument of this single argument procedure is \q{outFile[]}, which is the standard type denoting an output file channel. When it is executed, this procedure will be given an object which the mobile agent can use to write messages.
+
+In our case, the argument to the \q{exec} message we send is a single-argument procedure:
+\begin{alltt}
+(Oc)->Oc.outLine("I am "{}<>self^0);mobile(laces)
+\end{alltt}
+This procedure, when executed, displays a message on the output channel given in the argument \q{Oc}, and then proceeds to invoke the \q{mobile} action procedure with the remaining elements of the list of places to visit.
+
+Notice that without being passed the output channel there is no possible way for the mobile agent to display any messages. Although \go supports mobile agents, it also makes it very easy to control them: any resources that a mobile agent uses must be passed explicitly into the program when it is executed.
+
+The stages that our mobile agent will go through are:
+\begin{enumerate}
+\item It will be executed by some host. When it is executed, the object that denotes the resources it may use are passed in to it; in our case, the only resource permitted is an output channel for writing text.
+
+\item Once initiated, the mobile agent uses the resource given to it to display a message: ``I am here''.
+
+\item After displaying the message, the agent calls the \q{mobile} program; with a list of places to go to.
+
+\item The \q{mobile} action procedure picks the first of those places and sends it a message. The message contains the mobile agent itself; and therefore the cycle continues.
+\end{enumerate}
+This two-phase structure is quite typical for mobile agents: it is as though the mobile agent has two phases in its life-cycle: an active phase when the agent code can more-or-less do what it wants and a `spore' phase when the agent is packaged as a standard message that can be accepted by suitable hosts.
+
+Note that although \go can send programs in messages, it is \emph{not} the case that all values are first class. In particular, it is not permitted to send objects that reference other system resources -- such as file channels. Any attempt to do so will result in an \q{error} exception when the message send is attempted.
+
+
+\subsection{An Object oriented mobile agent}
+\label{mobile:object}
+\index{mobile agent!object oriented}
+One of the obvious limitations of the mobile agent in Program~\vref{mobile:p1} is that it cannot easily carry any reasonable form of \emph{state}. This is because the agent is couched in hte terms of a simple two-phase recursion, with the only state being represented in the arguments to the \q{mobile} call. In Program~\vref{mobile:o1} we show a slightly different form of mobile agent that is encapuslated as a class; which \emph{does} permit state.
+\begin{program}
+\begin{alltt}
+mobile..\{
+  include "sys:go/stdlib.gof".
+  include "sys:go/io.gof".
+  include "sys:go/stack.gof".
+  include "sys:go/cell.gof".
+  include "mobile.gh".
+
+  mobile[]\impl{}mbAgent[].        -- We are a mobile agent 
+  mobile(l,home)\{
+    Places = \$stack[handle](l).   -- List of places to go
+    Counter = \$cell[number](0).   -- Count visited places
+
+    visit(P) ->         -- We might get a request to visit
+        Places.push(P).
+
+    exec(\_)::Places.depth()==0 -> this>>home.
+    exec(O:outFile) ->
+        O.outLine("I am "{}<>this^0<>" at my "{}<>
+                  Counter.get()^0<>"th place");
+        Places.pop(Nx); O.outLine("Going to "{}<>Nx^0);
+        Counter.set(Counter.get()+1);
+        this >> Nx.
+  \}
+\}
+\end{alltt}
+\caption{A \q{mobile} class}
+\label{mobile:o1}
+\end{program}
+This program has a number of features that distinguish it from \q{mobile} in Program~\vref{mobile:p1}:
+\begin{itemize}
+\item
+The class exposes an \q{exec} element; this acts as the \q{mobile} executor: when the object is woken up at a station, then the \q{exec} element will be executed.
+\item
+\q{exec}uting the object is not the only operation that can be performed on the agent: it can also be asked the object to \q{visit} another station. Although, any such action should be performed \emph{before} the \q{exec} action.
+\item
+Instead of holding the list of places to visit in an argument of the \q{mobile} action procedure, this list is held in a \q{stack} variable.\footnote{The \q{stack} class is a standard library that implements a simple stack object -- allowing \q{push}es and \q{pop}s.}
+\item
+The execution of the mobile object is significantly simpler: instead of an iterative recursion where a closure is used to represent the continuation of the mobile agent at the next station, it simply sends the object itself to the next station.
+\item
+The \q{mobile} class declares that it implements the \q{mbAgent} interface. It is this interface that the support station for the mobile agent will be expecting. The \q{mbAgent} interface is defined to be:
+\begin{alltt}
+mbAgent[] \cast \{
+  exec:(outFile[])*.
+  visit:(handle)*.
+\}.
+\end{alltt}
+We have assumed that this interface is defined in the file \q{mobile.gh}.
+\item
+It is very natural to incorporate additional state elements in the object -- as simple \q{cell} objects or even more complex \q{dynamic} relations.
+\end{itemize}
+
+\section{A mobile agent support system}
+\label{mobile:base}
+\index{Mobile agent!base station}
+\index{Base station for mobile agent}
+\index{Agent!base station for mobile}
+
+In order for our mobile agent to execute it must go through the critical step of being executed. This is not something that the mobile agent can do by itself -- sending a message with a program in it is not the same as actually executing the program.
+
+In order to complete its life-cycle, the mobile agent needs a host that is willing and able to execute it. In particular, when it receives a message with the mobile agent code in it, the host must call it; perhaps by \q{spawn}ing a new sub-thread.
+\index{|q{spawn} sub-thread}
+
+In addition to executing the mobile agent, our host must also pass in to the code an output file channel object. In our case, we will simply pass in to the agent the local \q{stdout} file channel. Program~\vref{mobile:base1} is a simple base station that \q{spawn}s a new thread whenever it receives an \q{exec} message.
+
+\begin{program}
+\begin{alltt}
+base .. \{
+  include "sys:go/io.gof".
+  include "sys:go/stdlib.gof".
+
+  include "mobile.gh".
+
+  base() ->
+      ( A\impl{}mbAgent[] << \_ -> spawn \{ A.exec(stdout)\});
+      base().
+\}.
+\end{alltt}
+\caption{A base station for \q{spawn}ing mobile agents\label{mobile:base1}}
+\end{program}
+The \q{base} program is very trusting: it waits for a message consisting of any object that implements the \q{mbAgent[]} interface, and simply \q{spawn}s a new thread whose sole task is to execute the \q{exec} method in that object -- passing into it the local \q{stdout} file channel object -- and then goes on to wait for the next \q{exec} message.
+
+Of course, in general, we should augment the \q{base} program to perform validation checks on the incoming message; such as verifying the sender, perhaps even entering into a conversation with the sender -- looking for a security certificate for example. One way of doing this might be to extend the \q{mbAgent} interface, and to challenge the object with some query.
+
+Notice that the base station does not know what the mobile agent is going to do. However, it does limit the mobile agent by only passing to it the resource that the host is willing for the guest program to use.
+
+\section{Mobile agents in a teacup}
+We can test our mobile agents and base station by arranging for the agents to move around a set of base stations located entirely within a single invocation of \go. Program~\vref{mobile:teacup} is a harness program that \q{spawn}s four base stations -- \q{B1} \ldots \q{B4} -- and two unnamed mobile agents. The two mobile agents traverse our network of base stations -- in a different order -- and `return' back to the main thread.
+
+\begin{program}
+\begin{alltt}
+main .. \{
+  include "sys:go/io.gof".
+  include "sys:go/stdlib.gof".
+  include "mobile.gh".
+  include "mobile.gof".
+  include "mbase.gof".
+
+  main() ->
+      B1 = spawn \{ base() \};
+      B2 = spawn \{ base() \};
+      B3 = spawn \{ base() \};
+      B4 = spawn \{ base() \};
+      A1 = \new{}mobile[]([B1,B2,B3,B4,B1,B2,B3,B4],self);
+      A2 = \new{}mobile[]([B1,B2,B3,B4,B1,B2,B3,B4],self);
+      spawn \{ A1.exec(stdout) \};
+      spawn \{ A2.exec(stdout) \};
+      ( AA\impl{}mbAgent[] << \_ ->
+            stdout.outLine(AA^0<>" has come home")
+      );
+      ( BB\impl{}mbAgent[] << _ ->
+            stdout.outLine(BB^0<>" has come home")
+      );
+\}
+\end{alltt}
+\caption{A teacup full of mobile agents\label{mobile:teacup}}
+\end{program}
+
+We arrange the mobile agent's route by seeding the agent with a list of stations to visit, ending with ourselves.
+
+If we run our program, we get an output similar to:
+\begin{alltt}
+go teacup.goc
+I am \$mobile7177431163697380936 at my 0th place
+Going to hdl('computer#764608905.1','computer#764608905')
+I am \$mobile7177431163697380936 at my 1th place
+Going to hdl('computer#764608905.2','computer#764608905')
+I am \$mobile7177431163697380936 at my 2th place
+Going to hdl('computer#764608905.3','computer#764608905')
+I am \$mobile7177431163697380936 at my 3th place
+Going to hdl('computer#764608905.4','computer#764608905')
+\ldots
+\$mobile7177431163697380936 has come home
+I am \$mobile7061765529752583752 at my 5th place
+Going to hdl('computer#764608905.2','computer#764608905')
+I am \$mobile7061765529752583752 at my 6th place
+Going to hdl('computer#764608905.3','computer#764608905')
+I am \$mobile7061765529752583752 at my 7th place
+Going to hdl('computer#764608905.4','computer#764608905')
+\$mobile7061765529752583752 has come home
+\end{alltt}
+
+
+\section{Mobile agents in a larger world}
+\index{mobile agent!distributed}
+Shuttling programs between threads in a single invocation can hardly be called genuine mobile agents. However, with a little extra effort, we can transform Program~\vref{mobile:teacup} into a genuine mobile agent scenario.
+
+To complete the picture we need to have a way for base stations to be executing in different invocations of \go -- potentially on different machines -- and for these base stations to communicate. To facilitate this we can use the SCS -- the Simple Communications System (see Section~\vref{scs:setup}).
+
+Program~\vref{mobile:station} shows how we can use the \q{base} code from Program~\vref{mobile:base1} as the basis of a mobile agent \emph{station} -- in the context of the SCS.
+\begin{program}
+\begin{alltt}
+main..\{
+  include "sys:go/scomms.gof".
+  include "base.gof".
+
+  main(Host) -> scsConnect(base,Host,5050).
+\}
+\end{alltt}
+\caption{Creating a base station that is connected to the SCS\label{mobile:station}}
+\end{program}
+When \emph{this} program is run, it will connect to the \q{scs} server executing on the host identified in the \q{host} argument and register itself with it. This will allow other programs (i.e., the mobile agents) to send the base station messages.
+
+This program is designed to be executed with explicit command line options that tell the \go engine what the top-level \q{handle} of the base station should be. We will need this when we initiate the mobile agents themselves. For now, let us assume that there will be four base stations set up: \q{A}, \q{B} and \q{C}:
+\begin{alltt}
+\% go -N A -n base station.goc Ariel.local&
+\% go -N B -n base station.goc Ariel.local&
+\% go -N C -n base station.goc Ariel.local&
+\end{alltt}
+All of this assumes, of course, that the \q{scs} is executing on port 5050 on the machine \q{Ariel.local} -- the individual base stations themselves do not need to execute on the same computer.
+
+To start a mobile agent off, we also need to execute it in the context of a program that has been connected to the \q{scs}. Program~\vref{mobile:start} is a simple example of how to do this.
+
+\begin{program}
+\begin{alltt}
+main..\{
+  include "sys:go/scomms.gof".
+  include "sys:go/io.gof".
+  include "sys:go/stdlib.gof".
+  include "mobile.gh".
+  include "mobile.gof".
+
+  start() ->
+      A = \$mobile([hdl('base','A'),hdl('base','B'),
+                    hdl('base','C')],self);
+      A.exec(stdout);
+      loop() .. \{
+        loop() -> (
+             XX\impl{}mbAgent[] << From ->
+                 stdout.outLine(XX^0<>" has come home");
+                 XX.visit(hdl('base','A'));
+                 XX.visit(hdl('base','B'));
+                 XX.visit(hdl('base','C'));
+                 XX.exec(stdout)  -- start agent on new journey
+            ); loop()
+      \}.
+  main() -> scsConnect(start,"localhost",5050).
+\}
+\end{alltt}
+\caption{A mobile agent home\label{mobile:start}}
+\end{program}
+As with the \q{station} program in Program~\vref{mobile:station}, we start the agents by executing the command:
+\begin{alltt}
+\% go home.goc Ariel.local
+\end{alltt}
+
+Program~\vref{mobile:start} is similar in spirit to Program~\vref{mobile:teacup}; with a couple of differences: instead of directly \q{spawn}ing the base stations and the mobile agents, we only execute the mobile agent code itself, and we do so in the context of a connection to the \q{scs}. The second difference is that \emph{this} version will send the agent off again when it comes `home', creating an endless loop that is highly reminiscent of computer viruses.
+
+With Program~\vref{mobile:station} we have put into place the final piece necessary for our simple demonstration of mobile agents. The total number of lines of \go code here is a little over 50 lines! It has taken five times that number to explain it. Of course, our mobile agents don't \emph{do} very much when they `get' somewhere; but that is not the point of this exercise.
+
+
+
+
+
+
+
+

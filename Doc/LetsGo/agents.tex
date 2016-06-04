@@ -1,0 +1,27 @@
+\chapter{Three legged agents}
+\label{agent}
+
+In the context of the Internet specifically, and in a distributed computing environment generally, it is fair to say that any significant application is going to be inherently multi-threaded. If its `my system talking to yours', it may be talking to `theirs' at the same time also. Thus the challenge in designing an agent architecture is to combine the multi-agent aspect of the environment with the agent-hood aspect of the entire system.
+
+Our architecture partitions an agent into a number of kinds of components: a set of threads which represents the activities that the agent is engaged in, a memory in which the agent's critical memory is stored and a meta-controller whose function is to decide what the agent should be doing. In addition, the agent may need a `communicator', a thread that is used to (de)-multiplex communication between the agent and other agents.
+
+
+\section{Memory architecture}
+
+For an agent to be able to cope flexibly with its partners' volunteering of information it is necessary for it to be able to link a new piece of information with the agent's own goals. I.e., its not enough for the agent to be only processing information \emph{it is expecting}; it has to be be able to link new information that it was not necessarily expecting. This implies a kind of decoupling from the communicative aspects of an agent and its behavioral aspects.
+
+In the BDI paradigm, an agent is characterized by its Beliefs, Desires and Intentions. An agent's beliefs are those predicates which the agent believes -- of itself and of the world. An agent's desires are the predicates that it would like to be true; and an agent's intentions are the set of actual activities that the agent is engaged in or committed to.
+
+An agent architecture which uses such a memory architecture is well suited to the kind of flexibility we need: when the \q{RentalAgent}, for example, volunteers that 
+\begin{alltt}
+available("SRO::inCarNavigationSystem")
+\end{alltt}
+is true, then \q{ourAgent} can, if it believes the \q{RentalAgent}, use that information to potentially meet one of its desires -- even if \q{ourAgent} has no current intention to check for this fact. 
+
+Of course, for this to work, \q{ourAgent} and \q{RentalAgent} have to agree on the meaning of the terms \q{available} and \q{"SRO::inCarNavigationSystem"}. The former can be part of a standard inter-agent communications language; the latter may be part of a commonly understood \firstterm{Ontology}{Ontology is the study of `what is real'; or the relationship between ourselves and the real world. An Ontology is commonly understood to be a formal declaration of the relationships between a set of symbols and a domain of discourse that is shared by a community.}. 
+
+We saw a glimpse of the potential power of standard ontologies in Figure~\vref{rental:conversation} -- the \q{RentalAgent} advertised the availability of its in-car navigation system called \q{MapMe\tm}. Its somewhat unlikely that even an agent programmed to know about renting cars would know what that meant. However, by referring to an ontology server, \q{ourAgent} could determine that \q{MapMe\tm} was a type of \q{SRO::inCarNavigationSystem} -- something that our agent might know about.
+
+We can model the beliefs, desires and intentions held by an agent using a combination of dynamic relations and a set of appropriate types. The specifics of these will depend on the particular agent, our focus is on \q{ourAgent} which has the responsibility of finding, negotiating and arranging for a car rental.
+
+

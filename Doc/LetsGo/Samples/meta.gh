@@ -1,0 +1,14 @@
+/*
+ * Type definitions for the meta-evaluator
+ */
+ 
+   metaTp[CT] ::=  disj(list[metaTp[CT]]) | 
+		conj(list[metaTp[CT]]) | 
+		not(metaTp[CT]) | 
+		is(CT)  | isnot(CT) | TRUE.
+
+  clause[CT] ::= cl(CT,metaTp[CT]).
+
+  clauses[T] ~> {
+    cls:(T,metaTp[T]){}
+  }.
