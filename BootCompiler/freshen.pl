@@ -3,7 +3,7 @@
 :- use_module(misc).
 :- use_module(types).
 
-freshen(Tp,ThisType,B,FTp) :- addThisType(ThisType,[],B0),!,deQuant(Tp,B0,B,T0), !, freshn(T0,B,FTp).
+freshen(Tp,ThisType,B,FTp) :- addThisType(ThisType,[],B0),deQuant(Tp,B0,B,T0),  freshn(T0,B,FTp),!.
 
 addThisType(voidType,B,B).
 addThisType(Tp,B,[(thisType,Tp)|B]).
