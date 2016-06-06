@@ -1,6 +1,6 @@
 :- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, showType/3, showTypeRule/3,
       occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
-      bind/2, isIdentical/2,
+      bind/2, isIdentical/2, moveQuants/3,
       markLower/2, markUpper/2]).
 :- use_module(misc).
 
@@ -74,6 +74,10 @@ occIn(Id,funType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,univType(constrained(Lw,_,Up),Tp)) :- occIn(Id,Lw) ; occIn(Id,Up) ; occIn(Id,Tp).
 occIn(Id,univType(_,Tp)) :- occIn(Id,Tp).
 occIn(Id,faceType(L)) :- is_member((_,A),L), occIn(Id,A).
+
+moveQuants(univType(B,Tp),[B|Q],Tmpl) :- !,
+  moveQuants(Tp,Q,Tmpl).
+moveQuants(Tp,[],Tp).
 
 showTypeRule(typeRule(Hd,Bd),O,E) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,E).
 showTypeRule(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showTypeRule,O2,E).

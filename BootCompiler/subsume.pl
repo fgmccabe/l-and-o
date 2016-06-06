@@ -58,6 +58,7 @@ rewriteType(Nm,T,Tp,Env) :-
 sameType(T1,T2,Env) :- deRef(T1,Tp1), deRef(T2,Tp2), sm(Tp1,Tp2,Env), !.
 
 sm(_,anonType,_).
+sm(anonType,_,_).
 sm(voidType,voidType,_).
 sm(topType,topType,_).
 sm(thisType,T2,Env) :- isVar("this",Env,vr(_,T1)),!,

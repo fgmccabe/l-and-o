@@ -19,13 +19,13 @@ showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types),O,E) :-
   showTypeDefs(Types,O3,O4),
   showDefs(Defs,O4,O5),
   showOthers(Others,O5,O6),
-  appStr("}",O6,E).
+  appStr("}",O6,E),!.
 
-showTerm(vr(_,Nm),O,E) :- appStr(Nm,O,E).
-showTerm(intLit(_,Ix),O,E) :- appInt(Ix,O,E).
-showTerm(longLit(_,Ix),O,E) :- appInt(Ix,O,E).
-showTerm(floatLit(_,Ix),O,E) :- appInt(Ix,O,E).
-showTerm(stringLit(_,Str),O,E) :- 
+showTerm(v(_,Nm),O,E) :- appStr(Nm,O,E).
+showTerm(intLit(Ix),O,E) :- appInt(Ix,O,E).
+showTerm(longLit(Ix),O,E) :- appInt(Ix,O,E).
+showTerm(floatLit(Ix),O,E) :- appInt(Ix,O,E).
+showTerm(stringLit(Str),O,E) :- 
   appStr("""",O,O1),
   appStr(Str,O1,O2),
   appStr("""",O2,E).
@@ -42,6 +42,10 @@ showTerm(call(_,Op,Args),O,E) :-
 showTerm(dot(_,Rc,Fld),O,E) :-
   showTerm(Rc,O,O1),
   appStr(".",O1,O2),
+  appStr(Fld,O2,E).
+showTerm(pkgRef(_,Rc,Fld),O,E) :-
+  showTerm(Rc,O,O1),
+  appStr("#",O1,O2),
   appStr(Fld,O2,E).
 showTerm(con(_,Nm),O,E) :-
   appStr("'",O,O1),

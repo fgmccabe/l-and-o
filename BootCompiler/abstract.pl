@@ -3,7 +3,7 @@
       isUnary/3,isUnary/4,isBinary/4,isBinary/5,isBinaryTerm/4,
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
-      squareTerm/4,isSquare/3,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,
+      squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,
       isName/2,isIden/2,isIden/3,isString/2,
       isQuantified/3]).
 :- use_module(operators).
@@ -51,6 +51,8 @@ isBraceTuple(tuple(Lc,"{}",L),Lc,L).
 squareTerm(Lc,Op,Els,app(Lc,name(Lc,Op),tuple(Lc,"[]",Els))).
 
 isSquare(app(_,name(_,Op),tuple(_,"[]",L)),Op,L).
+
+isSquare(app(Lc,name(_,Op),tuple(_,"[]",L)),Lc,Op,L).
 
 isSquareTerm(app(_,Op,tuple(_,"[]",L)),Op,L).
 

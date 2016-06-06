@@ -13,7 +13,7 @@ t{
     show() => "true".
   }.
 
-  f(logical) : logical.
+  f:(logical) <=> logical.
   f(T)..{
     show()=>T.show()
   }.
@@ -21,7 +21,7 @@ t{
   T:logical.
   T = true.
 
-  S(logical)=>string.
+  S:(logical)=>string.
   S(true)=>"true".
   S(false)=>"false".
 }

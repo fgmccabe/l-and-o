@@ -1,6 +1,6 @@
 :-module(misc,[concat/3,segment/3,last/2,reverse/2,is_member/2,merge/3,intersect/3,subtract/3,
         appStr/3,appInt/3,appSym/3,
-        subPath/3,pathSuffix/2]).
+        subPath/4,pathSuffix/3,starts_with/2,ends_with/2]).
 
 concat([],X,X).
 concat([E|X],Y,[E|Z]) :- concat(X,Y,Z).
@@ -39,18 +39,21 @@ appSym(Sym,O,E) :- atom_chars(Sym,Chrs), concat(Chrs,E,O).
 
 appInt(Ix,O,E) :- number_string(Ix,Str), string_chars(Str,Chrs), concat(Chrs,E,O).
 
-subPath(Path,Suffix,Name) :-
-  sub_string(Path,_,_,After,"#"),
+subPath(Path,Marker,Suffix,Name) :-
+  sub_string(Path,_,_,After,Marker),
   (After=0, string_concat(Path,Suffix,Name) ; string_concat(Path,".",P0),string_concat(P0,Suffix,Name)).
-subPath(Path,Suffix,Name) :-
-  string_concat(Path,"#",P0),
+subPath(Path,Marker,Suffix,Name) :-
+  string_concat(Path,Marker,P0),
   string_concat(P0,Suffix,Name).
 
 ends_with(String,Tail) :- 
   string_concat(_,Tail,String).
 
-pathSuffix(String,Tail) :-
-  split_string(String,"#","",[_,Local]),
+starts_with(String,Front) :-
+  string_concat(Front,_,String).
+
+pathSuffix(String,Marker,Tail) :-
+  split_string(String,Marker,"",[_,Local]),
   split_string(Local,".","",Segs),
   last(Segs,Tail).
-pathSuffix(String,String).
+pathSuffix(String,_,String).

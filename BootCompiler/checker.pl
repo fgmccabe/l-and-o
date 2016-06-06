@@ -85,8 +85,13 @@ defineType(N,Lc,_,Defs,Defs,Env,Env,_) :-
 defineType(N,Lc,Stmts,[typeDef(N,Lc,Rules)|Defs],Defs,Env,Ex,Path) :- 
   parseTypeDef(Stmts,Env,Rules,[],Path),
   pickTypeTemplate(Rules,Type),
-  faceOfType(Lc,Env,Rules,Face),
+  faceOfType(Lc,Env,Rules,Type,Face),
   declareType(N,Lc,Type,Face,Rules,Env,Ex).
+
+faceOfType(Lc,Env,Rules,Tmplate,Face) :-
+  moveQuants(Tmplate,Q,Plate),
+  mergeFields(Rules,Q,Plate,[],Fields,Env,Lc),
+  moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
 
 parseTypeDef([],_,TpDefs,TpDefs,_).
 parseTypeDef([St|More],Env,[Rl|Defs],Dx,Path) :-
@@ -105,7 +110,7 @@ parseAnnotations([(var(N),_,_)|More],Fields,Annots,Env,Ex,Path) :-
   parseAnnotations(More,Fields,Annots,E0,Ex,Path).
 parseAnnotations([(var(N),Lc,_)|More],Fields,Annots,Env,Ex,Path) :-
   is_member((N,Tp),Fields),!,
-  declareVar(N,vr(N,Tp),Lc,Env,E0),
+  declareVar(N,Lc,vr(N,Tp),Env,E0),
   parseAnnotations(More,Fields,Annots,E0,Ex,Path).
 parseAnnotations([(var(N),Lc,_)|More],Fields,Annots,Env,Ex,Path) :-
   reportError("no type annotation for variable %s",[N],Lc),
@@ -114,14 +119,15 @@ parseAnnotations([(var(N),Lc,_)|More],Fields,Annots,Env,Ex,Path) :-
 annotateVar(Nm,St,Env,Ex) :-
   isBinary(St,Lc,":",_,T),
   parseType(T,Env,Tp),
-  declareVar(Nm,vr(Nm,Tp),Lc,Env,Ex).
+  declareVar(Nm,Lc,vr(Nm,Tp),Env,Ex).
 
 checkVarRules([],[],_,_).
 checkVarRules([(var(N),Lc,Stmts)|More],Defs,Env,Path) :-
   pickupVarType(N,Lc,Env,Tp),
   pickupThisType(Env,ThisType),
   freshen(Tp,ThisType,Q,ProgramType),
-  processStmts(Stmts,ProgramType,Defs,D0,Env,Path),
+  declareTypeVars(Q,Lc,Env,StmtEnv),
+  processStmts(Stmts,ProgramType,Defs,D0,StmtEnv,Path),
   checkEvidenceBinding(Lc,Q),
   checkVarRules(More,D0,Env,Path).
 
@@ -135,13 +141,15 @@ pickupThisType(_,voidType).
 
 checkEvidenceBinding(_,_).
 
-getTypeOfVar(N,Env,Nm,Tp) :-
-  isVar(N,Env,vr(Nm,T)),
-  pickupThisType(Env,ThisType),
-  freshen(T,ThisType,_,Tp).
+declareTypeVars([],_,Env,Env).
+declareTypeVars([(thisType,_)|Vars],Lc,Env,Ex) :- !,
+  declareTypeVars(Vars,Lc,Env,Ex).
+declareTypeVars([(Nm,Tp)|Vars],Lc,Env,Ex) :-
+  declareType(Nm,Lc,Tp,Env,E0),
+  declareTypeVars(Vars,Lc,E0,Ex).
 
 findType(Nm,Env,Tp) :-
-  typeInDict(Nm,Env,T),
+  typeInDict(Nm,Env,_,T),
   pickupThisType(Env,ThisType),
   freshen(T,ThisType,_,Tp).
 
@@ -188,17 +196,19 @@ processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :-
   isBinary(St,Lc,"<<",L,R),
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
   typeOfExp(R,E1,topType,_,Repl).
-processStmt(St,Tp,[classBody(Lc,Nm,Op,Stmts,Others,Types)|Defs],Defs,E,Path) :-
+processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   isName(L,Nm),!,
   pushScope(E,Env),
-  typeOfPtn(L,Tp,Env,E0,Op),
-  subPath(Path,Nm,ClassPath),
-  checkClassBody(Tp,R,E0,Stmts,Others,Types,_,ClassPath).
+  marker(class,Marker),
+  subPath(Path,Marker,Nm,ClassPath),
+  checkClassBody(Tp,R,Env,Stmts,Others,Types,_,ClassPath).
 processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
-  checkClassBody(Tp,R,E1,Stmts,Others,Types,_,Path).
+  marker(class,Marker),
+  subPath(Path,Marker,Nm,ClassPath),
+  checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
 
 checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Ptn,Value),Env) :-
   isIden(L,_,Nm),
@@ -223,13 +233,13 @@ checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   isBraceTuple(Body,Lc,Els),
   getTypeFace(ClassTp,Env,Fields),
   pushScope(Env,Base),
-  declareVar("this",vr("this",ClassTp),Lc,Base,ThEnv),
+  declareVar("this",Lc,vr("this",ClassTp),Base,ThEnv),
   thetaEnv(ClassPath,Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
   computeExport(Defs,Private,BodyDefs,Types).
 
 declareFields([],_,Env,Env).
 declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
-  declareVar(Nm,vr(Nm,Tp),Lc,Env,E0),
+  declareVar(Nm,Lc,vr(Nm,Tp),Env,E0),
   declareFields(More,Lc,E0,Ex).
 
 splitHead(Term,Nm,Args,Cond) :-
@@ -284,7 +294,6 @@ collectClassRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectClassRules(Stmts,Sx,Nm,Eqns).
 collectClassRules([],[],_,[]).
 
-
 isRuleForClass(labelRule(Lc,Nm,_,_),Lc,Nm).
 isRuleForClass(overrideRule(Lc,Nm,_,_),Lc,Nm).
 isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
@@ -292,22 +301,29 @@ isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
 typeOfPtn(N,Tp,Env,Ex,Term) :- 
   isIden(N,Lc,Nm),
   typeOfVarPtn(Lc,Nm,Tp,Env,Ex,Term).
-typeOfPtn(integer(Lc,Ix),Tp,Env,Env,intLit(Lc,Ix)) :-
+typeOfPtn(integer(_,Ix),Tp,Env,Env,intLit(Ix)) :-
   findType("integer",Env,IntegerTp),
   sameType(Tp,IntegerTp,Env).
-typeOfPtn(long(Lc,Ix),Tp,Env,Env,longLit(Lc,Ix)) :- !,
+typeOfPtn(long(_,Ix),Tp,Env,Env,longLit(Ix)) :- !,
   findType("long",Env,LongTp),
   sameType(Tp,LongTp,Env).
-typeOfPtn(float(Lc,Ix),Tp,Env,Env,floatLit(Lc,Ix)) :- !,
+typeOfPtn(float(_,Ix),Tp,Env,Env,floatLit(Ix)) :- !,
   findType("float",Env,FloatTp),
   sameType(Tp,FloatTp,Env).
-typeOfPtn(string(Lc,Sx),Tp,Env,Env,stringLit(Lc,Sx)) :- !,
+typeOfPtn(string(_,Sx),Tp,Env,Env,stringLit(Sx)) :- !,
   findType("string",Env,StringTp),
   sameType(Tp,StringTp,Env).
 typeOfPtn(P,Tp,Env,Ex,where(Ptn,Cond)) :-
   isBinary(P,"::",L,R),
   typeOfPtn(L,Tp,Env,E0,Ptn),
   checkCond(R,E0,Ex,Cond).
+typeOfPtn(Term,ET,Env,Env,pkgRef(Lc,Pkg,Fld)) :-
+  isBinary(Term,Lc,"#",L,F), !,
+  isIden(F,FLc,Fld),
+  packageName(L,Pkg),
+  isExported(Pkg,Fld,ExTp),
+  freshen(ExTp,voidType,_,Tp), % replace with package type
+  sameType(FLc,Tp,ET,Env).
 typeOfPtn(tuple(Lc,"()",[A]),Tp,Env,Ex,tuple(Lc,Args)) :-
   genTpVars(A,ArgTps),
   sameType(Tp,tupleType(ArgTps),Env),
@@ -321,6 +337,14 @@ typeOfPtn(tuple(Lc,"[]",A),Tp,Env,Ex,Term) :-
   ListTp = typeExp(_,[ElTp]),
   sameType(ListTp,Tp,Env),
   typeOfListPtn(A,Lc,ElTp,ListTp,Env,Ex,Term).
+typeOfPtn(Call,Tp,Env,Ex,where(V,Cond)) :-
+  isUnary(Call,Lc,"@",Test), % @Test = NV :: NV.Test where NV is a new name
+  isRoundTerm(Test,_,_,_),
+  gensym("_",NV),
+  typeOfVarPtn(Lc,NV,Tp,Env,E0,V),
+  V = v(Lc,Tp),
+  binary(Lc,".",name(Lc,NV),Test,TT),
+  checkCond(TT,E0,Ex,Cond).
 typeOfPtn(Term,Tp,Env,Ex,apply(Lc,Op,Args)) :-
   isRoundTerm(Term,Lc,F,A), !,
   \+ (isIden(F,N), isKeyword(N)),
@@ -340,14 +364,10 @@ genTpVars([_|I],[V|More]) :-
 typeOfVarPtn(Lc,Nm,Tp,Env,Env,Term) :-
   isVar(Nm,Env,Vr),!,
   varPttrn(Lc,Nm,Vr,Tp,Env,Term).
-typeOfVarPtn(Lc,Nm,Tp,Env,Ex,vr(Lc,Nm)) :-
-  declareVar(Nm,vr(Nm,Tp),Lc,Env,Ex).
+typeOfVarPtn(Lc,Nm,Tp,Env,Ex,v(Lc,Nm)) :-
+  declareVar(Nm,Lc,vr(Nm,Tp),Env,Ex).
 
-varPttrn(Lc,_,vr(VNm,VT),Tp,Env,vr(Lc,VNm)) :-
-  pickupThisType(Env,ThisType),
-  freshen(VT,ThisType,_,T),
-  sameType(Tp,T,Env).
-varPttrn(Lc,_,enum(VNm,VT),Tp,Env,enum(Lc,VNm)) :-
+varPttrn(Lc,_,vr(VNm,VT),Tp,Env,v(Lc,VNm)) :-
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,T),
   sameType(Tp,T,Env).
@@ -381,22 +401,22 @@ typeOfListPtn([El|More],_,ElTp,ListTp,Env,Ex,apply(Lc,Op,[Hd,Tl])) :-
 typeOfExp(V,ET,Tp,Env,Term) :-
   isIden(V,Lc,N),!,
   typeOfVar(Lc,N,ET,Tp,Env,Term).
-typeOfExp(integer(Lc,Ix),ET,Tp,Env,intLit(Lc,Ix)) :- !,
+typeOfExp(integer(Lc,Ix),ET,Tp,Env,intLit(Ix)) :- !,
   findType("integer",Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfExp(long(Lc,Ix),ET,Tp,Env,longLit(Lc,Ix)) :- !,
+typeOfExp(long(Lc,Ix),ET,Tp,Env,longLit(Ix)) :- !,
   findType("long",Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfExp(float(Lc,Ix),ET,Tp,Env,floatLit(Lc,Ix)) :- !,
+typeOfExp(float(Lc,Ix),ET,Tp,Env,floatLit(Ix)) :- !,
   findType("float",Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfExp(string(Lc,Ix),ET,Tp,Env,stringLit(Lc,Ix)) :- !,
+typeOfExp(string(Lc,Ix),ET,Tp,Env,stringLit(Ix)) :- !,
   findType("string",Env,Tp),
   checkType(Lc,Tp,ET,Env).
 typeOfExp(interString(Lc,Segs),ET,Tp,Env,Exp) :- !,
   findType("string",Env,Tp),
   checkType(Lc,Tp,ET,Env),
-  typeOfStringSegments(Segs,Env,Exp).
+  typeOfStringSegments(Segs,Lc,Env,Exp).
 typeOfExp(Term,ET,RT,Env,Exp) :-
   isBinary(Term,Lc,":",L,R), !,
   parseType(R,Env,RT),
@@ -406,7 +426,7 @@ typeOfExp(Term,ET,Tp,Env,Exp) :-
   isBinary(Term,Lc,".",L,F), !,
   isIden(F,Fld),
   recordAccessExp(Lc,L,Fld,ET,Tp,Env,Exp).
-typeOfExp(Term,ET,Tp,Env,pkgDot(Lc,Pkg,Fld)) :-
+typeOfExp(Term,ET,Tp,Env,pkgRef(Lc,Pkg,Fld)) :-
   isBinary(Term,Lc,"#",L,F), !,
   isIden(F,FLc,Fld),
   packageName(L,Pkg),
@@ -486,23 +506,19 @@ fieldInFace(_,Nm,Lc,V) :-
   reportError("field %s not declared",[Nm],Lc),
   newTypeVar(Nm,V).
 
-typeOfVar(Lc,"true",ET,Tp,Env,enum(Lc,"true")) :-
+typeOfVar(Lc,"true",ET,Tp,Env,v(Lc,"true")) :-
   findType("logical",Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfVar(Lc,"false",ET,Tp,Env,enum(Lc,"false")) :-
+typeOfVar(Lc,"false",ET,Tp,Env,v(Lc,"false")) :-
   findType("logical",Env,Tp),
   checkType(Lc,Tp,ET,Env).
 typeOfVar(Lc,Nm,ET,Tp,Env,Term) :-
   isVar(Nm,Env,Vr),!,
   varExp(Lc,Nm,Vr,ET,Tp,Env,Term).
 typeOfVar(Lc,Nm,_,voidType,_,_,tVoid) :-
-  reportError("variable %s not declared",[enum(Lc,Nm)],Lc).
+  reportError("variable %s not declared",[v(Lc,Nm)],Lc).
 
-varExp(Lc,_,vr(VNm,VT),ET,Tp,Env,vr(Lc,VNm)) :- !,
-  pickupThisType(Env,ThisType),
-  freshen(VT,ThisType,_,Tp),
-  checkType(Lc,Tp,ET,Env).
-varExp(Lc,_,enum(VNm,VT),ET,Tp,Env,enum(Lc,VNm)) :- !,
+varExp(Lc,_,vr(VNm,VT),ET,Tp,Env,v(Lc,VNm)) :- !,
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,Tp),
   checkType(Lc,Tp,ET,Env).
@@ -530,6 +546,10 @@ typeOfListExp([El|More],_,ElTp,ListTp,Env,apply(Lc,Op,[Hd,Tl])) :-
   typeOfExp(name(Lc,",.."),topType,_,Env,Op),
   typeOfExp(El,ElTp,_,Env,Hd),
   typeOfListExp(More,Lc,ElTp,ListTp,Env,Tl).
+
+typeOfStringSegments([],Lc,_Env,stringLit("")) :- 
+  reportError("string interpolation not implemented",[],Lc),!.
+
 
 checkType(_,S,T,Env) :-
   subType(S,T,Env),!.
@@ -619,16 +639,6 @@ exportDef(typeDef(_,Nm,Tp),Private,Fields,Fields,Types,Tx) :-
   (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Tp)|Tx]).
 exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
-
-faceOfType(Lc,Env,Rules,Face) :-
-  pickTypeTemplate(Rules,Tmplate),
-  moveQuants(Tmplate,Q,Plate),
-  mergeFields(Rules,Q,Plate,[],Fields,Env,Lc),
-  moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
-
-moveQuants(univType(B,Tp),[B|Q],Tmpl) :- !,
-  moveQuants(Tp,Q,Tmpl).
-moveQuants(Tp,[],Tp).
 
 mergeFields([],_,_,Fields,Fields,_,_).
 mergeFields([Rule|More],Q,Plate,SoFar,Fields,Env,Lc) :-

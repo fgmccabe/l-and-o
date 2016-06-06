@@ -17,10 +17,10 @@ parseType(Tp,Env,B,Bound,PT) :-
   isQuantified(Tp,V,BT),
   parseBound(V,B,B0,Env,PT,Inner),
   parseType(BT,Env,B0,Bound,Inner).
-parseType(Nm,Env,B,B,Tp) :- isName(Nm,Id), parseTypeName(Id,Env,B,Tp).
+parseType(Nm,Env,B,B,Tp) :- isIden(Nm,Lc,Id), parseTypeName(Lc,Id,Env,B,Tp).
 parseType(Sq,Env,B,Bound,typeExp(Op,ArgTps)) :- 
-  isSquare(Sq,N,Args),
-  parseTypeName(N,Env,B,typeExp(Op,_ATs)),
+  isSquare(Sq,Lc,N,Args),
+  parseTypeName(Lc,N,Env,B,typeExp(Op,_ATs)),
   parseTypes(Args,Env,B,Bound,ArgTps). %% should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
 parseType(F,Env,B,Bound,funType(AT,RT)) :-
   isBinary(F,"=>",L,R),
@@ -46,12 +46,14 @@ parseType(T,_,_,B,B,anonType) :-
   locOfAst(T,Lc),
   reportError("cannot understand type %s",[T],Lc).
 
-parseTypeName("_",_,_,anonType).
-parseTypeName("void",_,_,voidType).
-parseTypeName("top",_,_,topType).
-parseTypeName("this",_,_,thisType).
-parseTypeName(Id,_,B,Tp) :- is_member((Id,Tp),B),!.
-parseTypeName(Id,Env,_,FTp) :- typeInDict(Id,Env,Tp),freshen(Tp,thisType,_,FTp).
+parseTypeName(_,"_",_,_,anonType).
+parseTypeName(_,"void",_,_,voidType).
+parseTypeName(_,"top",_,_,topType).
+parseTypeName(_,"this",_,_,thisType).
+parseTypeName(_,Id,_,B,Tp) :- is_member((Id,Tp),B),!.
+parseTypeName(_,Id,Env,_,FTp) :- typeInDict(Id,Env,_,Tp),freshen(Tp,thisType,_,FTp).
+parseTypeName(Lc,Id,_,_,anonType) :- 
+  reportError("type %s not declared",[Id],Lc).
 
 parseBound(P,BV,Bound,Env,QT,Inner) :-
   isBinary(P,",",L,R),
@@ -130,14 +132,15 @@ parseRule(St,B,Env,Ex,typeRule(Lhs,Rhs),Path) :-
 parseTypeHead(N,B,type(TpNm),Env,Ex,Path) :-
   isIden(N,Lc,Nm),
   (B = [] ; reportError("too many quantifiers in type def for %s",[N],Lc)),
-  subPath(Path,Nm,TpNm),
+  marker(type,Marker),
+  subPath(Path,Marker,Nm,TpNm),
   declareType(Nm,Lc,type(TpNm),Env,Ex). % temporary definition
 parseTypeHead(N,B,typeExp(TpNm,Args),Env,Ex,Path) :-
-  isSquare(N,Nm,A),
-  locOfAst(N,Lc),
+  isSquare(N,Lc,Nm,A),
   (length(B,Sz),length(A,Sz); reportError("incorrect number of quantifiers for %s",[N],Lc)),
   parseHeadArgs(A,B,Args),
-  subPath(Path,Nm,TpNm),
+  marker(type,Marker),
+  subPath(Path,Marker,Nm,TpNm),
   attachBinding(B,typeExp(TpNm,Args),Tp),
   declareType(Nm,Lc,Tp,Env,Ex). % temporary definition
 

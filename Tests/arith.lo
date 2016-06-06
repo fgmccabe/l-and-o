@@ -1,0 +1,31 @@
+arith{
+  arith <~ {
+    pl:  (this)=>this.
+    tms: (this)=>this.
+    mns: (this)=>this.
+    dv:  (this)=>this.
+  }.
+
+  plus:all t<~arith ~~ (t,t)=>t.
+  plus(x,y) => x.pl(y).
+
+  times:all t<~arith ~~ (t,t)=>t.
+  times(x,y) => x.tms(y).
+
+  minus:all t<~arith ~~ (t,t)=>t.
+  minus(x,y) => x.mns(y).
+
+  div:all t<~arith ~~ (t,t)=>t.
+  div(x,y) => x.dv(y).
+
+  IT <~ arith.
+  I:(integer)<=>IT.
+  I(X)..{
+    pl(I(Y)) => I(__integer_plus(X,Y)).
+    tms(I(Y)) => I(__integer_times(X,Y)).
+    mns(I(Y)) => I(__integer_minus(X,Y)).
+    dv(I(Y)) => I(__integer_div(X,Y)).
+  }.
+
+  assert plus(times(I(2),I(3)),I(4)) = I(10).
+}

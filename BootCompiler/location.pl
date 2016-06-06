@@ -1,4 +1,4 @@
-:- module(location,[locOf/2, mergeLoc/3,showLocation/3]).
+:- module(location,[locOf/2, mergeLoc/3,showLocation/3,lcLine/2,lcColumn/2,lcSize/2,lcOff/2]).
 
 :- use_module(misc).
 
@@ -18,3 +18,8 @@ showLocation(loc(Ln,Col,_,Sz),O,E) :-
   appStr("(",O3,O4),
   appInt(Sz,O4,O5),
   appStr(")",O5,E).
+
+lcLine(loc(Ln,_,_,_),Ln).
+lcColumn(loc(_,_,Col,_),Col).
+lcSize(loc(_,_,_,Sz),Sz).
+lcOff(loc(_,Off,_,_),Off).
