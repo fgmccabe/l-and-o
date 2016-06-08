@@ -68,12 +68,10 @@ static char *skipSig(char *tp) {
   switch (*tp++) {
     case integer_sig:
     case float_sig:
-    case number_sig:
-    case symbol_sig:
     case string_sig:
     case top_sig:
+    case void_sig:
     case logical_sig:
-    case opaque_sig:
     case type_sig:
       return tp;
     case list_sig:
@@ -92,18 +90,11 @@ static char *skipSig(char *tp) {
         tp = skipSig(tp);
       return skipSig(tp);
     }
-    case proc_sig: {
+    case pred_sig: {
       int ar = *tp++;
 
       while (ar-- > 0)
         tp = skipSig(tp + 1);
-      return tp;
-    }
-    case action_sig: {
-      int ar = *tp++;
-
-      while (ar-- > 0)
-        tp = skipSig(tp);
       return tp;
     }
     case tuple_sig: {
@@ -144,9 +135,7 @@ static int sigArity(char *spec) {
   switch (*spec) {
     case funct_sig:
       return (int) (spec[1]) + 1;
-    case proc_sig:
-      return (int) (spec[1]);
-    case action_sig:
+    case pred_sig:
       return (int) (spec[1]);
     case grammar_sig:
       return (int) (spec[1]) + 2;

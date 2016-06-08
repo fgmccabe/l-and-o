@@ -195,7 +195,6 @@ wffExp(name(_,"false")).
 wffExp(name(_,K)) :- \+isKeyword(K).
 wffExp(name(Lc,K)) :- isKeyword(K), reportError("unexpected keyword: %s",[K],Lc).
 wffExp(integer(_,_)).
-wffExp(long(_,_)).
 wffExp(float(_,_)).
 wffExp(string(_,_)).
 wffExp(interString(_,Segs)) :- wffStringSegments(Segs).
@@ -252,7 +251,6 @@ wffPtn(name(_,"true")).
 wffPtn(name(_,"false")).
 wffPtn(name(_,O)) :- \+ isKeyword(O).
 wffPtn(integer(_,_)).
-wffPtn(long(_,_)).
 wffPtn(float(_,_)).
 wffPtn(string(_,_)).
 wffPtn(interString(Lc,_)) :- reportError("interpolated string not allowed in pattern",[],Lc).

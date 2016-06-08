@@ -8,7 +8,6 @@ display(Term,Pr) :- dispAst(Term,Pr,Chrs,[]), string_chars(Res,Chrs), write(Res)
 
 dispAst(name(_,Nm),_,O,E) :- appStr(Nm,O,E).
 dispAst(integer(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
-dispAst(long(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
 dispAst(float(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).
 dispAst(string(_,S),_,['"'|O],E) :- appStr(S,O,O1), appStr("""",O1,E).
 dispAst(display(_,Term),Pr,['<','<'|O],E) :- dispAst(Term,Pr,O,['>','>'|E]).

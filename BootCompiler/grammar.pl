@@ -57,7 +57,6 @@ legalNextRight([lbrce(_)|_],_).
 legalNextRight([lqpar(_)|_],_).
 legalNextRight([stringTok(_,_)|_],_).
 legalNextRight([integerTok(_,_)|_],_).
-legalNextRight([longTok(_,_)|_],_).
 legalNextRight([floatTok(_,_)|_],_).
 
 term00([idTok(I,Lc)|Toks],T,Toks) :- 
@@ -73,7 +72,6 @@ term00([lqpar(Lcx)|Tks],unary(Lc,"<||>",T),Toks) :- term(Tks,2000,T,Tks2), check
 
 term0([stringTok(St,Lc)|Toks],Str,Toks) :- handleInterpolation(St,Lc,Str).
 term0([integerTok(In,Lc)|Toks],integer(Lc,In),Toks).
-term0([longTok(Ln,Lc)|Toks],long(Lc,Ln),Toks).
 term0([floatTok(Fl,Lc)|Toks],float(Lc,Fl),Toks).
 term0(Tks,T,Toks) :- term00(Tks,Op,RTks), termArgs(RTks,Op,T,Toks).
 

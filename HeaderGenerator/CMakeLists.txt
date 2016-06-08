@@ -9,5 +9,9 @@ set(SOURCE_FILES opcodes.c)
 
 add_executable(opcodes ${SOURCE_FILES})
 
-add_executable(genops genoperators.c trie.c)
-target_link_libraries(genops ooio)
+add_executable(ops genoperators.c trie.c)
+target_link_libraries(ops ooio)
+
+set(ESC_SOURCE_FILES genescapes.c)
+add_executable(genesc ${ESC_SOURCE_FILES})
+target_link_libraries(genesc ooio)

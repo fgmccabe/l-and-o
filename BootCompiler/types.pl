@@ -1,4 +1,6 @@
-:- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, showType/3, showTypeRule/3,
+:- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, 
+      typeArity/2,isFunctionType/2,isPredType/2,isClassType/2,
+      showType/3, showTypeRule/3,
       occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
       bind/2, isIdentical/2, moveQuants/3,
       markLower/2, markUpper/2]).
@@ -17,6 +19,7 @@ isType(classType(_,_)).
 isType(predType(_)).
 isType(univType(_,_)).
 isType(faceType(_)).
+isType(constrained(_,_,_)).
 
 % the _ in unb(_) is to work around issues with SWI-Prolog's assignment.
 newTypeVar(Nm,tVar(v{lower:voidType,upper:topType,curr:unb(_),name:Nm,id:Id})) :- gensym("_#",Id).
@@ -99,9 +102,9 @@ showType(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMor
 showType(faceType(Els),O,E) :- appStr("{ ",O,O1), showTypeFields(Els,O1,O2), appStr("}",O2,E).
 showType(typeRule(Hd,Bd),O,E) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,E).
 
-showBound(constrained(voidType,Nm,Upper),O,E) :- appStr(Nm,O,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
-showBound(constrained(Lower,Nm,Upper),O,E) :- showType(Lower,O,O0), appStr(Nm,O0,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
-showBound(Nm,O,E) :- string(Nm), appStr(Nm,O,E).
+showBound(constrained(voidType,Nm,Upper),O,E) :- showType(Nm,O,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
+showBound(constrained(Lower,Nm,Upper),O,E) :- showType(Lower,O,O0), showType(Nm,O0,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
+showBound(Nm,O,E) :- showType(Nm,O,E).
 
 showLower(voidType,O,O) :-!.
 showLower(Tp,O,E) :- isBound(Tp,B), !, showLower(B,O,E).
@@ -117,7 +120,7 @@ showTypeEls([Tp|More],O,E) :- showType(Tp,O,O1), showMoreTypeEls(More,O1,E).
 showMoreTypeEls([],O,O).
 showMoreTypeEls([Tp|More],O,E) :- appStr(", ",O,O1),showType(Tp,O1,O2), showMoreTypeEls(More,O2,E).
 
-showMoreQuantified(univType(Nm,Tp),P,O,E) :- appStr(", ",O,O1), appStr(Nm,O1,O2), showMoreQuantified(Tp,P,O2,E).
+showMoreQuantified(univType(Nm,Tp),P,O,E) :- appStr(", ",O,O1), showType(Nm,O1,O2), showMoreQuantified(Tp,P,O2,E).
 showMoreQuantified(Tp,P,O,E) :- appStr(" ~~ ",O,O1), call(P,Tp,O1,E).
 
 showTypeFields([],O,O).
@@ -127,3 +130,18 @@ showMoreTypeFields([],O,O).
 showMoreTypeFields([Fld|More],O,E) :- appStr(". ",O,O1), showTypeField(Fld,O1,O2), showMoreTypeFields(More,O2,E).
 
 showTypeField((Nm,Tp),O,E) :- appStr(Nm,O,O1), appStr(" : ",O1,O2), showType(Tp,O2,E).
+
+typeArity(univType(_,Tp),Ar) :- typeArity(Tp,Ar).
+typeArity(funType(A,_),Ar) :- length(A,Ar).
+typeArity(predType(A),Ar) :- length(A,Ar).
+typeArity(classType(A,_),Ar) :- length(A,Ar).
+
+isFunctionType(univType(_,Tp),Ar) :- isFunctionType(Tp,Ar).
+isFunctionType(funType(A,_),Ar) :- length(A,Ar).
+
+isPredType(univType(_,Tp),Ar) :- isPredType(Tp,Ar).
+isPredType(predType(A),Ar) :- length(A,Ar).
+
+isClassType(univType(_,Tp),Ar) :- isClassType(Tp,Ar).
+isClassType(classType(A,_),Ar) :- length(A,Ar).
+

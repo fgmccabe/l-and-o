@@ -59,17 +59,17 @@ parseBound(P,BV,Bound,Env,QT,Inner) :-
   isBinary(P,",",L,R),
   parseBound(L,BV,B0,Env,QT,Q0),
   parseBound(R,B0,Bound,Env,Q0,Inner).
-parseBound(V,B,[(Nm,kVar(Nm))|B],Env,univType(constrained(Lower,Nm,Upper),Inner),Inner) :-
+parseBound(V,B,[(Nm,kVar(Nm))|B],Env,univType(constrained(Lower,kVar(Nm),Upper),Inner),Inner) :-
   isBinary(V,"<~",L,Up),
   isBinary(L,"<~",Lw,Vr),
   isName(Vr,Nm),
   parseType(Up,Env,[(Nm,kVar(Nm))|B],_,Upper),
   parseType(Lw,Env,[(Nm,kVar(Nm))|B],_,Lower).
-parseBound(V,B,[(Nm,kVar(Nm))|B],Env,univType(constrained(voidType,Nm,Upper),Inner),Inner) :-
+parseBound(V,B,[(Nm,kVar(Nm))|B],Env,univType(constrained(voidType,kVar(Nm),Upper),Inner),Inner) :-
   isBinary(V,"<~",Vr,Up),
   isName(Vr,Nm),
   parseType(Up,Env,[(Nm,kVar(Nm))|B],_,Upper).
-parseBound(V,B,[(N,kVar(N))|B],_,univType(N,Inner),Inner) :-
+parseBound(V,B,[(N,kVar(N))|B],_,univType(kVar(N),Inner),Inner) :-
   isName(V,N).
 
 parseTypes([],_,B,B,[]).
@@ -151,4 +151,4 @@ parseHeadArgs([H|L],B,[V|Args]) :-
   parseHeadArgs(L,B,Args).
 
 attachBinding([],Tp,Tp).
-attachBinding([(Nm,_)|B],Tp,RT) :- attachBinding(B,univType(Nm,Tp),RT).
+attachBinding([(Nm,_)|B],Tp,RT) :- attachBinding(B,univType(kVar(Nm),Tp),RT).

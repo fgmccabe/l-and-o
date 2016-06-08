@@ -15,10 +15,7 @@
 
 #include "stringBufferP.h"
 
-#include <assert.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <stdarg.h>
 
 /* Set up the buffer file class */
 
@@ -46,30 +43,35 @@ static retCode bufferSeek(ioPo f, long count);
 
 static retCode bufferClose(ioPo f);
 
-BufferClassRec BufferClass = { { (classPo) &IoClass, /* parent class is io object */
-"buffer", /* this is the buffer class */
-NULL, initBufferClass, /* Buffer class initializer */
-O_INHERIT_DEF, /* Buffer object element creation */
-BufferDestroy, /* Buffer objectdestruction */
-O_INHERIT_DEF, /* erasure */
-BufferInit, /* initialization of a buffer object */
-sizeof(BufferObject), /* size of a buffer object */
-NULL, /* pool of buffer values */
-O_INHERIT_DEF,                        // No special hash function
+BufferClassRec BufferClass = {
+  {(classPo) &IoClass, /* parent class is io object */
+    "buffer", /* this is the buffer class */
+    NULL,
+    initBufferClass, /* Buffer class initializer */
+    O_INHERIT_DEF, /* Buffer object element creation */
+    BufferDestroy, /* Buffer objectdestruction */
+    O_INHERIT_DEF, /* erasure */
+    BufferInit, /* initialization of a buffer object */
+    sizeof(BufferObject), /* size of a buffer object */
+    NULL, /* pool of buffer values */
+    O_INHERIT_DEF,                        // No special hash function
     O_INHERIT_DEF,                        // No special equality
     PTHREAD_ONCE_INIT, /* not yet initialized */
-    PTHREAD_MUTEX_INITIALIZER }, { }, { bufferInBytes, /* inByte  */
-bufferOutBytes, /* outBytes  */
-bufferBackByte, /* backByte */
-bufferAtEof, /* at end of file? */
-bufferInReady, /* readyIn  */
-bufferOutReady, /* readyOut  */
-bufferFlusher, /* flush  */
-bufferSeek, /* seek  */
-bufferClose /* close  */
-} };
+    PTHREAD_MUTEX_INITIALIZER
+  },
+  {},
+  {bufferInBytes, /* inByte  */
+    bufferOutBytes, /* outBytes  */
+    bufferBackByte, /* backByte */
+    bufferAtEof, /* at end of file? */
+    bufferInReady, /* readyIn  */
+    bufferOutReady, /* readyOut  */
+    bufferFlusher, /* flush  */
+    bufferSeek, /* seek  */
+    bufferClose /* close  */
+  }};
 
-classPo strBufferClass = (classPo) &BufferClass;
+classPo bufferClass = (classPo) &BufferClass;
 
 static void initBufferClass(classPo class, classPo req) {
 }
@@ -125,9 +127,7 @@ static retCode bufferInBytes(ioPo io, byte *ch, long count, long *actual) {
   return ret;
 }
 
-static retCode bufferOutBytes(ioPo io, byte *b, long count, long *actual) {
-  bufferPo f = O_BUFFER(io);
-
+static retCode ensureSpace(bufferPo f,long count){
   if (f->buffer.pos + count >= f->buffer.len) {
     if (f->buffer.resizeable) {
       long nlen = f->buffer.len + (f->buffer.len >> 1) + count; /* allow for some growth */
@@ -138,13 +138,21 @@ static retCode bufferOutBytes(ioPo io, byte *b, long count, long *actual) {
       } else
         syserr("could not allocate more space for buffer");
     } else {
-      return Ok; /* Silently drop actual output */
+      return Fail;
     }
   }
-
-  for (int ix = 0; ix < count; ix++)
-    f->buffer.buffer[f->buffer.pos++] = b[ix];
   return Ok;
+}
+
+static retCode bufferOutBytes(ioPo io, byte *b, long count, long *actual) {
+  bufferPo f = O_BUFFER(io);
+
+  retCode ret = ensureSpace(f,count);
+
+  for (int ix = 0; ret == Ok && ix < count; ix++)
+    f->buffer.buffer[f->buffer.pos++] = b[ix];
+  *actual = count;
+  return ret;
 }
 
 static retCode bufferBackByte(ioPo io, byte b) {
@@ -204,19 +212,22 @@ retCode clearBuffer(bufferPo in) {
 }
 
 bufferPo newStringBuffer() {
-  byte name[] = { '<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0 };
-  byte *buffer = (byte*) malloc(sizeof(byte) * 128);
+  byte name[] = {'<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0};
+  byte *buffer = (byte *) malloc(sizeof(byte) * 128);
 
   return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, 128, ioWRITE, True));
 }
 
 bufferPo fixedStringBuffer(string buffer, long len) {
-  byte name[] = { '<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0 };
+  byte name[] = {'<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0};
   return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, len, ioWRITE, False));
 }
 
 string getTextFromBuffer(long *actual, bufferPo s) {
   *actual = s->buffer.pos;
+
+  ensureSpace(s,1);
+  s->buffer.buffer[s->buffer.pos] = '\0';
 
   return s->buffer.buffer;
 }

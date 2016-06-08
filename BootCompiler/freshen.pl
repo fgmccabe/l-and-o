@@ -10,8 +10,8 @@ addThisType(Tp,B,[(thisType,Tp)|B]).
 
 hasQuants(univType(_,_)).
   
-deQuant(univType(constrained(Lower,V,Upper),Tp),B,BV,FTp) :- BB = [(V,TV)|B], freshn(Lower,BB,Lw),freshn(Upper,BB,Up),newTypeVar(V,TV,Lw,Up),deQuant(Tp,BB,BV,FTp).
-deQuant(univType(V,Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
+deQuant(univType(constrained(Lower,kVar(V),Upper),Tp),B,BV,FTp) :- BB = [(V,TV)|B], freshn(Lower,BB,Lw),freshn(Upper,BB,Up),newTypeVar(V,TV,Lw,Up),deQuant(Tp,BB,BV,FTp).
+deQuant(univType(kVar(V),Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
 deQuant(Tp,B,B,Tp).
 
 evidence(Tp,FTp) :- skolemize(Tp,[],B,T0), freshn(T0,B,FTp).
@@ -19,8 +19,8 @@ evidence(Tp,FTp) :- skolemize(Tp,[],B,T0), freshn(T0,B,FTp).
 freshn(Tp,[],Tp) :- !.
 freshn(Tp,Binding,FTp) :- frshn(Tp,Binding,FTp),!.
 
-skolemize(univType(constrained(_,V,_),Tp),B,BV,FTp) :- skolemize(Tp,[(V,kVar(V))|B],BV,FTp).
-skolemize(univType(V,Tp),B,BV,FTp) :- skolemize(Tp,[(V,kVar(V))|B],BV,FTp).
+skolemize(univType(constrained(_,kVar(V),_),Tp),B,BV,FTp) :- skolemize(Tp,[(V,kVar(V))|B],BV,FTp).
+skolemize(univType(kVar(V),Tp),B,BV,FTp) :- skolemize(Tp,[(V,kVar(V))|B],BV,FTp).
 skolemize(Tp,B,B,Tp).
 
 frshn(voidType,_,voidType) :- !.
@@ -38,7 +38,7 @@ frshn(classType(A,R),B,classType(FA,FR)) :-
 frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
 frshn(typeExp(O,A),B,typeExp(O,FA)) :- frshnTypes(A,B,FA).
-frshn(univType(V,Tp),B,univType(V,FTp)) :-
+frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
   frshn(Tp,B0,FTp).
 frshn(faceType(L),B,faceType(FL)) :-

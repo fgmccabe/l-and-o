@@ -42,7 +42,6 @@ locOfToken(idTok(_,Lc),Lc).
 locOfToken(lqpar(Lc),Lc).
 locOfToken(rqpar(Lc),Lc).
 locOfToken(integerTok(_,Lc),Lc).
-locOfToken(longTok(_,Lc),Lc).
 locOfToken(floatTok(_,Lc),Lc).
 locOfToken(stringTok(_,Lc),Lc).
 locOfToken(term(Lc),Lc).
@@ -58,7 +57,6 @@ dispToken(idTok(Id,_),St) :- string_chars(Id,St).
 dispToken(lqpar(_),['<','|']).
 dispToken(rqpar(_),['|','>']).
 dispToken(integerTok(Ix,_),Str) :- number_string(Ix,St),string_chars(St,Str).
-dispToken(longTok(Lx,_),Str) :- number_string(Lx,St),string_chars(St,Str).
 dispToken(floatTok(Dx,_),Str) :- number_string(Dx,St),string_chars(St,Str).
 dispToken(stringTok(St,_),Str) :- string_chars(St,Str).
 dispToken(term(_),['.',' ']).
@@ -129,7 +127,6 @@ readDecimal(St,NxSt,Ng) :- nextSt(St,St1,'-'), readNatural(St1,NxSt,0,N), Ng is 
 readDecimal(St,NxSt,N) :- readNatural(St,NxSt,0,N).
 
 readMoreNumber(St0,St,NxSt,Sgn,D,floatTok(FP,Lc)) :- nextSt(St,St1,'.'), hedChar(St1,D), isDigit(D), readFraction(St1,D,0.1,St2,Fr), Mant is Sgn*Fr, readExponent(St2,NxSt,Mant,FP), makeLoc(St0,NxSt,Lc).
-readMoreNumber(St0,St,NxSt,Sgn,D,longTok(FP,Lc)) :- nextSt(St,NxSt,'l'), FP is Sgn*D, makeLoc(St0,NxSt,Lc).
 readMoreNumber(St0,St,St,Sgn,D,integerTok(FP,Lc)) :- FP is Sgn*D, makeLoc(St0,St,Lc).
 
 readFraction(St,NxSt,SF,Fx,Fr) :- nextSt(St,St1,Ch), isDigit(Ch,D), SF1 is SF+D*Fx, Fx1 is Fx/10, readFraction(St1,NxSt,SF1,Fx1,Fr).

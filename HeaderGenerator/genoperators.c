@@ -6,7 +6,7 @@
 #include "trie.h"
 #include "pool.h"
 
-/* Generate a Prolog or Clause module, that knows about the standard operators */
+/* Generate a Prolog or L&O module, that knows about the standard operators */
 
 static void genInfix(FILE *out, char *op, int left, int prior, int right, char *cmt);
 static void genPrefix(FILE *out, char *op, int prior, int right, char *cmt);
@@ -42,7 +42,7 @@ static char *pC(char *buff, long *ix, char c) {
 }
 
 enum {
-  genProlog, genClause
+  genProlog, genLO
 } genMode = genProlog;
 
 typedef struct {
@@ -71,7 +71,7 @@ int getOptions(int argc, char **argv) {
         genMode = genProlog;
         break;
       case 'c':
-        genMode = genClause;
+        genMode = genLO;
         prefix = optarg;
         break;
       default:;
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
         fprintf(out,
                 ":-module(operators,[infixOp/4,prefixOp/3,postfixOp/3,isOperator/2,follows/3,final/2]).\n\n");
         break;
-      case genClause:
+      case genLO:
         fprintf(out, "%s{\n", prefix);
         break;
     }
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
     switch (genMode) {
       case genProlog:
         break;
-      case genClause:
+      case genLO:
         fprintf(out, "}.\n");
         break;
     }

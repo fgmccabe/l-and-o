@@ -165,25 +165,25 @@ processStmt(St,funType(AT,RT),[equation(Lc,Nm,Ptn,Cond,Exp)|Defs],Defs,E,_) :-
   typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
   checkCond(C,E0,E1,Cond),
   typeOfExp(R,RT,_,E1,Exp).
-processStmt(St,predType(AT),[clause(Lc,Nm,Ptn,Cond,Body)|Defs],Defs,E,_) :- 
+processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,":-",L,R),!,
   splitHead(L,Nm,Args,C),
   pushScope(E,Env),
-  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
+  typeOfPtns(Args,AT,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
-processStmt(St,predType(AT),[strong(Lc,Nm,Ptn,Cond,Body)|Defs],Defs,E,_) :- 
+processStmt(St,predType(AT),[strong(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,":--",L,R),!,
   splitHead(L,Nm,Args,C),
   pushScope(E,Env),
-  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
+  typeOfPtns(Args,AT,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
-processStmt(St,predType(AT),[clause(Lc,Nm,Ptn,Cond,true(Lc))|Defs],Defs,E,_) :- 
+processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :- 
   splitHead(St,Nm,Args,C),!,
   pushScope(E,Env),
   locOfAst(St,Lc),
-  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
+  typeOfPtns(Args,AT,Lc,Env,E0,Args),
   checkCond(C,E0,_,Cond).
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
@@ -216,17 +216,15 @@ checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Ptn,Value),Env) :-
   typeOfPtn(L,Tp,Env,_,Ptn),
   typeOfExp(R,Tp,_,E,Value).
 
-checkClassHead(Term,Tp,Env,Ex,Nm,Ptn) :-
-  isName(Term,Nm),!,
-  pushScope(Env,E0),
-  typeOfPtn(Term,Tp,E0,Ex,Ptn).
+checkClassHead(Term,_,Env,Env,Nm,enum(Lc,Nm)) :-
+  isIden(Term,Lc,Nm),!.
 checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   splitHead(Term,Nm,A,C),!,
   locOfAst(Term,Lc),
   pushScope(Env,E0),
   typeOfPtns(A,AT,Lc,E0,E1,Args),
   checkCond(C,E1,Ex,Cond),
-  Hd = apply(Lc,con(Lc,Nm),Args),
+  Hd = apply(Lc,vr(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
 checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
@@ -267,6 +265,11 @@ generalizeStmts([Cl|Stmts],Env,[predicate(Lc,Nm,Tp,[Cl|Clses])|Defs],Dx) :-
 generalizeStmts([defn(Lc,Nm,Ptn,Value)|Stmts],Env,[defn(Lc,Nm,Ptn,Tp,Value)|Defs],Dx) :-
   pickupVarType(Nm,_,Env,Tp),!,
   generalizeStmts(Stmts,Env,Defs,Dx).
+generalizeStmts([Cl|Stmts],Env,[enum(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
+  isRuleForEnum(Cl,Lc,Nm),!,
+  collectEnumRules(Stmts,S0,Nm,Rules),
+  pickupVarType(Nm,Lc,Env,Tp),
+  generalizeStmts(S0,Env,Defs,Dx).
 generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
   isRuleForClass(Cl,Lc,Nm),!,
   collectClassRules(Stmts,S0,Nm,Rules),
@@ -274,11 +277,33 @@ generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
   generalizeStmts(S0,Env,Defs,Dx).
 
 collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
-  (Cl = clause(_,Nm,_,_,_) ; Cl = strong(_,Nm,_,_,_)),!,
-  collectClauses(Stmts,Sx,Nm,Ex).
-collectClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
-  collectClauses(Stmts,Sx,Nm,Eqns).
-collectClauses([],[],_,[]).
+  Cl = clause(_,Nm,_,_,_),!,
+  collectMoreClauses(Stmts,Sx,Nm,Ex).
+collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
+  Cl = strong(_,Nm,_,_,_),!,
+  collectStrongClauses(Stmts,Sx,Nm,Ex).
+
+collectMoreClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
+  Cl = clause(_,Nm,_,_,_),!,
+  collectMoreClauses(Stmts,Sx,Nm,Ex).
+collectMoreClauses([Cl|Stmts],Sx,Nm,Clses) :-
+  Cl = strong(Lc,Nm,_,_,_),!,
+  reportError("not allowed to mix strong and regular clauses",[],Lc),
+  collectMoreClauses(Stmts,Sx,Nm,Clses).
+collectMoreClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
+  collectMoreClauses(Stmts,Sx,Nm,Eqns).
+collectMoreClauses([],[],_,[]).
+
+collectStrongClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
+  Cl = strong(_,Nm,_,_,_),!,
+  collectMoreClauses(Stmts,Sx,Nm,Ex).
+collectStrongClauses([Cl|Stmts],Sx,Nm,Clses) :-
+  Cl = clause(Lc,Nm,_,_,_),!,
+  reportError("not allowed to mix strong and regular clauses",[],Lc),
+  collectMoreClauses(Stmts,Sx,Nm,Clses).
+collectStrongClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
+  collectMoreClauses(Stmts,Sx,Nm,Eqns).
+collectStrongClauses([],[],_,[]).
 
 collectEquations([Eqn|Stmts],Sx,Nm,[Eqn|Ex]) :-
   Eqn = equation(_,Nm,_,_,_),
@@ -298,15 +323,23 @@ isRuleForClass(labelRule(Lc,Nm,_,_),Lc,Nm).
 isRuleForClass(overrideRule(Lc,Nm,_,_),Lc,Nm).
 isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
 
+collectEnumRules([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
+  isRuleForEnum(Cl,_,Nm),!,
+  collectEnumRules(Stmts,Sx,Nm,Ex).
+collectEnumRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
+  collectEnumRules(Stmts,Sx,Nm,Eqns).
+collectEnumRules([],[],_,[]).
+
+isRuleForEnum(labelRule(Lc,Nm,enum(_,_),_),Lc,Nm).
+isRuleForEnum(overrideRule(Lc,Nm,enum(_,_),_),Lc,Nm).
+isRuleForEnum(classBody(Lc,Nm,enum(_,_),_,_,_),Lc,Nm).
+
 typeOfPtn(N,Tp,Env,Ex,Term) :- 
   isIden(N,Lc,Nm),
   typeOfVarPtn(Lc,Nm,Tp,Env,Ex,Term).
 typeOfPtn(integer(_,Ix),Tp,Env,Env,intLit(Ix)) :-
   findType("integer",Env,IntegerTp),
   sameType(Tp,IntegerTp,Env).
-typeOfPtn(long(_,Ix),Tp,Env,Env,longLit(Ix)) :- !,
-  findType("long",Env,LongTp),
-  sameType(Tp,LongTp,Env).
 typeOfPtn(float(_,Ix),Tp,Env,Env,floatLit(Ix)) :- !,
   findType("float",Env,FloatTp),
   sameType(Tp,FloatTp,Env).
@@ -403,9 +436,6 @@ typeOfExp(V,ET,Tp,Env,Term) :-
   typeOfVar(Lc,N,ET,Tp,Env,Term).
 typeOfExp(integer(Lc,Ix),ET,Tp,Env,intLit(Ix)) :- !,
   findType("integer",Env,Tp),
-  checkType(Lc,Tp,ET,Env).
-typeOfExp(long(Lc,Ix),ET,Tp,Env,longLit(Ix)) :- !,
-  findType("long",Env,Tp),
   checkType(Lc,Tp,ET,Env).
 typeOfExp(float(Lc,Ix),ET,Tp,Env,floatLit(Ix)) :- !,
   findType("float",Env,Tp),
@@ -519,10 +549,6 @@ typeOfVar(Lc,Nm,_,voidType,_,_,tVoid) :-
   reportError("variable %s not declared",[v(Lc,Nm)],Lc).
 
 varExp(Lc,_,vr(VNm,VT),ET,Tp,Env,v(Lc,VNm)) :- !,
-  pickupThisType(Env,ThisType),
-  freshen(VT,ThisType,_,Tp),
-  checkType(Lc,Tp,ET,Env).
-varExp(Lc,_,con(VNm,VT),ET,Tp,Env,con(Lc,VNm)) :- !,
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,Tp),
   checkType(Lc,Tp,ET,Env).

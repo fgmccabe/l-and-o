@@ -66,7 +66,6 @@ typedef struct _io_part_{
 
   long currColumn;			                /* No. characters since last lf */
 
-  long refCount;                        /* Reference count */
   ioPo prev;                            /* Previous file in open set */
   ioPo next;                            /* Next file in open set */
 } IoPart;

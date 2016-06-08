@@ -24,38 +24,35 @@
 #define fileType "U'go.io#fileType'\0"
 #define filePerm "U'go.io#filePerm'\0"
 #define debugType "U'go.debug#debugger'\0"
-#define tplType "U'#,'\2"
 
   /* Define the standard escapes */
-  escape(exit,0,True,False,"p\1+i","terminate go engine")
+  escape(exit,0,True,False,"F\1iv","terminate go engine")
   escape(_command_line,1,False,False,"F\0LS","command line arguments")
-  escape(_command_opts,3,False,False,"F\0L"tplType"cs","command line options")
+  escape(_command_opts,3,False,False,"F\0LT\2SS","command line options")
 
-  escape(_unify,4,False,False,":\0AP\2?$\0?$\0","unification")
-  escape(_identical,5,False,False,":\0AP\2+$\0+$\0","test for identicality")
-  escape(_match,6,False,False,":\0AP\2+$\0?$\0","matching")
+  escape(_unify,4,False,False,":k't'P\2k't'k't'","unification")
+  escape(_identical,5,False,False,":k't'P\2k't'k't'","test for identicality")
+  escape(_match,6,False,False,":k't'P\2k't'k't'","matching")
 
-  escape(var,7,False,False,":\1AP\1+$\1","test for variable")
-  escape(nonvar,8,False,False,":\1AP\1+$\1","test for non-variable")
+  escape(var,7,False,False,":k't'P\1k't'","test for variable")
+  escape(nonvar,8,False,False,":k't'P\1k't'","test for non-variable")
 
-  escape(_errorcode,10,False,False,"F\1+sS","decode error symbol")
+  // escape(_call,11,True,False,"p\4+s+s+i+LS","dynamic call")
 
-  escape(_call,11,True,False,"p\4+s+s+i+LS","dynamic call")
+  // escape(_defined,12,True,False,"P\3+s+s+i","test for defined name")
 
-  escape(_defined,12,True,False,"P\3+s+s+i","test for defined name")
+escape(_int_plus,13,False,False,"F\2iii","add two integers")
+escape(_int_minus,14,False,False,"F\2iii","subtract two integers")
+escape(_int_times,15,False,False,"F\2iii","multiply two integers")
+escape(_int_div,16,False,False,"F\2iii","divide two integers")
+escape(_flt_plus,13,False,False,"F\2fff","add two floats")
+escape(_flt_minus,14,False,False,"F\2fff","subtract two floats")
+escape(_flt_times,15,False,False,"F\2fff","multiply two floats")
+escape(_flt_div,16,False,False,"F\2fff","divide two floats")
+escape(_int_abs,24,False,False,"F\1ii","integer absolute value")
+escape(_flt_abs,24,False,False,"F\1ff","float absolute value")
 
-  escape(_plus,13,False,False,":\1NF\2+$\1+$\1$\1","add two numbers")
-  escape(_minus,14,False,False,":\1NF\2+$\1+$\1$\1","subtract two numbers")
-  escape(_times,15,False,False,":\1NF\2+$\1+$\1$\1","multiply two numbers")
-  escape(_div,16,False,False,":\1NF\2+$\1+$\1f","divide two numbers")
-  escape(iplus,17,False,False,"F\3+i+i+ii","modulo addition")
-  escape(iminus,18,False,False,"F\3+i+i+ii","modulo subtraction")
-  escape(itimes,19,False,False,"F\3+i+i+ii","modulo multiplication")
-  escape(idiv,20,False,False,"F\3+i+i+ii","modulo division")
-  escape(imod,21,False,False,"F\2+i+ii","modulo remainder")
-  escape(quot,22,False,False,":\1NF\2+$\1+$\1i","integer quotient")
-  escape(rem,23,False,False,":\1NF\2+$\1+$\1f","remainder")
-  escape(abs,24,False,False,":\1NF\1+$\1$\1","absolute value")
+/*
   escape(_power,25,False,False,":\1NF\2+$\1+$\1$\1","raise X to the power Y")
   escape(sqrt,26,False,False,":\1NF\1+$\1f","square root")
   escape(exp,27,False,False,":\1NF\1+$\1$\1","exponential")
@@ -134,7 +131,7 @@
   escape(_checkRoot,115,True,False,"P\2+S+S","check url against root URL")
   escape(_mergeURL,116,True,False,"F\2+S+SS","merge URLs")
   escape(_createURL,117,True,False,"F\4+S+S+S+iO","create a URL")
-  escape(_popen,118,True,False,"p\7+S+LS+L"tplType"sS+O+O+O+i","open a pipe")
+  escape(_popen,118,True,False,"p\7+S+LS+LT\2sS+O+O+O+i","open a pipe")
   
   escape(_close,119,True,False,"p\1+O","close file")
   escape(_eof,120,True,False,"P\1+O","end of file test")
@@ -160,7 +157,7 @@
 
   escape(_logmsg,142,False,False,"P\1+S","log a message in logfile")
   
-  /* Socket handling functions */
+  // Socket handling functions
   escape(_connect,143,True,False,"p\5+S+i+i-O-O","connect to remote host")
   escape(_listen,144,True,False,"p\2+i-O","listen on a port")
   escape(_accept,145,True,False,"p\7+O-O-O-S-S-i+i","accept connection")
@@ -177,14 +174,14 @@
   escape(_mkdir,156,True,False,"p\2+S+i","create directory")
   escape(_rmdir,157,True,False,"p\1+S","delete directory")
   escape(_chmod,158,True,False,"p\2+S+i","change mode of a file or directory")
-  escape(_ls,159,True,False,"F\1+SL"tplType"S"fileType"","report on contents of a directory")
+  escape(_ls,159,True,False,"F\1+SLT\2S"fileType"","report on contents of a directory")
   escape(_file_present,160,True,False,"P\1+S","test for file")
   escape(_file_mode,161,True,False,"F\1+Si","report modes of a file")
   escape(_file_type,162,True,False,"F\1+S"fileType,"report on the type of a file")
   escape(_file_size,163,True,False,"F\1+Si","report on the size of a file")
   escape(_file_date,164,True,False,"p\4+S-f-f-f","report on file access time and modification times")
 
-/* Timing and delaying */
+// Timing and delaying
   escape(delay,170,False,False,"p\1+N","delay for period of time")  
   escape(sleep,171,False,False,"p\1+N","sleep until a definite time")  
   escape(now,172,False,False,"F\0f","current time")  
@@ -195,7 +192,7 @@
   escape(_date2time,177,False,False,"F\007+i+i+i+i+i+N+Nf", "convert a date to a time")
   escape(_utc2time,178,False,False,"F\010+N+N+N+N+N+N+N+Nf", "convert a UTC date to a time")
 
- /* Character class escapes */
+ // Character class escapes
 
   escape(_isCcChar,180,False,False,"P\1+i","is Other, control char")
   escape(_isCfChar,181,False,False,"P\1+i","is Other, format char")
@@ -231,7 +228,7 @@
   escape(_isLetterChar,210,False,False,"P\1+i","is letter char")
   escape(_digitCode,211,False,False,"F\1+ii","convert char to num")
 
-/* String and symbol handling escapes */
+// String and symbol handling escapes
   escape(int2str,214,False,False,"F\4+i+N+N+iS","format an integer as a string")
   escape(num2str,215,False,False,"F\5+N+N+N+l+lS","format a number as a string")
   escape(_stringOf,216,False,False,":\0AF\3+$\0+i+iS","convert value to a string")
@@ -241,21 +238,21 @@
 
   escape(getenv,230,False,False,"F\2+S+SS","get an environment variable")
   escape(setenv,231,True,False,"P\2+S+S","set an environment variable")
-  escape(envir,232,False,False,"F\0L"tplType"sS","return entire environment")
+  escape(envir,232,False,False,"F\0LT\2SS","return entire environment")
   escape(getlogin,233,False,False,"F\0S","return user's login")
 
-/* Process manipulation */
+/ Process manipulation
   escape(_fork,240,False,False,"p\1+"threadType,"fork new process")
   escape(_thread,241,False,False,"F\0"threadType"","report thread of current process")
   escape(kill,242,True,False,"p\1+"threadType ,"kill off a process")
   escape(thread_state,243,False,False,"F\1+"threadType processState"","state of process")
   escape(waitfor,244,False,False,"p\1+"threadType,"wait for other thread to terminate")
   escape(_assoc,246,False,False,":\0AP\2+$\0+p\0","associate a goal with a var")
-  escape(_shell,247,True,False,"p\4+S+LS+L"tplType"sS-i","Run a shell cmd")
+  escape(_shell,247,True,False,"p\4+S+LS+LT\2SS-i","Run a shell cmd")
 
   escape(_ins_debug,254,False,False,"p\0","set instruction-level")
   escape(_stackTrace,255,False,False,"p\0","Print a stack trace")
-
+*/
 
 #undef processState
 #undef errorType
@@ -264,7 +261,6 @@
 #undef fileType
 #undef filePerm
 #undef debugType
-#undef tplType
 
 #if 0
 #ifdef GOXLIB

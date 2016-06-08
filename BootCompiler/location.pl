@@ -4,7 +4,6 @@
 
 locOf(idTok(_,Lc),Lc).
 locOf(integerTok(_,Lc),Lc).
-locOf(longTok(_,Lc),Lc).
 locOf(floatTok(_,Lc),Lc).
 locOf(stringTok(_,Lc),Lc).
 locOf(terminal,missing).

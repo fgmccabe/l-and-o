@@ -1,9 +1,11 @@
 :- module(dict,[typeInDict/4,typeFaceRule/3,typeRules/3,declareType/5,declareType/7,
     declareVar/5,isVar/3,isVar/4,
+    processNames/3,processTypes/3,
     pushScope/2,makeKey/2,stdDict/1,marker/2]).
 
 :- use_module(misc).
 :- use_module(types).
+:- use_module(escapes).
 
 typeInDict(Nm,Env,Tp) :- tpInDict(Nm,Env,tpDef(_,_,Tp,_,_)).
 
@@ -37,17 +39,46 @@ declareVar(Nm,Lc,Vr,[scope(Types,Names,Rules)|Outer],[scope(Types,Names1,Rules)|
   makeKey(Nm,Key),
   put_dict(Key,Names,vEntry(Vr,Lc),Names1).
 
+isVar(Nm,_,vr(Nm,Tp),std) :- escapeType(Nm,Tp),!.
 isVar(Nm,Env,Vr,Lc) :- makeKey(Nm,Key), isVr(Key,Env,Vr,Lc).
 isVar(Nm,Env,Vr) :- isVar(Nm,Env,Vr,_).
 
 marker(type,"*").
-marker(value,"#").
-marker(class,"@").
+marker(value,"@").
+marker(class,"#").
 
 isVr(Key,[scope(_,Names,_)|_],Vr,Lc) :- get_dict(Key,Names,vEntry(Vr,Lc)),!.
 isVr(Key,[_|Outer],Vr,Lc) :- isVr(Key,Outer,Vr,Lc).
 
 pushScope(Env,[scope(types{},vars{},rules{})|Env]).
+
+processNames(Dict,P,Result) :-
+  processNames(Dict,P,[],Result).
+
+processNames([],_,SoFar,SoFar).
+processNames([scope(_,Names,_)|Outer],P,SoFar,Result) :-
+  dict_pairs(Names,_,Pairs),
+  procNames(Pairs,P,SoFar,S0),
+  processNames(Outer,P,S0,Result).
+
+procNames([],_,SoFar,SoFar).
+procNames([K-vEntry(Vr,_)|More],P,SoFar,Result) :-
+  call(P,K,Vr,SoFar,S0),
+  procNames(More,P,S0,Result).
+
+processTypes(Dict,P,Result) :-
+  processTypes(Dict,P,[],Result).
+
+processTypes([],_,SoFar,SoFar).
+processTypes([scope(_,Names,_)|Outer],P,SoFar,Result) :-
+  dict_pairs(Names,_,Pairs),
+  procTypes(Pairs,P,SoFar,S0),
+  processTypes(Outer,P,S0,Result).
+
+procTypes([],_,SoFar,SoFar).
+procTypes([K-V|More],P,SoFar,Result) :-
+  call(P,K,V,SoFar,S0),
+  procTypes(More,P,S0,Result).
 
 makeKey(Id,Key) :-
   atom_string(Key,Id).
@@ -57,15 +88,14 @@ stdVar(Nm,Vr,Env,Ex) :- declareVar(Nm,'std',Vr,Env,Ex).
 stdDict(Dict) :-
   pushScope([],Base),
   declareType("integer",std,type("lo.std*integer"),Base,B1),
-  declareType("long",std,type("lo.std*long"),B1,B2),
-  declareType("float",std,type("lo.std*float"),B2,B3),
+  declareType("float",std,type("lo.std*float"),B1,B3),
   declareType("string",std,type("lo.std*string"),B3,B4),
   declareType("logical",std,type("lo.std*logical"),B4,B4a),
   declareType("thing",std,type("lo.std*thing"),B4a,B5),
-  declareType("list",std,univType("t",typeExp("lo.std*list",[kVar("t")])),B5,B6),
-  stdVar(",..",con("lo.std@,..",univType("t",
+  declareType("list",std,univType(kVar("t"),typeExp("lo.std*list",[kVar("t")])),B5,B6),
+  stdVar(",..",vr("lo.std#,..",univType(kVar("t"),
     classType([kVar("t"),typeExp("lo.std*list",[kVar("t")])],typeExp("lo.std*list",[kVar("t")])))),B6,B7),
-  stdVar("[]",vr("lo.std@[]",univType("t",typeExp("lo.std*list",[kVar("t")]))),B7,B8),
+  stdVar("[]",vr("lo.std#[]",univType(kVar("t"),typeExp("lo.std*list",[kVar("t")]))),B7,B8),
   stdVar("__integer_plus",vr("__integer_plus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B8,B9),
   stdVar("__integer_minus",vr("__integer_minus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B9,B10),
   stdVar("__integer_times",vr("__integer_times",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B10,B11),

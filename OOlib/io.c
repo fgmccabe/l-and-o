@@ -47,7 +47,7 @@ static retCode nullClose(ioPo f);
 
 IoClassRec IoClass = {
   {
-    (classPo) &ObjectClass,                /* parent class is object */
+    (classPo) &LockedClass,               /* parent class is object */
     "io",                                 /* this is the io class */
     inheritIo,                            /* deal with inheritance */
     initIoClass,                          /* IO class initializer */
@@ -182,7 +182,6 @@ static void IoInit(objectPo o, va_list *args) {
     activeSet = f;
   }
 
-  f->io.refCount = 1;                   /* one reference by default */
   uniCpy(f->io.filename, NumberOf(f->io.filename), name);
   f->io.status = Ok;
   f->io.inBpos = 0;
@@ -608,7 +607,7 @@ retCode closeFile(ioPo f) {
 
   lock(O_LOCKED(o));
 
-  if (--f->io.refCount <= 0) {
+  if (--(f->object.refCount) <= 0) {
     while (flushFile(f) == Fail);
     //    clearFileProperties(f);     // clear out any attached properties
 
@@ -625,12 +624,13 @@ retCode closeFile(ioPo f) {
     f->io.prev->io.next = f->io.next;
 
     unlockClass(ioClass);
+    unlock(O_LOCKED(o));
 
-    ret = ((IoClassRec *) f->object.class)->ioPart.close(f);
+    return ((IoClassRec *) f->object.class)->ioPart.close(f);
   }
 
   unlock(O_LOCKED(o));
-  return ret;
+  return Ok;
 }
 
 retCode skipBlanks(ioPo f) {

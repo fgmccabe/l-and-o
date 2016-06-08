@@ -102,6 +102,7 @@ void initRecursiveMutex(pthread_mutex_t *mutex) {
 }
 
 static void objectInit(objectPo o, va_list *args) {
+  o->refCount = 1;
 }
 
 static void objectDestroy(objectPo o) {

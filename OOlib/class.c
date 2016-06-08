@@ -26,7 +26,7 @@ static void revInit(classPo cl,classPo class)
   if(cl->parent!=NULL)
     revInit(cl->parent,class);
 
-  if(cl->classInit!=NULL)
+  if(cl->classInit!=NULL&& cl->classInit!=O_INHERIT_DEF)
     cl->classInit(cl,class);
 }
 
@@ -35,7 +35,7 @@ static void initClass(void)
   classPo cl = classToInit;
 
   while(cl!=NULL){
-    if(cl->classInherit!=NULL)
+    if(cl->classInherit!=NULL && cl->classInherit!=O_INHERIT_DEF)
       cl->classInherit(cl,classToInit);
     cl = cl->parent;
   }

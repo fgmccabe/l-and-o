@@ -5,6 +5,8 @@
 :- use_module(canon).
 :- use_module(wff).
 :- use_module(checker).
+:- use_module(transform).
+:- use_module(plog).
 :- use_module(errors).
 
 /* Logic and Object compiler driver */
@@ -14,9 +16,14 @@ parseFile(Fl,Term) :- grab_text(Fl,Txt),
 
 wffFile(Fl,Term) :- startCount, parseFile(Fl,Term), wffModule(Term), !, noErrors.
 
-test(Fl) :- 
+typeFile(Fl,Prog) :-
   wffFile(Fl,Term),
   checkProgram(Term,Prog),
   displayCanon(Prog).
 
-main :-test("../Tests/tree.lo").
+test(Fl) :- 
+  typeFile(Fl,Prog),
+  transformProg(Prog,[],Rules),
+  displayPlRules(Rules).
+
+main :-test("../Tests/a.lo").

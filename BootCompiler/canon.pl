@@ -6,7 +6,28 @@
 :- use_module(location).
 
 isCanon(prog(_,_,_,_)).
-isCanon(con(_,_)).
+isCanon(v(_,_)).
+isCanon(intLit(_)).
+isCanon(floatLit(_)).
+isCanon(stringLit(_)).
+isCanon(apply(_,_,_)).
+isCanon(call(_,_,_)).
+isCanon(dot(_,_,_)).
+isCanon(pkgRef(_,_,_)).
+isCanon(enum(_,_)).
+isCanon(record(_,_,_,_)).
+isCanon(true(_)).
+isCanon(false(_)).
+isCanon(where(_,_)).
+isCanon(conj(_,_)).
+isCanon(disj(_,_)).
+isCanon(conditional(_,_,_)).
+isCanon(equals(_,_,_)).
+isCanon(unify(_,_,_)).
+isCanon(match(_,_,_)).
+isCanon(one(_)).
+isCanon(neg(_)).
+isCanon(forall(_,_)).
 
 displayCanon(Term) :- showCanon(Term,Chrs,[]), string_chars(Res,Chrs), write(Res).
 
@@ -23,7 +44,6 @@ showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types),O,E) :-
 
 showTerm(v(_,Nm),O,E) :- appStr(Nm,O,E).
 showTerm(intLit(Ix),O,E) :- appInt(Ix,O,E).
-showTerm(longLit(Ix),O,E) :- appInt(Ix,O,E).
 showTerm(floatLit(Ix),O,E) :- appInt(Ix,O,E).
 showTerm(stringLit(Str),O,E) :- 
   appStr("""",O,O1),
@@ -47,10 +67,6 @@ showTerm(pkgRef(_,Rc,Fld),O,E) :-
   showTerm(Rc,O,O1),
   appStr("#",O1,O2),
   appStr(Fld,O2,E).
-showTerm(con(_,Nm),O,E) :-
-  appStr("'",O,O1),
-  appStr(Nm,O1,O2),
-  appStr("'",O2,E).
 showTerm(enum(_,Nm),O,E) :-
   appStr("'",O,O1),
   appStr(Nm,O1,O2),
@@ -179,6 +195,15 @@ showDef(defn(Lc,Nm,Ptn,Tp,Value),O,E) :-
   appStr(" = ",O8,O9),
   showTerm(Value,O9,O10),
   appStr(".\n",O10,E).
+showDef(enum(Lc,Nm,Type,Rules),O,E) :-
+  appStr("enum: ",O,O1),
+  appStr(Nm,O1,O2),
+  appStr("|:",O2,O3),
+  showType(Type,O3,O4),
+  appStr(" @ ",O4,O5),
+  showLocation(Lc,O5,O6),
+  appStr("\n",O6,O6a),
+  showClassRules(Rules,O6a,E).
 showDef(class(Lc,Nm,Type,Rules),O,E) :-
   appStr("class: ",O,O1),
   appStr(Nm,O1,O2),

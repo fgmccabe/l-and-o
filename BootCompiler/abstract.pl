@@ -75,7 +75,6 @@ isAst(A) :- locOfAst(A,_).
 
 locOfAst(name(Lc,_),Lc).
 locOfAst(integer(Lc,_),Lc).
-locOfAst(long(Lc,_),Lc).
 locOfAst(float(Lc,_),Lc).
 locOfAst(string(Lc,_),Lc).
 locOfAst(interString(Lc,_),Lc).
