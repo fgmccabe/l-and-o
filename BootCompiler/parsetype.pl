@@ -17,7 +17,7 @@ parseType(Tp,Env,B,Bound,PT) :-
   isQuantified(Tp,V,BT),
   parseBound(V,B,B0,Env,PT,Inner),
   parseType(BT,Env,B0,Bound,Inner).
-parseType(Nm,Env,B,B,Tp) :- isIden(Nm,Lc,Id), parseTypeName(Lc,Id,Env,B,Tp).
+parseType(Nm,Env,B,B,Tp) :- isIden(Nm,Lc,Id), !, parseTypeName(Lc,Id,Env,B,Tp).
 parseType(Sq,Env,B,Bound,typeExp(Op,ArgTps)) :- 
   isSquare(Sq,Lc,N,Args),
   parseTypeName(Lc,N,Env,B,typeExp(Op,_ATs)),
@@ -42,7 +42,7 @@ parseType(T,Env,B,Bound,tupleType(AT)) :-
 parseType(T,Env,Bound,Bound,faceType(AT)) :-
   isBraceTuple(T,_,L),
   parseTypeFields(L,Env,Bound,AT).
-parseType(T,_,_,B,B,anonType) :-
+parseType(T,_,B,B,anonType) :-
   locOfAst(T,Lc),
   reportError("cannot understand type %s",[T],Lc).
 

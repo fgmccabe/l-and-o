@@ -23,11 +23,12 @@ a{
 
  fred:string.
  fred = "fred".
-
+/*
  xx : ()=>{p:(string,string){}. n:string}.
  xx() => {
   p("alpha","beta").
   n = fred.
  }
+ */
 }.
 

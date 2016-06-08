@@ -1,6 +1,6 @@
 :- module(transUtils,[trCons/3,localName/4,labelAccess/5,extraVars/2,thisVar/2,
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
-          makePkgMap/4,
+          makePkgMap/4,genNewName/4,
           pushOpt/3, isOption/2,
           trCons/3]).
 
@@ -24,6 +24,13 @@ localName(_,Glue,Nm,Nm) :-
 localName(Pkg,Glue,Nm,LclName) :-
   string_concat(Pkg,Glue,T),
   string_concat(T,Nm,LclName).
+
+genNewName(Map,Variant,Args,prg(Nm,Ar)) :-
+  layerName(Map,Prefix),
+  gensym(Variant,V),
+  length(Args,Ar),
+  localName(Prefix,"@",V,Nm).
+
 
 /*
  * Each element in Layers defines a scope. It is a tuple of the form:
@@ -62,7 +69,7 @@ stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleFun("",prg(LclName,Arity)))|SoFar]) :-
   isFunctionType(Tp,Ar),!,
   Arity is Ar+1,
   localName("","@",Nm,LclName).
-stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,modulePred("",prg(LclName,Arity)))|SoFar]) :-
+stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleRel("",prg(LclName,Arity)))|SoFar]) :-
   isPredType(Tp,Arity),!,
   localName("","@",Nm,LclName).
 stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass("",strct(LclName,Arity),prg(LclName,3)))|SoFar]) :-
@@ -83,26 +90,25 @@ makePkgMap(Pkg,Defs,Types,Map) :-
 pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',vdel,vdel,vdel)|Std]).
 
 makeModuleMap(Pkg,[Def|Rest],Map,Mx) :-
-  makeDefMap(Pkg,Def,Map,M0),
+  makeMdkEntry(Pkg,Def,Map,M0),
   makeModuleMap(Pkg,Rest,M0,Mx).
 makeModuleMap(_,[],Map,Map).
 
-makeDefMap(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeMdkEntry(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+1.
-makeDefMap(Pkg,predicate(_,Nm,Tp,_),[(Nm,modulePred(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
-  typeArity(Tp,Ar),
-  Arity is Ar+1.
-makeDefMap(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
+  typeArity(Tp,Arity).
+makeMdkEntry(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName).
-makeDefMap(Pkg,class(_,Nm,Tp,_),[(Nm,moduleClass(Pkg,strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
+makeMdkEntry(Pkg,class(_,Nm,Tp,_),[(Nm,moduleClass(Pkg,strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
   localName(Pkg,"#",Nm,LclName),
   typeArity(Tp,Ar).
-makeDefMap(Pkg,enum(_,Nm,_,_),[(Nm,moduleClass(Pkg,enum(LclName),prg(LclName,3)))|Mx],Mx) :-
+makeMdkEntry(Pkg,enum(_,Nm,_,_),[(Nm,moduleClass(Pkg,enum(LclName),prg(LclName,3)))|Mx],Mx) :-
   localName(Pkg,"#",Nm,LclName).
-makeDefMap(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx) :-
+makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx) :-
   localName(Pkg,"*",Nm,LclName).
 
 makeTypesMap(_,_,List,List).
@@ -187,3 +193,4 @@ pushOpt(Opts,Opt,[Opt|Opts]).
 
 isOption(Opt,Opts) :- is_member(Opt,Opts),!.
 
+layerName([lyr(Nm,_,_,_,_,_)|_],Nm).

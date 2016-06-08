@@ -1,4 +1,4 @@
-:- module(canon,[displayType/1,displayCanon/1,showCanon/3,isCanon/1]).
+:- module(canon,[displayType/1,displayCanon/1,showCanon/3,isCanon/1,isAssertion/1]).
 
 :- use_module(misc).
 :- use_module(operators).
@@ -29,6 +29,8 @@ isCanon(one(_)).
 isCanon(neg(_)).
 isCanon(forall(_,_)).
 
+isAssertion(assertion(_,_)).
+
 displayCanon(Term) :- showCanon(Term,Chrs,[]), string_chars(Res,Chrs), write(Res).
 
 displayType(Tp) :- showType(Tp,Chrs,[]), string_chars(Res,Chrs), write(Res).
@@ -40,7 +42,7 @@ showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types),O,E) :-
   showTypeDefs(Types,O3,O4),
   showDefs(Defs,O4,O5),
   showOthers(Others,O5,O6),
-  appStr("}",O6,E),!.
+  appStr("}.\n",O6,E),!.
 
 showTerm(v(_,Nm),O,E) :- appStr(Nm,O,E).
 showTerm(intLit(Ix),O,E) :- appInt(Ix,O,E).
@@ -183,7 +185,7 @@ showDef(predicate(Lc,Nm,Type,Clauses),O,E) :-
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O7),
   showClauses(Clauses,O7,E),!.
-showDef(defn(Lc,Nm,Ptn,Tp,Value),O,E) :-
+showDef(defn(Lc,Nm,Cond,Tp,Value),O,E) :-
   appStr("var definition: ",O,O1),
   appStr(Nm,O1,O2),
   appStr("|:",O2,O3),
@@ -191,7 +193,8 @@ showDef(defn(Lc,Nm,Ptn,Tp,Value),O,E) :-
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O7),
-  showTerm(Ptn,O7,O8),
+  appStr("Nm",O7,O7a),
+  showGuard(Cond,O7a,O8),
   appStr(" = ",O8,O9),
   showTerm(Value,O9,O10),
   appStr(".\n",O10,E).
@@ -252,11 +255,16 @@ showEq(equation(_,Nm,Args,Cond,Value),O,E) :-
   appStr(Nm,O,O1),
   appStr("(",O1,O2),
   showTerms(Args,O2,O3),
-  appStr(") :: ",O3,O4),
-  showTerm(Cond,O4,O5),
+  appStr(") ",O3,O4),
+  showGuard(Cond,O4,O5),
   appStr(" => ",O5,O6),
   showTerm(Value,O6,O7),
   appStr(".\n",O7,E).
+
+showGuard(true(_),E,E) :- !.
+showGuard(C,E,O) :-
+  appStr(" :: ",E,E1),
+  showTerm(C,E1,O).
 
 showClauses([],O,O).
 showClauses([Cl|Rest],O,E) :-
@@ -267,8 +275,8 @@ showClause(clause(_,Nm,Args,Cond,Body),O,E) :-
   appStr(Nm,O,O1),
   appStr("(",O1,O2),
   showTerms(Args,O2,O3),
-  appStr(") :: ",O3,O4),
-  showTerm(Cond,O4,O5),
+  appStr(") ",O3,O4),
+  showGuard(Cond,O4,O5),
   appStr(" :- ",O5,O6),
   showTerm(Body,O6,O7),
   appStr(".\n",O7,E).
@@ -276,8 +284,8 @@ showClause(strong(_,Nm,Args,Cond,Body),O,E) :-
   appStr(Nm,O,O1),
   appStr("(",O1,O2),
   showTerms(Args,O2,O3),
-  appStr(") :: ",O3,O4),
-  showTerm(Cond,O4,O5),
+  appStr(")",O3,O4),
+  showGuard(Cond,O4,O5),
   appStr(" :-- ",O5,O6),
   showTerm(Body,O6,O7),
   appStr(".\n",O7,E).

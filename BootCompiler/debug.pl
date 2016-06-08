@@ -19,8 +19,8 @@ isDebug(Nm,Opts) :-
 % are we debugging?
 debugPreamble(Nm,Q,Qx,[call(prg("go.debug@current",1),[v(DgVr)])|PrGx],PrGx,Opts,ClOpts) :-
   isDebug(Nm,Opts),!,
-  gensym("$D",DgVr),
-  gensym("$F",FrVr),
+  gensym("__D",DgVr),
+  gensym("__F",FrVr),
   Qx = [v(DgVr),v(FrVr)|Q],
   pushOpt(dbgVars(Nm,DgVr,FrVr),Opts,ClOpts).
 debugPreamble(_,Q,Q,P,P,Opts,Opts).

@@ -8,6 +8,7 @@
 :- use_module(transform).
 :- use_module(plog).
 :- use_module(errors).
+:- use_module(genprolog).
 
 /* Logic and Object compiler driver */
 
@@ -18,12 +19,13 @@ wffFile(Fl,Term) :- startCount, parseFile(Fl,Term), wffModule(Term), !, noErrors
 
 typeFile(Fl,Prog) :-
   wffFile(Fl,Term),
-  checkProgram(Term,Prog),
-  displayCanon(Prog).
+  checkProgram(Term,Prog).
 
 test(Fl) :- 
   typeFile(Fl,Prog),
   transformProg(Prog,[],Rules),
-  displayPlRules(Rules).
+  % displayPlRules(Rules),
+  current_output(Out),
+  genRules(Out,Rules).
 
 main :-test("../Tests/a.lo").

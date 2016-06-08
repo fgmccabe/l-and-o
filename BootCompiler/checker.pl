@@ -103,7 +103,7 @@ varGroup(Grp,Fields,Annots,Defs,Dx,Base,Env,Path) :-
   checkVarRules(Grp,D0,Env,Path),
   generalizeStmts(D0,Env,Defs,Dx).
 
-parseAnnotations([],_,_,Env,Env,_).
+parseAnnotations([],_,_,Env,Env,_) :-!.
 parseAnnotations([(var(N),_,_)|More],Fields,Annots,Env,Ex,Path) :-
   is_member((N,Annot),Annots),!,
   annotateVar(N,Annot,Env,E0),
@@ -158,32 +158,32 @@ processStmts([St|More],ProgramType,Defs,Dx,Env,Path) :-
   processStmt(St,ProgramType,Defs,D0,Env,Path),!,
   processStmts(More,ProgramType,D0,Dx,Env,Path).
 
-processStmt(St,funType(AT,RT),[equation(Lc,Nm,Ptn,Cond,Exp)|Defs],Defs,E,_) :- 
+processStmt(St,funType(AT,RT),[equation(Lc,Nm,Args,Cond,Exp)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,"=>",L,R),!,
-  splitHead(L,Nm,Args,C),
+  splitHead(L,Nm,A,C),
   pushScope(E,Env),
-  typeOfPtns(Args,AT,Lc,Env,E0,Ptn),
+  typeOfPtns(A,AT,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   typeOfExp(R,RT,_,E1,Exp).
 processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,":-",L,R),!,
-  splitHead(L,Nm,Args,C),
+  splitHead(L,Nm,A,C),
   pushScope(E,Env),
-  typeOfPtns(Args,AT,Lc,Env,E0,Args),
+  typeOfPtns(A,AT,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 processStmt(St,predType(AT),[strong(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,":--",L,R),!,
-  splitHead(L,Nm,Args,C),
+  splitHead(L,Nm,A,C),
   pushScope(E,Env),
-  typeOfPtns(Args,AT,Lc,Env,E0,Args),
+  typeOfPtns(A,AT,Lc,Env,E0,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :- 
-  splitHead(St,Nm,Args,C),!,
+  splitHead(St,Nm,A,C),!,
   pushScope(E,Env),
   locOfAst(St,Lc),
-  typeOfPtns(Args,AT,Lc,Env,E0,Args),
+  typeOfPtns(A,AT,Lc,Env,E0,Args),
   checkCond(C,E0,_,Cond).
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
@@ -210,11 +210,11 @@ processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],De
   subPath(Path,Marker,Nm,ClassPath),
   checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
 
-checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Ptn,Value),Env) :-
-  isIden(L,_,Nm),
+checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Cond,Value),Env) :-
+  splitHead(L,Nm,none,C),
   pushScope(Env,E),
-  typeOfPtn(L,Tp,Env,_,Ptn),
-  typeOfExp(R,Tp,_,E,Value).
+  checkCond(C,E,E1,Cond),
+  typeOfExp(R,Tp,_,E1,Value).
 
 checkClassHead(Term,_,Env,Env,Nm,enum(Lc,Nm)) :-
   isIden(Term,Lc,Nm),!.
@@ -247,6 +247,8 @@ splitHead(Term,Nm,Args,name(Lc,"true")) :-
   isRound(Term,Nm,Args),
   locOfAst(Term,Lc),
   \+ is_member(Nm,["=>",":-",":--","<=","..","=",":="]).
+splitHead(Id,Nm,none,name(Lc,"true")) :-
+  isIden(Id,Lc,Nm),!.
 splitHead(Term,"()",Args,name(Lc,"true")) :-
   locOfAst(Term,Lc),
   isTuple(Term,Args).
@@ -262,7 +264,7 @@ generalizeStmts([Cl|Stmts],Env,[predicate(Lc,Nm,Tp,[Cl|Clses])|Defs],Dx) :-
   collectClauses(Stmts,S0,Nm,Clses),
   pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Defs,Dx).
-generalizeStmts([defn(Lc,Nm,Ptn,Value)|Stmts],Env,[defn(Lc,Nm,Ptn,Tp,Value)|Defs],Dx) :-
+generalizeStmts([defn(Lc,Nm,Cond,Value)|Stmts],Env,[defn(Lc,Nm,Cond,Tp,Value)|Defs],Dx) :-
   pickupVarType(Nm,_,Env,Tp),!,
   generalizeStmts(Stmts,Env,Defs,Dx).
 generalizeStmts([Cl|Stmts],Env,[enum(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
@@ -276,6 +278,7 @@ generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
   pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Defs,Dx).
 
+collectClauses([],[],_,[]).
 collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   Cl = clause(_,Nm,_,_,_),!,
   collectMoreClauses(Stmts,Sx,Nm,Ex).

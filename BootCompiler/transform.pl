@@ -7,11 +7,13 @@
 :- use_module(debug).
 :- use_module(misc).
 :- use_module(escapes).
+:- use_module(location).
 
 
-transformProg(prog(Pkg,_Imports,Defs,_Others,_Fields,Types),Opts,Rules) :-
+transformProg(prog(Pkg,_Imports,Defs,Others,_Fields,Types),Opts,Rules) :-
   makePkgMap(Pkg,Defs,Types,Map),
-  transformModuleDefs(Pkg,Map,Opts,Defs,Rules,Ex,Ex,[]).
+  transformModuleDefs(Pkg,Map,Opts,Defs,R0,Rx,Rx,[]),
+  transformOthers(Pkg,Map,Opts,Others,Rules,R0).
 
 transformModuleDefs(_,_,_,[],Rules,Rules,Ex,Ex).
 transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
@@ -20,11 +22,14 @@ transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
 
 transformMdlDef(Pkg,Map,Opts,function(Lc,Nm,Tp,Eqns),Rules,Rx,Ex,Exx) :-
   localName(Pkg,"@",Nm,LclName),
-  transformEquations(Map,Opts,LclName,Eqns,1,No,Rules,R0,Ex,Exx),
+  transformEquations(Map,Opts,LclName,Eqns,1,_,Rules,R0,Ex,Exx),
   failSafeEquation(Map,Opts,Lc,LclName,Tp,R0,Rx).
-transformMdlDef(Pkg,Map,Opts,predicate(Lc,Nm,_,Clses),Rules,Rx,Ex,Exx) :-
+transformMdlDef(Pkg,Map,Opts,predicate(_,Nm,_,Clses),Rules,Rx,Ex,Exx) :-
   localName(Pkg,"@",Nm,LclName),
-  transformClauses(Map,Opts,LclName,Clses,1,No,Rules,[],Ex,Exx).
+  transformClauses(Map,Opts,LclName,Clses,1,_,Rules,Rx,Ex,Exx).
+transformMdlDef(Pkg,Map,Opts,defn(_,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
+  localName(Pkg,"@",Nm,LclName),
+  transformDefn(Map,Opts,Nm,LclName,Cond,Value,Rules,Rx,Ex,Exx).
 
 transformEquations(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
 transformEquations(Map,Opts,LclName,[Eqn|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
@@ -44,24 +49,24 @@ transformEqn(Map,Opts,LclName,QNo,equation(_,Nm,A,Cond,Value),[clse(Q,prg(LclNam
   length(Args,Arity),
   breakDebug(Nm,CGx,PreV,ClOpts).                % generate break point debugging
 
-failSafeEquation(Map,Opts,Lc,LclName,Tp,[clse(Q,prg(LclName,Arity),Q,G)|Rest],Rest) :-
+failSafeEquation(Map,Opts,Lc,LclName,Tp,[clse([],prg(LclName,Arity),Anons,G)|Rest],Rest) :-
   extraVars(Map,Extra),                                     % extra variables coming from labels
   typeArity(Tp,Ar),
-  Arity is Ar+1,
-  genVars(Arity,Q),
+  length(Extra,EA),
+  Arity is Ar+1+EA,
+  genAnons(Arity,Anons),
   genRaise(Opts,Lc,LclName,G,[]).
 
-genRaise(Opts,Lc,LclName,[raise(strg(LclName),intgr(Lno),intgr(Off),intgr(Sz))|P],P) :-
+genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[strg(LclName),intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
   lcLine(Lc,Lno),
   lcColumn(Lc,Off),
-  lcSize(lc,Sz).
+  lcSize(Lc,Sz).
 
-genVars(0,[]).
-genVars(K,[idnt(V)|Rest]) :-
+genAnons(0,[]).
+genAnons(K,[anon|Rest]) :-
   K>0,
-  gensym("$v",V),
   K1 is K-1,
-  genVars(K1,Rest).
+  genAnons(K1,Rest).
 
 transformClauses(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
 transformClauses(Map,Opts,LclName,[Cl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
@@ -69,26 +74,53 @@ transformClauses(Map,Opts,LclName,[Cl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
   N1 is No+1,
   transformClauses(Map,Opts,LclName,Defs,N1,Nx,R0,Rx,Ex0,Exx).
 
-transformClause(Map,Opts,LclName,QNo,clause(_,Nm,A,Cond,Value),[clse(Q,prg(LclName,Arity),Args,Body)|Rx],Rx,Ex,Exx) :-
+transformClause(Map,Opts,LclName,QNo,clause(_,Nm,A,Cond,Body),[clse(Q,prg(LclName,Arity),Args,Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                     % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),  % are we debugging?
   trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
-  trGoal(Cond,PostGx,CGx,Q1,Q2,Map,ClOpts,Ex0,Exx),         % condition goals
-  labelAccess(Q2,Q,Map,Body,LbLx),                             % generate label access goals
+  trGoal(Cond,PostGx,CGx,Q1,Q2,Map,ClOpts,Ex0,Ex1),         % condition goals
+  trGoal(Body,CGx,CGy,Q2,Q3,Map,ClOpts,Ex1,Exx),
+  labelAccess(Q3,Q,Map,Goals,LbLx),                             % generate label access goals
   frameDebug(Nm,QNo,FBg,PreG,Q,ClOpts),                      % generate frame entry debugging
   deframeDebug(Nm,QNo,Px,[],ClOpts),                     % generate frame exit debugging
   length(Args,Arity),
-  breakDebug(Nm,CGx,Px,ClOpts).                % generate break point debugging
-transformClause(Map,Opts,LclName,QNo,strong(_,Nm,A,Cond,Value),[clse(Q,prg(LclName,Arity),Args,Body)|Rx],Rx,Ex,Exx) :-
+  breakDebug(Nm,CGy,Px,ClOpts).                % generate break point debugging
+transformClause(Map,Opts,LclName,QNo,strong(_,Nm,A,Cond,Body),[clse(Q,prg(LclName,Arity),Args,Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                     % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),  % are we debugging?
-  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,[neck|PostGx],Map,ClOpts,Ex,Ex0), % head args
-  trGoal(Cond,PostGx,CGx,Q1,Q2,Map,ClOpts,Ex0,Exx),         % condition goals
-  labelAccess(Q2,Q,Map,Body,LbLx),                             % generate label access goals
+  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
+  trGoal(Cond,PostGx,[neck|CGx],Q1,Q2,Map,ClOpts,Ex0,Ex1),         % condition goals
+  trGoal(Body,CGx,CGy,Q2,Q3,Map,ClOpts,Ex1,Exx),
+  labelAccess(Q3,Q,Map,Goals,LbLx),                             % generate label access goals
   frameDebug(Nm,QNo,FBg,PreG,Q,ClOpts),                      % generate frame entry debugging
   deframeDebug(Nm,QNo,Px,[],ClOpts),                     % generate frame exit debugging
   length(Args,Arity),
-  breakDebug(Nm,CGx,Px,ClOpts).                % generate break point debugging
+  breakDebug(Nm,CGy,Px,ClOpts).                % generate break point debugging
+
+transformDefn(Map,Opts,Nm,LclName,Cond,Value,[clse(Q,prg(LclName,Arity),[Rep],Body)|Rx],Rx,Ex,Exx) :-
+  extraVars(Map,Extra),                                     % extra variables coming from labels
+  debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),  % are we debugging?
+  trGoal(Cond,PostGx,[neck|CGx],Q0,Q2,Map,ClOpts,Ex,Ex0),         % condition goals
+  trExp(Value,Rep,Q2,Q3,PreV,PVx,PVx,Px,Map,ClOpts,Ex0,Exx),         % replacement expression
+  labelAccess(Q3,Q,Map,Body,LbLx),                             % generate label access goals
+  frameDebug(Nm,QNo,FBg,PostGx,Q,ClOpts),                      % generate frame entry debugging
+  deframeDebug(Nm,QNo,Px,[],ClOpts),                     % generate frame exit debugging
+  length([_|Extra],Arity),
+  breakDebug(Nm,CGx,PreV,ClOpts).                % generate break point debugging
+
+transformOthers(_,_,_,[],Rx,Rx).
+transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
+  collect(Others,isAssertion,Asserts,Rest),
+  transformAssertions(Pkg,Map,Opts,[assertion(Lc,G)|Asserts],Rules,R0),
+  transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
+
+transformAssertions(Pkg,Map,Opts,Asserts,Rules,Rx) :-
+  rfold(Asserts,transform:collectGoal,true(_),G),
+  localName(Pkg,"@","assert",LclName),
+  transformClause(Map,Opts,LclName,1,clause('',"assert",[],true(''),G),Rules,R0,R0,Rx).
+
+collectGoal(assertion(_,G),true(_),G) :-!.
+collectGoal(assertion(_,G),O,conj(O,G)).
 
 trPtns([],Args,Args,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtns([P|More],[A|Args],Ax,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
@@ -107,9 +139,10 @@ trPtn(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   lookupPkgRef(Map,Pkg,Rf,Reslt),
-  gensym("$v",Xi),
+  gensym("Xi",Xi),
   implementPkgRefPtn(Reslt,Lc,Pkg,Rf,idnt(Xi),Ptn,Q,Qx,Post,Pstx).
-
+trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
+  trPtns(Ptns,P,Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
 trPtn(apply(_,O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0),
   trPtnCallOp(O,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
@@ -122,7 +155,7 @@ trPtn(XX,void,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-
 
 trVarPtn(_,Nm,A,Q,Qx,Pre,Prx,Post,Pstx,Map,_) :-
   lookupVarName(Map,Nm,V),!,
-  gensym("$v",X),
+  gensym("X",X),
   implementVarPtn(V,Nm,idnt(X),A,Q,Qx,Pre,Prx,Post,Pstx).
 trVarPtn(Lc,Nm,idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_) :-
   reportError("'%s' not defined",[Nm],Lc).
@@ -142,7 +175,7 @@ implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-               
 
 trPtnCallOp(v(_,Nm),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
-  gensym("$v",X),
+  gensym("X",X),
   implementPtnCall(Reslt,Nm,idnt(X),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
 
 implementPtnCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
@@ -183,14 +216,16 @@ trExp(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
   lookupPkgRef(Map,Pkg,Rf,Reslt),
-  gensym("$v",Xi),
+  gensym("Xi",Xi),
   implementPkgRefExp(Reslt,Lc,Pkg,Rf,idnt(Xi),Exp,Q,Qx,Post,Pstx).
+trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
+  trExps(A,TA,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(apply(_,Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,Args,Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
-  gensym("$v",X),
+  gensym("X",X),
   trExpCallOp(Op,idnt(X),Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
 trExp(dot(_,Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
-  gensym("$r",XV),
+  gensym("XV",XV),
   X = idnt(XV),
   trCons(Fld,[X],S),
   C = cons(S,[X]),
@@ -214,7 +249,7 @@ implementDotExp(_,R,C,X,X,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
 
 trVarExp(Lc,Nm,Exp,Q,Qx,Pre,Prx,Post,Pstx,Map,_) :-
   lookupVarName(Map,Nm,V),!,
-  gensym("$v",X),
+  gensym("X",X),
   implementVarExp(V,Lc,Nm,idnt(X),Exp,Q,Qx,Pre,Prx,Post,Pstx).
 trVarExp(Lc,Nm,idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_) :-
   reportError("'%s' not defined",[Nm],Lc).
@@ -276,7 +311,7 @@ implementVarExp(labelArg(N,LblVr,ThVar),_,_,_,idnt(N),Q,Qx,Pre,Pre,Tail,Tail) :-
 implementVarExp(inheritField(Super,LblVr,ThVr),_,Nm,X,X,Q,Qx,
       [call(Super,[cons(strct(Nm,1),[X]),LblVr,ThVr])|Pre],Pre,Tail,Tail) :-
   merge([X,LblVr,ThVr],Q,Qx).
-implementVarExp(moduleClass(_,Enum,_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Tail,Tail).
+implementVarExp(moduleClass(_,enum(Enum),_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Tail,Tail).
 implementVarExp(localClass(Enum,_,LbVr,ThVr),_,_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
   merge([LbVr,ThVr],Q,Qx).
 implementVarExp(inherit(prg(Nm,_),LbVr,ThVr),_,_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
@@ -287,7 +322,7 @@ implementVarExp(_Other,Lc,Nm,_,idnt(Nm),Q,Q,Pre,Pre,Tail,Tail) :-
   reportError("cannot handle %s in expression",[Nm],Lc).
 
 implementPkgRefExp(moduleVar(_,Vn),_,_,_,Xi,Q,[Xi|Q],[call(Vn,[Xi])|Pre],Pre,Post,Post).
-implementPkgRefExp(moduleClass(_,Enum,_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post).
+implementPkgRefExp(moduleClass(_,enum(Enum),_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post).
 
 implementPkgRefExp(_,Lc,Pkg,Ref,_,Q,Q,Post,Post) :-
   reportError("illegal access to %s#%s",[Pkg,Ref],Lc).
@@ -300,7 +335,7 @@ trGoal(conj(L,R),Goals,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
 trGoal(disj(L,R),[call(DisjPr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trGoal(L,LG,[],[],Q0,Map,Opts,Ex,Ex0),
   trGoal(R,RG,[],Q0,LQ,Map,Opts,Ex0,Ex1),
-  genNewName(Map,LQ,DisjPr),
+  genNewName(Map,"or",LQ,DisjPr),
   Cl1 = clse(LQ,DisjPr,LQ,LG),
   Cl2 = clse(LQ,DisjPr,LQ,RG),
   Ex1 = [Cl1,Cl2|Exx],
@@ -309,29 +344,29 @@ trGoal(conditional(T,L,R),[call(CondPr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trGoal(T,TG,[neck|LG],[],Q0,Map,Opts,Ex,Ex0),
   trGoal(L,LG,[],Q0,Q1,Map,Opts,Ex0,Ex1),
   trGoal(R,RG,[],Q1,LQ,Map,Opts,Ex1,Ex2),
-  genNewName(Map,LQ,CondPr),
+  genNewName(Map,"cond",LQ,CondPr),
   Cl1 = clse(LQ,CondPr,LQ,TG),
   Cl2 = clse(LQ,CondPr,LQ,RG),
   Ex2 = [Cl1,Cl2|Exx],
   merge(LQ,Q,Qx).
 trGoal(one(T),[call(OnePr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trGoal(T,TG,[neck],[],LQ,Map,Opts,Ex,Ex0),
-  genNewName(Map,LQ,OnePr),
+  genNewName(Map,"one",LQ,OnePr),
   Cl1 = clse(LQ,OnePr,LQ,TG),
   Ex0 = [Cl1|Exx],
   merge(LQ,Q,Qx).
 trGoal(neg(T),[call(NegPr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trGoal(T,TG,[neck,fail],[],LQ,Map,Opts,Ex,Ex0),
-  genNewName(Map,LQ,NegPr),
+  genNewName(Map,"neg",LQ,NegPr),
   Cl1 = clse(LQ,NegPr,LQ,TG),
   Cl2 = clse(LQ,NegPr,LQ,[]),
   Ex0 = [Cl1,Cl2|Exx],
   merge(LQ,Q,Qx).
 trGoal(forall(L,R),[call(APr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
-  genNewName(Map,LQ,APr),
-  genNewName(Map,LQ,BPr),
   trGoal(L,LG,[call(BPr,LQ),neck,fail],[],Q0,Map,Opts,Ex,Ex0),
   trGoal(R,RG,[neck,fail],Q0,LQ,Map,Opts,Ex0,Ex1),
+  genNewName(Map,"forallA",LQ,APr),
+  genNewName(Map,"forallB",LQ,BPr),
   ACl1 = clse(LQ,APr,LQ,LG),
   ACl2 = clse(LQ,APr,LQ,[]),
   BCl1 = clse(LQ,BPr,LQ,RG),
@@ -339,8 +374,8 @@ trGoal(forall(L,R),[call(APr,LQ)|Gx],Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   Ex1 = [ACl1,ACl2,BCl1,BCl2|Exx],
   merge(LQ,Q,Qx).
 trGoal(equals(_,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
-  trExp(L,Lx,G,G0,G0,G1,Q,Q0,Map,Opts,Ex,Ex0),
-  trExp(R,Rx,G1,G2,G2,G3,Q0,Qx,Map,Opts,Ex0,Exx),
+  trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
+  trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx),
   G3 = [equals(Lx,Rx)|Gx].
 trGoal(unify(_,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trPtn(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
@@ -348,7 +383,7 @@ trGoal(unify(_,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   G3 = [equals(Lx,Rx)|Gx].
 trGoal(match(_,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trPtn(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  trExp(R,Rx,G1,G2,G2,G3,Q0,Qx,Map,Opts,Ex0,Exx),
+  trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx),
   G3 = [equals(Lx,Rx)|Gx].
 trGoal(call(_,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExps(Args,AG,Q,Q0,G,Pr,Pr,Post,Map,Opts,Ex,Ex0),
@@ -357,7 +392,7 @@ trGoal(call(_,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
 trGoalCall(v(_,Nm),Args,[ecall(Nm,Args)|Tail],Tail,Q,Q,_,_,Ex,Ex) :-
   isEscape(Nm),!.
 trGoalCall(v(_,Nm),Args,G,Gx,Q,Qx,Map,_,Ex,Ex) :-
-  lookupRelName(Nm,Map,RSpec),
+  lookupRelName(Map,Nm,RSpec),
   implementGoalCall(RSpec,Nm,Args,G,Gx,Q,Qx).
 trGoalCall(dot(_,Rec,Pred),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trCons(Pred,Args,Op),
