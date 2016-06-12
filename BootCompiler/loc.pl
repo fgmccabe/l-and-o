@@ -29,4 +29,5 @@ test(Fl) :-
   current_output(Out),
   genRules(Out,Rules).
 
-main :-test("../Tests/a.lo").
+main(Args) :- write("hello").
+

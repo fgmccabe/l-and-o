@@ -1,4 +1,3 @@
-:- module(tree,['tree@assert'/0]).
 
 'tree@assert'() :- 'tree@u'(XX111),
     ocall('leaves%1'(XX110),XX111,XX111),

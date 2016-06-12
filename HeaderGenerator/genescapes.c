@@ -7,6 +7,7 @@
 #include "signature.h"
 #include "stringBuffer.h"
 #include "formio.h"
+#include <ctype.h>
 
 enum {
   genProlog, genLO
@@ -188,8 +189,20 @@ static void dumpStdType(char *name, bufferPo out) {
   outMsg(O_IO(out), ")");
 }
 
+static char *dInt(char *sig,int *len) {
+  char K = *sig++;
+  int Len = 0;
+  while(isdigit(K)){
+    Len = Len*10+digittoint(K);
+    K = *sig++;
+  }
+  *len = K;
+  return sig;
+}
+
 static char *dSequence(char *sig, bufferPo out) {
-  int ar = *sig++;
+  int ar;
+  sig = dInt(sig,&ar);
   char *sep = "";
   outStr(O_IO(out), "[");
   while (ar-- > 0) {
@@ -202,7 +215,8 @@ static char *dSequence(char *sig, bufferPo out) {
 }
 
 static char *dFields(char *sig, bufferPo out) {
-  int ar = *sig++;
+  int ar;
+  sig = dInt(sig,&ar);
   char *sep = "";
   outStr(O_IO(out), "[");
   while (ar-- > 0) {
