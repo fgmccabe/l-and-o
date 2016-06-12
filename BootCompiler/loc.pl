@@ -19,11 +19,12 @@ wffFile(Fl,Term) :- startCount, parseFile(Fl,Term), wffModule(Term), !, noErrors
 
 typeFile(Fl,Prog) :-
   wffFile(Fl,Term),
-  checkProgram(Term,Prog).
+  checkProgram(Term,Prog),!,
+  displayCanon(Prog).
 
 test(Fl) :- 
   typeFile(Fl,Prog),
-  transformProg(Prog,[],Rules),
+  transformProg(Prog,[/*debugging*/],Rules),
   % displayPlRules(Rules),
   current_output(Out),
   genRules(Out,Rules).

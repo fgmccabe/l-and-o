@@ -25,7 +25,8 @@ packageName(T,Pkg) :- isString(T,Pkg).
 
 thetaEnv(Path,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
   dependencies(Els,Groups,Private,Annots,Imps,Otrs),
-  checkImports(Imps,Imports,Base,Env),
+  checkImports(Imps,Imports,Base,IBase),
+  pushFace(Fields,IBase,Env),
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Path),
   checkOthers(Otrs,Others,TheEnv,Path).
 
@@ -40,7 +41,7 @@ checkImport(St,[import(Lc,PkgSpec)|More],More,Env,Ex) :-
   locatePackage(PkgName,PkgSpec),
   importDefs(PkgSpec,Env,Ex).
 
-% For now, e stub these out.
+% For now, we stub these out.
 locatePackage(Pkg,Pkg).
 importDefs(_,Env,Env).
 
@@ -82,7 +83,7 @@ defineTypes([(tpe(N),Lc,Stmts)|More],Defs,Dx,Env,Ex,Path) :-
 defineType(N,Lc,_,Defs,Defs,Env,Env,_) :-
   typeInDict(N,Env,OLc,_),!,
   reportError("type %s already defined at %s",[N,OLc],Lc).
-defineType(N,Lc,Stmts,[typeDef(N,Lc,Rules)|Defs],Defs,Env,Ex,Path) :- 
+defineType(N,Lc,Stmts,[typeDef(Lc,N,Type,Rules)|Defs],Defs,Env,Ex,Path) :- 
   parseTypeDef(Stmts,Env,Rules,[],Path),
   pickTypeTemplate(Rules,Type),
   faceOfType(Lc,Env,Rules,Type,Face),
@@ -188,14 +189,16 @@ processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :-
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
   checkDefn(Lc,L,R,Tp,Def,Env).
-processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :- 
+processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,"<=",L,R),
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
-  typeOfExp(R,E1,topType,_,Repl).
-processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl)|Defs],Defs,E,_) :- 
+  typeOfExp(R,topType,SuperTp,E1,Repl),
+  generateClassFace(SuperTp,E,SuperFace).
+processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :- 
   isBinary(St,Lc,"<<",L,R),
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
-  typeOfExp(R,E1,topType,_,Repl).
+  typeOfExp(R,topType,SuperTp,E1,Repl),
+  generateClassFace(SuperTp,E,SuperFace).
 processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   isName(L,Nm),!,
@@ -224,7 +227,7 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   pushScope(Env,E0),
   typeOfPtns(A,AT,Lc,E0,E1,Args),
   checkCond(C,E1,Ex,Cond),
-  Hd = apply(Lc,vr(Lc,Nm),Args),
+  Hd = apply(Lc,v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
 checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
@@ -267,15 +270,17 @@ generalizeStmts([Cl|Stmts],Env,[predicate(Lc,Nm,Tp,[Cl|Clses])|Defs],Dx) :-
 generalizeStmts([defn(Lc,Nm,Cond,Value)|Stmts],Env,[defn(Lc,Nm,Cond,Tp,Value)|Defs],Dx) :-
   pickupVarType(Nm,_,Env,Tp),!,
   generalizeStmts(Stmts,Env,Defs,Dx).
-generalizeStmts([Cl|Stmts],Env,[enum(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
+generalizeStmts([Cl|Stmts],Env,[enum(Lc,Nm,Tp,[Cl|Rules],Face)|Defs],Dx) :-
   isRuleForEnum(Cl,Lc,Nm),!,
   collectEnumRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
+  generateClassFace(Tp,Env,Face),
   generalizeStmts(S0,Env,Defs,Dx).
-generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules])|Defs],Dx) :-
+generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules],Face)|Defs],Dx) :-
   isRuleForClass(Cl,Lc,Nm),!,
   collectClassRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
+  generateClassFace(Tp,Env,Face),
   generalizeStmts(S0,Env,Defs,Dx).
 
 collectClauses([],[],_,[]).
@@ -322,8 +327,8 @@ collectClassRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectClassRules(Stmts,Sx,Nm,Eqns).
 collectClassRules([],[],_,[]).
 
-isRuleForClass(labelRule(Lc,Nm,_,_),Lc,Nm).
-isRuleForClass(overrideRule(Lc,Nm,_,_),Lc,Nm).
+isRuleForClass(labelRule(Lc,Nm,_,_,_),Lc,Nm).
+isRuleForClass(overrideRule(Lc,Nm,_,_,_),Lc,Nm).
 isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
 
 collectEnumRules([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
@@ -333,8 +338,8 @@ collectEnumRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectEnumRules(Stmts,Sx,Nm,Eqns).
 collectEnumRules([],[],_,[]).
 
-isRuleForEnum(labelRule(Lc,Nm,enum(_,_),_),Lc,Nm).
-isRuleForEnum(overrideRule(Lc,Nm,enum(_,_),_),Lc,Nm).
+isRuleForEnum(labelRule(Lc,Nm,enum(_,_),_,_),Lc,Nm).
+isRuleForEnum(overrideRule(Lc,Nm,enum(_,_),_,_),Lc,Nm).
 isRuleForEnum(classBody(Lc,Nm,enum(_,_),_,_,_),Lc,Nm).
 
 typeOfPtn(N,Tp,Env,Ex,Term) :- 
@@ -397,6 +402,7 @@ genTpVars([_|I],[V|More]) :-
   newTypeVar("__",V),
   genTpVars(I,More).
 
+typeOfVarPtn(Lc,"_",_,Env,Env,v(Lc,"_")) :- !.
 typeOfVarPtn(Lc,Nm,Tp,Env,Env,Term) :-
   isVar(Nm,Env,Vr),!,
   varPttrn(Lc,Nm,Vr,Tp,Env,Term).
@@ -469,7 +475,7 @@ typeOfExp(Term,ET,Tp,Env,pkgRef(Lc,Pkg,Fld)) :-
 typeOfExp(Term,ET,Tp,Env,conditional(Lc,Test,Then,Else)) :-
   isBinary(Term,Lc,"|",L,El),
   isBinary(L,"?",Tst,Th), !,
-  checkCond(Tst,Env,Test),
+  checkCond(Tst,Env,ET,Test),
   typeOfExp(Th,ET,T1,Env,Then),
   typeOfExp(El,ET,T2,Env,Else),
   glb(T1,T2,Env,Tp).
@@ -545,6 +551,7 @@ typeOfVar(Lc,"true",ET,Tp,Env,v(Lc,"true")) :-
 typeOfVar(Lc,"false",ET,Tp,Env,v(Lc,"false")) :-
   findType("logical",Env,Tp),
   checkType(Lc,Tp,ET,Env).
+typeOfVar(Lc,"_",_,anonType,_,v(Lc,"_")) :-!.
 typeOfVar(Lc,Nm,ET,Tp,Env,Term) :-
   isVar(Nm,Env,Vr),!,
   varExp(Lc,Nm,Vr,ET,Tp,Env,Term).
@@ -593,30 +600,30 @@ checkCond(Term,Env,Ex,conj(Lhs,Rhs)) :-
   isBinary(Term,",",L,R), !,
   checkCond(L,Env,E1,Lhs),
   checkCond(R,E1,Ex,Rhs).
-checkCond(Term,Env,Ex,conditional(Test,Either,Or)) :-
-  isBinary(Term,"|",L,R),
+checkCond(Term,Env,Ex,conditional(Lc,Test,Either,Or)) :-
+  isBinary(Term,Lc,"|",L,R),
   isBinary(L,"?",T,Th),!,
   checkCond(T,Env,E0,Test),
   checkCond(Th,E0,E1,Either),
   checkCond(R,E1,Ex,Or).
-checkCond(Term,Env,Ex,disj(Either,Or)) :-
-  isBinary(Term,"|",L,R),!,
+checkCond(Term,Env,Ex,disj(Lc,Either,Or)) :-
+  isBinary(Term,Lc,"|",L,R),!,
   checkCond(L,Env,E1,Either),
   checkCond(R,E1,Ex,Or).
-checkCond(Term,Env,Ex,one(Test)) :-
-  isUnary(Term,"!",N),!,
+checkCond(Term,Env,Ex,one(Lc,Test)) :-
+  isUnary(Term,Lc,"!",N),!,
   checkCond(N,Env,Ex,Test).
-checkCond(Term,Env,Env,neg(Test)) :-
-  isUnary(Term,"\\+",N),!,
+checkCond(Term,Env,Env,neg(Lc,Test)) :-
+  isUnary(Term,Lc,"\\+",N),!,
   checkCond(N,Env,_,Test).
-checkCond(Term,Env,Env,forall(Gen,Test)) :-
-  isBinary(Term,"*>",L,R),!,
+checkCond(Term,Env,Env,forall(Lc,Gen,Test)) :-
+  isBinary(Term,Lc,"*>",L,R),!,
   checkCond(L,Env,E0,Gen),
   checkCond(R,E0,_,Test).
 checkCond(Term,Env,Ex,Cond) :-
   isTuple(Term,C),!,
   checkConds(C,Env,Ex,Cond).
-checkCond(Term,Env,Env,neg(equals(Lc,Lhs,Rhs))) :-
+checkCond(Term,Env,Env,neg(Lc,equals(Lc,Lhs,Rhs))) :-
   isBinary(Term,Lc,"\\=",L,R),!,
   newTypeVar("_#",TV),
   typeOfExp(L,TV,Tp,Env,Lhs),
@@ -655,17 +662,19 @@ checkConds([C|More],Env,Ex,(L,R)) :-
 
 computeExport([],_,[],[]).
 computeExport([Def|Defs],Private,Fields,Types) :-
-  exportDef(Def,Private,Fields,Fx,Types,Tx),
+  exportDef(Def,Private,Fields,Fx,Types,Tx),!,
   computeExport(Defs,Private,Fx,Tx).
 
 exportDef(function(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
 exportDef(predicate(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(class(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
+exportDef(class(_,Nm,Tp,_,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(typeDef(_,Nm,Tp),Private,Fields,Fields,Types,Tx) :-
-  (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Tp)|Tx]).
+exportDef(enum(_,Nm,Tp,_,_),Private,Fields,Fx,Types,Types) :-
+  (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
+exportDef(typeDef(_,Nm,_,Rules),Private,Fields,Fields,Types,Tx) :-
+  (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Rules)|Tx]).
 exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
 
@@ -710,6 +719,12 @@ pickTypeTemplate([Rl|_],Type) :-
 deRule(univType(B,Tp),univType(B,XTp)) :-
   deRule(Tp,XTp).
 deRule(typeRule(Lhs,_),Lhs).
+
+generateClassFace(Tp,Env,Face) :-
+  freshen(Tp,voidType,Q,Plate),
+  (Plate = classType(_,T); T=Plate),
+  getTypeFace(T,Env,F),
+  freezeType(faceType(F),Q,Face),!.
 
 getTypeFace(T,Env,Face) :-
   deRef(T,Tp),

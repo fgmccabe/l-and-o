@@ -42,6 +42,9 @@ ruleName(St,var(Nm),value) :-
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
   typeName(L,Nm).
+ruleName(St,tpe(Nm),type) :-
+  isBinary(St,"::=",L,_),
+  typeName(L,Nm).
 
 collectDefines([St|Stmts],Kind,OSt,Nm,[St|Defn]) :-
   ruleName(St,Nm,Kind),

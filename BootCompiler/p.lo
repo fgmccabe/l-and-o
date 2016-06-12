@@ -1,0 +1,62 @@
+px{
+  -- Test simple inheritance
+
+  p <~ {
+    name:string.
+  }.
+  s <~ p.
+  s <~ {
+    studies:string.
+    first:string.
+  }.
+
+  p:(string) <=> p.
+  p(Nm)..{
+    name = Nm.
+  }.
+/*
+  Should translate to ...
+
+'px#p'('name%1'(XV63), XLbl63, XThis63) :- !,
+    'px#p@name'(XV63, XLbl63, XThis63).
+'px#p@name'(XNm, XLbV76, XThV76) :- XLbV76 = 'px#p'(XNm),
+    !.
+
+*/
+
+  s:(string,string) <=> s.
+  s(S,_) .. {
+    studies = S.
+    first = name.
+  }.
+  s(_,N) <= p(N).
+
+/*
+  Should translate to
+
+'px#s'('name%1'(XV64), XLbl64, XThis64) :- !,
+    'px#s^super25'('name%1'(XV64), XLbl64, XThis64).
+'px#s'('studies%1'(XV65), XLbl65, XThis65) :- !,
+    'px#s@studies'(XV65, XLbl65, XThis65).
+'px#s@studies'(XS, XLbV77, XThV77) :- XLbV77 = 'px#s'(XS, X_),
+    !.
+'px#s^super25'(XCV27, 'px#s'(X_, XN), XThV77) :- ocall('px#p'(XN),XCV27,XThV77).
+
+*/
+
+  fred:s.
+  fred = s("math","fred").
+
+  assert fred.name="fred".
+  assert fred.first="fred".
+
+  /*
+  Should translate to:
+
+'px@fred'('px#s'("math", "fred")) :- !.
+
+'px@assert'() :- 'px@fred'(XX247),
+    ocall('name%1'(XXV15),XX247,XX247),
+    XXV15 = "fred".
+*/
+}

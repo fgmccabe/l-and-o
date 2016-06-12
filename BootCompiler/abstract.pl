@@ -4,7 +4,7 @@
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,
-      isName/2,isIden/2,isIden/3,isString/2,
+      isName/2,isIden/1,isIden/2,isIden/3,isString/2,
       isQuantified/3]).
 :- use_module(operators).
 
@@ -62,6 +62,8 @@ isSquareTuple(tuple(Lc,"[]",L),Lc,L).
 
 isName(name(_,Nm),Nm).
 
+isIden(N) :- isIden(N,_).
+
 isIden(name(_,Nm),Nm).
 isIden(tuple(_,"()",[name(_,Nm)]),Nm).
 
@@ -80,6 +82,5 @@ locOfAst(string(Lc,_),Lc).
 locOfAst(interString(Lc,_),Lc).
 locOfAst(tuple(Lc,_,_),Lc).
 locOfAst(app(Lc,_,_),Lc).
-
 
 isQuantified(T,V,B) :- isUnary(T,"all",R), isBinary(R,"~~",V,B).

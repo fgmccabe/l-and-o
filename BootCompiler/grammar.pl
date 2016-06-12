@@ -97,15 +97,13 @@ termArgs([lbra(Lcx)|Tks],Op,T,Toks) :-
     tupleize(Seq,Lc,"[]",Args),
     apply(Lc,Op,Args,NOP),
     termArgs(Tks3,NOP,T,Toks).
-termArgs([lbrce(Lcx),rbrce(Lcy)|Tks],Op,T,Toks) :- 
+termArgs([lbrce(Lcx),rbrce(Lcy)|Tks],Op,T,Tks) :- 
     mergeLoc(Lcx,Lcy,Lc),
-    apply(Lc,Op,tuple(Lc,"{}",[]),NOP),
-    termArgs(Tks,NOP,T,Toks).
+    apply(Lc,Op,tuple(Lc,"{}",[]),T).
 termArgs([lbrce(Lcx)|Tks],Op,T,Toks) :- terms(Tks,Tks2,Seq),
-    checkToken(Tks2,Tks3,rbrce(Lcy),"missing close brace, got %w"),
+    checkToken(Tks2,Toks,rbrce(Lcy),"missing close brace, got %w"),
     mergeLoc(Lcx,Lcy,Lc),
-    apply(Lc,Op,tuple(Lc,"{}",Seq),NOP),
-    termArgs(Tks3,NOP,T,Toks).
+    apply(Lc,Op,tuple(Lc,"{}",Seq),T).
 termArgs([idTok(".",Lcd),idTok(Fld,LcF)|Tks],Op,T,Toks) :-
     binary(Lcd,".",Op,name(LcF,Fld),NOP),
     termArgs(Tks,NOP,T,Toks).

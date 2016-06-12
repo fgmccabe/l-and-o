@@ -1,7 +1,7 @@
 :- module(dict,[typeInDict/4,typeFaceRule/3,typeRules/3,declareType/5,declareType/7,
     declareVar/5,isVar/3,isVar/4,
     processNames/3,processTypes/3,
-    pushScope/2,makeKey/2,stdDict/1,marker/2]).
+    pushScope/2,pushFace/3,makeKey/2,stdDict/1,marker/2]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -52,6 +52,11 @@ isVr(Key,[_|Outer],Vr,Lc) :- isVr(Key,Outer,Vr,Lc).
 
 pushScope(Env,[scope(types{},vars{},rules{})|Env]).
 
+pushFace([],Env,Env).
+pushFace([(Nm,Tp)|Fields],Env,ThEnv) :-
+  declareVar(Nm,'',vr(Nm,Tp),Env,Env0),
+  pushFace(Fields,Env0,ThEnv).
+
 processNames(Dict,P,Result) :-
   processNames(Dict,P,[],Result).
 
@@ -96,10 +101,6 @@ stdDict(Dict) :-
   stdVar(",..",vr("lo.std#,..",univType(kVar("t"),
     classType([kVar("t"),typeExp("lo.std*list",[kVar("t")])],typeExp("lo.std*list",[kVar("t")])))),B6,B7),
   stdVar("[]",vr("lo.std#[]",univType(kVar("t"),typeExp("lo.std*list",[kVar("t")]))),B7,B8),
-  stdVar("__integer_plus",vr("__integer_plus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B8,B9),
-  stdVar("__integer_minus",vr("__integer_minus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B9,B10),
-  stdVar("__integer_times",vr("__integer_times",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B10,B11),
-  stdVar("__integer_div",vr("__integer_div",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))),B11,B12),
-  Dict=B12.
+  Dict=B8.
 
 

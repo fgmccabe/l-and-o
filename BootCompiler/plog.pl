@@ -43,6 +43,14 @@ showGoal(call(Pr,Args),O,E) :-
   appStr("(",O0,O1),
   showTerms(Args,O1,O2),
   appStr(")",O2,E).
+showGoal(ocall(Pr,Lbl,This),O,E) :-
+  appStr("ocall(",O,O1),
+  showTerm(Pr,O1,O2),
+  appStr(",",O2,O3),
+  showTerm(Lbl,O3,O4),
+  appStr(",",O4,O5),
+  showTerm(This,O5,O6),
+  appStr(")",O6,E).
 showGoal(neck,O,E) :-
   appStr("!",O,E).
 showGoal(fail,O,E) :-

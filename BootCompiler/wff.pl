@@ -15,8 +15,9 @@ wffModule(Term) :-
 verifyName(Nm,[Seg|Rest]) :- isBinary(Nm,".",L,name(_,Seg)), verifyName(L,Rest).
 verifyName(name(_,Seg),[Seg|_]).
 
-wffPackageName(Term) :- isIden(Term,_).
+wffPackageName(Term) :- isIden(Term).
 wffPackageName(Term) :- isString(Term,_).
+wffPackageName(Term) :- isBinary(Term,".",L,R), wffPackageName(L), wffPackageName(R).
 wffPackageName(Name) :- 
   locOfAst(Name,Lc),
   reportError("Module %s not valid",[Name],Lc).
@@ -68,19 +69,32 @@ wffFaceTypes([]).
 wffFaceTypes([F|A]) :- isTypeAnnotation(F), wffFaceTypes(A).
 
 wffTypeExps([]).
-wffTypeExps([T|L]) :- wffTypeArg(T), wffTypeExps(L).
+wffTypeExps([T|L]) :- wffTypeExp(T), wffTypeExps(L).
 
-wffTypeArg(T) :- isUnary(T,"+",TT), !, wffTypeExp(TT).
-wffTypeArg(T) :- isUnary(T,"++",TT), !, wffTypeExp(TT).
-wffTypeArg(T) :- isUnary(T,"-",TT), !, wffTypeExp(TT).
-wffTypeArg(T) :- isUnary(T,"+-",TT), !, wffTypeExp(TT).
-wffTypeArg(T) :- isUnary(T,"-+",TT), !, wffTypeExp(TT).
-wffTypeArg(T) :- wffTypeExp(T).
+wffArgType(T) :- isUnary(T,"+",TT), !, wffTypeExp(TT).
+wffArgType(T) :- isUnary(T,"++",TT), !, wffTypeExp(TT).
+wffArgType(T) :- isUnary(T,"-",TT), !, wffTypeExp(TT).
+wffArgType(T) :- isUnary(T,"+-",TT), !, wffTypeExp(TT).
+wffArgType(T) :- isUnary(T,"-+",TT), !, wffTypeExp(TT).
+wffArgType(T) :- isIden(T).
 
 isPrivate(Term,T,Lc) :- isUnary(Term,"private",T), locOfAst(T,Lc).
 
-isAlgebraicTypeDef(Term,Lc,Head,Body) :- isBinary(Term,"::=",Head,Body), locOfAst(Term,Lc).
+isAlgebraicTypeDef(Term,Lc,Head,Body) :- isBinary(Term,Lc,"::=",Head,Body),
+   wffNamedType(Head),
+   wffTypeConstructors(Body).
+
 isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_).
+
+wffNamedType(T) :- wffIden(T).
+wffNamedType(T) :- isSquare(T,_,A), wffTypeArgs(A).
+
+wffTypeArgs([]).
+wffTypeArgs([T|L]) :- isIden(T), wffTypeArgs(L).
+
+wffTypeConstructors(T) :- isBinary(T,"|",L,R), wffTypeConstructors(L), wffTypeConstructors(R).
+wffTypeConstructors(T) :- isIden(T).
+wffTypeConstructors(T) :- isRound(T,Op,Args), \+ isKeyword(Op), wffTypeExps(Args).
 
 isTypeAnnotation(Term) :-
   isBinary(Term,":",L,R),
@@ -265,7 +279,7 @@ wffPtn(T) :- locOfAst(T,Lc), reportError("Cannot understand pattern %s",[T],Lc).
 
 wffPtns([]).
 wffPtns([T]) :-
-  isBinary(T,".,,",L,R),
+  isBinary(T,",..",L,R),
   wffPtn(L),
   wffPtn(R).
 wffPtns([P|T]) :- wffPtn(P), wffPtns(T).

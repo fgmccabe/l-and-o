@@ -19,6 +19,6 @@ showLocation(loc(Ln,Col,_,Sz),O,E) :-
   appStr(")",O5,E).
 
 lcLine(loc(Ln,_,_,_),Ln).
-lcColumn(loc(_,_,Col,_),Col).
+lcColumn(loc(_,Col,_,_),Col).
 lcSize(loc(_,_,_,Sz),Sz).
-lcOff(loc(_,Off,_,_),Off).
+lcOff(loc(_,_,Off,_),Off).

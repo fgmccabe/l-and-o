@@ -1,4 +1,4 @@
-arith{
+std.arith{
   arith <~ {
     pl:  (this)=>this.
     tms: (this)=>this.

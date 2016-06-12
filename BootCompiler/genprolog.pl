@@ -36,7 +36,7 @@ genBody([G|Body],O,E) :-
   rfold(Body,genprolog:genMoreGoal,O1,E).
 
 genMoreGoal(G,O,E) :-
-  appStr(", ",O,O0),
+  appStr(",\n    ",O,O0),
   genGoal(G,O0,E).
 
 genGoal(call(Pr,Args),O,E) :-
@@ -44,6 +44,14 @@ genGoal(call(Pr,Args),O,E) :-
   appStr("(",O0,O1),
   genTerms(Args,O1,O2),
   appStr(")",O2,E).
+genGoal(ocall(Pr,Lbl,This),O,E) :-
+  appStr("ocall(",O,O1),
+  genTerm(Pr,O1,O2),
+  appStr(",",O2,O3),
+  genTerm(Lbl,O3,O4),
+  appStr(",",O4,O5),
+  genTerm(This,O5,O6),
+  appStr(")",O6,E).
 genGoal(neck,O,E) :-
   appStr("!",O,E).
 genGoal(fail,O,E) :-
@@ -55,18 +63,16 @@ genGoal(equals(L,R),O,E) :-
 genGoal(raise(_),O,E) :-
   appStr("abort",O,E).
 
-genTerm(prg(Nm,Ar),O,E) :-
+genTerm(prg(Nm,_),O,E) :-
   appStr("'",O,O0),
   appStr(Nm,O0,O1),
-  appStr("/",O1,O2),
-  appInt(Ar,O2,O3),
-  appStr("'",O3,E).
-genTerm(strct(Nm,Ar),O,E) :-
+ % appStr("/",O1,O2),
+ % appInt(Ar,O2,O3),
+  appStr("'",O1,E).
+genTerm(strct(Nm,_),O,E) :-
   appStr("'",O,O0),
   appStr(Nm,O0,O1),
-  appStr("/",O1,O2),
-  appInt(Ar,O2,O3),
-  appStr("'",O3,E).
+  appStr("'",O1,E).
 genTerm(intgr(Ix),O,E) :-
   appInt(Ix,O,E).
 genTerm(strg(Str),O,E) :-
@@ -91,9 +97,9 @@ genTerm(cons(Op,Args),O,E) :-
   genTerms(Args,O2,O3),
   appStr(")",O3,E).
 genTerm(tpl(Args),O,E) :-
-  appStr("(",O,O1),
-  genTerms(Args,O1,O2),
-  appStr(")",O2,E).
+  appStr("(",O,O5),
+  genTerms(Args,O5,O6),
+  appStr(")",O6,E).
 
 genList(cons(strct("lo.std#,..",2),[A,B]),O,E) :-
   appStr("[",O,O1),

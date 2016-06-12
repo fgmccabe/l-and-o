@@ -1,9 +1,9 @@
 :- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, 
-      typeArity/2,isFunctionType/2,isPredType/2,isClassType/2,
+      typeArity/2,isFunctionType/2,isPredType/1,isPredType/2,isClassType/2,
       showType/3, showTypeRule/3,
       occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
       bind/2, isIdentical/2, moveQuants/3,
-      markLower/2, markUpper/2]).
+      markLower/2, markUpper/2,identicalVar/2]).
 :- use_module(misc).
 
 isType(anonType).
@@ -50,7 +50,7 @@ bounds(tVar(V),Lw,Up) :- !, boundsOf(V,Lw,Up).
 bounds(T,T,T).
 
 boundsOf(V,Lw,Up) :- V.curr \= unb(_), bounds(V.curr,Lw,Up).
-boundsOf(V,V.lower,V.upper).
+boundsOf(V,Lw,Up) :- deRef(V.lower,Lw), deRef(V.upper,Up).
 
 markUpper(T,Tp) :- \+occursIn(T,Tp), T=tVar(V), b_set_dict(upper,V,Tp).
 
@@ -61,6 +61,8 @@ bind(T,Tp) :- \+occursIn(T,Tp), T=tVar(V),b_set_dict(curr,V,Tp).
 occursIn(tVar(TV),Tp) :- deRef(Tp,DTp), \+ sameVar(TV,DTp), occIn(TV.id,DTp),!.
 
 sameVar(V1,tVar(V2)) :- V1.id = V2.id.
+
+identicalVar(tVar(V1),tVar(V2)) :- V1.id = V2.id.
 
 occIn(Id,tVar(V)) :- isBound(tVar(V),Tp), !, occIn(Id,Tp).
 occIn(Id,tVar(V)) :- V.id=Id,!.
@@ -138,6 +140,8 @@ typeArity(classType(A,_),Ar) :- length(A,Ar).
 
 isFunctionType(univType(_,Tp),Ar) :- isFunctionType(Tp,Ar).
 isFunctionType(funType(A,_),Ar) :- length(A,Ar).
+
+isPredType(Tp) :- isPredType(Tp,_).
 
 isPredType(univType(_,Tp),Ar) :- isPredType(Tp,Ar).
 isPredType(predType(A),Ar) :- length(A,Ar).

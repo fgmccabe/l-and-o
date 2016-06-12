@@ -15,11 +15,9 @@ convertConstructors(Term,Head,Elements,Tail) :-
 convertConstructor(name(Lc,Nm),Tp,[TpRule,InheritRule,Body|Tail],Tail) :-
   binary(Lc,":",name(Lc,Nm),Tp,TpRule),
   binary(Lc,"<=",name(Lc,Nm),name(Lc,"thing"),InheritRule), /* Inherit from thing */
-
   unary(Lc,"dS",string(Lc,Nm),StrValue),
   roundTerm(Lc,"display",[name(Lc,"_")],Hd),
   binary(Lc,"=>",Hd,StrValue,ShowFun),
-
   isBraceTuple(Content,Lc,[ShowFun]),
   binary(Lc,"..",name(Lc,Nm),Content,Body).
 convertConstructor(Con,Tp,[TpRule,InheritRule,Body|Tail],Tail) :-

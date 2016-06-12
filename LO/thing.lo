@@ -1,0 +1,11 @@
+std.thing{
+  integer <~ thing.
+  float <~ thing.
+  string <~ thing.
+
+  ss ::= ssSp(integer) | ssNl | ssStr(string) | ssSeq(list[ss]) | ssSub(integer,ss).
+
+  thing <~ {
+    show : ()=>ss.
+  }
+}

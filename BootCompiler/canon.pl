@@ -93,13 +93,13 @@ showTerm(conj(L,R),O,E) :-
   showTerm(L,O,O1),
   appStr(", ",O1,O2),
   showTerm(R,O2,E).
-showTerm(disj(Either,Or),O,E) :-
+showTerm(disj(_,Either,Or),O,E) :-
   appStr("(",O,O0),
   showTerm(Either,O0,O1),
   appStr(" | ",O1,O2),
   showTerm(Or,O2,O3),
   appStr(")",O3,E).
-showTerm(conditional(Test,Either,Or),O,E) :-
+showTerm(conditional(_,Test,Either,Or),O,E) :-
   appStr("(",O,O1),
   showTerm(Test,O1,O2),
   appStr("?",O2,O3),
@@ -119,13 +119,13 @@ showTerm(match(_,L,R),O,E) :-
   showTerm(L,O,O1),
   appStr(" .= ",O1,O2),
   showTerm(R,O2,E).
-showTerm(one(L),O,E) :-
+showTerm(one(_,L),O,E) :-
   showTerm(L,O,O1),
   appStr("!",O1,E).
-showTerm(neg(R),O,E) :-
+showTerm(neg(_,R),O,E) :-
   appStr("\\+",O,O1),
   showTerm(R,O1,E).
-showTerm(forall(Gen,Test),O,E) :-
+showTerm(forall(_,Gen,Test),O,E) :-
   appStr("(",O,O0),
   showTerm(Gen,O0,O1),
   appStr(" *> ",O1,O2),
@@ -154,12 +154,14 @@ showImports([import(_,Pkg)|Imports],O,E) :-
 showTypeDefs([],O,O).
 showTypeDefs([(_,Rules)|More],O,E) :-
   showTypeDef(Rules,O,O1),
-  showTypeDefs(More,O1,E).
+  appStr("\n",O1,O2),
+  showTypeDefs(More,O2,E).
 
 showTypeDef([],O,O) :- !.
 showTypeDef([Rl|Rules],O,E) :-
   showTypeRule(Rl,O,O1),
-  showTypeDef(Rules,O1,E).  
+  appStr(".\n",O1,O2),
+  showTypeDef(Rules,O2,E).  
 
 showDefs([],O,O).
 showDefs([Stmt|Stmts],O,E) :-
@@ -170,7 +172,7 @@ showDefs([Stmt|Stmts],O,E) :-
 showDef(function(Lc,Nm,Type,Eqns),O,E) :-
   appStr("function: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr("|:",O2,O3),
+  appStr(":",O2,O3),
   showType(Type,O3,O4),
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
@@ -179,7 +181,7 @@ showDef(function(Lc,Nm,Type,Eqns),O,E) :-
 showDef(predicate(Lc,Nm,Type,Clauses),O,E) :-
   appStr("predicate: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr("|:",O2,O3),
+  appStr(":",O2,O3),
   showType(Type,O3,O4),
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
@@ -188,7 +190,7 @@ showDef(predicate(Lc,Nm,Type,Clauses),O,E) :-
 showDef(defn(Lc,Nm,Cond,Tp,Value),O,E) :-
   appStr("var definition: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr("|:",O2,O3),
+  appStr(":",O2,O3),
   showType(Tp,O3,O4),
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
@@ -198,42 +200,46 @@ showDef(defn(Lc,Nm,Cond,Tp,Value),O,E) :-
   appStr(" = ",O8,O9),
   showTerm(Value,O9,O10),
   appStr(".\n",O10,E).
-showDef(enum(Lc,Nm,Type,Rules),O,E) :-
+showDef(enum(Lc,Nm,_Type,Rules,Face),O,E) :-
   appStr("enum: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr("|:",O2,O3),
-  showType(Type,O3,O4),
+  appStr(":",O2,O3),
+  showType(Face,O3,O4),
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O6a),
   showClassRules(Rules,O6a,E).
-showDef(class(Lc,Nm,Type,Rules),O,E) :-
+showDef(class(Lc,Nm,_Type,Rules,Face),O,E) :-
   appStr("class: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr("|:",O2,O3),
-  showType(Type,O3,O4),
+  appStr(":",O2,O3),
+  showType(Face,O3,O4),
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O6a),
   showClassRules(Rules,O6a,E).
-showDef(typeDef(Nm,Lc,Rules),O,E) :-
+showDef(typeDef(Lc,Nm,Tp,Rules),O,E) :-
   appStr("type: ",O,O1),
   appStr(Nm,O1,O2),
-  appStr(" @ ",O2,O3),
-  showLocation(Lc,O3,O4),
-  showTypeDef(Rules,O4,E).
+  appStr(":",O2,O3),
+  showType(Tp,O3,O4),
+  appStr(" @ ",O4,O5),
+  showLocation(Lc,O5,O6),
+  appStr("\n",O6,O7),
+  showTypeDef(Rules,O7,O8),
+  appStr("\n",O8,E).
 
 showClassRules([],O,O).
 showClassRules([Rl|Rules],O,E) :-
   showClassRule(Rl,O,O1),
   showClassRules(Rules,O1,E).
 
-showClassRule(labelRule(_,_,Hd,Repl),O,E) :-
+showClassRule(labelRule(_,_,Hd,Repl,_),O,E) :-
   showTerm(Hd,O,O1),
   appStr(" <= ",O1,O2),
   showTerm(Repl,O2,O3),
   appStr(".\n",O3,E).
-showClassRule(overrideRule(_,_,Hd,Repl),O,E) :-
+showClassRule(overrideRule(_,_,Hd,Repl,_),O,E) :-
   showTerm(Hd,O,O1),
   appStr(" << ",O1,O2),
   showTerm(Repl,O2,O3),
@@ -289,7 +295,6 @@ showClause(strong(_,Nm,Args,Cond,Body),O,E) :-
   appStr(" :-- ",O5,O6),
   showTerm(Body,O6,O7),
   appStr(".\n",O7,E).
-
 
 showOthers([],O,O).
 showOthers([Stmt|Stmts],O,E) :-

@@ -1,6 +1,6 @@
 :-module(misc,[concat/3,segment/3,last/2,reverse/2,is_member/2,merge/3,intersect/3,subtract/3,
         collect/4,map/3,rfold/4,
-        appStr/3,appInt/3,appSym/3,
+        appStr/3,appInt/3,appSym/3,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2]).
 
 concat([],X,X).
@@ -75,3 +75,7 @@ pathSuffix(String,Marker,Tail) :-
   split_string(Local,".","",Segs),
   last(Segs,Tail).
 pathSuffix(String,_,String).
+
+genstr(Prefix,S) :-
+  gensym(Prefix,A),
+  atom_string(A,S).

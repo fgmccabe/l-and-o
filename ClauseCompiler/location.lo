@@ -8,7 +8,7 @@ location{
     length:integer.
   }.
 
-  loc(symbol,integer,integer):fileLoc.
+  loc:(symbol,integer,integer)<=>fileLoc.
   loc(Fl,Fr,To)..{
     show()::Fr==To => explode(Fl)<>"["<>Fr.show()<>"]".
     show()=>explode(Fl)<>"["<>Fr.show()<>"-"<>To.show()<>"]".
