@@ -1,0 +1,9 @@
+catalog{
+  -- simple test catalog
+  version is "1.0"
+  base is "."
+  content is {
+    "thing" -> "thing.lo"
+    "arith" -> "arith.lo"
+  }
+}
