@@ -28,6 +28,3 @@ test(Fl) :-
   % displayPlRules(Rules),
   current_output(Out),
   genRules(Out,Rules).
-
-main(Args) :- write("hello").
-

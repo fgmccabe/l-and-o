@@ -29,7 +29,7 @@ transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
 transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,Ex,Exx).
 transformMdlDef(_,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,Ex,Exx).
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
 transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
 
 transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Eqns),LclFun,Rules,Rx,Ex,Exx) :-
@@ -544,9 +544,8 @@ makeInheritanceMap([labelRule(_,_,P,R,FaceTp)|Defs],LclName,LbVr,ThVr,Map,Opts,L
   Super = prg(SuperName,3),
   merge(Q1,[CV,ThVr],Q),
   Ex1 =  [clse(Q,Super,[CV,Ptn,ThVr],Body)|Ex2],
-  makeInheritFields(InhFields,types:isPredType,LclName,Super,Fields,LbVr,ThVr,Entry,En0,List,L0),
-  makeInherit(Repl,LbVr,ThVr,LclName,Super,L0,L1,En0,En1,Ex0,Ex1),
-  makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L1,Lx,Fields,En1,En,Ex2,Exx).
+  makeInheritFields(InhFields,types:isPredType,LclName,Super,Fields,LbVr,ThVr,Entry,En0,List,L1),
+  makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L1,Lx,Fields,En0,En,Ex2,Exx).
 
 makeInheritFields([],_,_,_,_,_,_,Entry,Entry,List,List).
 makeInheritFields([(Nm,Tp)|InhFields],Test,LclName,Super,Fields,LbVr,ThVr,Entry,En,List,Lx) :-
@@ -569,8 +568,6 @@ fieldArity(Tp,Arity) :- isFunctionType(Tp,Ar), !, Arity is Ar+1.
 fieldArity(Tp,Arity) :- isPredType(Tp,Arity),!.
 fieldArity(Tp,Arity) :- isClassType(Tp,Ar), !, Arity is Ar+1.
 fieldArity(_,1).
-
-makeInherit(Repl,LbVr,ThVr,LclName,Super,List,List,Entry,Entry,Ex,Ex).
 
 collectMtds([],_,_,_,List,List,_).
 collectMtds([Entry|Defs],OuterNm,LbVr,ThVr,List,Lx,Fields) :-
