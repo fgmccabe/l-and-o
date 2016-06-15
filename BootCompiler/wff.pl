@@ -23,16 +23,16 @@ wffPackageName(Name) :-
   reportError("Module %s not valid",[Name],Lc).
 
 wffThetaEnv([]).
-wffThetaEnv([Pri|Stmts]) :- 
-    isPrivate(Pri,El,_),
-    wffThetaEnv([El|Stmts]).
-wffThetaEnv([Pri|Stmts]) :- 
-    isPublic(Pri,El,_),
-    wffThetaEnv([El|Stmts]).
 wffThetaEnv([St|Stmts]) :-
     wffStmt(St),
     wffThetaEnv(Stmts).
 
+wffStmt(St) :-
+  isPrivate(St,El,_),!,
+  wffStmt(El).
+wffStmt(St) :-
+  isPublic(St,El,_),!,
+  wffStmt(El).
 wffStmt(St) :-
   wffImportSt(St).
 wffStmt(St) :-

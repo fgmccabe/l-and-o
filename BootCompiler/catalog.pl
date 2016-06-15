@@ -1,4 +1,4 @@
-:- module(catalog,[locateCatalog/2,catalog//1,resolveCatalog/3]).
+:- module(catalog,[locateCatalog/2,catalog//1,resolveCatalog/3,catalogBase/2]).
 
 :- use_module(resource).
 :- use_module(misc).
@@ -9,12 +9,15 @@ locateCatalog(Uri,Cat) :-
   locateResource(CatURI,Chars),
   parseBagOChars(Chars,CatURI,Cat).
 
-resolveCatalog(Nm,cat(Cat),Uri) :-
-  is_member(contents(Map),Cat),
-  is_member(entry(Nm,Uri),Map),!.
-resolveCatalog(Nm,cat(Cat),Uri) :-
+resolveCatalog(cat(Cat),Nm,Uri) :-
+  is_member(entries(Map),Cat),
   is_member(base(Base),Cat),
-  resolveURI(Base,Nm,Uri).
+  is_member(entry(Nm,U),Map),!,
+  resolveURI(Base,U,Uri).
+resolveCatalog(cat(Cat),Nm,Uri) :-
+  is_member(base(Base),Cat),
+  parseURI(Nm,U),
+  resolveURI(Base,U,Uri).
 
 parseBagOChars(Chrs,Uri,Cat) :-
   phrase(tokens(Toks),Chrs),
@@ -23,6 +26,9 @@ parseBagOChars(Chrs,Uri,Cat) :-
 
 defaultBase(cat(Stmts),Fl,cat(NStmts)) :-
   replace(Stmts,base(_),base(Fl),NStmts).
+
+catalogBase(cat(Stmts),Base) :-
+  is_member(base(Base),Stmts).
 
 catalog(cat(Stmts)) -->
   [catalog, lbrce], catStmts(Stmts), [rbrce].
@@ -37,7 +43,7 @@ catStmt(version(Version)) --> [version, is], string(Version), [period].
 contents([]) --> [].
 contents([Entry|More]) --> entry(Entry), contents(More).
 
-entry(entry(Key,Url)) --> string(Key), [thin_arrow], string(Url), [period].
+entry(entry(Key,Url)) --> string(Key), [thin_arrow], string(U), [period], {parseURI(U,Url)}.
 
 string(S) --> [string(S)].
 

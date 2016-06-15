@@ -1,8 +1,0 @@
-catalog{
-  -- simple test catalog
-  version is "1.0".
-  content is {
-    "thing" -> "thing.lo".
-    "arith" -> "arith.lo".
-  }
-}

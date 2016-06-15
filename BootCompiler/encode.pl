@@ -46,9 +46,9 @@ encodeType(anonType,['_'|O],O).
 encodeType(voidType,['v'|O],O).
 encodeType(topType,['A'|O],O).
 encodeType(typeExp("lo.std*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
-encodeType(type("lo.std*integer"),['i'|O],O).
-encodeType(type("lo.std*float"),['f'|O],O).
-encodeType(type("lo.std*string"),['S'|O],O).
+encodeType(type("lo.arith*integer"),['i'|O],O).
+encodeType(type("lo.arith*float"),['f'|O],O).
+encodeType(type("lo.thing*string"),['S'|O],O).
 encodeType(kVar(Nm),['k'|O],Ox) :- encodeTpName(Nm,O,Ox).
 encodeType(type(Nm),['t'|O],Ox) :- encodeTpName(Nm,O,Ox).
 encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeTpName(Nm,O,O1), encodeTypes(Args,O1,Ox).

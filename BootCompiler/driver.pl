@@ -15,10 +15,16 @@
 :- use_module(genprolog).
 :- use_module(uri).
 :- use_module(catalog).
+:- use_module(misc).
+:- use_module(import).
 
 parseFlags([],[],[]).
-parseFlags(['-g'|More],[debugging|Opts],Files) :- parseFlags(More,Opts,Files).
-parseFlags(['-p'|More],[profiling|Opts],Files) :- parseFlags(More,Opts,Files).
+parseFlags(['-g'|More],[debugging|Opts],Files) :- 
+  parseFlags(More,Opts,Files).
+parseFlags(['-p'|More],[profiling|Opts],Files) :- 
+  parseFlags(More,Opts,Files).
+parseFlags(['-b', B|More],[build(Build)|Opts],Files) :- 
+  atom_string(B,Build), parseFlags(More,Opts,Files).
 parseFlags(['--'|More], [], Files) :- stringify(More,Files).
 parseFlags(More, [], Files) :- stringify(More,Files).
 
@@ -28,43 +34,50 @@ stringify([Name|More],[Fn|Files]) :-
   stringify(More,Files).
 
 main(Args) :- 
-  getBaseUrl(Base),
-  locateCatalog(Base,Cat),
-  parseFlags(Args,Opts,Files),
-  processFiles(Files,Cat,Base,Opts).
+  getCWDUri(CWD),
+  parseFlags(Args,CWD,Opts,Files),
+  processFiles(Files,Opts).
 
-processFiles([],_,_,_).
-processFiles([Fn|More],Cat,Base,Opts) :-
-  processFile(Base,Cat,Fn,Opts),
-  processFiles(More,Cat,Base,Opts).
+processFiles([],_,_).
+processFiles([Fn|More],CWD,Opts) :-
+  processFile(Fn,CWD,Opts),
+  processFiles(More,CWD,Opts).
 
-processFile(Base,Cat,Fl,Opts) :-
+processFile(Fl,CWD,Opts) :-
   startCount,
-  parseURI(Fl,FUrl),
-  locateResource(Base,FUrl,Text),
-  parseFile(Text,Term),!,
+  getSrcUri(Fl,CWD,FUrl),
+  locateCatalog(FUrl,Cat),
+  locateResource(FUrl,Src),
+  parseFile(Src,Term),!,
   noErrors,
   wffModule(Term),!,
   noErrors,
-  checkProgram(Term,Cat,Prog),!,
+  checkProgram(Term,Cat,Opts,Prog),!,
   noErrors,
   displayCanon(Prog),
   transformProg(Prog,Opts,Rules),!,
   noErrors,
-  current_output(Out),
-  genRules(Out,Rules),!.
+  genRules(Rules,Text),!,
+  makeOutputUri(FUrl,Opts,Fl,OutUri),
+  putResource(OutUri,Text).
 
 parseFile(Txt,Term) :-
   allTokens(Txt,Toks),
   parse(Toks,Term,_), !.
 
 test(Fl) :- 
-  getBaseUrl(Base),
-  locateCatalog(Base,Cat),
-  processFile(Base,Cat,Fl,[/*debugging*/]).
+  getCWDUri(CWD),
+  processFile(Fl,CWD,[/*debugging*/]).
 
-getBaseUrl(Base) :-
+getCWDUri(WD) :-
   working_directory(C,C),
   atom_string(C,D),
-  string_concat("file:",D,CWD),
-  parseURI(CWD,Base).
+  string_concat("file:",D,DT),
+  parseURI(DT,WD).
+
+getSrcUri(Fl,WD,FUri) :-
+  parseURI(Fl,FU),
+  resolveURI(WD,FU,FUri).
+
+
+

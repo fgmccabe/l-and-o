@@ -1,4 +1,4 @@
-:- module(checker,[checkProgram/3]).
+:- module(checker,[checkProgram/4]).
 
 :- use_module(abstract).
 :- use_module(dependencies).
@@ -17,13 +17,13 @@
 
 :- use_module(display).
 
-checkProgram(Prog,Cat,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
+checkProgram(Prog,Cat,Opts,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
   stdDict(Base),
   isBraceTerm(Prog,Pk,Els),
   packageName(Pk,Pkg),
   pushScope(Base,TEnv),
   declareCatalog(Pkg,Cat,TEnv,Env),
-  thetaEnv(Pkg,Els,[],Env,_,Defs,Private,Imports,Others),
+  thetaEnv(Pkg,Opts,Els,[],Env,_,Defs,Private,Imports,Others),
   computeExport(Defs,Private,Fields,Types),!.
 
 packageName(T,Pkg) :- isIden(T,Pkg).
@@ -34,37 +34,49 @@ packageName(T,Pkg) :- isBinary(T,".",L,R),
   string_concat(LP,".",I),
   string_concat(I,RP,Pkg).
 
-thetaEnv(Pkg,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
+thetaEnv(Pkg,Opts,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
   macroRewrite(Els,Stmts),
   dependencies(Stmts,Groups,Private,Annots,Imps,Otrs),
-  checkImports(Imps,Imports,Pkg,Base,IBase),
+  checkImports(Imps,Imports,Pkg,Opts,Base,IBase),
   pushFace(Fields,IBase,Env),
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-checkImports([],[],_,Env,Env) :- !.
-checkImports([St|Stmts],Imports,Pkg,Env,Ex) :-
-  checkImport(St,private,Imports,IM,Pkg,Env,E0),
-  checkImports(Stmts,IM,Pkg,E0,Ex).
+checkImports([],[],_,_,Env,Env) :- !.
+checkImports([St|Stmts],Imports,Pkg,Opts,Env,Ex) :-
+  checkImport(St,private,Imports,IM,Pkg,Opts,Env,E0),
+  checkImports(Stmts,IM,Pkg,Opts,E0,Ex).
 
-checkImport(St,_,Imports,More,Pkg,Env,Ex) :-
+checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
   isUnary(St,"private",I),
-  checkImport(I,private,Imports,More,Pkg,Env,Ex).
-checkImport(St,_,Imports,More,Pkg,Env,Ex) :-
+  checkImport(I,private,Imports,More,Pkg,Opts,Env,Ex).
+checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
   isUnary(St,"public",I),
-  checkImport(I,public,Imports,More,Pkg,Env,Ex).
-checkImport(St,Viz,[import(Lc,Viz,PkgSpec)|More],More,Pkg,Env,Ex) :-
+  checkImport(I,public,Imports,More,Pkg,Opts,Env,Ex).
+checkImport(St,Viz,[import(Lc,Viz,PkgSpec)|More],More,Pkg,Opts,Env,Ex) :-
   isUnary(St,Lc,"import",P),
-  isIden(P,_,PkgName),
+  packageName(P,PkgName),
   getCatalog(Pkg,Env,Cat),
-  locatePackage(PkgName,Cat,PkgSpec),
-  importDefs(PkgSpec,Env,Ex).
+  (locatePackage(PkgName,Cat,Opts,PkgSpec),
+   importDefs(PkgSpec,Lc,Env,Ex) ;
+   reportError("cannot locate package %s",[PkgName],Lc),
+   Env=Ex).
 
 % For now, we stub these out.
-locatePackage(Pkg,Cat,PkgSpec) :-
+locatePackage(Pkg,Cat,Opts,PkgSpec) :-
   resolveCatalog(Cat,Pkg,Uri),
-  importPkg(Pkg,Uri,PkgSpec).
-importDefs(_,Env,Env).
+  catalogBase(Cat,Base),
+  importPkg(Pkg,Uri,Base,Opts,PkgSpec).
+importDefs(spec(faceType(Exported),faceType(Types)),Lc,Env,Ex) :-
+  declareFields(Exported,Lc,Env,E0),
+  importTypes(Types,Lc,E0,Ex).
+
+importTypes([],_,Env,Env).
+importTypes([(Nm,tupleType(Rules))|More],Lc,Env,Ex) :-
+  pickTypeTemplate(Rules,Type),
+  pickFaceRule(Rules,FaceRule),
+  declareType(Nm,Lc,Type,FaceRule,Rules,Env,E0),
+  importTypes(More,Lc,E0,Ex).
 
 checkOthers([],[],_,_).
 checkOthers([St|Stmts],Ass,Env,Path) :-
@@ -311,7 +323,7 @@ checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   getTypeFace(ClassTp,Env,Fields),
   pushScope(Env,Base),
   declareVar("this",Lc,vr("this",ClassTp),Base,ThEnv),
-  thetaEnv(ClassPath,Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
+  thetaEnv(ClassPath,[],Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
   computeExport(Defs,Private,BodyDefs,Types).
 
 declareFields([],_,Env,Env).
@@ -794,6 +806,10 @@ collectFields([(Nm,Tp)|More],SoFar,Flds,Lc) :-
 
 pickTypeTemplate([Rl|_],Type) :-
   deRule(Rl,Type).
+
+pickFaceRule(Rules,Rl) :-
+  is_member(Rl,Rules),
+  isFaceRule(Rl),!.
 
 deRule(univType(B,Tp),univType(B,XTp)) :-
   deRule(Tp,XTp).

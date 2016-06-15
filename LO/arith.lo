@@ -1,4 +1,9 @@
-std.arith{
+lo.arith{
+  import lo.thing.
+
+  integer <~ arith.
+  float <~ arith.
+
   arith <~ {
     pl:  (this)=>this.
     tms: (this)=>this.
@@ -6,17 +11,17 @@ std.arith{
     dv:  (this)=>this.
   }.
 
-  plus:all t<~arith ~~ (t,t)=>t.
-  plus(x,y) => x.pl(y).
+  (+):all t<~arith ~~ (t,t)=>t.
+  x+y => x.pl(y).
 
-  times:all t<~arith ~~ (t,t)=>t.
-  times(x,y) => x.tms(y).
+  (*):all t<~arith ~~ (t,t)=>t.
+  x*y => x.tms(y).
 
-  minus:all t<~arith ~~ (t,t)=>t.
-  minus(x,y) => x.mns(y).
+  (-):all t<~arith ~~ (t,t)=>t.
+  x-y => x.mns(y).
 
-  div:all t<~arith ~~ (t,t)=>t.
-  div(x,y) => x.dv(y).
+  (/):all t<~arith ~~ (t,t)=>t.
+  x/y => x.dv(y).
 
   IT <~ arith.
   I:(integer)<=>IT.
@@ -27,5 +32,13 @@ std.arith{
     dv(I(Y)) => I(__integer_div(X,Y)).
   }.
 
-  assert plus(times(I(2),I(3)),I(4)) = I(10).
+  assert I(2)*I(3)+I(4) = I(10).
+
+  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
+  integer..{
+    pl(Y) => __integer_plus(this,Y).
+    tms(Y) => __integer_times(this,Y).
+    mns(Y) => __integer_minus(this,Y).
+    dv(Y) => __integer_div(this,Y).
+  }
 }

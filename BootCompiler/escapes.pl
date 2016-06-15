@@ -2,24 +2,24 @@
 
 :-module(escapes,[isEscape/1,escapeType/2]).
 
-escapeType("exit",funType([type("lo.std*integer")],voidType)).
-escapeType("_command_line",funType([],typeExp("lo.std*list",[type("lo.std*string")]))).
-escapeType("_command_opts",funType([],typeExp("lo.std*list",[tupleType([type("lo.std*string"),type("lo.std*string")])]))).
+escapeType("exit",funType([type("lo.arith*integer")],voidType)).
+escapeType("_command_line",funType([],typeExp("lo.std*list",[type("lo.thing*string")]))).
+escapeType("_command_opts",funType([],typeExp("lo.std*list",[tupleType([type("lo.thing*string"),type("lo.thing*string")])]))).
 escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_match",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("var",univType(kVar("t"),predType([kVar("t")]))).
 escapeType("nonvar",univType(kVar("t"),predType([kVar("t")]))).
-escapeType("_int_plus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))).
-escapeType("_int_minus",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))).
-escapeType("_int_times",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))).
-escapeType("_int_div",funType([type("lo.std*integer"),type("lo.std*integer")],type("lo.std*integer"))).
-escapeType("_flt_plus",funType([type("lo.std*float"),type("lo.std*float")],type("lo.std*float"))).
-escapeType("_flt_minus",funType([type("lo.std*float"),type("lo.std*float")],type("lo.std*float"))).
-escapeType("_flt_times",funType([type("lo.std*float"),type("lo.std*float")],type("lo.std*float"))).
-escapeType("_flt_div",funType([type("lo.std*float"),type("lo.std*float")],type("lo.std*float"))).
-escapeType("_int_abs",funType([type("lo.std*integer")],type("lo.std*integer"))).
-escapeType("_flt_abs",funType([type("lo.std*float")],type("lo.std*float"))).
+escapeType("_int_plus",funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer"))).
+escapeType("_int_minus",funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer"))).
+escapeType("_int_times",funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer"))).
+escapeType("_int_div",funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer"))).
+escapeType("_flt_plus",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
+escapeType("_flt_minus",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
+escapeType("_flt_times",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
+escapeType("_flt_div",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
+escapeType("_int_abs",funType([type("lo.arith*integer")],type("lo.arith*integer"))).
+escapeType("_flt_abs",funType([type("lo.arith*float")],type("lo.arith*float"))).
 isEscape("exit").
 isEscape("_command_line").
 isEscape("_command_opts").

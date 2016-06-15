@@ -5,14 +5,13 @@
 :- use_module(transutils).
 :- use_module(encode).
 
-genRules(Out,export(Pkg,Imports,Fields,Types,Rules)) :-
+genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
   appStr(":- use_module(ocall).\n",Chrs,O0),
   genImports(Imports,O0,O1),
   genFieldTypes(Fields,Pkg,O1,O2),
   genTypes(Types,Pkg,O2,O3),
   genPlRules(Rules,O3,[]),
-  string_chars(Res,Chrs), 
-  write(Out,Res).
+  string_chars(Text,Chrs).
 
 genImports([],O,O).
 

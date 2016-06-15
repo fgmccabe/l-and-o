@@ -1,4 +1,4 @@
-:- module(uri,[parseURI/2,resolveURI/3,showUri/3,makePath/2]).
+:- module(uri,[parseURI/2,resolveURI/3,showUri/3,uriPath/2,makePath/2]).
 
 :- use_module(misc).
 
@@ -29,7 +29,7 @@ netPath(net(A,P)) --> ['/','/'], authority(A), optAbsolutePath(P).
 
 absolutePath(abs(P)) --> ['/'], pathSegments(P).
 
-relativePath(rel([F|R])) --> pathSegment(F), absolutePath(abs(R)).
+relativePath(rel(S)) --> pathSegments(S).
 
 authority(A) --> server(A).
 
@@ -316,3 +316,8 @@ pQuery(query(Q),['?'|O],Ox) :-
 makePath(P,Text) :-
   pHierPath(P,O,[]),
   string_chars(Text,O).
+
+uriPath(absUri(_,Pth,_),Path) :-
+  makePath(Pth,Path).
+uriPath(relUri(Pth,_),Path) :-
+  makePath(Pth,Path).

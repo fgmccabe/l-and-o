@@ -1,4 +1,4 @@
-:- module(decode,[decodeTerm/3, decodeType//1]).
+:- module(decode,[decodeTerm/3, decodeType//1,decodeSignature/2]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -112,12 +112,16 @@ decodeTerm(11,Flg,Term,Refs,Sin,Sout) :-
   is_member((Key,Term),Refs),!.
 decodeTerm(_,_,_,_,_) :- abort.
 
+decodeSignature(S,Tp) :-
+  string_chars(S,Chrs),
+  phrase(decodeType(Tp),Chrs).
+
 decodeType(anonType) --> ['_'].
 decodeType(voidType) --> ['v'].
 decodeType(topType) --> ['A'].
-decodeType(type("lo.std*integer")) --> ['i'].
-decodeType(type("lo.std*float")) --> ['f'].
-decodeType(type("lo.std*string")) --> ['S'].
+decodeType(type("lo.arith*integer")) --> ['i'].
+decodeType(type("lo.arith*float")) --> ['f'].
+decodeType(type("lo.thing*string")) --> ['S'].
 decodeType(type("lo.std*logical")) --> ['l'].
 decodeType(kVar(Nm)) --> ['k'], decodeName(Nm).
 decodeType(type(Nm)) --> ['t'], decodeName(Nm).
@@ -129,7 +133,7 @@ decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
 decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
 decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
 decodeType(classType(A,T)) --> ['C'], decodeArgTypes(A), decodeType(T).
-decodeType(tupleTuple(Tps)) --> ['T'], decodeTypes(Tps).
+decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).
 decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 
 decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).

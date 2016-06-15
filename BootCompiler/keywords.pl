@@ -27,11 +27,6 @@
   keyword("::=").
   keyword("<=").
   keyword("<~").
-  keyword("-").
-  keyword("*").
-  keyword("/").
-  keyword("+").
-  keyword("%").
   keyword("$").
   keyword("*>").
   keyword("\\+").

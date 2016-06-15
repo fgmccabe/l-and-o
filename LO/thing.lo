@@ -1,0 +1,14 @@
+lo.thing{
+  string <~ thing.
+
+  ss ::= ssSp | ssNl | ssStr(string) | ssSeq(list[ss]) | ssIndent(ss).
+
+  thing <~ {
+    show : ()=>ss.
+  }.
+
+  thing:thing.
+  thing..{
+    show() => ssStr("thing").
+  }.
+}

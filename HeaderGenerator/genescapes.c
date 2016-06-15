@@ -81,13 +81,13 @@ static char *dumpSig(char *sig, bufferPo out) {
 
   switch (*sig++) {
     case integer_sig:
-      dumpStdType("lo.std*integer", out);
+      dumpStdType("lo.arith*integer", out);
       break;
     case float_sig:
-      dumpStdType("lo.std*float", out);
+      dumpStdType("lo.arith*float", out);
       break;
     case string_sig:
-      dumpStdType("lo.std*string", out);
+      dumpStdType("lo.thing*string", out);
       break;
     case logical_sig:
       dumpStdType("lo.std*logical", out);
@@ -190,13 +190,13 @@ static void dumpStdType(char *name, bufferPo out) {
 }
 
 static char *dInt(char *sig,int *len) {
-  char K = *sig++;
-  int Len = 0;
+  char K = *sig;
+  int Ln = 0;
   while(isdigit(K)){
-    Len = Len*10+digittoint(K);
-    K = *sig++;
+    Ln = Ln*10+digittoint(K);
+    K = *++sig;
   }
-  *len = K;
+  *len = Ln;
   return sig;
 }
 
