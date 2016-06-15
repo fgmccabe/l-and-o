@@ -9,7 +9,7 @@
 :- use_module(escapes).
 :- use_module(location).
 
-transformProg(prog(Pkg,_Imports,Defs,Others,_Fields,Types),Opts,Rules) :-
+transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types),Opts,export(Pkg,Imports,Fields,Types,Rules)) :-
   makePkgMap(Pkg,Defs,Types,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
   transformModuleDefs(Pkg,Map,POpts,Defs,R0,Rx,Rx,[]),
@@ -27,7 +27,7 @@ transformMdlDef(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),Rules,Rx,Ex,Exx) :-
 transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
   transformDefn(Pkg,Map,Opts,Lc,Nm,_,Cond,Value,Rules,Rx,Ex,Exx).
 transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,Ex,Exx).
+  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
 transformMdlDef(_,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
 transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
@@ -216,8 +216,8 @@ trPtn(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   lookupPkgRef(Map,Pkg,Rf,Reslt),
-  genstr("Xi",Xi),
-  implementPkgRefPtn(Reslt,Lc,Pkg,Rf,idnt(Xi),Ptn,Q,Qx,Post,Pstx).
+  genVar("Xi",Xi),
+  implementPkgRefPtn(Reslt,Lc,Pkg,Rf,Xi,Ptn,Q,Qx,Post,Pstx).
 trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
   trPtns(Ptns,P,Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
 trPtn(apply(_,O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
@@ -233,8 +233,8 @@ trPtn(XX,void,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-
 trVarPtn(_,"_",idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_).
 trVarPtn(_,Nm,A,Q,Qx,Pre,Prx,Post,Pstx,Map,_) :-
   lookupVarName(Map,Nm,V),!,
-  genstr("X",X),
-  implementVarPtn(V,Nm,idnt(X),A,Q,Qx,Pre,Prx,Post,Pstx).
+  genVar("X",X),
+  implementVarPtn(V,Nm,X,A,Q,Qx,Pre,Prx,Post,Pstx).
 trVarPtn(Lc,Nm,idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_) :-
   reportError("'%s' not defined",[Nm],Lc).
 
@@ -253,8 +253,8 @@ implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-               
 
 trPtnCallOp(v(_,Nm),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
-  genstr("X",X),
-  implementPtnCall(Reslt,Nm,idnt(X),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
+  genVar("X",X),
+  implementPtnCall(Reslt,Nm,X,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
 
 implementPtnCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
   concat(Args,[X,LblVr,ThVr],XArgs),
@@ -300,8 +300,8 @@ trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,TA,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(apply(_,Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,Args,Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
-  genstr("X",X),
-  trExpCallOp(Op,idnt(X),Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
+  genVar("X",X),
+  trExpCallOp(Op,X,Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
 trExp(dot(_,Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   genVar("XV",X),
   trCons(Fld,[X],S),
@@ -539,8 +539,8 @@ makeInheritanceMap([labelRule(_,_,P,R,FaceTp)|Defs],LclName,LbVr,ThVr,Map,Opts,L
   genVar("CV",CV),
   trPtn(P,Ptn,Extra,Q0,Body,Pre0,Pre0,Prx,Map,Opts,Ex,Ex0),
   trExp(R,Repl,Q0,Q1,Prx,Px,Px,[ocall(CV,Repl,ThVr)],Map,Opts,Ex0,Ex1),
-  gensym("super",S),
-  localName(LclName,"^",S,SuperName),
+  genstr("^",S),
+  string_concat(LclName,S,SuperName),
   Super = prg(SuperName,3),
   merge(Q1,[CV,ThVr],Q),
   Ex1 =  [clse(Q,Super,[CV,Ptn,ThVr],Body)|Ex2],

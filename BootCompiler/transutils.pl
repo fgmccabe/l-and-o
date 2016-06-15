@@ -2,7 +2,7 @@
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
           makePkgMap/4,genNewName/4,genVar/2,
           pushOpt/3, isOption/2,layerName/2,
-          trCons/3,trPrg/3,
+          trCons/3,trPrg/3,typeTrArity/2,
           genAnons/2,genVars/2]).
 
 :- use_module(misc).
@@ -132,7 +132,6 @@ makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx) :-
 
 makeTypesMap(_,_,List,List).
 
- 
 lookup([],_,_,notInMap).
 lookup([lyr(_Prefix,Defns,_Lc,_Lbl,_LbVr,_ThVr)|_Layers],Nm,Filter,Reslt) :-
   filteredSearch(Defns,Filter,Nm,Reslt),!.
@@ -230,3 +229,13 @@ genVars(K,[V|Rest]) :-
   K1 is K-1,
   genVar("V",V),
   genVars(K1,Rest).
+
+typeTrArity(Tp,Ar) :-
+  isFunctionType(Tp,A),
+  Ar is A+1.
+typeTrArity(Tp,Ar) :-
+  isPredType(Tp,Ar).
+typeTrArity(Tp,Ar) :-
+  isClassType(Tp,A),
+  Ar is A+1.
+typeTrArity(_,1).

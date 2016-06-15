@@ -1,52 +1,5 @@
 #!/usr/bin/env swipl -q -g main.
 
-/* Logic and Object compiler driver */
+/* Logic and Object compiler script */
 
-:- use_module(grab).
-:- use_module(lexer).
-:- use_module(grammar).
-:- use_module(display).
-:- use_module(canon).
-:- use_module(wff).
-:- use_module(checker).
-:- use_module(transform).
-:- use_module(plog).
-:- use_module(errors).
-:- use_module(genprolog).
-
-parseFile(Fl,Term) :- grab_text(Fl,Txt),
-  allTokens(Txt,Toks), parse(Toks,Term,_), !.
-
-wffFile(Fl,Term) :- startCount, parseFile(Fl,Term), wffModule(Term), !, noErrors.
-
-typeFile(Fl,Prog) :-
-  wffFile(Fl,Term),
-  checkProgram(Term,Prog),!,
-  displayCanon(Prog).
-
-parseFlags([],[],[]).
-parseFlags(['-g'|More],[debugging|Opts],Files) :- parseFlags(More,Opts,Files).
-parseFlags(['-p'|More],[profiling|Opts],Files) :- parseFlags(More,Opts,Files).
-parseFlags(['--'|More], [], Files) :- stringify(More,Files).
-parseFlags(More, [], Files) :- stringify(More,Files).
-
-stringify([],[]).
-stringify([Name|More],[Fn|Files]) :- 
-  atom_string(Name,Fn),
-  stringify(More,Files).
-
-main(Args) :- 
-  parseFlags(Args,Opts,Files),
-  processFiles(Files,Opts).
-
-processFiles([],_).
-processFiles([Fn|More],Opts) :-
-  processFile(Fn,Opts),
-  processFiles(More,Opts).
-
-processFile(Fl,Opts) :-
-  typeFile(Fl,Prog),
-  transformProg(Prog,Opts,Rules),
-  % displayPlRules(Rules),
-  current_output(Out),
-  genRules(Out,Rules).
+:- use_module(driver).

@@ -13,7 +13,7 @@ dependencies(Els,Groups,Private,Annots,Imports,Other) :-
   topsort(Defs,Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,[St|I],Other) :-
-  isUnary(St,"import",_),
+  isImport(St),
   collectDefinitions(Stmts,Defs,P,A,I,Other).
 collectDefinitions([St|Stmts],Defs,P,A,I,[St|Other]) :-
   isUnary(St,"assert",_),
@@ -33,6 +33,15 @@ collectDefinitions([St|Stmts],[(Nm,Lc,[St|Defn])|Defs],P,A,I,O) :-
   collectDefinitions(OS,Defs,P,A,I,O).
 collectDefinitions([],[],[],[],[],[]).
 
+isImport(St) :-
+  isUnary(St,"public",I),!,
+  isImport(I).
+isImport(St) :-
+  isUnary(St,"private",I),!,
+  isImport(I).
+isImport(St) :-
+  isUnary(St,"import",_).
+
 ruleName(St,Name,Mode) :-
   isQuantified(St,_,B),!,
   ruleName(B,Name,Mode).
@@ -41,9 +50,6 @@ ruleName(St,var(Nm),value) :-
   headName(Hd,Nm).
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
-  typeName(L,Nm).
-ruleName(St,tpe(Nm),type) :-
-  isBinary(St,"::=",L,_),
   typeName(L,Nm).
 
 collectDefines([St|Stmts],Kind,OSt,Nm,[St|Defn]) :-

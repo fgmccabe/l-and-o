@@ -1,4 +1,4 @@
-:- module(parsetype,[parseType/3,parseType/4,parseType/5,parseTypeRule/4]).
+:- module(parsetype,[parseType/3,parseType/4,parseType/5,parseTypeRule/4,parseTypeTemplate/5]).
 
 :- use_module(abstract).
 :- use_module(dict).
@@ -123,6 +123,18 @@ noConstraintsBound(V,B,[(Nm,kVar(Nm))|B]) :-
   isName(Vr,Nm).
 noConstraintsBound(V,B,[(N,kVar(N))|B]) :-
   isName(V,N).
+
+parseTypeTemplate(St,B,Env,Type,Path) :-
+  isQuantified(St,V,Body),
+  noConstraintsBound(V,B,BB),
+  parseTypeTemplate(Body,BB,Env,Ex,Inner,Path),
+  parseBound(V,B,_,Ex,Type,Inner).
+parseTypeTemplate(St,B,Env,Rule,Path) :-
+  parseTypeTemplate(St,B,Env,_,Rule,Path).
+
+parseTypeTemplate(St,B,Env,Ex,Type,Path) :-
+  isBinary(St,"<~",L,_),
+  parseTypeHead(L,B,Type,Env,Ex,Path),!.
 
 parseRule(St,B,Env,Ex,typeRule(Lhs,Rhs),Path) :-
   isBinary(St,"<~",L,R),

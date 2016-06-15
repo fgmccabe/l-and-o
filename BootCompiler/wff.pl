@@ -1,4 +1,4 @@
-:-module(wff,[wffModule/1]).
+:-module(wff,[wffModule/1,isAlgebraicTypeDef/4]).
 :-use_module(errors).
 :-use_module(abstract).
 :-use_module(misc).
@@ -25,6 +25,9 @@ wffPackageName(Name) :-
 wffThetaEnv([]).
 wffThetaEnv([Pri|Stmts]) :- 
     isPrivate(Pri,El,_),
+    wffThetaEnv([El|Stmts]).
+wffThetaEnv([Pri|Stmts]) :- 
+    isPublic(Pri,El,_),
     wffThetaEnv([El|Stmts]).
 wffThetaEnv([St|Stmts]) :-
     wffStmt(St),
@@ -79,6 +82,8 @@ wffArgType(T) :- isUnary(T,"-+",TT), !, wffTypeExp(TT).
 wffArgType(T) :- isIden(T).
 
 isPrivate(Term,T,Lc) :- isUnary(Term,"private",T), locOfAst(T,Lc).
+
+isPublic(Term,T,Lc) :- isUnary(Term,"public",T), locOfAst(T,Lc).
 
 isAlgebraicTypeDef(Term,Lc,Head,Body) :- isBinary(Term,Lc,"::=",Head,Body),
    wffNamedType(Head),

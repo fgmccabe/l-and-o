@@ -1,6 +1,7 @@
-:-module(misc,[concat/3,segment/3,last/2,reverse/2,is_member/2,merge/3,intersect/3,subtract/3,
+:-module(misc,[concat/3,segment/3,last/2,reverse/2,is_member/2,
+        merge/3,intersect/3,subtract/3,replace/4,
         collect/4,map/3,rfold/4,
-        appStr/3,appInt/3,appSym/3,genstr/2,
+        appStr/3,appInt/3,appSym/3,appQuoted/3,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2]).
 
 concat([],X,X).
@@ -24,6 +25,11 @@ merge([E|X],Y,Z) :-
   merge(X,Y,Z).
 merge([E|X],Y,Z) :-
   merge(X,[E|Y],Z).
+
+replace([],_,El,[El]).
+replace([E|X],E,Nw,[Nw|X]).
+replace([E|X],K,Nw,[E|Y]) :-
+  replace(X,K,Nw,Y).
 
 subtract(_,[],[]).
 subtract(E,[E|O],O).
@@ -52,6 +58,12 @@ rfold([E|L],F,S,Sx) :-
   rfold(L,F,S0,Sx).
 
 appStr(Str,O,E) :- string_chars(Str,Chrs), concat(Chrs,E,O).
+
+appQuoted(Str,O,E) :- appStr("'",O,O1), string_chars(Str,Chars), quoteConcat(Chars,O1,O2), appStr("'",O2,E).
+
+quoteConcat([],O,O).
+quoteConcat(['"'|More],['\\','"'|Out],Ox) :- quoteConcat(More,Out,Ox).
+quoteConcat([C|More],[C|Out],Ox) :- quoteConcat(More,Out,Ox).
 
 appSym(Sym,O,E) :- atom_chars(Sym,Chrs), concat(Chrs,E,O).
 

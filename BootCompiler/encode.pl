@@ -59,7 +59,7 @@ encodeType(tupleType(Args),['T'|O],Ox) :- encodeTypes(Args,O,Ox).
 encodeType(faceType(Fields),['I'|O],Ox) :- encodeFieldTypes(Fields,O,Ox).
 encodeType(univType(B,Tp),[':'|O],Ox) :- encodeType(B,O,O1),encodeType(Tp,O1,Ox).
 encodeType(constrained(Lw,Tp,Up),['c'|O],Ox) :- encodeType(Lw,O,O1), encodeType(Tp,O1,O2),encodeType(Up,O2,Ox).
-
+encodeType(typeRule(L,R),['Y'|O],Ox) :- encodeType(L,O,O1), encodeType(R,O1,Ox).
 encodeTpName(Nm,O,Ox) :- string_chars(Nm,Chrs), findDelim(Chrs,Delim), encodeChars(Chrs,Delim,O,Ox).
 
 findDelim(Chrs,Delim) :-
@@ -71,6 +71,17 @@ encodeChars(Chars,Delim,[Delim|O],Ox) :-
 
 encodeInt(K,[D|O],O) :- K>=0 , K=<10, digit(K,D).
 encodeInt(N,[D|O],Ox) :- N1 is N div 10, K is N mod 10, digit(K,D), encodeInt(N1,O,Ox).
+
+digit(0,'0').
+digit(1,'1').
+digit(2,'2').
+digit(3,'3').
+digit(4,'4').
+digit(5,'5').
+digit(6,'6').
+digit(7,'7').
+digit(8,'8').
+digit(9,'9').
 
 encodeTypes(Tps,O,Ox) :- length(Tps,L), encodeInt(L,O,O1),encodeTps(Tps,O1,Ox).
 
@@ -85,6 +96,7 @@ encodeArgTps([Tp|More],O,Ox) :- encodeArgType(Tp,O,O1), encodeArgTps(More,O1,Ox)
 encodeArgType(in(Tp),['+'|O],Ox) :- encodeType(Tp,O,Ox).
 encodeArgType(out(Tp),['-'|O],Ox) :- encodeType(Tp,O,Ox).
 encodeArgType(inout(Tp),O,Ox) :- encodeType(Tp,O,Ox).
+encodeArgType(Tp,O,Ox) :- encodeType(Tp,O,Ox).
 
 encodeFieldTypes(Fields,O,Ox) :- length(Fields,L), encodeInt(L,O,O1),encodeFieldTps(Fields,O1,Ox).
 

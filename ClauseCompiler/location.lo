@@ -1,20 +1,24 @@
 location{
-  fileLoc <~ {
-    merge:(fileLoc)=>fileLoc.
-    url:string.
+  import thing.
+  import arith.
+  
+  location <~ {
+    merge:(location)=>location.
     line:integer.
     column:integer.
     from:integer.
     length:integer.
   }.
 
-  loc:(symbol,integer,integer)<=>fileLoc.
-  loc(Fl,Fr,To)..{
-    show()::Fr==To => explode(Fl)<>"["<>Fr.show()<>"]".
-    show()=>explode(Fl)<>"["<>Fr.show()<>"-"<>To.show()<>"]".
-    url()=>explode(Fl).
-    extend(Nt) => loc(Fl,Fr,Nt).
-    from = Fr.
-    to = To.
+  loc:(integer,integer,integer,integer)<=>location.
+  loc(Line,Off,Col,Len)..{
+    line = Line.
+    column = Col.
+    from = Off.
+    length = Len.
+
+    merge(loc(_,_,C,L)) => loc(Line,Off,Col,C-Col+L).
   }.
+
+  hasLoc <~ { locOf:location. }.
 }

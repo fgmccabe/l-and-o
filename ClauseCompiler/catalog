@@ -1,0 +1,6 @@
+catalog{
+  content is {
+    "thing" -> "../LO/thing.lo"
+    "arith" -> "../LO/arith.lo"
+  }
+}

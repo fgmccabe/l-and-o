@@ -1,10 +1,16 @@
-:-module(display,[dispAst/4,dispAstTerm/3,display/2]).
+:-module(display,[dispAst/4,dispAstTerm/3,display/2,display/1,displayAll/1]).
 :- use_module(operators).
 :- use_module(misc).
 
 dispAstTerm(Msg,Term,Pr) :- write(Msg), display(Term,Pr), nl().
 
-display(Term,Pr) :- dispAst(Term,Pr,Chrs,[]), string_chars(Res,Chrs), write(Res).
+display(Term) :- display(Term,2000).
+display(Term,Pr) :- dispAst(Term,Pr,Chrs,[]), string_chars(Res,Chrs), writeln(Res).
+
+displayAll([]).
+displayAll([T|M]) :-
+  display(T),
+  displayAll(M).
 
 dispAst(name(_,Nm),_,O,E) :- appStr(Nm,O,E).
 dispAst(integer(_,Nm),_,O,E) :- number_chars(Nm,Chrs), concat(Chrs,E,O).

@@ -66,6 +66,7 @@ lastInfOp
 infixOp(".",450,450,449,"object access")
 
 prefixOp("private",1700,1699,"private program")
+prefixOp("public",1700,1699,"public program")
 prefixOp("assert", 1260,1259,"assert condition")
 prefixOp("import",900,899,"import module")
 prefixOp("all",1245,1244,"universal quantifier")

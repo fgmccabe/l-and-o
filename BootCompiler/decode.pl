@@ -129,7 +129,8 @@ decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
 decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
 decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
 decodeType(classType(A,T)) --> ['C'], decodeArgTypes(A), decodeType(T).
-decodeType(tupleTuple(Tps)) --> decodeTypes(Tps).
+decodeType(tupleTuple(Tps)) --> ['T'], decodeTypes(Tps).
+decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 
 decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).
 decodeArgType(out(Tp)) --> ['-'], decodeType(Tp).

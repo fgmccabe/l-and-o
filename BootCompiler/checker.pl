@@ -1,4 +1,4 @@
-:- module(checker,[checkProgram/2]).
+:- module(checker,[checkProgram/3]).
 
 :- use_module(abstract).
 :- use_module(dependencies).
@@ -11,38 +11,59 @@
 :- use_module(canon).
 :- use_module(errors).
 :- use_module(keywords).
+:- use_module(macro).
+:- use_module(catalog).
+:- use_module(import).
 
-checkProgram(Prog,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
+:- use_module(display).
+
+checkProgram(Prog,Cat,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
   stdDict(Base),
   isBraceTerm(Prog,Pk,Els),
   packageName(Pk,Pkg),
   pushScope(Base,TEnv),
-  thetaEnv(Pkg,Els,[],TEnv,_,Defs,Private,Imports,Others),
+  declareCatalog(Pkg,Cat,TEnv,Env),
+  thetaEnv(Pkg,Els,[],Env,_,Defs,Private,Imports,Others),
   computeExport(Defs,Private,Fields,Types),!.
 
 packageName(T,Pkg) :- isIden(T,Pkg).
 packageName(T,Pkg) :- isString(T,Pkg).
+packageName(T,Pkg) :- isBinary(T,".",L,R), 
+  packageName(L,LP),
+  packageName(R,RP),
+  string_concat(LP,".",I),
+  string_concat(I,RP,Pkg).
 
-thetaEnv(Path,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
-  dependencies(Els,Groups,Private,Annots,Imps,Otrs),
-  checkImports(Imps,Imports,Base,IBase),
+thetaEnv(Pkg,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
+  macroRewrite(Els,Stmts),
+  dependencies(Stmts,Groups,Private,Annots,Imps,Otrs),
+  checkImports(Imps,Imports,Pkg,Base,IBase),
   pushFace(Fields,IBase,Env),
-  checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Path),
-  checkOthers(Otrs,Others,TheEnv,Path).
+  checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
+  checkOthers(Otrs,Others,TheEnv,Pkg).
 
-checkImports([],[],Env,Env) :- !.
-checkImports([St|Stmts],Imports,Env,Ex) :-
-  checkImport(St,Imports,IM,Env,E0),
-  checkImports(Stmts,IM,E0,Ex).
+checkImports([],[],_,Env,Env) :- !.
+checkImports([St|Stmts],Imports,Pkg,Env,Ex) :-
+  checkImport(St,private,Imports,IM,Pkg,Env,E0),
+  checkImports(Stmts,IM,Pkg,E0,Ex).
 
-checkImport(St,[import(Lc,PkgSpec)|More],More,Env,Ex) :-
+checkImport(St,_,Imports,More,Pkg,Env,Ex) :-
+  isUnary(St,"private",I),
+  checkImport(I,private,Imports,More,Pkg,Env,Ex).
+checkImport(St,_,Imports,More,Pkg,Env,Ex) :-
+  isUnary(St,"public",I),
+  checkImport(I,public,Imports,More,Pkg,Env,Ex).
+checkImport(St,Viz,[import(Lc,Viz,PkgSpec)|More],More,Pkg,Env,Ex) :-
   isUnary(St,Lc,"import",P),
   isIden(P,_,PkgName),
-  locatePackage(PkgName,PkgSpec),
+  getCatalog(Pkg,Env,Cat),
+  locatePackage(PkgName,Cat,PkgSpec),
   importDefs(PkgSpec,Env,Ex).
 
 % For now, we stub these out.
-locatePackage(Pkg,Pkg).
+locatePackage(Pkg,Cat,PkgSpec) :-
+  resolveCatalog(Cat,Pkg,Uri),
+  importPkg(Pkg,Uri,PkgSpec).
 importDefs(_,Env,Env).
 
 checkOthers([],[],_,_).
@@ -64,6 +85,12 @@ checkGroups([Gp|More],Fields,Annots,Defs,Env,E,Path) :-
   checkGroup(Gp,GrpType,Fields,Annots,Defs,D0,Env,E0,Path),
   checkGroups(More,Fields,Annots,D0,E0,E,Path).
 
+displayGroup([]).
+displayGroup([(T,_,Stmts)|More]) :-
+  writef("Group %w: ",[T]),
+  displayAll(Stmts),
+  displayGroup(More).
+
 groupType([(var(_),_,_)|_],var).
 groupType([(tpe(_),_,_)|_],tpe).
 
@@ -72,32 +99,81 @@ checkGroup(Grp,tpe,_,_,Defs,Dx,Env,Ex,Path) :-
 checkGroup(Grp,var,Fields,Annots,Defs,Dx,Env,Ex,Path) :-
   varGroup(Grp,Fields,Annots,Defs,Dx,Env,Ex,Path).
 
+% This is very elaborate - to support mutual recursion amoung types.
 typeGroup(Grp,Defs,Dx,Env,Ex,Path) :-
-  defineTypes(Grp,Defs,Dx,Env,Ex,Path).
+  defineTypes(Grp,Env,TmpEnv,Path),
+  parseTypeDefs(Grp,TpDefs,[],TmpEnv,Path),
+  declareTypes(TpDefs,TpDefs,Defs,Dx,Env,Ex).
 
-defineTypes([],Defs,Defs,Env,Env,_).
-defineTypes([(tpe(N),Lc,Stmts)|More],Defs,Dx,Env,Ex,Path) :-
-  defineType(N,Lc,Stmts,Defs,D0,Env,E0,Path),
-  defineTypes(More,D0,Dx,E0,Ex,Path).
+defineTypes([],Env,Env,_).
+defineTypes([(tpe(N),Lc,Stmts)|More],Env,Ex,Path) :-
+  defineType(N,Lc,Stmts,Env,E0,Path),
+  defineTypes(More,E0,Ex,Path).
 
-defineType(N,Lc,_,Defs,Defs,Env,Env,_) :-
+defineType(N,Lc,_,Env,Env,_) :-
   typeInDict(N,Env,OLc,_),!,
   reportError("type %s already defined at %s",[N,OLc],Lc).
-defineType(N,Lc,Stmts,[typeDef(Lc,N,Type,Rules)|Defs],Defs,Env,Ex,Path) :- 
-  parseTypeDef(Stmts,Env,Rules,[],Path),
-  pickTypeTemplate(Rules,Type),
-  faceOfType(Lc,Env,Rules,Type,Face),
-  declareType(N,Lc,Type,Face,Rules,Env,Ex).
+defineType(N,Lc,[St|_],Env,Ex,Path) :- 
+  parseTypeTemplate(St,[],Env,Type,Path),
+  declareType(N,Lc,Type,Env,Ex).
 
-faceOfType(Lc,Env,Rules,Tmplate,Face) :-
-  moveQuants(Tmplate,Q,Plate),
-  mergeFields(Rules,Q,Plate,[],Fields,Env,Lc),
-  moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
+parseTypeDefs([],Defs,Defs,_,_).
+parseTypeDefs([(tpe(N),Lc,Stmts)|More],Defs,Dx,TmpEnv,Path) :-
+  parseTypeDefinition(N,Lc,Stmts,Defs,D0,TmpEnv,Path),
+  parseTypeDefs(More,D0,Dx,TmpEnv,Path).
+
+parseTypeDefinition(N,Lc,Stmts,[typeDef(Lc,N,Type,Rules)|Defs],Defs,TmpEnv,Path) :- 
+  parseTypeDef(Stmts,TmpEnv,Rules,[],Path),
+  pickTypeTemplate(Rules,Type).
 
 parseTypeDef([],_,TpDefs,TpDefs,_).
 parseTypeDef([St|More],Env,[Rl|Defs],Dx,Path) :-
   parseTypeRule(St,Env,Rl,Path),
   parseTypeDef(More,Env,Defs,Dx,Path).
+
+declareTypes([],_,Defs,Defs,Env,Env).
+declareTypes([typeDef(Lc,N,Type,Rules)|More],TpDefs,[typeDef(Lc,N,Type,NRules)|Defs],Dx,Env,Ex) :-
+  faceOfType(Lc,TpDefs,Env,Rules,Type,Face),
+  replaceFaceRule(Rules,Face,NRules),
+  declareType(N,Lc,Type,Face,NRules,Env,E0),
+  declareTypes(More,TpDefs,Defs,Dx,E0,Ex).
+
+faceOfType(Lc,TpDefs,Env,Rules,Tmplate,Face) :-
+  moveQuants(Tmplate,Q,Plate),
+  findAllFields(Rules,Q,Plate,[],Fields,TpDefs,Env,Lc),
+  moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
+
+replaceFaceRule([],Face,[Face]).
+replaceFaceRule([Rl|Rules],Face,[Face|Rules]) :-
+  isFaceRule(Rl),!.
+replaceFaceRule([Rl|Rules],Face,[Rl|NRules]) :-
+  replaceFaceRule(Rules,Face,NRules).
+
+isFaceRule(Rl) :-
+  moveQuants(Rl,_,typeRule(_,faceType(_))).
+
+findAllFields([],_,_,Fields,Fields,_,_,_).
+findAllFields([Rl|Rules],Q,Plate,SoFar,Fields,TpDefs,Env,Lc) :-
+  moveQuants(Rl,_,typeRule(Lhs,Rhs)),
+  matchTypes(Plate,Lhs,Binding),
+  freshn(Rhs,Binding,FRhs),
+  findFields(FRhs,Q,TpDefs,TpDefs1,Env,SoFar,Flds,Lc),
+  findAllFields(Rules,Q,Plate,Flds,Fields,TpDefs1,Env,Lc).
+
+findFields(faceType(Flds),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+  collectFace(faceType(Flds),Env,SoFar,Fields,Lc).
+findFields(type(Nm),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+  typeFaceRule(Nm,Env,FaceRule),!,
+  mergeFields([FaceRule],[],type(Nm),SoFar,Fields,Env,Lc).
+findFields(typeExp(Nm,Args),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+  typeFaceRule(Nm,Env,FaceRule),
+  mergeFields([FaceRule],[],typeExp(Nm,Args),SoFar,Fields,Env,Lc).
+findFields(type(Nm),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
+  subtract(typeDef(_,_,type(Nm),Rules),TpDefs,TpDefs1),
+  findAllFields(Rules,Q,type(Nm),SoFar,Fields,TpDefs1,Env,Lc).
+findFields(typeExp(Nm,Args),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
+  subtract(typeDef(_,_,typeExp(Nm,Args),Rules),TpDefs,TpDefs1),
+  findAllFields(Rules,Q,typExp(Nm,Args),SoFar,Fields,TpDefs1,Env,Lc).
 
 varGroup(Grp,Fields,Annots,Defs,Dx,Base,Env,Path) :-
   parseAnnotations(Grp,Fields,Annots,Base,Env,Path),
@@ -680,11 +756,14 @@ exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
 
 mergeFields([],_,_,Fields,Fields,_,_).
 mergeFields([Rule|More],Q,Plate,SoFar,Fields,Env,Lc) :-
+  mergeFromTypeRule(Rule,Plate,SoFar,Flds,Env,Lc),
+  mergeFields(More,Q,Plate,Flds,Fields,Env,Lc).
+
+mergeFromTypeRule(Rule,Plate,SoFar,Fields,Env,Lc) :-
   moveQuants(Rule,_,typeRule(Lhs,Rhs)),
   matchTypes(Plate,Lhs,Binding),
   freshn(Rhs,Binding,FRhs),
-  collectFace(FRhs,Env,SoFar,Flds,Lc),
-  mergeFields(More,Q,Plate,Flds,Fields,Env,Lc).
+  collectFace(FRhs,Env,SoFar,Fields,Lc).
 
 matchTypes(type(Nm),type(Nm),[]) :-!.
 matchTypes(typeExp(Nm,L),typeExp(Nm,R),Binding) :- 

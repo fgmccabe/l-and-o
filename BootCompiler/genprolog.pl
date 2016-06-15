@@ -1,11 +1,39 @@
 :- module(genprolog,[genRules/2]).
 
 :- use_module(misc).
+:- use_module(types).
+:- use_module(transutils).
+:- use_module(encode).
 
-genRules(Out,Rls) :-
-  genPlRules(Rls,Chrs,[]),
+genRules(Out,export(Pkg,Imports,Fields,Types,Rules)) :-
+  appStr(":- use_module(ocall).\n",Chrs,O0),
+  genImports(Imports,O0,O1),
+  genFieldTypes(Fields,Pkg,O1,O2),
+  genTypes(Types,Pkg,O2,O3),
+  genPlRules(Rules,O3,[]),
   string_chars(Res,Chrs), 
   write(Out,Res).
+
+genImports([],O,O).
+
+genFieldTypes(Fields,Pkg,O,Ox) :-
+  localName(Pkg,"#","export",Ex),
+  appQuoted(Ex,O,O0),
+  appStr("(""",O0,O1),
+  encodeType(faceType(Fields),O1,O2),
+  appStr(""").\n",O2,Ox).
+
+genTypes(Types,Pkg,O,Ox) :-
+  localName(Pkg,"#","types",Ex),
+  appQuoted(Ex,O,O0),
+  appStr("(""",O0,O1),
+  formatTypeRules(Types,Fields),
+  encodeType(faceType(Fields),O1,O2),
+  appStr(""").\n",O2,Ox).
+
+formatTypeRules([],[]).
+formatTypeRules([(Nm,Rules)|More],[(Nm,tupleType(Rules))|Out]) :-
+  formatTypeRules(More,Out).
 
 genPlRules(Rls,O,E) :-
   rfold(Rls,genprolog:genPlRule,O,E).

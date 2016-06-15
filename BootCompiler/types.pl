@@ -97,9 +97,9 @@ showType(tVar(St),O,E) :- showLower(St.lower,O,O1),appStr("%",O1,O2),appStr(St.n
 showType(type(Nm),O,E) :- appStr(Nm,O,E).
 showType(typeExp(Nm,A),O,E) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,E).
 showType(tupleType(A),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,E).
-showType(funType(A,R),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,E).
-showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
-showType(predType(A),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,E).
+showType(funType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,E).
+showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
+showType(predType(A),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,E).
 showType(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showType,O2,E).
 showType(faceType(Els),O,E) :- appStr("{ ",O,O1), showTypeFields(Els,O1,O2), appStr("}",O2,E).
 showType(typeRule(Hd,Bd),O,E) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,E).
@@ -122,6 +122,17 @@ showTypeEls([Tp|More],O,E) :- showType(Tp,O,O1), showMoreTypeEls(More,O1,E).
 showMoreTypeEls([],O,O).
 showMoreTypeEls([Tp|More],O,E) :- appStr(", ",O,O1),showType(Tp,O1,O2), showMoreTypeEls(More,O2,E).
 
+showTypeArgs([],O,O).
+showTypeArgs([Tp|More],O,E) :- showArgType(Tp,O,O1), showMoreTypeArgs(More,O1,E).
+
+showMoreTypeArgs([],O,O).
+showMoreTypeArgs([Tp|More],O,E) :- appStr(", ",O,O1),showArgType(Tp,O1,O2), showMoreTypeArgs(More,O2,E).
+
+showArgType(in(Tp),O,Ox) :- showType(Tp,O,O0), appStr("+",O0,Ox).
+showArgType(out(Tp),O,Ox) :- showType(Tp,O,O0), appStr("-",O0,Ox).
+showArgType(inout(Tp),O,Ox) :- showType(Tp,O,Ox).
+showArgType(Tp,O,Ox) :- showType(Tp,O,Ox).
+
 showMoreQuantified(univType(Nm,Tp),P,O,E) :- appStr(", ",O,O1), showType(Nm,O1,O2), showMoreQuantified(Tp,P,O2,E).
 showMoreQuantified(Tp,P,O,E) :- appStr(" ~~ ",O,O1), call(P,Tp,O1,E).
 
@@ -134,6 +145,7 @@ showMoreTypeFields([Fld|More],O,E) :- appStr(". ",O,O1), showTypeField(Fld,O1,O2
 showTypeField((Nm,Tp),O,E) :- appStr(Nm,O,O1), appStr(" : ",O1,O2), showType(Tp,O2,E).
 
 typeArity(univType(_,Tp),Ar) :- typeArity(Tp,Ar).
+typeArity(constrained(_,Tp,_),Ar) :- typeArity(Tp,Ar).
 typeArity(funType(A,_),Ar) :- length(A,Ar).
 typeArity(predType(A),Ar) :- length(A,Ar).
 typeArity(classType(A,_),Ar) :- length(A,Ar).
