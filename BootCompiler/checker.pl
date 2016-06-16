@@ -53,7 +53,7 @@ checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
 checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
   isUnary(St,"public",I),
   checkImport(I,public,Imports,More,Pkg,Opts,Env,Ex).
-checkImport(St,Viz,[import(Lc,Viz,PkgSpec)|More],More,Pkg,Opts,Env,Ex) :-
+checkImport(St,Viz,[import(Lc,PkgName,Viz,PkgSpec)|More],More,Pkg,Opts,Env,Ex) :-
   isUnary(St,Lc,"import",P),
   packageName(P,PkgName),
   getCatalog(Pkg,Env,Cat),
@@ -67,7 +67,7 @@ locatePackage(Pkg,Cat,Opts,PkgSpec) :-
   resolveCatalog(Cat,Pkg,Uri),
   catalogBase(Cat,Base),
   importPkg(Pkg,Uri,Base,Opts,PkgSpec).
-importDefs(spec(faceType(Exported),faceType(Types)),Lc,Env,Ex) :-
+importDefs(spec(_,faceType(Exported),faceType(Types)),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,Ex).
 

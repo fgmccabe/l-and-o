@@ -23,22 +23,14 @@ lo.arith{
   (/):all t<~arith ~~ (t,t)=>t.
   x/y => x.dv(y).
 
-  IT <~ arith.
-  I:(integer)<=>IT.
-  I(X)..{
-    pl(I(Y)) => I(__integer_plus(X,Y)).
-    tms(I(Y)) => I(__integer_times(X,Y)).
-    mns(I(Y)) => I(__integer_minus(X,Y)).
-    dv(I(Y)) => I(__integer_div(X,Y)).
+  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
+  integer:integer.
+  integer..{
+    pl(Y) => _int_plus(this,Y).
+    tms(Y) => _int_times(this,Y).
+    mns(Y) => _int_minus(this,Y).
+    dv(Y) => _int_div(this,Y).
   }.
 
-  assert I(2)*I(3)+I(4) = I(10).
-
-  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
-  integer..{
-    pl(Y) => __integer_plus(this,Y).
-    tms(Y) => __integer_times(this,Y).
-    mns(Y) => __integer_minus(this,Y).
-    dv(Y) => __integer_div(this,Y).
-  }
+  assert 2*3+4 = 10.
 }

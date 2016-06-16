@@ -18,15 +18,18 @@
 :- use_module(misc).
 :- use_module(import).
 
-parseFlags([],[],[]).
-parseFlags(['-g'|More],[debugging|Opts],Files) :- 
-  parseFlags(More,Opts,Files).
-parseFlags(['-p'|More],[profiling|Opts],Files) :- 
-  parseFlags(More,Opts,Files).
-parseFlags(['-b', B|More],[build(Build)|Opts],Files) :- 
-  atom_string(B,Build), parseFlags(More,Opts,Files).
-parseFlags(['--'|More], [], Files) :- stringify(More,Files).
-parseFlags(More, [], Files) :- stringify(More,Files).
+parseFlags([],_,[],[]).
+parseFlags(['-g'|More],CWD,[debugging|Opts],Files) :- 
+  parseFlags(More,CWD,Opts,Files).
+parseFlags(['-p'|More],CWD,[profiling|Opts],Files) :- 
+  parseFlags(More,CWD,Opts,Files).
+parseFlags(['-b', B|More],CWD,[build(Build)|Opts],Files) :- 
+  atom_string(B,BD), 
+  parseURI(BD,BU),
+  resolveURI(CWD,BU,Build),
+  parseFlags(More,CWD,Opts,Files).
+parseFlags(['--'|More], _, [], Files) :- stringify(More,Files).
+parseFlags(More, _, [], Files) :- stringify(More,Files).
 
 stringify([],[]).
 stringify([Name|More],[Fn|Files]) :- 
@@ -36,7 +39,7 @@ stringify([Name|More],[Fn|Files]) :-
 main(Args) :- 
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,Files),
-  processFiles(Files,Opts).
+  processFiles(Files,CWD,Opts).
 
 processFiles([],_,_).
 processFiles([Fn|More],CWD,Opts) :-

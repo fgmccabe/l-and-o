@@ -4,6 +4,7 @@
 :- use_module(types).
 :- use_module(transutils).
 :- use_module(encode).
+:- use_module(uri).
 
 genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
   appStr(":- use_module(ocall).\n",Chrs,O0),
@@ -14,6 +15,15 @@ genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
   string_chars(Text,Chrs).
 
 genImports([],O,O).
+genImports([I|More],O,Ox) :-
+  genImport(I,O,O1),
+  genImports(More,O1,Ox).
+
+genImport(import(_,_,_,spec(Uri,_,_)),O,Ox) :-
+  appStr(":-[",O,O1),
+  uriPath(Uri,Path),
+  genQuoted(Path,O1,O2),
+  appStr("].\n",O2,Ox).
 
 genFieldTypes(Fields,Pkg,O,Ox) :-
   localName(Pkg,"#","export",Ex),
@@ -71,6 +81,11 @@ genGoal(call(Pr,Args),O,E) :-
   appStr("(",O0,O1),
   genTerms(Args,O1,O2),
   appStr(")",O2,E).
+genGoal(ecall(Escape,Args),O,E) :-
+  genQuoted(Escape,O,O0),
+  appStr("(",O0,O1),
+  genTerms(Args,O1,O2),
+  appStr(")",O2,E).
 genGoal(ocall(Pr,Lbl,This),O,E) :-
   appStr("ocall(",O,O1),
   genTerm(Pr,O1,O2),
@@ -97,9 +112,7 @@ genTerm(prg(Nm,_),O,E) :-
  % appInt(Ar,O2,O3),
   appStr("'",O1,E).
 genTerm(strct(Nm,_),O,E) :-
-  appStr("'",O,O0),
-  appStr(Nm,O0,O1),
-  appStr("'",O1,E).
+  genQuoted(Nm,O,E).
 genTerm(intgr(Ix),O,E) :-
   appInt(Ix,O,E).
 genTerm(strg(Str),O,E) :-
@@ -127,6 +140,11 @@ genTerm(tpl(Args),O,E) :-
   appStr("(",O,O5),
   genTerms(Args,O5,O6),
   appStr(")",O6,E).
+
+genQuoted(Str,O,Ox) :-
+  appStr("'",O,O1),
+  appStr(Str,O1,O2),
+  appStr("'",O2,Ox).
 
 genList(cons(strct("lo.std#,..",2),[A,B]),O,E) :-
   appStr("[",O,O1),

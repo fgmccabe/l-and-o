@@ -12,7 +12,8 @@ typedef enum {
     kvar_sig = 'k', /* quantified type variable */
     top_sig = 'A', /* Top value -- of unknown type */
     void_sig = 'v', /* Bottom type - no value has this type */
-    type_sig = 't',                         /* A type variable */
+    type_sig = 't',                         /* A type */
+    this_sig = 'h', // this type is a special type
 
   /* Compound type signatures */
     list_sig = 'L', /* List pair -- NULL = nil */

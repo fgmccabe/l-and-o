@@ -4,6 +4,7 @@
 :- use_module(abstract).
 :- use_module(location).
 :- use_module(errors).
+:- use_module(lexer).
 
 parse(Tks,T,RTks) :-
     term(Tks,2000,T,Tks1),!,

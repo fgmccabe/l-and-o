@@ -45,6 +45,7 @@ encodeText(Flg,Str,O,Ox) :-
 encodeType(anonType,['_'|O],O).
 encodeType(voidType,['v'|O],O).
 encodeType(topType,['A'|O],O).
+encodeType(thisType,['h'|O],O).
 encodeType(typeExp("lo.std*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
 encodeType(type("lo.arith*integer"),['i'|O],O).
 encodeType(type("lo.arith*float"),['f'|O],O).

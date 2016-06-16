@@ -264,6 +264,9 @@ showUri(absUri(Scheme,Path,Query),O,Ox) :-
   pScheme(Scheme,O,O1),
   pHierPath(Path,O1,O2),
   pQuery(Query,O2,Ox).
+showUri(relUri(Path,Query),O,Ox) :-
+  pHierPath(Path,O,O1),
+  pQuery(Query,O1,Ox).
 
 pScheme(S,O,Ox) :-
   string_chars(S,C),

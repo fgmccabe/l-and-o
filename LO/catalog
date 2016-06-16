@@ -4,5 +4,6 @@ catalog{
   content is {
     "lo.thing" -> "thing.lo".
     "lo.arith" -> "arith.lo".
+    "lo.lists" -> "lists.lo".
   }
 }

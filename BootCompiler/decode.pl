@@ -119,6 +119,7 @@ decodeSignature(S,Tp) :-
 decodeType(anonType) --> ['_'].
 decodeType(voidType) --> ['v'].
 decodeType(topType) --> ['A'].
+decodeType(thisType) --> ['h'].
 decodeType(type("lo.arith*integer")) --> ['i'].
 decodeType(type("lo.arith*float")) --> ['f'].
 decodeType(type("lo.thing*string")) --> ['S'].

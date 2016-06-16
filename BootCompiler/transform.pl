@@ -512,6 +512,12 @@ pickAllFieldsFromFace(Tp,Fields) :-
   moveQuants(Tp,_,faceType(Fields)).
 
 makeClassMtdMap([],_,_,_,void,void,List,List,_,_,_,Ex,Ex).
+makeClassMtdMap([classBody(_,_,enum(_,Nm),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,[],List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+  collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
+  collectLabelVars([],LbVr,ThVr,L0,L1),
+  extraVars(Map,Extra),
+  makeLblTerm(enum(Nm),Extra,LblTerm),
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
 makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[equals(LbVr,LblTerm)],Map,Opts,Ex,Ex0),

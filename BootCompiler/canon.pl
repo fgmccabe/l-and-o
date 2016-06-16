@@ -4,6 +4,7 @@
 :- use_module(operators).
 :- use_module(types).
 :- use_module(location).
+:- use_module(uri).
 
 isCanon(prog(_,_,_,_)).
 isCanon(v(_,_)).
@@ -132,7 +133,6 @@ showTerm(forall(_,Gen,Test),O,E) :-
   showTerm(Test,O2,O3),
   appStr(")",O3,E).
 
-
 showTerms([],O,O).
 showTerms([T|More],O,E) :-
   showTerm(T,O,O1),
@@ -145,11 +145,17 @@ showMoreTerms([T|More],O,E) :-
   showMoreTerms(More,O2,E).
 
 showImports([],O,O).
-showImports([import(_,Pkg)|Imports],O,E) :-
-  appStr("  import ",O,O1),
-  appStr(Pkg,O1,O2),
+showImports([import(_,_,Viz,spec(CodeUri,_,_))|Imports],O,E) :-
+  showVisibility(Viz,O,O0),
+  appStr("import ",O0,O1),
+  showUri(CodeUri,O1,O2),
   appStr(".\n",O2,O3),
   showImports(Imports,O3,E).
+
+showVisibility(private,O,Ox) :-
+  appStr("private ",O,Ox).
+showVisibility(public,O,Ox) :-
+  appStr("public ",O,Ox).
 
 showTypeDefs([],O,O).
 showTypeDefs([(_,Rules)|More],O,E) :-
