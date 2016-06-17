@@ -5,7 +5,6 @@
 
 :- use_module(abstract).
 :- use_module(wff).
-:- use_module(dcg).
 
 
 % rewrite a sequence of statements into another sequence.
@@ -15,10 +14,6 @@ macroRewrite([St|More],Stmts) :-
   isBinary(St,"::=",_,_),!,
   convertAlgebraic(St,Stmts,S0),
   macroRewrite(More,S0).
-macroRewrite([St|More],Stmts) :-
-  isBinary(St,"-->",_,_),
-  dcgRule(St,Stmts,Tail),
-  macroRewrite(More,Tail).
 macroRewrite([St|More],[St|Stmts]) :-
   macroRewrite(More,Stmts).
 

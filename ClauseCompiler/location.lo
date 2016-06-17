@@ -1,6 +1,6 @@
-location{
-  import thing.
-  import arith.
+cp.location{
+  import lo.thing.
+  import lo.arith.
   
   location <~ {
     merge:(location)=>location.

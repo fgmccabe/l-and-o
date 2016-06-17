@@ -15,6 +15,12 @@ resolveCatalog(cat(Cat),Nm,Uri) :-
   is_member(entry(Nm,U),Map),!,
   resolveURI(Base,U,Uri).
 resolveCatalog(cat(Cat),Nm,Uri) :-
+  is_member(default(Deflt),Cat),!,
+  is_member(base(Base),Cat),
+  resolveURI(Base,Deflt,DefltUri),
+  locateCatalog(DefltUri,DefltCat),
+  resolveCatalog(DefltCat,Nm,Uri).
+resolveCatalog(cat(Cat),Nm,Uri) :-
   is_member(base(Base),Cat),
   parseURI(Nm,U),
   resolveURI(Base,U,Uri).
@@ -37,13 +43,14 @@ catStmts([]) --> [].
 catStmts([St|More]) --> catStmt(St), catStmts(More).
 
 catStmt(entries(Contents)) --> [content, is, lbrce], contents(Contents), [rbrce].
-catStmt(base(Base)) --> [base, is], string(Base), [period].
+catStmt(base(BaseUri)) --> [base, is], string(Base), { parseURI(Base,BaseUri) }, [period].
 catStmt(version(Version)) --> [version, is], string(Version), [period].
+catStmt(default(CatUri)) --> [default, is], string(U), { parseURI(U,CatUri) }, [period].
 
 contents([]) --> [].
 contents([Entry|More]) --> entry(Entry), contents(More).
 
-entry(entry(Key,Url)) --> string(Key), [thin_arrow], string(U), [period], {parseURI(U,Url)}.
+entry(entry(Key,Uri)) --> string(Key), [thin_arrow], string(U), [period], {parseURI(U,Uri)}.
 
 string(S) --> [string(S)].
 
@@ -68,6 +75,7 @@ token(catalog) --> [c,a,t,a,l,o,g].
 token(content) --> [c,o,n,t,e,n,t].
 token(version) --> [v,e,r,s,i,o,n].
 token(base) --> [b,a,s,e].
+token(default) --> [d,e,f,a,u,l,t].
 token(is) --> [i,s].
 token(lbrce) --> ['{'].
 token(rbrce) --> ['}'].

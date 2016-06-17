@@ -300,6 +300,9 @@ processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],De
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
   checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
+processStmt(St,Tp,Defs,Dx,E,Path) :-
+  isBinary(St,"-->",_,_),
+  processGrammarRule(St,Tp,Defs,Dx,E,Path).
 
 checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Cond,Value),Env) :-
   splitHead(L,Nm,none,C),
@@ -344,6 +347,12 @@ splitHead(Term,"()",Args,name(Lc,"true")) :-
   locOfAst(Term,Lc),
   isTuple(Term,Args).
 
+splitGrHead(Term,Nm,Args,PB) :-
+  isBinary(Term,",",L,tuple(_,"[]",PB)),!,
+  splitHead(L,Nm,Args,_).
+splitGrHead(Term,Nm,Args,[]) :-
+  splitHead(Term,Nm,Args,name(_,"true")).
+
 generalizeStmts([],_,Defs,Defs).
 generalizeStmts([Eqn|Stmts],Env,[function(Lc,Nm,Tp,[Eqn|Eqns])|Defs],Dx) :-
   Eqn = equation(Lc,Nm,_,_,_),
@@ -369,6 +378,11 @@ generalizeStmts([Cl|Stmts],Env,[class(Lc,Nm,Tp,[Cl|Rules],Face)|Defs],Dx) :-
   collectClassRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
   generateClassFace(Tp,Env,Face),
+  generalizeStmts(S0,Env,Defs,Dx).
+generalizeStmts([Rl|Stmts],Env,[grammar(Lc,Nm,Tp,[Rl|Rules])|Defs],Dx) :-
+  isGrammarRule(Rl,Lc,Nm),
+  collectGrammarRules(Stmts,S0,Nm,Rules),
+  pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Defs,Dx).
 
 collectClauses([],[],_,[]).
@@ -408,6 +422,15 @@ collectEquations([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectEquations(Stmts,Sx,Nm,Eqns).
 collectEquations([],[],_,[]).
 
+collectGrammarRules([Rl|Stmts],Sx,Nm,[Rl|Ex]) :-
+  isGrammarRule(Rl,_,Nm),
+  collectGrammarRules(Stmts,Sx,Nm,Ex).
+collectGrammarRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
+  collectGrammarRules(Stmts,Sx,Nm,Eqns).
+collectGrammarRules([],[],_,[]).
+
+isGrammarRule(grammarRule(Lc,Nm,_,_,_),Lc,Nm).
+
 collectClassRules([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   isRuleForClass(Cl,_,Nm),!,
   collectClassRules(Stmts,Sx,Nm,Ex).
@@ -439,7 +462,7 @@ typeOfPtn(integer(_,Ix),Tp,Env,Env,intLit(Ix)) :-
 typeOfPtn(float(_,Ix),Tp,Env,Env,floatLit(Ix)) :- !,
   findType("float",Env,FloatTp),
   sameType(Tp,FloatTp,Env).
-typeOfPtn(string(_,Sx),Tp,Env,Env,stringLit(Sx)) :- !,
+typeOfPtn(string(Lc,Sx),Tp,Env,Env,stringLit(Lc,Sx)) :- !,
   findType("string",Env,StringTp),
   sameType(Tp,StringTp,Env).
 typeOfPtn(P,Tp,Env,Ex,where(Ptn,Cond)) :-
@@ -537,7 +560,7 @@ typeOfExp(integer(Lc,Ix),ET,Tp,Env,intLit(Ix)) :- !,
 typeOfExp(float(Lc,Ix),ET,Tp,Env,floatLit(Ix)) :- !,
   findType("float",Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfExp(string(Lc,Ix),ET,Tp,Env,stringLit(Ix)) :- !,
+typeOfExp(string(Lc,Ix),ET,Tp,Env,stringLit(Lc,Ix)) :- !,
   findType("string",Env,Tp),
   checkType(Lc,Tp,ET,Env).
 typeOfExp(interString(Lc,Segs),ET,Tp,Env,Exp) :- !,
@@ -671,7 +694,7 @@ typeOfListExp([El|More],_,ElTp,ListTp,Env,apply(Lc,Op,[Hd,Tl])) :-
   typeOfExp(El,ElTp,_,Env,Hd),
   typeOfListExp(More,Lc,ElTp,ListTp,Env,Tl).
 
-typeOfStringSegments([],Lc,_Env,stringLit("")) :- 
+typeOfStringSegments([],Lc,_Env,stringLit(Lc,"")) :- 
   reportError("string interpolation not implemented",[],Lc),!.
 
 
@@ -748,6 +771,89 @@ checkConds([C|More],Env,Ex,(L,R)) :-
   checkCond(C,Env,E0,L),
   checkConds(More,E0,Ex,R).
 
+processGrammarRule(St,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|Defs],Defs,E,_) :-
+  isBinary(St,Lc,"-->",L,R),!,
+  splitGrHead(L,Nm,A,P),
+  pushScope(E,Env),
+  findType("stream",Env,StreamType),
+  StreamType = typeExp(_,[ElTp]),
+  subType(Tp,StreamType,Env),
+  typeOfPtns(A,AT,Lc,Env,E0,Args),
+  checkNonTerminals(R,Tp,ElTp,E0,E1,Body),
+  checkPushBack(P,PB,ElTp,E1).
+
+checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
+  checkTerminals(Els,Terms,ElTp,E,Env).
+checkNonTerminals(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-
+  isBinary(Term,Lc,",",L,R), !,
+  checkNonTerminals(L,Tp,ElTp,Env,E1,Lhs),
+  checkNonTerminals(R,Tp,ElTp,E1,Ex,Rhs).
+checkNonTerminals(Term,Tp,ElTp,Env,Ex,conditional(Lc,Test,Either,Or)) :-
+  isBinary(Term,Lc,"|",L,R),
+  isBinary(L,"?",T,Th),!,
+  checkNonTerminals(T,Tp,ElTp,Env,E0,Test),
+  checkNonTerminals(Th,Tp,ElTp,E0,E1,Either),
+  checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
+checkNonTerminals(Term,Tp,ElTp,Env,Ex,disj(Lc,Either,Or)) :-
+  isBinary(Term,Lc,"|",L,R),!,
+  checkNonTerminals(L,Tp,ElTp,Env,E1,Either),
+  checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
+checkNonTerminals(Term,Tp,ElTp,Env,Ex,guard(Lc,NonTerm,Cond)) :-
+  isBinary(Term,Lc,"::",L,R),!,
+  checkNonTerminals(L,Tp,ElTp,Env,E1,NonTerm),
+  checkCond(R,E1,Ex,Cond).
+checkNonTerminals(Term,Tp,ElTp,Env,Ex,one(Lc,Test)) :-
+  isUnary(Term,Lc,"!",N),!,
+  checkNonTerminals(N,Tp,ElTp,Env,Ex,Test).
+checkNonTerminals(Term,Tp,ElTp,Env,Env,neg(Lc,Test)) :-
+  isUnary(Term,Lc,"\\+",N),!,
+  checkNonTerminals(N,Tp,ElTp,Env,_,Test).
+checkNonTerminals(Term,_,_,Env,Env,neg(Lc,equals(Lc,Lhs,Rhs))) :-
+  isBinary(Term,Lc,"\\=",L,R),!,
+  newTypeVar("_#",TV),
+  typeOfExp(L,TV,Tp,Env,Lhs),
+  typeOfExp(R,Tp,_,Env,Rhs).
+checkNonTerminals(Term,_,_,Env,Ex,unify(Lc,Lhs,Rhs)) :-
+  isBinary(Term,Lc,"==",L,R),!,
+  newTypeVar("_#",TV),
+  typeOfPtn(L,TV,Env,E0,Lhs),
+  typeOfPtn(R,TV,E0,Ex,Rhs).
+checkNonTerminals(Term,_,_,Env,Env,equals(Lc,Lhs,Rhs)) :-
+  isBinary(Term,Lc,"=",L,R),!,
+  newTypeVar("_#",TV),
+  typeOfExp(L,TV,Tp,Env,Lhs),
+  typeOfExp(R,Tp,_,Env,Rhs).
+checkNonTerminals(Term,_,_,Env,Ex,match(Lc,Lhs,Rhs)) :-
+  isBinary(Term,Lc,".=",L,R),!,
+  newTypeVar("_#",TV),
+  typeOfPtn(L,TV,Env,Ex,Lhs),
+  typeOfExp(R,TV,_,Ex,Rhs).
+checkNonTerminals(Term,_,_,Env,Ex,match(Lc,Rhs,Lhs)) :-
+  isBinary(Term,Lc,"=.",L,R),!,
+  newTypeVar("_#",TV),
+  typeOfPtn(L,TV,Env,Ex,Lhs),
+  typeOfExp(R,TV,_,Ex,Rhs).
+checkNonTerminals(Term,Tp,_,Env,Ex,call(Lc,Pred,Args)) :-
+  isRoundTerm(Term,Lc,F,A),
+  genTpVars(A,ArgTps),
+  typeOfExp(F,grammarType(ArgTps,Tp),_,Env,Pred),
+  typeOfPtns(A,ArgTps,Lc,Env,Ex,Args).
+checkNonTerminals(Term,_,_,Env,Env,eof(Lc)) :-
+  isIden(Term,Lc,"eof").
+checkNonTerminals(Term,_,_,Env,Ex,goal(Lc,Cond)) :-
+  isBraceTuple(Term,Lc,Els),
+  checkConds(Els,Env,Ex,Cond).
+
+checkPushBack([],[],_,_) :- !.
+checkPushBack([T|More],[TT|Out],Tp,Env) :-
+  typeOfExp(T,Tp,_,Env,TT),
+  checkPushBack(More,Out,Tp,Env).
+
+checkTerminals([],[],_,Env,Env) :- !.
+checkTerminals([T|More],[TT|Out],Tp,Env,Ex) :-
+  typeOfPtn(T,Tp,Env,E0,TT),
+  checkTerminals(More,Out,Tp,E0,Ex).
+
 computeExport([],_,[],[]).
 computeExport([Def|Defs],Private,Fields,Types) :-
   exportDef(Def,Private,Fields,Fx,Types,Tx),!,
@@ -764,6 +870,8 @@ exportDef(enum(_,Nm,Tp,_,_),Private,Fields,Fx,Types,Types) :-
 exportDef(typeDef(_,Nm,_,Rules),Private,Fields,Fields,Types,Tx) :-
   (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Rules)|Tx]).
 exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
+  (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
+exportDef(grammar(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
   (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
 
 mergeFields([],_,_,Fields,Fields,_,_).

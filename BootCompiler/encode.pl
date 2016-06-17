@@ -54,6 +54,7 @@ encodeType(kVar(Nm),['k'|O],Ox) :- encodeTpName(Nm,O,Ox).
 encodeType(type(Nm),['t'|O],Ox) :- encodeTpName(Nm,O,Ox).
 encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeTpName(Nm,O,O1), encodeTypes(Args,O1,Ox).
 encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(predType(Args),['P'|O],Ox) :- encodeArgTypes(Args,O,Ox).
 encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(tupleType(Args),['T'|O],Ox) :- encodeTypes(Args,O,Ox).

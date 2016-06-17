@@ -47,6 +47,8 @@ wffStmt(St) :-
   wffDefinition(St).
 wffStmt(St) :-
   wffEquation(St).
+wffStmt(St) :-
+  wffGrammarRule(St).
 wffStmt(St) :- wffLabelRule(St).
 wffStmt(St) :- wffClass(St).
 wffStmt(St) :- wffClause(St).
@@ -57,6 +59,7 @@ wffImportSt(St) :- isUnary(St,"import",P), wffPackageName(P).
 wffTypeExp(T) :- wffIden(T).
 wffTypeExp(T) :- isSquare(T,_,A), wffTypeExps(A).
 wffTypeExp(T) :- isBinary(T,"=>",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
+wffTypeExp(T) :- isBinary(T,"-->",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
 wffTypeExp(T) :- isBinary(T,"<=>",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
 wffTypeExp(T) :- isBraceTerm(T,L,[]),isTuple(L,A), wffTypeExps(A).
 wffTypeExp(T) :- isBraceTuple(T,_,A), wffFaceTypes(A).
@@ -202,11 +205,14 @@ wffClass(Term) :-
   wffThetaEnv(Els).
 
 wffExps([]).
-wffExps([T]) :-
+wffExps([P|T]) :- wffExp(P), wffExps(T).
+
+wffExpList([]).
+wffExpList([T]) :-
   isBinary(T,".,,",L,R),
   wffExp(L),
   wffExp(R).
-wffExps([P|T]) :- wffExp(P), wffExps(T).
+wffExpList([P|T]) :- wffExp(P), wffExpList(T).
 
 wffExp(name(_,"this")).
 wffExp(name(_,"true")).
@@ -218,7 +224,7 @@ wffExp(float(_,_)).
 wffExp(string(_,_)).
 wffExp(interString(_,Segs)) :- wffStringSegments(Segs).
 wffExp(tuple(_,"()",A)) :- wffExps(A).
-wffExp(tuple(_,"[]",A)) :- wffExps(A).
+wffExp(tuple(_,"[]",A)) :- wffExpList(A).
 wffExp(tuple(_,"{}",A)) :- wffThetaEnv(A).
 wffExp(T) :- isBinary(T,":",L,R), wffExp(L), wffTypeExp(R).
 wffExp(T) :- isBinary(T,".",L,R), wffExp(L), wffExp(R).
@@ -294,3 +300,76 @@ wffIden(Id) :- isTuple(Id,[Nm]), isName(Nm,_), \+ isKeyword(Nm).
 
 ifthen(T,Th,_) :- T, !, Th.
 ifthen(_,_,El) :- El.
+
+wffGrammarRule(St) :-
+  isBinary(St,"-->",L,R),!,
+  wffGrammarHead(L),
+  wffGrammarNonTermimal(R).
+
+wffGrammarHead(H) :-
+  isBinary(H,",",L,R),!,
+  wffHead(L),
+  wffTerminal(R).
+wffGrammarHead(H) :-
+  wffHead(H).
+
+wffTerminal(T) :-
+  isString(T,_).
+wffTerminal(tuple(_,"[]",Els)) :-
+  wffExps(Els).
+
+wffGrammarNonTermimal(T) :-
+  wffTerminal(T).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,",",L,R),
+  wffGrammarNonTermimal(L),
+  wffGrammarNonTermimal(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"|",L,R),
+  isBinary(L,"?",Ts,Th),
+  wffGrammarNonTermimal(Ts),
+  wffGrammarNonTermimal(Th),
+  wffGrammarNonTermimal(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"|",L,R),
+  wffGrammarNonTermimal(L),
+  wffGrammarNonTermimal(R).
+wffGrammarNonTermimal(T) :-
+  isUnary(T,"!",R),
+  wffGrammarNonTermimal(R).
+wffGrammarNonTermimal(T) :-
+  isUnary(T,"\\+",R),
+  wffGrammarNonTermimal(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"=",L,R),
+  wffExp(L),
+  wffExp(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"\\=",L,R),
+  wffExp(L),
+  wffExp(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"==",L,R),
+  wffExp(L),
+  wffExp(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,".=",L,R),
+  wffPtn(L),
+  wffExp(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"=.",L,R),
+  wffExp(L),
+  wffPtn(R).
+wffGrammarNonTermimal(T) :-
+  isBinary(T,"::",L,R),
+  wffGrammarNonTermimal(L),
+  wffCond(R).
+wffGrammarNonTermimal(T) :-
+  isBraceTuple(T,_,[El]),
+  wffCond(El).
+wffGrammarNonTermimal(T) :-
+  isRoundTerm(T,_,F,A),
+  wffExp(F),
+  wffPtns(A).
+wffGrammarNonTermimal(T) :-
+  isIdent(T,"eof").

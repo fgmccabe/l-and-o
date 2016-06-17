@@ -27,6 +27,11 @@ parseType(F,Env,B,Bound,funType(AT,RT)) :-
   isTuple(L,LA),
   parseTypes(LA,Env,B,B0,AT),
   parseType(R,Env,B0,Bound,RT).
+parseType(F,Env,B,Bound,grammarType(AT,RT)) :-
+  isBinary(F,"-->",L,R),
+  isTuple(L,LA),
+  parseTypes(LA,Env,B,B0,AT),
+  parseType(R,Env,B0,Bound,RT).
 parseType(F,Env,B,Bound,classType(AT,RT)) :-
   isBinary(F,"<=>",L,R),
   isTuple(L,LA),

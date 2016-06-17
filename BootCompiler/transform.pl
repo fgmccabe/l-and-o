@@ -22,6 +22,8 @@ transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
 
 transformMdlDef(Pkg,Map,Opts,function(Lc,Nm,Tp,Eqns),Rules,Rx,Ex,Exx) :-
   transformFunction(Pkg,Map,Opts,function(Lc,Nm,Tp,Eqns),_,Rules,Rx,Ex,Exx).
+transformMdlDef(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Rls),Rules,Rx,Ex,Exx) :-
+  transformGrammar(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Rls),_,Rules,Rx,Ex,Exx).
 transformMdlDef(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),Rules,Rx,Ex,Exx) :-
   transformPredicate(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),_,Rules,Rx,Ex,Exx).
 transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
@@ -122,6 +124,85 @@ transformDefn(Outer,Map,Opts,Lc,Nm,prg(LclName,1),Cond,Value,[clse(Q,prg(LclName
   length([_|Extra],Arity),
   breakDebug(Nm,CGx,PreV,ClOpts).                         % generate break point debugging
 
+transformGrammar(Prefix,Map,Opts,grammar(_,Nm,Tp,Rls),LclFun,Rules,Rx,Ex,Exx) :-
+  localName(Prefix,"@",Nm,LclName),
+  typeArity(Tp,Arity),
+  LclFun = prg(LclName,Arity),
+  pushOpt(Opts,inProg(Nm),POpts),
+  transformGrammarRules(Map,POpts,LclFun,Rls,1,_,Rules,Rx,Ex,Exx).
+
+transformGrammarRules(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
+transformGrammarRules(Map,Opts,LclFun,[Cl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
+  transformGrammarRule(Map,Opts,LclFun,No,Cl,Rules,R0,Ex,Ex0),
+  N1 is No+1,
+  transformGrammarRules(Map,Opts,LclFun,Defs,N1,Nx,R0,Rx,Ex0,Exx).
+
+transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
+      [clse(Q,LclFun,[StIn,StX|Args],Goals)|Rx],Rx,Ex,Exx) :-
+  extraVars(Map,Extra),                                   % extra variables coming from labels
+  debugPreamble(Nm,Extra,Q0,LbLx,PreG,Opts,ClOpts),        % are we debugging?
+  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,FBg,Map,ClOpts,Ex,Ex0), % head args
+  genVar("StIn",StIn),
+
+  dcgBody(Body,BG,BGx,StIn,StOut,[StIn,StOut|Q1],Q2,Map,ClOpts,Ex0,Ex1), % grammar body
+  trCons("cons",2,Ahead),
+  pushTerminals(PB,Ahead,BGx,DFG,StOut,StX,Q2,Q3,Map,ClOpts,Ex1,Exx),                % push back
+
+  labelAccess(Q3,Q,Map,Goals,LbLx),                       % generate label access goals
+  frameDebug(Nm,QNo,FBg,LG,Q,ClOpts),                     % generate frame entry debugging
+  lineDebug(Lc,LG,BrkG,ClOpts),                           % line debug after setting up frame
+  deframeDebug(Nm,QNo,DFG,[],ClOpts),                      % generate frame exit debugging
+  breakDebug(Nm,BrkG,BG,ClOpts).                           % generate break point debugging
+
+dcgBody(stringLit(Lc,Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
+  trCons("hdtl",2,Verb),
+  pushString(Lc,Txt,Verb,G,Gx,Strm,Strmx,Q,Qx).
+dcgBody(terminals(_,Terms),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  trCons("hdtl",2,Verb),
+  pushTerminals(Terms,Verb,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(eof(_),[ocall(Verb,[Strm])|G],Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
+  trCons("eof",1,Verb),
+  joinStream(Strm,Strmx,G,Gx).
+dcgBody(conj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  dcgBody(Lhs,G,G0,Strm,Strm0,Q,Q0,Map,Opts,Ex,Ex0),
+  dcgBody(Rhs,G0,Gx,Strm0,Strmx,Q0,Qx,Map,Opts,Ex0,Exx).
+dcgBody(guard(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  dcgBody(Lhs,G,G0,Strm,Strmx,Q,Q0,Map,Opts,Ex,Ex0),
+  trGoal(Rhs,G0,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+dcgBody(goal(_,Goal),G,Gx,Strm,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
+  trGoal(Goal,G,Gx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(call(Lc,NT,Args),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  lineDebug(Lc,G,G0,Opts),
+  trExps(Args,AG,Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
+  (var(Strmx) -> genVar("Stx",Strmx) ; true),
+  trGoalCall(NT,[Strm,Strmx|AG],G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+
+pushString(Lc,Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
+  string_codes(Str,Chrs),
+  pushCharList(Lc,Chrs,V,G,Gx,Strm,Strmx,Q,Qx).
+
+pushCharList(_,[],G,Gx,Strm,Strmx,Q,Q) :-
+  joinStream(Strm,Strmx,G,Gx).
+pushCharList(Lc,[Ch|Chrs],Verb,G,Gx,Strm,Strmx,Q,Qx) :-
+  genVar("X",X),
+  streamCall(Verb,intgr(Lc,Ch),Strm,X,G,G0),
+  pushCharList(Lc,Chrs,Verb,G0,Gx,X,Strmx,[X|Q],Qx).
+
+pushTerminals([],_,G,Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
+  joinStream(Strm,Strmx,G,Gx).
+pushTerminals([E|More],V,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  trPtn(E,Ptn,Q,Q0,G,G0,G1,G2,Map,Opts,Ex,Ex0),
+  genVar("NStrm",NStrm),
+  streamCall(V,Ptn,Strm,NStrm,G0,G1),
+  pushTerminals(More,V,G2,Gx,NStrm,Strmx,[NStrm|Q0],Qx,Map,Opts,Ex0,Exx).
+
+streamCall(Verb,El,Strm,Strmx,[ocall(cons(Verb,[El,Strmx]),Strm,Strm)|G],G).
+
+joinStream(X,X,G,G).
+joinStream(Strm,Strmx,[equals(Strm,Strmx)|Gx],Gx).
+
+
+
 transformOthers(_,_,_,[],Rx,Rx).
 transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
   collect(Others,isAssertion,Asserts,Rest),
@@ -213,7 +294,7 @@ trPtn(enum(Lc,Nm),A,Q,Qx,Pre,Prx,Post,Pstx,Map,Opts,Ex,Ex) :- !,
   trVarPtn(Lc,Nm,A,Q,Qx,Pre,Prx,Post,Pstx,Map,Opts).
 trPtn(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trPtn(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
+trPtn(stringLit(_,Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   lookupPkgRef(Map,Pkg,Rf,Reslt),
   genVar("Xi",Xi),
@@ -291,7 +372,7 @@ trExp(v(Lc,Nm),Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Ex) :-
   trVarExp(Lc,Nm,Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts).
 trExp(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trExp(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
+trExp(stringLit(_,Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
   lookupPkgRef(Map,Pkg,Rf,Reslt),
   genVar("Xi",Xi),
@@ -588,6 +669,10 @@ collectMtd(predicate(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,A
   localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.
+collectMtd(grammar(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
+  localName(OuterNm,"@",Nm,LclName),
+  typeArity(Tp,Ar),
+  Arity is Ar+4.
 collectMtd(defn(_,Nm,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(prg(LclName,3),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName).
 collectMtd(enum(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-

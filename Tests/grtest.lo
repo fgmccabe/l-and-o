@@ -1,0 +1,33 @@
+grtest{
+  import lo.stream.
+  import lo.arith.
+
+  ident : () --> stream[integer].
+  ident() --> [C], { isLetter(C)}, alphaNums().
+
+  alphaNum: () --> stream[integer].
+  alphaNum() --> [C] :: isLetter(C).
+  alphaNum() --> [C] :: isDigit(C).
+
+  alphaNums: () --> stream[integer].
+  alphaNums() --> alphaNum(), alphaNums().
+  alphaNums() --> [].
+
+  isLetter:(integer){}.
+  isLetter(0ca).
+  isLetter(0cb).
+  isLetter(0cc).
+  isLetter(0cd).
+
+  isDigit:(integer){}.
+  isDigit(0c0).
+  isDigit(0c1).
+  isDigit(0c2).
+  isDigit(0c3).
+  isDigit(0c4).
+  isDigit(0c5).
+  isDigit(0c6).
+  isDigit(0c7).
+  isDigit(0c8).
+  isDigit(0c9).
+}

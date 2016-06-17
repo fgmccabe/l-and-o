@@ -10,7 +10,7 @@ isCanon(prog(_,_,_,_)).
 isCanon(v(_,_)).
 isCanon(intLit(_)).
 isCanon(floatLit(_)).
-isCanon(stringLit(_)).
+isCanon(stringLit(_,_)).
 isCanon(apply(_,_,_)).
 isCanon(call(_,_,_)).
 isCanon(dot(_,_,_)).
@@ -48,7 +48,7 @@ showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types),O,E) :-
 showTerm(v(_,Nm),O,E) :- appStr(Nm,O,E).
 showTerm(intLit(Ix),O,E) :- appInt(Ix,O,E).
 showTerm(floatLit(Ix),O,E) :- appInt(Ix,O,E).
-showTerm(stringLit(Str),O,E) :- 
+showTerm(stringLit(_,Str),O,E) :- 
   appStr("""",O,O1),
   appStr(Str,O1,O2),
   appStr("""",O2,E).
@@ -224,6 +224,16 @@ showDef(class(Lc,Nm,_Type,Rules,Face),O,E) :-
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O6a),
   showClassRules(Rules,O6a,E).
+showDef(grammar(Lc,Nm,Tp,Rules),O,E) :-
+  appStr("grammar: ",O,O1),
+  appStr(Nm,O1,O2),
+  appStr(":",O2,O3),
+  showType(Tp,O3,O4),
+  appStr(" @ ",O4,O5),
+  showLocation(Lc,O5,O6),
+  appStr("\n",O6,O6a),
+  showGrammarRules(Rules,O6a,E).
+
 showDef(typeDef(Lc,Nm,Tp,Rules),O,E) :-
   appStr("type: ",O,O1),
   appStr(Nm,O1,O2),
@@ -301,6 +311,70 @@ showClause(strong(_,Nm,Args,Cond,Body),O,E) :-
   appStr(" :-- ",O5,O6),
   showTerm(Body,O6,O7),
   appStr(".\n",O7,E).
+
+showGrammarRules([],O,O).
+showGrammarRules([Rl|Rules],O,Ox) :-
+  showGrammarRule(Rl,O,O1),
+  showGrammarRules(Rules,O1,Ox).
+
+showGrammarRule(grammarRule(_,Nm,Args,PB,Body),O,Ox) :-
+  appStr(Nm,O,O1),
+  appStr("(",O1,O2),
+  showTerms(Args,O2,O3),
+  appStr(") ",O3,O4),
+  showPushBack(PB,O4,O5),
+  appStr(" --> ",O5,O6),
+  showNonTerminal(Body,O6,O7),
+  appStr(".\n",O7,Ox).
+
+showPushBack([],O,O).
+showPushBack(Els,O,Ox) :-
+  appStr("[",O,O1),
+  showTerms(Els,O1,O2),
+  appStr("]",O2,Ox).
+
+showNonTerminal(terminals(_,Terms),O,Ox) :-
+  showPushBack(Terms,O,Ox).
+showNonTerminal(conj(_,Lhs,Rhs),O,Ox) :-
+  showNonTerminal(Lhs,O,O1),
+  appStr(", ",O1,O2),
+  showNonTerminal(Rhs,O2,Ox).
+showNonTerminal(guard(_,Lhs,Rhs),O,Ox) :-
+  showNonTerminal(Lhs,O,O1),
+  appStr(" :: ",O1,O2),
+  showTerm(Rhs,O2,Ox).
+showNonTerminal(disj(_,Lhs,Rhs),O,Ox) :-
+  appStr("(",O,O0),
+  showNonTerminal(Lhs,O0,O1),
+  appStr(" | ",O1,O2),
+  showNonTerminal(Rhs,O2,O3),
+  appStr(")",O3,Ox).
+showNonTerminal(conditional(_,Test,Lhs,Rhs),O,Ox) :-
+  appStr("(",O,O0),
+  showNonTerminal(Test,O0,O1),
+  appStr("?",O1,O2),
+  showNonTerminal(Lhs,O2,O3),
+  appStr(" | ",O3,O4),
+  showNonTerminal(Rhs,O4,O5),
+  appStr(")",O5,Ox).
+showNonTerminal(one(_,Rhs),O,Ox) :-
+  appStr("(",O,O1),
+  appStr("!",O1,O2),
+  showNonTerminal(Rhs,O2,O3),
+  appStr(")",O3,Ox).
+showNonTerminal(neg(_,Rhs),O,Ox) :-
+  appStr("(",O,O1),
+  appStr("\\+",O1,O2),
+  showNonTerminal(Rhs,O2,O3),
+  appStr(")",O3,Ox).
+showNonTerminal(goal(_,Rhs),O,Ox) :-
+  appStr("{",O,O1),
+  showTerm(Rhs,O1,O2),
+  appStr(")",O2,Ox).
+showNonTerminal(eof(_),O,Ox) :-
+  appStr("eof",O,Ox).
+showNonTerminal(NT,O,Ox) :-
+  showTerm(NT,O,Ox).
 
 showOthers([],O,O).
 showOthers([Stmt|Stmts],O,E) :-

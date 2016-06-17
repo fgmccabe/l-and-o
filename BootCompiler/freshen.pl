@@ -33,6 +33,9 @@ frshn(type(Nm),_,type(Nm)).
 frshn(funType(A,R),B,funType(FA,FR)) :-
   frshnTypes(A,B,FA),
   frshn(R,B,FR).
+frshn(grammarType(A,R),B,grammarType(FA,FR)) :-
+  frshnTypes(A,B,FA),
+  frshn(R,B,FR).
 frshn(classType(A,R),B,classType(FA,FR)) :-
   frshnTypes(A,B,FA),
   frshn(R,B,FR).
@@ -42,6 +45,11 @@ frshn(typeExp(O,A),B,typeExp(O,FA)) :- frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
   frshn(Tp,B0,FTp).
+frshn(univType(constrained(Lw,kVar(V),Up),Tp),B,univType(constrained(FLw,kVar(V),FUp),FTp)) :-
+  subtract((V,_),B,B0),
+  frshn(Tp,B0,FTp),
+  frshn(Lw,B0,FLw),
+  frshn(Up,B0,FUp).
 frshn(faceType(L),B,faceType(FL)) :-
   frshnFields(L,B,FL).
 frshn(typeRule(A,R),B,typeRule(FA,FR)) :-
@@ -69,6 +77,9 @@ freeze(tVar(V),B,kVar(TV)) :- is_member((TV,VV),B), deRef(VV,VVV), identicalVar(
 freeze(tVar(V),_,tVar(V)) :- !.
 freeze(type(Nm),_,type(Nm)).
 freeze(funType(A,R),B,funType(FA,FR)) :-
+  freezeTypes(A,B,FA),
+  freeze(R,B,FR).
+freeze(grammarType(A,R),B,grammarType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
 freeze(classType(A,R),B,classType(FA,FR)) :-

@@ -74,7 +74,8 @@ headOfRule(St,Hd) :-
 headOfRule(St,Hd) :-
   isBinary(St,"..",Hd,_).
 headOfRule(St,Hd) :-
-  isBinary(St,"-->",Hd,_).
+  isBinary(St,"-->",H,_),
+  (isBinary(H,",",Hd,_) ; H=Hd),!.
 headOfRule(St,St) :-
   isRound(St,Nm,_), \+ isRuleKeyword(Nm).
 
@@ -122,6 +123,10 @@ collRefs(St,All,SoFar,Refs) :-
   collectHeadRefs(H,All,SoFar,R0),
   collectExpRefs(Exp,All,R0,Refs).
 collRefs(St,All,SoFar,Refs) :-
+  isBinary(St,"-->",H,Exp),
+  collectGrHeadRefs(H,All,SoFar,R0),
+  collectExpRefs(Exp,All,R0,Refs).
+collRefs(St,All,SoFar,Refs) :-
   isBinary(St,"<=",H,Exp),
   collectHeadRefs(H,All,SoFar,R0),
   collectLabelRefs(Exp,All,R0,Refs).
@@ -159,6 +164,13 @@ collectHeadRefs(Hd,All,R0,Refs) :-
   isRoundTerm(Hd,_,A),
   collectPtnListRefs(A,All,R0,Refs).
 collectHeadRefs(_,_,R,R).
+
+collectGrHeadRefs(Hd,All,R0,Refs) :-
+  isBinary(Hd,",",L,R),!,
+  collectHeadRefs(L,All,R0,R1),
+  collectPtnRefs(R,All,R1,Refs).
+collectGrHeadRefs(Hd,All,R0,Refs) :-
+  collectHeadRefs(Hd,All,R0,Refs).
 
 collectClassRefs(Term,All,SoFar,Refs) :-
   isBraceTuple(Term,_,Defs),

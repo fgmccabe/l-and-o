@@ -1,13 +1,13 @@
-:- module(uri,[parseURI/2,resolveURI/3,showUri/3,uriPath/2,makePath/2]).
+:- module(uri,[parseURI/2,uri//1,resolveURI/3,showUri/3,uriPath/2,makePath/2]).
 
 :- use_module(misc).
 
 parseURI(S,U) :-
   string_chars(S,Chrs),
-  phrase(parseURI(U),Chrs).
+  phrase(uri(U),Chrs).
 
-parseURI(absUri(Scheme,Path,Query)) --> absoluteURI(Scheme,Path,Query).
-parseURI(relUri(Path,Query)) --> relativeURI(Path,Query).
+uri(absUri(Scheme,Path,Query)) --> absoluteURI(Scheme,Path,Query).
+uri(relUri(Path,Query)) --> relativeURI(Path,Query).
 
 isAbsoluteURI(absUri(_,_,_)).
 

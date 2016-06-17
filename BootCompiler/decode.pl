@@ -132,6 +132,7 @@ decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Lower,Tp,Upper)) --> ['c'], decodeType(Lower), decodeType(Tp), decodeType(Upper).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
 decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
+decodeType(grammarType(A,T)) --> ['G'], decodeArgTypes(A), decodeType(T).
 decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
 decodeType(classType(A,T)) --> ['C'], decodeArgTypes(A), decodeType(T).
 decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).

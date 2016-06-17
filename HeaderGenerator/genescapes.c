@@ -141,6 +141,13 @@ static char *dumpSig(char *sig, bufferPo out) {
       sig = dSequence(sig, out);
       outStr(O_IO(out), ")");
       break;
+    case grammar_sig:
+      outStr(O_IO(out), "grammarType(");
+      sig = dSequence(sig, out);
+      outStr(O_IO(out), ",");
+      sig = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      break;
     case class_sig:
       outStr(O_IO(out), "classType(");
       sig = dSequence(sig, out);

@@ -117,6 +117,10 @@ makeMdkEntry(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx]
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+1.
+makeMdkEntry(Pkg,grammar(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+  localName(Pkg,"@",Nm,LclName),
+  typeArity(Tp,Ar),
+  Arity is Ar+2.
 makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Arity).

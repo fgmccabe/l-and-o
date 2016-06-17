@@ -29,6 +29,7 @@ sb(typeExp(Nm,A1),typeExp(Nm,A2),Env) :- sbList(A1,A2,Env).
 sb(typeExp(Nm,A1),T2,Env) :- rewriteType(Nm,typeExp(Nm,A1),T1,Env), subType(T1,T2,Env).
 sb(tupleType(A1),tupleType(A2),Env) :- sbList(A1,A2,Env).
 sb(funType(A1,R1),funType(A2,R2),Env) :- subType(R1,R2,Env), sbList(A2,A1,Env).
+sb(grammarType(A1,R1),grammarType(A2,R2),Env) :- subType(R1,R2,Env), sbList(A2,A1,Env).
 sb(classType(A1,R1),classType(A2,R2),Env) :- subType(R1,R2,Env), sbList(A2,A1,Env).
 sb(predType(A1),predType(A2),Env) :- sbList(A2,A1,Env).
 sb(faceType(E1),faceType(E2),Env) :- sbFields(E1,E2,Env).
@@ -73,6 +74,7 @@ sm(type(Nm),type(Nm),_).
 sm(typeExp(Nm,A1),typeExp(Nm,A2),Env) :- smList(A1,A2,Env).
 sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
 sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
+sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
 sm(classType(A1,R1),classType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
 sm(predType(A1),predType(A2),Env) :- smList(A2,A1,Env).
 sm(faceType(E1),faceType(E2),Env) :- length(E1,L), length(E2,L), smFields(E1,E2,Env).

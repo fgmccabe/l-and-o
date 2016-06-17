@@ -1,5 +1,5 @@
 :- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, 
-      typeArity/2,isFunctionType/2,isPredType/1,isPredType/2,isClassType/2,
+      typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
       showType/3, showTypeRule/3,
       occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
       bind/2, isIdentical/2, moveQuants/3,
@@ -15,6 +15,7 @@ isType(type(_)).
 isType(typeExp(_,_)).
 isType(tupleType(_)).
 isType(funType(_,_)).
+isType(grammarType(_,_)).
 isType(classType(_,_)).
 isType(predType(_)).
 isType(univType(_,_)).
@@ -72,10 +73,11 @@ occIn(Id,typeExp(_,L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,tupleType(L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,funType(L,_)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,funType(_,R)) :- is_member(A,R), occIn(Id,A).
+occIn(Id,grammarType(L,_)) :- is_member(A,L), occIn(Id,A).
+occIn(Id,grammarType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,classType(L,_)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,classType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,predType(L)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,funType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,univType(constrained(Lw,_,Up),Tp)) :- occIn(Id,Lw) ; occIn(Id,Up) ; occIn(Id,Tp).
 occIn(Id,univType(_,Tp)) :- occIn(Id,Tp).
 occIn(Id,faceType(L)) :- is_member((_,A),L), occIn(Id,A).
@@ -98,6 +100,7 @@ showType(type(Nm),O,E) :- appStr(Nm,O,E).
 showType(typeExp(Nm,A),O,E) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,E).
 showType(tupleType(A),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,E).
 showType(funType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,E).
+showType(grammarType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("-->",O3,O4), showType(R,O4,E).
 showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
 showType(predType(A),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,E).
 showType(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showType,O2,E).
@@ -147,6 +150,7 @@ showTypeField((Nm,Tp),O,E) :- appStr(Nm,O,O1), appStr(" : ",O1,O2), showType(Tp,
 typeArity(univType(_,Tp),Ar) :- typeArity(Tp,Ar).
 typeArity(constrained(_,Tp,_),Ar) :- typeArity(Tp,Ar).
 typeArity(funType(A,_),Ar) :- length(A,Ar).
+typeArity(grammarType(A,_),Ar) :- length(A,Ar).
 typeArity(predType(A),Ar) :- length(A,Ar).
 typeArity(classType(A,_),Ar) :- length(A,Ar).
 
@@ -161,3 +165,5 @@ isPredType(predType(A),Ar) :- length(A,Ar).
 isClassType(univType(_,Tp),Ar) :- isClassType(Tp,Ar).
 isClassType(classType(A,_),Ar) :- length(A,Ar).
 
+isGrammarType(univType(_,Tp),Ar) :- isGrammarType(Tp,Ar).
+isGrammarType(grammarType(A,_),Ar) :- length(A,Ar).
