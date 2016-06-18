@@ -88,7 +88,7 @@ headName(Head,Nm) :-
 headName(Name,Nm) :-
   isName(Name,Nm).
 headName(tuple(_,"()",[Name]),Nm) :-
-  isName(Name,Nm).
+  headName(Name,Nm).
 
 typeName(Tp,Nm) :- isSquare(Tp,Nm,_).
 typeName(Tp,Nm) :- isName(Tp,Nm).
@@ -232,8 +232,10 @@ collectExpRefs(T,A,R0,Refs) :-
   isTuple(T,Els),
   collectExpListRefs(Els,A,R0,Refs).
 collectExpRefs(T,A,R0,Refs) :-
-  isSquareTuple(T,_,Els),
-  collectExpListRefs(Els,A,R0,Refs).
+  isSquareTuple(T,Lc,Els),
+  collectExpRefs(name(Lc,"[]"),A,R0,R1),
+  collectExpRefs(name(Lc,",.."),A,R1,R2), % special handling for list notation
+  collectExpListRefs(Els,A,R2,Refs).
 collectExpRefs(_,_,Refs,Refs).
 
 collectExpListRefs([],_,Refs,Refs).

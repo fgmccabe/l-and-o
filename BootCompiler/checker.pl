@@ -66,7 +66,7 @@ locatePackage(Pkg,Cat,PkgSpec) :-
   resolveCatalog(Cat,Pkg,Uri),
   importPkg(Pkg,Uri,PkgSpec).
 
-importDefs(spec(_,faceType(Exported),faceType(Types)),Lc,Env,Ex) :-
+importDefs(spec(_,faceType(Exported),faceType(Types),_),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,Ex).
 
@@ -288,7 +288,7 @@ processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
   generateClassFace(SuperTp,E,SuperFace).
 processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
-  isName(L,Nm),!,
+  isIden(L,Nm),!,
   pushScope(E,Env),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
@@ -333,23 +333,33 @@ declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
   declareVar(Nm,Lc,vr(Nm,Tp),Env,E0),
   declareFields(More,Lc,E0,Ex).
 
+splitHead(tuple(_,"()",[A]),Nm,Args,Cond) :-!,
+  splitHd(A,Nm,Args,Cond).
 splitHead(Term,Nm,Args,Cond) :-
+  splitHd(Term,Nm,Args,Cond).
+
+splitHd(Term,Nm,Args,Cond) :-
   isBinary(Term,"::",L,Cond),!,
   splitHead(L,Nm,Args,_).
-splitHead(Term,Nm,Args,name(Lc,"true")) :-
+splitHd(Term,Nm,Args,name(Lc,"true")) :-
   isRound(Term,Nm,Args),
   locOfAst(Term,Lc),
   \+ is_member(Nm,["=>",":-",":--","<=","..","=",":="]).
-splitHead(Id,Nm,none,name(Lc,"true")) :-
+splitHd(Id,Nm,none,name(Lc,"true")) :-
   isIden(Id,Lc,Nm),!.
-splitHead(Term,"()",Args,name(Lc,"true")) :-
+splitHd(Term,"()",Args,name(Lc,"true")) :-
   locOfAst(Term,Lc),
   isTuple(Term,Args).
 
-splitGrHead(Term,Nm,Args,PB) :-
+splitGrHead(tuple(_,"()",[A]),Nm,Args,Cond) :-!,
+  splitGrHd(A,Nm,Args,Cond).
+splitGrHead(Term,Nm,Args,Cond) :-
+  splitGrHd(Term,Nm,Args,Cond).
+
+splitGrHd(Term,Nm,Args,PB) :-
   isBinary(Term,",",L,tuple(_,"[]",PB)),!,
   splitHead(L,Nm,Args,_).
-splitGrHead(Term,Nm,Args,[]) :-
+splitGrHd(Term,Nm,Args,[]) :-
   splitHead(Term,Nm,Args,name(_,"true")).
 
 generalizeStmts([],_,Defs,Defs).
@@ -522,7 +532,8 @@ typeOfVarPtn(Lc,Nm,Tp,Env,Ex,v(Lc,Nm)) :-
 varPttrn(Lc,_,vr(VNm,VT),Tp,Env,v(Lc,VNm)) :-
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,T),
-  sameType(Tp,T,Env).
+  (sameType(Tp,T,Env) ; 
+    reportError("variable %s : %s not consistent with expected type %s",[VNm,VT,Tp],Lc)).
 varPttrn(Lc,Nm,V,Tp,_,pVoid) :-
   reportError("illegal variable: %s/%s : %s",[Nm,V,Tp],Lc).
 

@@ -145,7 +145,7 @@ showMoreTerms([T|More],O,E) :-
   showMoreTerms(More,O2,E).
 
 showImports([],O,O).
-showImports([import(_,_,Viz,spec(CodeUri,_,_))|Imports],O,E) :-
+showImports([import(_,_,Viz,spec(CodeUri,_,_,_))|Imports],O,E) :-
   showVisibility(Viz,O,O0),
   appStr("import ",O0,O1),
   showUri(CodeUri,O1,O2),

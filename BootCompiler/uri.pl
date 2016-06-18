@@ -1,6 +1,7 @@
 :- module(uri,[parseURI/2,uri//1,resolveURI/3,showUri/3,uriPath/2,makePath/2]).
 
 :- use_module(misc).
+:- use_module(encode).
 
 parseURI(S,U) :-
   string_chars(S,Chrs),

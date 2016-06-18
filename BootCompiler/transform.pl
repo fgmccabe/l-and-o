@@ -29,7 +29,7 @@ transformMdlDef(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),Rules,Rx,Ex,Exx) :-
 transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
   transformDefn(Pkg,Map,Opts,Lc,Nm,_,Cond,Value,Rules,Rx,Ex,Exx).
 transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
+  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
 transformMdlDef(_,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
 
@@ -70,7 +70,7 @@ failSafeEquation(Map,Opts,Lc,LclFun,Tp,[clse([],LclFun,Anons,G)|Rest],Rest) :-
   genAnons(Arity,Anons),
   genRaise(Opts,Lc,LclFun,G,[]).
 
-genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[strg(LclName),intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
+genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
   lcLine(Lc,Lno),
   lcColumn(Lc,Off),
   lcSize(Lc,Sz).
@@ -216,36 +216,32 @@ transformAssertions(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
 collectGoal(assertion(_,G),true(_),G) :-!.
 collectGoal(assertion(_,G),O,conj(O,G)).
 
-transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),LblTerm,prg(LclName,Arity),Rules,Rx,Entry,Entry,Ex,Exx) :-
-  labelDefn(Map,Opts,Lc,LblPrg,LblTerm,Rules,R0),
-  layerName(Map,Outer),
-  className(Outer,Nm,LclName),
-  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,R0,En0,Ex,Ex1),!,
-  typeArity(Tp,Ar),
-  Arity is Ar+1,
+transformClass(Map,Opts,class(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Entry,Ex,Exx) :-
+  labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Rules,R0),
+  genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,R0,En0,Ex,Ex1),!,
   transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
 
 transformEnum(Map,Opts,enum(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Enx,Ex,Exx) :-
-  labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,LblTerm,Entry,Enx),
-  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,Rules,En0,Ex,Ex1),!,
+  labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Entry,Enx),
+  genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,Rules,En0,Ex,Ex1),!,
   transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
 
-labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,LblTerm,[clse(Q,Access,[cons(Con,[LblTerm])|Extra],Body)|Rx],Rx) :-
+labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,[clse(Q,Access,[cons(Con,[LblTerm])|Extra],Body)|Rx],Rx) :-
   lookupVarName(Map,Nm,Spec),
   trCons(Nm,1,Con),
   makeLabelTerm(Spec,Access,LblTerm,LblPrg),
   LblPrg = prg(LclName,_),
   pushOpt(Opts,inProg(Nm),DOpts),
   extraVars(Map,Extra),                                   % extra variables coming from labels
-  debugPreamble(Nm,Extra,Q0,LbLx,FBg,DOpts,ClOpts),        % are we debugging?
+  debugPreamble(Nm,Extra,Q0,LbLx,FBg,DOpts,ClOpts),       % are we debugging?
   labelAccess(Q0,Q,Map,Body,LbLx),                        % generate label access goals
   frameDebug(Nm,0,FBg,LG,Q,ClOpts),                       % generate frame entry debugging
-  lineDebug(Lc,LG,[neck|CGx],ClOpts),                         % line debug after setting up frame
+  lineDebug(Lc,LG,[neck|CGx],ClOpts),                     % line debug after setting up frame
   deframeDebug(Nm,0,Px,[],ClOpts),                        % generate frame exit debugging
-  breakDebug(Nm,CGx,Px,ClOpts).                         % generate break point debugging
+  breakDebug(Nm,CGx,Px,ClOpts).                           % generate break point debugging
 
 makeLabelTerm(localClass(LclName,Strct,LblPrg,LblVr,ThVr),prg(LclName,3),cons(Strct,[LblVr,ThVr]),LblPrg).
-makeLabelTerm(moduleClass(Access,LblTerm,LblPrg),Access,LblTerm,LblPrg).
+makeLabelTerm(moduleClass(Access,Strct,LblPrg),Access,cons(Strct,[]),LblPrg).
 
 findClassBody(Defs,classBody(Lc,Nm,Hd,Stmts,Others,Types)) :-
   is_member(classBody(Lc,Nm,Hd,Stmts,Others,Types),Defs),!.
@@ -280,7 +276,7 @@ transformClassDef(Prefix,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Entry,Enx,Ex
   transformDefn(Prefix,Map,Opts,Lc,Nm,LclDefn,Cond,Value,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclDefn,Entry,Enx).
 transformClassDef(Prefix,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,LclProg,Rules,Rx,Entry,E0,Ex,Exx),
+  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
   entryClause(Nm,Prefix,LclProg,E0,Enx).
 transformClassDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
@@ -601,35 +597,35 @@ trGoalDot(Rec,C,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Rec,NR,G,G0,G0,G1,Q,Qx,Map,Opts,Ex,Exx),
   G1 = [ocall(C,NR,NR)|Gx].
 
-genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr)|Map],Entry,En,Ex,Exx) :-
+genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr)|Map],Entry,En,Ex,Exx) :-
   genVar("LbV",LbVr),
   genVar("ThV",ThVr),
   pickAllFieldsFromFace(Face,Fields),
-  makeClassMtdMap(Defs,LclName,LbVr,ThVr,LblTerm,LblGl,[],L0,Fields,Map,Opts,Ex,Ex0),
+  makeClassMtdMap(Defs,LclName,LbVr,ThVr,LblGl,[],L0,Fields,Map,Opts,Ex,Ex0),
   makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L0,List,Fields,Entry,En,Ex0,Exx).
 
 pickAllFieldsFromFace(Tp,Fields) :-
   moveQuants(Tp,_,faceType(Fields)).
 
-makeClassMtdMap([],_,_,_,void,void,List,List,_,_,_,Ex,Ex).
-makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([],_,_,_,void,List,List,_,_,_,Ex,Ex).
+makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   collectLabelVars([],LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(enum(LclName),Extra,LblTerm),
   (Extra =[] -> LblGl = [] ; LblGl = [equals(LbVr,LblTerm)]),
-  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
+makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[equals(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
   collectLabelVars(Vs,LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(Lbl,Extra,LblTerm),
-  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
-makeClassMtdMap([labelRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
-  makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblTerm,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([overrideRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
-  makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblTerm,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
+makeClassMtdMap([labelRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
+makeClassMtdMap([overrideRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
 
 makeLblTerm(enum(Nm),[],enum(Nm)) :- !.
 makeLblTerm(enum(Nm),Extra,cons(strct(Nm,Ar),Extra)) :- !, length(Extra,Ar).

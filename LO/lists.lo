@@ -1,17 +1,18 @@
-lo.lists{
+lo.list{
   -- implement the list interface for lists
   import lo.stream.
 
-  []:list[_].
-  []..{
+  all t ~~ list[t] <~ stream[t].
+
+  '[]':list[_].
+  '[]'..{
     eof().
     cons(X) => [X].
-    tack(X) => [X].
     hdtl(_,_) :- false.
   }.
 
-  (,..): all t ~~ (t,list[t]) ~> list[t].
-  [H,..T]..{
+  (,..): all t ~~ (t,list[t]) <=> list[t].
+  (H,..T)..{
     eof() :- false.
     hdtl(H,T).
     cons(X) => [X,..this].

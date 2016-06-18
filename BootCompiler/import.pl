@@ -1,4 +1,6 @@
 :- module(import, [importPkg/3,makeOutputUri/3,makeOutputUri/4]).
+
+% This is specific to the Prolog translation of L&O code
  
 :- use_module(catalog).
 :- use_module(resource).
@@ -8,13 +10,15 @@
 :- use_module(transutils).
 :- use_module(decode).
 
-importPkg(Pkg,Uri,spec(Uri,Export,Types)) :-
+importPkg(Pkg,Uri,spec(Uri,Export,Types,Imports)) :-
   openResource(Uri,Strm),
-  pickupPieces(Strm,Pkg,[export,types],Pieces), % todo: imports
-  processPieces(Pieces,Export,Types),
+  pickupPieces(Strm,Pkg,[export,types,import],Pieces), % todo: imports
+  processPieces(Pieces,Export,Types,Imports),
   close(Strm).
 
 pickupPieces(_,_,[],[]).
+pickupPieces(Strm,_,_,[]) :-
+  at_end_of_stream(Strm).
 pickupPieces(Strm,Pkg,Lookfor,Pieces) :-
   read(Strm,Term),
   Term =.. [F|Args],
@@ -28,13 +32,16 @@ isAPiece(F,Args,Pkg,[L|Lookfor],[L|Rest],Pieces,More) :-
   isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More).
 isAPiece(_,_,_,[],[],Pieces,Pieces).
 
-processPieces([],_,_).
-processPieces([export(Sig)|More],Export,Types) :-
+processPieces([],_,_,[]).
+processPieces([export(Sig)|More],Export,Types,Imports) :-
   decodeSignature(Sig,Export),
-  processPieces(More,_,Types).
-processPieces([types(Sig)|More],Export,Types) :-
+  processPieces(More,_,Types,Imports).
+processPieces([types(Sig)|More],Export,Types,Imports) :-
   decodeSignature(Sig,Types),
-  processPieces(More,Export,_).
+  processPieces(More,Export,_,Imports).
+processPieces([import(Src)|More],Export,Types,[Uri|Imports]) :-
+  parseURI(Src,Uri),
+  processPieces(More,Export,Types,Imports).
 
 makeOutputUri(Base,Fn,Out) :-
   string_concat(Prefix,".lo",Fn),

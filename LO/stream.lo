@@ -4,11 +4,4 @@ lo.stream{
     hdtl:(E,this){}.
     cons:(E)=>this.
   }.
-
-  seq:all E ~~ (E,stream[E])<=>stream[E].
-  seq(H,T) .. {
-    eof() :- false.
-    hdtl(H,T).
-    cons(E) => seq(E,this).
-  }
 }

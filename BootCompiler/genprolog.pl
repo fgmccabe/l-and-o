@@ -8,22 +8,27 @@
 
 genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
   appStr(":- use_module(ocall).\n",Chrs,O0),
-  genImports(Imports,O0,O1),
+  genImports(Imports,Pkg,O0,O1),
   genFieldTypes(Fields,Pkg,O1,O2),
   genTypes(Types,Pkg,O2,O3),
   genPlRules(Rules,O3,[]),
   string_chars(Text,Chrs).
 
-genImports([],O,O).
-genImports([I|More],O,Ox) :-
-  genImport(I,O,O1),
-  genImports(More,O1,Ox).
+genImports([],_,O,O).
+genImports([I|More],Pkg,O,Ox) :-
+  genImport(I,Pkg,O,O1),
+  genImports(More,Pkg,O1,Ox).
 
-genImport(import(_,_,_,spec(Uri,_,_)),O,Ox) :-
+genImport(import(_,_,_,spec(Uri,_,_,_)),Pkg,O,Ox) :-
   appStr(":-[",O,O1),
   uriPath(Uri,Path),
   genQuoted(Path,O1,O2),
-  appStr("].\n",O2,Ox).
+  appStr("].\n",O2,O3),
+  localName(Pkg,"#","import",Imp),
+  appQuoted(Imp,O3,O4),
+  appStr("(""",O4,O5),
+  showUri(Uri,O5,O6),
+  appStr(""").\n",O6,Ox).
 
 genFieldTypes(Fields,Pkg,O,Ox) :-
   localName(Pkg,"#","export",Ex),
@@ -121,8 +126,6 @@ genTerm(strg(Str),O,E) :-
   appStr("""",O2,E).
 genTerm(anon,O,E) :-
   appStr("_",O,E).
-genTerm(enum("lo.std#[]"),O,E) :- !,
-  appStr("[]",O,E).
 genTerm(enum(Nm),O,E) :-
   appStr("'",O,O1),
   appStr(Nm,O1,O2),
@@ -130,7 +133,6 @@ genTerm(enum(Nm),O,E) :-
 genTerm(idnt(Nm),O,E) :-
   appStr("X",O,O0),
   appStr(Nm,O0,E).
-genTerm(cons(strct("lo.std#,..",2),[A,B]),O,E) :- !, genList(cons(strct("lo.std#,..",2),[A,B]),O,E).
 genTerm(cons(Op,Args),O,E) :-
   genTerm(Op,O,O1),
   appStr("(",O1,O2),
@@ -146,22 +148,6 @@ genQuoted(Str,O,Ox) :-
   appStr(Str,O1,O2),
   appStr("'",O2,Ox).
 
-genList(cons(strct("lo.std#,..",2),[A,B]),O,E) :-
-  appStr("[",O,O1),
-  genTerm(A,O1,O2),
-  genMoreList(B,O2,E).
-
-genMoreList(enum("lo.std#[]"),O,E) :-
-  appStr("]",O,E).
-genMoreList(cons(strct("lo.std#,..",2),[A,B]),O,E) :- !,
-  appStr(",",O,O1),
-  genTerm(A,O1,O2),
-  genMoreList(B,O2,E).
-genMoreList(A,O,E) :-
-  appStr(" | ",O,O1),
-  genTerm(A,O1,O2),
-  appStr("]",O2,E).
-
 genTerms([],O,O).
 genTerms([T|Rest],O,E) :-
   genTerm(T,O,O0),
@@ -170,4 +156,3 @@ genTerms([T|Rest],O,E) :-
 genMoreTerm(G,O,E) :-
   appStr(", ",O,O0),
   genTerm(G,O0,E).
-

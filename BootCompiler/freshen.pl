@@ -57,7 +57,7 @@ frshn(typeRule(A,R),B,typeRule(FA,FR)) :-
   frshn(R,B,FR).
 
 frshnFields([],_,[]).
-frshnFields([(Mode,A)|L],B,[(Mode,FA)|FL]) :- !, frshn(A,B,FA), frshnFields(L,B,FL).
+frshnFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, frshn(A,B,FA), frshnFields(L,B,FL).
 frshnFields([A|L],B,[FA|FL]) :- frshn(A,B,FA), frshnFields(L,B,FL).
 
 frshnTypes([],_,[]).

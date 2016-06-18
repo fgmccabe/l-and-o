@@ -1,4 +1,4 @@
-:- module(decode,[decodeTerm/3, decodeType//1,decodeSignature/2]).
+:- module(decode,[decodeTerm/2,decodeTerm/3, decodeType//1,decodeSignature/2]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -67,6 +67,10 @@ grabBytes(Ln,[B|More],[B|Sin],Sout) :-
   Ln > 0,
   Ln1 is Ln-1,
   grabBytes(Ln1,More,Sin,Sout).
+
+decodeTerm(Src,Term) :-
+  string_codes(Src,Codes),
+  decodeTerm(Term,Codes,[]).
 
 decodeTerm(Term,Sin,Sout) :-
   decodeTerm(Term,[],Sin,Sout).
@@ -140,7 +144,7 @@ decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 
 decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).
 decodeArgType(out(Tp)) --> ['-'], decodeType(Tp).
-decodeArgType(inout(Tp)) --> decodeType(Tp).
+decodeArgType(Tp) --> decodeType(Tp).
 
 decodeArgTypes(0,[]) --> [].
 decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeArgType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).
