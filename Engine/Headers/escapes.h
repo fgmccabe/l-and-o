@@ -233,9 +233,10 @@ escape(_flt_abs,24,False,False,"F1ff","float absolute value")
   escape(num2str,215,False,False,"F5+N+N+N+l+lS","format a number as a string")
   escape(_stringOf,216,False,False,":k't'AF3+k't'+i+iS","convert value to a string")
   escape(_trim,217,False,False,"F2+S+iS","trim a string to a width")
-  escape(explode,218,False,False,"F1+SLi","convert string to list of code points")
-  escape(implode,219,False,False,"F1+LiS","convert list of code points to string")
-
+*/
+  escape(explode,218,False,False,"F1SLi","convert string to list of code points")
+  escape(implode,219,False,False,"F1LiS","convert list of code points to string")
+/*
   escape(getenv,230,False,False,"F2+S+SS","get an environment variable")
   escape(setenv,231,True,False,"P2+S+S","set an environment variable")
   escape(envir,232,False,False,"F0LT2SS","return entire environment")

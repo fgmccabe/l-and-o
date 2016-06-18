@@ -31,7 +31,8 @@ transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
 transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
 transformMdlDef(_,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,_,Rules,Rx,_,_,Ex,Exx).
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
+
 transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
 
 transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Eqns),LclFun,Rules,Rx,Ex,Exx) :-
@@ -151,8 +152,8 @@ transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
   labelAccess(Q3,Q,Map,Goals,LbLx),                       % generate label access goals
   frameDebug(Nm,QNo,FBg,LG,Q,ClOpts),                     % generate frame entry debugging
   lineDebug(Lc,LG,BrkG,ClOpts),                           % line debug after setting up frame
-  deframeDebug(Nm,QNo,DFG,[],ClOpts),                      % generate frame exit debugging
-  breakDebug(Nm,BrkG,BG,ClOpts).                           % generate break point debugging
+  deframeDebug(Nm,QNo,DFG,[],ClOpts),                     % generate frame exit debugging
+  breakDebug(Nm,BrkG,BG,ClOpts).                          % generate break point debugging
 
 dcgBody(stringLit(Lc,Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
   trCons("hdtl",2,Verb),
@@ -201,8 +202,6 @@ streamCall(Verb,El,Strm,Strmx,[ocall(cons(Verb,[El,Strmx]),Strm,Strm)|G],G).
 joinStream(X,X,G,G).
 joinStream(Strm,Strmx,[equals(Strm,Strmx)|Gx],Gx).
 
-
-
 transformOthers(_,_,_,[],Rx,Rx).
 transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
   collect(Others,isAssertion,Asserts,Rest),
@@ -218,18 +217,35 @@ collectGoal(assertion(_,G),true(_),G) :-!.
 collectGoal(assertion(_,G),O,conj(O,G)).
 
 transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),LblTerm,prg(LclName,Arity),Rules,Rx,Entry,Entry,Ex,Exx) :-
+  labelDefn(Map,Opts,Lc,LblPrg,LblTerm,Rules,R0),
   layerName(Map,Outer),
   className(Outer,Nm,LclName),
-  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,Rules,En0,Ex,Ex0),!,
+  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,R0,En0,Ex,Ex1),!,
   typeArity(Tp,Ar),
   Arity is Ar+1,
-  transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex0,Exx).
+  transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
 
-transformEnum(Map,Opts,enum(Lc,Nm,_,Defs,Face),LblTerm,prg(LclName,1),Rules,Rx,Entry,Entry,Ex,Exx) :-
-  layerName(Map,Outer),
-  className(Outer,Nm,LclName),
-  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,Rules,En0,Ex,Ex0),!,
-  transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex0,Exx).
+transformEnum(Map,Opts,enum(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Enx,Ex,Exx) :-
+  labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,LblTerm,Entry,Enx),
+  genClassMap(Map,Opts,Lc,LclName,Defs,Face,LblTerm,CMap,Rules,En0,Ex,Ex1),!,
+  transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
+
+labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,LblTerm,[clse(Q,Access,[cons(Con,[LblTerm])|Extra],Body)|Rx],Rx) :-
+  lookupVarName(Map,Nm,Spec),
+  trCons(Nm,1,Con),
+  makeLabelTerm(Spec,Access,LblTerm,LblPrg),
+  LblPrg = prg(LclName,_),
+  pushOpt(Opts,inProg(Nm),DOpts),
+  extraVars(Map,Extra),                                   % extra variables coming from labels
+  debugPreamble(Nm,Extra,Q0,LbLx,FBg,DOpts,ClOpts),        % are we debugging?
+  labelAccess(Q0,Q,Map,Body,LbLx),                        % generate label access goals
+  frameDebug(Nm,0,FBg,LG,Q,ClOpts),                       % generate frame entry debugging
+  lineDebug(Lc,LG,[neck|CGx],ClOpts),                         % line debug after setting up frame
+  deframeDebug(Nm,0,Px,[],ClOpts),                        % generate frame exit debugging
+  breakDebug(Nm,CGx,Px,ClOpts).                         % generate break point debugging
+
+makeLabelTerm(localClass(LclName,Strct,LblPrg,LblVr,ThVr),prg(LclName,3),cons(Strct,[LblVr,ThVr]),LblPrg).
+makeLabelTerm(moduleClass(Access,LblTerm,LblPrg),Access,LblTerm,LblPrg).
 
 findClassBody(Defs,classBody(Lc,Nm,Hd,Stmts,Others,Types)) :-
   is_member(classBody(Lc,Nm,Hd,Stmts,Others,Types),Defs),!.
@@ -267,7 +283,7 @@ transformClassDef(Prefix,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,E
   transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,LclProg,Rules,Rx,Entry,E0,Ex,Exx),
   entryClause(Nm,Prefix,LclProg,E0,Enx).
 transformClassDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,LclProg,Rules,Rx,Entry,E0,Ex,Exx),
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
   entryClause(Nm,Prefix,LclProg,E0,Enx).
 
 entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),[cons(Con,Args),LblVr,ThVr],[neck,call(EntryPrg,Q)])|Rx],Rx) :-
@@ -325,7 +341,7 @@ implementVarPtn(moduleVar(_,Vn),_,X,X,Q,[X|Q],[call(Vn,X)|Pre],Pre,Post,Post) :-
 implementVarPtn(labelArg(N,ClVr,TVr),_,_,N,Q,Qx,Pre,Pre,Post,Post) :- !,    % argument from label
   merge([N,ClVr,TVr],Q,Qx).
 implementVarPtn(moduleClass(_,enum(Enum),_),_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post).
-implementVarPtn(localClass(Enum,_,LbVr,ThVr),_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Post,Post) :-
+implementVarPtn(localClass(_,Enum,_,LbVr,ThVr),_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Post,Post) :-
   merge([LbVr,ThVr],Q,Qx).
 implementVarPtn(inherit(Nm,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre,Pre,Post,Post) :-
   merge([LbVr,ThVr],Q,Qx).
@@ -348,7 +364,7 @@ implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,[ca
   trCons(Nm,XArgs,Op),
   merge([X,LblVr,ThVr],Q,Qx).
 implementPtnCall(moduleClass(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
-implementPtnCall(localClass(Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementPtnCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   concat(Args,[LbVr,ThVr],XArgs),
   merge([LbVr,ThVr],Q,Qx).
 implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,Args,cons(strct(Nm,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
@@ -400,6 +416,9 @@ trDotExp(R,C,X,X,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
 
 implementDotExp(inherit(_,Super,ClVr,ThVr),_,C,X,X,Q,Qx,Pre,Pre,[call(Super,[C,ClVr,ThVr])|Tail],Tail,_,_,Ex,Ex) :-
   merge([X,ClVr,ThVr],Q,Qx).
+implementDotExp(moduleClass(_,_,LblPrg),R,C,X,X,Q,Qx,Pre,Prx,Tail,Tailx,Map,Opts,Ex,Exx) :-
+  trExp(R,Rc,Q,Q0,Pre,Prx,Tail,[call(LblPrg,[C,Rc,Rc])|Tailx],Map,Opts,Ex,Exx),
+  merge([X],Q0,Qx).
 implementDotExp(_,R,C,X,X,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   trExp(R,Rc,Q,Q0,Pre,Px,Tail,[ocall(C,Rc,Rc)|Tailx],Map,Opts,Ex,Exx),
   merge([X],Q0,Qx).
@@ -453,7 +472,7 @@ implementFunCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,[ca
   trCons(Nm,XArgs,Op),
   merge([X,LblVr,ThVr],Q,Qx).
 implementFunCall(moduleClass(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
-implementFunCall(localClass(Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementFunCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   concat(Args,[LbVr,ThVr],XArgs),
   merge([LbVr,ThVr],Q,Qx).
 implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
@@ -471,7 +490,7 @@ implementVarExp(inheritField(Super,LblVr,ThVr),_,Nm,X,X,Q,Qx,
   trCons(Nm,1,V),
   merge([X,LblVr,ThVr],Q,Qx).
 implementVarExp(moduleClass(_,enum(Enum),_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Tail,Tail).
-implementVarExp(localClass(Enum,_,LbVr,ThVr),_,_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
+implementVarExp(localClass(_,Enum,_,LbVr,ThVr),_,_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
   merge([LbVr,ThVr],Q,Qx).
 implementVarExp(inherit(Nm,_,LbVr,ThVr),_,_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
   merge([LbVr,ThVr],Q,Qx).
@@ -576,7 +595,7 @@ implementGoalCall(_,Pred,G,G,Q,Q) :-
   reportMsg("cannot handle source for %s",[Pred]).
 
 trGoalDot(v(_,Nm),C,[call(Super,[C,LbVr,ThVr])|Gx],Gx,Q,Qx,Map,_,Ex,Ex) :- 
-  lookupVarName(Nm,Map,inherit(_,Super,LbVr,ThVr)),!,
+  lookupVarName(Map,Nm,inherit(_,Super,LbVr,ThVr)),!,
   merge([LbVr,ThVr],Q,Qx).
 trGoalDot(Rec,C,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Rec,NR,G,G0,G0,G1,Q,Qx,Map,Opts,Ex,Exx),
@@ -593,11 +612,12 @@ pickAllFieldsFromFace(Tp,Fields) :-
   moveQuants(Tp,_,faceType(Fields)).
 
 makeClassMtdMap([],_,_,_,void,void,List,List,_,_,_,Ex,Ex).
-makeClassMtdMap([classBody(_,_,enum(_,Nm),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,[],List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   collectLabelVars([],LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
-  makeLblTerm(enum(Nm),Extra,LblTerm),
+  makeLblTerm(enum(LclName),Extra,LblTerm),
+  (Extra =[] -> LblGl = [] ; LblGl = [equals(LbVr,LblTerm)]),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
 makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblTerm,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
@@ -675,12 +695,10 @@ collectMtd(grammar(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Ari
   Arity is Ar+4.
 collectMtd(defn(_,Nm,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(prg(LclName,3),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName).
-collectMtd(enum(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-
-  localName(OuterNm,"#",Nm,LclName),
-  typeArity(Tp,Ar),
-  Arity is Ar+2.
-collectMtd(class(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-
-  localName(OuterNm,"#",Nm,LclName),
+collectMtd(enum(_,Nm,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(OuterNm,strct(LclName,2),prg(LclName,3),Lbl,ThV))|List]) :-
+  localName(OuterNm,"@",Nm,LclName).
+collectMtd(class(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(OuterNm,strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-
+  localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.
 

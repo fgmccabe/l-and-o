@@ -1,0 +1,10 @@
+catalog{
+  -- catalog for base library
+  version is "1.0".
+  content is {
+    "lo.thing" -> "thing.pl".
+    "lo.arith" -> "arith.pl".
+    "lo.lists" -> "lists.pl".
+    "lo.stream" -> "stream.pl".
+  }
+}

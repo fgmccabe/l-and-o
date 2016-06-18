@@ -11,7 +11,7 @@ parse(Tks,T,RTks) :-
     checkTerminator(Tks1,RTks).
 
 term(Tks,Pr,T,Toks) :-
-    termLeft(Tks,Pr,Left,LftPr,Tks1),
+    termLeft(Tks,Pr,Left,LftPr,Tks1),!,
     termRight(Tks1,Pr,LftPr,Left,T,Toks).
 
 termLeft([idTok(Id,Lc),rpar(Lcy)|Toks],_,name(Lc,Id),0,[rpar(Lcy)|Toks]).

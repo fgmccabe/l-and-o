@@ -20,6 +20,8 @@ escapeType("_flt_times",funType([type("lo.arith*float"),type("lo.arith*float")],
 escapeType("_flt_div",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
 escapeType("_int_abs",funType([type("lo.arith*integer")],type("lo.arith*integer"))).
 escapeType("_flt_abs",funType([type("lo.arith*float")],type("lo.arith*float"))).
+escapeType("explode",funType([type("lo.thing*string")],typeExp("lo.std*list",[type("lo.arith*integer")]))).
+escapeType("implode",funType([typeExp("lo.std*list",[type("lo.arith*integer")])],type("lo.thing*string"))).
 isEscape("exit").
 isEscape("_command_line").
 isEscape("_command_opts").
@@ -38,3 +40,5 @@ isEscape("_flt_times").
 isEscape("_flt_div").
 isEscape("_int_abs").
 isEscape("_flt_abs").
+isEscape("explode").
+isEscape("implode").

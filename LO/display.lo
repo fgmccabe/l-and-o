@@ -1,0 +1,16 @@
+lo.display{
+  import lo.thing.
+  import lo.string.
+  import lo.list.
+
+  all t ~~ display[t] <~ {
+    display:(t) => ss.
+  }
+
+  ss ::= ssSp | ssNl | ssStr(string) | ssSeq(list[ss]) | ssIndent(ss).
+
+  thingDisp : display[thing].
+  thingDisp .. {
+    display(_) => ss("thing").
+  }
+}

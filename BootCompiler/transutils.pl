@@ -91,12 +91,14 @@ stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleFun("",prg(LclName,Arity)))|SoFar]) :-
 stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleRel("",prg(LclName,Arity)))|SoFar]) :-
   isPredType(Tp,Arity),!,
   localName("","@",Nm,LclName).
-stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass("",strct(LclName,Arity),prg(LclName,3)))|SoFar]) :-
+stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Arity),prg(LclName,3)))|SoFar]) :-
   isClassType(Tp,Arity),!,
-  localName("","#",Nm,LclName).
-stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass("",enum(LclName),prg(LclName,3)))|SoFar]) :- % this is a hack
+  localName("","#",Nm,LclName),
+  localName("","@",Nm,AccessName).
+stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|SoFar]) :- % this is a hack
   \+isFunctionType(Tp,_),\+isPredType(Tp,_),\+isClassType(Tp,_),!,
-  localName("","#",Nm,LclName).
+  localName("","#",Nm,LclName),
+  localName("","@",Nm,AccessName).
 stdMapEntry(_,vr(Nm,Tp),SoFar,SoFar) :-
   reportMsg("cannot understand standard name %s:%s",[Nm,Tp]).
 
@@ -126,11 +128,13 @@ makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx
   typeArity(Tp,Arity).
 makeMdkEntry(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName).
-makeMdkEntry(Pkg,class(_,Nm,Tp,_,_),[(Nm,moduleClass(Pkg,strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
+makeMdkEntry(Pkg,class(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
   localName(Pkg,"#",Nm,LclName),
-  typeArity(Tp,Ar).
-makeMdkEntry(Pkg,enum(_,Nm,_,_,_),[(Nm,moduleClass(Pkg,enum(LclName),prg(LclName,3)))|Mx],Mx) :-
-  localName(Pkg,"#",Nm,LclName).
+  typeArity(Tp,Ar),
+  localName(Pkg,"@",Nm,AccessName).
+makeMdkEntry(Pkg,enum(_,Nm,_,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx) :-
+  localName(Pkg,"#",Nm,LclName),
+  localName(Pkg,"@",Nm,AccessName).
 makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx) :-
   localName(Pkg,"*",Nm,LclName).
 
@@ -152,7 +156,7 @@ lookupVarName(Map,Nm,V) :-
 anyDef(moduleVar(_Pkg,_Vn)).
 anyDef(localVar(_Vn,_ClVr,_TVr)).
 anyDef(labelArg(_N,_ClVr,_TVr)).
-anyDef(localClass(_,_,_,_)).
+anyDef(localClass(_,_,_,_,_)).
 anyDef(moduleClass(_,_,_)).
 anyDef(inherit(_,_,_,_)).
 anyDef(inheritField(_,_,_)).
@@ -172,13 +176,13 @@ funDef(localFun(_,_,_)).
 funDef(moduleFun(_,_)).
 funDef(inherit(_,_,_,_)).
 funDef(inheritField(_,_,_)).
-funDef(localClass(_,_,_,_)).
+funDef(localClass(_,_,_,_,_)).
 funDef(moduleClass(_,_,_)).
 
 lookupClassName(Map,Nm,V) :-
   lookup(Map,Nm,classDef,V).
 
-classDef(localClass(_,_,_,_)).
+classDef(localClass(_,_,_,_,_)).
 classDef(moduleClass(_,_,_)).
 classDef(inherit(_,_,_,_)).
 classDef(inheritField(_,_,_)).

@@ -1,4 +1,4 @@
-:- module(import, [importPkg/5,makeOutputUri/4]).
+:- module(import, [importPkg/3,makeOutputUri/3,makeOutputUri/4]).
  
 :- use_module(catalog).
 :- use_module(resource).
@@ -8,10 +8,8 @@
 :- use_module(transutils).
 :- use_module(decode).
 
-importPkg(Pkg,Uri,Base,Opts,spec(CodeUri,Export,Types)) :-
-  uriPath(Uri,Pth),
-  makeOutputUri(Base,Opts,Pth,CodeUri),
-  openResource(CodeUri,Strm),
+importPkg(Pkg,Uri,spec(Uri,Export,Types)) :-
+  openResource(Uri,Strm),
   pickupPieces(Strm,Pkg,[export,types],Pieces), % todo: imports
   processPieces(Pieces,Export,Types),
   close(Strm).
@@ -38,17 +36,18 @@ processPieces([types(Sig)|More],Export,Types) :-
   decodeSignature(Sig,Types),
   processPieces(More,Export,_).
 
-makeOutputUri(_,Opts,Fn,Out) :-
-  is_member(build(B),Opts),
-  string_concat(Prefix,".lo",Fn),
-  string_concat(Prefix,".pl",OFn),
-  split_string(OFn,"/","",Els),
-  last(Els,Tail),
-  parseURI(Tail,OU),
-  resolveURI(B,OU,Out).
-makeOutputUri(Base,_,Fn,Out) :-
+makeOutputUri(Base,Fn,Out) :-
   string_concat(Prefix,".lo",Fn),
   string_concat(Prefix,".pl",OFn),
   parseURI(OFn,OU),
   resolveURI(Base,OU,Out).
 
+makeOutputUri(Base,Opts,Fn,Out) :-
+  is_member(build(Build),Opts),
+  string_concat(Prefix,".lo",Fn),
+  string_concat(Prefix,".pl",OFn),
+  split_string(OFn,"/","",Els),
+  last(Els,Tail),
+  parseURI(Tail,OU),
+  resolveURI(Base,Build,Tgt),
+  resolveURI(Tgt,OU,Out).

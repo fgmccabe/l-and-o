@@ -1,6 +1,7 @@
 :- module(polyfill,[exit/1,'_int_plus'/3,'_int_minus'/3,'_int_times'/3,'_int_div'/3,
                     '_flt_plus'/3,'_flt_minus'/3,'_flt_times'/3,'_flt_div'/3,
                     '_int_abs'/2,'_flt_abs'/2,
+                    explode/2, implode/2,
                     '_unify'/2]).
 
 
@@ -19,3 +20,7 @@ exit(X) :- halt(X).
 '_flt_div'(X,Y,Z) :- Z is X/Y.
 '_int_abs'(X,Y) :- Y is abs(X).
 '_flt_abs'(X,Y) :- Y is abs(X).
+
+explode(S,C) :- string_codes(S,C).
+
+implode(C,S) :- string_codes(S,C).

@@ -76,6 +76,7 @@ token(content) --> [c,o,n,t,e,n,t].
 token(version) --> [v,e,r,s,i,o,n].
 token(base) --> [b,a,s,e].
 token(default) --> [d,e,f,a,u,l,t].
+token(product) --> [p,r,o,d,u,c,t].
 token(is) --> [i,s].
 token(lbrce) --> ['{'].
 token(rbrce) --> ['}'].

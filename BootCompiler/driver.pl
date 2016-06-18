@@ -25,8 +25,7 @@ parseFlags(['-p'|More],CWD,[profiling|Opts],Files) :-
   parseFlags(More,CWD,Opts,Files).
 parseFlags(['-b', B|More],CWD,[build(Build)|Opts],Files) :- 
   atom_string(B,BD), 
-  parseURI(BD,BU),
-  resolveURI(CWD,BU,Build),
+  parseURI(BD,Build),
   parseFlags(More,CWD,Opts,Files).
 parseFlags(['--'|More], _, [], Files) :- stringify(More,Files).
 parseFlags(More, _, [], Files) :- stringify(More,Files).
@@ -60,6 +59,7 @@ processFile(Fl,CWD,Opts) :-
   displayCanon(Prog),
   transformProg(Prog,Opts,Rules),!,
   noErrors,
+  displayPlRules(Rules),!,
   genRules(Rules,Text),!,
   makeOutputUri(FUrl,Opts,Fl,OutUri),
   putResource(OutUri,Text).
@@ -81,6 +81,3 @@ getCWDUri(WD) :-
 getSrcUri(Fl,WD,FUri) :-
   parseURI(Fl,FU),
   resolveURI(WD,FU,FUri).
-
-
-

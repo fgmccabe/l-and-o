@@ -1,0 +1,47 @@
+/* Automatically generated, do not edit */
+
+lo.comp.escapes{
+  escapeType:(string)=>type.
+  escapeType("exit") => funType([type("lo.arith*integer")],voidType).
+  escapeType("_command_line") => funType([],typeExp("lo.std*list",[type("lo.thing*string")])).
+  escapeType("_command_opts") => funType([],typeExp("lo.std*list",[tupleType([type("lo.thing*string"),type("lo.thing*string")])])).
+  escapeType("_unify") => univType(kVar("t"),predType([kVar("t"),kVar("t")])).
+  escapeType("_identical") => univType(kVar("t"),predType([kVar("t"),kVar("t")])).
+  escapeType("_match") => univType(kVar("t"),predType([kVar("t"),kVar("t")])).
+  escapeType("var") => univType(kVar("t"),predType([kVar("t")])).
+  escapeType("nonvar") => univType(kVar("t"),predType([kVar("t")])).
+  escapeType("_int_plus") => funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer")).
+  escapeType("_int_minus") => funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer")).
+  escapeType("_int_times") => funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer")).
+  escapeType("_int_div") => funType([type("lo.arith*integer"),type("lo.arith*integer")],type("lo.arith*integer")).
+  escapeType("_flt_plus") => funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float")).
+  escapeType("_flt_minus") => funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float")).
+  escapeType("_flt_times") => funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float")).
+  escapeType("_flt_div") => funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float")).
+  escapeType("_int_abs") => funType([type("lo.arith*integer")],type("lo.arith*integer")).
+  escapeType("_flt_abs") => funType([type("lo.arith*float")],type("lo.arith*float")).
+  escapeType("explode") => funType([type("lo.thing*string")],typeExp("lo.std*list",[type("lo.arith*integer")])).
+  escapeType("implode") => funType([typeExp("lo.std*list",[type("lo.arith*integer")])],type("lo.thing*string")).
+  isEscape:(string){}.
+  isEscape("exit").
+  isEscape("_command_line").
+  isEscape("_command_opts").
+  isEscape("_unify").
+  isEscape("_identical").
+  isEscape("_match").
+  isEscape("var").
+  isEscape("nonvar").
+  isEscape("_int_plus").
+  isEscape("_int_minus").
+  isEscape("_int_times").
+  isEscape("_int_div").
+  isEscape("_flt_plus").
+  isEscape("_flt_minus").
+  isEscape("_flt_times").
+  isEscape("_flt_div").
+  isEscape("_int_abs").
+  isEscape("_flt_abs").
+  isEscape("explode").
+  isEscape("implode").
+
+}.

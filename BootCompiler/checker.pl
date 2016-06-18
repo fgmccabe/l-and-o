@@ -53,20 +53,19 @@ checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
 checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
   isUnary(St,"public",I),
   checkImport(I,public,Imports,More,Pkg,Opts,Env,Ex).
-checkImport(St,Viz,[import(Lc,PkgName,Viz,PkgSpec)|More],More,Pkg,Opts,Env,Ex) :-
+checkImport(St,Viz,[import(Lc,PkgName,Viz,PkgSpec)|More],More,Pkg,_,Env,Ex) :-
   isUnary(St,Lc,"import",P),
   packageName(P,PkgName),
   getCatalog(Pkg,Env,Cat),
-  (locatePackage(PkgName,Cat,Opts,PkgSpec),
+  (locatePackage(PkgName,Cat,PkgSpec),
    importDefs(PkgSpec,Lc,Env,Ex) ;
    reportError("cannot locate package %s",[PkgName],Lc),
    Env=Ex).
 
-% For now, we stub these out.
-locatePackage(Pkg,Cat,Opts,PkgSpec) :-
+locatePackage(Pkg,Cat,PkgSpec) :-
   resolveCatalog(Cat,Pkg,Uri),
-  catalogBase(Cat,Base),
-  importPkg(Pkg,Uri,Base,Opts,PkgSpec).
+  importPkg(Pkg,Uri,PkgSpec).
+
 importDefs(spec(_,faceType(Exported),faceType(Types)),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,Ex).
@@ -628,7 +627,7 @@ typeOfExp(Term,ET,Tp,Env,apply(Lc,Fun,Args)) :-
   genTpVars(A,ArgTps),
   typeOfExp(F,funType(ArgTps,ET),funType(_,Tp),Env,Fun),!,
   typeOfExps(A,ArgTps,_,Env,Args).
-typeOfExp(Term,ET,Tp,Env,apply(Lc,Fun,Args)) :-
+typeOfExp(Term,ET,Tp,Env,apply(Lc,Fun,Args)) :- %% needs some adjustment to prevent free functions
   isRoundTerm(Term,Lc,F,A),!,
   genTpVars(A,ArgTps),
   typeOfExp(F,classType(ArgTps,ET),classType(_,Tp),Env,Fun),

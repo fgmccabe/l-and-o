@@ -1,10 +1,29 @@
 :- module(plog,[displayPlRules/1]).
 
 :- use_module(misc).
+:- use_module(types).
 
-displayPlRules(Rls) :-
-  showPlRules(Rls,Chrs,[]),
-  string_chars(Res,Chrs), write(Res).
+displayPlRules(export(_,Imports,Fields,_,Rules)) :-
+  showImports(Imports,Chrs,O1),
+  showType(faceType(Fields),O1,O2),
+  showPlRules(Rules,O2,[]),
+  string_chars(Text,Chrs),
+  write(Text).
+
+showImports([],O,O).
+showImports([I|More],O,Ox) :-
+  showImport(I,O,O1),
+  showImports(More,O1,Ox).
+
+showImport(import(_,Pkg,Mode,_),O,Ox) :-
+  showMode(Mode,O,O1),
+  appStr(Pkg,O1,Ox).
+
+showMode(private,O,Ox) :-
+  appStr("private ",O,Ox).
+showMode(public,O,Ox) :-
+  appStr("public ",O,Ox).  
+
 
 showPlRules(Rls,O,E) :-
   rfold(Rls,plog:showPlRule,O,E).

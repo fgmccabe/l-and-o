@@ -1,0 +1,35 @@
+inEnums{
+  -- Test inner classes
+  import lo.arith.
+  import lo.thing.
+
+  basic <~ {
+    id:integer.
+  }.
+
+  better <~ basic.
+  better <~ {
+    inner:basic.
+  }.
+
+  outer:better.
+  outer..{
+    inner:basic.
+    inner..{
+      id = o.
+    }.
+
+    o:integer.
+    o = 47.
+
+    id = inner.id.
+  }.
+
+  O:better.
+  O = outer.
+
+  I:basic.
+  I = O.inner.
+
+  assert I.id = 47.
+}
