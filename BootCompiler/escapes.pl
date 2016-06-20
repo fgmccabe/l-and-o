@@ -3,8 +3,8 @@
 :-module(escapes,[isEscape/1,escapeType/2]).
 
 escapeType("exit",funType([type("lo.arith*integer")],voidType)).
-escapeType("_command_line",funType([],typeExp("lo.std*list",[type("lo.thing*string")]))).
-escapeType("_command_opts",funType([],typeExp("lo.std*list",[tupleType([type("lo.thing*string"),type("lo.thing*string")])]))).
+escapeType("_command_line",funType([],typeExp("lo.list*list",[type("lo.string*string")]))).
+escapeType("_command_opts",funType([],typeExp("lo.list*list",[tupleType([type("lo.string*string"),type("lo.string*string")])]))).
 escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_match",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
@@ -20,8 +20,8 @@ escapeType("_flt_times",funType([type("lo.arith*float"),type("lo.arith*float")],
 escapeType("_flt_div",funType([type("lo.arith*float"),type("lo.arith*float")],type("lo.arith*float"))).
 escapeType("_int_abs",funType([type("lo.arith*integer")],type("lo.arith*integer"))).
 escapeType("_flt_abs",funType([type("lo.arith*float")],type("lo.arith*float"))).
-escapeType("explode",funType([type("lo.thing*string")],typeExp("lo.std*list",[type("lo.arith*integer")]))).
-escapeType("implode",funType([typeExp("lo.std*list",[type("lo.arith*integer")])],type("lo.thing*string"))).
+escapeType("explode",funType([type("lo.string*string")],typeExp("lo.list*list",[type("lo.arith*integer")]))).
+escapeType("implode",funType([typeExp("lo.list*list",[type("lo.arith*integer")])],type("lo.string*string"))).
 isEscape("exit").
 isEscape("_command_line").
 isEscape("_command_opts").

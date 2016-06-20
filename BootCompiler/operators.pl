@@ -19,10 +19,8 @@
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=",949,950,949).	 /* class rule arrow */
-  infixOp("<<",949,950,949).	 /* overriding class rule arrow */
-  infixOp("<~",949,949,948).	 /* subtype rule */
+  infixOp("<~",949,949,948).	 /* type interface rule */
   infixOp("=",899,900,899).	 /* variable declaration */
-  infixOp(":=",899,900,899).	 /* variable assignment */
   infixOp("==",899,900,899).	 /* equality predicate */
   infixOp("\\=",899,900,899).	 /* not unifyable */
   infixOp("!=",899,900,899).	 /* not equal */
@@ -48,6 +46,7 @@
   infixOp("~",934,935,934).	 /* grammar remainder */
   infixOp(".",450,450,449).	 /* object access */
   prefixOp("private",1700,1699).	 /* private program */
+  prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
   prefixOp("import",900,899).	 /* import module */
   prefixOp("all",1245,1244).	 /* universal quantifier */
@@ -97,11 +96,9 @@
   follows('::','=','::=').
   follows(':','-',':-').
   follows(':-','-',':--').
-  follows(':','=',':=').
   follows('',';',';').
   follows('','<','<').
   follows('<','~','<~').
-  follows('<','<','<<').
   follows('<','=','<=').
   follows('<=','>','<=>').
   follows('<','>','<>').
@@ -146,11 +143,9 @@
   final('::=',"::=").	 /* user type definition */
   final(':-',":-").	 /* clause arrow */
   final(':--',":--").	 /* strong clause */
-  final(':=',":=").	 /* variable assignment */
   final(';',";").	 /* action terminator */
   final('<',"<").	 /* less than */
-  final('<~',"<~").	 /* subtype rule */
-  final('<<',"<<").	 /* overriding class rule arrow */
+  final('<~',"<~").	 /* type interface rule */
   final('<=',"<=").	 /* class rule arrow */
   final('<=>',"<=>").	 /* class constructor type */
   final('<>',"<>").	 /* list append */

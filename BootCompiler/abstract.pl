@@ -4,7 +4,7 @@
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,
-      isName/2,isIden/1,isIden/2,isIden/3,isString/2,
+      isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
       isQuantified/3]).
 :- use_module(operators).
 
@@ -72,6 +72,8 @@ isIden(tuple(Lc,"()",[name(_,Nm)]),Lc,Nm).
 
 isString(string(_,St),St).
 isString(interString(_,string(_,St)),St).
+
+isInteger(integer(_,Ix),Ix).
 
 isAst(A) :- locOfAst(A,_).
 

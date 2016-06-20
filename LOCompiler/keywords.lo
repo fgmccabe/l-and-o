@@ -1,0 +1,66 @@
+comp.keywords{
+  import lo.string.
+
+  isKeyword:(string){}.
+  isKeyword(X) :: keyword(X) ::- true.
+
+  private keyword:(string){}.
+  keyword("|").
+  keyword("||").
+  keyword(";").
+  keyword(":").
+  keyword("::").
+  keyword(",").
+  keyword("..").
+  keyword("?").
+  keyword("!").
+  keyword("^").
+  keyword("~").
+  keyword("~~").
+  keyword("=").
+  keyword("==").
+  keyword(".=").
+  keyword("=>").
+  keyword("<=>").
+  keyword("->").
+  keyword(":-").
+  keyword(":--").
+  keyword("-->").
+  keyword("::=").
+  keyword("<=").
+  keyword("<~").
+  keyword("$").
+  keyword("*>").
+  keyword("\\+").
+  keyword("\\=").
+  keyword("!=").
+  keyword(".").
+  keyword("%%").
+  keyword("@").
+  keyword("@@").
+  keyword("in").
+  keyword("true").
+  keyword("false").
+  keyword("this").
+  keyword("import").
+  keyword("#").
+
+  isRuleKeyword:(string){}.
+  isRuleKeyword(X) :: ruleKeyword(X) :-- true.
+
+  private
+  ruleKeyword:(string){}.
+
+  ruleKeyword("::").
+  ruleKeyword("..").
+  ruleKeyword("~~").
+  ruleKeyword("=>").
+  ruleKeyword("<=>").
+  ruleKeyword("->").
+  ruleKeyword(":-").
+  ruleKeyword(":--").
+  ruleKeyword("-->").
+  ruleKeyword("::=").
+  ruleKeyword("<=").
+  ruleKeyword("<~").  
+}

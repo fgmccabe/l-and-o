@@ -1,6 +1,5 @@
 :- module(lexer,[nextToken/3,allTokens/2,locOfToken/2,subTokenize/3,isToken/1,dispToken/2]).
 :- use_module(operators).
-:- use_module(option,[hasValue/2]).
 
 /* tokenState(text,currLine,currOff,currPos) */
 

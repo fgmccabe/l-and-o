@@ -12,15 +12,18 @@ wffModule(Term) :-
     locOfAst(Term,Lc),
     reportError("Invalid module: %s",[Term],Lc).
 
-verifyName(Nm,[Seg|Rest]) :- isBinary(Nm,".",L,name(_,Seg)), verifyName(L,Rest).
-verifyName(name(_,Seg),[Seg|_]).
-
 wffPackageName(Term) :- isIden(Term).
 wffPackageName(Term) :- isString(Term,_).
 wffPackageName(Term) :- isBinary(Term,".",L,R), wffPackageName(L), wffPackageName(R).
+wffPackageName(Term) :- isBinary(Term,"#",L,R), wffPackageName(L), wffPackageVersion(R).
 wffPackageName(Name) :- 
   locOfAst(Name,Lc),
   reportError("Module %s not valid",[Name],Lc).
+
+wffPackageVersion(Term) :- isIden(Term).
+wffPackageVersion(Term) :- isString(Term,_).
+wffPackageVersion(Term) :- isInteger(Term,_).
+wffPackageVersion(Term) :- isBinary(Term,".",L,R), wffPackageVersion(L), wffPackageVersion(R).
 
 wffThetaEnv([]).
 wffThetaEnv([St|Stmts]) :-
@@ -54,6 +57,8 @@ wffStmt(St) :- wffClass(St).
 wffStmt(St) :- wffClause(St).
 wffStmt(St) :- locOfAst(St,Lc), reportError("Cannot understand statement %s",[St],Lc).
 
+wffImportSt(St) :- isUnary(St,"private",P), wffImportSt(P).
+wffImportSt(St) :- isUnary(St,"public",P), wffImportSt(P).
 wffImportSt(St) :- isUnary(St,"import",P), wffPackageName(P).
 
 wffTypeExp(T) :- wffIden(T).
@@ -179,10 +184,6 @@ wffHead(Head) :- wffIden(Head).
 
 wffLabelRule(Term) :-
   isBinary(Term,"<=",L,R),
-  wffHead(L),
-  wffLabelReplacement(R).
-wffLabelRule(Term) :-
-  isBinary(Term,"<<",L,R),
   wffHead(L),
   wffLabelReplacement(R).
 

@@ -137,6 +137,7 @@ checkTerminator(Tks,RTks) :-
     checkToken(Tks,RTks,term(_),"missing terminator, got %w").
 
 handleInterpolation([segment(Str,Lc)],_,string(Lc,Str)).
+handleInterpolation([],Lc,string(Lc,"")).
 handleInterpolation(Segments,Lc,interString(Lc,Inters)) :- stringSegments(Segments,Inters).
 
 stringSegments([],[]).

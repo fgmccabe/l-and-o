@@ -1,4 +1,4 @@
-:- module(checker,[checkProgram/4]).
+:- module(checker,[checkProgram/3]).
 
 :- use_module(abstract).
 :- use_module(dependencies).
@@ -12,18 +12,16 @@
 :- use_module(errors).
 :- use_module(keywords).
 :- use_module(macro).
-:- use_module(catalog).
 :- use_module(import).
 
 :- use_module(display).
 
-checkProgram(Prog,Cat,Opts,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
+checkProgram(Prog,Repo,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
   stdDict(Base),
   isBraceTerm(Prog,Pk,Els),
   packageName(Pk,Pkg),
-  pushScope(Base,TEnv),
-  declareCatalog(Pkg,Cat,TEnv,Env),
-  thetaEnv(Pkg,Opts,Els,[],Env,_,Defs,Private,Imports,Others),
+  pushScope(Base,Env),
+  thetaEnv(Pkg,Repo,Els,[],Env,_,Defs,Private,Imports,Others),
   computeExport(Defs,Private,Fields,Types),!.
 
 packageName(T,Pkg) :- isIden(T,Pkg).
@@ -34,39 +32,50 @@ packageName(T,Pkg) :- isBinary(T,".",L,R),
   string_concat(LP,".",I),
   string_concat(I,RP,Pkg).
 
-thetaEnv(Pkg,Opts,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
+packageVersion(T,Pkg) :- isIden(T,Pkg).
+packageVersion(T,Pkg) :- isString(T,Pkg).
+packageVersion(integer(_,Ix),Pkg) :- atom_string(Ix,Pkg).
+packageVersion(T,Pkg) :- isBinary(T,".",L,R), 
+  packageVersion(L,LP),
+  packageVersion(R,RP),
+  string_concat(LP,".",I),
+  string_concat(I,RP,Pkg).
+
+packageName(T,pkg(Pkg),v(Version)) :-
+  isBinary(T,"#",L,R),
+  packageName(L,Pkg),
+  packageVersion(R,Version).
+packageName(T,pkg(Pkg),defltVersion) :-
+  packageName(T,Pkg).
+
+thetaEnv(Pkg,Repo,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
   macroRewrite(Els,Stmts),
   dependencies(Stmts,Groups,Private,Annots,Imps,Otrs),
-  checkImports(Imps,Imports,Pkg,Opts,Base,IBase),
+  checkImports(Imps,Imports,Repo,Base,IBase),
   pushFace(Fields,IBase,Env),
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-checkImports([],[],_,_,Env,Env) :- !.
-checkImports([St|Stmts],Imports,Pkg,Opts,Env,Ex) :-
-  checkImport(St,private,Imports,IM,Pkg,Opts,Env,E0),
-  checkImports(Stmts,IM,Pkg,Opts,E0,Ex).
+checkImports([],[],_,Env,Env) :- !.
+checkImports([St|Stmts],Imports,Repo,Env,Ex) :-
+  checkImport(St,private,Imports,IM,Repo,Env,E0),
+  checkImports(Stmts,IM,Repo,E0,Ex).
 
-checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
+checkImport(St,_,Imports,More,Repo,Env,Ex) :-
   isUnary(St,"private",I),
-  checkImport(I,private,Imports,More,Pkg,Opts,Env,Ex).
-checkImport(St,_,Imports,More,Pkg,Opts,Env,Ex) :-
+  checkImport(I,private,Imports,More,Repo,Env,Ex).
+checkImport(St,_,Imports,More,Repo,Env,Ex) :-
   isUnary(St,"public",I),
-  checkImport(I,public,Imports,More,Pkg,Opts,Env,Ex).
-checkImport(St,Viz,[import(Lc,PkgName,Viz,PkgSpec)|More],More,Pkg,_,Env,Ex) :-
+  checkImport(I,public,Imports,More,Repo,Env,Ex).
+checkImport(St,Viz,[import(Lc,Pkg,Viz,PkgSpec)|More],More,Repo,Env,Ex) :-
   isUnary(St,Lc,"import",P),
-  packageName(P,PkgName),
-  getCatalog(Pkg,Env,Cat),
-  (locatePackage(PkgName,Cat,PkgSpec),
+  packageName(P,Pkg,Version),
+  (importPkg(Pkg,Version,Repo,PkgSpec),
    importDefs(PkgSpec,Lc,Env,Ex) ;
-   reportError("cannot locate package %s",[PkgName],Lc),
+   reportError("cannot locate package %s",[Pkg],Lc),
    Env=Ex).
 
-locatePackage(Pkg,Cat,PkgSpec) :-
-  resolveCatalog(Cat,Pkg,Uri),
-  importPkg(Pkg,Uri,PkgSpec).
-
-importDefs(spec(_,faceType(Exported),faceType(Types),_),Lc,Env,Ex) :-
+importDefs(spec(_,_,faceType(Exported),faceType(Types),_),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,Ex).
 
@@ -281,11 +290,6 @@ processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
   typeOfExp(R,topType,SuperTp,E1,Repl),
   generateClassFace(SuperTp,E,SuperFace).
-processStmt(St,Tp,[overrideRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :- 
-  isBinary(St,Lc,"<<",L,R),
-  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
-  typeOfExp(R,topType,SuperTp,E1,Repl),
-  generateClassFace(SuperTp,E,SuperFace).
 processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"..",L,R),
   isIden(L,Nm),!,
@@ -325,7 +329,7 @@ checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   getTypeFace(ClassTp,Env,Fields),
   pushScope(Env,Base),
   declareVar("this",Lc,vr("this",ClassTp),Base,ThEnv),
-  thetaEnv(ClassPath,[],Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
+  thetaEnv(ClassPath,nullRepo,Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
   computeExport(Defs,Private,BodyDefs,Types).
 
 declareFields([],_,Env,Env).
@@ -448,7 +452,6 @@ collectClassRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
 collectClassRules([],[],_,[]).
 
 isRuleForClass(labelRule(Lc,Nm,_,_,_),Lc,Nm).
-isRuleForClass(overrideRule(Lc,Nm,_,_,_),Lc,Nm).
 isRuleForClass(classBody(Lc,Nm,_,_,_,_),Lc,Nm).
 
 collectEnumRules([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
@@ -459,7 +462,6 @@ collectEnumRules([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
 collectEnumRules([],[],_,[]).
 
 isRuleForEnum(labelRule(Lc,Nm,enum(_,_),_,_),Lc,Nm).
-isRuleForEnum(overrideRule(Lc,Nm,enum(_,_),_,_),Lc,Nm).
 isRuleForEnum(classBody(Lc,Nm,enum(_,_),_,_,_),Lc,Nm).
 
 typeOfPtn(N,Tp,Env,Ex,Term) :- 
@@ -706,7 +708,6 @@ typeOfListExp([El|More],_,ElTp,ListTp,Env,apply(Lc,Op,[Hd,Tl])) :-
 
 typeOfStringSegments([],Lc,_Env,stringLit(Lc,"")) :- 
   reportError("string interpolation not implemented",[],Lc),!.
-
 
 checkType(_,S,T,Env) :-
   subType(S,T,Env),!.

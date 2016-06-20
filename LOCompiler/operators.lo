@@ -1,6 +1,13 @@
 /* Automatically generated, do not edit */
 
-operators{
+comp.operators{
+  import lo.string.
+  import lo.arith.
+
+  infixOp:(string,integer,integer,integer){}.
+  prefixOp:(string,integer,integer){}.
+  postfixOp:(string,integer,integer){}.
+
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp("::=",1459,1460,1459).	 /* user type definition */
   infixOp("|",1249,1250,1250).	 /* type union and disjunction */
@@ -18,10 +25,8 @@ operators{
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=",949,950,949).	 /* class rule arrow */
-  infixOp("<<",949,950,949).	 /* overriding class rule arrow */
-  infixOp("<~",949,949,948).	 /* subtype rule */
+  infixOp("<~",949,949,948).	 /* type interface rule */
   infixOp("=",899,900,899).	 /* variable declaration */
-  infixOp(":=",899,900,899).	 /* variable assignment */
   infixOp("==",899,900,899).	 /* equality predicate */
   infixOp("\\=",899,900,899).	 /* not unifyable */
   infixOp("!=",899,900,899).	 /* not equal */
@@ -47,6 +52,7 @@ operators{
   infixOp("~",934,935,934).	 /* grammar remainder */
   infixOp(".",450,450,449).	 /* object access */
   prefixOp("private",1700,1699).	 /* private program */
+  prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
   prefixOp("import",900,899).	 /* import module */
   prefixOp("all",1245,1244).	 /* universal quantifier */
@@ -60,10 +66,14 @@ operators{
   postfixOp("-+",759,760).	 /* bidirectional mode */
   postfixOp("+-",759,760).	 /* bidirectional mode */
   postfixOp("!",904,905).	 /* one solution operator */
+
   /* Define isOperator */
+  isOperator:(string,integer){}.
   isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
   isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).
   isOperator(Op,Pr) :- postfixOp(Op,_,Pr).
+
+  follows:(string,integer,string){}.
   follows("",0c%,"%").
   follows("%",0c%,"%%").
   follows("",0c*,"*").
@@ -96,11 +106,9 @@ operators{
   follows("::",0c=,"::=").
   follows(":",0c-,":-").
   follows(":-",0c-,":--").
-  follows(":",0c=,":=").
   follows("",0c;,";").
   follows("",0c<,"<").
   follows("<",0c~,"<~").
-  follows("<",0c<,"<<").
   follows("<",0c=,"<=").
   follows("<=",0c>,"<=>").
   follows("<",0c>,"<>").
@@ -116,6 +124,8 @@ operators{
   follows("",0c!,"!").
   follows("!",0c=,"!=").
   follows("",0c#,"#").
+
+  final:(string){}.
   final("%").	 /* quotient */
   final("%%").	 /* grammar parse */
   final("*").	 /* multiplication */
@@ -145,11 +155,9 @@ operators{
   final("::=").	 /* user type definition */
   final(":-").	 /* clause arrow */
   final(":--").	 /* strong clause */
-  final(":=").	 /* variable assignment */
   final(";").	 /* action terminator */
   final("<").	 /* less than */
-  final("<~").	 /* subtype rule */
-  final("<<").	 /* overriding class rule arrow */
+  final("<~").	 /* type interface rule */
   final("<=").	 /* class rule arrow */
   final("<=>").	 /* class constructor type */
   final("<>").	 /* list append */

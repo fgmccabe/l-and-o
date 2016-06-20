@@ -93,7 +93,7 @@ static void dumpFollows(char *K, void *V, void *cl) {
   if (genMode == genProlog)
     fprintf(out, "  follows('%s',\'%s\','%s').\n", pS(&b1[0], prefix), pC(b2, &ix, last), pS(b3, K));
   else
-    fprintf(out, "  follows(\"%s\",0c%s,\"%s\").\n", pS(b1, prefix), pC(b2, &ix, last), pS(b3, K));
+    fprintf(out, "  follows(\"%s\",0c%s,\"%s\").\n", pS(&b1[0], prefix), pC(b2, &ix, last), pS(b3, K));
 }
 
 static void dumpOperator(char *K, void *V, void *cl) {
@@ -139,6 +139,11 @@ int main(int argc, char **argv) {
         break;
       case genLO:
         fprintf(out, "%s{\n", prefix);
+        fprintf(out, "  import lo.string.\n");
+        fprintf(out, "  import lo.arith.\n\n");
+        fprintf(out, "  infixOp:(string,integer,integer,integer){}.\n");
+        fprintf(out, "  prefixOp:(string,integer,integer){}.\n");
+        fprintf(out, "  postfixOp:(string,integer,integer){}.\n\n");
         break;
     }
 
@@ -160,12 +165,38 @@ int main(int argc, char **argv) {
 
 #include "operators.h"
 
-    fprintf(out, "  /* Define isOperator */\n");
+    fprintf(out, "\n  /* Define isOperator */");
+
+    switch (genMode) {
+      case genLO:
+        fprintf(out, "\n  isOperator:(string,integer){}.\n");
+        break;
+      default:
+      ;
+    }
+
     fprintf(out, "  isOperator(Op,Pr) :- prefixOp(Op,Pr,_).\n");
     fprintf(out, "  isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).\n");
     fprintf(out, "  isOperator(Op,Pr) :- postfixOp(Op,_,Pr).\n");
 
+    switch (genMode) {
+      case genLO:
+        fprintf(out, "\n  follows:(string,integer,string){}.\n");
+        break;
+      default:
+      ;
+    }
+
     processTrie(tokenTrie, dumpFollows, out);
+
+    switch (genMode) {
+      case genLO:
+        fprintf(out, "\n  final:(string){}.\n");
+        break;
+      default:
+      ;
+    }
+
     processTrie(tokenTrie, dumpOperator, out);
 
     switch (genMode) {

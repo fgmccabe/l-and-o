@@ -145,17 +145,23 @@ showMoreTerms([T|More],O,E) :-
   showMoreTerms(More,O2,E).
 
 showImports([],O,O).
-showImports([import(_,_,Viz,spec(CodeUri,_,_,_))|Imports],O,E) :-
+showImports([import(_,_,Viz,spec(Pkg,Version,_,_,_))|Imports],O,E) :-
   showVisibility(Viz,O,O0),
   appStr("import ",O0,O1),
-  showUri(CodeUri,O1,O2),
-  appStr(".\n",O2,O3),
-  showImports(Imports,O3,E).
+  appStr(Pkg,O1,O2),
+  showVersion(Version,O2,O3),
+  appStr(".\n",O3,O4),
+  showImports(Imports,O4,E).
 
 showVisibility(private,O,Ox) :-
   appStr("private ",O,Ox).
 showVisibility(public,O,Ox) :-
   appStr("public ",O,Ox).
+
+showVersion(defltVersion,O,O).
+showVersion(v(V),O,Ox) :-
+  appStr(",",O,O1),
+  appStr(V,O1,Ox).
 
 showTypeDefs([],O,O).
 showTypeDefs([(_,Rules)|More],O,E) :-
@@ -253,11 +259,6 @@ showClassRules([Rl|Rules],O,E) :-
 showClassRule(labelRule(_,_,Hd,Repl,_),O,E) :-
   showTerm(Hd,O,O1),
   appStr(" <= ",O1,O2),
-  showTerm(Repl,O2,O3),
-  appStr(".\n",O3,E).
-showClassRule(overrideRule(_,_,Hd,Repl,_),O,E) :-
-  showTerm(Hd,O,O1),
-  appStr(" << ",O1,O2),
   showTerm(Repl,O2,O3),
   appStr(".\n",O3,E).
 showClassRule(classBody(_,_,Hd,Stmts,Others,Types),O,E) :-

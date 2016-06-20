@@ -1,7 +1,8 @@
-:- module(uri,[parseURI/2,uri//1,resolveURI/3,showUri/3,uriPath/2,makePath/2]).
+:- module(uri,[parseURI/2,uri//1,resolveURI/3,showUri/3,getUriPath/2,makePath/2,uriPath/2,uriHash/2]).
 
 :- use_module(misc).
 :- use_module(encode).
+:- use_module(parseUtils).
 
 parseURI(S,U) :-
   string_chars(S,Chrs),
@@ -84,6 +85,9 @@ hostPort(host(Host,Port)) --> host(H), ([':'], port(P) ; { P=[] }), {string_char
 
 host(H) --> alphaDashStar(H).
 
+alphaStar([C|S]) --> (alpha(C) ; digit(C) ; plus(C) ; minus(C) ; dot(C)), alphaStar(S).
+alphaStar([]) --> [].
+
 alphaDashStar([C|S]) --> (alpha(C) ; digit(C) ; minus(C) ; dot(C)) , alphaDashStar(S).
 alphaDashStar([]) --> [].
 
@@ -96,39 +100,23 @@ optQuery(noQuery) --> [].
 query(Q) --> uric(Q,M), query(M).
 query([]) --> [].
 
-alphaStar([C|S]) --> (alpha(C) ; digit(C) ; plus(C) ; minus(C) ; dot(C)), alphaStar(S).
-alphaStar([]) --> [].
-
 minus('-') --> ['-'].
 plus('+') --> ['+'].
 dot('.') --> ['.'].
 
-
-% low level designations
-
-alpha(C) --> (lowAlpha(C) ; upAlpha(C)).
-
-lowAlpha(C) --> [C], { isLowAlpha(C) }.
-
-upAlpha(C) --> [C], { isUpAlpha(C) }.
-
-digit(C) --> [C], { digit(C) }.
-
-alphanum(C) --> alpha(C) ; digit(C).
+% special level designations
 
 uric([C|M],M) --> reserved(C) ; unreserved(C).
 uric(['%',U,L|M],M) --> escaped(U,L).
 
 reserved(C) --> [C], { reserved(C) }.
 
-unreserved(C) --> [C], { alphanum(C); mark(C) }.
+unreserved(C) --> alphanum(C).
+unreserved(C) --> [C], { mark(C) }.
 
 mark(C) --> [C], { mark(C) }.
 
 escaped(U,L) --> ['%'], hex(U), hex(L).
-
-hex(C) --> digit(C).
-hex(C) --> [C], { hexDigit(C) }.
 
 delim(C) --> [C], { delim(C) }.
 
@@ -153,88 +141,6 @@ mark('''').
 mark('(').
 mark(')').
 
-alphanum(C) :- isLowAlpha(C).
-alphanum(C) :- isUpAlpha(C).
-alphanum(C) :- digit(C).
-
-isLowAlpha('a').
-isLowAlpha('b').
-isLowAlpha('c').
-isLowAlpha('d').
-isLowAlpha('e').
-isLowAlpha('f').
-isLowAlpha('g').
-isLowAlpha('h').
-isLowAlpha('i').
-isLowAlpha('j').
-isLowAlpha('k').
-isLowAlpha('l').
-isLowAlpha('m').
-isLowAlpha('n').
-isLowAlpha('o').
-isLowAlpha('p').
-isLowAlpha('q').
-isLowAlpha('r').
-isLowAlpha('s').
-isLowAlpha('t').
-isLowAlpha('u').
-isLowAlpha('v').
-isLowAlpha('w').
-isLowAlpha('x').
-isLowAlpha('y').
-isLowAlpha('z').
-
-isUpAlpha('A').
-isUpAlpha('B').
-isUpAlpha('C').
-isUpAlpha('D').
-isUpAlpha('E').
-isUpAlpha('F').
-isUpAlpha('G').
-isUpAlpha('H').
-isUpAlpha('I').
-isUpAlpha('J').
-isUpAlpha('K').
-isUpAlpha('L').
-isUpAlpha('M').
-isUpAlpha('N').
-isUpAlpha('O').
-isUpAlpha('P').
-isUpAlpha('Q').
-isUpAlpha('R').
-isUpAlpha('S').
-isUpAlpha('T').
-isUpAlpha('U').
-isUpAlpha('V').
-isUpAlpha('W').
-isUpAlpha('X').
-isUpAlpha('Y').
-isUpAlpha('Z').
-
-digit('0').
-digit('1').
-digit('2').
-digit('3').
-digit('4').
-digit('5').
-digit('6').
-digit('7').
-digit('8').
-digit('9').
-
-hexDigit('a').
-hexDigit('b').
-hexDigit('c').
-hexDigit('d').
-hexDigit('e').
-hexDigit('f').
-hexDigit('A').
-hexDigit('B').
-hexDigit('C').
-hexDigit('D').
-hexDigit('E').
-hexDigit('F').
-
 delim('<').
 delim('>').
 delim('#').
@@ -252,14 +158,14 @@ resolvePath(net(A,P),rel(Segs),net(A,NP)) :-
   reverse(P,[_|R]),
   edit(Segs,R,NP).
 resolvePath(abs(_),abs(P),abs(P)).
-resolvePath(abs(B),rel(P),abs(NP)) :-
+resolvePath(abs(B),rel(P),abs(NewPath)) :-
   reverse(B,[_|R]),
-  edit(P,R,NP).
+  edit(P,NP,R,NR),
+  revconcat(NR,NP,NewPath).
 
-edit([""|Segs],R,Edit) :- edit(Segs,R,Edit).
-edit(["."|Segs],R,Edit) :- edit(Segs,R,Edit).
-edit([".."|Segs],[_|R],Edit) :- edit(Segs,R,Edit).
-edit(Segs,R,Edit) :- reverse(R,RR), concat(RR,Segs,Edit).
+edit(["."|Segs],Sx,R,Rx) :- edit(Segs,Sx,R,Rx).
+edit([".."|Segs],Sx,[_|R],Rx) :- edit(Segs,Sx,R,Rx).
+edit(Segs,Segs,R,R).
 
 showUri(absUri(Scheme,Path,Query),O,Ox) :-
   pScheme(Scheme,O,O1),
@@ -321,7 +227,44 @@ makePath(P,Text) :-
   pHierPath(P,O,[]),
   string_chars(Text,O).
 
-uriPath(absUri(_,Pth,_),Path) :-
+getUriPath(absUri(_,Pth,_),Path) :-
   makePath(Pth,Path).
-uriPath(relUri(Pth,_),Path) :-
+getUriPath(relUri(Pth,_),Path) :-
   makePath(Pth,Path).
+
+uriPath(absUri(_,Path,_),Path).
+uriPath(relUri(Path,_),Path).
+
+uriHash(absUri(Scheme,Path,Query),Hash) :-
+  stringHash(0,Scheme,H1),
+  pathHash(H1,Path,H2),
+  queryHash(H2,Query,H3),
+  hashSixtyFour(H3,Hash).
+uriHash(relUri(Path,Query),Hash) :-
+  pathHash(0,Path,H1),
+  queryHash(H1,Query,H2),
+  hashSixtyFour(H2,Hash).
+
+authHash(H0,userHost(Usr,Hst),H) :-
+  userHash(H0,Usr,H1),
+  hostHash(H1,Hst,H).
+
+hostHash(H0,host(S,P),H) :- stringHash(H0,S,H1), portHash(H1,P,H).
+
+portHash(H0,"",H0).
+portHash(H0,P,H) :- H1 is H0*47+58, stringHash(H1,P,H).
+
+userHash(H,noOne,H).
+userHash(H0,user(U),H) :- H1 is H0*47+58, stringHash(H1,U,H).
+
+pathHash(H0,net(A,P),H) :- authHash(H0,A,H1), pathHash(H1,P,H).
+pathHash(H0,abs(S),H) :- H1 is H0*47+47, segHash(H1,S,H). %% 47 = '/'
+pathHash(H0,rel(S),H) :- segHash(H0,S,H).
+
+queryHash(H,noQuery,H).
+queryHash(H0,query(Q),H) :- H1 is H0*47+63, stringHash(H1,Q,H). %% 63 = '?'
+
+segHash(H0,[],H0).
+segHash(H0,[Seg|More],Hx) :-
+  stringHash(H0,Seg,H1),
+  segHash(H1,More,Hx).

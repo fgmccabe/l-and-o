@@ -1,15 +1,22 @@
-:-module(misc,[concat/3,segment/3,last/2,reverse/2,is_member/2,
+:-module(misc,[concat/3,flatten/2,segment/3,last/2,reverse/2,revconcat/3,is_member/2,
         merge/3,intersect/3,subtract/3,replace/4,
         collect/4,map/3,rfold/4,
-        appStr/3,appInt/3,appSym/3,appQuoted/3,genstr/2,
-        subPath/4,pathSuffix/3,starts_with/2,ends_with/2]).
+        appStr/3,appInt/3,appSym/3,appQuoted/4,genstr/2,
+        subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
+        stringHash/3,hashSixtyFour/2]).
 
 concat([],X,X).
 concat([E|X],Y,[E|Z]) :- concat(X,Y,Z).
 
+flatten([],[]).
+flatten([F|R],Z):- concat(F,U,Z), flatten(R,U).
+
 reverse(X,Y) :- reverse(X,[],Y).
 reverse([],X,X).
 reverse([E|R],X,Y) :- reverse(R,[E|X],Y).
+
+revconcat(X,Y,Z) :-
+  reverse(X,Y,Z).
 
 segment(Str,Ch,Segments) :- split_string(Str,Ch,"",Segments).
 
@@ -59,10 +66,12 @@ rfold([E|L],F,S,Sx) :-
 
 appStr(Str,O,E) :- string_chars(Str,Chrs), concat(Chrs,E,O).
 
-appQuoted(Str,O,E) :- appStr("'",O,O1), string_chars(Str,Chars), quoteConcat(Chars,O1,O2), appStr("'",O2,E).
+appQuoted(Str,Qt,O,E) :- appStr(Qt,O,O1), string_chars(Str,Chars), quoteConcat(Chars,O1,O2), appStr(Qt,O2,E).
 
 quoteConcat([],O,O).
 quoteConcat(['"'|More],['\\','"'|Out],Ox) :- quoteConcat(More,Out,Ox).
+quoteConcat([''''|More],['\\',''''|Out],Ox) :- quoteConcat(More,Out,Ox).
+quoteConcat(['\\'|More],['\\','\\'|Out],Ox) :- quoteConcat(More,Out,Ox).
 quoteConcat([C|More],[C|Out],Ox) :- quoteConcat(More,Out,Ox).
 
 appSym(Sym,O,E) :- atom_chars(Sym,Chrs), concat(Chrs,E,O).
@@ -91,3 +100,15 @@ pathSuffix(String,_,String).
 genstr(Prefix,S) :-
   gensym(Prefix,A),
   atom_string(A,S).
+
+stringHash(H,Str,Hx) :-
+  string_codes(Str,Codes),
+  hashCodes(Codes,H,Hx).
+
+hashCodes([],H,H).
+hashCodes([C|More],H0,Hx) :-
+  H1 is 47*H0+C,
+  hashCodes(More,H1,Hx).
+
+hashSixtyFour(H0,H) :-
+  H is H0 mod (1<<63).

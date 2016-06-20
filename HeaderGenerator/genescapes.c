@@ -61,7 +61,8 @@ int main(int argc, char **argv) {
         break;
       case genLO:
         fprintf(out, "%s{\n", prefix);
-
+        fprintf(out, "\n  import lo.string.\n");
+        fprintf(out, "  import comp.types.\n\n");
         loEscapeTypes(out);
         loIsEscape(out);
         fprintf(out, "\n}.\n");
@@ -87,7 +88,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       dumpStdType("lo.arith*float", out);
       break;
     case string_sig:
-      dumpStdType("lo.thing*string", out);
+      dumpStdType("lo.string*string", out);
       break;
     case logical_sig:
       dumpStdType("lo.std*logical", out);
@@ -162,7 +163,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case list_sig:
       outStr(O_IO(out), "typeExp(");
-      dumpStr("lo.std*list", out);
+      dumpStr("lo.list*list", out);
       outStr(O_IO(out), ",[");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), "])");
@@ -310,7 +311,7 @@ static void genLoIsEsc(FILE *out, bufferPo buffer, char *name) {
 static void loIsEscape(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out, "  isEscape:(string){}.\n");
+  fprintf(out, "\n  isEscape:(string){}.\n");
 
 #include "escapes.h"
 

@@ -17,15 +17,21 @@
 :- use_module(catalog).
 :- use_module(misc).
 :- use_module(import).
+:- use_module(repository).
 
 parseFlags([],_,[],[]).
 parseFlags(['-g'|More],CWD,[debugging|Opts],Files) :- 
   parseFlags(More,CWD,Opts,Files).
 parseFlags(['-p'|More],CWD,[profiling|Opts],Files) :- 
   parseFlags(More,CWD,Opts,Files).
-parseFlags(['-b', B|More],CWD,[build(Build)|Opts],Files) :- 
-  atom_string(B,BD), 
-  parseURI(BD,Build),
+parseFlags(['-r', R|More],CWD,[repository(Repo)|Opts],Files) :- 
+  atom_string(R,RN),
+  parseURI(RN,RU),
+  resolveURI(CWD,RU,Ruri),
+  openRepository(Ruri,Repo),
+  parseFlags(More,CWD,Opts,Files).
+parseFlags(['-v', V|More],CWD,[version(Vers)|Opts],Files) :-
+  atom_string(V,Vers),
   parseFlags(More,CWD,Opts,Files).
 parseFlags(['--'|More], _, [], Files) :- stringify(More,Files).
 parseFlags(More, _, [], Files) :- stringify(More,Files).
@@ -38,31 +44,44 @@ stringify([Name|More],[Fn|Files]) :-
 main(Args) :- 
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,Files),
-  processFiles(Files,CWD,Opts).
+  openRepo(Opts,Repo),
+  processFiles(Files,CWD,Repo,Opts).
 
-processFiles([],_,_).
-processFiles([Fn|More],CWD,Opts) :-
-  processFile(Fn,CWD,Opts),
-  processFiles(More,CWD,Opts).
+openRepo(Opts,Repo) :-
+  is_member(repository(Repo),Opts),!.
+openRepo(_,Repo) :-
+  getCWDUri(CWD),
+  openRepository(CWD,Repo).
 
-processFile(Fl,CWD,Opts) :-
+processFiles([],_,_,_).
+processFiles([Fn|More],CWD,Repo,Opts) :-
+  processFile(Fn,CWD,Repo,Rx,Opts),
+  processFiles(More,CWD,Rx,Opts).
+
+processFile(Fl,CWD,Repo,Rx,Opts) :-
   startCount,
   getSrcUri(Fl,CWD,FUrl),
-  locateCatalog(FUrl,Cat),
   locateResource(FUrl,Src),
   parseFile(Src,Term),!,
   noErrors,
   wffModule(Term),!,
   noErrors,
-  checkProgram(Term,Cat,Opts,Prog),!,
+  checkProgram(Term,Repo,Prog),!,
   noErrors,
   displayCanon(Prog),
   transformProg(Prog,Opts,Rules),!,
   noErrors,
   displayPlRules(Rules),!,
   genRules(Rules,Text),!,
-  makeOutputUri(FUrl,Opts,Fl,OutUri),
-  putResource(OutUri,Text).
+  packageName(Prog,Pkg),
+  packageVersion(Opts,Vers),
+  addPackage(Repo,Pkg,Vers,Text,Rx).
+
+packageName(prog(Pkg,_,_,_,_,_),Pkg).
+
+packageVersion(Opts,v(Vers)) :-
+  is_member(version(Vers),Opts),!.
+packageVersion(_,defltVersion).
 
 parseFile(Txt,Term) :-
   allTokens(Txt,Toks),

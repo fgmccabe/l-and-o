@@ -7,8 +7,7 @@
 :- use_module(uri).
 
 genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
-  appStr(":- use_module(ocall).\n",Chrs,O0),
-  genImports(Imports,Pkg,O0,O1),
+  genImports(Imports,Pkg,Chrs,O1),
   genFieldTypes(Fields,Pkg,O1,O2),
   genTypes(Types,Pkg,O2,O3),
   genPlRules(Rules,O3,[]),
@@ -19,27 +18,37 @@ genImports([I|More],Pkg,O,Ox) :-
   genImport(I,Pkg,O,O1),
   genImports(More,Pkg,O1,Ox).
 
-genImport(import(_,_,_,spec(Uri,_,_,_)),Pkg,O,Ox) :-
-  appStr(":-[",O,O1),
-  uriPath(Uri,Path),
-  genQuoted(Path,O1,O2),
-  appStr("].\n",O2,O3),
+genImport(import(_,_,Viz,spec(PkgImp,Vers,_,_,_)),Pkg,O,Ox) :-
   localName(Pkg,"#","import",Imp),
-  appQuoted(Imp,O3,O4),
-  appStr("(""",O4,O5),
-  showUri(Uri,O5,O6),
-  appStr(""").\n",O6,Ox).
+  appQuoted(Imp,"'",O,O1),
+  appStr("(",O1,O2),
+  genViz(Viz,O2,O3),
+  appStr(",",O3,O4),
+  appQuoted(PkgImp,"""",O4,O6),
+  appStr(",",O6,O7),
+  genVer(Vers,O7,O8),
+  appStr(").\n",O8,Ox).
+
+genVer(defltVersion,O,Ox) :-
+  appStr("'*'",O,Ox).
+genVer(v(V),O,Ox) :-
+  appQuoted(V,"""",O,Ox).
+
+genViz(private,O,Ox) :-
+  appStr("private",O,Ox).
+genViz(public,O,Ox) :-
+  appStr("public",O,Ox).
 
 genFieldTypes(Fields,Pkg,O,Ox) :-
   localName(Pkg,"#","export",Ex),
-  appQuoted(Ex,O,O0),
+  appQuoted(Ex,"'",O,O0),
   appStr("(""",O0,O1),
   encodeType(faceType(Fields),O1,O2),
   appStr(""").\n",O2,Ox).
 
 genTypes(Types,Pkg,O,Ox) :-
   localName(Pkg,"#","types",Ex),
-  appQuoted(Ex,O,O0),
+  appQuoted(Ex,"'",O,O0),
   appStr("(""",O0,O1),
   formatTypeRules(Types,Fields),
   encodeType(faceType(Fields),O1,O2),
@@ -120,10 +129,8 @@ genTerm(strct(Nm,_),O,E) :-
   genQuoted(Nm,O,E).
 genTerm(intgr(Ix),O,E) :-
   appInt(Ix,O,E).
-genTerm(strg(Str),O,E) :-
-  appStr("""",O,O1),
-  appStr(Str,O1,O2),
-  appStr("""",O2,E).
+genTerm(strg(Str),O,Ox) :-
+  appQuoted(Str,"""",O,Ox).
 genTerm(anon,O,E) :-
   appStr("_",O,E).
 genTerm(enum(Nm),O,E) :-

@@ -12,7 +12,6 @@
   keyword("?").
   keyword("!").
   keyword("^").
-  keyword("^^").
   keyword("~").
   keyword("~~").
   keyword("=").
@@ -57,5 +56,3 @@
   ruleKeyword("::=").
   ruleKeyword("<=").
   ruleKeyword("<~").
-
-

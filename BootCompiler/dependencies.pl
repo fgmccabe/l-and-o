@@ -70,8 +70,6 @@ headOfRule(St,Hd) :-
 headOfRule(St,Hd) :-
   isBinary(St,"<=",Hd,_).
 headOfRule(St,Hd) :-
-  isBinary(St,"<<",Hd,_).
-headOfRule(St,Hd) :-
   isBinary(St,"..",Hd,_).
 headOfRule(St,Hd) :-
   isBinary(St,"-->",H,_),
@@ -128,10 +126,6 @@ collRefs(St,All,SoFar,Refs) :-
   collectExpRefs(Exp,All,R0,Refs).
 collRefs(St,All,SoFar,Refs) :-
   isBinary(St,"<=",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectLabelRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
-  isBinary(St,"<<",H,Exp),
   collectHeadRefs(H,All,SoFar,R0),
   collectLabelRefs(Exp,All,R0,Refs).
 collRefs(St,All,SoFar,Refs) :-

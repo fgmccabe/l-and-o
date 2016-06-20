@@ -10,7 +10,7 @@
 :- use_module(location).
 
 transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types),Opts,export(Pkg,Imports,Fields,Types,Rules)) :-
-  makePkgMap(Pkg,Defs,Types,Map),
+  makePkgMap(Pkg,Defs,Types,Imports,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
   transformModuleDefs(Pkg,Map,POpts,Defs,R0,Rx,Rx,[]),
   transformOthers(Pkg,Map,POpts,Others,Rules,R0).
@@ -30,8 +30,10 @@ transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
   transformDefn(Pkg,Map,Opts,Lc,Nm,_,Cond,Value,Rules,Rx,Ex,Exx).
 transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
-transformMdlDef(_,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
+transformMdlDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Ex0),
+  localName(Prefix,"@",Nm,LclName),
+  Ex0 = [clse([],prg(LclName,1),[enum(LclName)],[neck])|Exx].
 
 transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
 
@@ -204,7 +206,7 @@ joinStream(Strm,Strmx,[equals(Strm,Strmx)|Gx],Gx).
 
 transformOthers(_,_,_,[],Rx,Rx).
 transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
-  collect(Others,isAssertion,Asserts,Rest),
+  collect(Others,canon:isAssertion,Asserts,Rest),
   transformAssertions(Pkg,Map,Opts,Lc,[assertion(Lc,G)|Asserts],Rules,R0),
   transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
 
@@ -333,7 +335,7 @@ trVarPtn(Lc,Nm,idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_) :-
 
 implementVarPtn(localVar(Vn,ClVr,TVr),_,X,X,Q,Qx,[call(Vn,[X,ClVr,TVr])|Pre],Pre,Post,Post) :- !, % instance var
   merge([X,ClVr,TVr],Q,Qx).
-implementVarPtn(moduleVar(_,Vn),_,X,X,Q,[X|Q],[call(Vn,X)|Pre],Pre,Post,Post) :- !. % module variable
+implementVarPtn(moduleVar(_,Vn),_,X,X,Q,[X|Q],[call(Vn,[X])|Pre],Pre,Post,Post) :- !. % module variable
 implementVarPtn(labelArg(N,ClVr,TVr),_,_,N,Q,Qx,Pre,Pre,Post,Post) :- !,    % argument from label
   merge([N,ClVr,TVr],Q,Qx).
 implementVarPtn(moduleClass(_,enum(Enum),_),_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post).
@@ -623,8 +625,6 @@ makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List
   makeLblTerm(Lbl,Extra,LblTerm),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
 makeClassMtdMap([labelRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
-  makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([overrideRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
 
 makeLblTerm(enum(Nm),[],enum(Nm)) :- !.
