@@ -1,5 +1,5 @@
 lo.arith{
-  import lo.thing.
+  public import lo.thing.
 
   integer <~ arith.
   float <~ arith.

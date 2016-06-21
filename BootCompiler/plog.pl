@@ -17,14 +17,14 @@ showImports([I|More],O,Ox) :-
   showImport(I,O,O1),
   showImports(More,O1,Ox).
 
-showImport(import(_,Pkg,Mode,_),O,Ox) :-
-  showMode(Mode,O,O1),
+showImport(import(Viz,pkg(Pkg),_,_,_),O,Ox) :-
+  showViz(Viz,O,O1),
   appStr(Pkg,O1,O2),
   appStr(".\n",O2,Ox).
 
-showMode(private,O,Ox) :-
+showViz(private,O,Ox) :-
   appStr("private import ",O,Ox).
-showMode(public,O,Ox) :-
+showViz(public,O,Ox) :-
   appStr("public import ",O,Ox).
 
 showTypes(Types,O,Ox) :-

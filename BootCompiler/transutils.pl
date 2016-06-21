@@ -144,15 +144,14 @@ makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportMap(Import,Map,M0),
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
+makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_),Map,Mx) :-
+  importFields(Pkg,Fields,Map,Mx).
 
-makeImportMap(import(Lc,Pkg,_,spec(_,_,faceType(Fields),_,_)),Map,Mx) :-
-  importFields(Lc,Pkg,Fields,Map,Mx).
-
-importFields(_,_,[],Map,Map).
-importFields(Lc,Pkg,[(Nm,Tp)|Fields],Map,Mx) :-
+importFields(_,[],Map,Map).
+importFields(Pkg,[(Nm,Tp)|Fields],Map,Mx) :-
   moveQuants(Tp,_,Template),
   makeImportEntry(Template,Pkg,Nm,Map,M0),
-  importFields(Lc,Pkg,Fields,M0,Mx).
+  importFields(Pkg,Fields,M0,Mx).
 
 makeImportEntry(funType(A,_),Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),

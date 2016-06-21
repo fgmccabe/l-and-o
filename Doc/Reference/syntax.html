@@ -1,0 +1,254 @@
+<h1 id="grammar">Language Syntax</h1><p> We take a layered approach to understanding L&amp;O&quot;s syntax. The lowest level is the character level; then there is the lexical or token level, the parse level and finally the well typed formulae level. Each of these levels identifies a different ‘level of abstraction’; each focusses on a different aspect of a well formed L&amp;O program.</p><p>This chapter is concerned with the lower three of these abstractions: characters, tokens and parse trees. This progressively moves up from the physical character of files containing L&amp;O programs to a tree-like representation of the contents of a L&amp;O source file. In later chapters, we focus on the subset of parse trees that can be given a well defined meaning: i.e., are well typed and form coherent units of execution.</p><h2 id="characters-and-lexical-syntax">Characters and lexical syntax</h2><h3 id="unicode-characters">Unicode characters</h3><p>  L&amp;O uses the Unicode character encoding system <span class="citation"></span>. More specifically, the L&amp;O run-time uses Unicode characters internally to represent symbols and the L&amp;O compiler and run-time engine interpret streams of UTF-8 bytes and UTF-16 words as Unicode. Identifiers in L&amp;O programs as well as data processed by L&amp;O programs are assumed to be Unicode based.</p><p>A L&amp;O language processor assumes that the input is encoded in UTF-8.</p><p>However, all of the the characters used within the language definition of L&amp;O – such as the built-in operators and syntactic features – are contained within the ASCII subset of the Unicode character set. Thus, L&amp;O can be used in an ASCII-based environment.</p><h4 id="character-categories">Character Categories</h4><p> The Unicode consortium has identified a number of character catagories<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.</p><p>L&amp;O uses these character categories to classify characters for the the purposes of discriminating identifiers and number values occurring in the program source text. The purpose of this is to permit non-English programmers to use non-English identifiers in the text of the program.</p><p>The character categories used by L&amp;O are:</p><h2 id="tokens">Tokens</h2><p> It is required that the input of a L&amp;O language processor is first partitioned into contiguous sequences of characters called <em>tokens</em>. There are several different kinds of tokens; corresponding to the identifiers, symbols, character literals, string literals and punctuation marks necessary to correctly parse a L&amp;O program.</p><blockquote><p>We use L&amp;O’s own grammar notation to describe the tokenization and parsing rules for L&amp;O. Apart from demonstrating the power of L&amp;O’s grammar notation – which is modelled on Prolog’s DCG grammars – it also demonstrates that we can eat our own dog food!</p></blockquote><p>In the productions for the tokenizer listed below we assume that, in an actual tokenizer, all the productions for a given non-terminal are collected together – as is required by L&amp;O’s grammar. However, for explanatory purposes, the grammar rules for some of the non-terminals are distributed thoughout the text below.  The tokenizer rules depend on the  type defined below:</p><pre><code>tokType ::= ID(symbol)             -- Identifier
+  | IN(integer)                    -- Integer literal
+  | FT(float)                      -- Floating point literal
+  | ST(string)                     -- String literal
+  | SY(string)                     -- Symbol
+  | CH(char)                       -- Character literal
+  | LPAR | RPAR | LBRA | RBRA
+  | LBRCE | RBRCE                  -- Punctuation
+  | COMMA | CONS | TERM
+  | EOF.                           -- End of file</code></pre><p>This type definition defines the legal kinds of tokens that can be expected; and also forms the basis of the stream processed at the next higher level in the L&amp;O language specification: namely the syntactic grammar.</p><h3 id="token:comments">Comments and whitespace</h3><p>Tokens in a L&amp;O source text may separated by zero or more <em>comments</em> and/or white space text – some pairs of tokens <em>require</em> some intervening space or comments for proper recognition. For example, a number following an identifier requires at least one white space character; otherwise the rules for identifier would ‘swallow’ the number token. White space characters and comments may be used for the purposes of recognizing tokens; but must otherwise be discarded by a language processor.</p><p>There are two styles of comment in L&amp;O source texts – <em>line</em> comments and <em>block</em> comments.</p><h4 id="token:linecomment">Line comment</h4><p> A line comment consists of the characters <code>-- </code> i.e., two hyphen characters and a whitespace character, followed by all the characters up to the next new-line character or end-of-file which ever is first.</p><h4 id="token:blockcomment">Block comment</h4><p>  A block comment consists of the characters <code>/*</code> followed by any characters and is terminated by the characters <code>*/</code></p><p>The L&amp;O tokeniser rules for white space and comments are:</p><pre><code>whiteSpace:[integer]{}.
+whiteSpace(X):-__isZsChar(X).
+whiteSpace(X):-__isZlChar(X).
+whiteSpace(X):-__isZpChar(X).
+
+comments:(integer,integer)--&gt;string.
+comments(Lno,Lx) --&gt; comment(Lno,Ly)!, comments(Ly,Lx).
+comments(Lno,Lno) --&gt; &quot;&quot;.
+
+comment:(integer,integer)--&gt;string.
+comment(Lno,Lx) --&gt; &quot;-- &quot;,lineComment(Lno,Lx).
+comment(Lno,Lx) --&gt; &quot;--\t&quot;,lineComment(Lno,Lx).
+comment(Lno,Lx) --&gt; &quot;/*&quot;,bodyComment(Lno,Lx).
+comment(Lno,Lno+1) --&gt; &quot;\n&quot;.
+comment(Lno,Lno) --&gt; [X],{__isZsChar(X)}. -- ignore space
+
+lineComment:(integer,integer)--&gt;string.
+lineComment(Lno,Lno+1) --&gt; [X],{__isZlChar(X)}. -- new line
+lineComment(Lno,Lx) --&gt; [X],{\+__isZlChar(X)},
+        lineComment(Lno,Lx).
+
+bodyComment:(integer,integer)--&gt;string.
+bodyComment(Lno,Lno) --&gt; &quot;*/&quot;.
+bodyComment(Lno,Lx) --&gt; [X],{__isZlChar(X)},
+        bodyComment(Lno+1,Lx).
+bodyComment(Lno,Lx) --&gt; [X],bodyComment(Lno,Lx).</code></pre><h3 id="token:identifier">Identifiers</h3><p> Identifiers serve many purposes within a L&amp;O program: to identify variables and parameters, to identify types, even to identify syntactic operators.</p><p>There are several classes of identifier, corresponding to how they are written: identifiers written using normal identifier rules, operators – which are often written with graphical characters – and quoted identifiers which are written like string literals but with single quotes.</p><p> L&amp;O identifiers are modelled on the standard Unicode identifier syntax; which in turn is a generalization of the common notation for identifier syntax found in many programming languages.</p><p>The basic rule for identifiers is that they have an initial start letter – which is either a letter character, or a character which could be used in a word or an underscore character – followed by a sequence of zero or more characters from a somewhat extended set – including the digit characters.</p><blockquote><p>What makes this style of identifier ‘different’ is that the Unicode standard defines many thousands of ‘letter’ character; this allows identifiers to be written in non roman scripts – such as Kanji for example.</p></blockquote><p>The following L&amp;O grammar rules capture the definition of an identifier:</p><pre><code>tok:(tokType)--&gt;string.     -- a grammar that returns a token
+
+/* An identifier is an idStart character, 
+   followed by a sequence of idChar */
+tok(ID(I)) --&gt; idStart(X), idChar(C)*C^N, I=implode([X,..N]).
+\dots
+idStart:(integer)--&gt;string.
+idStart(X) --&gt; [X],{__isLetterChar(X)}.
+idStart(0c_) --&gt; &quot;_&quot;.
+idStart(0c\+ff3f;) --&gt; &quot;\\+ff3f;&quot;.      -- full width low line
+  
+idChar:(integer)--&gt;string.
+idChar(X) --&gt; idStart(X).
+idChar(X) --&gt; [X],{__isNdChar(X)}.
+idChar(X) --&gt; [X],{__isMnChar(X)}.
+idChar(X) --&gt; [X],{__isMcChar(X)}.
+idChar(X) --&gt; [X],{__isPcChar(X)}.
+idChar(X) --&gt; [X],{__isCfChar(X)}.</code></pre><p>The <code>idStart</code> rule defines those characters that may start an identifier, and the <code>idChar</code> rule identifies those characters that may continue an identifier. Together, these rules state that any ‘letter’ character may start an identifier, and letters and numbers may follow this initial letter.</p><blockquote><p>The grammar condition</p><pre><code>idChar(C)*C^N</code></pre><p>matches a sequence of zero or more <code>idChar</code>s, and puts the resulting list in the variable <code>N</code>. See Section  for a more complete explanation.</p></blockquote><p>  Quoted identifiers are written as a sequence of characters – not including new-line or other control characters – surrounded by <code>'</code> marks. More specifically, quoted identifiers are written as a sequence of character references (see Section  above) surrounded by <code>'</code> characters.</p><p>For example,</p><pre><code>&#39;a symbol&#39;</code></pre><p>is the identifier with name <code>a symbol</code>.</p><p>The grammar rule for quoted identifier tokens is</p><pre><code>tok(ID(L)) --&gt; &quot;&#39;&quot;, strChar(C)*C^L,&quot;&#39;&quot;.</code></pre><blockquote><p>Quoted identifiers are especially useful when integrating with other languages. For example, a record structure arising from parsing a CVS file may use field names that are constructed from the CVS input; in which case, being able to use quoted identifiers becomes crucial.</p></blockquote><h3 id="token:char">Characters</h3><p>  There is no separate type for characters. This is partly due to the fact that there is no single mapping between strings and characters in Unicode. If it is necessary to process characters, as opposed to strings, then one must use the Unicode concept of <em>codepoint</em> – which is actually an integer.</p><p>However, there is a special notation for codepoint: a leading <code>0c</code> in front of a <em>character reference</em> denotes the integer value of the codepoint corresponding to the character.</p><p>For example, the CodePoint corresponding to new-line character is written:</p><pre><code>0c\n</code></pre><p>The grammar rule for character literals is:</p><pre><code>tok(IN(ch)) --&gt; &quot;0c&quot;, strChar(ch).</code></pre><p>where <code>strChar</code> is the production to defines a legal character that may occur in a <code>string</code> value.</p><h4 id="token:stringcharacter">Character reference</h4><p>  Character references are used in several places in L&amp;O’s syntax: within string literals, identifiers and codepoint literals. There are also several special forms of character reference. The common Unix names for characters such as <code>\</code>n for new-line are recognized, as is a special notation for entering arbitrary Unicode characters.</p><p>There are three categories of character references: characters which do not need escaping, characters that are represented using a backslash escape, and characters denoted by their hexadecimal character code.</p><p>For example the string <code>&quot;string&quot;</code> has the following code points in it:</p><pre><code>0cs 0ct 0cr 0ci 0cn 0cg</code></pre><p>A string containing just a new-line character is:</p><pre><code>&quot;\n&quot;</code></pre><p>and a string containing the Unicode sentinel character would be denoted:</p><pre><code>&quot;\+fffe;&quot;</code></pre><p>The rules for character references are:</p><pre><code>/* Special character sequence following a back-slash
+*  in a symbol or literal string
+*/
+strChar:(integer)--&gt;string.
+strChar(0ca) --&gt; &quot;\\a&quot;.
+strChar(0cb) --&gt; &quot;\\b&quot;.
+strChar(0cd) --&gt; &quot;\\d&quot;.
+strChar(0ce) --&gt; &quot;\\e&quot;.
+strChar(0cf) --&gt; &quot;\\t&quot;.
+strChar(0cn) --&gt; &quot;\\n&quot;.
+strChar(0cr) --&gt; &quot;\\r&quot;.
+strChar(0ct) --&gt; &quot;\\t&quot;.
+strChar(0cv) --&gt; &quot;\\v&quot;.
+strChar(0c&#39;) --&gt; &quot;\\&#39;&quot;.
+strChar(0c&quot;) --&gt; &quot;\\&quot;&quot;.
+strChar(0c`) --&gt; &quot;\\`&quot;.
+strChar(0c\\) --&gt; &quot;\\\\&quot;.
+strChar(Cr) --&gt; &quot;\\+&quot;,hexSeq(0,C),&quot;;&quot;,Cr=__charOf(C).
+strChar(X) --&gt; &quot;\\&quot;, [X].
+strChar(X) --&gt; [X],{\+__isCcChar(X)}.
+...
+hexDig:(integer)--&gt;string.
+hexDig(__digitCode(X)) --&gt; [X],{__isNdChar(X)}.
+hexDig(10) --&gt; &quot;a&quot;.  hexDig(10) --&gt; &quot;A&quot;.
+hexDig(11) --&gt; &quot;b&quot;.  hexDig(11) --&gt; &quot;B&quot;.
+hexDig(12) --&gt; &quot;c&quot;.  hexDig(12) --&gt; &quot;C&quot;.
+hexDig(13) --&gt; &quot;d&quot;.  hexDig(13) --&gt; &quot;D&quot;.
+hexDig(14) --&gt; &quot;e&quot;.  hexDig(14) --&gt; &quot;E&quot;.
+hexDig(15) --&gt; &quot;f&quot;.  hexDig(15) --&gt; &quot;F&quot;.
+
+hexSeq:(integer,integer)--&gt;string.
+hexSeq(I,N) --&gt; hexDig(X)!,hexSeq(N*16+X,N).
+hexSeq(N,N) --&gt; &quot;&quot;.</code></pre><blockquote><p>The rules for <code>strChar</code> above may be a little confusing, because of the rules for quoting characters in strings. The required sequence of characters to represent a new-line character is a back-slash followed by an <code>n</code>: <code>\n</code>&quot;. The string that denotes this in the grammar rule requires two backslashes – since a backslash in a string must itself be represented by two backslash characters. This is especially spectacular in the case of the <code>strChar</code> rule for the backslash character: this requires two backslashes in sequence and the string that denotes this sequence in the grammar rule consists of four backslash characters!</p></blockquote><h3 id="token:string">String literals</h3><p>  String literals are written as a sequence of character references (see ) – not including new-line or paragraph separator characters – surrounded by <code>&quot;</code> marks.</p><blockquote><p>The reason for not permitting new-lines to occur in string literals is that that enables a particularly silly kind of syntax error to be picked up easily: a missing string quote will always generate a syntax error at the end of the line. The restriction does not affect the possible string literals, as it is always possible to use <code>\n</code> to indicate a new-line character, and the L&amp;O compiler concatenates sequences of string literals into a single string literal.</p><p>One benefit of the automatic string merge feature is that when a program has a lengthy string embedded in it it can be formatted both for display and for program tidiness.</p></blockquote><p>The grammar rule for string literals is very similar to the production for symbols. Note however, that string literals are interpreted as synonyms for lists of <code>char</code>s.</p><pre><code>tok(ST(L)) --&gt; &quot;\&quot;&quot;, strChar(C)*C^L,&quot;\&quot;&quot;.</code></pre><h3 id="interpolated-strings">Interpolated Strings</h3><p>A particular variant of string literal is the <em>interpolated string</em>.</p><h4 id="token:number">Numbers</h4><p>  L&amp;O numbers are built from the <code>__isNdChar</code> character class. This class of characters includes many digit characters; all of which share the semantic property that they can be interpreted as decimal digits.</p><p>L&amp;O distinguishes integer literals (and values) from floating point literals and values; these are <em>not</em> generally substitutable for each other.</p><pre><code>tok(Nm) --&gt; [X],{__isNdChar(X)},
+    numberSeq(__digitCode(X),I),
+    ( fraction(F),exponent(E),
+      Nm = FT(n2float(I)+F)*n2float(E)
+    | Nm = IN(I)).
+
+tok(IN(N)) --&gt; &quot;0x&quot;, hexSeq(0,N).
+tok(IN(C)) --&gt; &quot;0c&quot;, strChar(C).
+
+numberSeq:(integer,integer)--&gt;string.
+numberSeq(I,N) --&gt; [D],{__isNdChar(D)!},
+        numberSeq(I*10+__digitCode(D),N).
+numberSeq(N,N) --&gt; &quot;&quot;.
+
+fraction:(float)--&gt;string.
+fraction(F) --&gt; &quot;.&quot;, [C],{__isNdChar(C)},
+        frSeq(10,1/__digitCode(C),F).
+fraction(0) --&gt; &quot;&quot;.
+
+frSeq:(float,float,float)--&gt;string.
+frSeq(X,F,R) --&gt; [C],{__isNdChar(C)},
+        frSeq(X*10,F+__digitCode(C)/X,R).
+frSeq(X,F,F) --&gt; &quot;&quot;.
+
+exponent:(float)--&gt;string.
+exponent(Ex) --&gt; &quot;E-&quot;, numberSeq(0,X),Ex = 10 ** (-X).
+exponent(Ex) --&gt; &quot;e-&quot;, numberSeq(0,X),Ex=10 ** (-X).
+exponent(Ex) --&gt; &quot;E&quot;, numberSeq(0,X),Ex=10 ** X.
+exponent(Ex) --&gt; &quot;e&quot;, numberSeq(0,X),Ex=10 ** X.
+exponent(1) --&gt; &quot;&quot;.</code></pre><p>Apart from the normal decimal notation for numbers, L&amp;O supports two additional notations: the hexadecimal notation and the character code notation. The hexadecimal number notation simply consists of a leading <code>0x</code> followed by the hexadecimal digits of the number. All hexadecimal numbers are integral.</p><blockquote><p> Notice that there is no definition of a negative numeric literal as a single token. Literal negative numbers are handled at a slightly higher level in the L&amp;O language processing: the leading <code>-</code> character is interpreted as a prefix unary operator signifying arithmetic negation.</p></blockquote><h3 id="operators-and-punctuation-marks">Operators and punctuation marks</h3><p></p><p>L&amp;O uses a number of special punctuation marks to signify specific syntactic features – such as lists, theta expressions and so on.</p><pre><code>tok(LPAR) --&gt; &quot;(&quot;.
+tok(RPAR) --&gt; &quot;)&quot;.
+tok(LBRA) --&gt; &quot;[&quot;.
+tok(RBRA) --&gt; &quot;]&quot;.
+tok(LBRCE) --&gt; &quot;{&quot;.
+tok(RBRCE) --&gt; &quot;}&quot;.
+tok(CONS) --&gt; &quot;,..&quot;.
+tok(COMMA) --&gt; &quot;,&quot;.
+tok(ID(&quot;. &quot;)) --&gt; &quot;.&quot;, [X],{ __isZsChar(X)
+                          | __isZlChar(X)
+                          | __isZsChar(X)
+                          | __isCcChar(X)}.</code></pre><p>  Note that the symbol consists of a period followed by any kind of white space character. This distinguishes it from other uses of the period; such as class body definition operator <code>..</code> or within a floating point number.</p><p> In addition to these punctuation marks, L&amp;O uses a number of symbols for the prefined operators:</p><pre><code>tok(ID(&quot;||&quot;) --&gt; &quot;||&quot;.
+tok(ID(&quot;|&quot;) --&gt; &quot;|&quot;.
+tok(ID(&quot;::&quot;) --&gt; &quot;::&quot;.
+tok(ID(&quot;::=&quot;) --&gt; &quot;::=&quot;.
+tok(ID(&quot;:=&quot;) --&gt; &quot;:=&quot;.
+tok(ID(&quot;:-&quot;) --&gt; &quot;:-&quot;.
+tok(ID(&quot;:--&quot;) --&gt; &quot;:--&quot;.
+tok(ID(&quot;:&quot;) --&gt; &quot;:&quot;.
+tok(ID(&quot;--&gt;&quot;) --&gt; &quot;--&gt;&quot;.
+tok(ID(&quot;-&gt;&quot;) --&gt; &quot;-&gt;&quot;.
+tok(ID(&quot;~&quot;) --&gt; &quot;~&quot;.
+tok(ID(&quot;&lt;~&quot;) --&gt; &quot;&lt;~&quot;.
+tok(ID(&quot;\^&quot;) --&gt; &quot;\^&quot;.
+tok(ID(&quot;..&quot;) --&gt; &quot;..&quot;.
+tok(ID(&quot;.&quot;)) --&gt; &quot;.&quot;.
+tok(ID(&quot;?&quot;) --&gt; &quot;?&quot;.
+tok(ID(&quot;!&quot;) --&gt; &quot;!&quot;.
+tok(ID(&quot;==&quot;) --&gt; &quot;==&quot;.
+tok(ID(&quot;=&quot;) --&gt; &quot;=&quot;.
+tok(ID(&quot;\\=&quot;) --&gt; &quot;\\=&quot;.
+tok(ID(&quot;!=&quot;) --&gt; &quot;!=&quot;.
+tok(ID(&quot;\$&quot;) --&gt; &quot;\$&quot;.
+tok(ID(&quot;\\+&quot;) --&gt; &quot;\\+&quot;.
+tok(ID(&quot;+&quot;) --&gt; &quot;+&quot;.
+tok(ID(&quot;*&gt;&quot;) --&gt; &quot;*&gt;&quot;.
+tok(ID(&quot;**&quot;) --&gt; &quot;**&quot;.
+tok(ID(&quot;*&quot;) --&gt; &quot;*&quot;.
+tok(ID(&quot;/&quot;) --&gt; &quot;/&quot;.
+tok(ID(&quot;\\/&quot;) --&gt; &quot;\\/&quot;.
+tok(ID(&quot;/\\&quot;) --&gt; &quot;/\\&quot;.
+tok(ID(&quot;\\&quot;) --&gt; &quot;\\&quot;.
+tok(ID(&quot;&lt;&gt;&quot;) --&gt; &quot;&lt;&gt;&quot;.
+tok(ID(&quot;=&gt;&quot;) --&gt; &quot;=&gt;&quot;.
+tok(ID(&quot;&lt;=&quot;) --&gt; &quot;&lt;=&quot;.
+tok(ID(&quot;&gt;=&quot;) --&gt; &quot;&gt;=&quot;.
+tok(ID(&quot;=&lt;&quot;) --&gt; &quot;=&lt;&quot;.
+tok(ID(&quot;.=&quot;) --&gt; &quot;.=&quot;.
+tok(ID(&quot;%%&quot;) --&gt; &quot;%%&quot;.
+tok(ID(&quot;\#&quot;) --&gt; &quot;\#&quot;.
+tok(ID(&quot;@&quot;) --&gt; &quot;@&quot;.
+tok(ID(&quot;@@&quot;) --&gt; &quot;@@&quot;.
+tok(ID(&quot;&gt;&quot;) --&gt; &quot;&gt;&quot;.
+tok(ID(&quot;&lt;&quot;) --&gt; &quot;&lt;&quot;.
+tok(ID(&quot;-&quot;) --&gt; &quot;-&quot;.
+tok(ID(&quot;;&quot;) --&gt; &quot;;&quot;.</code></pre><p>Note that all the graphic identifiers are ‘spelled out’ here. The reason that we can do so is that L&amp;O completely specifies all the permitted operators. In turn, explicitly enumerating all the possible graphical tokens significantly improves the programmer’s experience of writing L&amp;O programs – it is not necessary to separate sequences of characters such as:</p><pre><code>A*-B</code></pre><p>as the L&amp;O parser can correctly parse this as:</p><pre><code>*(A,-(B))</code></pre><p>without requiring an explicit space between the <code>*</code> and <code>-</code> characters.</p><p>Any character not referred to explicitly here, and not referred to in any of the token rules above is not considered a legal character in a L&amp;O program.</p><h3 id="a-standard-tokenizer">A Standard Tokenizer</h3><p> Based on the productions for the <code>tok</code> introduces above, we can define a complete L&amp;O tokenizer that consumes a string (i.e., a list of characters) and produces a list of tokens.</p><p>Note that (as used in a compiler) a realistic tokenizer would collect additional information as it tokenizes the stream; in particular, the line number where each token occurs.</p><p>Our tokenizer rules can be easily extended to count line numbers and associate a line number and source file with each token. We use an auxilliary constructor to wrap each token with this information:</p><pre><code>TokenType ::= tk(tokType,integer).</code></pre><p>The production below for <code>goTokens</code> also show how the treatment of white space and comments meshes with the treatment of the individual types of token:</p><pre><code>goTokens:(list[(tokType,integer)])--&gt;string.
+goTokens([tk(Tok,Ln),..L],Lno) --&gt;
+    comment(Lno,Ln), tok(Tok), goTokens(L,Ln).
+goTokens([],Lno) --&gt; comment(Lno,_).</code></pre><p>This requires a slight modification to the rules for comment handling, and furthermore assumes (correctly) that a L&amp;O token cannot span across multiple lines of input.</p><h2 id="parser:grammar">Operator Grammar</h2><p>The grammar of L&amp;O specifies the rules for sequencing tokens into syntactically reasonable structures. However, a grammar parser is not itself capable of determining <em>semantically</em> meaningful program structures – that analysis requires the type inferencing system and other phases of a language processor.</p><p>The grammar of L&amp;O is based on an <em>operator precedence grammar</em>. Although they might not be aware of it, most programmers are quite familiar with operator precedence grammars – it is typically the grammar used for arithmetic expressions in regular programming languages. In L&amp;O – as in Prolog – we extend the use of operator-style grammars to cover the whole language.</p><p>An operator grammar allows us to write expressions like:</p><pre><code>X * Y + X / Y</code></pre><p>and to know that this means the equivalent of:</p><pre><code>(X * Y) + (X / Y)</code></pre><p>or more specifically:</p><pre><code>+(*(X, Y), /(X, Y))</code></pre><p>I.e., an operator grammar allows us to write operators between arguments instead of before them, and an operator precedence grammar allows us to avoid using parentheses in many common situations.</p><p>It is not necessary to restrict the scope of an operator grammar to arithmetic expressions – a fact used by the early originators of the  and Prolog programming languages. We can also use an operator grammar for the whole of a programming language. For example, in L&amp;O, an equation such as:</p><pre><code>app([E,..X],Y) =&gt; [E,..app(X,Y)]</code></pre><p>can be interpreted – by treating <code>=&gt;</code> as an operator – as:</p><pre><code>=&gt;(app([E,..X],Y),[E,..app(X,Y)])</code></pre><p>A somewhat more complicated example allows us to interpret a conditional equation in terms of operators:</p><pre><code>sort([E,..X])::split(E,X,A,B) =&gt; sort(A)&lt;&gt;[E]&lt;&gt;sort(B) </code></pre><p>as</p><pre><code>=&gt;(::(sort([E,..X]),split(E,X,A,B)),:-(&lt;&gt;(sort(A),&lt;&gt;([E],sort(B)))))</code></pre><p>Here, we have relied on the fact that <code>=&gt;</code>, <code>&lt;&gt;</code> and <code>::</code> are <em>infix</em> operators, in addition to the ‘normal’ infix operators: <code>&quot;+&quot;</code> and <code>-</code> operators.</p><blockquote><p>The major benefit of this sleight of hand is simplicity – it allows us to focus on the logical structure of a program fragment rather than the inessential details.</p><p>The major demerit is that, occasionally, syntax errors can be somewhat harder to interpret. Furthermore, a syntax error at this level tends to create a cascade of spurious error messages as the parser attempts to recover from the incorrect input.</p></blockquote><p>The output of parsing a L&amp;O text using the operator precedence grammar is a <em>parse tree</em>. This parse tree represents the syntactic structure of the program text in an abstract way.</p><h3 id="standard-operators">Standard operators</h3><p>The standard operators in L&amp;O are listed in order of priority below in Section . Each operator has a priority, associativity and a role.</p><p>The priority of an operator is the indication of the ‘importance’ of the operator: the higher the priority the nearer the top of the abstract syntax tree the corresponding structure will be. Priorities are numbers in the range 1..2000; by convention, priorities in the range 1..899 refer to entities that normally take the role of expressions, priorities in the range 900..1000 refer to predicates and predicate-level connectives and priorities in the range 1001..2000 refer to entries that have a statement or program level interpretation. The comma and the semi-colon operators are the only one with a priority of exactly 1000.</p><h5 id="representing-operators">Representing operators</h5><p>In our standard definition of L&amp;O grammar, we represent the different operators as clauses in the <code>preOp</code>, <code>infOp</code> and <code>postOp</code> relations. Each clause in the <code>infOp</code> predicate takes the form:</p><pre><code>infOp:(string,integer,integer,integer){}.
+...
+infOp(&quot;*&quot;,720,720,719).</code></pre><p>where <code>&quot;*&quot;</code> is a left associative infix operator of priority 720. This is encoded in the three numbers: the first number represents the priority of the term expected on the left of the <code>*</code> expression, the second represents the priority of the <code>*</code> expression itself and the third number represents the expected priority of expressions to the right of the <code>*</code> operator. Since <code>*</code> is left associative, this implies that a <code>*</code> expression can appear to the left, i.e., the expected priority on the left is the same as the actual priority of the <code>*</code> operator. For example, an expression such as</p><pre><code>A*B*C</code></pre><p>is parsed as though it were</p><pre><code>(A*B)*C</code></pre><p>A non-associative operator, such as <code>!=</code>, is represented by a clause such as:</p><pre><code>infOp(&quot;!=&quot;,899,900,899).        -- not equal predicate</code></pre><p>The Left and Right expected priorities are both less than the priority of <code>!=</code> itself; which implies that multiple occurrences of them must be correctly parenthesized. An expression such as</p><pre><code>a != b != c</code></pre><p>occuring in the program text would not be valid.</p><p>Prefix operators are represented in a similar way. The prefix operator <code>-</code> which is not associative and has priority 300 is represented by a clause in the <code>preOp</code> relation:</p><pre><code>preOp:(string,integer,integer){}.
+...
+preOp(&quot;-&quot;,300,299).</code></pre><p>The first number is the priority of the <code>-</code> operator as a prefix operator, and the second number is the priority of the expected term that follows the operator. Note that the <em>prefix</em> priority of an operator can be different to its <em>infix</em> priority; however, if an operator’s postfix priority is different to its infix priority then this may cause ambiguities. All of L&amp;O’s operators have consistent infix and postfix priorities.</p><p>Postfix operators are represented as instances of the <code>postOp</code> relation. The postfix operator <code>!</code> which is not associative and has priority 905 is represented by a clause in the <code>postOp</code> relation:</p><pre><code>postOp:(string,integer,integer){}.
+...
+postOp(&quot;!&quot;,904,905);</code></pre><p>In this case, the first number is the priority of the expected term to the left of the <code>!</code> operator as a postfix operator, and the second number is the priority of the <code>!</code> expression itself.</p><h3 id="parsing-analysis">Parsing analysis</h3><p>It is most convenient to consider parsing analysis as generating <em>parse trees</em> from streams of tokens. A parse tree is a tree-like structure that reflects operators such as <code>&quot;+&quot;</code>; as well as syntactic constructions such as lists, tuples and applicative expressions.</p><h5 id="abstract-syntax-type-definition"> Abstract syntax type definition</h5><p>Parse trees are expressed in terms of an <em>abstract syntax</em>. An abstract syntax is a notation which has operators for core elements – such as characters, strings, symbols and numbers – and a way of combining these into applicative forms – such as lists, tuples and function application. The type definition of the L&amp;O abstract syntax is:</p><pre><code>absTree ::=
+    I(string)                       -- identifier
+  | INT(integer)                    -- integer literal
+  | FLT(float)                      -- floating point literal
+  | STR(list[char])                 -- string literal
+  | APP(absTree,absTree)            -- applicative
+  | TPL(string,list[absTree])       -- tuple
+  .</code></pre><p>where the <code>I</code>, <code>INT</code>, <code>FLT</code> and <code>ST</code> forms correspond to identifiers, integers, floating point and literal strings respectively. Note that the type definition used here is simplified compared to that used in a compiler: a ‘real’ version would include line number information that would help to identify the location of terms for reporting errors and for support for run-time debugging. We omit this for the sake of clarity.</p><p>The <code>TPL</code> form is used for syntactic forms such as:</p><pre><code>(A,B,C)</code></pre><p>which is represented as:</p><pre><code>TPL(&quot;()&quot;,[I(&quot;A&quot;),I(&quot;B&quot;),I(&quot;C&quot;)])</code></pre><p>and</p><pre><code>[1,2,3]</code></pre><p>which becomes:</p><pre><code>TPL(&quot;[]&quot;,[INT(1),INT(2),INT(3)])</code></pre><p>I.e., both are tuples, but with a different bracketing.</p><p><code>TPL</code> is also used to represent the contents of a <code>{}</code> term:</p><pre><code>{a(). b().}</code></pre><p>which is represented as:</p><pre><code>TPL(&quot;{}&quot;,[APP(I(&quot;a&quot;),TPL(&quot;()&quot;,[])),APP(I(&quot;b&quot;),TPL(&quot;()&quot;,[]))])</code></pre><h5 id="parsing-over-streams-of-tokens">Parsing over streams of tokens</h5><p>Note that the grammar rules for parsing L&amp;O are expressed in terms of streams of <code>tokType</code> expressions rather than streams of characters. This is not a problem for the grammar formalism itself as the grammar notation is inherently polymorphic. For example, the grammar rule for a number in the token stream is:</p><pre><code>term0:(absTree)--&gt;list[tokType].
+term0(INT(N)) --&gt; [IN(N)].</code></pre><p>The basic rules for parsing L&amp;O programs revolve around the notion of a <em>primitive</em> expression and an <em>operator</em> expression. These distinctions have nothing to do with the semantics of L&amp;O programs; they only relate to the syntactic relationships of elements of the language. In Chapter  we provide an analysis of the elements of L&amp;O that more closely relates to the meaning of a program.</p><p>As with the standard rules for L&amp;O tokens, we give the rules for parsing sequences of tokens into parse trees as L&amp;O grammar rules. For readability, we assume the input is parsed as a sequence of <code>tokType</code> entries (see section ), rather than the more realistic <code>tokenType</code> entries which carry line number information.</p><h4 id="grammar:primitive">Primitive parse tree</h4><p>A primitive parse tree can be a literal (such as a number, symbol, character, string or regular identifier), an applicative expression (such as a function application, or a rule head) or a bracketted expression (such as a list, or parenthesised expression.</p><h5 id="simple-literals">Simple literals</h5><p>The main grammar production that corresponds to the primitive expression is <code>term0</code>. The first few cases of this are straightforward, and correspond to occurrences of simple literal values in the token stream:</p><pre><code>term0:(absTree)--&gt;list[tokType].
+term0(STR(S)) --&gt; [ST(s)].       -- A string literal
+term0(INT(N)) --&gt; [IN(N)].       -- An integer literal
+term0(FLT(N)) --&gt; [FT(N)].       -- A floating point literal</code></pre><blockquote><p>Mention interpolation</p></blockquote><h5 id="identifiers-and-applicative-expressions">Identifiers and applicative expressions</h5><p>An identifier may occur by itself, as in an occurrence of a variable, or it may signal an applicative expression, as in a function application. The various rules that capture these cases are amongst the most complicated in the entire L&amp;O grammar. In part, this is to allow the grammar to parse expressions such as:</p><pre><code>f(X){
+  X.Ok() -&gt; stdout.outLine(&quot;Ok&quot;)
+}</code></pre><p>The core grammar rule for applicative expressions uses <code>term00</code> to express the rules for the <em>function</em> part of an applicative expression:</p><pre><code>term0(T) --&gt; term00(L), termArgs(L,T).</code></pre><p>and <code>termArgs</code> to capture the possible forms of arguments – including none.</p><p>There are two main rules for <code>term00</code> – the identifier rule and the parenthesised expression rule. The first rule says that an identifier is a <code>term00</code> expression, provided that it is not also a standard operator. I.e., it isn’t one of the symbols referred to in Table .</p><pre><code>term00:(absTree)--&gt;list[tokType].
+term00(I(S)) --&gt; [ID(S)], {\+isOperator(S)}.
+term00(T) --&gt; parenTerm(T).</code></pre><p>The <code>termArgs</code> grammar production either encounters an opening parenthesis – in which case the arguments of an applicative expression are parsed – or not – in which case the leading ‘function symbol’ is interpreted as is.</p><p>The rules for <code>termArgs</code> are:</p><pre><code>termArgs:(absTree,absTree)--&gt;list[tokType].
+termArgs(Pref,Term) --&gt; parenTerm(Args),
+    termArgs(APP(Pref,Args),Term).
+termArgs(Pref,Term) --&gt; [ID(&quot;.&quot;),ID(Fld)],
+    termArgs(APP(I(&quot;.&quot;),TPL(&quot;()&quot;,[Pref,I(Fld)])),Term).
+termArgs(T,T)--&gt;[].</code></pre><p>where <code>parenTerm</code> decribes the various forms of parenthesized terms.</p><p>In effect, an applicative term consists of a ‘function’ applied to a sequence of expressions. This rule is iterative, allowing expressions of the form:</p><pre><code>f[A](B,C)</code></pre><p>whose parse tree representation is:</p><pre><code>APP(APP(I(&quot;f&quot;),TPL(&quot;[]&quot;,[I(&quot;A&quot;)])),TPL(&quot;()&quot;,[I(&quot;B&quot;),I(&quot;C&quot;)]))</code></pre><p>There are other kinds of <code>APP</code> terms, arising from operator expressions, in addition to expressions using <code>termArgs</code> production.</p><p>Note that we have a special rule for dealing with the dot operator which enforces the requirement that the right hand side must be an identifier. This reflects the fact that method access in an object is always tightly bound: an expression such as</p><pre><code>O.f(A,B)</code></pre><p>is parsed as though it were:</p><pre><code>(O.f)(A,B)</code></pre><h5 id="parenthesised-expressions">Parenthesised expressions</h5><p>Parenthesised expressions are enclosed by bracket characters. There are three such groups of characters – parentheses <code>()</code> which indicate tuples as well as operator overriding, square brackets <code>[]</code> which indicate list expressions and braces <code>{}</code> which typically indicate program structure such as theta expressions and classes.</p><pre><code>parenTerm:[absTree-]--&gt;list[tokType];
+parenTerm(TPL(&quot;()&quot;,[])) --&gt; [LPAR,RPAR].
+parenTerm(TPL(&quot;()&quot;,deComma(Els)) --&gt; [LPAR],term(Els,2000),[RPAR].
+parenTerm(TPL(&quot;[]&quot;,[])) --&gt; [LBRA,RBRA].
+parenTerm(TPL(&quot;[]&quot;,deCons(Els))) --&gt; [LBRA], term(Els,2000), [RBRA].
+parenTerm(TPL(&quot;{}&quot;,[])) --&gt; [LBRCE,RBRCE].
+parenTerm(TPL(&quot;{}&quot;,Els)) --&gt; [LBRCE],terms(Els),[RBRCE].
+
+terms([T|Els]) --&gt; term(T,2000), [TERM], terms(Els).
+terms([]) --&gt; [].</code></pre><h5 id="grammar:lists">List expressions</h5><p>The two functions <code>deComma</code> and <code>deCons</code> implement the conversion from comma-terms to lists of elements: the only difference between them is whether the list <code>,..</code> notation is legal or not:</p><pre><code>deComma:(absTree)=&gt;list[absTree].
+deComma(APP(I(&quot;,&quot;),TPL(&quot;()&quot;,[L,R]))) =&gt; [L,..deComma(R)].
+deComma(T) =&gt; [T].</code></pre><p>The rules for <code>deCons</code> implements the list notation. A L&amp;O list expression is a sequence of terms separated by <code>COMMA</code>s, and enclosed in square brackets. If the last element of a list expression is separated by a <code>,..</code> (<code>CONS</code>) token then it denotes the remainder of the list rather than the last element.</p><pre><code>deCons:(absTree)=&gt;list[absTree].
+deCons(APP(I(&quot;,&quot;),TPL(&quot;()&quot;,[L,R]))) =&gt; [L,..deCons(R)].
+deCons(APP(I(&quot;,..&quot;),TPL(&quot;()&quot;,[L,R]))) =&gt; [L,..R].
+deCons(T) =&gt; [T].</code></pre><p>The abstract syntax of a list literal is based on the <code>,..</code> applicative expression. Thus the parse tree corresponding to the list literal <code>[A]</code> is:</p><pre><code>APP(I(&quot;,..&quot;),TPL(&quot;()&quot;,[I(&quot;A&quot;),I(&quot;[]&quot;)]))</code></pre><p>Note that this refers only to the abstract parse tree representation of list pairs; the run-time representation of a list such as this may be considerably more succinct.</p><h4 id="grammar:operator-expression">Operator expression</h4><p>An operator expression can be an infix, prefix or a postfix operator expression. Most operators are infix; however it is possible for an operator to be simultaneously an infix and/or a prefix and/or a postfix operator. The grammar requires some disambiguation in the case that an operator is both infix and postfix.</p><p>Our productions for operator expressions are split into two fundamental cases: prefix expressions – handled by the <code>termLeft</code> grammar rules – and infix and postfix expressions – handled by the <code>termRight</code> grammar rules.</p><h5 id="prefix-operator-expressions">Prefix operator expressions</h5><p>A prefix operator expression consists of a prefix operator, followed by a term. The priority of the prefix operator should not be greater than the ‘allowed’ priority; and that the expected priority of the term that follows the prefix operator is based on the priority of the prefix operator itself.</p><p>The <code>termLeft</code> grammar does not report an error if it encounters an out-of-range prefix operator as the <code>termLeft</code> production may have been invoked recursively; and the prefix operator expression <em>may</em> have significance at an outer level. We rely on backtracking within the parser to resolve this particular conflict.</p><pre><code>termLeft:(absTree,integer,integer)--&gt;list[tokType].
+
+termLeft(APP(I(Op),TPL(&quot;()&quot;,[Right])),P,Oprior) --&gt;
+    [ID(Op)],
+    {isPreOp(Op,Oprior,OrPrior), P&gt;=Oprior},
+    term(Right,OrPrior).</code></pre><p>The second rule for <code>termLeft</code> defaults to the primitive term expression in the case that the lead token is not a prefix operator:</p><pre><code>termLeft(Term,P,0) --&gt; term0(Term).</code></pre><h5 id="infix-and-postfix-operator-expressions">Infix and postfix operator expressions</h5><p>The <code>termRight</code> grammar production defines how infix and postfix operators are handled.</p><p>The ‘input’ to <code>termRight</code> includes the term encountered to the left of the infix or postfix operator. If the next token is an infix operator, then the right hand side term is parsed – with appropriate expected priorities – and we recursively look again for further infix and/or postfix operators:</p><pre><code>termRight:(absTree,integer,integer,integer,absTree)--&gt;
+    list[tokType].
+
+termRight(Left,prior,lprior,aprior,Term) --&gt;
+    [ID(Op)],
+    { isInfOp(Op,L,O,R),O=&lt;prior,L&gt;=lprior },
+    term(Right,R),
+    termRight(APP(I(Op),TPL(&quot;()&quot;,[Left,Right])),
+              prior,O,aprior,Term).</code></pre><p>The input to the recursive call to <code>termRight</code> includes the infix term just discovered.</p><p>Postfix operators are treated in a similar way to infix expressions, except that postfix operators do not have a ‘right hand’ expression:</p><pre><code>termRight(Left,prior,lprior,aprior,Term) --&gt;
+    [ID(Op)],
+    { isPstOp(Op,L,O),O=&lt;prior,L&gt;=lprior },
+    termRight(APP(I(Op),TPL(&quot;()&quot;,[Left])),prior,O,aprior,Term).</code></pre><p>Note that we make use of L&amp;O’s backtracking to help disambiguate the case where an operator is simultaneously an infix and a postfix operator. There are several such operators, for example: <code>&quot;. &quot;</code>, <code>&quot;+&quot;</code> and <code>\uphat</code>. When encountering such dual-mode operators, the first interpretation as an infix operator is tried first; and if that fails then the postfix interpretation is used.</p><h5 id="special-infix-operators">Special infix operators</h5><p>The <code>&quot;. &quot;</code>(<code>TERM</code>) operator is a special operator in that it can serve both as punctuation and as an operator. As punctuation, it serves as an expression terminator and it serves as a separator operator when encountered in a class body or package.</p><p>These punctuation symbols’ roles as operators are captured via additional rules in the <code>termRight</code> grammar:</p><pre><code>termRight(Left,_,lprior,lprior,Left),[TERM] --&gt; [TERM].
+termRight(Left,prior,lprior,aprior,Term,true) --&gt; 
+    [TERM],
+    { 2000=&lt;prior,1999&gt;=lprior },
+    term(Right,2000),
+    termRight(APP(I(&quot;. &quot;),TPL(&quot;()&quot;,[Left,Right])),
+               prior,2000,aprior,Term).
+termRight(Left,prior,lprior,aprior,Term) --&gt;
+    [TERM],
+    { 2000=&lt;prior,2000&gt;=lprior },
+    termRight(APP(I(&quot;. &quot;),TPL(&quot;()&quot;,[Left])),
+      prior,2000,aprior,Term).</code></pre><p>We also need a special rule to deal with tupling operator <code>,</code> (<code>COMMA</code>):</p><pre><code>termRight(Left,prior,lprior,aprior,Term) --&gt;
+    [COMMA],
+    { isInfOp(&quot;,&quot;,L,O,R),O=&lt;prior,L&gt;=lprior },
+    term(Right,R),
+    termRight(APP(I(&quot;,&quot;),TPL(&quot;()&quot;,[Left,Right])), prior,O,aprior,Term).</code></pre><p>The final rule for <code>termRight</code> simply returns the left-hand expression and does not consume further tokens:</p><pre><code>termRight(Left,_,prior,prior,Left) --&gt; [].</code></pre><h5 id="top-level-term-parse-tree">Top-level term parse tree</h5><p>Our final production, for <code>term</code> itself, invokes the grammar for prefix/simple expressions and the grammar for infix and postfix expressions:</p><pre><code>term:(absTree,integer)--&gt;list[tokType].
+term(T,prior) --&gt; termLeft(Left,prior,Lprior),
+    termRight(Left,prior,Lprior,_,T).</code></pre><h3 id="example-parse-tree">Example parse tree</h3><p>The abstract parse trees of even simple expressions can be quite large. For example, the abstract tree corresponding to:</p><pre><code>app([E,..X],Y) =&gt; [E,..app(X,Y)]</code></pre><p>is</p><pre><code>APP(I(&quot;=&gt;&quot;),
+  TPL(&quot;()&quot;,
+    [APP(I(&quot;app&quot;),
+      TPL(&quot;()&quot;,
+          [APP(I(&quot;,..&quot;),
+              TPL(&quot;()&quot;,[I(&quot;E&quot;),I(&quot;X&quot;)])),
+              I(&quot;Y&quot;)])),
+    APP(I(&quot;,..&quot;),
+      TPL(&quot;()&quot;,[I(&quot;E&quot;),
+          APP(I(&quot;app&quot;),
+              TPL(&quot;()&quot;,[I(&quot;X&quot;),I(&quot;Y&quot;)]))]))]))</code></pre><p>Moreover, abstract parse trees only represent one intermediate kind of structure in a typical L&amp;O compiler. However, by the time that the above equation is compiled, it will have been reduced to just a few instructions.</p><div class="footnotes"><hr /><ol><li id="fn1"><p>A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.<a href="#fnref1">↩</a></p></li></ol></div>

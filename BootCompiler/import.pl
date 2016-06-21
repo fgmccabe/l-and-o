@@ -15,9 +15,9 @@ importPkg(Pkg,Repo,Spec) :-
 
 importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Imports)) :-
   openPackageAsStream(Repo,Pkg,Vers,Strm),
-  pickupPieces(Strm,Pkg,[export,types,import],Pieces), % todo: imports
-  processPieces(Pieces,Export,Types,Imports),
-  close(Strm).
+  pickupPieces(Strm,Pkg,[export,types],Pieces),
+  close(Strm),
+  processPieces(Pieces,Export,Types,Imports).
 
 pickupPieces(_,_,[],[]).
 pickupPieces(Strm,_,_,[]) :-
@@ -28,7 +28,10 @@ pickupPieces(Strm,Pkg,Lookfor,Pieces) :-
   isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More),
   pickupPieces(Strm,Pkg,Rest,More).
 
-isAPiece(F,Args,Pkg,[L|Rest],Rest,[Term|Pieces],Pieces) :-
+isAPiece(F,Args,pkg(Pkg),L,L,[Term|Pieces],Pieces) :-
+  localName(Pkg,"#","import",F),!,
+  Term =..['import'|Args].
+isAPiece(F,Args,pkg(Pkg),[L|Rest],Rest,[Term|Pieces],Pieces) :-
   localName(Pkg,"#",L,F),!,
   Term =..[L|Args].
 isAPiece(F,Args,Pkg,[L|Lookfor],[L|Rest],Pieces,More) :-
@@ -42,7 +45,8 @@ processPieces([export(Sig)|More],Export,Types,Imports) :-
 processPieces([types(Sig)|More],Export,Types,Imports) :-
   decodeSignature(Sig,Types),
   processPieces(More,Export,_,Imports).
-processPieces([import(Viz,Pkg,Version)|More],Export,Types,[import(Viz,Pkg,Version)|Imports]) :-
+processPieces([import(Viz,Pkg,Version)|More],Export,Types,[Import|Imports]) :-
+  massageImport([Viz,Pkg,Version],Import),
   processPieces(More,Export,Types,Imports).
 
 loadPkg(Pkg,Vers,Repo,Code,Imports) :-

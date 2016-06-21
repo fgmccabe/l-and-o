@@ -1,0 +1,494 @@
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 Language Syntax\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  We take a layered approach to understanding L&O"s syntax. The lowest level is the character level; then there is the lexical or token level, the parse level and finally the well typed formulae level. Each of these levels identifies a different \u8216'level of abstraction\u8217'; each focusses on a different aspect of a well formed L&O program.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This chapter is concerned with the lower three of these abstractions: characters, tokens and parse trees. This progressively moves up from the physical character of files containing L&O programs to a tree-like representation of the contents of a L&O source file. In later chapters, we focus on the subset of parse trees that can be given a well defined meaning: i.e., are well typed and form coherent units of execution.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 Characters and lexical syntax\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Unicode characters\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   L&O uses the Unicode character encoding system . More specifically, the L&O run-time uses Unicode characters internally to represent symbols and the L&O compiler and run-time engine interpret streams of UTF-8 bytes and UTF-16 words as Unicode. Identifiers in L&O programs as well as data processed by L&O programs are assumed to be Unicode based.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A L&O language processor assumes that the input is encoded in UTF-8.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 However, all of the the characters used within the language definition of L&O \u8211- such as the built-in operators and syntactic features \u8211- are contained within the ASCII subset of the Unicode character set. Thus, L&O can be used in an ASCII-based environment.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Character Categories\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  The Unicode consortium has identified a number of character catagories{\super\chftn}{\*\footnote\chftn\~\plain\pard {\pard \ql \f0 \sa180 \li0 \fi0 A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.\par}
+}. A character category distinguishes the typical role of a character \u8211- numeric digit, punctuation mark, regular text \u8211- in a language independent way.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 L&O uses these character categories to classify characters for the the purposes of discriminating identifiers and number values occurring in the program source text. The purpose of this is to permit non-English programmers to use non-English identifiers in the text of the program.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The character categories used by L&O are:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 Tokens\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  It is required that the input of a L&O language processor is first partitioned into contiguous sequences of characters called {\i tokens}. There are several different kinds of tokens; corresponding to the identifiers, symbols, character literals, string literals and punctuation marks necessary to correctly parse a L&O program.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 We use L&O\u8217's own grammar notation to describe the tokenization and parsing rules for L&O. Apart from demonstrating the power of L&O\u8217's grammar notation \u8211- which is modelled on Prolog\u8217's DCG grammars \u8211- it also demonstrates that we can eat our own dog food!\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 In the productions for the tokenizer listed below we assume that, in an actual tokenizer, all the productions for a given non-terminal are collected together \u8211- as is required by L&O\u8217's grammar. However, for explanatory purposes, the grammar rules for some of the non-terminals are distributed thoughout the text below.  The tokenizer rules depend on the  type defined below:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tokType ::= ID(symbol)             -- Identifier\line
+  | IN(integer)                    -- Integer literal\line
+  | FT(float)                      -- Floating point literal\line
+  | ST(string)                     -- String literal\line
+  | SY(string)                     -- Symbol\line
+  | CH(char)                       -- Character literal\line
+  | LPAR | RPAR | LBRA | RBRA\line
+  | LBRCE | RBRCE                  -- Punctuation\line
+  | COMMA | CONS | TERM\line
+  | EOF.                           -- End of file\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This type definition defines the legal kinds of tokens that can be expected; and also forms the basis of the stream processed at the next higher level in the L&O language specification: namely the syntactic grammar.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Comments and whitespace\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Tokens in a L&O source text may separated by zero or more {\i comments} and/or white space text \u8211- some pairs of tokens {\i require} some intervening space or comments for proper recognition. For example, a number following an identifier requires at least one white space character; otherwise the rules for identifier would \u8216'swallow\u8217' the number token. White space characters and comments may be used for the purposes of recognizing tokens; but must otherwise be discarded by a language processor.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 There are two styles of comment in L&O source texts \u8211- {\i line} comments and {\i block} comments.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Line comment\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  A line comment consists of the characters {\f1 -- } i.e., two hyphen characters and a whitespace character, followed by all the characters up to the next new-line character or end-of-file which ever is first.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Block comment\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   A block comment consists of the characters {\f1 /*} followed by any characters and is terminated by the characters {\f1 */}\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The L&O tokeniser rules for white space and comments are:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 whiteSpace:[integer]\{\}.\line
+whiteSpace(X):-__isZsChar(X).\line
+whiteSpace(X):-__isZlChar(X).\line
+whiteSpace(X):-__isZpChar(X).\line
+\line
+comments:(integer,integer)-->string.\line
+comments(Lno,Lx) --> comment(Lno,Ly)!, comments(Ly,Lx).\line
+comments(Lno,Lno) --> "".\line
+\line
+comment:(integer,integer)-->string.\line
+comment(Lno,Lx) --> "-- ",lineComment(Lno,Lx).\line
+comment(Lno,Lx) --> "--\\t",lineComment(Lno,Lx).\line
+comment(Lno,Lx) --> "/*",bodyComment(Lno,Lx).\line
+comment(Lno,Lno+1) --> "\\n".\line
+comment(Lno,Lno) --> [X],\{__isZsChar(X)\}. -- ignore space\line
+\line
+lineComment:(integer,integer)-->string.\line
+lineComment(Lno,Lno+1) --> [X],\{__isZlChar(X)\}. -- new line\line
+lineComment(Lno,Lx) --> [X],\{\\+__isZlChar(X)\},\line
+        lineComment(Lno,Lx).\line
+\line
+bodyComment:(integer,integer)-->string.\line
+bodyComment(Lno,Lno) --> "*/".\line
+bodyComment(Lno,Lx) --> [X],\{__isZlChar(X)\},\line
+        bodyComment(Lno+1,Lx).\line
+bodyComment(Lno,Lx) --> [X],bodyComment(Lno,Lx).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Identifiers\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  Identifiers serve many purposes within a L&O program: to identify variables and parameters, to identify types, even to identify syntactic operators.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 There are several classes of identifier, corresponding to how they are written: identifiers written using normal identifier rules, operators \u8211- which are often written with graphical characters \u8211- and quoted identifiers which are written like string literals but with single quotes.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  L&O identifiers are modelled on the standard Unicode identifier syntax; which in turn is a generalization of the common notation for identifier syntax found in many programming languages.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The basic rule for identifiers is that they have an initial start letter \u8211- which is either a letter character, or a character which could be used in a word or an underscore character \u8211- followed by a sequence of zero or more characters from a somewhat extended set \u8211- including the digit characters.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 What makes this style of identifier \u8216'different\u8217' is that the Unicode standard defines many thousands of \u8216'letter\u8217' character; this allows identifiers to be written in non roman scripts \u8211- such as Kanji for example.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The following L&O grammar rules capture the definition of an identifier:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok:(tokType)-->string.     -- a grammar that returns a token\line
+\line
+/* An identifier is an idStart character, \line
+   followed by a sequence of idChar */\line
+tok(ID(I)) --> idStart(X), idChar(C)*C^N, I=implode([X,..N]).\line
+\\dots\line
+idStart:(integer)-->string.\line
+idStart(X) --> [X],\{__isLetterChar(X)\}.\line
+idStart(0c_) --> "_".\line
+idStart(0c\\+ff3f;) --> "\\\\+ff3f;".      -- full width low line\line
+  \line
+idChar:(integer)-->string.\line
+idChar(X) --> idStart(X).\line
+idChar(X) --> [X],\{__isNdChar(X)\}.\line
+idChar(X) --> [X],\{__isMnChar(X)\}.\line
+idChar(X) --> [X],\{__isMcChar(X)\}.\line
+idChar(X) --> [X],\{__isPcChar(X)\}.\line
+idChar(X) --> [X],\{__isCfChar(X)\}.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 idStart} rule defines those characters that may start an identifier, and the {\f1 idChar} rule identifies those characters that may continue an identifier. Together, these rules state that any \u8216'letter\u8217' character may start an identifier, and letters and numbers may follow this initial letter.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 The grammar condition\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 \f1 idChar(C)*C^N\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 matches a sequence of zero or more {\f1 idChar}s, and puts the resulting list in the variable {\f1 N}. See Section\u160? for a more complete explanation.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   Quoted identifiers are written as a sequence of characters \u8211- not including new-line or other control characters \u8211- surrounded by {\f1 '} marks. More specifically, quoted identifiers are written as a sequence of character references (see Section\u160? above) surrounded by {\f1 '} characters.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 For example,\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 'a symbol'\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 is the identifier with name {\f1 a symbol}.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The grammar rule for quoted identifier tokens is\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(ID(L)) --> "'", strChar(C)*C^L,"'".\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 Quoted identifiers are especially useful when integrating with other languages. For example, a record structure arising from parsing a CVS file may use field names that are constructed from the CVS input; in which case, being able to use quoted identifiers becomes crucial.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Characters\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   There is no separate type for characters. This is partly due to the fact that there is no single mapping between strings and characters in Unicode. If it is necessary to process characters, as opposed to strings, then one must use the Unicode concept of {\i codepoint} \u8211- which is actually an integer.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 However, there is a special notation for codepoint: a leading {\f1 0c} in front of a {\i character reference} denotes the integer value of the codepoint corresponding to the character.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 For example, the CodePoint corresponding to new-line character is written:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 0c\\n\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The grammar rule for character literals is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(IN(ch)) --> "0c", strChar(ch).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 where {\f1 strChar} is the production to defines a legal character that may occur in a {\f1 string} value.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Character reference\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   Character references are used in several places in L&O\u8217's syntax: within string literals, identifiers and codepoint literals. There are also several special forms of character reference. The common Unix names for characters such as {\f1 \\}n for new-line are recognized, as is a special notation for entering arbitrary Unicode characters.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 There are three categories of character references: characters which do not need escaping, characters that are represented using a backslash escape, and characters denoted by their hexadecimal character code.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 For example the string {\f1 "string"} has the following code points in it:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 0cs 0ct 0cr 0ci 0cn 0cg\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A string containing just a new-line character is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 "\\n"\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 and a string containing the Unicode sentinel character would be denoted:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 "\\+fffe;"\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The rules for character references are:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 /* Special character sequence following a back-slash\line
+*  in a symbol or literal string\line
+*/\line
+strChar:(integer)-->string.\line
+strChar(0ca) --> "\\\\a".\line
+strChar(0cb) --> "\\\\b".\line
+strChar(0cd) --> "\\\\d".\line
+strChar(0ce) --> "\\\\e".\line
+strChar(0cf) --> "\\\\t".\line
+strChar(0cn) --> "\\\\n".\line
+strChar(0cr) --> "\\\\r".\line
+strChar(0ct) --> "\\\\t".\line
+strChar(0cv) --> "\\\\v".\line
+strChar(0c') --> "\\\\'".\line
+strChar(0c") --> "\\\\"".\line
+strChar(0c`) --> "\\\\`".\line
+strChar(0c\\\\) --> "\\\\\\\\".\line
+strChar(Cr) --> "\\\\+",hexSeq(0,C),";",Cr=__charOf(C).\line
+strChar(X) --> "\\\\", [X].\line
+strChar(X) --> [X],\{\\+__isCcChar(X)\}.\line
+...\line
+hexDig:(integer)-->string.\line
+hexDig(__digitCode(X)) --> [X],\{__isNdChar(X)\}.\line
+hexDig(10) --> "a".  hexDig(10) --> "A".\line
+hexDig(11) --> "b".  hexDig(11) --> "B".\line
+hexDig(12) --> "c".  hexDig(12) --> "C".\line
+hexDig(13) --> "d".  hexDig(13) --> "D".\line
+hexDig(14) --> "e".  hexDig(14) --> "E".\line
+hexDig(15) --> "f".  hexDig(15) --> "F".\line
+\line
+hexSeq:(integer,integer)-->string.\line
+hexSeq(I,N) --> hexDig(X)!,hexSeq(N*16+X,N).\line
+hexSeq(N,N) --> "".\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 The rules for {\f1 strChar} above may be a little confusing, because of the rules for quoting characters in strings. The required sequence of characters to represent a new-line character is a back-slash followed by an {\f1 n}: {\f1 \\n}". The string that denotes this in the grammar rule requires two backslashes \u8211- since a backslash in a string must itself be represented by two backslash characters. This is especially spectacular in the case of the {\f1 strChar} rule for the backslash character: this requires two backslashes in sequence and the string that denotes this sequence in the grammar rule consists of four backslash characters!\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 String literals\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   String literals are written as a sequence of character references (see ) \u8211- not including new-line or paragraph separator characters \u8211- surrounded by {\f1 "} marks.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 The reason for not permitting new-lines to occur in string literals is that that enables a particularly silly kind of syntax error to be picked up easily: a missing string quote will always generate a syntax error at the end of the line. The restriction does not affect the possible string literals, as it is always possible to use {\f1 \\n} to indicate a new-line character, and the L&O compiler concatenates sequences of string literals into a single string literal.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 One benefit of the automatic string merge feature is that when a program has a lengthy string embedded in it it can be formatted both for display and for program tidiness.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The grammar rule for string literals is very similar to the production for symbols. Note however, that string literals are interpreted as synonyms for lists of {\f1 char}s.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(ST(L)) --> "\\"", strChar(C)*C^L,"\\"".\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Interpolated Strings\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A particular variant of string literal is the {\i interpolated string}.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Numbers\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   L&O numbers are built from the {\f1 __isNdChar} character class. This class of characters includes many digit characters; all of which share the semantic property that they can be interpreted as decimal digits.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 L&O distinguishes integer literals (and values) from floating point literals and values; these are {\i not} generally substitutable for each other.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(Nm) --> [X],\{__isNdChar(X)\},\line
+    numberSeq(__digitCode(X),I),\line
+    ( fraction(F),exponent(E),\line
+      Nm = FT(n2float(I)+F)*n2float(E)\line
+    | Nm = IN(I)).\line
+\line
+tok(IN(N)) --> "0x", hexSeq(0,N).\line
+tok(IN(C)) --> "0c", strChar(C).\line
+\line
+numberSeq:(integer,integer)-->string.\line
+numberSeq(I,N) --> [D],\{__isNdChar(D)!\},\line
+        numberSeq(I*10+__digitCode(D),N).\line
+numberSeq(N,N) --> "".\line
+\line
+fraction:(float)-->string.\line
+fraction(F) --> ".", [C],\{__isNdChar(C)\},\line
+        frSeq(10,1/__digitCode(C),F).\line
+fraction(0) --> "".\line
+\line
+frSeq:(float,float,float)-->string.\line
+frSeq(X,F,R) --> [C],\{__isNdChar(C)\},\line
+        frSeq(X*10,F+__digitCode(C)/X,R).\line
+frSeq(X,F,F) --> "".\line
+\line
+exponent:(float)-->string.\line
+exponent(Ex) --> "E-", numberSeq(0,X),Ex = 10 ** (-X).\line
+exponent(Ex) --> "e-", numberSeq(0,X),Ex=10 ** (-X).\line
+exponent(Ex) --> "E", numberSeq(0,X),Ex=10 ** X.\line
+exponent(Ex) --> "e", numberSeq(0,X),Ex=10 ** X.\line
+exponent(1) --> "".\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Apart from the normal decimal notation for numbers, L&O supports two additional notations: the hexadecimal notation and the character code notation. The hexadecimal number notation simply consists of a leading {\f1 0x} followed by the hexadecimal digits of the number. All hexadecimal numbers are integral.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0  Notice that there is no definition of a negative numeric literal as a single token. Literal negative numbers are handled at a slightly higher level in the L&O language processing: the leading {\f1 -} character is interpreted as a prefix unary operator signifying arithmetic negation.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Operators and punctuation marks\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \par}
+{\pard \ql \f0 \sa180 \li0 \fi0 L&O uses a number of special punctuation marks to signify specific syntactic features \u8211- such as lists, theta expressions and so on.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(LPAR) --> "(".\line
+tok(RPAR) --> ")".\line
+tok(LBRA) --> "[".\line
+tok(RBRA) --> "]".\line
+tok(LBRCE) --> "\{".\line
+tok(RBRCE) --> "\}".\line
+tok(CONS) --> ",..".\line
+tok(COMMA) --> ",".\line
+tok(ID(". ")) --> ".", [X],\{ __isZsChar(X)\line
+                          | __isZlChar(X)\line
+                          | __isZsChar(X)\line
+                          | __isCcChar(X)\}.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0   Note that the symbol consists of a period followed by any kind of white space character. This distinguishes it from other uses of the period; such as class body definition operator {\f1 ..} or within a floating point number.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  In addition to these punctuation marks, L&O uses a number of symbols for the prefined operators:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 tok(ID("||") --> "||".\line
+tok(ID("|") --> "|".\line
+tok(ID("::") --> "::".\line
+tok(ID("::=") --> "::=".\line
+tok(ID(":=") --> ":=".\line
+tok(ID(":-") --> ":-".\line
+tok(ID(":--") --> ":--".\line
+tok(ID(":") --> ":".\line
+tok(ID("-->") --> "-->".\line
+tok(ID("->") --> "->".\line
+tok(ID("~") --> "~".\line
+tok(ID("<~") --> "<~".\line
+tok(ID("\\^") --> "\\^".\line
+tok(ID("..") --> "..".\line
+tok(ID(".")) --> ".".\line
+tok(ID("?") --> "?".\line
+tok(ID("!") --> "!".\line
+tok(ID("==") --> "==".\line
+tok(ID("=") --> "=".\line
+tok(ID("\\\\=") --> "\\\\=".\line
+tok(ID("!=") --> "!=".\line
+tok(ID("\\$") --> "\\$".\line
+tok(ID("\\\\+") --> "\\\\+".\line
+tok(ID("+") --> "+".\line
+tok(ID("*>") --> "*>".\line
+tok(ID("**") --> "**".\line
+tok(ID("*") --> "*".\line
+tok(ID("/") --> "/".\line
+tok(ID("\\\\/") --> "\\\\/".\line
+tok(ID("/\\\\") --> "/\\\\".\line
+tok(ID("\\\\") --> "\\\\".\line
+tok(ID("<>") --> "<>".\line
+tok(ID("=>") --> "=>".\line
+tok(ID("<=") --> "<=".\line
+tok(ID(">=") --> ">=".\line
+tok(ID("=<") --> "=<".\line
+tok(ID(".=") --> ".=".\line
+tok(ID("%%") --> "%%".\line
+tok(ID("\\#") --> "\\#".\line
+tok(ID("@") --> "@".\line
+tok(ID("@@") --> "@@".\line
+tok(ID(">") --> ">".\line
+tok(ID("<") --> "<".\line
+tok(ID("-") --> "-".\line
+tok(ID(";") --> ";".\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that all the graphic identifiers are \u8216'spelled out\u8217' here. The reason that we can do so is that L&O completely specifies all the permitted operators. In turn, explicitly enumerating all the possible graphical tokens significantly improves the programmer\u8217's experience of writing L&O programs \u8211- it is not necessary to separate sequences of characters such as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 A*-B\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 as the L&O parser can correctly parse this as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 *(A,-(B))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 without requiring an explicit space between the {\f1 *} and {\f1 -} characters.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Any character not referred to explicitly here, and not referred to in any of the token rules above is not considered a legal character in a L&O program.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 A Standard Tokenizer\par}
+{\pard \ql \f0 \sa180 \li0 \fi0  Based on the productions for the {\f1 tok} introduces above, we can define a complete L&O tokenizer that consumes a string (i.e., a list of characters) and produces a list of tokens.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that (as used in a compiler) a realistic tokenizer would collect additional information as it tokenizes the stream; in particular, the line number where each token occurs.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Our tokenizer rules can be easily extended to count line numbers and associate a line number and source file with each token. We use an auxilliary constructor to wrap each token with this information:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 TokenType ::= tk(tokType,integer).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The production below for {\f1 goTokens} also show how the treatment of white space and comments meshes with the treatment of the individual types of token:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 goTokens:(list[(tokType,integer)])-->string.\line
+goTokens([tk(Tok,Ln),..L],Lno) -->\line
+    comment(Lno,Ln), tok(Tok), goTokens(L,Ln).\line
+goTokens([],Lno) --> comment(Lno,_).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This requires a slight modification to the rules for comment handling, and furthermore assumes (correctly) that a L&O token cannot span across multiple lines of input.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 Operator Grammar\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The grammar of L&O specifies the rules for sequencing tokens into syntactically reasonable structures. However, a grammar parser is not itself capable of determining {\i semantically} meaningful program structures \u8211- that analysis requires the type inferencing system and other phases of a language processor.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The grammar of L&O is based on an {\i operator precedence grammar}. Although they might not be aware of it, most programmers are quite familiar with operator precedence grammars \u8211- it is typically the grammar used for arithmetic expressions in regular programming languages. In L&O \u8211- as in Prolog\u160?\u8211- we extend the use of operator-style grammars to cover the whole language.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 An operator grammar allows us to write expressions like:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 X * Y + X / Y\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 and to know that this means the equivalent of:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 (X * Y) + (X / Y)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 or more specifically:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 +(*(X, Y), /(X, Y))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 I.e., an operator grammar allows us to write operators between arguments instead of before them, and an operator precedence grammar allows us to avoid using parentheses in many common situations.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 It is not necessary to restrict the scope of an operator grammar to arithmetic expressions \u8211- a fact used by the early originators of the  and Prolog\u160?programming languages. We can also use an operator grammar for the whole of a programming language. For example, in L&O, an equation such as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 app([E,..X],Y) => [E,..app(X,Y)]\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 can be interpreted \u8211- by treating {\f1 =>} as an operator \u8211- as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 =>(app([E,..X],Y),[E,..app(X,Y)])\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A somewhat more complicated example allows us to interpret a conditional equation in terms of operators:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 sort([E,..X])::split(E,X,A,B) => sort(A)<>[E]<>sort(B) \par}
+{\pard \ql \f0 \sa180 \li0 \fi0 as\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 =>(::(sort([E,..X]),split(E,X,A,B)),:-(<>(sort(A),<>([E],sort(B)))))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Here, we have relied on the fact that {\f1 =>}, {\f1 <>} and {\f1 ::} are {\i infix} operators, in addition to the \u8216'normal\u8217' infix operators: {\f1 "+"} and {\f1 -} operators.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 The major benefit of this sleight of hand is simplicity \u8211- it allows us to focus on the logical structure of a program fragment rather than the inessential details.\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 The major demerit is that, occasionally, syntax errors can be somewhat harder to interpret. Furthermore, a syntax error at this level tends to create a cascade of spurious error messages as the parser attempts to recover from the incorrect input.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The output of parsing a L&O text using the operator precedence grammar is a {\i parse tree}. This parse tree represents the syntactic structure of the program text in an abstract way.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Standard operators\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The standard operators in L&O are listed in order of priority below in Section\u160?. Each operator has a priority, associativity and a role.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The priority of an operator is the indication of the \u8216'importance\u8217' of the operator: the higher the priority the nearer the top of the abstract syntax tree the corresponding structure will be. Priorities are numbers in the range 1..2000; by convention, priorities in the range 1..899 refer to entities that normally take the role of expressions, priorities in the range 900..1000 refer to predicates and predicate-level connectives and priorities in the range 1001..2000 refer to entries that have a statement or program level interpretation. The comma and the semi-colon operators are the only one with a priority of exactly 1000.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Representing operators\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 In our standard definition of L&O grammar, we represent the different operators as clauses in the {\f1 preOp}, {\f1 infOp} and {\f1 postOp} relations. Each clause in the {\f1 infOp} predicate takes the form:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 infOp:(string,integer,integer,integer)\{\}.\line
+...\line
+infOp("*",720,720,719).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 where {\f1 "*"} is a left associative infix operator of priority 720. This is encoded in the three numbers: the first number represents the priority of the term expected on the left of the {\f1 *} expression, the second represents the priority of the {\f1 *} expression itself and the third number represents the expected priority of expressions to the right of the {\f1 *} operator. Since {\f1 *} is left associative, this implies that a {\f1 *} expression can appear to the left, i.e., the expected priority on the left is the same as the actual priority of the {\f1 *} operator. For example, an expression such as\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 A*B*C\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 is parsed as though it were\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 (A*B)*C\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A non-associative operator, such as {\f1 !=}, is represented by a clause such as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 infOp("!=",899,900,899).        -- not equal predicate\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The Left and Right expected priorities are both less than the priority of {\f1 !=} itself; which implies that multiple occurrences of them must be correctly parenthesized. An expression such as\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 a != b != c\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 occuring in the program text would not be valid.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Prefix operators are represented in a similar way. The prefix operator {\f1 -} which is not associative and has priority 300 is represented by a clause in the {\f1 preOp} relation:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 preOp:(string,integer,integer)\{\}.\line
+...\line
+preOp("-",300,299).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The first number is the priority of the {\f1 -} operator as a prefix operator, and the second number is the priority of the expected term that follows the operator. Note that the {\i prefix} priority of an operator can be different to its {\i infix} priority; however, if an operator\u8217's postfix priority is different to its infix priority then this may cause ambiguities. All of L&O\u8217's operators have consistent infix and postfix priorities.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Postfix operators are represented as instances of the {\f1 postOp} relation. The postfix operator {\f1 !} which is not associative and has priority 905 is represented by a clause in the {\f1 postOp} relation:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 postOp:(string,integer,integer)\{\}.\line
+...\line
+postOp("!",904,905);\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 In this case, the first number is the priority of the expected term to the left of the {\f1 !} operator as a postfix operator, and the second number is the priority of the {\f1 !} expression itself.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Parsing analysis\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 It is most convenient to consider parsing analysis as generating {\i parse trees} from streams of tokens. A parse tree is a tree-like structure that reflects operators such as {\f1 "+"}; as well as syntactic constructions such as lists, tuples and applicative expressions.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20  Abstract syntax type definition\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Parse trees are expressed in terms of an {\i abstract syntax}. An abstract syntax is a notation which has operators for core elements \u8211- such as characters, strings, symbols and numbers \u8211- and a way of combining these into applicative forms \u8211- such as lists, tuples and function application. The type definition of the L&O abstract syntax is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 absTree ::=\line
+    I(string)                       -- identifier\line
+  | INT(integer)                    -- integer literal\line
+  | FLT(float)                      -- floating point literal\line
+  | STR(list[char])                 -- string literal\line
+  | APP(absTree,absTree)            -- applicative\line
+  | TPL(string,list[absTree])       -- tuple\line
+  .\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 where the {\f1 I}, {\f1 INT}, {\f1 FLT} and {\f1 ST} forms correspond to identifiers, integers, floating point and literal strings respectively. Note that the type definition used here is simplified compared to that used in a compiler: a \u8216'real\u8217' version would include line number information that would help to identify the location of terms for reporting errors and for support for run-time debugging. We omit this for the sake of clarity.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 TPL} form is used for syntactic forms such as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 (A,B,C)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 which is represented as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 TPL("()",[I("A"),I("B"),I("C")])\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 and\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 [1,2,3]\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 which becomes:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 TPL("[]",[INT(1),INT(2),INT(3)])\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 I.e., both are tuples, but with a different bracketing.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 {\f1 TPL} is also used to represent the contents of a {\f1 \{\}} term:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 \{a(). b().\}\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 which is represented as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 TPL("\{\}",[APP(I("a"),TPL("()",[])),APP(I("b"),TPL("()",[]))])\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Parsing over streams of tokens\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that the grammar rules for parsing L&O are expressed in terms of streams of {\f1 tokType} expressions rather than streams of characters. This is not a problem for the grammar formalism itself as the grammar notation is inherently polymorphic. For example, the grammar rule for a number in the token stream is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 term0:(absTree)-->list[tokType].\line
+term0(INT(N)) --> [IN(N)].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The basic rules for parsing L&O programs revolve around the notion of a {\i primitive} expression and an {\i operator} expression. These distinctions have nothing to do with the semantics of L&O programs; they only relate to the syntactic relationships of elements of the language. In Chapter\u160? we provide an analysis of the elements of L&O that more closely relates to the meaning of a program.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 As with the standard rules for L&O tokens, we give the rules for parsing sequences of tokens into parse trees as L&O grammar rules. For readability, we assume the input is parsed as a sequence of {\f1 tokType} entries (see section\u160?), rather than the more realistic {\f1 tokenType} entries which carry line number information.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Primitive parse tree\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A primitive parse tree can be a literal (such as a number, symbol, character, string or regular identifier), an applicative expression (such as a function application, or a rule head) or a bracketted expression (such as a list, or parenthesised expression.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Simple literals\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The main grammar production that corresponds to the primitive expression is {\f1 term0}. The first few cases of this are straightforward, and correspond to occurrences of simple literal values in the token stream:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 term0:(absTree)-->list[tokType].\line
+term0(STR(S)) --> [ST(s)].       -- A string literal\line
+term0(INT(N)) --> [IN(N)].       -- An integer literal\line
+term0(FLT(N)) --> [FT(N)].       -- A floating point literal\par}
+{\pard \ql \f0 \sa180 \li720 \fi0 Mention interpolation\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Identifiers and applicative expressions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 An identifier may occur by itself, as in an occurrence of a variable, or it may signal an applicative expression, as in a function application. The various rules that capture these cases are amongst the most complicated in the entire L&O grammar. In part, this is to allow the grammar to parse expressions such as:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 f(X)\{\line
+  X.Ok() -> stdout.outLine("Ok")\line
+\}\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The core grammar rule for applicative expressions uses {\f1 term00} to express the rules for the {\i function} part of an applicative expression:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 term0(T) --> term00(L), termArgs(L,T).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 and {\f1 termArgs} to capture the possible forms of arguments \u8211- including none.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 There are two main rules for {\f1 term00} \u8211- the identifier rule and the parenthesised expression rule. The first rule says that an identifier is a {\f1 term00} expression, provided that it is not also a standard operator. I.e., it isn\u8217't one of the symbols referred to in Table\u160?.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 term00:(absTree)-->list[tokType].\line
+term00(I(S)) --> [ID(S)], \{\\+isOperator(S)\}.\line
+term00(T) --> parenTerm(T).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 termArgs} grammar production either encounters an opening parenthesis \u8211- in which case the arguments of an applicative expression are parsed \u8211- or not \u8211- in which case the leading \u8216'function symbol\u8217' is interpreted as is.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The rules for {\f1 termArgs} are:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termArgs:(absTree,absTree)-->list[tokType].\line
+termArgs(Pref,Term) --> parenTerm(Args),\line
+    termArgs(APP(Pref,Args),Term).\line
+termArgs(Pref,Term) --> [ID("."),ID(Fld)],\line
+    termArgs(APP(I("."),TPL("()",[Pref,I(Fld)])),Term).\line
+termArgs(T,T)-->[].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 where {\f1 parenTerm} decribes the various forms of parenthesized terms.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 In effect, an applicative term consists of a \u8216'function\u8217' applied to a sequence of expressions. This rule is iterative, allowing expressions of the form:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 f[A](B,C)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 whose parse tree representation is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 APP(APP(I("f"),TPL("[]",[I("A")])),TPL("()",[I("B"),I("C")]))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 There are other kinds of {\f1 APP} terms, arising from operator expressions, in addition to expressions using {\f1 termArgs} production.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that we have a special rule for dealing with the dot operator which enforces the requirement that the right hand side must be an identifier. This reflects the fact that method access in an object is always tightly bound: an expression such as\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 O.f(A,B)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 is parsed as though it were:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 (O.f)(A,B)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Parenthesised expressions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Parenthesised expressions are enclosed by bracket characters. There are three such groups of characters \u8211- parentheses {\f1 ()} which indicate tuples as well as operator overriding, square brackets {\f1 []} which indicate list expressions and braces {\f1 \{\}} which typically indicate program structure such as theta expressions and classes.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 parenTerm:[absTree-]-->list[tokType];\line
+parenTerm(TPL("()",[])) --> [LPAR,RPAR].\line
+parenTerm(TPL("()",deComma(Els)) --> [LPAR],term(Els,2000),[RPAR].\line
+parenTerm(TPL("[]",[])) --> [LBRA,RBRA].\line
+parenTerm(TPL("[]",deCons(Els))) --> [LBRA], term(Els,2000), [RBRA].\line
+parenTerm(TPL("\{\}",[])) --> [LBRCE,RBRCE].\line
+parenTerm(TPL("\{\}",Els)) --> [LBRCE],terms(Els),[RBRCE].\line
+\line
+terms([T|Els]) --> term(T,2000), [TERM], terms(Els).\line
+terms([]) --> [].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 List expressions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The two functions {\f1 deComma} and {\f1 deCons} implement the conversion from comma-terms to lists of elements: the only difference between them is whether the list {\f1 ,..} notation is legal or not:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 deComma:(absTree)=>list[absTree].\line
+deComma(APP(I(","),TPL("()",[L,R]))) => [L,..deComma(R)].\line
+deComma(T) => [T].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The rules for {\f1 deCons} implements the list notation. A L&O list expression is a sequence of terms separated by {\f1 COMMA}s, and enclosed in square brackets. If the last element of a list expression is separated by a {\f1 ,..} ({\f1 CONS}) token then it denotes the remainder of the list rather than the last element.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 deCons:(absTree)=>list[absTree].\line
+deCons(APP(I(","),TPL("()",[L,R]))) => [L,..deCons(R)].\line
+deCons(APP(I(",.."),TPL("()",[L,R]))) => [L,..R].\line
+deCons(T) => [T].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The abstract syntax of a list literal is based on the {\f1 ,..} applicative expression. Thus the parse tree corresponding to the list literal {\f1 [A]} is:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 APP(I(",.."),TPL("()",[I("A"),I("[]")]))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that this refers only to the abstract parse tree representation of list pairs; the run-time representation of a list such as this may be considerably more succinct.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs24 Operator expression\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 An operator expression can be an infix, prefix or a postfix operator expression. Most operators are infix; however it is possible for an operator to be simultaneously an infix and/or a prefix and/or a postfix operator. The grammar requires some disambiguation in the case that an operator is both infix and postfix.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Our productions for operator expressions are split into two fundamental cases: prefix expressions \u8211- handled by the {\f1 termLeft} grammar rules \u8211- and infix and postfix expressions \u8211- handled by the {\f1 termRight} grammar rules.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Prefix operator expressions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 A prefix operator expression consists of a prefix operator, followed by a term. The priority of the prefix operator should not be greater than the \u8216'allowed\u8217' priority; and that the expected priority of the term that follows the prefix operator is based on the priority of the prefix operator itself.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 termLeft} grammar does not report an error if it encounters an out-of-range prefix operator as the {\f1 termLeft} production may have been invoked recursively; and the prefix operator expression {\i may} have significance at an outer level. We rely on backtracking within the parser to resolve this particular conflict.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termLeft:(absTree,integer,integer)-->list[tokType].\line
+\line
+termLeft(APP(I(Op),TPL("()",[Right])),P,Oprior) -->\line
+    [ID(Op)],\line
+    \{isPreOp(Op,Oprior,OrPrior), P>=Oprior\},\line
+    term(Right,OrPrior).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The second rule for {\f1 termLeft} defaults to the primitive term expression in the case that the lead token is not a prefix operator:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termLeft(Term,P,0) --> term0(Term).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Infix and postfix operator expressions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 termRight} grammar production defines how infix and postfix operators are handled.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The \u8216'input\u8217' to {\f1 termRight} includes the term encountered to the left of the infix or postfix operator. If the next token is an infix operator, then the right hand side term is parsed \u8211- with appropriate expected priorities \u8211- and we recursively look again for further infix and/or postfix operators:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termRight:(absTree,integer,integer,integer,absTree)-->\line
+    list[tokType].\line
+\line
+termRight(Left,prior,lprior,aprior,Term) -->\line
+    [ID(Op)],\line
+    \{ isInfOp(Op,L,O,R),O=<prior,L>=lprior \},\line
+    term(Right,R),\line
+    termRight(APP(I(Op),TPL("()",[Left,Right])),\line
+              prior,O,aprior,Term).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The input to the recursive call to {\f1 termRight} includes the infix term just discovered.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Postfix operators are treated in a similar way to infix expressions, except that postfix operators do not have a \u8216'right hand\u8217' expression:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termRight(Left,prior,lprior,aprior,Term) -->\line
+    [ID(Op)],\line
+    \{ isPstOp(Op,L,O),O=<prior,L>=lprior \},\line
+    termRight(APP(I(Op),TPL("()",[Left])),prior,O,aprior,Term).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note that we make use of L&O\u8217's backtracking to help disambiguate the case where an operator is simultaneously an infix and a postfix operator. There are several such operators, for example: {\f1 ". "}, {\f1 "+"} and {\f1 \\uphat}. When encountering such dual-mode operators, the first interpretation as an infix operator is tried first; and if that fails then the postfix interpretation is used.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Special infix operators\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The {\f1 ". "}({\f1 TERM}) operator is a special operator in that it can serve both as punctuation and as an operator. As punctuation, it serves as an expression terminator and it serves as a separator operator when encountered in a class body or package.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 These punctuation symbols\u8217' roles as operators are captured via additional rules in the {\f1 termRight} grammar:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termRight(Left,_,lprior,lprior,Left),[TERM] --> [TERM].\line
+termRight(Left,prior,lprior,aprior,Term,true) --> \line
+    [TERM],\line
+    \{ 2000=<prior,1999>=lprior \},\line
+    term(Right,2000),\line
+    termRight(APP(I(". "),TPL("()",[Left,Right])),\line
+               prior,2000,aprior,Term).\line
+termRight(Left,prior,lprior,aprior,Term) -->\line
+    [TERM],\line
+    \{ 2000=<prior,2000>=lprior \},\line
+    termRight(APP(I(". "),TPL("()",[Left])),\line
+      prior,2000,aprior,Term).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 We also need a special rule to deal with tupling operator {\f1 ,} ({\f1 COMMA}):\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termRight(Left,prior,lprior,aprior,Term) -->\line
+    [COMMA],\line
+    \{ isInfOp(",",L,O,R),O=<prior,L>=lprior \},\line
+    term(Right,R),\line
+    termRight(APP(I(","),TPL("()",[Left,Right])), prior,O,aprior,Term).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The final rule for {\f1 termRight} simply returns the left-hand expression and does not consume further tokens:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 termRight(Left,_,prior,prior,Left) --> [].\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs20 Top-level term parse tree\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Our final production, for {\f1 term} itself, invokes the grammar for prefix/simple expressions and the grammar for infix and postfix expressions:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 term:(absTree,integer)-->list[tokType].\line
+term(T,prior) --> termLeft(Left,prior,Lprior),\line
+    termRight(Left,prior,Lprior,_,T).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs28 Example parse tree\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The abstract parse trees of even simple expressions can be quite large. For example, the abstract tree corresponding to:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 app([E,..X],Y) => [E,..app(X,Y)]\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 is\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 APP(I("=>"),\line
+  TPL("()",\line
+    [APP(I("app"),\line
+      TPL("()",\line
+          [APP(I(",.."),\line
+              TPL("()",[I("E"),I("X")])),\line
+              I("Y")])),\line
+    APP(I(",.."),\line
+      TPL("()",[I("E"),\line
+          APP(I("app"),\line
+              TPL("()",[I("X"),I("Y")]))]))]))\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Moreover, abstract parse trees only represent one intermediate kind of structure in a typical L&O compiler. However, by the time that the above equation is compiled, it will have been reduced to just a few instructions.\par}

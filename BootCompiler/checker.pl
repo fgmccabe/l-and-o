@@ -13,6 +13,7 @@
 :- use_module(keywords).
 :- use_module(macro).
 :- use_module(import).
+:- use_module(transitive).
 
 :- use_module(display).
 
@@ -51,7 +52,8 @@ packageName(T,pkg(Pkg),defltVersion) :-
 thetaEnv(Pkg,Repo,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
   macroRewrite(Els,Stmts),
   dependencies(Stmts,Groups,Private,Annots,Imps,Otrs),
-  checkImports(Imps,Imports,Repo,Base,IBase),
+%  checkImports(Imps,Imports,Repo,Base,IBase),
+  processImportGroup(Imps,Imports,Repo,Base,IBase),
   pushFace(Fields,IBase,Env),
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
@@ -85,6 +87,49 @@ importTypes([(Nm,tupleType(Rules))|More],Lc,Env,Ex) :-
   pickFaceRule(Rules,FaceRule),
   declareType(Nm,Lc,Type,FaceRule,Rules,Env,E0),
   importTypes(More,Lc,E0,Ex).
+
+findAllImports([],_,[]).
+findAllImports([St|More],Lc,[Spec|Imports]) :-
+  findImport(St,Lc,private,Spec),
+  findAllImports(More,_,Imports).
+
+findImport(St,Lc,_,Spec) :-
+  isUnary(St,Lc,"private",I),
+  findImport(I,_,private,Spec).
+findImport(St,Lc,_,Spec) :-
+  isUnary(St,Lc,"public",I),
+  findImport(I,_,public,Spec).
+findImport(St,Lc,Viz,import(Viz,Pkg,Version)) :-
+  isUnary(St,Lc,"import",P),
+  packageName(P,Pkg,Version).
+
+processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex) :-
+  findAllImports(Stmts,Lc,Imports),
+  importAll(Imports,Repo,AllImports),
+  importAllDefs(AllImports,Lc,ImportSpecs,Repo,Env,Ex).
+
+importAll(Imports,Repo,AllImports) :-
+  closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
+
+importAllDefs([],_,[],_,Env,Env).
+importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types)|Specs],Repo,Env,Ex) :-
+  importPkg(Pkg,Vers,Repo,Spec),
+  Spec = spec(_,_,Exported,Types,_),
+  importDefs(Spec,Lc,Env,Ev0),
+  importAllDefs(More,Lc,Specs,Repo,Ev0,Ex).
+
+notAlreadyImported(import(_,Pkg,Vers),SoFar) :-
+  \+ is_member(import(_,Pkg,Vers),SoFar),!.
+
+importMore(Repo,import(Viz,Pkg,Vers),SoFar,[import(Viz,Pkg,Vers)|SoFar],Inp,More) :-
+  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,Imports)),
+  addPublicImports(Imports,Inp,More).
+
+addPublicImports([],Imp,Imp).
+addPublicImports([import(public,Pkg,Vers)|I],Rest,[import(public,Pkg,Vers)|Out]) :-
+  addPublicImports(I,Rest,Out).
+addPublicImports([import(private,_,_)|I],Rest,Out) :-
+  addPublicImports(I,Rest,Out).
 
 checkOthers([],[],_,_).
 checkOthers([St|Stmts],Ass,Env,Path) :-
