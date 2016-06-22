@@ -198,10 +198,6 @@ static char *genOpType(FILE *f,char *tp)
       fprintf(f,"])");
       return tp;
     }
-    
-    case var_sig:
-      fprintf(f,"undef(\'_t%d\')",*tp++);
-      return tp;
 
     case forall_sig:
       fprintf(f,"allType(\'_t%d\',",*tp++);

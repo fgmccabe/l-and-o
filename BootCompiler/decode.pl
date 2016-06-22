@@ -127,10 +127,10 @@ decodeType(thisType) --> ['h'].
 decodeType(type("lo.arith*integer")) --> ['i'].
 decodeType(type("lo.arith*float")) --> ['f'].
 decodeType(type("lo.thing*string")) --> ['S'].
-decodeType(type("lo.std*logical")) --> ['l'].
+decodeType(type("lo.logical*logical")) --> ['l'].
 decodeType(kVar(Nm)) --> ['k'], decodeName(Nm).
 decodeType(type(Nm)) --> ['t'], decodeName(Nm).
-decodeType(typeExp("lo.std*list",[ElTp])) --> ['L'], decodeType(ElTp).
+decodeType(typeExp("lo.list*list",[ElTp])) --> ['L'], decodeType(ElTp).
 decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeName(Nm), decodeTypes(ArgTypes).
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Lower,Tp,Upper)) --> ['c'], decodeType(Lower), decodeType(Tp), decodeType(Upper).

@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
         break;
       case genLO:
         fprintf(out, "%s{\n", prefix);
-        fprintf(out, "\n  import lo.string.\n");
-        fprintf(out, "  import comp.types.\n\n");
+        fprintf(out, "\n  import lo.\n");
+        fprintf(out, "  import lo.comp.types.\n\n");
         loEscapeTypes(out);
         loIsEscape(out);
         fprintf(out, "\n}.\n");
@@ -91,12 +91,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       dumpStdType("lo.string*string", out);
       break;
     case logical_sig:
-      dumpStdType("lo.std*logical", out);
-      break;
-    case var_sig:
-      outStr(O_IO(out), "tVar(");
-      sig = dName(sig, out);
-      outStr(O_IO(out), ")");
+      dumpStdType("lo.logical*logical", out);
       break;
     case kvar_sig:
       outStr(O_IO(out), "kVar(");

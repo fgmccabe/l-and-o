@@ -71,7 +71,6 @@ isIden(name(Lc,Nm),Lc,Nm).
 isIden(tuple(Lc,"()",[name(_,Nm)]),Lc,Nm).
 
 isString(string(_,St),St).
-isString(interString(_,string(_,St)),St).
 
 isInteger(integer(_,Ix),Ix).
 
@@ -81,7 +80,6 @@ locOfAst(name(Lc,_),Lc).
 locOfAst(integer(Lc,_),Lc).
 locOfAst(float(Lc,_),Lc).
 locOfAst(string(Lc,_),Lc).
-locOfAst(interString(Lc,_),Lc).
 locOfAst(tuple(Lc,_,_),Lc).
 locOfAst(app(Lc,_,_),Lc).
 

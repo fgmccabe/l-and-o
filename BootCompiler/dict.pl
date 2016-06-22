@@ -102,12 +102,5 @@ declareCatalog(Nm,Ct,[scope(Types,Nms,Rls,Cats)|Outer],[scope(Types,Nms,Rls,Cats
 
 stdDict(Base) :-
   pushScope([],Base).
-  /*
-  declareType("list",std,univType(kVar("t"),typeExp("lo.list*list",[kVar("t")])),Base,B6),
-  stdVar(",..",vr("lo.list#,..",univType(kVar("t"),
-    classType([kVar("t"),typeExp("lo.list*list",[kVar("t")])],typeExp("lo.list*list",[kVar("t")])))),B6,B7),
-  stdVar("[]",vr("lo.list#[]",univType(kVar("t"),typeExp("lo.std*list",[kVar("t")]))),B7,B8),
-  Dict=B8.
-  */
 
 

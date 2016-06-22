@@ -1,8 +1,8 @@
-comp.keywords{
-  import lo.string.
+lo.comp.keywords{
+  import lo.
 
   isKeyword:(string){}.
-  isKeyword(X) :: keyword(X) ::- true.
+  isKeyword(X) :: keyword(X) :-- true.
 
   private keyword:(string){}.
   keyword("|").
@@ -29,7 +29,7 @@ comp.keywords{
   keyword("::=").
   keyword("<=").
   keyword("<~").
-  keyword("$").
+  keyword("\$").
   keyword("*>").
   keyword("\\+").
   keyword("\\=").

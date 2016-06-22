@@ -1,5 +1,7 @@
 lo.arith{
-  public import lo.thing.
+  import lo.thing.
+  import lo.display.
+  import lo.logical.
 
   integer <~ arith.
   float <~ arith.
@@ -33,4 +35,14 @@ lo.arith{
   }.
 
   assert 2*3+4 = 10.
+
+  intDisp : display[integer].
+  intDisp .. {
+    display(Ix) => ss(_int2str(Ix,10,0,0c )).
+  }.
+
+  fltDisp : display[float].
+  fltDisp .. {
+    display(Dx) => ss(_flt2str(Dx,0,8,true,false)).
+  }
 }

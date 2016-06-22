@@ -46,7 +46,8 @@ encodeType(anonType,['_'|O],O).
 encodeType(voidType,['v'|O],O).
 encodeType(topType,['A'|O],O).
 encodeType(thisType,['h'|O],O).
-encodeType(typeExp("lo.std*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
+encodeType(typeExp("lo.list*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
+encodeType(type("lo.logical*logical"),['l'|O],O).
 encodeType(type("lo.arith*integer"),['i'|O],O).
 encodeType(type("lo.arith*float"),['f'|O],O).
 encodeType(type("lo.thing*string"),['S'|O],O).
@@ -72,7 +73,7 @@ encodeChars(Chars,Delim,[Delim|O],Ox) :-
  concat(Chars,[Delim|Ox],O).
 
 encodeInt(K,[D|O],O) :- K>=0 , K=<10, digit(K,D).
-encodeInt(N,[D|O],Ox) :- N1 is N div 10, K is N mod 10, digit(K,D), encodeInt(N1,O,Ox).
+encodeInt(N,O,Ox) :- N1 is N div 10, encodeInt(N1,O,[D|Ox]), K is N mod 10, digit(K,D).
 
 digit(0,'0').
 digit(1,'1').

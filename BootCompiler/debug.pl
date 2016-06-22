@@ -30,12 +30,12 @@ deframeDebug(Nm,QNo,FB,FBx,Opts) :-
   FB=[ocall(cons(RlNm,[strg(Nm),intgr(QNo),FrVr]),DgVr,DgVr)|FBx].
 deframeDebug(_,_,F,F,_).
 
-constructFrameList([],enum("lo.std#[]")).
+constructFrameList([],enum("lo.list#[]")).
 constructFrameList([idnt(V)|Vars],FQ) :-
   starts_with(V,"_"),!,
   constructFrameList(Vars,FQ).
 constructFrameList([idnt(V)|Vars],
-      cons(strct("lo.std#,..",2),[tpl([strg(V),idnt(V)]),Q])) :-
+      cons(strct("lo.list#,..",2),[tpl([strg(V),idnt(V)]),Q])) :-
   constructFrameList(Vars,Q).
 
 breakDebug(Nm,[ocall(cons(BC,[strg(Nm)]),DgVr,DgVr)|BG],BG,Opts) :-

@@ -2,7 +2,7 @@
 :-use_module(misc).
 
 topsort(Defs,Groups) :-
-  analyseDefs(Defs,[],Grps),
+  analyseDefs(Defs,[],Grps),!,
   reverse(Grps,Groups).
 
 analyseDefs([],Groups,Groups).

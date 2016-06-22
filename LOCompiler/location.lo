@@ -1,6 +1,9 @@
-comp.location{
+lo.comp.location{
   import lo.thing.
   import lo.arith.
+  import lo.display.
+  import lo.list.
+  import lo.string.
   
   location <~ {
     merge:(location)=>location.
@@ -21,4 +24,11 @@ comp.location{
   }.
 
   hasLoc <~ { locOf:location. }.
+
+  locationDisp : display[location].
+  locationDisp .. {
+    display(loc(Ln,Off,Col,Len)) => 
+        ssSeq([intDisp.display(Ln),ss(":"),
+                intDisp.display(Col),ss("("),intDisp.display(Len),ss(")")]).
+  }.
 }

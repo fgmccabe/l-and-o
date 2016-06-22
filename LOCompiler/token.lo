@@ -1,0 +1,49 @@
+lo.comp.token{
+  import lo.comp.location.
+  import lo.
+
+  tok ::= lpar
+         |  rpar
+         |  lbra
+         |  rbra
+         |  lbrce
+         |  rbrce
+         |  lqpar
+         |  rqpar
+         |  idTok(string)
+         |  intTok(integer)
+         |  fltTok(float)
+         |  stringTok(string)
+         |  period
+         |  terminal.
+
+  token <~ hasLoc.
+
+  tok:(tok,location) <=> token.
+  tok(Tk,Loc) .. {
+    locOf = Loc.
+  }.
+
+  tokenDisp : display[token].
+  tokenDisp .. {
+    display(tok(Tk,Loc)) => ssSeq([tokDisp.display(Tk),ss("@"),locationDisp.display(Loc)]).
+  }.
+
+  tokDisp : display[tok].
+  tokDisp .. {
+    display(lpar) => ss("(").
+    display(rpar) => ss(")").
+    display(lbra) => ss("[").
+    display(rbra) => ss("]").
+    display(lbrce) => ss("{").
+    display(rbrce) => ss("}").
+    display(lqpar) => ss("<|").
+    display(rqpar) => ss("|>").
+    display(idTok(Nm)) => ss(Nm).
+    display(intTok(Ix)) => intDisp.display(Ix).
+    display(fltTok(Dx)) => fltDisp.display(Dx).
+    display(stringTok(Sx)) => stringDisp.display(Sx).
+    display(period) => ss(". ").
+    display(terminal) => ss("<term>").
+  }
+}

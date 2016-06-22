@@ -100,8 +100,6 @@ static char *skipSig(char *tp)
       tp = skipSig(tp+1);
     return tp;
   }
-  case var_sig:
-    return tp+1;
   case forall_sig:
     return skipSig(skipSig(tp+1));
   case poly_sig:{
@@ -258,7 +256,7 @@ static char *genOpType(FILE *f,char *tp)
       fprintf(f,"*");
       return tp;
 
-    case var_sig:
+    case kvar_sig:
       fprintf(f,"t\\sub{%d}",*tp++);
       return tp;
       

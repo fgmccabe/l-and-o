@@ -68,6 +68,7 @@ wffTypeExp(T) :- isBinary(T,"-->",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp
 wffTypeExp(T) :- isBinary(T,"<=>",L,R), isTuple(L,A), wffTypeExps(A), wffTypeExp(R).
 wffTypeExp(T) :- isBraceTerm(T,L,[]),isTuple(L,A), wffTypeExps(A).
 wffTypeExp(T) :- isBraceTuple(T,_,A), wffFaceTypes(A).
+wffTypeExp(T) :- isTuple(T,A), wffTypeExps(A).
 wffTypeExp(T) :- isQuantified(T,V,Tp), wffTypeQuants(V,[],_), wffTypeExp(Tp).
 wffTypeExp(T) :- locOfAst(T,Lc), reportError("Cannot understand type %s",[T],Lc).
 
@@ -223,7 +224,6 @@ wffExp(name(Lc,K)) :- isKeyword(K), reportError("unexpected keyword: %s",[K],Lc)
 wffExp(integer(_,_)).
 wffExp(float(_,_)).
 wffExp(string(_,_)).
-wffExp(interString(_,Segs)) :- wffStringSegments(Segs).
 wffExp(tuple(_,"()",A)) :- wffExps(A).
 wffExp(tuple(_,"[]",A)) :- wffExpList(A).
 wffExp(tuple(_,"{}",A)) :- wffThetaEnv(A).
@@ -279,7 +279,6 @@ wffPtn(name(_,O)) :- \+ isKeyword(O).
 wffPtn(integer(_,_)).
 wffPtn(float(_,_)).
 wffPtn(string(_,_)).
-wffPtn(interString(Lc,_)) :- reportError("interpolated string not allowed in pattern",[],Lc).
 wffPtn(tuple(_,"()",A)) :- wffPtns(A).
 wffPtn(tuple(_,"[]",A)) :- wffPtns(A).
 wffPtn(tuple(Lc,"{}",_)) :- reportError("not permitted as pattern",[],Lc).

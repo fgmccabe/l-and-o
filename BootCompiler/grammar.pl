@@ -126,8 +126,6 @@ terms(Tks,Toks,[T|R]) :-
 
 lookAhead(Tk,[Tk|_]).
 
-printAhead([Tk|_]) :- writeln(Tk).
-
 checkToken([Tk|Toks],Toks,Tk,_) :- !.
 checkToken([Tk|Toks],Toks,_,Msg) :- locOfToken(Tk,Lc), reportError(Msg,[Tk],Lc).
 
@@ -138,17 +136,22 @@ checkTerminator(Tks,RTks) :-
 
 handleInterpolation([segment(Str,Lc)],_,string(Lc,Str)).
 handleInterpolation([],Lc,string(Lc,"")).
-handleInterpolation(Segments,Lc,interString(Lc,Inters)) :- stringSegments(Segments,Inters).
+handleInterpolation(Segments,Lc,Term) :- 
+  stringSegments(Segments,Inters),
+  unary(Lc,"ssSeq",tuple(Lc,"[]",Inters),Fltn),
+  unary(Lc,"ssFormat",Fltn,Term).
 
 stringSegments([],[]).
 stringSegments([Seg|More],[H|T]) :- stringSegment(Seg,H), stringSegments(More,T).
 
 stringSegment(segment(Str,Lc),string(Lc,Str)).
-stringSegment(interpolate(Text,[],Lc),display(Lc,Term)) :-
+stringSegment(interpolate(Text,[],Lc),Disp) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX),
+  unary(Lc,"display",Term,Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).
-stringSegment(interpolate(Text,Fmt,Lc),format(Lc,Term,Fmt)) :-
+stringSegment(interpolate(Text,Fmt,Lc),format(Lc,Term,Disp)) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX),
+  binary(Lc,"format",Term,string(Lc,Fmt),Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).

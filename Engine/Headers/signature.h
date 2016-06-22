@@ -8,7 +8,6 @@ typedef enum {
     float_sig = 'f', /* A float */
     string_sig = 'S', /* String */
     logical_sig = 'l', /* Logical value */
-    var_sig = '$', /* Type variable */
     kvar_sig = 'k', /* quantified type variable */
     top_sig = 'A', /* Top value -- of unknown type */
     void_sig = 'v', /* Bottom type - no value has this type */

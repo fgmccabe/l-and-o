@@ -1,6 +1,5 @@
 lo.string{
-  public import lo.thing.
-  import lo.arith.
+  import lo.thing.
 
   string <~ thing.
 }

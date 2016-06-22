@@ -1,4 +1,4 @@
-:-module(errors,[reportError/3,reportMsg/2,reportMsg/3,errorCount/1,noErrors/0,startCount/0]).
+:-module(errors,[reportError/3,reportError/2,reportMsg/2,reportMsg/3,errorCount/1,noErrors/0,startCount/0]).
 :- use_module(display).
 :- use_module(abstract).
 :- use_module(lexer).
@@ -12,6 +12,11 @@ reportError(Msg,A,Lc) :- incErrorCount(),
   errorCount(E),
   showLocation(Lc,OLc,[]),
   writef("Error %w: at %s\n",[E,OLc]),
+  genDisplay(A,AA),
+  writef(Msg,AA),nl(),!.
+reportError(Msg,A) :- incErrorCount(),
+  errorCount(E),
+  writef("Error %w:\n",[E]),
   genDisplay(A,AA),
   writef(Msg,AA),nl(),!.
 

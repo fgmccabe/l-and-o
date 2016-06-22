@@ -21,7 +21,6 @@ dispAst(format(_,Term,Fmt),Pr,['<','<'|O],E) :- dispAst(Term,Pr,O,O1),
     string_chars(Fmt,FChrs),
     concat([':'|FChrs],O2,O1),
     concat(['>','>'],E,O2).
-dispAst(interString(_,Segments),_,O,E) :- writeEls(Segments,0,"++",O,E).
 dispAst(tuple(_,Nm,A),_,O,E) :- bracket(Nm,Left,Right,Sep,Pr),
     appStr(Left,O,O1),
     writeEls(A,Pr,Sep,O1,O2),

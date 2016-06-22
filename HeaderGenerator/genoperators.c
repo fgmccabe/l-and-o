@@ -139,8 +139,7 @@ int main(int argc, char **argv) {
         break;
       case genLO:
         fprintf(out, "%s{\n", prefix);
-        fprintf(out, "  import lo.string.\n");
-        fprintf(out, "  import lo.arith.\n\n");
+        fprintf(out, "  import lo.\n\n");
         fprintf(out, "  infixOp:(string,integer,integer,integer){}.\n");
         fprintf(out, "  prefixOp:(string,integer,integer){}.\n");
         fprintf(out, "  postfixOp:(string,integer,integer){}.\n\n");

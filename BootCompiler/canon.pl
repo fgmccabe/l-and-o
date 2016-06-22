@@ -80,6 +80,10 @@ showTerm(record(_,Defs,Others,Types),O,E) :-
   showDefs(Defs,O2,O3),
   showOthers(Others,O3,O4),
   appStr(" }",O4,E).
+showTerm(tuple(_,Els),O,Ox) :-
+  appStr("(",O,O1),
+  showTerms(Els,O1,O2),
+  appStr(")",O2,Ox).
 showTerm(true(_),O,E) :-
   appStr("true",O,E).
 showTerm(false(_),O,E) :-

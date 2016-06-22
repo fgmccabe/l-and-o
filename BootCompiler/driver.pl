@@ -44,7 +44,7 @@ stringify([Name|More],[Fn|Files]) :-
 main(Args) :- 
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,Files),
-  openRepo(Opts,Repo),
+  openRepo(Opts,Repo),!,
   processFiles(Files,CWD,Repo,Opts).
 
 openRepo(Opts,Repo) :-
@@ -55,8 +55,10 @@ openRepo(_,Repo) :-
 
 processFiles([],_,_,_).
 processFiles([Fn|More],CWD,Repo,Opts) :-
-  processFile(Fn,CWD,Repo,Rx,Opts),
+  processFile(Fn,CWD,Repo,Rx,Opts),!,
   processFiles(More,CWD,Rx,Opts).
+processFiles([_|More],CWD,Repo,Opts) :-
+  processFiles(More,CWD,Repo,Opts).
 
 processFile(Fl,CWD,Repo,Rx,Opts) :-
   startCount,
@@ -71,8 +73,8 @@ processFile(Fl,CWD,Repo,Rx,Opts) :-
   displayCanon(Prog),
   transformProg(Prog,Opts,Rules),!,
   noErrors,
-  displayPlRules(Rules),!,
-  genRules(Rules,Text),!,
+  displayPlRules(Rules),
+  genRules(Rules,Text),
   packageName(Prog,Pkg),
   packageVersion(Opts,Vers),
   addPackage(Repo,Pkg,Vers,Text,Rx).

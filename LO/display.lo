@@ -5,12 +5,31 @@ lo.display{
 
   all t ~~ display[t] <~ {
     display:(t) => ss.
-  }
+  }.
 
-  ss ::= ssSp | ssNl | ssStr(string) | ssSeq(list[ss]) | ssIndent(ss).
+  -- Structured string - ss - allows post formatting.
+  ss ::= ssSp | ssNl | ss(string) | ssSeq(list[ss]) | ssIndent(ss).
+
+  -- To avoid circular dependency, we must implement display for what we import
 
   thingDisp : display[thing].
   thingDisp .. {
     display(_) => ss("thing").
-  }
+  }.
+
+  stringDisp : display[string].
+  stringDisp .. {
+    display(S) => ssSeq([ss("\""),ss(S),ss("\"")]).
+  }.
+
+  listDisp : all t ~~ (display[t]) <=> display[list[t]].
+  listDisp(ED) .. {
+    display([]) => ss("[]").
+    display([E,..Y]) => ssSeq([ss("["),ED.display(E),displayMore(Y)]).
+
+    displayMore : (list[t]) => ss.
+    displayMore([]) => ss("]").
+    displayMore([E,..M]) => ssSeq([ss(","),ssSp,ED.display(E),displayMore(M)]).
+  }.
+
 }

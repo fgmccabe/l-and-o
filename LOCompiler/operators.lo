@@ -1,8 +1,7 @@
 /* Automatically generated, do not edit */
 
-comp.operators{
-  import lo.string.
-  import lo.arith.
+lo.comp.operators{
+  import lo.
 
   infixOp:(string,integer,integer,integer){}.
   prefixOp:(string,integer,integer){}.

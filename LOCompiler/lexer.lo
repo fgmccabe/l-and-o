@@ -1,0 +1,28 @@
+lo.comp.lexer{
+  import lo.
+  import lo.comp.location.
+  import lo.comp.token.
+  import lo.comp.operators.
+
+  -- Define the lexer for the L&O syntax
+
+  tokenState <~ stream[integer].
+  tokenState <~ { currLine:integer. currOff:integer. currCol:integer}.
+
+  tkState:(list[integer],integer,integer,integer) <=> tokenState.
+  tkState(Chars,Line,Off,Col) .. {
+    eof() :- Chars = [].
+
+    nextState:() => (integer,tokenState).
+    nextState() :: Chars =. [0c\n,..Rest] => (0c\n,tkState(Rest,Line+1,Off+1,0)).
+    nextState() :: Chars =. [Ch,..Rest] => (Ch,tkState(Rest,Line,Off+1,Col+1)).
+
+    hdtl(Ch,Nxt) :- nextState() = (Ch,Nxt).
+
+    cons(Ch) => tkState([Ch,..Chars],Line,Off,Col).
+
+    currLine = Line.
+    currOff = Off.
+    currCol = Col.
+  }.
+}
