@@ -163,12 +163,14 @@ dcgBody(stringLit(Lc,Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
 dcgBody(terminals(_,Terms),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   trCons("hdtl",2,Verb),
   pushTerminals(Terms,Verb,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
-dcgBody(eof(_),[ocall(Verb,[Strm])|G],Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
-  trCons("eof",1,Verb),
+dcgBody(eof(_),[ocall(cons(Verb,[]),Strm,Strm)|G],Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
+  trCons("eof",0,Verb),
   joinStream(Strm,Strmx,G,Gx).
 dcgBody(conj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgBody(Lhs,G,G0,Strm,Strm0,Q,Q0,Map,Opts,Ex,Ex0),
   dcgBody(Rhs,G0,Gx,Strm0,Strmx,Q0,Qx,Map,Opts,Ex0,Exx).
+dcgBody(disj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  dcgDisj(Lhs,Rhs,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
 dcgBody(guard(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgBody(Lhs,G,G0,Strm,Strmx,Q,Q0,Map,Opts,Ex,Ex0),
   trGoal(Rhs,G0,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
@@ -179,6 +181,20 @@ dcgBody(call(Lc,NT,Args),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExps(Args,AG,Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
   (var(Strmx) -> genVar("Stx",Strmx) ; true),
   trGoalCall(NT,[Strm,Strmx|AG],G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+
+dcgDisj(Lhs,Rhs,[call(DisProg,[Strm,Strmx|DQ])|G],G,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  genVar("DjStrm",DjStrm),
+  (var(Strmx) -> genVar("DjOut",Strmx) ; true),
+  dcgBody(Lhs,LG,[],DjStrm,DjStrmx,[],LQ,Map,Opts,Ex,Ex0),
+  dcgBody(Rhs,RG,[],DjStrm,DjStrmy,LQ,DQ,Map,Opts,Ex0,Ex1),
+  genstr("Disj",DisPr),
+  length(DQ,Ar),
+  Arity is Ar+2,
+  trPrg(DisPr,Arity,DisProg),
+  C1 = clse([DjStrm|DQ],DisProg,[DjStrm,DjStrmx|DQ],LG),
+  C2 = clse([DjStrm|DQ],DisProg,[DjStrm,DjStrmy|DQ],RG),
+  Ex1 = [C1,C2|Exx],
+  merge(DQ,Q,Qx).
 
 pushString(Lc,Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
   string_codes(Str,Chrs),

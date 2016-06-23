@@ -1,4 +1,4 @@
-:- module(lo,[main/1]).
+% :- module(lo,[main/1]).
 
 :- use_module(ocall).
 :- use_module(polyfill).

@@ -13,11 +13,8 @@ lo.comp.lexer{
   tkState(Chars,Line,Off,Col) .. {
     eof() :- Chars = [].
 
-    nextState:() => (integer,tokenState).
-    nextState() :: Chars =. [0c\n,..Rest] => (0c\n,tkState(Rest,Line+1,Off+1,0)).
-    nextState() :: Chars =. [Ch,..Rest] => (Ch,tkState(Rest,Line,Off+1,Col+1)).
-
-    hdtl(Ch,Nxt) :- nextState() = (Ch,Nxt).
+    hdtl(0c\n,Next) :: Chars =. [0c\n,..Rest] :-- Next = tkState(Rest,Line+1,Off+1,0).
+    hdtl(Ch,Next) :: Chars =. [Ch,..Rest] :-- Next = tkState(Rest,Line,Off+1,Col+1).
 
     cons(Ch) => tkState([Ch,..Chars],Line,Off,Col).
 
@@ -25,4 +22,21 @@ lo.comp.lexer{
     currOff = Off.
     currCol = Col.
   }.
+
+  skipSpaces: () --> tokenState.
+  skipSpaces() --> [0c ], skipSpaces().
+  skipSpaces() --> [0c\t], skipSpaces().
+  skipSpaces() --> [0c\n], skipSpaces().
+  skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(), skipSpaces().
+  skipSpaces() --> [0c/, 0c*], blockComment(), skipSpaces().
+  skipSpaces() --> [].
+
+  lineComment:() --> tokenState.
+  lineComment() --> [0c\n].
+  lineComment() --> [_], lineComment().
+
+  blockComment:() --> tokenState.
+  blockComment() --> eof.
+  blockComment() --> [0c*, 0c/].
+  blockComment() --> [_], blockComment().
 }

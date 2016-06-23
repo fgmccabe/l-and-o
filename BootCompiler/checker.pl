@@ -835,6 +835,8 @@ processGrammarRule(St,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|Defs],
 
 checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
   checkTerminals(Els,Terms,ElTp,E,Env).
+checkNonTerminals(tuple(_,"()",[NT]),Tp,ElTp,Env,Ex,GrNT) :-
+  checkNonTerminals(NT,Tp,ElTp,Env,Ex,GrNT).
 checkNonTerminals(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-
   isBinary(Term,Lc,",",L,R), !,
   checkNonTerminals(L,Tp,ElTp,Env,E1,Lhs),

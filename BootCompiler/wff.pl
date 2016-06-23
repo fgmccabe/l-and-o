@@ -319,6 +319,9 @@ wffTerminal(tuple(_,"[]",Els)) :-
   wffExps(Els).
 
 wffGrammarNonTermimal(T) :-
+  isTuple(T,[NT]),!,
+  wffGrammarNonTermimal(NT).
+wffGrammarNonTermimal(T) :-
   wffTerminal(T).
 wffGrammarNonTermimal(T) :-
   isBinary(T,",",L,R),
@@ -372,4 +375,4 @@ wffGrammarNonTermimal(T) :-
   wffExp(F),
   wffPtns(A).
 wffGrammarNonTermimal(T) :-
-  isIdent(T,"eof").
+  isIden(T,"eof").
