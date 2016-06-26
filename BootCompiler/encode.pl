@@ -57,7 +57,7 @@ encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeTpName(Nm,O,O1), encodeTypes(Ar
 encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(predType(Args),['P'|O],Ox) :- encodeArgTypes(Args,O,Ox).
-encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(tupleType(Args),['T'|O],Ox) :- encodeTypes(Args,O,Ox).
 encodeType(faceType(Fields),['I'|O],Ox) :- encodeFieldTypes(Fields,O,Ox).
 encodeType(univType(B,Tp),[':'|O],Ox) :- encodeType(B,O,O1),encodeType(Tp,O1,Ox).
@@ -98,8 +98,7 @@ encodeArgTps([Tp|More],O,Ox) :- encodeArgType(Tp,O,O1), encodeArgTps(More,O1,Ox)
 
 encodeArgType(in(Tp),['+'|O],Ox) :- encodeType(Tp,O,Ox).
 encodeArgType(out(Tp),['-'|O],Ox) :- encodeType(Tp,O,Ox).
-encodeArgType(inout(Tp),O,Ox) :- encodeType(Tp,O,Ox).
-encodeArgType(Tp,O,Ox) :- encodeType(Tp,O,Ox).
+encodeArgType(inout(Tp),['?'|O],Ox) :- encodeType(Tp,O,Ox).
 
 encodeFieldTypes(Fields,O,Ox) :- length(Fields,L), encodeInt(L,O,O1),encodeFieldTps(Fields,O1,Ox).
 

@@ -138,13 +138,13 @@ decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
 decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
 decodeType(grammarType(A,T)) --> ['G'], decodeArgTypes(A), decodeType(T).
 decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
-decodeType(classType(A,T)) --> ['C'], decodeArgTypes(A), decodeType(T).
+decodeType(classType(A,T)) --> ['C'], decodeTypes(A), decodeType(T).
 decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).
 decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 
 decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).
 decodeArgType(out(Tp)) --> ['-'], decodeType(Tp).
-decodeArgType(Tp) --> decodeType(Tp).
+decodeArgType(inout(Tp)) --> decodeType(Tp).
 
 decodeArgTypes(0,[]) --> [].
 decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeArgType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).

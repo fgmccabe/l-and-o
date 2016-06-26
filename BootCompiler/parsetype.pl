@@ -25,12 +25,12 @@ parseType(Sq,Env,B,Bound,typeExp(Op,ArgTps)) :-
 parseType(F,Env,B,Bound,funType(AT,RT)) :-
   isBinary(F,"=>",L,R),
   isTuple(L,LA),
-  parseTypes(LA,Env,B,B0,AT),
+  parseArgTypes(LA,Env,B,B0,AT),
   parseType(R,Env,B0,Bound,RT).
 parseType(F,Env,B,Bound,grammarType(AT,RT)) :-
   isBinary(F,"-->",L,R),
   isTuple(L,LA),
-  parseTypes(LA,Env,B,B0,AT),
+  parseArgTypes(LA,Env,B,B0,AT),
   parseType(R,Env,B0,Bound,RT).
 parseType(F,Env,B,Bound,classType(AT,RT)) :-
   isBinary(F,"<=>",L,R),
@@ -40,7 +40,7 @@ parseType(F,Env,B,Bound,classType(AT,RT)) :-
 parseType(C,Env,B,Bound,predType(AT)) :-
   isBraceTerm(C,L,[]),
   isTuple(L,A),
-  parseTypes(A,Env,B,Bound,AT).
+  parseArgTypes(A,Env,B,Bound,AT).
 parseType(T,Env,B,Bound,tupleType(AT)) :-
   isTuple(T,A),
   parseTypes(A,Env,B,Bound,AT).
@@ -79,22 +79,21 @@ parseBound(V,B,[(N,kVar(N))|B],_,univType(kVar(N),Inner),Inner) :-
 
 parseTypes([],_,B,B,[]).
 parseTypes([A|AT],Env,B,Bound,[Atype|ArgTypes]) :-
-  parseArgType(A,Env,B,B0,Atype),
+  parseType(A,Env,B,B0,Atype),
   parseTypes(AT,Env,B0,Bound,ArgTypes).
 
-parseArgType(A,Env,B,Bound,AType) :-
+parseArgTypes([],_,B,B,[]).
+parseArgTypes([A|AT],Env,B,Bound,[Atype|ArgTypes]) :-
+  parseArgType(A,Env,B,B0,Atype),
+  parseArgTypes(AT,Env,B0,Bound,ArgTypes).
+
+parseArgType(A,Env,B,Bound,in(AType)) :-
   isUnary(A,"+",AA),
   parseType(AA,Env,B,Bound,AType).
-parseArgType(A,Env,B,Bound,AType) :-
+parseArgType(A,Env,B,Bound,out(AType)) :-
   isUnary(A,"-",AA),
   parseType(AA,Env,B,Bound,AType).
-parseArgType(A,Env,B,Bound,AType) :-
-  isUnary(A,"+-",AA),
-  parseType(AA,Env,B,Bound,AType).
-parseArgType(A,Env,B,Bound,AType) :-
-  isUnary(A,"-+",AA),
-  parseType(AA,Env,B,Bound,AType).
-parseArgType(A,Env,B,Bound,AType) :-
+parseArgType(A,Env,B,Bound,inout(AType)) :-
   parseType(A,Env,B,Bound,AType).
 
 parseTypeFields([],_,_,[]).

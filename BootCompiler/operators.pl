@@ -1,6 +1,11 @@
 /* Automatically generated, do not edit */
 
-:-module(operators,[infixOp/4,prefixOp/3,postfixOp/3,isOperator/2,follows/3,final/2]).
+lo.comp.operators{
+  import lo.
+
+  infixOp:(string,integer,integer,integer){}.
+  prefixOp:(string,integer,integer){}.
+  postfixOp:(string,integer,integer){}.
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp("::=",1459,1460,1459).	 /* user type definition */
@@ -20,9 +25,10 @@
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=",949,950,949).	 /* class rule arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
-  infixOp("=",899,900,899).	 /* variable declaration */
+  infixOp("=",899,900,899).	 /* unifies predicate */
   infixOp("==",899,900,899).	 /* equality predicate */
   infixOp("\\=",899,900,899).	 /* not unifyable */
+  infixOp("\\==",899,900,899).	 /* not equals */
   infixOp("!=",899,900,899).	 /* not equal */
   infixOp("<",899,900,899).	 /* less than */
   infixOp("=<",899,900,899).	 /* less than or equal */
@@ -48,116 +54,119 @@
   prefixOp("private",1700,1699).	 /* private program */
   prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
-  prefixOp("import",900,899).	 /* import module */
   prefixOp("all",1245,1244).	 /* universal quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
+  prefixOp("import",900,899).	 /* import module */
   prefixOp("-",300,299).	 /* arithmetic negation */
   postfixOp(". ",1899,1900).	 /* statement terminator */
   postfixOp(";",1149,1150).	 /* action terminator */
   postfixOp("+",759,760).	 /* input mode */
   postfixOp("-",759,760).	 /* output mode */
-  postfixOp("-+",759,760).	 /* bidirectional mode */
-  postfixOp("+-",759,760).	 /* bidirectional mode */
   postfixOp("!",904,905).	 /* one solution operator */
+
   /* Define isOperator */
+  isOperator:(string,integer){}.
   isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
   isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).
   isOperator(Op,Pr) :- postfixOp(Op,_,Pr).
-  follows('','%','%').
-  follows('%','%','%%').
-  follows('','*','*').
-  follows('*','*','**').
-  follows('*','>','*>').
-  follows('','+','+').
-  follows('+','-','+-').
-  follows('',',',',').
-  follows(',','.',',.').
-  follows(',.','.',',..').
-  follows('','-','-').
-  follows('-','+','-+').
-  follows('-','-','--').
-  follows('--','>','-->').
-  follows('','.','.').
-  follows('.','.','..').
-  follows('.',' ','. ').
-  follows('.','=','.=').
-  follows('','/','/').
-  follows('','|','|').
-  follows('|','|','||').
-  follows('','~','~').
-  follows('~','~','~~').
-  follows('','\\','\\').
-  follows('\\','+','\\+').
-  follows('\\','=','\\=').
-  follows('','^','^').
-  follows('',':',':').
-  follows(':',':','::').
-  follows('::','=','::=').
-  follows(':','-',':-').
-  follows(':-','-',':--').
-  follows('',';',';').
-  follows('','<','<').
-  follows('<','~','<~').
-  follows('<','=','<=').
-  follows('<=','>','<=>').
-  follows('<','>','<>').
-  follows('','=','=').
-  follows('=','.','=.').
-  follows('=','<','=<').
-  follows('=','=','==').
-  follows('=','>','=>').
-  follows('','>','>').
-  follows('>','=','>=').
-  follows('','?','?').
-  follows('','@','@').
-  follows('','!','!').
-  follows('!','=','!=').
-  follows('','#','#').
-  final('%',"%").	 /* quotient */
-  final('%%',"%%").	 /* grammar parse */
-  final('*',"*").	 /* multiplication */
-  final('**',"**").	 /* exponentiation */
-  final('*>',"*>").	 /* all solutions */
-  final('+',"+").	 /* input mode */
-  final('+-',"+-").	 /* bidirectional mode */
-  final(',',",").	 /* tupling, conjunction */
-  final(',..',",..").	 /* list cons */
-  final('-',"-").	 /* output mode */
-  final('-+',"-+").	 /* bidirectional mode */
-  final('-->',"-->").	 /* grammar rule */
-  final('.',".").	 /* object access */
-  final('..',"..").	 /* class body */
-  final('. ',". ").	 /* statement terminator */
-  final('.=',".=").	 /* match predicate */
-  final('/',"/").	 /* division */
-  final('|',"|").	 /* type union and disjunction */
-  final('||',"||").	 /* bag of constructor */
-  final('~',"~").	 /* grammar remainder */
-  final('~~',"~~").	 /* quantifier */
-  final('\\+',"\\+").	 /* logical negation */
-  final('\\=',"\\=").	 /* not unifyable */
-  final('^',"^").	 /* grammar iterator */
-  final(':',":").	 /* type annotation */
-  final('::',"::").	 /* guard marker */
-  final('::=',"::=").	 /* user type definition */
-  final(':-',":-").	 /* clause arrow */
-  final(':--',":--").	 /* strong clause */
-  final(';',";").	 /* action terminator */
-  final('<',"<").	 /* less than */
-  final('<~',"<~").	 /* type interface rule */
-  final('<=',"<=").	 /* class rule arrow */
-  final('<=>',"<=>").	 /* class constructor type */
-  final('<>',"<>").	 /* list append */
-  final('=',"=").	 /* variable declaration */
-  final('=.',"=.").	 /* match predicate */
-  final('=<',"=<").	 /* less than or equal */
-  final('==',"==").	 /* equality predicate */
-  final('=>',"=>").	 /* function arrow */
-  final('>',">").	 /* greater than */
-  final('>=',">=").	 /* greater than or equal */
-  final('?',"?").	 /* conditional operator */
-  final('@',"@").	 /* tau pattern */
-  final('!',"!").	 /* one solution operator */
-  final('!=',"!=").	 /* not equal */
-  final('#',"#").	 /* package separator */
+
+  follows:(string,integer,string){}.
+  follows("",0c%,"%").
+  follows("%",0c%,"%%").
+  follows("",0c*,"*").
+  follows("*",0c*,"**").
+  follows("*",0c>,"*>").
+  follows("",0c+,"+").
+  follows("",0c,,",").
+  follows(",",0c.,",.").
+  follows(",.",0c.,",..").
+  follows("",0c-,"-").
+  follows("-",0c-,"--").
+  follows("--",0c>,"-->").
+  follows("",0c.,".").
+  follows(".",0c.,"..").
+  follows(".",0c ,". ").
+  follows(".",0c=,".=").
+  follows("",0c/,"/").
+  follows("",0c|,"|").
+  follows("|",0c|,"||").
+  follows("",0c~,"~").
+  follows("~",0c~,"~~").
+  follows("",0c\\,"\\").
+  follows("\\",0c+,"\\+").
+  follows("\\",0c=,"\\=").
+  follows("\\=",0c=,"\\==").
+  follows("",0c^,"^").
+  follows("",0c:,":").
+  follows(":",0c:,"::").
+  follows("::",0c=,"::=").
+  follows(":",0c-,":-").
+  follows(":-",0c-,":--").
+  follows("",0c;,";").
+  follows("",0c<,"<").
+  follows("<",0c~,"<~").
+  follows("<",0c=,"<=").
+  follows("<=",0c>,"<=>").
+  follows("<",0c>,"<>").
+  follows("",0c=,"=").
+  follows("=",0c.,"=.").
+  follows("=",0c<,"=<").
+  follows("=",0c=,"==").
+  follows("=",0c>,"=>").
+  follows("",0c>,">").
+  follows(">",0c=,">=").
+  follows("",0c?,"?").
+  follows("",0c@,"@").
+  follows("",0c!,"!").
+  follows("!",0c=,"!=").
+  follows("",0c#,"#").
+
+  final:(string){}.
+  final("%").	 /* quotient */
+  final("%%").	 /* grammar parse */
+  final("*").	 /* multiplication */
+  final("**").	 /* exponentiation */
+  final("*>").	 /* all solutions */
+  final("+").	 /* input mode */
+  final(",").	 /* tupling, conjunction */
+  final(",..").	 /* list cons */
+  final("-").	 /* output mode */
+  final("-->").	 /* grammar rule */
+  final(".").	 /* object access */
+  final("..").	 /* class body */
+  final(". ").	 /* statement terminator */
+  final(".=").	 /* match predicate */
+  final("/").	 /* division */
+  final("|").	 /* type union and disjunction */
+  final("||").	 /* bag of constructor */
+  final("~").	 /* grammar remainder */
+  final("~~").	 /* quantifier */
+  final("\\+").	 /* logical negation */
+  final("\\=").	 /* not unifyable */
+  final("\\==").	 /* not equals */
+  final("^").	 /* grammar iterator */
+  final(":").	 /* type annotation */
+  final("::").	 /* guard marker */
+  final("::=").	 /* user type definition */
+  final(":-").	 /* clause arrow */
+  final(":--").	 /* strong clause */
+  final(";").	 /* action terminator */
+  final("<").	 /* less than */
+  final("<~").	 /* type interface rule */
+  final("<=").	 /* class rule arrow */
+  final("<=>").	 /* class constructor type */
+  final("<>").	 /* list append */
+  final("=").	 /* unifies predicate */
+  final("=.").	 /* match predicate */
+  final("=<").	 /* less than or equal */
+  final("==").	 /* equality predicate */
+  final("=>").	 /* function arrow */
+  final(">").	 /* greater than */
+  final(">=").	 /* greater than or equal */
+  final("?").	 /* conditional operator */
+  final("@").	 /* tau pattern */
+  final("!").	 /* one solution operator */
+  final("!=").	 /* not equal */
+  final("#").	 /* package separator */
+}.

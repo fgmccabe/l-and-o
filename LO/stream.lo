@@ -2,6 +2,6 @@ lo.stream{
   all E ~~ stream[E] <~ {
     eof:(){}.
     hdtl:(E,this){}.
-    cons:(E)=>this.
+    cons:(E+)=>this.
   }.
 }

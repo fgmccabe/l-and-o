@@ -7,22 +7,22 @@ lo.arith{
   float <~ arith.
 
   arith <~ {
-    pl:  (this)=>this.
-    tms: (this)=>this.
-    mns: (this)=>this.
-    dv:  (this)=>this.
+    pl:  (this+)=>this.
+    tms: (this+)=>this.
+    mns: (this+)=>this.
+    dv:  (this+)=>this.
   }.
 
-  (+):all t<~arith ~~ (t,t)=>t.
+  (+):all t<~arith ~~ (t+,t+)=>t.
   x+y => x.pl(y).
 
-  (*):all t<~arith ~~ (t,t)=>t.
+  (*):all t<~arith ~~ (t+,t+)=>t.
   x*y => x.tms(y).
 
-  (-):all t<~arith ~~ (t,t)=>t.
+  (-):all t<~arith ~~ (t+,t+)=>t.
   x-y => x.mns(y).
 
-  (/):all t<~arith ~~ (t,t)=>t.
+  (/):all t<~arith ~~ (t+,t+)=>t.
   x/y => x.dv(y).
 
   -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.

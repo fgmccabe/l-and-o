@@ -140,10 +140,6 @@ collRefs(St,All,SoFar,Refs) :-
   isBinary(St,":--",H,Exp),
   collectHeadRefs(H,All,SoFar,R0),
   collectCondRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
-  isBinary(St,"-->",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectCondRefs(Exp,All,R0,Refs).
 collRefs(St,All,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
@@ -283,6 +279,12 @@ collectTypeRefs(T,All,SoFar,Refs) :-
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTuple(T,_,A), 
   collectFaceTypes(A,All,SoFar,Refs).
+collectTypeRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"+",L),
+  collectTypeRefs(L,All,SoFar,Refs).
+collectTypeRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"-",L),
+  collectTypeRefs(L,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isQuantified(T,V,A),
   collectQuants(V,All,SoFar,R0),

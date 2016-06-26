@@ -4,11 +4,11 @@ lo.display{
   import lo.list.
 
   all t ~~ display[t] <~ {
-    display:(t) => ss.
+    display:(t+) => ss.
   }.
 
   -- Structured string - ss - allows post formatting.
-  ss ::= ssSp | ssNl | ss(string) | ssSeq(list[ss]) | ssIndent(ss).
+  ss ::= ss(string) | ssSeq(list[ss]) | ssFormat(string,ss).
 
   -- To avoid circular dependency, we must implement display for what we import
 

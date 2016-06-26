@@ -34,6 +34,13 @@ sb(classType(A1,R1),classType(A2,R2),Env) :- subType(R1,R2,Env), sbList(A2,A1,En
 sb(predType(A1),predType(A2),Env) :- sbList(A2,A1,Env).
 sb(faceType(E1),faceType(E2),Env) :- sbFields(E1,E2,Env).
 
+sbArgs([],[],_).
+sbArgs([A1|L1],[A2|L2],Env) :- sbArg(A1,A2,Env), sbArgs(L1,L2,Env).
+
+sbArg(in(T1),T2,Env) :- subType(T1,T2,Env).
+sbArg(out(T1),T2,Env) :- subType(T2,T1,Env).
+sbArg(inout(T1),T2,Env) :- sameType(T1,T2,Env).
+
 sbList([],[],_).
 sbList([E1|L1],[E2|L2],Env) :- subType(E1,E2,Env), sbList(L1,L2,Env).
 
@@ -56,6 +63,9 @@ rewriteType(Nm,T,Tp,Env) :-
   freshen(Rl,T,_,typeRule(Arg,Tp)),
   sameType(T,Arg,Env).
 
+sameType(in(T1),T2,Env) :- subType(T1,T2,Env).
+sameType(out(T1),T2,Env) :- subType(T2,T1,Env).
+sameType(inout(T1),T2,Env) :- sameType(T1,T2,Env).
 sameType(T1,T2,Env) :- deRef(T1,Tp1), deRef(T2,Tp2), sm(Tp1,Tp2,Env), !.
 
 sm(_,anonType,_).
@@ -73,10 +83,10 @@ sm(T1,tVar(V2),Env) :- checkBinding(V2,T1,Env).
 sm(type(Nm),type(Nm),_).
 sm(typeExp(Nm,A1),typeExp(Nm,A2),Env) :- smList(A1,A2,Env).
 sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
-sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
-sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
+sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smArgs(A2,A1,Env).
+sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smArgs(A2,A1,Env).
 sm(classType(A1,R1),classType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
-sm(predType(A1),predType(A2),Env) :- smList(A2,A1,Env).
+sm(predType(A1),predType(A2),Env) :- smArgs(A2,A1,Env).
 sm(faceType(E1),faceType(E2),Env) :- length(E1,L), length(E2,L), smFields(E1,E2,Env).
 
 varBinding(T1,T2,_) :- isIdentical(T1,T2),!.
@@ -91,6 +101,13 @@ varBinding(T1,T2,Env) :-
 checkBinding(V,tVar(TV),Env) :- !, varBinding(tVar(V),tVar(TV),Env).
 checkBinding(V,Tp,Env) :- subType(Tp,V.upper,Env), subType(V.lower,Tp,Env),
   bind(tVar(V),Tp).
+
+smArgs([],[],_).
+smArgs([E1|L1],[E2|L2],Env) :- sameArgType(E1,E2,Env), smArgs(L1,L2,Env).
+
+sameArgType(in(T1),T2,Env) :- subType(T1,T2,Env).
+sameArgType(out(T1),T2,Env) :- subType(T2,T1,Env).
+sameArgType(inout(T1),T2,Env) := sameType(T1,T2,Env).
 
 smList([],[],_).
 smList([E1|L1],[E2|L2],Env) :- sameType(E1,E2,Env), smList(L1,L2,Env).

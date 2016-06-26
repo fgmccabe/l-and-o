@@ -1,4 +1,4 @@
-:- module(freshen,[freshn/3,freshen/4,evidence/2,freeze/3,freezeType/3]).
+:- module(freshen,[freshn/3,freshen/4,evidence/2,freeze/3,freezeType/3,copyFlowMode/3]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -31,15 +31,15 @@ frshn(kVar(TV),B,Tp) :- is_member((TV,Tp),B),!.
 frshn(tVar(V),_,tVar(V)).
 frshn(type(Nm),_,type(Nm)).
 frshn(funType(A,R),B,funType(FA,FR)) :-
-  frshnTypes(A,B,FA),
+  frshnArgTypes(A,B,FA),
   frshn(R,B,FR).
 frshn(grammarType(A,R),B,grammarType(FA,FR)) :-
-  frshnTypes(A,B,FA),
+  frshnArgTypes(A,B,FA),
   frshn(R,B,FR).
 frshn(classType(A,R),B,classType(FA,FR)) :-
   frshnTypes(A,B,FA),
   frshn(R,B,FR).
-frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
+frshn(predType(A),B,predType(FA)) :- frshnArgTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
 frshn(typeExp(O,A),B,typeExp(O,FA)) :- frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
@@ -63,6 +63,14 @@ frshnFields([A|L],B,[FA|FL]) :- frshn(A,B,FA), frshnFields(L,B,FL).
 frshnTypes([],_,[]).
 frshnTypes([A|L],B,[FA|FL]) :- frshn(A,B,FA), frshnTypes(L,B,FL).
 
+frshnArgTypes([],_,[]).
+frshnArgTypes([A|L],B,[FA|FL]) :- frshnArg(A,B,FA), frshnArgTypes(L,B,FL).
+
+frshnArg(in(T),B,in(FT)) :- frshn(T,B,FT).
+frshnArg(out(T),B,out(FT)) :- frshn(T,B,FT).
+frshnArg(inout(T),B,inout(FT)) :- frshn(T,B,FT).
+
+
 freezeType(Tp,B,FrZ) :-
   freeze(Tp,B,FT),
   reQuant(B,B,FT,FrZ).
@@ -77,15 +85,15 @@ freeze(tVar(V),B,kVar(TV)) :- is_member((TV,VV),B), deRef(VV,VVV), identicalVar(
 freeze(tVar(V),_,tVar(V)) :- !.
 freeze(type(Nm),_,type(Nm)).
 freeze(funType(A,R),B,funType(FA,FR)) :-
-  freezeTypes(A,B,FA),
+  freezeArgTypes(A,B,FA),
   freeze(R,B,FR).
 freeze(grammarType(A,R),B,grammarType(FA,FR)) :-
-  freezeTypes(A,B,FA),
+  freezeArgTypes(A,B,FA),
   freeze(R,B,FR).
 freeze(classType(A,R),B,classType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
-freeze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
+freeze(predType(A),B,predType(FA)) :- freezeArgTypes(A,B,FA).
 freeze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
 freeze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
 freeze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
@@ -98,11 +106,18 @@ freeze(typeRule(A,R),B,typeRule(FA,FR)) :-
   freeze(R,B,FR).
 
 freezeFields([],_,[]).
-freezeFields([(Mode,A)|L],B,[(Mode,FA)|FL]) :- !, freeze(A,B,FA), freezeFields(L,B,FL).
+freezeFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, freeze(A,B,FA), freezeFields(L,B,FL).
 freezeFields([A|L],B,[FA|FL]) :- freeze(A,B,FA), freezeFields(L,B,FL).
 
 freezeTypes([],_,[]).
 freezeTypes([A|L],B,[FA|FL]) :- freeze(A,B,FA), freezeTypes(L,B,FL).
+
+freezeArgTypes([],_,[]).
+freezeArgTypes([Tp|L],B,[FTp|FL]) :-
+  copyFlowMode(Fl,InTp,Tp),
+  freeze(InTp,B,FT),
+  copyFlowMode(Fl,FT,FTp),
+  freezeArgTypes(L,B,FL).
 
 reQuant([],_,T,T).
 reQuant([(Nm,Tp)|B],BB,T,FT) :- isUnbound(Tp),!, 
@@ -114,5 +129,7 @@ reQuant([(Nm,Tp)|B],BB,T,FT) :- isUnbound(Tp),!,
     reQuant(B,BB,univType(kVar(Nm),T),FT)).
 reQuant([_|B],BB,T,FT) :- reQuant(B,BB,T,FT).
 
-
+copyFlowMode(in(_),Tp,in(Tp)).
+copyFlowMode(out(_),Tp,out(Tp)).
+copyFlowMode(inout(_),Tp,inout(Tp)).
 
