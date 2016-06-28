@@ -7,6 +7,7 @@
       isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
       isQuantified/3]).
 :- use_module(operators).
+:- use_module(keywords).
 
 apply(Lc,Op,Args,app(Lc,Op,Args)).
 
@@ -20,9 +21,11 @@ roundTerm(Lc,Op,Args,app(Lc,name(Lc,Op),tuple(Lc,"()",Args))).
 
 isRound(app(_,name(_,Op),tuple(_,"()",Args)),Op,Args).
 
-isRoundTerm(app(_,Op,tuple(_,"()",Args)),Op,Args).
+isKeyOp(name(_,Op)) :- isKeyword(Op).
 
-isRoundTerm(app(Lc,Op,tuple(_,"()",Args)),Lc,Op,Args).
+isRoundTerm(app(_,Op,tuple(_,"()",Args)),Op,Args) :- \+isKeyOp(Op).
+
+isRoundTerm(app(Lc,Op,tuple(_,"()",Args)),Lc,Op,Args) :- \+isKeyOp(Op).
 
 binary(Lc,Op,L,R,app(Lc,name(Lc,Op),tuple(Lc,"()",[L,R]))).
 

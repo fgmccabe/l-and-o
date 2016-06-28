@@ -9,7 +9,7 @@
 dependencies(Els,Groups,Private,Annots,Imports,Other) :-
   collectDefinitions(Els,Dfs,Private,Annots,Imports,Other),
   allRefs(Dfs,[],AllRefs),
-  collectThetaRefs(Dfs,AllRefs,Defs),
+  collectThetaRefs(Dfs,AllRefs,Annots,Defs),
   topsort(Defs,Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,[St|I],Other) :-
@@ -26,6 +26,11 @@ collectDefinitions([St|Stmts],Defs,[(Prvte,Kind)|P],A,I,O) :-
   isUnary(St,"private",Inner),
   ruleName(Inner,Prvte,Kind),
   collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
+collectDefinitions([St|Stmts],Defs,[(V,value)|P],[(V,Inner)|A],I,O) :-
+  isUnary(St,"private",Inner),
+  isBinary(Inner,":",L,_),
+  isIden(L,V),
+  collectDefinitions(Stmts,Defs,P,A,I,O).
 collectDefinitions([St|Stmts],[(Nm,Lc,[St|Defn])|Defs],P,A,I,O) :-
   ruleName(St,Nm,Kind),
   locOfAst(St,Lc),
@@ -98,53 +103,61 @@ allRefs([(N,_,_)|Defs],SoFar,AllRefs) :-
   allRefs(Defs,[N|SoFar],AllRefs).
 allRefs([],SoFar,SoFar).
 
-collectThetaRefs([],_,[]).
-collectThetaRefs([(Defines,Lc,Def)|Defs],AllRefs,[(Defines,Refs,Lc,Def)|Dfns]) :-
-  collectStmtRefs(Def,AllRefs,Refs,[]),
-  collectThetaRefs(Defs,AllRefs,Dfns).
+collectThetaRefs([],_,_,[]).
+collectThetaRefs([(Defines,Lc,Def)|Defs],AllRefs,Annots,[(Defines,Refs,Lc,Def)|Dfns]) :-
+  collectStmtRefs(Def,AllRefs,Annots,Refs,[]),
+  collectThetaRefs(Defs,AllRefs,Annots,Dfns).
 
-collectStmtRefs([],_,Refs,Refs).
-collectStmtRefs([St|Stmts],All,SoFar,Refs) :-
-  collRefs(St,All,SoFar,S0),
-  collectStmtRefs(Stmts,All,S0,Refs).
+collectStmtRefs([],_,_,Refs,Refs).
+collectStmtRefs([St|Stmts],All,Annots,SoFar,Refs) :-
+  collRefs(St,All,Annots,SoFar,S0),
+  collectStmtRefs(Stmts,All,Annots,S0,Refs).
 
-collRefs(St,All,SoFar,Refs) :-
+collRefs(St,All,Annots,SoFar,Refs) :-
   isQuantified(St,V,B),
   collectQuants(V,All,SoFar,R0),
-  collRefs(B,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collRefs(B,All,Annots,R0,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"=",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectExpRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectExpRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"=>",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectExpRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectExpRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"-->",H,Exp),
-  collectGrHeadRefs(H,All,SoFar,R0),
-  collectExpRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectGrHeadRefs(H,All,R0,R1),
+  collectExpRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"<=",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectLabelRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(St,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectLabelRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"..",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectClassRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectClassRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,":-",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectCondRefs(Exp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectCondRefs(Exp,All,R1,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,":--",H,Exp),
-  collectHeadRefs(H,All,SoFar,R0),
-  collectCondRefs(Exp,All,R0,Refs).
-collRefs(St,All,R0,Refs) :-
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectCondRefs(Exp,All,R1,Refs).
+collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
-collRefs(St,All,SoFar,Refs) :-
-  collectHeadRefs(St,All,SoFar,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
+  collectAnnotRefs(St,All,Annots,SoFar,R0),
+  collectHeadRefs(St,All,R0,Refs).
 
 collectHeadRefs(Hd,All,R0,Refs) :-
   isBinary(Hd,"::",L,R),
@@ -165,7 +178,14 @@ collectGrHeadRefs(Hd,All,R0,Refs) :-
 collectClassRefs(Term,All,SoFar,Refs) :-
   isBraceTuple(Term,_,Defs),
   locallyDefined(Defs,All,Rest),
-  collectStmtRefs(Defs,Rest,SoFar,Refs).
+  collectStmtRefs(Defs,Rest,[],SoFar,Refs).
+
+collectAnnotRefs(H,All,Annots,SoFar,Refs) :-
+  headName(H,Nm),
+  is_member((Nm,Annot),Annots),!,
+  isBinary(Annot,":",_,Tp),
+  collectTypeRefs(Tp,All,SoFar,Refs).
+collectAnnotRefs(_,_,_,Refs,Refs).
 
 locallyDefined([],All,All).
 locallyDefined([St|Stmts],All,Rest) :-
@@ -226,6 +246,12 @@ collectExpRefs(T,A,R0,Refs) :-
   collectExpRefs(name(Lc,"[]"),A,R0,R1),
   collectExpRefs(name(Lc,",.."),A,R1,R2), % special handling for list notation
   collectExpListRefs(Els,A,R2,Refs).
+collectExpRefs(app(_,Op,Args),All,R,Refs) :-
+  collectExpRefs(Op,All,R,R0),
+  collectExpRefs(Args,All,R0,Refs).
+collectExpRefs(T,All,R,Refs) :-
+  isBraceTuple(T,_,Els),
+  collectExpListRefs(Els,All,R,Refs).
 collectExpRefs(_,_,Refs,Refs).
 
 collectExpListRefs([],_,Refs,Refs).
@@ -274,6 +300,11 @@ collectTypeRefs(T,All,SoFar,Refs) :-
   collectTypeList(A,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
+  isBinary(T,"-->",L,R),
+  isTuple(L,A),
+  collectTypeList(A,All,SoFar,R0),
+  collectTypeRefs(R,All,R0,Refs).
+collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTerm(T,L,[]), isTuple(L,A),
   collectTypeList(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
@@ -289,6 +320,9 @@ collectTypeRefs(T,All,SoFar,Refs) :-
   isQuantified(T,V,A),
   collectQuants(V,All,SoFar,R0),
   collectTypeRefs(A,All,R0,Refs).
+collectTypeRefs(T,All,SoFar,Refs) :-
+  isTuple(T,Args),
+  collectTypeList(Args,All,SoFar,Refs).
 
 collectQuants(T,All,SoFar,Refs) :-
   isIden(T,Nm),

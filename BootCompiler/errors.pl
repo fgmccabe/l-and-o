@@ -61,6 +61,9 @@ showTerm(T,O) :-
   isType(T),!,
   showType(T,O,[]).
 showTerm(T,O) :-
+  isTypeFlow(T),!,
+  showTypeFlow(T,O,[]).
+showTerm(T,O) :-
   isCanon(T),!,
-  showCanon(T,O,[]).
+  showCanonTerm(T,O,[]).
 showTerm(T,O) :- term_string(T,S), !,string_chars(S,O).

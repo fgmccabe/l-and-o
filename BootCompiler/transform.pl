@@ -55,7 +55,7 @@ transformEquations(Map,Opts,LclFun,[Eqn|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
 transformEqn(Map,Opts,LclFun,QNo,equation(Lc,Nm,A,Cond,Value),[clse(Q,LclFun,Args,Body)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        % are we debugging?
-  trPtns(A,Args,[Rep|Extra],Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
+  trExps(A,Args,[Rep|Extra],Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
   trGoal(Cond,PostGx,[neck|CGx],Q1,Q2,Map,ClOpts,Ex0,Ex1),   % condition goals
   trExp(Value,Rep,Q2,Q3,PreV,PVx,PVx,Px,Map,ClOpts,Ex1,Exx),  % replacement expression
   labelAccess(Q3,Q,Map,Body,LbLx),                        % generate label access goals
@@ -93,7 +93,7 @@ transformClauses(Map,Opts,LclFun,[Cl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
 transformClause(Map,Opts,LclFun,QNo,clause(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Args,Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        % are we debugging?
-  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
+  trExps(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
   trGoal(Cond,PostGx,CGx,Q1,Q2,Map,ClOpts,Ex0,Ex1),       % condition goals
   trGoal(Body,CGx,CGy,Q2,Q3,Map,ClOpts,Ex1,Exx),
   labelAccess(Q3,Q,Map,Goals,LbLx),                       % generate label access goals
@@ -104,7 +104,7 @@ transformClause(Map,Opts,LclFun,QNo,clause(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Arg
 transformClause(Map,Opts,LclFun,QNo,strong(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Args,Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        % are we debugging?
-  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
+  trExps(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,PostGx,Map,ClOpts,Ex,Ex0), % head args
   trGoal(Cond,PostGx,[neck|CGx],Q1,Q2,Map,ClOpts,Ex0,Ex1), % condition goals
   trGoal(Body,CGx,CGy,Q2,Q3,Map,ClOpts,Ex1,Exx),
   labelAccess(Q3,Q,Map,Goals,LbLx),                       % generate label access goals
@@ -144,7 +144,7 @@ transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
       [clse(Q,LclFun,[StIn,StX|Args],Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,PreG,Opts,ClOpts),        % are we debugging?
-  trPtns(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,FBg,Map,ClOpts,Ex,Ex0), % head args
+  trExps(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,FBg,Map,ClOpts,Ex,Ex0), % head args
   genVar("StIn",StIn),
 
   dcgBody(Body,BG,BGx,StIn,StOut,[StIn,StOut|Q1],Q2,Map,ClOpts,Ex0,Ex1), % grammar body
@@ -171,20 +171,35 @@ dcgBody(conj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgBody(Rhs,G0,Gx,Strm0,Strmx,Q0,Qx,Map,Opts,Ex0,Exx).
 dcgBody(disj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgDisj(Lhs,Rhs,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(conditional(_,Tst,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  dcgConditional(Tst,Lhs,Rhs,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(one(_,Tst),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  dcgOne(Tst,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(neg(_,Tst),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  joinStream(Strm,Strmx,G,G0),
+  dcgNeg(Tst,G0,Gx,Strm,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(ahead(_,Tst),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  joinStream(Strm,Strmx,G,G0),
+  dcgAhead(Tst,G0,Gx,Strm,Q,Qx,Map,Opts,Ex,Exx).
 dcgBody(guard(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgBody(Lhs,G,G0,Strm,Strmx,Q,Q0,Map,Opts,Ex,Ex0),
   trGoal(Rhs,G0,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
-dcgBody(goal(_,Goal),G,Gx,Strm,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
-  trGoal(Goal,G,Gx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(goal(_,Goal),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  joinStream(Strm,Strmx,G,G0),
+  trGoal(Goal,G0,Gx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(dip(_,V,Cond),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  joinStream(Strm,Strmx,G,G0),
+  trExp(V,StrmVr,Q,Q0,G0,G1,G1,[equals(Strm,StrmVr)|G2],Map,Opts,Ex,Ex0),
+  trGoal(Cond,G2,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
 dcgBody(call(Lc,NT,Args),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
-  trExps(Args,AG,Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
+  trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
   (var(Strmx) -> genVar("Stx",Strmx) ; true),
   trGoalCall(NT,[Strm,Strmx|AG],G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
 
 dcgDisj(Lhs,Rhs,[call(DisProg,[Strm,Strmx|DQ])|G],G,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
-  genVar("DjStrm",DjStrm),
   (var(Strmx) -> genVar("DjOut",Strmx) ; true),
+  genVar("DjStrm",DjStrm),
   dcgBody(Lhs,LG,[],DjStrm,DjStrmx,[],LQ,Map,Opts,Ex,Ex0),
   dcgBody(Rhs,RG,[],DjStrm,DjStrmy,LQ,DQ,Map,Opts,Ex0,Ex1),
   genstr("Disj",DisPr),
@@ -195,6 +210,52 @@ dcgDisj(Lhs,Rhs,[call(DisProg,[Strm,Strmx|DQ])|G],G,Strm,Strmx,Q,Qx,Map,Opts,Ex,
   C2 = clse([DjStrm|DQ],DisProg,[DjStrm,DjStrmy|DQ],RG),
   Ex1 = [C1,C2|Exx],
   merge(DQ,Q,Qx).
+
+dcgOne(Lhs,[call(OneProg,[Strm,Strmx|DQ])|G],G,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  genVar("OneStm",OneStm),
+  (var(Strmx) -> genVar("DjOut",Strmx) ; true),
+  dcgBody(Lhs,LG,[neck],OneStm,OneStmx,[],DQ,Map,Opts,Ex,[C1|Exx]),
+  genstr("OneGr",OnePr),
+  length(DQ,Ar),
+  Arity is Ar+2,
+  trPrg(OnePr,Arity,OneProg),
+  C1 = clse([OneStm|DQ],OneProg,[OneStm,OneStmx|DQ],LG),
+  merge(DQ,Q,Qx).
+
+dcgNeg(Tst,[call(NegProg,[Strm|TQ])|G],G,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
+  genVar("NegStrm",NegStrm),
+  dcgBody(Tst,TG,[neck,fail],NegStrm,_,[],TQ,Map,Opts,Ex,[C1,C2|Exx]),
+  genstr("Neg",NegPr),
+  length(TQ,Ar),
+  Arity is Ar+1,
+  trPrg(NegPr,Arity,NegProg),
+  C1 = clse([NegStrm|TQ],NegProg,[NegStrm|TQ],TG),
+  C2 = clse([NegStrm|TQ],NegProg,[NegStrm|TQ],[]),
+  merge(TQ,Q,Qx).
+
+dcgConditional(Tst,Lhs,Rhs,[call(CondProg,[Strm,Strmx|DQ])|G],G,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  (var(Strmx) -> genVar("CndOut",Strmx) ; true),
+  genVar("CondStrm",CndStrm),
+  dcgBody(Tst,TG,[neck|LG],CndStrm,CndStrm0,[],TQ,Map,Opts,Ex,Ex0),
+  dcgBody(Lhs,LG,[],CndStrm0,CndStrmx,TQ,LQ,Map,Opts,Ex0,Ex1),
+  dcgBody(Rhs,RG,[],CndStrm,CndStrmy,LQ,DQ,Map,Opts,Ex1,[C1,C2|Exx]),
+  genstr("Cond",CondPr),
+  length(DQ,Ar),
+  Arity is Ar+2,
+  trPrg(CondPr,Arity,CondProg),
+  C1 = clse([CndStrm|DQ],CondProg,[CndStrm,CndStrmx|DQ],TG),
+  C2 = clse([CndStrm|DQ],CondProg,[CndStrm,CndStrmy|DQ],RG),
+  merge(DQ,Q,Qx).
+
+dcgAhead(Tst,[call(HdProg,[Strm|TQ])|G],G,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
+  genVar("HedStrm",HedStrm),
+  dcgBody(Tst,TG,[],HedStrm,_,[],TQ,Map,Opts,Ex,[C1|Exx]),
+  genstr("Hed",HedPr),
+  length(TQ,Ar),
+  Arity is Ar+1,
+  trPrg(HedPr,Arity,HdProg),
+  C1 = clse([HedStrm|TQ],HdProg,[HedStrm|TQ],TG),
+  merge(TQ,Q,Qx).
 
 pushString(Lc,Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
   string_codes(Str,Chrs),
@@ -330,7 +391,7 @@ trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   genVar("Xi",Xi),
   implementPkgRefPtn(Reslt,Lc,Pkg,Rf,Xi,Ptn,Q,Qx,Post,Pstx).
 trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
-  trPtns(Ptns,P,Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
+  trPtns(Ptns,P,[],Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
 trPtn(apply(_,O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0),
   trPtnCallOp(O,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
@@ -390,10 +451,10 @@ implementPkgRefPtn(moduleClass(_,enum(Enum),_),_,_,_,_,enum(Enum),Q,Q,Tail,Tail)
 implementPkgRefPtn(_,Lc,Pkg,Rf,_,idnt("_"),Q,Q,Post,Post) :-
   reportError("illegal access to %s#%s",[Pkg,Rf],Lc).
 
-trExps([],[],Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trExps([P|More],[A|Args],Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
+trExps([],Args,Args,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
+trExps([P|More],[A|Args],Extra,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
   trExp(P,A,Q,Q0,Pre,Pre0,Post,Pst0,Map,Opts,Ex,Ex0),
-  trExps(More,Args,Q0,Qx,Pre0,Prx,Pst0,Psx,Map,Opts,Ex0,Exx).
+  trExps(More,Args,Extra,Q0,Qx,Pre0,Prx,Pst0,Psx,Map,Opts,Ex0,Exx).
 
 trExp(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :- 
   thisVar(Map,ThVr),!,
@@ -408,9 +469,9 @@ trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
   genVar("Xi",Xi),
   implementPkgRefExp(Reslt,Lc,Pkg,Rf,Xi,Exp,Q,Qx,Post,Pstx).
 trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
-  trExps(A,TA,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
+  trExps(A,TA,[],Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(apply(_,Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
-  trExps(A,Args,Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
+  trExps(A,Args,[],Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
   genVar("X",X),
   trExpCallOp(Op,X,Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
 trExp(dot(_,Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
@@ -418,6 +479,9 @@ trExp(dot(_,Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   trCons(Fld,[X],S),
   C = cons(S,[X]),
   trDotExp(Rec,C,X,Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
+trExp(where(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
+  trExp(P,Ptn,Q,Q0,Pre,P0,Post,Pstx,Map,Opts,Ex,Ex0),
+  trGoal(C,P0,Px,Q0,Qx,Map,Opts,Ex0,Exx).
 trExp(XX,void,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-
   reportMsg("internal: cannot transform %s as expression",[XX]).
 
@@ -574,17 +638,24 @@ trGoal(equals(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   lineDebug(Lc,G3,[equals(Lx,Rx)|Gx],Opts),
   trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
-trGoal(unify(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
-  lineDebug(Lc,G3,[equals(Lx,Rx)|Gx],Opts),
-  trPtn(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  trPtn(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
 trGoal(match(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
-  lineDebug(Lc,G3,[equals(Lx,Rx)|Gx],Opts),
-  trPtn(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
+  lineDebug(Lc,G3,[match(Lx,Rx)|Gx],Opts),
+  trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
+trGoal(unify(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
+  lineDebug(Lc,G3,[unify(Lx,Rx)|Gx],Opts),
+  trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
+  trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
+trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+  trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
+  dcgBody(NT,G1,G2,StIn,StOut,[StIn,StOut|Q0],Q2,Map,Opts,Ex0,Ex1), % grammar body
+  trExp(Rem,StOut,Q2,Qx,G2,G3,G3,Gx,Q2,Qx,Map,Opts,Ex1,Exx).
+trGoal(phrase(Lc,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+  trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
+  dcgBody(conj(Lc,NT,eof(Lc)),G1,Gx,StIn,StOut,[StIn,StOut|Q0],Qx,Map,Opts,Ex0,Exx).
 trGoal(call(Lc,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
-  trExps(Args,AG,Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
+  trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
   trGoalCall(Pred,AG,G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
 
 trGoalCall(v(_,Nm),Args,[ecall(Nm,Args)|Tail],Tail,Q,Q,_,_,Ex,Ex) :-
@@ -612,7 +683,7 @@ trGoalDot(v(_,Nm),C,[call(Super,[C,LbVr,ThVr])|Gx],Gx,Q,Qx,Map,_,Ex,Ex) :-
   lookupVarName(Map,Nm,inherit(_,Super,LbVr,ThVr)),!,
   merge([LbVr,ThVr],Q,Qx).
 trGoalDot(Rec,C,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
-  trExp(Rec,NR,G,G0,G0,G1,Q,Qx,Map,Opts,Ex,Exx),
+  trExp(Rec,NR,Q,Qx,G,G0,G0,G1,Map,Opts,Ex,Exx),
   G1 = [ocall(C,NR,NR)|Gx].
 
 genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr)|Map],Entry,En,Ex,Exx) :-

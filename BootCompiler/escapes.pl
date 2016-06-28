@@ -19,6 +19,9 @@ escapeType("_flt_times",funType([in(type("lo.arith*float")),in(type("lo.arith*fl
 escapeType("_flt_div",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
 escapeType("_int_abs",funType([in(type("lo.arith*integer"))],type("lo.arith*integer"))).
 escapeType("_flt_abs",funType([in(type("lo.arith*float"))],type("lo.arith*float"))).
+escapeType("_int2flt",funType([in(type("lo.arith*integer"))],type("lo.arith*float"))).
+escapeType("_flt2int",funType([in(type("lo.arith*float"))],type("lo.arith*integer"))).
+escapeType("_pwr",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
 escapeType("_isCcChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_isCfChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_isCnChar",predType([in(type("lo.arith*integer"))])).
@@ -72,6 +75,9 @@ isEscape("_flt_times").
 isEscape("_flt_div").
 isEscape("_int_abs").
 isEscape("_flt_abs").
+isEscape("_int2flt").
+isEscape("_flt2int").
+isEscape("_pwr").
 isEscape("_isCcChar").
 isEscape("_isCfChar").
 isEscape("_isCnChar").

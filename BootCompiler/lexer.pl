@@ -125,13 +125,13 @@ readNatural(St,St,D,D).
 readDecimal(St,NxSt,Ng) :- nextSt(St,St1,'-'), readNatural(St1,NxSt,0,N), Ng is -N.
 readDecimal(St,NxSt,N) :- readNatural(St,NxSt,0,N).
 
-readMoreNumber(St0,St,NxSt,Sgn,D,floatTok(FP,Lc)) :- nextSt(St,St1,'.'), hedChar(St1,D), isDigit(D), readFraction(St1,D,0.1,St2,Fr), Mant is Sgn*Fr, readExponent(St2,NxSt,Mant,FP), makeLoc(St0,NxSt,Lc).
+readMoreNumber(St0,St,NxSt,Sgn,D,floatTok(FP,Lc)) :- nextSt(St,St1,'.'), hedChar(St1,Dg), isDigit(Dg,_), readFraction(St1,St2,D,0.1,Fr), Mant is Sgn*Fr, readExponent(St2,NxSt,Mant,FP), makeLoc(St0,NxSt,Lc).
 readMoreNumber(St0,St,St,Sgn,D,integerTok(FP,Lc)) :- FP is Sgn*D, makeLoc(St0,St,Lc).
 
 readFraction(St,NxSt,SF,Fx,Fr) :- nextSt(St,St1,Ch), isDigit(Ch,D), SF1 is SF+D*Fx, Fx1 is Fx/10, readFraction(St1,NxSt,SF1,Fx1,Fr).
 readFraction(St,St,Fr,_,Fr).
 
-readExponent(St,NxSt,M,FP) :- nextSt(St,St1,'e'), readDecimal(St1,NxSt,E), FP is M+10**E.
+readExponent(St,NxSt,M,FP) :- nextSt(St,St1,'e'), readDecimal(St1,NxSt,E), FP is M*10**E.
 readExponent(St,St,M,M).
 
 charRef(St,Nxt,Chr) :- nextSt(St,St1,'\\'), nextSt(St1,St2,Ch), backslashRef(St2,Nxt,Ch,Chr).
@@ -190,8 +190,6 @@ readFormat(St,St,[]) :- \+ hedChar(St,':').
 
 idStart(L) :- char_type(L,alpha).
 idStart('_').
-idStart('@').
-idStart('$').
 
 idChar(X) :- idStart(X).
 idChar(X) :- isDigit(X,_).

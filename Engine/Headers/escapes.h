@@ -51,9 +51,12 @@ escape(_flt_div,16,False,False,"F2+f+ff","divide two floats")
 escape(_int_abs,24,False,False,"F1+ii","integer absolute value")
 escape(_flt_abs,24,False,False,"F1+ff","float absolute value")
 
-/*
-  escape(_power,25,False,False,":k'u'NF2+k'u'+k'u'k'u'","raise X to the power Y")
-  escape(sqrt,26,False,False,":k'u'NF1+k'u'f","square root")
+escape(_int2flt,25,False,False,"F1+if","convert integer to float")
+escape(_flt2int,26,False,False,"F1+fi","convert float to integer")
+
+escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
+
+/*  escape(sqrt,26,False,False,":k'u'NF1+k'u'f","square root")
   escape(exp,27,False,False,":k'u'NF1+k'u'k'u'","exponential")
   escape(log,28,False,False,":k'u'NF1+k'u'f","logarithm")
   escape(log10,29,False,False,":k'u'NF1+k'u'f","10-based logarithm")

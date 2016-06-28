@@ -1,7 +1,7 @@
 :-module(misc,[concat/3,flatten/2,segment/3,last/2,reverse/2,revconcat/3,is_member/2,
         merge/3,intersect/3,subtract/3,replace/4,
         collect/4,map/3,rfold/4,
-        appStr/3,appInt/3,appSym/3,appQuoted/4,genstr/2,
+        appStr/3,appInt/3,appFlt/3,appSym/3,appQuoted/4,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
         stringHash/3,hashSixtyFour/2]).
 
@@ -77,6 +77,8 @@ quoteConcat([C|More],[C|Out],Ox) :- quoteConcat(More,Out,Ox).
 appSym(Sym,O,E) :- atom_chars(Sym,Chrs), concat(Chrs,E,O).
 
 appInt(Ix,O,E) :- number_string(Ix,Str), string_chars(Str,Chrs), concat(Chrs,E,O).
+
+appFlt(Dx,O,Ox) :- number_string(Dx,Str), string_chars(Str,Chrs), concat(Chrs,Ox,O).
 
 subPath(Path,Marker,Suffix,Name) :-
   sub_string(Path,_,_,After,Marker),

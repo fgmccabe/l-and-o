@@ -242,8 +242,6 @@ wffTerm(T) :- isBinary(T,"-",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isBinary(T,"*",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isBinary(T,"/",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isBinary(T,"%",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"%%",L,R), isBinary(R,"~",NT,Rm), wffTerm(L), wffGrammarNonTermimal(NT), wffTerm(Rm).
-wffTerm(T) :- isBinary(T,"%%",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isRoundTerm(T,Op,Args), wffTerm(Op), wffTerms(Args).
 wffTerm(T) :- locOfAst(T,Lc), reportError("term %s not well formed",[T],Lc).
 
@@ -268,6 +266,8 @@ wffCond(C) :- isBinary(C,">=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,".=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"=.",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"in",L,R), wffTerm(L),wffTerm(R).
+wffCond(T) :- isBinary(T,"%%",L,R), isBinary(R,"~",S,M), wffTerm(S), wffGrammarNonTermimal(L), wffTerm(M).
+wffCond(T) :- isBinary(T,"%%",L,R), wffTerm(L), wffTerm(R).
 wffCond(C) :- isRoundTerm(C,Op,Args), wffTerm(Op), wffTerms(Args).
 wffCond(T) :- locOfAst(T,Lc), reportError("Condition not well formed: %s",[T],Lc).
 

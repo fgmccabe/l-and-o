@@ -1,7 +1,5 @@
 a{
-  import lo.list.
-  import lo.string.
-  import lo.arith.
+  import lo.
 
  a:all t ~~ (list[t]+,list[t])=>list[t].
  a([],X) => X.

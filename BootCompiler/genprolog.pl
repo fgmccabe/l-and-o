@@ -116,6 +116,14 @@ genGoal(equals(L,R),O,E) :-
   genTerm(L,O,O1),
   appStr(" = ",O1,O2),
   genTerm(R,O2,E).
+genGoal(unify(L,R),O,E) :-
+  genTerm(L,O,O1),
+  appStr(" = ",O1,O2),
+  genTerm(R,O2,E).
+genGoal(match(L,R),O,E) :-
+  genTerm(L,O,O1),
+  appStr(" = ",O1,O2),
+  genTerm(R,O2,E).
 genGoal(raise(_),O,E) :-
   appStr("abort",O,E).
 
@@ -129,6 +137,8 @@ genTerm(strct(Nm,_),O,E) :-
   genQuoted(Nm,O,E).
 genTerm(intgr(Ix),O,E) :-
   appInt(Ix,O,E).
+genTerm(float(Dx),O,E) :-
+  appFlt(Dx,O,E).
 genTerm(strg(Str),O,Ox) :-
   appQuoted(Str,"""",O,Ox).
 genTerm(anon,O,E) :-

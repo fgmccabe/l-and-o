@@ -1,9 +1,5 @@
 lo.comp.location{
-  import lo.thing.
-  import lo.arith.
-  import lo.display.
-  import lo.list.
-  import lo.string.
+  import lo.
   
   location <~ {
     merge:(location)=>location.

@@ -144,7 +144,7 @@ decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 
 decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).
 decodeArgType(out(Tp)) --> ['-'], decodeType(Tp).
-decodeArgType(inout(Tp)) --> decodeType(Tp).
+decodeArgType(inout(Tp)) --> ['?'], decodeType(Tp).
 
 decodeArgTypes(0,[]) --> [].
 decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeArgType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).

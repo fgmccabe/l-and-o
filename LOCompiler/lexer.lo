@@ -7,7 +7,9 @@ lo.comp.lexer{
   -- Define the lexer for the L&O syntax
 
   tokenState <~ stream[integer].
-  tokenState <~ { currLine:integer. currOff:integer. currCol:integer}.
+  tokenState <~ {
+    currentLocation:((integer,integer,integer)){}
+  }.
 
   tkState:(list[integer],integer,integer,integer) <=> tokenState.
   tkState(Chars,Line,Off,Col) .. {
@@ -18,15 +20,189 @@ lo.comp.lexer{
 
     cons(Ch) => tkState([Ch,..Chars],Line,Off,Col).
 
-    currLine = Line.
-    currOff = Off.
-    currCol = Col.
+    currentLocation((Line,Off,Col)).
   }.
 
+  private
+  makeLocation:((integer,integer,integer),(integer,integer,integer)) => location.
+  makeLocation((StartLine,StartOff,StartCol),(_,EndOff,_)) => 
+      loc(StartLine,StartOff,StartCol,EndOff-StartOff).
+
+  tokenize:(list[token]) --> tokenState.
+  tokenize(AllTokens) -->
+    skipSpaces(),
+    allTokens(AllTokens).
+
+  private
+  allTokens : (list[token]) --> tokenState.
+  allTokens([]) --> eof.
+  allTokens([tok(Tk,Lc),..More]) -->
+    @currentLocation(Start),
+    nxtTok(Tk),
+    @currentLocation(End),
+    Lc = makeLocation(Start,End),
+    skipSpaces(),
+    allTokens(More).
+  
+
+  token:(token) --> tokenState.
+  token(tok(Tk,Lc)) --> skipSpaces(),
+    @currentLocation(Start),
+    nxtTok(Tk),
+    @currentLocation(End),
+    Lc = makeLocation(Start,End).
+
+  nxtTok:(tok) --> tokenState.
+  nxtTok(Num) --> digit(_)+, readNumber(Num).
+  nxtTok(intTok(Ch)) --> [0c0, 0cc], charRef(Ch).
+  nxtTok(lpar) --> [0c(].
+  nxtTok(rpar) --> [0c)].
+  nxtTok(lbra) --> [0c[].
+  nxtTok(rbar) --> [0c]].
+  nxtTok(lbrce) --> [0c{].
+  nxtTok(rbrce) --> [0c}].
+  nxtTok(lqpar) --> [0c<, 0c|].
+  nxtTok(rqpar) --> [0c|, 0c>].
+  nxtTok(period) --> [0c.], space().
+  nxtTok(terminal) --> eof.
+  nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
+  nxtTok(idTok(Id)) --> [0c'], readQuoted(Q), { Id = implode(Q)}.
+  nxtTok(stringTok(Text)) --> [0c"], readStringSegments(Text), [0c"].
+  nxtTok(idTok(Op)) --> [Ch], { follows("",Ch,Next)}, followGraph(Next,Op)!.
+
+  private
+  followGraph:(string,string) --> tokenState.
+  followGraph(State,Op) --> [Ch], { follows(State,Ch,Next)}, followGraph(Next,Op).
+  followGraph(Op,Op) --> { final(Op)}.
+
+  readQuoted : (list[integer]) --> tokenState.
+  readQuoted([C,..R]) --> charRef(C), readQuoted(R).
+  readQuoted([]) --> [0c'].
+
+  readIden : (list[integer]) --> tokenState.
+  readIden([C,..R]) --> alphaNum(C), readIden(R).
+  readIden([]) --> [].
+
+  idStart:(integer) --> tokenState.
+  idStart(0c_) --> [0c_].
+  idStart(Ch) --> [Ch] :: _isLetterChar(Ch).
+
+  alphaNum:(integer) --> tokenState.
+  alphaNum(Ch) --> idStart(Ch).
+  alphaNum(Ch) --> [Ch] :: (_isNdChar(Ch) | _isMnChar(Ch) | _isMcChar(Ch) | _isPcChar(Ch) | _isCfChar(Ch) )!.
+
+  readStringSegments:(list[stringSegment]) --> tokenState.
+  readStringSegments([]) --> [0c"]+.
+  readStringSegments([Seg,..Segs]) --> [0c$],
+    interpolation(Seg),
+    readStringSegments(Segs).
+  readStringSegments([segment(Lc,Seg),..Segs]) -->
+    @currentLocation(Start), -- read the current location from the token state
+    readStr(Chars),
+    @currentLocation(End),
+    { Seg = implode(Chars),
+      Lc = makeLocation(Start,End)},
+    readStringSegments(Segs).
+
+  readStr:(list[integer]) --> tokenState.
+  readStr([]) --> [0c"]+.
+  readStr([]) --> [0c$]+.
+  readStr([Ch,..More]) --> charRef(Ch), readStr(More).
+
+  interpolation:(stringSegment-) --> tokenState.
+  interpolation(interpolate(implode(Text),implode(Format))) --> 
+    countBrackets(Text,[]),
+    readFormat(Format),
+    Lc = makeLocation(Start,End).
+
+  countBrackets:(list[integer],list[integer]) --> tokenState.
+  countBrackets([],[]) --> [].
+  countBrackets([Ch,..More],[Ch,..Stack]) --> [Ch], countBrackets(More,Stack).
+  countBrackets([0c(,..More],Stack) --> [0c(], countBrackets(More,[0c),..Stack]).
+  countBrackets([0c[,..More],Stack) --> [0c[], countBrackets(More,[0c],..Stack]).
+  countBrackets([0c{,..More],Stack) --> [0c{], countBrackets(More,[0c},..Stack]).
+  countBrackets([0c",..More],Stack) --> [0c"], Stack \= [], countBrackets(More,[0c",..Stack]).
+  countBrackets([Ch,..More],Stack) --> [Ch], countBrackets(More,Stack).
+
+  readFormat:(list[integer]) --> tokenState.
+  readFormat([]) --> [0c;].
+  readFormat([Ch,..More]) --> [Ch], readFormat(More).
+  readFormat([]) --> eof.
+
+  readNumber:(tok) --> tokenState.
+  readNumber(Tk) --> readNatural(First,0), readMoreNumber(Tk,First).
+
+  readDecimal:(integer) --> tokenState.
+  readDecimal(In) --> [0c-], readNatural(0,Pl), In = 0-Pl.
+  readDecimal(In) --> readNatural(0,In).
+
+  readNatural:(integer,integer) --> tokenState.
+  readNatural(SoFar,Int) --> digit(D), readNatural(SoFar*10+D,Int).
+  readNatural(SoFar,SoFar) --> [].
+
+  readMoreNumber:(tok,integer) --> tokenState.
+  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr), 
+      exponent(_int2flt(Decimal)+Fr,Fp).
+  readMoreNumber(intTok(Ix),Ix) --> [].
+
+  fraction:(float+,float+,float-) --> tokenState.
+  fraction(Scale,SoFar,Result) --> digit(D), fraction(Scale*0.1,SoFar+_int2flt(D)*Scale,Result).
+  fraction(_,Fract,Fract) --> [].
+
+  exponent:(float+,float-) --> tokenState.
+  exponent(SoFar,Fp) --> ([0ce] | [0cE]), readDecimal(Exp), Fp = SoFar*_pwr(10.0,_int2flt(Exp)).
+  exponent(Fp,Fp) --> [].
+
+  digit:(integer) --> tokenState.
+  digit(0) --> [0c0].
+  digit(1) --> [0c1].
+  digit(2) --> [0c2].
+  digit(3) --> [0c3].
+  digit(4) --> [0c4].
+  digit(5) --> [0c5].
+  digit(6) --> [0c6].
+  digit(7) --> [0c7].
+  digit(8) --> [0c8].
+  digit(9) --> [0c9].
+
+  charRef:(integer) --> tokenState.
+  charRef(Chr) --> [0c\\], backSlashRef(Chr).
+  charRef(Chr) --> [Chr].
+
+  backSlashRef:(integer) --> tokenState.
+  backSlashRef(0c\a) --> [0ca].
+  backSlashRef(0c\b) --> [0cb].
+  backSlashRef(0c\t) --> [0ct].
+  backSlashRef(0c\n) --> [0cn].
+  backSlashRef(0c\r) --> [0cr].
+  backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
+
+  hexChars:(integer,integer)-->tokenState.
+  hexChars(SoFar,Ch) --> hexDigit(N), hexChars(SoFar*16+N,Ch).
+  hexChars(SoFar,SoFar) --> [0c;].
+
+  hexDigit:(integer) --> tokenState.
+  hexDigit(D) --> digit(D).
+  hexDigit(10) --> [0ca].
+  hexDigit(11) --> [0cb].
+  hexDigit(12) --> [0cc].
+  hexDigit(13) --> [0cd].
+  hexDigit(14) --> [0ce].
+  hexDigit(15) --> [0cf].
+  hexDigit(10) --> [0cA].
+  hexDigit(11) --> [0cB].
+  hexDigit(12) --> [0cC].
+  hexDigit(13) --> [0cD].
+  hexDigit(14) --> [0cE].
+  hexDigit(15) --> [0cF].
+
+  space:() --> tokenState.
+  space() --> [0c ].
+  space() --> [0c\t].
+  space() --> [0c\n].
+
   skipSpaces: () --> tokenState.
-  skipSpaces() --> [0c ], skipSpaces().
-  skipSpaces() --> [0c\t], skipSpaces().
-  skipSpaces() --> [0c\n], skipSpaces().
+  skipSpaces() --> space()!, skipSpaces().
   skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(), skipSpaces().
   skipSpaces() --> [0c/, 0c*], blockComment(), skipSpaces().
   skipSpaces() --> [].

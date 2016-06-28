@@ -1,6 +1,6 @@
-:- module(types,[isType/1,newTypeVar/2,newTypeVar/4,deRef/2, 
+:- module(types,[isType/1,isTypeFlow/1,newTypeVar/2,newTypeVar/4,deRef/2, 
       typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
-      showType/3, showTypeRule/3,
+      showType/3, showTypeRule/3,showTypeFlow/3,
       occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
       bind/2, isIdentical/2, moveQuants/3,
       markLower/2, markUpper/2,identicalVar/2]).
@@ -21,6 +21,10 @@ isType(predType(_)).
 isType(univType(_,_)).
 isType(faceType(_)).
 isType(constrained(_,_,_)).
+
+isTypeFlow(in(T)) :- isType(T).
+isTypeFlow(out(T)) :- isType(T).
+isTypeFlow(inout(T)) :- isType(T).
 
 % the _ in unb(_) is to work around issues with SWI-Prolog's assignment.
 newTypeVar(Nm,tVar(v{lower:voidType,upper:topType,curr:unb(_),name:Nm,id:Id})) :- gensym("_#",Id).
@@ -101,7 +105,7 @@ showType(typeExp(Nm,A),O,E) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,
 showType(tupleType(A),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,E).
 showType(funType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,E).
 showType(grammarType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("-->",O3,O4), showType(R,O4,E).
-showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
+showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
 showType(predType(A),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,E).
 showType(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showType,O2,E).
 showType(faceType(Els),O,E) :- appStr("{ ",O,O1), showTypeFields(Els,O1,O2), appStr("}",O2,E).
@@ -126,15 +130,14 @@ showMoreTypeEls([],O,O).
 showMoreTypeEls([Tp|More],O,E) :- appStr(", ",O,O1),showType(Tp,O1,O2), showMoreTypeEls(More,O2,E).
 
 showTypeArgs([],O,O).
-showTypeArgs([Tp|More],O,E) :- showArgType(Tp,O,O1), showMoreTypeArgs(More,O1,E).
+showTypeArgs([Tp|More],O,E) :- showTypeFlow(Tp,O,O1), showMoreTypeArgs(More,O1,E).
 
 showMoreTypeArgs([],O,O).
-showMoreTypeArgs([Tp|More],O,E) :- appStr(", ",O,O1),showArgType(Tp,O1,O2), showMoreTypeArgs(More,O2,E).
+showMoreTypeArgs([Tp|More],O,E) :- appStr(", ",O,O1),showTypeFlow(Tp,O1,O2), showMoreTypeArgs(More,O2,E).
 
-showArgType(in(Tp),O,Ox) :- showType(Tp,O,O0), appStr("+",O0,Ox).
-showArgType(out(Tp),O,Ox) :- showType(Tp,O,O0), appStr("-",O0,Ox).
-showArgType(inout(Tp),O,Ox) :- showType(Tp,O,Ox).
-showArgType(Tp,O,Ox) :- showType(Tp,O,Ox).
+showTypeFlow(in(Tp),O,Ox) :- showType(Tp,O,O0), appStr("+",O0,Ox).
+showTypeFlow(out(Tp),O,Ox) :- showType(Tp,O,O0), appStr("-",O0,Ox).
+showTypeFlow(inout(Tp),O,Ox) :- showType(Tp,O,Ox).
 
 showMoreQuantified(univType(Nm,Tp),P,O,E) :- appStr(", ",O,O1), showType(Nm,O1,O2), showMoreQuantified(Tp,P,O2,E).
 showMoreQuantified(Tp,P,O,E) :- appStr(" ~~ ",O,O1), call(P,Tp,O1,E).

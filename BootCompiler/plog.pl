@@ -91,9 +91,17 @@ showGoal(neck,O,Ox) :-
   appStr("!",O,Ox).
 showGoal(fail,O,Ox) :-
   appStr("fail",O,Ox).
-showGoal(equals(L,R),O,Ox) :-
+showGoal(unify(L,R),O,Ox) :-
   showTerm(L,O,O1),
   appStr(" = ",O1,O2),
+  showTerm(R,O2,Ox).
+showGoal(equals(L,R),O,Ox) :-
+  showTerm(L,O,O1),
+  appStr(" == ",O1,O2),
+  showTerm(R,O2,Ox).
+showGoal(match(L,R),O,Ox) :-
+  showTerm(L,O,O1),
+  appStr(" .= ",O1,O2),
   showTerm(R,O2,Ox).
 showGoal(raise(T),O,Ox) :-
   appStr("raise ",O,O2),
@@ -111,6 +119,8 @@ showTerm(strct(Nm,Ar),O,Ox) :-
   appStr("]",O3,Ox).
 showTerm(intgr(Ix),O,Ox) :-
   appInt(Ix,O,Ox).
+showTerm(float(Dx),O,Ox) :-
+  appFlt(Dx,O,Ox).
 showTerm(strg(Str),O,Ox) :-
   appStr("""",O,O1),
   appStr(Str,O1,O2),

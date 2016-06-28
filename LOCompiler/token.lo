@@ -13,9 +13,11 @@ lo.comp.token{
          |  idTok(string)
          |  intTok(integer)
          |  fltTok(float)
-         |  stringTok(string)
+         |  stringTok(list[stringSegment])
          |  period
          |  terminal.
+
+  stringSegment ::= segment(location,string) | interpolate(string,string).
 
   token <~ hasLoc.
 
@@ -42,8 +44,15 @@ lo.comp.token{
     display(idTok(Nm)) => ss(Nm).
     display(intTok(Ix)) => intDisp.display(Ix).
     display(fltTok(Dx)) => fltDisp.display(Dx).
-    display(stringTok(Sx)) => stringDisp.display(Sx).
+    display(stringTok(Sx)) => listDisp(segmentDisp).display(Sx).
     display(period) => ss(". ").
     display(terminal) => ss("<term>").
+  }.
+
+  segmentDisp : display[stringSegment].
+  segmentDisp .. {
+    display(segment(_,T)) => ss(T).
+    display(interpolate(In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
+    display(interpolate(In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).
   }
 }
