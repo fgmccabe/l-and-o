@@ -6,13 +6,13 @@ lx{
   tokenState <~ stream[integer].
   tokenState <~ {
     currentLocation:(integer){}
-  }.
+  }
 
   location <~ thing.
   location <~ {
     offset : integer.
     len : integer.
-  }.
+  }
 
   loc : (integer,integer) <=> location.
   loc(Off,Len) ..{
