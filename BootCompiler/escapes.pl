@@ -19,6 +19,10 @@ escapeType("_flt_times",funType([in(type("lo.arith*float")),in(type("lo.arith*fl
 escapeType("_flt_div",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
 escapeType("_int_abs",funType([in(type("lo.arith*integer"))],type("lo.arith*integer"))).
 escapeType("_flt_abs",funType([in(type("lo.arith*float"))],type("lo.arith*float"))).
+escapeType("_int_lt",predType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))])).
+escapeType("_int_ge",predType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))])).
+escapeType("_flt_lt",predType([in(type("lo.arith*float")),in(type("lo.arith*float"))])).
+escapeType("_flt_ge",predType([in(type("lo.arith*float")),in(type("lo.arith*float"))])).
 escapeType("_int2flt",funType([in(type("lo.arith*integer"))],type("lo.arith*float"))).
 escapeType("_flt2int",funType([in(type("lo.arith*float"))],type("lo.arith*integer"))).
 escapeType("_pwr",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
@@ -57,6 +61,8 @@ escapeType("_isLetterChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_digitCode",funType([in(type("lo.arith*integer"))],type("lo.arith*integer"))).
 escapeType("_int2str",funType([in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.string*string"))).
 escapeType("_flt2str",funType([in(type("lo.arith*float")),in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.logical*logical")),in(type("lo.logical*logical"))],type("lo.string*string"))).
+escapeType("_str_lt",predType([in(type("lo.string*string")),in(type("lo.string*string"))])).
+escapeType("_str_ge",predType([in(type("lo.string*string")),in(type("lo.string*string"))])).
 escapeType("explode",funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")]))).
 escapeType("implode",funType([in(typeExp("lo.list*list",[type("lo.arith*integer")]))],type("lo.string*string"))).
 isEscape("exit").
@@ -76,6 +82,10 @@ isEscape("_flt_times").
 isEscape("_flt_div").
 isEscape("_int_abs").
 isEscape("_flt_abs").
+isEscape("_int_lt").
+isEscape("_int_ge").
+isEscape("_flt_lt").
+isEscape("_flt_ge").
 isEscape("_int2flt").
 isEscape("_flt2int").
 isEscape("_pwr").
@@ -114,5 +124,7 @@ isEscape("_isLetterChar").
 isEscape("_digitCode").
 isEscape("_int2str").
 isEscape("_flt2str").
+isEscape("_str_lt").
+isEscape("_str_ge").
 isEscape("explode").
 isEscape("implode").

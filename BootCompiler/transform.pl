@@ -12,8 +12,9 @@
 transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types),Opts,export(Pkg,Imports,Fields,Types,Rules)) :-
   makePkgMap(Pkg,Defs,Types,Imports,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
-  transformModuleDefs(Pkg,Map,POpts,Defs,R0,Rx,Rx,[]),
-  transformOthers(Pkg,Map,POpts,Others,Rules,R0).
+  transformModuleDefs(Pkg,Map,POpts,Defs,R1,Rx,Rx,[]),
+  transformOthers(Pkg,Map,POpts,Others,Inits,Rules,R0),
+  packageInit(Pkg,Map,POpts,Inits,R0,R1).
 
 transformModuleDefs(_,_,_,[],Rules,Rules,Ex,Ex).
 transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
@@ -262,11 +263,11 @@ pushString(Lc,Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
   string_codes(Str,Chrs),
   pushCharList(Lc,Chrs,V,G,Gx,Strm,Strmx,Q,Qx).
 
-pushCharList(_,[],G,Gx,Strm,Strmx,Q,Q) :-
+pushCharList(_,[],_,G,Gx,Strm,Strmx,Q,Q) :-
   joinStream(Strm,Strmx,G,Gx).
 pushCharList(Lc,[Ch|Chrs],Verb,G,Gx,Strm,Strmx,Q,Qx) :-
   genVar("X",X),
-  streamCall(Verb,intgr(Lc,Ch),Strm,X,G,G0),
+  streamCall(Verb,intgr(Ch),Strm,X,G,G0),
   pushCharList(Lc,Chrs,Verb,G0,Gx,X,Strmx,[X|Q],Qx).
 
 pushTerminals([],_,G,Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
@@ -282,17 +283,17 @@ streamCall(Verb,El,Strm,Strmx,[ocall(cons(Verb,[El,Strmx]),Strm,Strm)|G],G).
 joinStream(X,X,G,G).
 joinStream(Strm,Strmx,[equals(Strm,Strmx)|Gx],Gx).
 
-transformOthers(_,_,_,[],Rx,Rx).
-transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
+transformOthers(_,_,_,[],[neck],Rx,Rx).
+transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],[call(AssertName,[])|Inits],Rules,Rx) :-
   collect(Others,canon:isAssertion,Asserts,Rest),
-  transformAssertions(Pkg,Map,Opts,Lc,[assertion(Lc,G)|Asserts],Rules,R0),
-  transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
-transformOthers(Pkg,Map,Opts,[show(Lc,E)|Others],Rules,Rx) :-
+  transformAssertions(Pkg,Map,Opts,Lc,[assertion(Lc,G)|Asserts],AssertName,Rules,R0),
+  transformOthers(Pkg,Map,Opts,Rest,Inits,R0,Rx).
+transformOthers(Pkg,Map,Opts,[show(Lc,E)|Others],[call(ShowName,[])|Inits],Rules,Rx) :-
   collect(Others,canon:isShow,Shows,Rest),
-  transformShows(Pkg,Map,Opts,Lc,[show(Lc,E)|Shows],Rules,R0),
-  transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
+  transformShows(Pkg,Map,Opts,Lc,[show(Lc,E)|Shows],ShowName,Rules,R0),
+  transformOthers(Pkg,Map,Opts,Rest,Inits,R0,Rx).
 
-transformAssertions(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
+transformAssertions(Pkg,Map,Opts,Lc,Asserts,prg(LclName,0),Rules,Rx) :-
   rfold(Asserts,transform:collectGoal,true(_),G),
   localName(Pkg,"@","assert",LclName),
   transformClause(Map,Opts,prg(LclName,0),1,clause(Lc,"assert",[],true(''),G),Rules,R0,R0,Rx).
@@ -300,13 +301,16 @@ transformAssertions(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
 collectGoal(assertion(_,G),true(_),G) :-!.
 collectGoal(assertion(_,G),O,conj(O,G)).
 
-transformShows(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
+transformShows(Pkg,Map,Opts,Lc,Asserts,prg(LclName,0),Rules,Rx) :-
   rfold(Asserts,transform:collectShow,true(_),G),
   localName(Pkg,"@","show",LclName),
   transformClause(Map,Opts,prg(LclName,0),1,clause(Lc,"show",[],true(''),G),Rules,R0,R0,Rx).
 
 collectShow(show(Lc,G),true(_),show(Lc,G)) :-!.
 collectShow(show(Lc,G),O,conj(O,show(Lc,G))).
+
+packageInit(Pkg,_,_,Inits,[clse([],prg(InitNm,0),[],Inits)|R],R) :-
+  localName(Pkg,"@","init",InitNm).
 
 transformClass(Map,Opts,class(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Entry,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Rules,R0),

@@ -1,4 +1,4 @@
-:- module(transUtils,[trCons/3,localName/4,className/3,labelAccess/5,extraVars/2,thisVar/2,
+:- module(transUtils,[trCons/3,className/3,labelAccess/5,extraVars/2,thisVar/2,
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
           makePkgMap/5,
           genNewName/4,genVar/2,
@@ -21,12 +21,6 @@ trCons(Nm,Args,strct(Name,Arity)) :-
   number_string(Arity,Sz),
   string_concat(Nm,"%",N1),
   string_concat(N1,Sz,Name).
-
-localName(_,Glue,Nm,Nm) :- 
-  sub_string(Nm,_,_,_,Glue),!.
-localName(Pkg,Glue,Nm,LclName) :-
-  string_concat(Pkg,Glue,T),
-  string_concat(T,Nm,LclName).
 
 className(Outer,Name,Nm) :-
   sub_string(Outer,_,_,_,"#"),!,

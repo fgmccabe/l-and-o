@@ -1,119 +1,117 @@
 \renewcommand{\chaptermark}[1]{\markboth{#1}{#1}} 
 \chapter{Preface}
 
-\lettrine[nindent=0.1em]{S}{ince} the widespread adoption of the Internet the world has changed irrevocably for computer systems -- no longer can applications be built in a stand-alone fashion, working in private. Even though there are countless private sub-domains protected by firewalls, the Internet is an inherently public environment and software should be expected to operate in the open, as it were. This brings enormous opportunities to use the interconnectedness between applications to enhance their power and effectiveness.
+Since the widespread adoption of the Internet the world has changed irrevocably for computer systems -- no longer can applications be built in a stand-alone fashion, working in private. Even though there are countless private sub-domains protected by firewalls, the Internet is an inherently public environment and software should be expected to operate in the open, as it were. This brings enormous opportunities to use the interconnectedness between applications to enhance their power and effectiveness.
 
 The Internet also carries significant potential risks for malicious persons to compromise your security. These risks go far beyond the risk of crashing software or even overwriting files on your hard disks -- you could lose money, life or your business if an improperly written application exposes information it should not have.
 
 Consider the task of a designer building a system that is intended to find the best price for an airline ticket -- by searching the available services on the Internet. The ticket agent must not only cope with ordinary issues in distributed systems -- such as systems not being available when expected -- but also with potentially malicious systems -- such as systems attempting to acquire personal financial information without delivering any service at all.
 
-In addition, potential buyers of this airline ticket agent may need persuading that the ticket agent is itself safe and effective -- that it will not bias ticket recommendations to particular airlines and that it will not divulge critical information to malicious third parties. This is, of course, in addition to common security concerns arising from third parties feeding the agent data in order to circumvent the ticket agent's \emph{implementation technology} -- such as so-called buffer overrun attacks.
+In addition, potential buyers of this airline ticket agent may need persuading that the ticket agent is itself safe and effective -- that it will not bias ticket recommendations to particular airlines and that it will not divulge critical information to malicious third parties. This is, of course, in addition to common security concerns arising from third parties feeding the agent data in order to circumvent the ticket agent's \textit{implementation technology} -- such as so-called buffer overrun attacks.
 
-Whatever the risks, the reality is that applications will routinely interconnect with others' applications in ways that are not easily foreseen by their designers. It is our task, as software developers, to make this experience as safe and painless as possible. \go is a Logic Programming based language designed from scratch to enable the development of safe, effective and secure applications that routinely interact with other applications on the Internet.
+Whatever the risks, the reality is that applications will routinely interconnect with others' applications in ways that are not easily foreseen by their designers. It is our task, as software developers, to make this experience as safe and painless as possible. L&O is a Logic Programming based language designed from scratch to enable the development of safe, effective and secure applications that routinely interact with other applications on the Internet.
 
 \paragraph{Software Engineering}
 
-Developing any kind of software is a complex task, made more difficult by the possibilities and risks offered by the Internet. Such complexity is not removed simply by adopting logic as the foundation of one's languages. Integration, reliability, security, modularization, evolvability, versioning, safety are all qualities that are important for software systems that are independent of the underlying technology. For knowledge intensive applications the list continues -- we also require flexibility, explainability, awareness of context. The design of \go is guided by a strong desire to gain the benefits of modern software engineering best practice as well as that of knowledge engineering. 
+Developing any kind of software is a complex task, made more difficult by the possibilities and risks offered by the Internet. Such complexity is not removed simply by adopting logic as the foundation of one's languages. Integration, reliability, security, modularization, evolvability, versioning, safety are all qualities that are important for software systems that are independent of the underlying technology. For knowledge intensive applications the list continues -- we also require flexibility, explainability, awareness of context. The design of L&O is guided by a strong desire to gain the benefits of modern software engineering best practice as well as that of knowledge engineering. 
 
-\go is a \emph{multi-paradigm} language -- it has a strong foundation in object oriented programming, functional programming and procedural programming as well as logic programming. In addition, it is a multi-threaded language with communication capabilities. This is a powerful combination aiming to solve the hard issues of complex software development.
+L&O is a \textit{multi-paradigm} language -- it has a strong foundation in object oriented programming, functional programming and procedural programming as well as logic programming. In addition, it is a multi-threaded language with communication capabilities. This is a powerful combination aiming to solve the hard issues of complex software development.
 
 \paragraph{Object orientation}
-\go's \emph{object orderedness} is fundamental to \go's approach to  software engineering.  To support the evolution of programs it is important to be able to modify a large program in a way that has manageable and predictable consequences. This is aided by having a clean separation between interfaces and implementations of components of the program. Being able to change the implementation of a component without changing all the \emph{references} to the program is a basic benefit of object ordered programming.
+L&O's \textit{object orderedness} is fundamental to L&O's approach to  software engineering.  To support the evolution of programs it is important to be able to modify a large program in a way that has manageable and predictable consequences. This is aided by having a clean separation between interfaces and implementations of components of the program. Being able to change the implementation of a component without changing all the \textit{references} to the program is a basic benefit of object ordered programming.
 
-Similarly, any change to a component (whether code or data) should not require changes to unaffected parts of the overall system. For example, merely \emph{adding} a new function to a module should not require modifying programs that only use existing features of the module. Both of these are important benefits of object ordered programming
+Similarly, any change to a component (whether code or data) should not require changes to unaffected parts of the overall system. For example, merely \textit{adding} a new function to a module should not require modifying programs that only use existing features of the module. Both of these are important benefits of object ordered programming
 
-\begin{aside}
-\index{object ordered computing}
-We use the term \emph{object ordered programming} to avoid some of the specifics of common object oriented languages -- the key feature of object ordered programming is the encapsulation of code and data that permits the \emph{hiding} of the implementation of a concept from the parts of the application that wish to merely \emph{use} the concept. Features such as inheritance are important but secondary compared to the core concepts of encapsulation and hiding.
-\end{aside}
+\begin{quote}
+We use the term \textit{object ordered programming} to avoid some of the specifics of common object oriented languages -- the key feature of object ordered programming is the encapsulation of code and data that permits the \textit{hiding} of the implementation of a concept from the parts of the application that wish to merely \textit{use} the concept. Features such as inheritance are important but secondary compared to the core concepts of encapsulation and hiding.
+\end{quote}
 
-\index{interface!importance of}
-As an example of the importance of interfaces, consider representing binary trees using  \prolog terms -- which is \prolog's basic means for structuring dynamic data. For example, we might use the \q{tree} term:
-\begin{alltt}
-tree(\emph{left},\emph{label},\emph{right})
-\end{alltt}
+As an example of the importance of interfaces, consider representing binary trees using  \textbf{Prolog} terms -- which is \textbf{Prolog}'s basic means for structuring dynamic data. For example, we might use the \verb+tree+ term:
+\begin{verbatim}
+tree(left,label,right)
+\end{verbatim}
 to denote a basic binary tree structure. 
 
-As a data structuring technique, the \prolog term is versatile and simple; however, it combines \emph{implementation} of data structures with \emph{access} in an unfortunate way. For example, to search a \q{tree} for an element we must use specific \q{tree} term patterns to unify against the actual tree:
-\begin{alltt}
+As a data structuring technique, the \textbf{Prolog} term is versatile and simple; however, it combines \textit{implementation} of data structures with \textit{access} in an unfortunate way. For example, to search a \verb+tree+ for an element we must use specific \verb+tree+ term patterns to unify against the actual tree:
+\begin{verbatim}
 find(A,tree(_,A,_)).
 find(A,tree(L,B,_)) :- A<B, find(A,L).
 find(A,tree(_,B,R)) :- A>B, find(A,R).
-\end{alltt}
-This simple program can be used to search an ordered binary tree, looking for elements that unify with the search term. The \q{find} program is concise, relatively clear and efficient. Perhaps this program was exactly what was needed.
+\end{verbatim}
+This simple program can be used to search an ordered binary tree, looking for elements that unify with the search term. The \verb+find+ program is concise, relatively clear and efficient. Perhaps this program was exactly what was needed.
 
-However, should it become necessary to adjust our tree representation -- perhaps to include a weight element -- then, in \prolog, \emph{all} references to the \q{tree} term will need to change, including existing uses which have no interest in the new weight feature. Our \q{find} program will certainly have to be modified -- to add the extra argument to the \q{tree} term and perhaps ignore it. On average there will an order of magnitude more references that \emph{use} the concept of \q{tree} than references which \emph{define} the essence of \q{tree}.
+However, should it become necessary to adjust our tree representation -- perhaps to include a weight element -- then, in \textbf{Prolog}, \textit{all} references to the \verb+tree+ term will need to change, including existing uses which have no interest in the new weight feature. Our \verb+find+ program will certainly have to be modified -- to add the extra argument to the \verb+tree+ term and perhaps ignore it. On average there will an order of magnitude more references that \textit{use} the concept of \verb+tree+ than references which \textit{define} the essence of \verb+tree+.
 
-In \go we can write the \q{find} program in a way that does not depend on the shape of the \q{tree} term:
-\begin{alltt}
+In L&O we can write the \verb+find+ program in a way that does not depend on the shape of the \verb+tree+ term:
+\begin{verbatim}
 find(A,T) :- T.hasLabel(A).
 find(A,T) :- A<T.label(), find(A,T.left()).
 find(A,T) :- A>T.label(), find(A,T.right()).
-\end{alltt}
-\go's labeled theory notation makes it straightforward to encapsulate the \q{tree} concept in an object, and to use an interface contract to access the tree. As a result, we should be able to add weights to our tree without upsetting existing uses of the tree -- in particular, the \q{find} program does not need to be modified.\note{It may need to be re-compiled however.}
+\end{verbatim}
+L&O's labeled theory notation makes it straightforward to encapsulate the \verb+tree+ concept in an object, and to use an interface contract to access the tree. As a result, we should be able to add weights to our tree without upsetting existing uses of the tree -- in particular, the \verb+find+ program does not need to be modified.\note{It may need to be re-compiled however.}
 
 For an OO language, such a capability is not novel, but traditionally, logic programming languages have not really focused on such engineering issues.
 
-\go has some features that distinguish it from some OO languages such as Java\tm. \go's object notation is based on Logic and Objects (\cite{fgm:92}) with some significant simplifications and modifications to incorporate types and  \emph{interface}s.
+L&O has some features that distinguish it from some OO languages such as Java\tm. L&O's object notation is based on Logic and Objects (\cite{fgm:92}) with some significant simplifications and modifications to incorporate types and  \textit{interface}s.
 
 \paragraph{Multiple paradigms}
-\go is a multi-paradigm language -- there are specialized notations for  functions, action rules and grammar rules, as well as predicates. The reason for this is two fold: it allows us to have tailored syntax and semantics for the different kinds of programs being written. Secondly, by offering these different notations we can encapsulate a more suitable semantics without the use of ugly operators such as \prolog's cut operator.
+L&O is a multi-paradigm language -- there are specialized notations for  functions, action rules and grammar rules, as well as predicates. The reason for this is two fold: it allows us to have tailored syntax and semantics for the different kinds of programs being written. Secondly, by offering these different notations we can encapsulate a more suitable semantics without the use of ugly operators such as \textbf{Prolog}'s cut operator.
 
 In many cases a logic programmer knows full well whether their program is intended to be fully relational or is actually a function. By giving different notations for these cases it allows programmers to signal their intentions more clearly than if all kinds of program have to be expressed in the single formalism of a logic clause.
 
-\paragraph{Strong types}
-\go\ is a strongly typed programming language. The purpose of using a strong type system is to enhance programmers' confidence in the correctness of the program -- it cannot replace a formal proof of correctness.
+\paragraph{Static types}
+L&O\ is a strongly statically typed programming language. The purpose of using a static type system is to enhance programmers' confidence in the correctness of the program -- it cannot replace a formal proof of correctness.
 
 We use an approach based on Hindley \& Milner's \cite{hindley:69} type term approach for representing types. However, type unification is augmented with a sub-type relation -- permitting types and classes to be defined as extensions of other types. In addition we require all programs and top-level variables and constants to have explicit type declarations. Variables in rules do not need type declarations -- although they are permitted.
 
-Having a strongly typed language can be quite constrictive compared to the untyped freedom one gets in languages such as \prolog.  However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.
+Having a static typed language can be quite constrictive compared to the untyped freedom one gets in languages such as \textbf{Prolog}.  However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.
 
 \paragraph{Meta-order and object-order}
-Unlike \prolog, \go\ does not permit data to be directly interpreted as code. The standard \prolog approach of using the same language for meta-level names of programs and programs themselves -- which in turn allows program text to be manipulated like other data -- has a number of technical problems; especially when considering distributed and secure applications.  However, as we shall see, \go's object oriented features allow us to emulate the important uses of Prolog's meta-level features. Moreover, in \go\ we can do this in a type safe way.
+Unlike \textbf{Prolog}, L&O\ does not permit data to be directly interpreted as code. The standard \textbf{Prolog} approach of using the same language for meta-level names of programs and programs themselves -- which in turn allows program text to be manipulated like other data -- has a number of technical problems; especially when considering distributed and secure applications.  However, as we shall see, L&O's object oriented features allow us to emulate the important uses of Prolog's meta-level features. Moreover, in L&O\ we can do this in a type safe way.
 
 \paragraph{Threads and distribution}
-\go\ is a multi-tasking programming language. It is possible to spawn off computations as separate threads or tasks.
+L&O\ is a multi-tasking programming language. It is possible to spawn off computations as separate threads or tasks.
 
 In a multi-threaded environment there are two overlapping concerns -- sharing of resources and coordination of activities. In the cases of shared resources the primary requirement is that the different users of a resource see consistent views of the resource. In the case of coordination the primary requirement is a means of controlling the flow of execution in the different threads of activity.
 
-\go threads may share access to objects, and to their state in the case of stateful objects -- within a single invocation of the system. \go supports synchronized access to such shared objects to permit contention issues to be addressed.
+L&O threads may share access to objects, and to their state in the case of stateful objects -- within a single invocation of the system. L&O supports synchronized access to such shared objects to permit contention issues to be addressed.
 
-Synchronizing access to shared resources is important, however it is not sufficient to achieve coordination between concurrent activities. In \go, coordination is achieved through \emph{message communication}. Our message communication functionality is not built-in to the language but is made available via the use of standard \emph{packages}, in particular the \q{go.mbox} package. The communications model in \q{go.mbox} is very simple: there are mailboxes and dropboxes: threads read their mail by querying their mailbox objects and can send messages to other threads using dropboxes linked to mailboxes. The model permits multiple implementations of the concept, indeed a single mailbox might receive mail delivered from a variety of kinds of dropboxes.
+Synchronizing access to shared resources is important, however it is not sufficient to achieve coordination between concurrent activities. In L&O, coordination is achieved through \textit{message communication}. Our message communication functionality is not built-in to the language but is made available via the use of standard \textit{packages}, in particular the \verb+go.mbox+ package. The communications model in \verb+go.mbox+ is very simple: there are mailboxes and dropboxes: threads read their mail by querying their mailbox objects and can send messages to other threads using dropboxes linked to mailboxes. The model permits multiple implementations of the concept, indeed a single mailbox might receive mail delivered from a variety of kinds of dropboxes.
 
-Overall, the intention behind the design of \go\ is to make programs more transparent: what you see in a \go\ program is what you mean -- there can be no hidden semantics. This property is what makes \go\ a reasonable language to use for high integrity applications -- such as agents that will be performing tasks that may involve real resources, or in safety critical areas.
+Overall, the intention behind the design of L&O\ is to make programs more transparent: what you see in a L&O\ program is what you mean -- there can be no hidden semantics. This property is what makes L&O\ a reasonable language to use for high integrity applications -- such as agents that will be performing tasks that may involve real resources, or in safety critical areas.
 
-\paragraph{The structure of Let's \go}
+\paragraph{The structure of Let's L&O}
 
 This book is intended to be read as an introduction to the language, to using it and to show how sophisticated programs can be built using its facilities. We assume some familiarity with programming, especially logic programming, although the pace is relatively gentle.
 
-Part~\ref{gettingStarted} gets us started, with the style of \go programs. Part~\ref{programming} explores some programming examples and techniques. In Part~\ref{inDetail} we look at the features of \go in more detail. This book is not a reference manual for \go; however, we do aim to cover the language in sufficient detail to impart the essence of \go.
+Part~\ref{gettingStarted} gets us started, with the style of L&O programs. Part~\ref{programming} explores some programming examples and techniques. In Part~\ref{inDetail} we look at the features of L&O in more detail. This book is not a reference manual for L&O; however, we do aim to cover the language in sufficient detail to impart the essence of L&O.
 
-Our style in presenting \go is rather informal; this is deliberate -- our focus is to explain the shape of \go and to show its utility. For a more detailed and formal explanation of the features of \go the reader is referred to the \go reference manual.
+Our style in presenting L&O is rather informal; this is deliberate -- our focus is to explain the shape of L&O and to show its utility. For a more detailed and formal explanation of the features of L&O the reader is referred to the L&O reference manual.
 
 %Part~\ref{agentProgramming} focuses on the development of simple agent systems using the facilities of the language. Our main example is a multi-agent scenario involving taxis and passengers. Taxis and passengers have to cooperate to achieve their respective goals, although the goals of a taxi and of a passenger are not identical.
 
 \paragraph{Conventions}
-We use a \q{typewriter} font whenever we are quoting either a specific element of \go, or something that may be typed in at the keyboard. We use \emph{emphasis} both for emphasis and to introduce a term for the first time. Many terms are defined in the Glossary, see page~\pageref{glossary}. Occasionally a line of text that is intended to be a single line is too long to fit into a line of print; in such situations we insert a \return character at the end of print lines that are split up.
+We use a \verb+typewriter+ font whenever we are quoting either a specific element of L&O, or something that may be typed in at the keyboard. We use \textit{emphasis} both for emphasis and to introduce a term for the first time. Many terms are defined in the Glossary, see page~\pageref{glossary}. Occasionally a line of text that is intended to be a single line is too long to fit into a line of print; in such situations we insert a \return character at the end of print lines that are split up.
 
-\begin{aside}
+\begin{quote}
 Every so often -- sometimes more than once on a given page -- you will see a paragraph highlighted this way. Such notes are often comments about how to use a given bit of information, or may be a warning about some issue that is relevant to the text at hand.
-\end{aside}
+\end{quote}
 
-\paragraph{Getting and installing \go}
-Appendix~\vref{install} discusses the process involved in installing the \go system. Please note that this process is quite likely to evolve; however, the location:
-\begin{alltt}
-http://homepage.mac.com/frankmccabe
-\end{alltt}
- will remain as a good source to get the \go system. (Be sure to look for the available files section.)
+\paragraph{Getting and installing L&O}
+Appendix~\vref{install} discusses the process involved in installing the L&O system. Please note that this process is quite likely to evolve; however, the location:
+\begin{verbatim}
+git@github.com:fmccabe/l-and-o.git
+\end{verbatim}
+ will remain as a good source to get the L&O system.
 
 \paragraph{Acknowledgments}
-Creating a programming language and writing about it are not solo activities. In my case I had the substantial help of a number of colleagues; most notably Keith Clark who is really a part of the design team for \go. He has tracked \go's progress through many different versions. 
+Creating a programming language and writing about it are not solo activities. In my case I had the substantial help of a number of colleagues; most notably Keith Clark who is really a part of the design team for L&O. He has tracked L&O's progress through many different versions. 
 
 Users are critical in any software enterprise, and Johnny Knottenbelt was one of the first. I hope that the inevitable stream of bugs that he found did not cause him too much grief.
 
-In addition Jonathan Dale and Kevin Twidle who have endured many \emph{explanations} of this or that new feature while trying to do their proper work. I thank my family, Midori and Stephen who have had less of a husband/father than they have the right to expect.
+In addition Jonathan Dale and Kevin Twidle who have endured many \textit{explanations} of this or that new feature while trying to do their proper work. I thank my family, Midori and Stephen who have had less of a husband/father than they have the right to expect.
 
-Finally, I thank you, dear reader, for taking the trouble to parse my English and following me on the road to \go.
+Finally, I thank you, dear reader, for taking the trouble to parse my English and following me on the road to L&O.
 
 \paragraph{Contact}
-If you have any questions, about the \go language or this book, please contact me at \q{frankmccabe@mac.com}.
+If you have any questions, about the L&O language or this book, please contact me at \verb+frankmccabe@mac.com+.

@@ -13,7 +13,9 @@
                     '_int2str'/5,
                     '_flt2str'/6,
                     '_int2flt'/2,'_flt2int'/2,
-                    '_display'/2
+                    '_display'/2,
+                    '_str_lt'/2, '_str_ge'/2,
+                    listify/2
                     ]).
 
 exit(X) :- halt(X).
@@ -82,3 +84,24 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 '_display'((Ln,Col,Sz),Term) :-
   writef("@%t:%t(%t) - %w",[Ln,Col,Sz,Term]).
 
+'_str_lt'(S1,S2) :-
+     string_codes(S1,C1),
+     string_codes(S2,C2),
+     codeSmaller(C1,C2),!.
+
+codeSmaller([],[_|_]).
+codeSmaller([C|_],[D|_]) :-
+     C<D.
+codeSmaller([C|L],[C|M]) :-
+     codeSmaller(L,M).
+
+'_str_ge'(S1,S2) :-
+     string_codes(S1,C1),
+     string_codes(S2,C2),
+     codeGe(C1,C2),!.
+
+codeGe([_|_],[]).
+codeGe([C|_],[D|_]) :-
+     C>D.
+codeGe([C|L],[C|M]) :-
+     codeGe(L,M).

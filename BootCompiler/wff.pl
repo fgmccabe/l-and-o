@@ -79,7 +79,13 @@ wffTypeQuants(V,Q,Qx) :- isBinary(V,"::",L,R), wffTypeQuants(L,Q,Qx), wffTypeExp
 wffTypeQuants(N,Q,[Nm|Q]) :- isIden(N,Nm).
 
 wffFaceTypes([]).
-wffFaceTypes([F|A]) :- isTypeAnnotation(F), wffFaceTypes(A).
+wffFaceTypes([F|A]) :- 
+  isTypeAnnotation(F),
+  wffFaceTypes(A).
+wffFaceTypes([F|A]) :- 
+  locOfAst(F,Lc),
+  reportError("%s not a valid type annotation",[F],Lc),
+  wffFaceTypes(A).
 
 wffTypeExps([]).
 wffTypeExps([T|L]) :- wffTypeExp(T), wffTypeExps(L).

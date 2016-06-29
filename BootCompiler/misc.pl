@@ -3,6 +3,7 @@
         collect/4,map/3,rfold/4,
         appStr/3,appInt/3,appFlt/3,appSym/3,appQuoted/4,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
+        localName/4,
         stringHash/3,hashSixtyFour/2]).
 
 concat([],X,X).
@@ -114,3 +115,9 @@ hashCodes([C|More],H0,Hx) :-
 
 hashSixtyFour(H0,H) :-
   H is H0 mod (1<<63).
+
+localName(_,Glue,Nm,Nm) :- 
+  sub_string(Nm,_,_,_,Glue),!.
+localName(Pkg,Glue,Nm,LclName) :-
+  string_concat(Pkg,Glue,T),
+  string_concat(T,Nm,LclName).

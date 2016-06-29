@@ -44,14 +44,6 @@ lo.comp.lexer{
     skipSpaces(),
     allTokens(More).
   
-
-  token:(token) --> tokenState.
-  token(tok(Tk,Lc)) --> skipSpaces(),
-    @currentLocation(Start),
-    nxtTok(Tk),
-    @currentLocation(End),
-    Lc = makeLocation(Start,End).
-
   nxtTok:(tok) --> tokenState.
   nxtTok(Num) --> digit(_)+, readNumber(Num).
   nxtTok(intTok(Ch)) --> [0c0, 0cc], charRef(Ch).
@@ -130,7 +122,7 @@ lo.comp.lexer{
   readFormat([]) --> eof.
 
   readNumber:(tok) --> tokenState.
-  readNumber(Tk) --> readNatural(First,0), readMoreNumber(Tk,First).
+  readNumber(Tk) --> readNatural(0,First), readMoreNumber(Tk,First).
 
   readDecimal:(integer) --> tokenState.
   readDecimal(In) --> [0c-], readNatural(0,Pl), In = 0-Pl.
@@ -138,7 +130,7 @@ lo.comp.lexer{
 
   readNatural:(integer,integer) --> tokenState.
   readNatural(SoFar,Int) --> digit(D), readNatural(SoFar*10+D,Int).
-  readNatural(SoFar,SoFar) --> [].
+  readNatural(SoFar,SoFar) --> \+digit(_).
 
   readMoreNumber:(tok,integer) --> tokenState.
   readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr), 

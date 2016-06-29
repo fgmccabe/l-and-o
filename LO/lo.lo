@@ -6,6 +6,7 @@ lo{
   public import lo.stream.
   public import lo.arith.
   public import lo.string.
+  public import lo.comparable.
 
   flatten : (ss) => string.
   flatten(D) => implode(flttn(D,[])).

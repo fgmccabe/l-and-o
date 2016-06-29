@@ -821,6 +821,9 @@ processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|De
 
 checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
   checkTerminals(Els,Terms,ElTp,E,Env).
+checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,stringLit(Lc,Text)) :- !,
+  findType("integer",Lc,Env,IntTp),     % strings are exploded into code points
+  subType(IntTp,ElTp,Env).
 checkNonTerminals(tuple(_,"()",[NT]),Tp,ElTp,Env,Ex,GrNT) :-
   checkNonTerminals(NT,Tp,ElTp,Env,Ex,GrNT).
 checkNonTerminals(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-

@@ -2,9 +2,7 @@ lo.arith{
   import lo.thing.
   import lo.display.
   import lo.logical.
-
-  integer <~ arith.
-  float <~ arith.
+  import lo.comparable.
 
   arith <~ {
     pl:  (this+)=>this.
@@ -25,6 +23,12 @@ lo.arith{
   (/):all t<~arith ~~ (t+,t+)=>t.
   x/y => x.dv(y).
 
+  integer <~ arith.
+  integer <~ comp.
+
+  float <~ arith.
+  float <~ comp.
+
   -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
   integer:integer.
   integer..{
@@ -32,6 +36,9 @@ lo.arith{
     tms(Y) => _int_times(this,Y).
     mns(Y) => _int_minus(this,Y).
     dv(Y) => _int_div(this,Y).
+
+    lt(Y) :- _int_lt(this,Y).
+    ge(Y) :- _int_ge(this,Y).
   }.
 
   float:float.
@@ -40,7 +47,10 @@ lo.arith{
     tms(Y) => _flt_times(this,Y).
     mns(Y) => _flt_minus(this,Y).
     dv(Y) => _flt_div(this,Y).
-  }.
+
+    lt(Y) :- _flt_lt(this,Y).
+    ge(Y) :- _flt_ge(this,Y).
+  }
 
   assert 2*3+4 = 10.
 

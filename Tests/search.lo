@@ -1,0 +1,38 @@
+search {
+  import lo.
+
+  -- Show the searchable interface approach to trees
+
+  all u ~~ searchable[u] <~ {
+    labeled:(u){}.
+    left:(this){}.
+    right:(this){}.
+  }
+
+  all t ~~ tree[t] <~ searchable[t].
+
+  empty: tree[_].
+  empty .. {
+    labeled(_) :- false.
+    left(_) :- false.
+    right(_) :- false.
+  }
+
+  node: all u ~~ (tree[u],u,tree[u]) <=> tree[u].
+  node(Left,Lbl,Right) .. {
+    labeled(Lbl).
+    left(Left).
+    right(Right).
+  }
+
+  search: all u <~ comp,t<~searchable[u] ~~ (u,t){}.
+  search(A,T) :- T.labeled(A).
+  search(A,T) :- T.labeled(B), B>A, T.left(L), search(A,L).
+  search(A,T) :- T.labeled(B), B<A, T.right(R), search(A,R).
+
+  sample:tree[string].
+  sample = node(node(empty,"A",empty),"B",node(empty,"C",empty)).
+
+  assert search("A",sample), search("B",sample), search("C",sample).
+  assert \+ search("AB",sample).
+}

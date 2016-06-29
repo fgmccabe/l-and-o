@@ -33,14 +33,31 @@ main(Args) :-
   parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
   openRepo(Opts,Repo),
   parsePkgName(Entry,Pkg,Vers),
-  processPackage(Pkg,Vers,Repo,[],Loaded,[],_).
+  processPackage(Pkg,Vers,Repo,[],Loaded,[],_),
+  lookForMain(Pkg,LOArgs).
 
 processPackage(Pkg,'*',Repo,Loaded,Ldx,PrIn,PrOut) :-
   processPackage(Pkg,defltVersion,Repo,Loaded,Ldx,PrIn,PrOut).
 processPackage(Pkg,Vers,Repo,Loaded,Ldx,PrIn,PrOut) :-
   loadPkg(Pkg,Vers,Repo,Code,Imports),
   assertAll(Code,PrIn,Pr0),
-  processImports(Imports,[(Pkg,Vers)|Loaded],Ldx,Repo,Pr0,PrOut).
+  processImports(Imports,[(Pkg,Vers)|Loaded],Ldx,Repo,Pr0,PrOut),
+  initPkg(Pkg).
+
+initPkg(pkg(Pkg)) :-
+  localName(Pkg,"@","init",Init),
+  atom_string(ICall,Init),
+  current_predicate(ICall/0),!,
+  call(ICall).
+initPkg(_).
+
+lookForMain(pkg(Top),Args) :-
+  localName(Top,"@","main",M),
+  atom_string(Main,M),
+  current_predicate(Main/1),!,
+  listify(Args,LArgs),
+  call(Main,LArgs).
+lookForMain(_,_).
 
 assertAll([],Pr0,Pr0).
 assertAll([T|M],Pr0,Prx) :-
@@ -57,7 +74,6 @@ predOf((H :- _),P) :- !,
 predOf(T,T/0) :- atom(T),!.
 predOf(T,P/A) :-
   compound_name_arity(T,P,A).
-
 
 processImports([],Ld,Ld,_,Pr,Pr).
 processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-

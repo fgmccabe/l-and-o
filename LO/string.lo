@@ -1,5 +1,12 @@
 lo.string{
   import lo.thing.
+  import lo.comparable.
 
-  string <~ thing.
+  string <~ comp.
+
+  string:string.
+  string .. {
+    lt(Y) :- _str_lt(this,Y).
+    ge(Y) :- _str_ge(this,Y).
+  }
 }

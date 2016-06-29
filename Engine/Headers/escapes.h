@@ -44,12 +44,20 @@ escape(_int_plus,13,False,False,"F2+i+ii","add two integers")
 escape(_int_minus,14,False,False,"F2+i+ii","subtract two integers")
 escape(_int_times,15,False,False,"F2+i+ii","multiply two integers")
 escape(_int_div,16,False,False,"F2+i+ii","divide two integers")
+
 escape(_flt_plus,13,False,False,"F2+f+ff","add two floats")
 escape(_flt_minus,14,False,False,"F2+f+ff","subtract two floats")
 escape(_flt_times,15,False,False,"F2+f+ff","multiply two floats")
 escape(_flt_div,16,False,False,"F2+f+ff","divide two floats")
+
 escape(_int_abs,24,False,False,"F1+ii","integer absolute value")
 escape(_flt_abs,24,False,False,"F1+ff","float absolute value")
+
+escape(_int_lt,27,False,False,"P2+i+i","integer less than")
+escape(_int_ge,27,False,False,"P2+i+i","integer greater or equal")
+
+escape(_flt_lt,27,False,False,"P2+f+f","float less than")
+escape(_flt_ge,27,False,False,"P2+f+f","float greater or equal")
 
 escape(_int2flt,25,False,False,"F1+if","convert integer to float")
 escape(_flt2int,26,False,False,"F1+fi","convert float to integer")
@@ -89,11 +97,6 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
   escape(itrunc,52,False,False,"F1+Ni","truncate to 64 bit integer")
   escape(integral,53,False,False,"P1+N","test if number is integral")
   escape(n2float,54,False,False,":k'u'NF1+k'u'f","float a number")
-  
-  escape(_less,55,False,False,":k't'AP2+k't'+k't'","compare terms")
-  escape(_leq,56,False,False,":k't'AP2+k't'+k't'","compare terms")
-  escape(_gt,57,False,False,":k't'AP2+k't'+k't'","compare terms")
-  escape(_geq,58,False,False,":k't'AP2+k't'+k't'","compare terms")
   
   escape(ground,59,False,False,":k't'AP1+k't'","test for grounded")
 
@@ -238,6 +241,10 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
 // String and symbol handling escapes
   escape(_int2str,214,False,False,"F4+i+i+i+iS","format an integer as a string")
   escape(_flt2str,215,False,False,"F5+f+i+i+l+lS","format a floating as a string")
+
+  escape(_str_lt,216,False,False,"P2+S+S","String 1 is less than string 2")
+  escape(_str_ge,217,False,False,"P2+S+S","String 1 is greater than or equals to string 2")
+
 /*
   escape(_stringOf,216,False,False,":k't'AF3+k't'+i+iS","convert value to a string")
   escape(_trim,217,False,False,"F2+S+iS","trim a string to a width")
