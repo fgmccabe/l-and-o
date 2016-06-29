@@ -5,3 +5,5 @@ CMakeCache.txt
 Makefile
 Tmp/
 */Build/
+HeaderGenerator/ops
+HeaderGenerator/genesc

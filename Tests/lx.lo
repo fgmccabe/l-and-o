@@ -130,5 +130,5 @@ lx{
 
   -- show Toks :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
-  show implode(flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks))) :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+  show flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 }
