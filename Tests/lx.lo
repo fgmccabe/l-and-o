@@ -20,6 +20,11 @@ lx{
     len = Len.
   }.
 
+  locDisp : display[location].
+  locDisp .. {
+    display(loc(Off,Len)) => ssSeq([intDisp.display(Off),ss("-"),intDisp.display(Len)]).
+  }.
+
   tkState:(list[integer],integer) <=> tokenState.
   tkState(Chars,Off) .. {
     eof() :- Chars = [].
@@ -33,18 +38,33 @@ lx{
 
   token ::= intTok(integer) | fltTok(float) | lpar | rpar | plus | times.
 
+  tokDisp : display[token].
+  tokDisp .. {
+    display(intTok(Ix)) => intDisp.display(Ix).
+    display(fltTok(Dx)) => fltDisp.display(Dx).
+    display(lpar) => ss("(").
+    display(rpar) => ss(")").
+    display(plus) => ss("+").
+    display(times) => ss("*").
+  }.
+
+  pairDisp : all t,u ~~ (display[t],display[u]) <=> display[(t,u)].
+  pairDisp(D1,D2) .. {
+    display((A,B)) => ssSeq([ss("("),D1.display(A),ss(", "),D2.display(B),ss(")")]).
+  }.
+
   private
   makeLocation:(integer,integer) => location.
   makeLocation(StartOff,EndOff) => 
       loc(StartOff,EndOff-StartOff).
 
-  tokenize:(list[(token,location)]) --> tokenState.
+  tokenize:(list[(token,location)]-) --> tokenState.
   tokenize(AllTokens) -->
     skipSpaces(),
     allTokens(AllTokens).
 
   private
-  allTokens : (list[(token,location)]) --> tokenState.
+  allTokens : (list[(token,location)]-) --> tokenState.
   allTokens([]) --> eof.
   allTokens([(Tk,Lc),..More]) -->
     @currentLocation(Start),
@@ -107,4 +127,8 @@ lx{
   skipSpaces() --> [].
 
   assert tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+
+  -- show Toks :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+
+  show implode(flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks))) :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 }

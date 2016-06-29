@@ -287,6 +287,10 @@ transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],Rules,Rx) :-
   collect(Others,canon:isAssertion,Asserts,Rest),
   transformAssertions(Pkg,Map,Opts,Lc,[assertion(Lc,G)|Asserts],Rules,R0),
   transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
+transformOthers(Pkg,Map,Opts,[show(Lc,E)|Others],Rules,Rx) :-
+  collect(Others,canon:isShow,Shows,Rest),
+  transformShows(Pkg,Map,Opts,Lc,[show(Lc,E)|Shows],Rules,R0),
+  transformOthers(Pkg,Map,Opts,Rest,R0,Rx).
 
 transformAssertions(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
   rfold(Asserts,transform:collectGoal,true(_),G),
@@ -295,6 +299,14 @@ transformAssertions(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
 
 collectGoal(assertion(_,G),true(_),G) :-!.
 collectGoal(assertion(_,G),O,conj(O,G)).
+
+transformShows(Pkg,Map,Opts,Lc,Asserts,Rules,Rx) :-
+  rfold(Asserts,transform:collectShow,true(_),G),
+  localName(Pkg,"@","show",LclName),
+  transformClause(Map,Opts,prg(LclName,0),1,clause(Lc,"show",[],true(''),G),Rules,R0,R0,Rx).
+
+collectShow(show(Lc,G),true(_),show(Lc,G)) :-!.
+collectShow(show(Lc,G),O,conj(O,show(Lc,G))).
 
 transformClass(Map,Opts,class(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Entry,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Rules,R0),
@@ -654,11 +666,15 @@ trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
 trGoal(phrase(Lc,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   dcgBody(conj(Lc,NT,eof(Lc)),G1,Gx,StIn,_,[StIn|Q0],Qx,Map,Opts,Ex0,Exx).
-
+trGoal(show(Lc,Exp),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+  trLocation(Lc,Loc,G,G0,Q,Q0,Map,Opts,Ex,Ex0),
+  trExp(Exp,Trm,Q0,Qx,G0,G1,G1,[ecall("_display",[Loc,Trm])|Gx],Map,Opts,Ex0,Exx).
 trGoal(call(Lc,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
   trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
   trGoalCall(Pred,AG,G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+
+trLocation(loc(Ln,Col,_,Sz),tpl([intgr(Ln),intgr(Col),intgr(Sz)]),G,G,Q,Q,_,_,Ex,Ex).
 
 trGoalCall(v(_,Nm),Args,[ecall(Nm,Args)|Tail],Tail,Q,Q,_,_,Ex,Ex) :-
   isEscape(Nm),!.

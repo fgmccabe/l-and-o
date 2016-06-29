@@ -6,4 +6,15 @@ lo{
   public import lo.stream.
   public import lo.arith.
   public import lo.string.
+
+  flatten : (ss) => list[integer].
+  flatten(D) => flttn(D,[]).
+
+  flttn : (ss,list[integer]) => list[integer].
+  flttn(ss(S),Rest) => explode(S)<>Rest.
+  flttn(ssSeq(L),Rest) => flttnList(L,Rest).
+
+  flttnList:(list[ss],list[integer]) => list[integer].
+  flttnList([],Rest) => Rest.
+  flttnList([E,..R],Rest) => flttn(E,flttnList(R,Rest)).
 }

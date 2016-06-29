@@ -155,6 +155,11 @@ isAssertion(St) :-
   isUnary(St,"assert",A),
   wffCond(A).
 
+isShow(St) :-
+  isUnary(St,"show",A),
+  wffTerm(A).
+
+
 wffDefinition(Term) :-
   isBinary(Term,"=",Hd,Result),
   wffHead(Hd),

@@ -54,6 +54,7 @@ lo.comp.operators{
   prefixOp("private",1700,1699).	 /* private program */
   prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
+  prefixOp("show",1260,1259).	 /* display debug message */
   prefixOp("all",1245,1244).	 /* universal quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */

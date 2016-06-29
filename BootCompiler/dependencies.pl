@@ -18,6 +18,9 @@ collectDefinitions([St|Stmts],Defs,P,A,[St|I],Other) :-
 collectDefinitions([St|Stmts],Defs,P,A,I,[St|Other]) :-
   isUnary(St,"assert",_),
   collectDefinitions(Stmts,Defs,P,A,I,Other).
+collectDefinitions([St|Stmts],Defs,P,A,I,[St|Other]) :-
+  isUnary(St,"show",_),
+  collectDefinitions(Stmts,Defs,P,A,I,Other).
 collectDefinitions([St|Stmts],Defs,P,[(V,St)|A],I,Other) :-
   isBinary(St,":",L,_),
   isIden(L,V),

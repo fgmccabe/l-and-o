@@ -144,6 +144,9 @@ checkOthers([St|Stmts],Ass,Env,Path) :-
 checkOther(St,[assertion(Lc,Cond)|More],More,Env,_) :-
   isUnary(St,Lc,"assert",C),!,
   checkCond(C,Env,_,Cond).
+checkOther(St,[show(Lc,Term)|More],More,Env,_) :-
+  isUnary(St,Lc,"show",E),!,
+  typeOfTerm(E,in(topType),_,Env,_,Term).
 
 checkGroups([],_,_,[],E,E,_).
 checkGroups([Gp|More],Fields,Annots,Defs,Env,E,Path) :-
@@ -534,7 +537,7 @@ typeOfTerm(Term,ET,RT,Env,Ev,Exp) :-
   isBinary(Term,Lc,":",L,R), !,
   parseType(R,Env,RT),
   checkType(Lc,RT,ET,Env),
-  typeOfTerm(L,RT,_,Env,Ev,Exp).
+  typeOfTerm(L,in(RT),_,Env,Ev,Exp).
 typeOfTerm(P,ET,Tp,Env,Ex,where(Ptn,Cond)) :-
   isBinary(P,"::",L,R),
   typeOfTerm(L,ET,Tp,Env,E0,Ptn),

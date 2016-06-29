@@ -29,7 +29,6 @@ lo.display{
 
     displayMore : (list[t]) => ss.
     displayMore([]) => ss("]").
-    displayMore([E,..M]) => ssSeq([ss(","),ssSp,ED.display(E),displayMore(M)]).
+    displayMore([E,..M]) => ssSeq([ss(","),ED.display(E),displayMore(M)]).
   }.
-
 }
