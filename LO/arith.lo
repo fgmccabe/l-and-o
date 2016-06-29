@@ -34,6 +34,14 @@ lo.arith{
     dv(Y) => _int_div(this,Y).
   }.
 
+  float:float.
+  float .. {
+    pl(Y) => _flt_plus(this,Y).
+    tms(Y) => _flt_times(this,Y).
+    mns(Y) => _flt_minus(this,Y).
+    dv(Y) => _flt_div(this,Y).
+  }.
+
   assert 2*3+4 = 10.
 
   intDisp : display[integer].

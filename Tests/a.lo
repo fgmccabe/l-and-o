@@ -16,12 +16,18 @@ a{
  m:(string){}.
  m("d").
 
+ f:(string){}.
+ f("a").
+ f("g").
+
  gp:(string,string){}.
  gp(x,y) :-- p(x,z), p(z,y).
 
  assert p("a","b"), gp("a","d").
 
  assert gp(x,y) *> m(y).
+
+ assert \+ (gp(x,y) *> f(x)).
 
  fred:string.
  fred = "fred".

@@ -61,7 +61,7 @@ legalNextRight([integerTok(_,_)|_],_).
 legalNextRight([floatTok(_,_)|_],_).
 
 term00([idTok(I,Lc)|Toks],T,Toks) :- 
-      (isOperator(I,_), \+lookAhead(rpar(_),Toks), !, reportError("unexpected operator: %s",[I],Lc),T=void(Lc);
+      (isOperator(I,_), \+lookAhead(rpar(_),Toks), !, reportError("unexpected operator: '%s'",[I],Lc),T=void(Lc);
       T = name(Lc,I)).
 term00([lpar(Lc0),rpar(Lc2)|Toks],tuple(Lc,"()",[]),Toks) :- mergeLoc(Lc0,Lc2,Lc).
 term00([lpar(Lcx)|Tks],T,Toks) :- term(Tks,2000,Seq,Tks2), checkToken(Tks2,Toks,rpar(Lcy),"missing close parenthesis, got %w"), mergeLoc(Lcx,Lcy,Lc), tupleize(Seq,Lc,"()",T).
@@ -132,7 +132,7 @@ checkToken([Tk|Toks],Toks,_,Msg) :- locOfToken(Tk,Lc), reportError(Msg,[Tk],Lc).
 checkTerminator([],[]).
 checkTerminator(Toks,Toks) :- Toks = [rbrce(_)|_].
 checkTerminator(Tks,RTks) :-
-    checkToken(Tks,RTks,term(_),"missing terminator, got %w").
+    checkToken(Tks,RTks,term(_),"missing terminator, got '%s'").
 
 handleInterpolation([segment(Str,Lc)],_,string(Lc,Str)).
 handleInterpolation([],Lc,string(Lc,"")).

@@ -11,7 +11,8 @@
                     '_isSmChar'/1,'_isSoChar'/1,'_isZlChar'/1,'_isZpChar'/1,'_isZsChar'/1,
                     '_isLetterChar'/1,
                     '_int2str'/5,
-                    '_flt2str'/6
+                    '_flt2str'/6,
+                    '_int2flt'/2,'_flt2int'/2
                     ]).
 
 
@@ -36,7 +37,7 @@ explode(S,C) :- string_codes(S,CC), listify(CC,C).
 listify([],'lo.list#[]').
 listify([E|L],'lo.list#,..'(E,LL)) :- listify(L,LL).
 
-implode(C,S) :- string_codes(S,C).
+implode(C,S) :- string_codes(C,S).
 
 /* Unicode character class */
 
@@ -73,6 +74,9 @@ implode(C,S) :- string_codes(S,C).
 
 '_isLetterChar'(X) :- unicode_property(X,category('Le')). % is letter char
 
-'_int2str'(Ix,_,_,_,Str) :- number_string(Ix,Str).
-'_flt2str'(Dx,_,_,_,_,Str) :- number_string(Dx,Str).
+'_int2str'(Str,Ix,_,_,_) :- number_string(Ix,Str).
+'_flt2str'(Str,Dx,_,_,_,_) :- number_string(Dx,Str).
+
+'_int2flt'(X,X).
+'_flt2int'(X,X).
 

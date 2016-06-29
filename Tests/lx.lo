@@ -1,0 +1,110 @@
+lx{
+  -- Basic test of grammar and pactual parsing
+
+  import lo.
+
+  tokenState <~ stream[integer].
+  tokenState <~ {
+    currentLocation:(integer){}
+  }.
+
+  location <~ thing.
+  location <~ {
+    offset : integer.
+    len : integer.
+  }.
+
+  loc : (integer,integer) <=> location.
+  loc(Off,Len) ..{
+    offset = Off.
+    len = Len.
+  }.
+
+  tkState:(list[integer],integer) <=> tokenState.
+  tkState(Chars,Off) .. {
+    eof() :- Chars = [].
+
+    hdtl(Ch,Next) :: Chars =. [Ch,..Rest] :-- Next = tkState(Rest,Off+1).
+
+    cons(Ch) => tkState([Ch,..Chars],Off).
+
+    currentLocation(Off).
+  }.
+
+  token ::= intTok(integer) | fltTok(float) | lpar | rpar | plus | times.
+
+  private
+  makeLocation:(integer,integer) => location.
+  makeLocation(StartOff,EndOff) => 
+      loc(StartOff,EndOff-StartOff).
+
+  tokenize:(list[(token,location)]) --> tokenState.
+  tokenize(AllTokens) -->
+    skipSpaces(),
+    allTokens(AllTokens).
+
+  private
+  allTokens : (list[(token,location)]) --> tokenState.
+  allTokens([]) --> eof.
+  allTokens([(Tk,Lc),..More]) -->
+    @currentLocation(Start),
+    nxtTok(Tk),
+    @currentLocation(End),
+    Lc = makeLocation(Start,End),
+    skipSpaces(),
+    allTokens(More).
+
+  nxtTok:(token) --> tokenState.
+  nxtTok(Num) --> digit(_)+, readNumber(Num).
+  nxtTok(lpar) --> [0c(].
+  nxtTok(rpar) --> [0c)].
+  nxtTok(plus) --> [0c+].
+  nxtTok(times) --> [0c*].
+
+  readNumber:(token) --> tokenState.
+  readNumber(Tk) --> readNatural(0,First), readMoreNumber(Tk,First).
+
+  readDecimal:(integer) --> tokenState.
+  readDecimal(In) --> [0c-], readNatural(0,Pl), In = 0-Pl.
+  readDecimal(In) --> readNatural(0,In).
+
+  readNatural:(integer,integer) --> tokenState.
+  readNatural(SoFar,Int) --> digit(D), readNatural(SoFar*10+D,Int).
+  readNatural(SoFar,SoFar) --> [].
+
+  readMoreNumber:(token,integer) --> tokenState.
+  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr), 
+      exponent(_int2flt(Decimal)+Fr,Fp).
+  readMoreNumber(intTok(Ix),Ix) --> [].
+
+  fraction:(float+,float+,float-) --> tokenState.
+  fraction(Scale,SoFar,Result) --> digit(D), fraction(Scale*0.1,SoFar+_int2flt(D)*Scale,Result).
+  fraction(_,Fract,Fract) --> [].
+
+  exponent:(float+,float-) --> tokenState.
+  exponent(SoFar,Fp) --> ([0ce] | [0cE]), readDecimal(Exp), Fp = SoFar*_pwr(10.0,_int2flt(Exp)).
+  exponent(Fp,Fp) --> [].
+
+  digit:(integer) --> tokenState.
+  digit(0) --> [0c0].
+  digit(1) --> [0c1].
+  digit(2) --> [0c2].
+  digit(3) --> [0c3].
+  digit(4) --> [0c4].
+  digit(5) --> [0c5].
+  digit(6) --> [0c6].
+  digit(7) --> [0c7].
+  digit(8) --> [0c8].
+  digit(9) --> [0c9].
+
+  space:() --> tokenState.
+  space() --> [0c ].
+  space() --> [0c\t].
+  space() --> [0c\n].
+
+  skipSpaces: () --> tokenState.
+  skipSpaces() --> space()!, skipSpaces().
+  skipSpaces() --> [].
+
+  assert tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+}

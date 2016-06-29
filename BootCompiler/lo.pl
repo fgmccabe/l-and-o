@@ -33,29 +33,41 @@ main(Args) :-
   parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
   openRepo(Opts,Repo),
   parsePkgName(Entry,Pkg,Vers),
-  processPackage(Pkg,Vers,Repo,[],Loaded).
+  processPackage(Pkg,Vers,Repo,[],Loaded,[],_).
 
-processPackage(Pkg,'*',Repo,Loaded,Ldx) :-
-  processPackage(Pkg,defltVersion,Repo,Loaded,Ldx).
-processPackage(Pkg,Vers,Repo,Loaded,Ldx) :-
+processPackage(Pkg,'*',Repo,Loaded,Ldx,PrIn,PrOut) :-
+  processPackage(Pkg,defltVersion,Repo,Loaded,Ldx,PrIn,PrOut).
+processPackage(Pkg,Vers,Repo,Loaded,Ldx,PrIn,PrOut) :-
   loadPkg(Pkg,Vers,Repo,Code,Imports),
-  assertAll(Code),
-  processImports(Imports,[(Pkg,Vers)|Loaded],Ldx,Repo).
+  assertAll(Code,PrIn,Pr0),
+  processImports(Imports,[(Pkg,Vers)|Loaded],Ldx,Repo,Pr0,PrOut).
 
-assertAll([]).
-assertAll([T|M]) :-
+assertAll([],Pr0,Pr0).
+assertAll([T|M],Pr0,Prx) :-
+  checkPred(T,Pr0,Pr1),
   assert(T),
-  assertAll(M).
+  assertAll(M,Pr1,Prx).
 
-processImports([],Ld,Ld,_).
-processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo) :-
+checkPred(T,Pr,Px) :-
+  predOf(T,P),!,
+  (is_member(P,Pr),!,Px=Pr ; abolish(P),Px=[P|Pr]).
+
+predOf((H :- _),P) :- !,
+  predOf(H,P).
+predOf(T,T/0) :- atom(T),!.
+predOf(T,P/A) :-
+  compound_name_arity(T,P,A).
+
+
+processImports([],Ld,Ld,_,Pr,Pr).
+processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
   is_member((Pkg,LdVers),Loaded),
   (LdVers \= Vers -> 
       runTimeMsg("not permitted to load multiple versions of same package: %s@%s, %s already loaded",[Pkg,Vers,LdVers]);true),
-  processImports(Imports,Loaded,Ldx,Repo).
-processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo) :-
-  processPackage(Pkg,Vers,Repo,Loaded,LdI),
-  processImports(Imports,LdI,Ldx,Repo).
+  processImports(Imports,Loaded,Ldx,Repo,Pr,Prx).
+processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
+  processPackage(Pkg,Vers,Repo,Loaded,LdI,Pr,Pr0),
+  processImports(Imports,LdI,Ldx,Repo,Pr0,Prx).
 
 parsePkgName(P,pkg(Pkg),v(Version)) :-
   sub_string(P,Before,_,After,"#"),!,

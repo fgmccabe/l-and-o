@@ -783,16 +783,22 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   typeOfTerm(M,in(StreamType),_,E0,E1,Rest),
   StreamType = typeExp(_,[ElTp]),
   checkNonTerminals(L,inout(StrType),in(ElTp),E1,Ev,NT).
-checkCond(Term,Env,Ev,phrase(Lc,NT,Strm)) :-
+checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
+  checkInvokeGrammar(Lc,L,R,Env,Ev,Goal).
+checkCond(Term,Env,Ev,Call) :-
+  isRoundTerm(Term,Lc,F,A),
+  ( typeOfKnown(F,in(topType),PrTp,Env,E0,Pred),
+    PrTp = predType(ArgTps),
+    typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args),
+    Call = call(Lc,Pred,Args);
+    Call = true(Lc)).
+
+checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
   findType("stream",Lc,Env,StreamType),
   typeOfTerm(R,in(StreamType),StrType,Env,E1,Strm),
   StreamType = typeExp(_,[ElTp]),
   checkNonTerminals(L,inout(StrType),in(ElTp),E1,Ev,NT).
-checkCond(Term,Env,Ev,call(Lc,Pred,Args)) :-
-  isRoundTerm(Term,Lc,F,A),
-  typeOfTerm(F,in(topType),predType(ArgTps),Env,E0,Pred),
-  typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args).
 
 checkConds([C],Env,Ex,Cond) :-
   checkCond(C,Env,Ex,Cond).
@@ -878,10 +884,14 @@ checkNonTerminals(Term,Tp,_,Env,Ev,dip(Lc,v(Lc,NV),Cond)) :-
   declareVar(NV,Lc,vr(NV,Tp),Env,E0),
   binary(Lc,".",name(Lc,NV),Op,NOp),
   checkCond(app(Lc,NOp,tuple(Lc,"()",Args)),E0,Ev,Cond).
-checkNonTerminals(Term,Tp,_,Env,Ev,call(Lc,Pred,Args)) :-
+checkNonTerminals(Term,Tp,_,Env,Ev,NT) :-
   isRoundTerm(Term,Lc,F,A),
-  typeOfTerm(F,in(topType),grammarType(ArgTps,Tp),Env,E0,Pred),
-  typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args).
+  typeOfKnown(F,in(topType),GrTp,Env,E0,Pred),
+  ( GrTp = grammarType(ArgTps,_), % must be done out of call to typeOfKnown
+    typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args),
+    NT = call(Lc,Pred,Args) ;
+    reportError("type of %s:%s not consistent with expected stream type: %s",[F,GrTp,Tp],Lc),
+    NT = terminals(Lc,[])).
 checkNonTerminals(Term,_,_,Env,Env,eof(Lc)) :-
   isIden(Term,Lc,"eof").
 checkNonTerminals(Term,_,_,Env,Ex,goal(Lc,Cond)) :-

@@ -33,7 +33,8 @@ transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
 transformMdlDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
   transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Ex0),
   localName(Prefix,"@",Nm,LclName),
-  Ex0 = [clse([],prg(LclName,1),[enum(LclName)],[neck])|Exx].
+  localName(Prefix,"#",Nm,EnumName),
+  Ex0 = [clse([],prg(LclName,1),[enum(EnumName)],[neck])|Exx].
 
 transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
 
@@ -147,7 +148,7 @@ transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
   trExps(A,Args,Extra,Q0,Q1,PreG,PGx,PGx,FBg,Map,ClOpts,Ex,Ex0), % head args
   genVar("StIn",StIn),
 
-  dcgBody(Body,BG,BGx,StIn,StOut,[StIn,StOut|Q1],Q2,Map,ClOpts,Ex0,Ex1), % grammar body
+  dcgBody(Body,BG,BGx,StIn,StOut,[StIn|Q1],Q2,Map,ClOpts,Ex0,Ex1), % grammar body
   trCons("cons",2,Ahead),
   pushTerminals(PB,Ahead,BGx,DFG,StOut,StX,Q2,Q3,Map,ClOpts,Ex1,Exx),                % push back
 
@@ -510,20 +511,20 @@ trVarExp(Lc,Nm,idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_) :-
   reportError("'%s' not defined",[Nm],Lc).
 
 trExpCallOp(v(_,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
-  concat([X],Args,XArgs),
+  concat(Args,[X],XArgs),
   merge([X],Q,Qx),
   isEscape(Nm),!.
 trExpCallOp(v(_,Nm),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
   implementFunCall(Reslt,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
 trExpCallOp(dot(_,Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
-  concat([X],Args,XArgs),
+  concat(Args,[X],XArgs),
   merge([X],Q,Q1),
   trCons(Fld,XArgs,Op),
   C = cons(Op,XArgs),
   trExpCallDot(Rec,Rec,C,X,Exp,Q1,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
 trExpCallOp(pkgRef(_,Pkg,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fun,XArgs)|Tailx],Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
-  concat([X],Args,XArgs),
+  concat(Args,[X],XArgs),
   merge([X],Q,Qx),
   lookupPkgRef(Map,Pkg,Nm,moduleFun(_,Fun)).
 
@@ -652,7 +653,8 @@ trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Rem,StOut,Q2,Qx,G2,G3,G3,Gx,Q2,Qx,Map,Opts,Ex1,Exx).
 trGoal(phrase(Lc,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  dcgBody(conj(Lc,NT,eof(Lc)),G1,Gx,StIn,StOut,[StIn,StOut|Q0],Qx,Map,Opts,Ex0,Exx).
+  dcgBody(conj(Lc,NT,eof(Lc)),G1,Gx,StIn,_,[StIn|Q0],Qx,Map,Opts,Ex0,Exx).
+
 trGoal(call(Lc,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
   trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),

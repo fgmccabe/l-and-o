@@ -39,10 +39,10 @@ displayType(Tp) :- showType(Tp,Chrs,[]), string_chars(Res,Chrs), write(Res).
 showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types),O,E) :-
   appStr(Pkg,O,O1),
   appStr("{\n",O1,O2),
-  showImports(Imports,O2,O3),
-  showTypeDefs(Types,O3,O4),
-  showDefs(Defs,O4,O5),
-  showOthers(Others,O5,O6),
+  showImports(Imports,O2,O3),!,
+  showTypeDefs(Types,O3,O4),!,
+  showDefs(Defs,O4,O5),!,
+  showOthers(Others,O5,O6),!,
   appStr("}.\n",O6,E),!.
 
 showCanonTerm(v(_,Nm),O,E) :- appStr(Nm,O,E).
@@ -137,7 +137,7 @@ showCanonTerm(forall(_,Gen,Test),O,E) :-
   showCanonTerm(Test,O2,O3),
   appStr(")",O3,E).
 showCanonTerm(phrase(_,NT,Strm),O,Ox) :-
-  showCanonTerm(NT,O,O1),
+  showNonTerminal(NT,O,O1),
   appStr("%%",O1,O2),
   showCanonTerm(Strm,O2,Ox).
 showCanonTerm(phrase(_,NT,Strm,Rem),O,Ox) :-
