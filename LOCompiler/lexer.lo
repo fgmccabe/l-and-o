@@ -46,7 +46,7 @@ lo.comp.lexer{
   
   nxtTok:(tok) --> tokenState.
   nxtTok(Num) --> digit(_)+, readNumber(Num).
-  nxtTok(intTok(Ch)) --> [0c0, 0cc], charRef(Ch).
+  nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
   nxtTok(lpar) --> [0c(].
   nxtTok(rpar) --> [0c)].
   nxtTok(lbra) --> [0c[].
@@ -55,7 +55,7 @@ lo.comp.lexer{
   nxtTok(rbrce) --> [0c}].
   nxtTok(lqpar) --> [0c<, 0c|].
   nxtTok(rqpar) --> [0c|, 0c>].
-  nxtTok(period) --> [0c.], space().
+  nxtTok(period) --> [0c.], whiteSpace().
   nxtTok(terminal) --> eof.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
   nxtTok(idTok(Id)) --> [0c'], readQuoted(Q), { Id = implode(Q)}.
@@ -188,13 +188,11 @@ lo.comp.lexer{
   hexDigit(14) --> [0cE].
   hexDigit(15) --> [0cF].
 
-  space:() --> tokenState.
-  space() --> [0c ].
-  space() --> [0c\t].
-  space() --> [0c\n].
+  whiteSpace:() --> tokenState.
+  whiteSpace() --> [X] :: (_isZsChar(X) | _isZlChar(X) | _isZpChar(X) | _isCcChar(X))!.
 
   skipSpaces: () --> tokenState.
-  skipSpaces() --> space()!, skipSpaces().
+  skipSpaces() --> whiteSpace(), skipSpaces().
   skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(), skipSpaces().
   skipSpaces() --> [0c/, 0c*], blockComment(), skipSpaces().
   skipSpaces() --> [].

@@ -6,11 +6,12 @@
 :- use_module(encode).
 :- use_module(uri).
 
-genRules(export(Pkg,Imports,Fields,Types,Rules),Text) :-
+genRules(export(Pkg,Imports,Fields,Types,Classes,Rules),Text) :-
   genImports(Imports,Pkg,Chrs,O1),
   genFieldTypes(Fields,Pkg,O1,O2),
   genTypes(Types,Pkg,O2,O3),
-  genPlRules(Rules,O3,[]),
+  genClasses(Classes,Pkg,O3,O4),
+  genPlRules(Rules,O4,[]),
   string_chars(Text,Chrs).
 
 genImports([],_,O,O).
@@ -57,6 +58,22 @@ genTypes(Types,Pkg,O,Ox) :-
 formatTypeRules([],[]).
 formatTypeRules([(Nm,Rules)|More],[(Nm,tupleType(Rules))|Out]) :-
   formatTypeRules(More,Out).
+
+genClasses(Classes,Pkg,O,Ox) :-
+  localName(Pkg,"#","classes",C),
+  appQuoted(C,"'",O,O0),
+  appStr("(",O0,O1),
+  formatClassStructures(Classes,Struct),
+  encodeTerm(tpl(Struct),B,[]),
+  string_codes(Txt,B),
+  appQuoted(Txt,"\"",O1,O2),
+  appStr(").\n",O2,Ox).
+
+formatClassStructures([],[]).
+formatClassStructures([(Nm,Access,Tp)|M],[tpl([strg(Nm),Access,strg(EncType)])|R]) :-
+  encodeType(Tp,Chars,[]),
+  string_chars(EncType,Chars),
+  formatClassStructures(M,R).
 
 genPlRules(Rls,O,E) :-
   rfold(Rls,genprolog:genPlRule,O,E).
@@ -155,6 +172,8 @@ genTerm(cons(Op,Args),O,E) :-
   appStr("(",O1,O2),
   genTerms(Args,O2,O3),
   appStr(")",O3,E).
+genTerm(tpl([]),O,Ox) :-!,
+  appQuoted("()","'",O,Ox).
 genTerm(tpl(Args),O,E) :-
   appStr("(",O,O5),
   genTerms(Args,O5,O6),

@@ -3,12 +3,13 @@
 :- use_module(misc).
 :- use_module(types).
 
-displayPlRules(export(_,Imports,Fields,Types,Rules)) :-
+displayPlRules(export(_,Imports,Fields,Types,Classes,Rules)) :-
   showImports(Imports,Chrs,O1),
   showType(faceType(Fields),O1,O2),
-  appStr(".\n",O2,O2a),
-  showTypes(Types,O2a,O3),
-  showPlRules(Rules,O3,[]),
+  appStr(".\n",O2,O3),
+  showTypes(Types,O3,O4),
+  showClasses(Classes,O4,O5),
+  showPlRules(Rules,O5,[]),
   string_chars(Text,Chrs),
   write(Text).
 
@@ -31,6 +32,19 @@ showTypes(Types,O,Ox) :-
   formatTypeRules(Types,Fields),
   showType(faceType(Fields),O,O1),
   appStr(".\n",O1,Ox).
+
+showClasses([],O,O).
+showClasses([(Nm,Access,Tp)|Cl],O,Ox) :-
+  showClass(Nm,Access,Tp,O,O1),
+  showClasses(Cl,O1,Ox).
+
+showClass(Nm,Access,Tp,O,Ox) :-
+  appStr("class: ",O,O1),
+  appStr(Nm,O1,O2),
+  appStr(":",O2,O3),
+  showType(Tp,O3,O4),
+  appStr("@",O4,O5),
+  showTerm(Access,O5,Ox).
 
 formatTypeRules([],[]).
 formatTypeRules([(Nm,Rules)|More],[(Nm,tupleType(Rules))|Out]) :-

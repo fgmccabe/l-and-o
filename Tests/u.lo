@@ -1,0 +1,6 @@
+u{
+  import lo.
+
+  x:(integer,integer){}.
+  x(_,_).
+}

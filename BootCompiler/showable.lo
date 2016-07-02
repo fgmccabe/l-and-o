@@ -1,7 +1,0 @@
-/*
- * The showable interface
- */
-
-showable{
-  showable <~ { show:()=>string }.
-}

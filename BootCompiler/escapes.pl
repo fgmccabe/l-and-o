@@ -26,6 +26,9 @@ escapeType("_flt_ge",predType([in(type("lo.arith*float")),in(type("lo.arith*floa
 escapeType("_int2flt",funType([in(type("lo.arith*integer"))],type("lo.arith*float"))).
 escapeType("_flt2int",funType([in(type("lo.arith*float"))],type("lo.arith*integer"))).
 escapeType("_pwr",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
+escapeType("_readFileContents",funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")]))).
+escapeType("_writeFileContents",predType([in(type("lo.string*string")),in(typeExp("lo.list*list",[type("lo.arith*integer")]))])).
+escapeType("_getCwd",funType([],type("lo.string*string"))).
 escapeType("_display",predType([in(tupleType([type("lo.arith*integer"),type("lo.arith*integer"),type("lo.arith*integer")])),in(topType)])).
 escapeType("_isCcChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_isCfChar",predType([in(type("lo.arith*integer"))])).
@@ -89,6 +92,9 @@ isEscape("_flt_ge").
 isEscape("_int2flt").
 isEscape("_flt2int").
 isEscape("_pwr").
+isEscape("_readFileContents").
+isEscape("_writeFileContents").
+isEscape("_getCwd").
 isEscape("_display").
 isEscape("_isCcChar").
 isEscape("_isCfChar").

@@ -1,0 +1,393 @@
+lo.uri {
+  -- Utilities to help parse and manipulate URIs
+  -- This code is an attempt to directly implement the specification in RFC 2396
+
+  import lo.
+
+  uri ::= absUri(string,rsrcName,query) | relUri(rsrcName,query).
+  rsrcName ::= netRsrc(authority,resourcePath) | localRsrc(resourcePath).
+  resourcePath ::= absPath(list[string]) | relPath(list[string]).
+
+  authority ::= server(option[userInfo],host).
+
+  userInfo ::= user(string).
+
+  host ::= hostPort(string,string) | host(string).
+
+  query ::= qry(string) | noQ.
+
+  parseUri:(string) => uri.
+  parseUri(S) :: uriParse(U) %% explode(S) => U.
+
+  uriParse:(uri-) --> stream[integer].
+  uriParse(absUri(Scheme,Hier,Query)) --> absoluteUri(Scheme,Hier,Query).
+  uriParse(relUri(Hier,Query)) --> relativeUri(Hier,Query).
+
+  private
+  absoluteUri:(string-,rsrcName-,query-) --> stream[integer].
+  absoluteUri(Scheme,Hier,Query) --> scheme(Scheme), ":", hierPart(Hier,Query).
+
+  private
+  scheme:(string-) --> stream[integer].
+  scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+.
+
+  private
+  grabScheme:(list[integer]-) --> stream[integer].
+  grabScheme([C,..S]) --> alpha(C), alphaStar(S).
+
+  private
+  alphaStar:(list[integer]-) --> stream[integer].
+  alphaStar([C,..S]) --> (alpha(C) | digit(C) | plus(C) | minus(C) | dot(C)), alphaStar(S).
+  alphaStar([]) --> [].
+
+  private
+  relativeUri:(rsrcName-,query-) --> stream[integer].
+  relativeUri(Hier,Query) --> netPath(Hier), query(Query).
+  relativeUri(localRsrc(Rsrc),Query) --> absoluteRsrc(Rsrc), query(Query).
+  relativeUri(localRsrc(Rsrc),Query) --> relativeRsrc(Rsrc), query(Query).
+
+  private
+  hierPart:(rsrcName-,query-) --> stream[integer].
+  hierPart(Hier,Query) --> netPath(Hier), query(Query).
+  hierPart(localRsrc(Rsrc),Query) --> absoluteRsrc(Rsrc), query(Query).
+
+  private
+  absoluteRsrc:(resourcePath-) --> stream[integer].
+  absoluteRsrc(absPath(Segments)) --> "/", pathSegments(Segments).
+
+  private
+  relativeRsrc:(resourcePath-) --> stream[integer].
+  relativeRsrc(relPath(Segments)) --> pathSegments(Segments).
+
+  private
+  pathSegments:(list[string]-) --> stream[integer].
+  pathSegments([Seg,..M]) --> segment(Seg), ("/", pathSegments(M) | M=[]).
+
+  private
+  segment:(string-) --> stream[integer].
+  segment(implode(C)) --> pChars(C,R), parameters(R).
+
+  private
+  pChars:(list[integer]-,list[integer]-) --> stream[integer].
+  pChars([C,..M],R) --> unreserved(C), pChars(M,R).
+  pChars([0c%,U,L,..M],R) --> escaped(U,L), pChars(M,R).
+  pChars([C,..M],R) --> [C]::pChar(C), pChars(M,R).
+  pChars(X,X) --> [].
+
+  private
+  pChar:(integer){}.
+  pChar(0c:).
+  pChar(0c@).
+  pChar(0c&).
+  pChar(0c=).
+  pChar(0c+).
+  pChar(0c$).
+  pChar(0c<).
+
+  private
+  parameters:(list[integer]-) --> stream[integer].
+  parameters(P) --> parameter(P,S), parameters(S).
+  parameters([]) --> [].
+
+  private
+  parameter:(list[integer]-,list[integer]-) --> stream[integer].
+  parameter([0c;,..P],M) --> ";", pChars(P,M).
+
+  private
+  query:(query) --> stream[integer].
+  query(qry(implode(Q))) --> "?", uricStar(Q).
+  query(noQ) --> eof.
+
+  private
+  uricStar:(list[integer]) --> stream[integer].
+  uricStar(S) --> uric(S,M), uricStar(M).
+  uricStar([]) --> [].
+
+  private
+  netPath:(rsrcName-) --> stream[integer].
+  netPath(netRsrc(A,P)) --> "//", authority(A), optAbsolutePath(P).
+
+  private
+  authority:(authority-) --> stream[integer].
+  authority(server(some(user(implode(U))),H)) --> userInfo(U), "@", hostNamePort(H).
+  authority(server(none,H)) --> hostNamePort(H).
+
+  private
+  userInfo:(list[integer]-) --> stream[integer].
+  userInfo(U) --> userStar(U).
+
+  private
+  userStar:(list[integer]) --> stream[integer].
+
+  userStar([C,..S]) --> unreserved(C), userStar(S).
+  userStar([0c%,U,L,..S]) --> escaped(U,L), userStar(S).
+  userStar([0c$,..S]) --> "$", userStar(S).
+  userStar([0c,,..S]) --> ",", userStar(S).
+  userStar([0c;,..S]) --> ";", userStar(S).
+  userStar([0c:,..S]) --> ":", userStar(S).
+  userStar([0c&,..S]) --> "&", userStar(S).
+  userStar([0c=,..S]) --> "=", userStar(S).
+  userStar([0c+,..S]) --> "+", userStar(S).
+  userStar([]) --> "@"+.
+
+  private
+  hostNamePort:(host-) --> stream[integer].
+  hostNamePort(hostPort(H,P)) --> hostName(H), ":", port(P).
+  hostNamePort(host(H)) --> hostName(H), \+":".
+
+  private
+  hostName:(string-) --> stream[integer].
+  hostName(implode(H)) --> alphaDashStar(H)!.
+
+  private
+  alphaDashStar:(list[integer]) --> stream[integer].
+  alphaDashStar([C,..S]) --> (alpha(C) | digit(C) | minus(C) | dot(C)) , alphaDashStar(S).
+  alphaDashStar([]) --> [].
+
+  private
+  port:(string-) --> stream[integer].
+  port(implode(P)) --> digits(P).
+
+  private
+  optAbsolutePath:(resourcePath-) --> stream[integer].
+  optAbsolutePath(P) --> absoluteRsrc(P).
+  optAbsolutePath(relPath([])) --> "?"+.
+  optAbsolutePath(relPath([])) --> eof.
+
+  private
+  plus:(integer) --> stream[integer].
+  plus(0c+) --> "+".
+
+  private
+  minus:(integer) --> stream[integer].
+  minus(0c-) --> "-".
+
+  private
+  dot:(integer) --> stream[integer].
+  dot(0c.) --> "-".
+
+  private
+  alpha:(integer)-->stream[integer].
+  alpha(C) --> [C] :: (isLowAlpha(C)|isUpAlpha(C)).
+
+  private
+  alphaNum:(integer) --> stream[integer].
+  alphaNum(C) --> alpha(C).
+  alphaNum(C) --> digit(C).
+
+  private
+  digit:(integer) --> stream[integer].
+  digit(X) --> [X], {isDigit(X)}.
+
+  private
+  digits:(list[integer]) --> stream[integer].
+  digits([C,..S]) --> digit(C), digits(S).
+  digits([]) --> \+digit(_).
+
+  private
+  hex:(integer-) --> stream[integer].
+  hex(C) --> digit(C).
+  hex(C) --> [C], { isHexDigit(C) }.
+
+  private
+  uric:(list[integer],list[integer]) --> stream[integer].
+  uric([C,..M],M) --> (reserved(C) | unreserved(C)).
+  uric([0c%,U,L,..M],M) --> escaped(U,L).
+
+  private
+  reserved:(integer) --> stream[integer].
+  reserved(C) --> [C], { isReserved(C) }.
+
+  private
+  unreserved:(integer) --> stream[integer].
+  unreserved(C) --> alphaNum(C).
+  unreserved(C) --> mark(C).
+
+  private
+  mark:(integer) --> stream[integer].
+  mark(C) --> [C], { isMark(C) }.
+
+  private
+  escaped:(integer,integer) --> stream[integer].
+  escaped(U,L) --> "%", hex(U), hex(L).
+
+  private
+  delim:(integer) --> stream[integer].
+  delim(C) --> [C], { isDelim(C) }.
+
+  private
+  isLowAlpha:(integer){}.
+  isLowAlpha(0ca).
+  isLowAlpha(0cb).
+  isLowAlpha(0cc).
+  isLowAlpha(0cd).
+  isLowAlpha(0ce).
+  isLowAlpha(0cf).
+  isLowAlpha(0cg).
+  isLowAlpha(0ch).
+  isLowAlpha(0ci).
+  isLowAlpha(0cj).
+  isLowAlpha(0ck).
+  isLowAlpha(0cl).
+  isLowAlpha(0cm).
+  isLowAlpha(0cn).
+  isLowAlpha(0co).
+  isLowAlpha(0cp).
+  isLowAlpha(0cq).
+  isLowAlpha(0cr).
+  isLowAlpha(0cs).
+  isLowAlpha(0ct).
+  isLowAlpha(0cu).
+  isLowAlpha(0cv).
+  isLowAlpha(0cw).
+  isLowAlpha(0cx).
+  isLowAlpha(0cy).
+  isLowAlpha(0cz).
+
+  private
+  isUpAlpha:(integer){}.
+  isUpAlpha(0cA).
+  isUpAlpha(0cB).
+  isUpAlpha(0cC).
+  isUpAlpha(0cD).
+  isUpAlpha(0cE).
+  isUpAlpha(0cF).
+  isUpAlpha(0cG).
+  isUpAlpha(0cH).
+  isUpAlpha(0cI).
+  isUpAlpha(0cJ).
+  isUpAlpha(0cK).
+  isUpAlpha(0cL).
+  isUpAlpha(0cM).
+  isUpAlpha(0cN).
+  isUpAlpha(0cO).
+  isUpAlpha(0cP).
+  isUpAlpha(0cQ).
+  isUpAlpha(0cR).
+  isUpAlpha(0cS).
+  isUpAlpha(0cT).
+  isUpAlpha(0cU).
+  isUpAlpha(0cV).
+  isUpAlpha(0cW).
+  isUpAlpha(0cX).
+  isUpAlpha(0cY).
+  isUpAlpha(0cZ).
+
+  private
+  isDigit:(integer){}.
+  isDigit(0c0).
+  isDigit(0c1).
+  isDigit(0c2).
+  isDigit(0c3).
+  isDigit(0c4).
+  isDigit(0c5).
+  isDigit(0c6).
+  isDigit(0c7).
+  isDigit(0c8).
+  isDigit(0c9).
+
+  private
+  isHexDigit:(integer){}.
+  isHexDigit(0ca).
+  isHexDigit(0cb).
+  isHexDigit(0cc).
+  isHexDigit(0cd).
+  isHexDigit(0ce).
+  isHexDigit(0cf).
+  isHexDigit(0cA).
+  isHexDigit(0cB).
+  isHexDigit(0cC).
+  isHexDigit(0cD).
+  isHexDigit(0cE).
+  isHexDigit(0cF).
+
+  private
+  isReserved:(integer){}.
+  isReserved(0c;).
+  isReserved(0c/).
+  isReserved(0c?).
+  isReserved(0c:).
+  isReserved(0c@).
+  isReserved(0c&).
+  isReserved(0c=).
+  isReserved(0c+).
+  isReserved(0c$).
+  isReserved(0c,).
+
+  private
+  isMark:(integer){}.
+  isMark(0c-).
+  isMark(0c_).
+  isMark(0c.).
+  isMark(0c!).
+  isMark(0c~).
+  isMark(0c*).
+  isMark(0c').
+  isMark(0c().
+  isMark(0c)).
+
+  private
+  isDelim:(integer){}.
+  isDelim(0c<).
+  isDelim(0c>).
+  isDelim(0c#).
+  isDelim(0c%).
+  isDelim(0c").
+
+  -- Resolve a url against a base. The base must be an absolute URI, either net or local.
+  resolveUri:(uri+,uri+) => uri.
+  resolveUri(_,U)::absUri(_,_,_).=U => U.
+  resolveUri(absUri(Scheme,Base,_),relUri(Path,Query)) => absUri(Scheme,resolvePath(Base,Path),Query).
+
+  private
+  resolvePath:(rsrcName,rsrcName)=>rsrcName.
+  resolvePath(_,netRsrc(A,P)) => netRsrc(A,P).
+  resolvePath(netRsrc(A,_),localRsrc(absPath(P))) => netRsrc(A,absPath(P)).
+  resolvePath(netRsrc(A,absPath(B)),localRsrc(relPath(P))) => netRsrc(A,absPath(edit(P,drop(reverse(B))))).
+  resolvePath(localRsrc(_),localRsrc(absPath(P))) => localRsrc(absPath(P)).
+  resolvePath(localRsrc(absPath(B)),localRsrc(relPath(P))) => localRsrc(absPath(edit(P,drop(reverse(B))))).
+
+  private
+  edit: (list[string],list[string]) => list[string].
+  edit([".",..Segs],R) => edit(Segs,R).
+  edit(["..",..Segs],[_,..R]) => edit(Segs,R).
+  edit(Segs,R) => reverse(R)<>Segs.
+
+  uriDisp:display[uri].
+  uriDisp..{
+    display(absUri(Scheme,Rsrc,Query)) => ssSeq([ss(Scheme),ss(":"),dispRsrc(Rsrc),dispQuery(Query)]).
+    display(relUri(Rsrc,Query)) => ssSeq([dispRsrc(Rsrc),dispQuery(Query)]).
+
+    private dispQuery:(query)=>ss.
+    dispQuery(noQ) => ssSeq([]).
+    dispQuery(qry(Q)) => ssSeq([ss("?"),ss(Q)]).
+  }
+
+  private dispRsrc:(rsrcName)=>ss.
+  dispRsrc(netRsrc(H,P)) => ssSeq([dispAuthority(H),dispPath(P)]).
+  dispRsrc(localRsrc(P)) => dispPath(P).
+
+  private dispAuthority:(authority)=>ss.
+  dispAuthority(server(none,H)) => dispHost(H).
+  dispAuthority(server(some(U),H)) => ssSeq([dispUser(U),ss("@"),dispHost(H)]).
+
+  private dispUser:(userInfo)=>ss.
+  dispUser(user(U)) => ss(U).
+
+  private dispHost:(host) => ss.
+  dispHost(hostPort(H,P)) => ssSeq([ss(H),ss(":"),ss(P)]).
+  dispHost(host(H)) => ss(H).
+
+  private dispPath:(resourcePath)=>ss.
+  dispPath(absPath(Segs)) => ssSeq([ss("/"),..dispSegs(Segs)]).
+  dispPath(relPath(Segs)) => ssSeq(dispSegs(Segs)).
+
+  private dispSegs:(list[string]) => list[ss].
+  dispSegs([]) => [].
+  dispSegs([S]) => [ss(S)].
+  dispSegs([S,..M]) => [ss(S),ss("/"),..dispSegs(M)].
+
+  getUriPath:(uri)=>string.
+  getUriPath(absUri(_,Pth,_)) => flatten(dispRsrc(Pth)).
+  getUriPath(relUri(Pth,_)) => flatten(dispRsrc(Pth)).
+}

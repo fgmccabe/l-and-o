@@ -376,7 +376,7 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   splitHead(Term,Nm,A,C),!,
   locOfAst(Term,Lc),
   pushScope(Env,E0),
-  typeOfTerms(A,AT,_,E0,E1,Args),
+  typeOfTerms(A,AT,_,E0,E1,Lc,Args),
   checkCond(C,E1,Ex,Cond),
   Hd = apply(Lc,v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
@@ -545,7 +545,7 @@ typeOfTerm(P,ET,Tp,Env,Ex,where(Ptn,Cond)) :-
 typeOfTerm(Call,ET,Tp,Env,Ev,where(V,Cond)) :-
   isUnary(Call,Lc,"@",Test), % @Test = NV :: NV.Test where NV is a new name
   isRoundTerm(Test,_,_,_),
-  gensym("_",NV),
+  genstr("_",NV),
   typeOfVar(Lc,NV,ET,Tp,Env,E0,V),
   V = v(Lc,Tp),
   binary(Lc,".",name(Lc,NV),Test,TT),
@@ -581,7 +581,7 @@ typeOfTerm(tuple(_,"()",[Inner]),ET,Tp,Env,Ev,Exp) :-
 typeOfTerm(tuple(Lc,"()",A),ET,tupleType(ElTypes),Env,Ev,tuple(Lc,Els)) :-
   genTpVars(A,ArgTps),
   checkType(Lc,tupleType(ArgTps),ET,Env),
-  typeOfTerms(A,ArgTps,ElTypes,Env,Ev,Els).
+  typeOfTerms(A,ArgTps,ElTypes,Env,Ev,Lc,Els).
 typeOfTerm(Term,ET,Tp,Env,Ev,Record) :-
   isBraceTuple(Term,Lc,_),!,
   typeOfRecord(Lc,Term,ET,Tp,Env,Ev,Record).
@@ -598,7 +598,7 @@ typeOfCall(Lc,Fun,A,funType(ArgTps,Tp),ET,Tp,Env,Ev,apply(Lc,Fun,Args)) :-
   typeOfArgs(A,ArgTps,_,Env,Ev,Lc,Args).
 typeOfCall(Lc,Fun,A,classType(ArgTps,Tp),ET,Tp,Env,Ev,apply(Lc,Fun,Args)) :-
   checkType(Lc,Tp,ET,Env),
-  typeOfTerms(A,ArgTps,_,Env,Ev,Args). % small but critical difference
+  typeOfTerms(A,ArgTps,_,Env,Ev,Lc,Args). % small but critical difference
 
 genTpVars([],[]).
 genTpVars([_|I],[Tp|More]) :- 
@@ -629,8 +629,9 @@ typeOfVar(Lc,"true",ET,Tp,Env,Env,v(Lc,"true")) :-
 typeOfVar(Lc,"false",ET,Tp,Env,Env,v(Lc,"false")) :-
   findType("logical",Lc,Env,Tp),
   checkType(Lc,Tp,ET,Env).
-typeOfVar(Lc,"_",ET,Tp,Env,Env,v(Lc,"_")) :-!,
+typeOfVar(Lc,"_",ET,Tp,Env,Env,v(Lc,V)) :-!,
   newTypeVar("_",Tp),
+  genstr("_",V),
   checkType(Lc,Tp,ET,Env).
 typeOfVar(Lc,Nm,ET,Tp,Env,Env,v(Lc,Nm)) :-
   isVar(Nm,Env,vr(_,VT)),!,
@@ -657,7 +658,8 @@ typeOfKnown(T,ET,Tp,Env,Env,v(Lc,Nm)) :-
   reportError("type of %s:%s not consistent with expected type %s",[Nm,VT,ET],Lc).
 typeOfKnown(T,ET,Tp,Env,Env,v(Lc,Nm)) :-
   isIden(T,Lc,Nm),!,
-  (nonvar(Tp);copyFlowMode(_,Tp,ET)),
+  copyFlowMode(_,VTp,ET),
+  (nonvar(Tp) ; newTypeVar("_",Tp), markUpper(Tp,VTp)),
   reportError("%s not declared, expected type %s",[Nm,ET],Lc).
 typeOfKnown(T,ET,Tp,Env,Ev,Exp) :-
   typeOfTerm(T,ET,Tp,Env,Ev,Exp).
@@ -690,10 +692,16 @@ typeOfParams([A|_],[],[],Env,Env,_,[]) :-
   locOfAst(A,Lc),
   reportError("too many arguments: %s",[A],Lc).
 
-typeOfTerms([],[],[],Env,Env,[]).
-typeOfTerms([A|As],[T|Ts],[ElTp|ElTypes],Env,Ev,[Term|Els]) :-
+typeOfTerms([],[],[],Env,Env,_,[]).
+typeOfTerms([],[T|_],[],Env,Env,Lc,[]) :-
+  reportError("insufficient arguments, expecting a %s",[T],Lc).
+typeOfTerms([A|_],[],[],Env,Env,_,[]) :-
+  locOfAst(A,Lc),
+  reportError("too many arguments: %s",[A],Lc).
+typeOfTerms([A|As],[T|Ts],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
   typeOfTerm(A,inout(T),ElTp,Env,E0,Term),
-  typeOfTerms(As,Ts,ElTypes,E0,Ev,Els).
+  locOfAst(A,Lc),
+  typeOfTerms(As,Ts,ElTypes,E0,Ev,Lc,Els).
 
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,_,Env,Ev,Exp).
@@ -791,10 +799,11 @@ checkCond(Term,Env,Ev,Goal) :-
   checkInvokeGrammar(Lc,L,R,Env,Ev,Goal).
 checkCond(Term,Env,Ev,Call) :-
   isRoundTerm(Term,Lc,F,A),
-  ( typeOfKnown(F,in(topType),PrTp,Env,E0,Pred),
-    PrTp = predType(ArgTps),
+  typeOfKnown(F,in(topType),PrTp,Env,E0,Pred),
+  ( PrTp = predType(ArgTps),
     typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args),
     Call = call(Lc,Pred,Args);
+    reportError("type of %s:%s not a predicate",[F,PrTp],Lc),
     Call = true(Lc)).
 
 checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
@@ -893,11 +902,12 @@ checkNonTerminals(Term,Tp,_,Env,Ev,dip(Lc,v(Lc,NV),Cond)) :-
 checkNonTerminals(Term,Tp,_,Env,Ev,NT) :-
   isRoundTerm(Term,Lc,F,A),
   typeOfKnown(F,in(topType),GrTp,Env,E0,Pred),
-  ( GrTp = grammarType(ArgTps,_), % must be done out of call to typeOfKnown
+  ( deRef(GrTp,grammarType(ArgTps,_)), % must be done out of call to typeOfKnown
     typeOfArgs(A,ArgTps,_,E0,Ev,Lc,Args),
-    NT = call(Lc,Pred,Args) ;
+    NT = call(Lc,Pred,Args) ,!;
     reportError("type of %s:%s not consistent with expected stream type: %s",[F,GrTp,Tp],Lc),
-    NT = terminals(Lc,[])).
+    NT = terminals(Lc,[]),
+    Env=Ev).
 checkNonTerminals(Term,_,_,Env,Env,eof(Lc)) :-
   isIden(Term,Lc,"eof").
 checkNonTerminals(Term,_,_,Env,Ex,goal(Lc,Cond)) :-

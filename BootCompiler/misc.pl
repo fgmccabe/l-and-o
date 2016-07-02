@@ -67,13 +67,12 @@ rfold([E|L],F,S,Sx) :-
 
 appStr(Str,O,E) :- string_chars(Str,Chrs), concat(Chrs,E,O).
 
-appQuoted(Str,Qt,O,E) :- appStr(Qt,O,O1), string_chars(Str,Chars), quoteConcat(Chars,O1,O2), appStr(Qt,O2,E).
+appQuoted(Str,Qt,O,E) :- appStr(Qt,O,O1), string_chars(Qt,[Q]),string_chars(Str,Chars), quoteConcat(Q,Chars,O1,O2), appStr(Qt,O2,E).
 
-quoteConcat([],O,O).
-quoteConcat(['"'|More],['\\','"'|Out],Ox) :- quoteConcat(More,Out,Ox).
-quoteConcat([''''|More],['\\',''''|Out],Ox) :- quoteConcat(More,Out,Ox).
-quoteConcat(['\\'|More],['\\','\\'|Out],Ox) :- quoteConcat(More,Out,Ox).
-quoteConcat([C|More],[C|Out],Ox) :- quoteConcat(More,Out,Ox).
+quoteConcat(_,[],O,O).
+quoteConcat(Qt,[Qt|More],['\\',Qt|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
+quoteConcat(Qt,['\\'|More],['\\','\\'|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
+quoteConcat(Qt,[C|More],[C|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
 
 appSym(Sym,O,E) :- atom_chars(Sym,Chrs), concat(Chrs,E,O).
 

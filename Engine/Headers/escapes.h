@@ -26,7 +26,7 @@
 #define debugType "t'go.debug#debugger'"
 
 /* Define the standard escapes */
-escape(exit,0,True,False,"F1+iv","terminate go engine")
+escape(exit,0,True,False,"F1+iv","terminate L&O engine")
 escape(_command_line,1,False,False,"F0LS","command line arguments")
 escape(_command_opts,3,False,False,"F0LT2SS","command line options")
 
@@ -129,6 +129,12 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
   escape(_sha1,102,False,False,"F1+LiLi","compute hash of a byte string")
 
   escape(_openURL,110,True,False,"F4+S+S+S+iO","open a URL")
+*/
+  escape(_readFileContents,111,True,False,"F1+SLi","Get the contents of a file as a list of integer codes")
+  escape(_writeFileContents,112,True,False,"P2+S+Li","write a file from a list of integer codes")
+  escape(_getCwd,113,True,False,"F0S","return url of current working directory")
+/*
+
   escape(_openInFile,111,True,False,"F2+S+iO","open input file")
   escape(_openOutFile,112,True,False,"F2+S+iO","open output file")
   escape(_openAppendFile,113,True,False,"F2+S+iO","open output file")

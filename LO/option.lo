@@ -1,0 +1,5 @@
+lo.option{
+  import lo.thing.
+  
+  all t ~~ option[t] ::= none | some(t).
+}

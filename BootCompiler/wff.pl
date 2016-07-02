@@ -1,4 +1,4 @@
-:-module(wff,[wffModule/1,isAlgebraicTypeDef/4]).
+:-module(wff,[wffModule/1,isAlgebraicTypeDef/5]).
 :-use_module(errors).
 :-use_module(abstract).
 :-use_module(misc).
@@ -102,11 +102,17 @@ isPrivate(Term,T,Lc) :- isUnary(Term,"private",T), locOfAst(T,Lc).
 
 isPublic(Term,T,Lc) :- isUnary(Term,"public",T), locOfAst(T,Lc).
 
-isAlgebraicTypeDef(Term,Lc,Head,Body) :- isBinary(Term,Lc,"::=",Head,Body),
-   wffNamedType(Head),
-   wffTypeConstructors(Body).
+isAlgebraicTypeDef(Term,Lc,Quants,Head,Body) :- 
+  isQuantified(Term,Quants,Inner),!,
+  isBinary(Inner,Lc,"::=",Head,Body),
+  wffNamedType(Head),
+  wffTypeConstructors(Body).
+isAlgebraicTypeDef(Term,Lc,[],Head,Body) :- 
+  isBinary(Term,Lc,"::=",Head,Body),
+  wffNamedType(Head),
+  wffTypeConstructors(Body).
 
-isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_).
+isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_,_).
 
 wffNamedType(T) :- wffIden(T).
 wffNamedType(T) :- isSquare(T,_,A), wffTypeArgs(A).

@@ -22,4 +22,15 @@ lo.list{
 
   [] <> X => X.
   [E,..X] <> Y => [E,..X<>Y].
+
+  reverse:all t ~~ (list[t]+) => list[t].
+  reverse(X) => rev(X,[]).
+
+  private
+  rev:all t ~~ (list[t]+,list[t]) => list[t].
+  rev([],R) => R.
+  rev([E,..L],R) => rev(L,[E,..R]).
+
+  drop:all t ~~ (list[t]) => list[t].
+  drop([_,..L]) => L.
 }

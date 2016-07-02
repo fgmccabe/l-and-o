@@ -15,7 +15,11 @@
                     '_int2flt'/2,'_flt2int'/2,
                     '_display'/2,
                     '_str_lt'/2, '_str_ge'/2,
-                    listify/2
+                    '_int_lt'/2, '_int_ge'/2,
+                    listify/2,
+                    '_readFileContents'/2,
+                    '_writeFileContents'/2,
+                    '_getCwd'/1
                     ]).
 
 exit(X) :- halt(X).
@@ -73,7 +77,7 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 '_isZpChar'(X) :- unicode_property(X,category('Zp')). % is Separator, para char
 '_isZsChar'(X) :- unicode_property(X,category('Zs')). % is Separator, space char
 
-'_isLetterChar'(X) :- unicode_property(X,category('Le')). % is letter char
+'_isLetterChar'(X) :- unicode_property(X,category('L')). % is letter char
 
 '_int2str'(Ix,_,_,_,Str) :- number_string(Ix,Str).
 '_flt2str'(Dx,_,_,_,_,Str) :- number_string(Dx,Str).
@@ -81,8 +85,11 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 '_int2flt'(X,X).
 '_flt2int'(X,X).
 
+'_int_lt'(X,Y) :- X<Y.
+'_int_ge'(X,Y) :- X >= Y.
+
 '_display'((Ln,Col,Sz),Term) :-
-  writef("@%t:%t(%t) - %w",[Ln,Col,Sz,Term]).
+  writef("@%t:%t(%t) - %w\n",[Ln,Col,Sz,Term]).
 
 '_str_lt'(S1,S2) :-
      string_codes(S1,C1),
@@ -105,3 +112,26 @@ codeGe([C|_],[D|_]) :-
      C>D.
 codeGe([C|L],[C|M]) :-
      codeGe(L,M).
+
+'_readFileContents'(Fl,Chars) :-
+  open(Fl,read,Stream),
+  read_until_eof(Stream,Codes),
+  listify(Codes,Chars).
+
+read_until_eof(Str,[]) :- at_end_of_stream(Str), close(Str).
+read_until_eof(Str,[Ch|M]) :- get_code(Str,Ch), read_until_eof(Str,M).
+
+'_writeFileContents'(Fl,Chars) :-
+  listify(Codes,Chars),
+  open(Fl,write,Stream),
+  writeCodes(Stream,Codes),
+  close(Stream).   
+
+writeCodes(_,[]).
+writeCodes(Str,[Code|More]) :-
+     put_code(Str,Code),
+     writeCodes(Str,More).
+
+'_getCwd'(U) :-
+    working_directory(C,C),
+    string_concat("file:",C,U).

@@ -1,120 +1,52 @@
-:- module(decode,[decodeTerm/2,decodeTerm/3, decodeType//1,decodeSignature/2]).
+:- module(decode,[decodeTerm//1, decodeValue/2, decodeType//1, decodeSignature/2]).
 
 :- use_module(misc).
 :- use_module(types).
+:- use_module(base64).
 
-% Decode a sequence of bytes into various entites
+% Decode a sequence of characters into various entites
 
 /*
- Decided by a leading 'flag' byte, the upper nibble of which encodes a type indicator:
- 0x00: Unbound variable
- 0x10: Integer
- 0x20: Floating point
- 0x30: Identifier
- 0x40: String
- 0x50: Constructor specifier
- 0x60: Program specifier
- 0x70: Tuple
- 0x80: Term
- 0x90: Code
- 0xa0: Label Definition
- 0xb0: Label Reference
- 0xc0: Reserved 
- 0xd0: Reserved 
- 0xe0: Reserved 
- 0xf0: Reserved 
-
- Where appropriate, a numeric argument is determined by the lower nibble, and subsequent byte:
-
- 0x0: The numeric argument is zero
- 0x1-0xe: The nibble is the length. The actual numeric argument is in the following xx bytes, most significant first
- 0xf: The length of the numeric argument is encoded as an integer, followed by the appropriate number of bytes encoding the argument
+ Decided by a leading 'flag' byte which encodes a type indicator:
+ 'a': Unbound variable
+ 'x': Integer
+ 'd': Floating point
+ 'e': Identifier
+ 's': String
+ 'o': Constructor specifier
+ 'p': Program specifier
+ 'u': Tuple
+ 'n': Term
+ '#': Code
 */
 
-% decode a flag's byte into a numeric argument. Might be double encoded.
-decLen(Flg,Len,Sin,Sout) :-
- Ln is Flg /\ 15,
- decLn(Ln,Len,Sin,Sout).
-decLn(0,0,Sin,Sin) :- !.          % special value of zero. 
-decLn(15,Len,[X|Sin],Sout) :-  !, % special length 15 means more than 14 bytes
- decLen(X,Ln,Sin,Si0),
- decInt(Ln,Len,Si0,Sout).
-decLn(Len,Len,Sin,Sin).
+decodeValue(Txt,Val) :-
+  string_chars(Txt,Chrs),
+  phrase(decodeTerm(Val),Chrs).
 
-decInt(Flg,Reslt,Sin,Sout) :- % decode an integer, given a flag byte
- decLen(Flg,Len,Sin,Si0),
- signByte(Leading,Si0,Si1),
- decInt(Leading,Reslt,Len,Si1,Sout).
+decodeTerm(anon) --> ['a'].
+decodeTerm(intgr(Ix)) --> ['x'], decInt(Ix).
+decodeTerm(float(Dx)) --> ['d'], decFloat(Dx).
+decodeTerm(enum(Nm)) --> ['e'], decodeName(Nm).
+decodeTerm(strg(Txt)) --> ['s'], decodeText(Chrs), { string_chars(Txt,Chrs)}.
+decodeTerm(strct(Nm,Ar)) --> ['o'], decInt(Ar), decodeName(Nm).
+decodeTerm(prg(Nm,Ar)) --> ['p'], decInt(Ar), decodeName(Nm).
+decodeTerm(tpl(Els)) --> ['u'], decInt(Len), decTerms(Len,Els).
+decodeTerm(cons(Con,Els)) --> ['n'], decInt(Len), decodeTerm(Con), decTerms(Len,Els).
+decodeTerm(code(Tp,Bytes,Lits)) --> ['#'],
+    decodeType(Tp), 
+    decodeTerm(Lits),
+    decodeText(B64),
+    { decode64(B64,Bytes,[])}.
 
-signByte(L,[B|Sin],Sin) :-
-  (B>>7)/\1 =:= 1,!,
-  L is -1 \/B.
-signByte(B,[B|Sin],Sin).
+decInt(Ix) --> ['-'], digits(0,N), Ix is -N.
+decInt(Ix) --> digits(0,Ix).
 
-decInt(X,X,0,Sin,Sin) :-!.
-decInt(SoFar,Reslt,Len,[By|Sin],Sout) :-
-  Nx is (SoFar<<8) \/ By,
-  L1 is Len-1,
-  decInt(Nx,Reslt,L1,Sin,Sout).
+decodeText(Chrs) --> [C], collectQuoted(C,Chrs).
 
-decodeText(Flg,Text,Sin,Sout) :-
-  decLen(Flg,Len,Sin,Si0),
-  grabBytes(Len,Bytes,Si0,Sout),
-  string_codes(Text,Bytes).
-
-grabBytes(0,[],Sin,Sin).
-grabBytes(Ln,[B|More],[B|Sin],Sout) :-
-  Ln > 0,
-  Ln1 is Ln-1,
-  grabBytes(Ln1,More,Sin,Sout).
-
-decodeTerm(Src,Term) :-
-  string_codes(Src,Codes),
-  decodeTerm(Term,Codes,[]).
-
-decodeTerm(Term,Sin,Sout) :-
-  decodeTerm(Term,[],Sin,Sout).
-
-decodeTerm(Term,Refs,[B|Sin],Sout) :-
-  Flg is (B >> 4) /\ 15,
-  decodeTerm(Flg,B,Term,Refs,Sin,Sout).
-
-decodeTerm(0,_,_,anon,Sin,Sin).
-decodeTerm(1,Flg,intgr(Ix),_,Sin,Sout) :-
-  decInt(Flg,Ix,Sin,Sout).
-decodeTerm(2,Flg,float(Dx),_,Sin,Sout) :-
-  decFloat(Flg,Dx,Sin,Sout).
-decodeTerm(3,Flg,enum(Nm),_,Sin,Sout) :-
-  decodeText(Flg,Nm,Sin,Sout).
-decodeTerm(4,Flg,string(Str),_,Sin,Sout) :-
-  decodeText(Flg,Str,Sin,Sout).
-decodeTerm(5,Flg,strct(Nm,Arity),Refs,Sin,Sout) :-
-  decInt(Flg,Arity,Sin,Si0),
-  decodeTerm(enum(Nm),Refs,Si0,Sout).
-decodeTerm(6,Flg,prg(Nm,Arity),Refs,Sin,Sout) :-
-  decInt(Flg,Arity,Sin,S0),
-  decodeTerm(enum(Nm),Refs,S0,Sout).
-decodeTerm(7,Flg,tpl(Args),Refs,Sin,Sout) :-
-  decInt(Flg,Ar,Sin,S0),
-  decodeTerms(Ar,Args,Refs,S0,Sout).
-decodeTerm(8,Flg,cons(C,Args),Refs,Sin,Sout) :-
-  decInt(Flg,Ar,Sin,S0),
-  decodeTerm(C,Refs,S0,S1),
-  decodeTerms(Ar,Args,Refs,S1,Sout).
-decodeTerm(9,Flg,code(Tp,Bytes,Lits),Refs,Sin,Sout) :-
-  decodeText(Flg,Signature,Sin,S0),
-  decodeSignature(Signature,Tp),
-  decodeTerm(tpl(Lits),Refs,S0,S1),
-  decodeTerm(intgr(CodeSize),Refs,S1,S2),
-  grabBytes(CodeSize,Bytes,S2,Sout).
-decodeTerm(10,Flg,Term,Refs,Sin,Sout) :-
-  decodeInt(Flg,Key,Sin,S0),
-  decodeTerm(S0,Value,Refs,S0,S1),
-  decodeTerm(Term,[(Key,Value)|Refs],S1,Sout).
-decodeTerm(11,Flg,Term,Refs,Sin,Sout) :-
-  decodeInt(Flg,Key,Sin,Sout),
-  is_member((Key,Term),Refs),!.
-decodeTerm(_,_,_,_,_) :- abort.
+collectQuoted(C,[]) --> [C].
+collectQuoted(C,[Ch|M]) --> ['\\', Ch], collectQuoted(C,M).
+collectQuoted(C,[Ch|M]) --> [Ch], collectQuoted(C,M).
 
 decodeSignature(S,Tp) :-
   string_chars(S,Chrs),
@@ -159,7 +91,6 @@ decodeTypes(Types) --> typeLen(Len), decodeTypes(Len,Types).
 decodeFields(0,[]) --> [].
 decodeFields(Ln,[(Nm,Tp)|More]) --> { Ln > 0 }, decodeName(Nm), decodeType(Tp), {L1 is Ln-1}, decodeFields(L1,More).
 decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
-
 
 decodeName(Str) --> [C], collectUntil(C,Text), { string_chars(Str,Text)}.
 

@@ -1,5 +1,6 @@
 :- module(lexer,[nextToken/3,allTokens/2,locOfToken/2,subTokenize/3,isToken/1,dispToken/2]).
 :- use_module(operators).
+:- use_module(errors).
 
 /* tokenState(text,currLine,currOff,currPos) */
 
@@ -113,6 +114,12 @@ nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.',' '],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\t'],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\n'],Lc).
 nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), !, followGraph(Ch,Id,St1,NxSt), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,Tk) :-
+  nextSt(St,St1,Ch), 
+  makeLoc(St,St1,Lc),
+  reportError("invalid character: %s",[[Ch]],Lc),
+  skipToNx(St1,St2),
+  nxTok(St2,NxSt,Tk).
 nxTok(St,St,terminal) :- isTerminal(St).
 
 readNumber(St,NxSt,Tk) :- readNumber(St,St,NxSt,1,Tk).
@@ -158,6 +165,7 @@ readString(St,NxSt,stringTok(Str,Lc)) :- readMoreString(St,St2,Str), makeLoc(St,
 readMoreString(St,St,[]) :- hedChar(St,'"').
 readMoreString(St,NxSt,[Seg|Segments]) :- 
       nextSt(St,St1,'$'),
+      \+ hedChar(St1,'"'),
       interpolation(St1,St2,Seg),
       readMoreString(St2,NxSt,Segments).
 readMoreString(St,NxSt,[segment(Seg,Lc)|Segments]) :-
@@ -167,7 +175,7 @@ readMoreString(St,NxSt,[segment(Seg,Lc)|Segments]) :-
       readMoreString(St1,NxSt,Segments).
 
 readStr(St,St,[]) :- hedChar(St,'"'). /* Terminated by end of string */
-readStr(St,St,[]) :- hedChar(St,'$'). /* or an interpolation marker */
+readStr(St,St,[]) :- hedChar(St,'$'), \+hedHedChar(St,'"'). /* or an interpolation marker */
 readStr(St,NxSt,[Ch|Seg]) :- charRef(St,St1,Ch), readStr(St1,NxSt,Seg).
 
 interpolation(St,NxSt,interpolate(Text,Fmt,Lc)) :-

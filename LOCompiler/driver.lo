@@ -1,0 +1,25 @@
+lo.comp.driver{
+  import lo.
+  import lo.uri.
+  import lo.resources.
+
+  import lo.comp.lexer.
+  import lo.comp.token.
+  import lo.comp.location.
+
+  tokenizeFile:(uri) => list[token].
+  tokenizeFile(U) :: tokenize(Toks) %% tkState(getResource(U),1,0,0) => Toks.
+
+  -- Hint to the run-time:
+  main:(list[string]+){}.
+  main(Strs) :-
+    B = cwd(),
+    parseArgs(B,Strs).
+
+  parseArgs:(uri,list[string]+){}.
+  parseArgs(_,[]).
+  parseArgs(B,[S,..M]) :-
+    Toks = tokenizeFile(resolveUri(B,parseUri(S))),
+    _display((0,0,0),flatten(listDisp(tokenDisp).display(Toks))),
+    parseArgs(B,M).
+}

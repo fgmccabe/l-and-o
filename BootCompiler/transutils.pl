@@ -1,6 +1,6 @@
 :- module(transUtils,[trCons/3,className/3,labelAccess/5,extraVars/2,thisVar/2,
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
-          makePkgMap/5,
+          makePkgMap/6,
           genNewName/4,genVar/2,
           pushOpt/3, isOption/2,layerName/2,
           trCons/3,trPrg/3,typeTrArity/2,
@@ -97,41 +97,41 @@ stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleClass(prg(AccessName,1),enum(LclName),p
 stdMapEntry(_,vr(Nm,Tp),SoFar,SoFar) :-
   reportMsg("cannot understand standard name %s:%s",[Nm,Tp]).
 
-makePkgMap(Pkg,Defs,Types,Imports,Map) :-
+makePkgMap(Pkg,Defs,Types,Imports,Classes,Map) :-
   stdMap(StdMap),
-  makeModuleMap(Pkg,Defs,DfList,Rest),
+  makeModuleMap(Pkg,Defs,DfList,Rest,Classes),
   makeImportsMap(Imports,Rest,R0),
   makeTypesMap(Pkg,Types,R0,[]),
   pushMap(Pkg,DfList,StdMap,Map).
 
 pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void)|Std]).
 
-makeModuleMap(Pkg,[Def|Rest],Map,Mx) :-
-  makeMdkEntry(Pkg,Def,Map,M0),
-  makeModuleMap(Pkg,Rest,M0,Mx).
-makeModuleMap(_,[],Map,Map).
+makeModuleMap(Pkg,[Def|Rest],Map,Mx,Classes) :-
+  makeMdkEntry(Pkg,Def,Map,M0,Classes,Clx),
+  makeModuleMap(Pkg,Rest,M0,Mx,Clx).
+makeModuleMap(_,[],Map,Map,[]).
 
-makeMdkEntry(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeMdkEntry(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+1.
-makeMdkEntry(Pkg,grammar(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeMdkEntry(Pkg,grammar(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.
-makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Arity).
-makeMdkEntry(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
+makeMdkEntry(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName).
-makeMdkEntry(Pkg,class(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
+makeMdkEntry(Pkg,class(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx,[(Nm,strct(LclName,Ar),Tp)|Clx],Clx) :-
   localName(Pkg,"#",Nm,LclName),
   typeArity(Tp,Ar),
   localName(Pkg,"@",Nm,AccessName).
-makeMdkEntry(Pkg,enum(_,Nm,_,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx) :-
+makeMdkEntry(Pkg,enum(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx,[(Nm,enum(LclName),Tp)|Clx],Clx) :-
   localName(Pkg,"#",Nm,LclName),
   localName(Pkg,"@",Nm,AccessName).
-makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx) :-
+makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"*",Nm,LclName).
 
 makeImportsMap([Import|Rest],Map,Mx) :-

@@ -1,0 +1,36 @@
+utest {
+  import lo.
+  import lo.uri.
+
+--  show flatten(uriDisp.display(U)) :: parseUri(U) %% explode("www.example.com").
+--  show flatten(uriDisp.display(V)) :: parseUri(V) %% explode("http://www.example.com").
+--  show flatten(uriDisp.display(W)) :: parseUri(W) %% explode("ftp://www.example.com/foo/bar?help").
+
+  parse:(string)=>uri.
+  parse(S) :: parseUri(U) %% explode(S) => U.
+
+  show base.
+--  show flatten(uriDisp.display(base)).
+
+  base:uri.
+  base = parse("file://Foo/bar/").
+
+  rel:uri.
+  rel = parse("alpha/beta").
+
+  res:uri.
+  res = resolveUri(base,rel).
+
+  show res.
+
+  main:(list[string]+){}.
+  main(Strs) :-
+    parseArgs(Strs).
+
+  parseArgs:(list[string]+){}.
+  parseArgs([]).
+  parseArgs([S,..M]) :-
+    parseUri(U) %% explode(S),
+    _display((0,0,0),flatten(uriDisp.display(U)))!,
+    parseArgs(M).
+}

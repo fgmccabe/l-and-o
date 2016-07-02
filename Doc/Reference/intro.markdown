@@ -31,9 +31,11 @@ L&O’s *object orderness* is fundamental to L&O’s approach to software engine
 
 L&O has some features that distinguish it from some OO languages such as Java\tm. L&O’s object notation is based on Logic and Objects (@fgm:92) with some significant simplifications and modifications to incorporate types.
 
-##### Strong types
+##### Strong Static types
 
-L&O is a strongly typed programming language. The purpose of using a strong type system is to enhance programmers’ confidence in the correctness of the program – it cannot replace a formal proof of correctness.
+L&O is a strongly, statically, typed programming language. The purpose of using a strong type system is to enhance programmers’ confidence in the correctness of the program – it cannot replace a formal proof of correctness.
+
+The purpose of static typing is to ensure that type errors as possible occur *before* running the program. The semantics of L&O is such that it is impossible for a type error to arise at run-time.
 
 Having a strongly typed language can be quite constrictive compared to the untyped freedom one gets in languages such as Prolog. However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.
 
@@ -55,7 +57,7 @@ In a multi-threaded environment there are two overlapping concerns – sharing o
 
 L&O threads may share access to objects, and to their state in the case of stateful objects – within a single invocation of the system. L&O supports synchronized access to such shared objects to permit contention issues to be addressed.
 
-Coordination is achieved through *mesage communication*. The communications model is very simple: a communication channel is established by a pair of entities: a `mailbox` and one or more associated `dropbox`es. When one process wishes to send a message to another process, it does so by using an appropriate `dropbox`. A process wishing to read a message does so by picking up messages from its `mailbox`.
+Coordination is achieved through *message communication*. The communications model is very simple: a communication channel is established by a pair of entities: a `mailbox` and one or more associated `dropbox`s. When one process wishes to send a message to another process, it does so by using an appropriate `dropbox`. A process wishing to read a message does so by picking up messages from its `mailbox`.
 
 ##### This reference manual
 

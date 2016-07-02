@@ -1,7 +1,7 @@
-Language Syntax {#grammar}
+Language Syntax
 ===============
 
-\index{syntax of L&O} We take a layered approach to understanding L&O"s syntax. The lowest level is the character level; then there is the lexical or token level, the parse level and finally the well typed formulae level. Each of these levels identifies a different ‘level of abstraction’; each focusses on a different aspect of a well formed L&O program.
+We take a layered approach to understanding L&O's syntax. The lowest level is the character level; then there is the lexical or token level, the parse level and finally the well typed formulae level. Each of these levels identifies a different ‘level of abstraction’; each focusses on a different aspect of a well formed L&O program.
 
 This chapter is concerned with the lower three of these abstractions: characters, tokens and parse trees. This progressively moves up from the physical character of files containing L&O programs to a tree-like representation of the contents of a L&O source file. In later chapters, we focus on the subset of parse trees that can be given a well defined meaning: i.e., are well typed and form coherent units of execution.
 
@@ -10,163 +10,173 @@ Characters and lexical syntax
 
 ### Unicode characters
 
-\index{syntax!lexical} \index{UNICODE} L&O uses the Unicode character encoding system @unicode:30. More specifically, the L&O run-time uses Unicode characters internally to represent symbols and the L&O compiler and run-time engine interpret streams of UTF-8 bytes and UTF-16 words as Unicode. Identifiers in L&O programs as well as data processed by L&O programs are assumed to be Unicode based.
+L&O uses the Unicode character encoding system @unicode:30. More specifically, the L&O run-time uses Unicode characters internally to represent symbols and the L&O compiler and run-time engine interpret streams of UTF-8 bytes and UTF-16 words as Unicode. Identifiers in L&O programs as well as data processed by L&O programs are assumed to be Unicode based.
 
-A L&O language processor assumes that the input is encoded in UTF-8.
+A L&O language processor should assume that the input is encoded in UTF-8.
 
 However, all of the the characters used within the language definition of L&O – such as the built-in operators and syntactic features – are contained within the ASCII subset of the Unicode character set. Thus, L&O can be used in an ASCII-based environment.
 
 #### Character Categories
 
-\index{character categories} The Unicode consortium has identified a number of character catagories[^1]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
+The Unicode consortium has identified a number of character categories[^1]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
 
 L&O uses these character categories to classify characters for the the purposes of discriminating identifiers and number values occurring in the program source text. The purpose of this is to permit non-English programmers to use non-English identifiers in the text of the program.
 
 The character categories used by L&O are:
 
-\begin{tabular}{lccc}
-\hline
-Cat&Description&L&O predicate&Page\\
-\hline
-Cc&Other, Control&\verb+__isCcChar+&\pageref{chars:isCcChar}\\
-Cf&Other, Format&\verb+__isCfChar+&\pageref{chars:isCfChar}\\
-Cn&Other, Not assigned&\verb+__isCnChar+&\pageref{chars:isCnChar}\\
-Co&Other, Private&\verb+__isCoChar+&\pageref{chars:isCoChar}\\
-Cs&Other, Surrogate&\verb+__isCsChar+&\pageref{chars:isCsChar}\\
-Ll&Letter, Lowercase&\verb+__isLlChar+&\pageref{chars:isLlChar}\\
-Lm&Letter, Modifier&\verb+__isLmChar+&\pageref{chars:isLmChar}\\
-Lo&Letter, Other&\verb+__isLoChar+&\pageref{chars:isLoChar}\\
-Lt&Letter, Titlecase&\verb+__isLtChar+&\pageref{chars:isLtChar}\\
-Lu&Letter, Uppercase&\verb+__isLuChar+&\pageref{chars:isLuChar}\\
-Mc&Mark, Spacing Combining&\verb+__isMcChar+&\pageref{chars:isMcChar}\\
-Me&Mark, Enclosing&\verb+__isMeChar+&\pageref{chars:isMeChar}\\
-Mn&Mark, Non spacing&\verb+__isMnChar+&\pageref{chars:isMnChar}\\
-Nd&Number, Numerical digit&\verb+__isNdChar+&\pageref{chars:isNdChar}\\
-Nl&Number, Letter&\verb+__isNlChar+&\pageref{chars:isNlChar}\\
-No&Number, Other&\verb+__isNoChar+&\pageref{chars:isNoChar}\\
-Pc&Punctuation, Connector&\verb+__isPcChar+&\pageref{chars:isPcChar}\\
-Pd&Punctuation, Dash&\verb+__isPdChar+&\pageref{chars:isPdChar}\\
-Pe&Punctuation, Close&\verb+__isPeChar+&\pageref{chars:isPeChar}\\
-Pf&Punctuation, Final Quote&\verb+__isPfChar+&\pageref{chars:isPfChar}\\
-Pi&Punctuation, Initial Quote&\verb+__isPiChar+&\pageref{chars:isPiChar}\\
-Po&Punctuation, Other&\verb+__isPoChar+&\pageref{chars:isPoChar}\\
-Ps&Punctuation, Open&\verb+__isPsChar+&\pageref{chars:isPsChar}\\
-Sc&Symbol, Currency&\verb+__isScChar+&\pageref{chars:isScChar}\\
-Sk&Symbol, Modifier&\verb+__isSkChar+&\pageref{chars:isSkChar}\\
-Sm&Symbol, Math&\verb+__isSmChar+&\pageref{chars:isSmChar}\\
-So&Symbol, Other&\verb+__isSoChar+&\pageref{chars:isSoChar}\\
-Zl&Separator, Line&\verb+__isZlChar+&\pageref{chars:isZlChar}\\
-Zp&Separator, Paragraph&\verb+__isZpChar+&\pageref{chars:isZpChar}\\
-Zs&Separator, Space&\verb+__isZsChar+&\pageref{chars:isZsChar}\\
-\hline
-\end{tabular}
+| Cat | Description | Standard predicate |  
+|  ------	| ------	| ------	|  
+| Cc | Other, Control | `_isCcChar` |
+| Cf | Other, Format | `_isCfChar` |
+| Cn | Other, Not assigned | `_isCnChar` |
+| Co | Other, Private | `_isCoChar` |
+| Cs | Other, Surrogate | `_isCsChar` |
+| Ll | Letter, Lowercase | `_isLlChar` |
+| Lm | Letter, Modifier | `_isLmChar` |
+| Lo | Letter, Other | `_isLoChar` |
+| Lt | Letter, Titlecase | `_isLtChar` |
+| Lu | Letter, Uppercase | `_isLuChar` |
+| Mc | Mark, Spacing Combining | `_isMcChar` |
+| Me | Mark, Enclosing | `_isMeChar` |
+| Mn | Mark, Non spacing | `_isMnChar` |
+| Nd | Number, Numerical digit | `_isNdChar` |
+| Nl | Number, Letter | `_isNlChar` |
+| No | Number, Other | `_isNoChar` |
+| Pc | Punctuation, Connector | `_isPcChar` |
+| Pd | Punctuation, Dash | `_isPdChar` |
+| Pe | Punctuation, Close | `_isPeChar` |
+| Pf | Punctuation, Final Quote | `_isPfChar` |
+| Pi | Punctuation, Initial Quote | `_isPiChar` |
+| Po | Punctuation, Other | `_isPoChar` |
+| Ps | Punctuation, Open | `_isPsChar` |
+| Sc | Symbol, Currency | `_isScChar` |
+| Sk | Symbol, Modifier | `_isSkChar` |
+| Sm | Symbol, Math | `_isSmChar` |
+| So | Symbol, Other | `_isSoChar` |
+| Zl | Separator, Line | `_isZlChar` |
+| Zp | Separator, Paragraph | `_isZpChar` |
+| Zs | Separator, Space | `_isZsChar` |
+[Character Categories][categories]
+
+
 Tokens
 ------
 
-\index{syntax!tokens} It is required that the input of a L&O language processor is first partitioned into contiguous sequences of characters called *tokens*. There are several different kinds of tokens; corresponding to the identifiers, symbols, character literals, string literals and punctuation marks necessary to correctly parse a L&O program.
+It is required that the input of a L&O language processor is first partitioned into contiguous sequences of characters called *tokens*. There are several different kinds of tokens; corresponding to the identifiers, symbols, character literals, string literals and punctuation marks necessary to correctly parse a L&O program.
 
-> We use L&O’s own grammar notation to describe the tokenization and parsing rules for L&O. Apart from demonstrating the power of L&O’s grammar notation – which is modelled on Prolog’s DCG grammars – it also demonstrates that we can eat our own dog food!
+> We use L&O’s own grammar notation to describe the tokenization and parsing rules for L&O. Apart from demonstrating the power of L&O’s grammar notation – which is modeled on Prolog’s DCG grammars – it also demonstrates that we can eat our own dog food!
 
-In the productions for the tokenizer listed below we assume that, in an actual tokenizer, all the productions for a given non-terminal are collected together – as is required by L&O’s grammar. However, for explanatory purposes, the grammar rules for some of the non-terminals are distributed thoughout the text below. \label{token:toktype} The tokenizer rules depend on the \type{token} type defined below:
+In the productions for the tokenizer listed below we assume that, in an actual tokenizer, all the productions for a given non-terminal are collected together – as is required by L&O’s grammar. However, for explanatory purposes, the grammar rules for some of the non-terminals are distributed throughout the text below.
 
-    tokType ::= ID(symbol)             -- Identifier
-      | IN(integer)                    -- Integer literal
-      | FT(float)                      -- Floating point literal
-      | ST(string)                     -- String literal
-      | SY(string)                     -- Symbol
-      | CH(char)                       -- Character literal
-      | LPAR | RPAR | LBRA | RBRA
-      | LBRCE | RBRCE                  -- Punctuation
-      | COMMA | CONS | TERM
-      | EOF.                           -- End of file
+The tokenizer rules depend on the `tok` type defined below:
+
+      tok ::= lpar | rpar | lbra | rbra  -- Punctuation
+         |  lbrce | rbrce | lqpar | rqpar
+         |  idTok(string) 	             -- Identifier
+         |  intTok(integer)              -- Integer literal
+         |  fltTok(float)                -- Floating point literal
+         |  stringTok(list[stringSegment])  -- String literals
+         |  period                       -- statement terminator
+         |  terminal.                    -- End of file            
 
 This type definition defines the legal kinds of tokens that can be expected; and also forms the basis of the stream processed at the next higher level in the L&O language specification: namely the syntactic grammar.
 
-### Comments and whitespace {#token:comments}
+In addition to the `tok` type, the tokenizer also makes use of a `tokenState` type that encapsulates the state of the input as it is consumed during tokenization. One key role for the `tokenState` is to keep track of where we are in the source: it counts line numbers, column offsets and byte offset from the start of the file. With this information, it becomes simple to locate the source of any errors in most regular editors.
 
-Tokens in a L&O source text may separated by zero or more *comments* and/or white space text – some pairs of tokens *require* some intervening space or comments for proper recognition. For example, a number following an identifier requires at least one white space character; otherwise the rules for identifier would ‘swallow’ the number token. White space characters and comments may be used for the purposes of recognizing tokens; but must otherwise be discarded by a language processor.
+`tokenState` is effectively defined by its interface:
+
+````
+tokenState <~ stream[integer].
+tokenState <~ {
+  currentLocation:((integer,integer,integer)){}
+}.
+````
+
+The `stream` type is the standard interface for parsing as defined by the grammar rule notation of L&O. It exposes three methods: to consume a code point, to add code points and to test for end-of-file:
+
+```
+all E ~~ stream[E] <~ {
+  eof:(){}.
+  hdtl:(E,this){}.
+  cons:(E+)=>this.
+}.
+```
+
+Notice that `stream` is generic, whereas `tokenState` is not. The grammar notation can parse streams of any form of element; whereas the tokenizer is focused on parsing text.
+
+### Comments and whitespace
 
 There are two styles of comment in L&O source texts – *line* comments and *block* comments.
 
-#### Line comment {#token:linecomment}
+Tokens in a L&O source text may separated by zero or more *comments* and/or white space text – some pairs of tokens *require* some intervening space or comments for proper recognition. For example, a number following an identifier requires at least one white space character; otherwise the rules for identifier would ‘swallow’ the number token. White space characters and comments may be used for the purposes of recognizing tokens; but must otherwise be discarded by a language processor.
 
-\index{syntax!line comment} A line comment consists of the characters `-- ` i.e., two hyphen characters and a whitespace character, followed by all the characters up to the next new-line character or end-of-file which ever is first.
+#### White Space ####
 
-#### Block comment {#token:blockcomment}
+White space is defined to be any character in the unicode categories `Zs`, `Zl` and `Zp`. This is captured in the grammar rules:[^ Note that the grammar uses `integer` values to represent Unicode Code Points.]
 
-\index{syntax!block comment} \index{\verb+/*+\ldots\verb+*/+ comments} A block comment consists of the characters `/*` followed by any characters and is terminated by the characters `*/`
+    whiteSpace:() --> tokenState.
+    whiteSpace() --> [C] :: (_isZsChar(X) | _isZlChar(X) | _isZpChar(X)).
 
-The L&O tokeniser rules for white space and comments are:
+#### Line comment
 
-    whiteSpace:[integer]{}.
-    whiteSpace(X):-__isZsChar(X).
-    whiteSpace(X):-__isZlChar(X).
-    whiteSpace(X):-__isZpChar(X).
+A line comment consists of the characters `-- ` i.e., two hyphen characters and a whitespace character, followed by all the characters up to the next new-line character or end-of-file which ever is first.
 
-    comments:(integer,integer)-->string.
-    comments(Lno,Lx) --> comment(Lno,Ly)!, comments(Ly,Lx).
-    comments(Lno,Lno) --> "".
-
-    comment:(integer,integer)-->string.
-    comment(Lno,Lx) --> "-- ",lineComment(Lno,Lx).
-    comment(Lno,Lx) --> "--\t",lineComment(Lno,Lx).
-    comment(Lno,Lx) --> "/*",bodyComment(Lno,Lx).
-    comment(Lno,Lno+1) --> "\n".
-    comment(Lno,Lno) --> [X],{__isZsChar(X)}. -- ignore space
-
-    lineComment:(integer,integer)-->string.
-    lineComment(Lno,Lno+1) --> [X],{__isZlChar(X)}. -- new line
-    lineComment(Lno,Lx) --> [X],{\+__isZlChar(X)},
+```
+lineComment:()-->tokenState.
+lineComment() --> [X],{_isZlChar(X)}. -- new line
+lineComment() --> [X],{\+_isZlChar(X)},
             lineComment(Lno,Lx).
+```
 
-    bodyComment:(integer,integer)-->string.
-    bodyComment(Lno,Lno) --> "*/".
-    bodyComment(Lno,Lx) --> [X],{__isZlChar(X)},
-            bodyComment(Lno+1,Lx).
-    bodyComment(Lno,Lx) --> [X],bodyComment(Lno,Lx).
+#### Block comment
+
+A block comment consists of the characters `/*` followed by any characters and is terminated by the characters `*/`:
+
+```
+blockComment:() --> tokenState.
+blockComment() --> eof.
+blockComment() --> "*/".
+blockComment() --> [_], blockComment().
+```
+
+For each token, the tokenizer first of all consumes any white space and then looks for the token itself. This first phase is the white space and comment consumption:
+
+```
+skipSpaces: () --> tokenState.
+skipSpaces() --> whiteSpace()!, skipSpaces().
+skipSpaces() --> "--", (" " | "\t"), lineComment(), skipSpaces().
+skipSpaces() --> "/*", blockComment(), skipSpaces().
+skipSpaces() --> [].
+```
 
 ### Identifiers {#token:identifier}
 
-\index{syntax!identifiers} Identifiers serve many purposes within a L&O program: to identify variables and parameters, to identify types, even to identify syntactic operators.
+Identifiers serve many purposes within a L&O program: to identify variables and parameters, to identify types, even to identify syntactic operators.
 
-There are several classes of identifier, corresponding to how they are written: identifiers written using normal identifier rules, operators – which are often written with graphical characters – and quoted identifiers which are written like string literals but with single quotes.
+There are three forms of identifier, corresponding to how they are written: identifiers written using normal identifier rules, operators – which are often written with graphical characters – and quoted identifiers which are written like string literals but with single quotes.
 
-\index{UNICODE!identifiers} L&O identifiers are modelled on the standard Unicode identifier syntax; which in turn is a generalization of the common notation for identifier syntax found in many programming languages.
+L&O identifiers are modelled on the standard Unicode identifier syntax; which in turn is a generalization of the common notation for identifier syntax found in many programming languages.
 
 The basic rule for identifiers is that they have an initial start letter – which is either a letter character, or a character which could be used in a word or an underscore character – followed by a sequence of zero or more characters from a somewhat extended set – including the digit characters.
 
 > What makes this style of identifier ‘different’ is that the Unicode standard defines many thousands of ‘letter’ character; this allows identifiers to be written in non roman scripts – such as Kanji for example.
 
-The following L&O grammar rules capture the definition of an identifier:
+The following L&O grammar rules capture this basic form of identifier:
 
-    tok:(tokType)-->string.     -- a grammar that returns a token
+```
+nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
 
-    /* An identifier is an idStart character, 
-       followed by a sequence of idChar */
-    tok(ID(I)) --> idStart(X), idChar(C)*C^N, I=implode([X,..N]).
-    \dots
-    idStart:(integer)-->string.
-    idStart(X) --> [X],{__isLetterChar(X)}.
-    idStart(0c_) --> "_".
-    idStart(0c\+ff3f;) --> "\\+ff3f;".      -- full width low line
-      
-    idChar:(integer)-->string.
-    idChar(X) --> idStart(X).
-    idChar(X) --> [X],{__isNdChar(X)}.
-    idChar(X) --> [X],{__isMnChar(X)}.
-    idChar(X) --> [X],{__isMcChar(X)}.
-    idChar(X) --> [X],{__isPcChar(X)}.
-    idChar(X) --> [X],{__isCfChar(X)}.
+idStart:(integer) --> tokenState.
+idStart(X) --> [X] :: __isLetterChar(X).
+idStart(0c_) --> "_".
 
+idChar:(integer)-->string.
+idChar(X) --> idStart(X).
+idChar(X) --> [X],{_isNdChar(X) | _isMnChar(X) | _isMcChar(X) | _isPcChar(X) | _isCfChar(X)}.
+```
 The `idStart` rule defines those characters that may start an identifier, and the `idChar` rule identifies those characters that may continue an identifier. Together, these rules state that any ‘letter’ character may start an identifier, and letters and numbers may follow this initial letter.
 
-> The grammar condition
->
->     idChar(C)*C^N
->
-> matches a sequence of zero or more `idChar`s, and puts the resulting list in the variable `N`. See Section \vref{grammar:iterator} for a more complete explanation.
-
-\index{syntax!symbols} \index{symbol syntax} Quoted identifiers are written as a sequence of characters – not including new-line or other control characters – surrounded by `'` marks. More specifically, quoted identifiers are written as a sequence of character references (see Section \ref{token:stringcharacter} above) surrounded by `'` characters.
+Quoted identifiers are written as a sequence of characters – not including new-line or other control characters – surrounded by `'` marks. More specifically, quoted identifiers are written as a sequence of character references (see Section \ref{token:stringcharacter} above) surrounded by `'` characters.
 
 For example,
 
@@ -176,15 +186,25 @@ is the identifier with name `a symbol`.
 
 The grammar rule for quoted identifier tokens is
 
-    tok(ID(L)) --> "'", strChar(C)*C^L,"'".
+```
+nxtTok(idTok(Id)) --> "'", readQuoted(Q), "'", { Id = implode(Q)}.
+
+readQuoted : (list[integer]) --> tokenState.
+readQuoted([C,..R]) --> charRef(C), readQuoted(R).
+readQuoted([]) --> "'"+.
+```
 
 > Quoted identifiers are especially useful when integrating with other languages. For example, a record structure arising from parsing a CVS file may use field names that are constructed from the CVS input; in which case, being able to use quoted identifiers becomes crucial.
 
+> The grammar rule notation has several extensions compared to the Prolog DCG. One of those is the *look ahead* feature – used here to check that the quoted identifier is terminated by a quote character.
+
+The final form of identifier is the *graphic identifier*. These identifiers arise from the set of standard operators.
+
 ### Characters {#token:char}
 
-\index{syntax!character literal} \index{syntax!character reference} There is no separate type for characters. This is partly due to the fact that there is no single mapping between strings and characters in Unicode. If it is necessary to process characters, as opposed to strings, then one must use the Unicode concept of *codepoint* – which is actually an integer.
+There is no separate type for characters. This is partly due to the fact that there is no single mapping between strings and characters in Unicode. If it is necessary to process characters, as opposed to strings, then one must use the Unicode concept of *codepoint* – which is actually an integer.
 
-However, there is a special notation for codepoint: a leading `0c` in front of a *character reference* denotes the integer value of the codepoint corresponding to the character.
+However, there is a special notation for codepoints: a leading `0c` in front of a *character reference* denotes the integer value of the codepoint corresponding to the character.
 
 For example, the CodePoint corresponding to new-line character is written:
 
@@ -192,13 +212,15 @@ For example, the CodePoint corresponding to new-line character is written:
 
 The grammar rule for character literals is:
 
-    tok(IN(ch)) --> "0c", strChar(ch).
+```
+nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
+```
 
-where `strChar` is the production to defines a legal character that may occur in a `string` value.
+where `charRef` is the production to defines a legal character that may occur in a `string` or in a quoted identifier.
 
 #### Character reference {#token:stringcharacter}
 
-\index{syntax!character reference} \index{character reference} Character references are used in several places in L&O’s syntax: within string literals, identifiers and codepoint literals. There are also several special forms of character reference. The common Unix names for characters such as `\`n for new-line are recognized, as is a special notation for entering arbitrary Unicode characters.
+Character references are used in several places in L&O’s syntax: within string literals, identifiers and codepoint literals. There are also several special forms of character reference. The common Unix names for characters such as `\`n for new-line are recognized, as is a special notation for entering arbitrary Unicode characters.
 
 There are three categories of character references: characters which do not need escaping, characters that are represented using a backslash escape, and characters denoted by their hexadecimal character code.
 
@@ -215,6 +237,38 @@ and a string containing the Unicode sentinel character would be denoted:
     "\+fffe;"
 
 The rules for character references are:
+
+```
+charRef:(integer) --> tokenState.
+  charRef(Chr) --> [0c\\], backSlashRef(Chr).
+  charRef(Chr) --> [Chr].
+
+  backSlashRef:(integer) --> tokenState.
+  backSlashRef(0c\a) --> [0ca].
+  backSlashRef(0c\b) --> [0cb].
+  backSlashRef(0c\t) --> [0ct].
+  backSlashRef(0c\n) --> [0cn].
+  backSlashRef(0c\r) --> [0cr].
+  backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
+
+  hexChars:(integer,integer)-->tokenState.
+  hexChars(SoFar,Ch) --> hexDigit(N), hexChars(SoFar*16+N,Ch).
+  hexChars(SoFar,SoFar) --> [0c;].
+
+  hexDigit:(integer) --> tokenState.
+  hexDigit(D) --> digit(D).
+  hexDigit(10) --> [0ca].
+  hexDigit(11) --> [0cb].
+  hexDigit(12) --> [0cc].
+  hexDigit(13) --> [0cd].
+  hexDigit(14) --> [0ce].
+  hexDigit(15) --> [0cf].
+  hexDigit(10) --> [0cA].
+  hexDigit(11) --> [0cB].
+  hexDigit(12) --> [0cC].
+  hexDigit(13) --> [0cD].
+  hexDigit(14) --> [0cE].
+  hexDigit(15) --> [0cF].
 
     /* Special character sequence following a back-slash
     *  in a symbol or literal string
@@ -254,15 +308,34 @@ The rules for character references are:
 
 ### String literals {#token:string}
 
-\index{syntax!strings} \index{string syntax} String literals are written as a sequence of character references (see \ref{token:stringcharacter}) – not including new-line or paragraph separator characters – surrounded by `"` marks.
+String literals are written as a sequence of character references (see \ref{token:stringcharacter}) – not including new-line or paragraph separator characters – surrounded by `"` marks.
 
-> The reason for not permitting new-lines to occur in string literals is that that enables a particularly silly kind of syntax error to be picked up easily: a missing string quote will always generate a syntax error at the end of the line. The restriction does not affect the possible string literals, as it is always possible to use `\n` to indicate a new-line character, and the L&O compiler concatenates sequences of string literals into a single string literal.
->
-> One benefit of the automatic string merge feature is that when a program has a lengthy string embedded in it it can be formatted both for display and for program tidiness.
+> The reason for not permitting new-lines to occur in string literals is that that enables a particularly silly kind of syntax error to be picked up easily: a missing string quote will always generate a syntax error at the end of the line. The restriction does not affect the possible string literals, as it is always possible to use `\n` to indicate a new-line character.
 
-The grammar rule for string literals is very similar to the production for symbols. Note however, that string literals are interpreted as synonyms for lists of `char`s.
+In addition to simple string literals, L&O also supports *string interpolation*. An interpolated string has embedded expressions within it: in effect, the string literal is really a string-valued expression.
 
-    tok(ST(L)) --> "\"", strChar(C)*C^L,"\"".
+For example, the string:
+
+    "hello $he said"
+
+is an interpolated string where the characters `$he` should be replace by the value generated from the variable `he`.
+
+The general form of interpolation expression has some significant variations: the expression can be enclosed in parentheses:
+
+    "hello $(master.name) said"
+
+It may also be followed by a *format string* — a signal to format the result in a special way:
+
+    "he paid $amnt:0099.99; into the account"
+
+A format string is signaled by a colon immediately after the main part of the interpolation expression and is terminated by a semi-colon.
+
+How format strings, and interpolated expressions are *interpreted* is left to another section. Here we focus on the issues involved with tokenizing such strings. Note that within an interpolation expression we may have other string literals, even other interpolated strings:
+
+    "he paid $(Acc.check("fred")) into the account"
+
+The quotes surrounding the inner string `"fred"` are hidden from the outer interpolated string by virtue of the fact that it is embedded within parentheses.
+
 
 ### Interpolated Strings
 

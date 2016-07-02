@@ -1,0 +1,13 @@
+lo.resources{
+  import lo.uri.
+  import lo.
+
+  getResource:(uri) => list[integer].
+  getResource(U) => _readFileContents(getUriPath(U)).
+
+  putResource:(uri,list[integer])=>().
+  putResource(U,Content) :: _writeFileContents(getUriPath(U),Content) => ().
+
+  cwd:()=>uri.
+  cwd() => parseUri(_getCwd()).
+}
