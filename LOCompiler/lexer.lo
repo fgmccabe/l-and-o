@@ -11,11 +11,14 @@ lo.comp.lexer{
     currentLocation:((integer,integer,integer)){}
   }.
 
+  startState:(list[integer])=>tokenState.
+  startState(Src) => tkState(Src,1,0,1).
+
   tkState:(list[integer],integer,integer,integer) <=> tokenState.
   tkState(Chars,Line,Off,Col) .. {
     eof() :- Chars = [].
 
-    hdtl(0c\n,Next) :: Chars =. [0c\n,..Rest] :-- Next = tkState(Rest,Line+1,Off+1,0).
+    hdtl(0c\n,Next) :: Chars =. [0c\n,..Rest] :-- Next = tkState(Rest,Line+1,Off+1,1).
     hdtl(Ch,Next) :: Chars =. [Ch,..Rest] :-- Next = tkState(Rest,Line,Off+1,Col+1).
 
     cons(Ch) => tkState([Ch,..Chars],Line,Off,Col).
@@ -38,15 +41,15 @@ lo.comp.lexer{
   allTokens([]) --> eof.
   allTokens([tok(Tk,Lc),..More]) -->
     @currentLocation(Start),
-    nxtTok(Tk),
+    nxtTok(Tk)!,
     @currentLocation(End),
     Lc = makeLocation(Start,End),
     skipSpaces(),
     allTokens(More).
   
   nxtTok:(tok) --> tokenState.
-  nxtTok(Num) --> digit(_)+, readNumber(Num).
   nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
+  nxtTok(Num) --> digit(_)+, readNumber(Num).
   nxtTok(lpar) --> [0c(].
   nxtTok(rpar) --> [0c)].
   nxtTok(lbra) --> [0c[].
@@ -133,7 +136,7 @@ lo.comp.lexer{
   readNatural(SoFar,SoFar) --> \+digit(_).
 
   readMoreNumber:(tok,integer) --> tokenState.
-  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr), 
+  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr), 
       exponent(_int2flt(Decimal)+Fr,Fp).
   readMoreNumber(intTok(Ix),Ix) --> [].
 
@@ -168,6 +171,7 @@ lo.comp.lexer{
   backSlashRef(0c\n) --> [0cn].
   backSlashRef(0c\r) --> [0cr].
   backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
+  backSlashRef(Ch) --> [Ch].
 
   hexChars:(integer,integer)-->tokenState.
   hexChars(SoFar,Ch) --> hexDigit(N), hexChars(SoFar*16+N,Ch).

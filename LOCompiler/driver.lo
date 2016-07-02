@@ -8,7 +8,7 @@ lo.comp.driver{
   import lo.comp.location.
 
   tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) :: tokenize(Toks) %% tkState(getResource(U),1,0,0) => Toks.
+  tokenizeFile(U) :: tokenize(Toks) %% startState(getResource(U)) => Toks.
 
   -- Hint to the run-time:
   main:(list[string]+){}.
