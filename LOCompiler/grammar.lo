@@ -1,0 +1,186 @@
+lo.comp.grammar{
+  import lo.
+  import lo.comp.token.
+  import lo.comp.operators.
+  import lo.comp.location.
+  import lo.comp.ast.
+  import lo.comp.lexer.
+  import lo.comp.errors.
+
+  tokMark ::= endBrce | otherMark.
+
+  parse:(ast-) --> list[token].
+  parse(Term) --> term(2000,Term,Mark)!,
+    checkForTerminator(Mark).
+
+  private
+  term:(integer+,ast-,tokMark-) --> list[token].
+  term(Pr,Term,Mark) -->
+    termLeft(Pr,Left,LftPr,LLend),
+    termRight(Pr,Left,Term,LftPr,LLend,Mark).
+
+  private
+  termLeft:(integer+,ast-,integer-,tokMark-) --> list[token].
+  termLeft(Pr,Left,OPr,Mark) -->
+    [tok(idTok(Op),Lc)], \+[tok(rpar,_)], { prefixOp(Op,OPr,ORight), OPr=<Pr},
+    term(ORight,Arg,Mark),
+    Left=unary(Lc.merge(Arg.loc),Op,Arg).
+  termLeft(_,Term,0,Mark) --> term0(Term,Mark).
+
+  private
+  termRight:(integer+,ast+,ast-,integer+,tokMark+,tokMark-) --> list[token].
+  termRight(Pr,Left,Term,LeftPr,_,Mark) -->
+    legalInfixOp(Op,Pr,LeftPr,InfPr,RightPr),
+    term(RightPr,Right,LMark),
+    M = binary(Left.loc.merge(Right.loc),Op,Left,Right),
+    termRight(Pr,M,Term,InfPr,LMark,Mark).
+  termRight(Pr,Left,Term,LeftPr,_,Mark) -->
+    legalPostfixOp(Op,Pr,LeftPr,PostPr),
+    M = unary(Left.loc.merge(Lc),Op,Left),
+    termRight(Pr,M,Term,PostPr,otherMark,Mark).
+  termRight(_,Term,Term,_,Mark,Mark) --> [].
+
+  private
+  legalInfixOp:(string-,integer+,integer+,integer-,integer-) --> list[token].
+  legalInfixOp(Op,Pr,LeftPr,OPr,RPr) -->
+      [tok(idTok(Op),_)],
+      { infixOp(Op,LPr,OPr,RPr),
+        OPr =< Pr,
+        LPr >= LeftPr },
+      followsInfix(OPr)+.
+
+  private
+  followsInfix:(integer+) --> list[token].
+  followsInfix(Pr) -->
+    [tok(idTok(Op),_)] , 
+    { prefixOp(Op,OpPr,_) ? OpPr =< Pr | \+ isOperator(Op,_)}.
+  followsInfix(_) --> [tok(lpar,_)].
+  followsInfix(_) --> [tok(lbra,_)].
+  followsInfix(_) --> [tok(lbrce,_)].
+  followsInfix(_) --> [tok(lqpar,_)].
+  followsInfix(_) --> [tok(stringTok(_),_)].
+  followsInfix(_) --> [tok(intTok(_),_)].
+  followsInfix(_) --> [tok(fltTok(_),_)].
+
+  private
+  legalPostfixOp:(string-,integer+,integer+,integer-) --> list[token].
+  legalPostfixOp(Op,Pr,LeftPr,PostPr) --> [tok(idTok(Op),_)],
+      { postfixOp(Op,LPr,PostPr),
+        PostPr =< Pr,
+        LPr >= LeftPr}.
+
+  private
+  term0:(ast-,tokMark-) --> list[token].
+  term0(parseString(Lc,Segments),otherMark) --> [tok(stringTok(Segments),Lc)].
+  term0(intg(Lc,Ix),otherMark) --> [tok(intTok(Ix),Lc)].
+  term0(flot(Lc,Dx),otherMark) --> [tok(fltTok(Dx),Lc)].
+  term0(tupl(Lc,"[]",[]),otherMark) --> 
+    [tok(lbra,Lc0),tok(rbra,Lc1)]!,
+    Lc = Lc0.merge(Lc1).
+  term0(tupl(Lc,"[]",tupleize(Seq)),otherMark) -->
+    [tok(lbra,Lc0)],
+    term(2000,Seq,_),
+    checkFor(rbra,Lc1,"missing close bracket"),
+    Lc = Lc0.merge(Lc1).
+  term0(tupl(Lc,"{}",[]),endBrce) -->
+    [tok(lbrce,Lc0),tok(rbrce,Lc1)],
+    Lc = Lc0.merge(Lc1).
+  term0(tupl(Lc,"{}",Seq),endBrce) -->
+    [tok(lbrce,Lc0)],
+    terms(Seq),
+    checkFor(rbrce,Lc1,"missing close brace"),
+    Lc = Lc0.merge(Lc1).
+  term0(unary(Lc,"<||>",A),otherMark) -->
+    [tok(lqpar,Lc0)],
+    term(2000,A,_),
+    checkFor(rqpar,Lc1,"missing close quote"),
+    Lc = Lc0.merge(Lc1).
+  term0(Term,Mark) -->
+    term00(Left,LMark),
+    termArgs(Left,Term,LMark,Mark).
+
+  private
+  term00:(ast-,tokMark-) --> list[token].
+  term00(iden(Lc,Nm),otherMark) --> [tok(idTok(Nm),Lc)].
+  term00(tupl(Lc,"()",[]),otherMark) --> 
+      [tok(lpar,Lc0),tok(rpar,Lc1)],
+      Lc = Lc0.merge(Lc1).
+  term00(tupl(Lc,"()",tupleize(Seq)),otherMark) -->
+      [tok(lpar,Lc0)],
+      term(2000,Seq,_),
+      checkFor(rpar,Lc1,"missing close paren"),
+      Lc = Lc0.merge(Lc1).
+
+  private
+  termArgs:(ast+,ast-,tokMark,tokMark-) --> list[token].
+  termArgs(Lft,Term,_,Mark) -->
+      [tok(lpar,Lc0), tok(rpar,Lc1)],
+      Lc = Lft.loc.merge(Lc1),
+      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"()",[])),Term,otherMark,Mark).
+  termArgs(Lft,Term,_,Mark) -->
+      [tok(lpar,Lc0)],
+      term(2000,Seq,_),
+      checkFor(rpar,Lc1,"missing lose paren"),
+      Lc = Lc0.merge(Lc1),
+      termArgs(appl(Lc,Lft,tupl(Lc,"()",tupleize(Seq))),Term,otherMark,Mark).
+  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",[])),_,endBrce) -->
+      [tok(lbrce,Lc0), tok(rbrce,Lc1)],
+      Lc = Lc0.merge(Lc1).
+  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",Els)),_,endBrce) -->
+      [tok(lbrce,Lc0)],
+      terms(Els),
+      checkFor(rbrce,Lc1,"missing close brace").
+
+  private
+  terms: (list[ast]-) --> list[token].
+  terms([T,..R]) --> parse(T), terms(R).
+  terms([]) --> [].
+
+  private
+  tupleize:(ast)=>list[ast].
+  tupleize(Term) :: isBinary(Term,_,",",L,R) => [L,..tupleize(R)].
+  tupleize(T) => [T].
+
+  private
+  checkFor:(tok+,location-,string+) --> list[token].
+  checkFor(Tk,Lc,_) --> [tok(Tk,Lc)].
+  checkFor(Tk,Lc,Msg) --> [tok(_,Lc)]+,
+    { reportError(Msg,Lc) }.
+
+  private
+  checkForTerminator:(tokMark) --> list[token].
+  checkForTerminator(_) --> [tok(period,_)].
+  checkForTerminator(_) --> eof.
+  checkForTerminator(_) --> [tok(rbrce,_)]+.
+  checkForTerminator(endBrce) --> [].
+  checkForTerminator(_) --> 
+    [tok(_,Lc)]+,
+    checkFor(period,Lc,"missing terminator").
+
+  private
+  parseString:(location,list[stringSegment]) => ast.
+  parseString(Lc,[]) => strg(Lc,"").
+  parseString(_,[segment(Lc,Str)]) => strg(Lc,Str).
+  parseString(Lc,Segments) =>
+    unary(Lc,"formatSS",unary(Lc,"ssSeq",tupl(Lc,"[]",parseSegments(Segments)))).
+
+  parseSegments:(list[stringSegment]) => list[ast].
+  parseSegments([]) => [].
+  parseSegments([segment(Lc,Str),..More]) =>
+    [unary(Lc,"ss",strg(Lc,Str)),..parseSegments(More)].
+  parseSegments([interpolate(Lc,Exp,Fmt),..More]) =>
+    [interpolateSegment(Lc,Exp,Fmt),..parseSegments(More)].
+
+  interpolateSegment:(location,string,string) => ast.
+  interpolateSegment(Lc,Text,"") :: term(2000,Arg,_) %% subTokenize(Lc,Text) =>
+    formatDisp(Lc,Arg,iden(Lc,"disp"),tupl(Lc,"()",[])).
+  interpolateSegment(Lc,Text,Fmt) :: term(2000,Arg,_) %% subTokenize(Lc,Text) =>
+    formatDisp(Lc,Arg,iden(Lc,"frmt"),tupl(Lc,"()",[strg(Lc,Fmt)])).
+
+  private
+  formatDisp:(location,ast,ast,ast) => ast.
+  formatDisp(Lc,tupl(_,"()",[Term]),Verb,Extra) => 
+    appl(Lc,binary(Lc,".",Term,Verb),Extra).
+  formatDisp(Lc,Term,Verb,Extra) =>
+    appl(Lc,binary(Lc,".",Term,Verb),Extra).
+ }

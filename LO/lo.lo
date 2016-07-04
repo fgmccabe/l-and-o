@@ -19,4 +19,7 @@ lo{
   flttnList:(list[ss],list[integer]) => list[integer].
   flttnList([],Rest) => Rest.
   flttnList([E,..R],Rest) => flttn(E,flttnList(R,Rest)).
+
+  formatSS:(ss) => string.
+  formatSS(S) => flatten(S). -- temporary definition.
 }

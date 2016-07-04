@@ -30,6 +30,7 @@ escapeType("_readFileContents",funType([in(type("lo.string*string"))],typeExp("l
 escapeType("_writeFileContents",predType([in(type("lo.string*string")),in(typeExp("lo.list*list",[type("lo.arith*integer")]))])).
 escapeType("_getCwd",funType([],type("lo.string*string"))).
 escapeType("_display",predType([in(tupleType([type("lo.arith*integer"),type("lo.arith*integer"),type("lo.arith*integer")])),in(topType)])).
+escapeType("_logmsg",predType([in(type("lo.string*string"))])).
 escapeType("_isCcChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_isCfChar",predType([in(type("lo.arith*integer"))])).
 escapeType("_isCnChar",predType([in(type("lo.arith*integer"))])).
@@ -96,6 +97,7 @@ isEscape("_readFileContents").
 isEscape("_writeFileContents").
 isEscape("_getCwd").
 isEscape("_display").
+isEscape("_logmsg").
 isEscape("_isCcChar").
 isEscape("_isCfChar").
 isEscape("_isCnChar").

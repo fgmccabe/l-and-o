@@ -6,9 +6,16 @@ lo.comp.driver{
   import lo.comp.lexer.
   import lo.comp.token.
   import lo.comp.location.
+  import lo.comp.ast.
+  import lo.comp.grammar.
 
   tokenizeFile:(uri) => list[token].
   tokenizeFile(U) :: tokenize(Toks) %% startState(getResource(U)) => Toks.
+
+  parseFile:(uri) => ast.
+  parseFile(U) :: 
+      ( tokenize(Toks) %% startState(getResource(U)), 
+        parse(Term) %% Toks ) => Term.
 
   -- Hint to the run-time:
   main:(list[string]+){}.

@@ -161,19 +161,25 @@ handleInterpolation([],Lc,string(Lc,"")).
 handleInterpolation(Segments,Lc,Term) :- 
   stringSegments(Segments,Inters),
   unary(Lc,"ssSeq",tuple(Lc,"[]",Inters),Fltn),
-  unary(Lc,"ssFormat",Fltn,Term).
+  unary(Lc,"formatSS",Fltn,Term).
 
 stringSegments([],[]).
-stringSegments([Seg|More],[H|T]) :- stringSegment(Seg,H), stringSegments(More,T).
+stringSegments([Seg|More],[H|T]) :- stringSegment(Seg,H),!, stringSegments(More,T).
 
-stringSegment(segment(Str,Lc),string(Lc,Str)).
-stringSegment(interpolate(Text,[],Lc),Disp) :-
+stringSegment(segment(Str,Lc),S) :-
+  unary(Lc,"ss",string(Lc,Str),S).
+stringSegment(interpolate(Text,"",Lc),Disp) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX,_),
-  unary(Lc,"display",Term,Disp),
+  formatDisp(Lc,Term,"disp",[],Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).
-stringSegment(interpolate(Text,Fmt,Lc),format(Lc,Term,Disp)) :-
+stringSegment(interpolate(Text,Fmt,Lc),Disp) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX,_),
-  binary(Lc,"format",Term,string(Lc,Fmt),Disp),
+  formatDisp(Lc,Term,"frmt",[string(Lc,Fmt)],Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).
+
+formatDisp(Lc,tuple(_,"()",[Term]),Verb,Extra,app(Lc,Op,tuple(Lc,"()",Extra))) :-
+  binary(Lc,".",Term,name(Lc,Verb),Op).
+formatDisp(Lc,Term,Verb,Extra,app(Lc,Op,tuple(Lc,"()",Extra))) :-
+  binary(Lc,".",Term,name(Lc,Verb),Op).

@@ -283,7 +283,7 @@ collectPtnRefs(app(_,Op,Args),All,R0,Refs) :-
   collectPtnRefs(Args,All,R1,Refs).
 collectPtnRefs(tuple(_,_,Args),All,R0,Refs) :-
   collectPtnListRefs(Args,All,R0,Refs).
-collectPtnRefs(_,Refs,Refs).
+collectPtnRefs(_,_,Refs,Refs).
 
 collectTypeRefs(V,All,SoFar,Refs) :-
   isIden(V,Nm),

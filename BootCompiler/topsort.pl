@@ -35,8 +35,8 @@ inStack(Ref,[_|Stack],X) :- inStack(Ref,Stack,X).
 pickDef(Nm,[(Nm,Refs,Lc,Df)|Defs],Defs,(Nm,Refs,Lc,Df)).
 pickDef(Nm,[D|Defs],[D|ODefs],Df) :- pickDef(Nm,Defs,ODefs,Df).
 
-popGroups(Stack,Stack,Groups,Groups,Low,Pt) :- Pt > Low.
-popGroups(Stack,OStack,Groups,OG,_,Pt) :-
+popGroups(Stack,Stack,Groups,Groups,Low,Pt) :- Pt < Low. % still adding references to lower defn
+ popGroups(Stack,OStack,Groups,OG,_,Pt) :-
   popGroup(Stack,OStack,Group,Pt),
   mkGroup(Group,Groups,OG).
 

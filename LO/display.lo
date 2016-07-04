@@ -10,6 +10,12 @@ lo.display{
   -- Structured string - ss - allows post formatting.
   ss ::= ss(string) | ssSeq(list[ss]) | ssFormat(string,ss).
 
+  -- Implementable interface
+  displayable <~ {
+    disp:()=>ss.
+    frmt:(string)=>ss.
+  }
+
   -- To avoid circular dependency, we must implement display for what we import
 
   thingDisp : display[thing].

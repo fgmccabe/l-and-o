@@ -1,6 +1,7 @@
 lo.comp.location{
   import lo.
   
+  location <~ displayable.
   location <~ {
     merge:(location)=>location.
     line:integer.
@@ -17,9 +18,12 @@ lo.comp.location{
     length = Len.
 
     merge(loc(_,_,C,L)) => loc(Line,Off,Col,C-Col+L).
+
+    disp()=>locationDisp.display(this).
+    frmt(_)=>locationDisp.display(this).
   }.
 
-  hasLoc <~ { locOf:location. }.
+  hasLoc <~ { loc:location. }.
 
   locationDisp : display[location].
   locationDisp .. {

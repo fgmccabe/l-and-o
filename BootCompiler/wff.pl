@@ -252,13 +252,6 @@ wffTerm(T) :- isBinary(T,".",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isBinary(T,"#",L,R), wffPackageName(L), wffIden(R).
 wffTerm(T) :- isUnary(T,"@",R), wffCond(R).
 wffTerm(T) :- isBinary(T,"|",L,R), isBinary(L,"?",Tst,Th), wffCond(Tst), wffTerm(Th), wffTerm(R).
-wffTerm(T) :- isBinary(T,"=>",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,":-",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"+",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"-",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"*",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"/",L,R), wffTerm(L), wffTerm(R).
-wffTerm(T) :- isBinary(T,"%",L,R), wffTerm(L), wffTerm(R).
 wffTerm(T) :- isRoundTerm(T,Op,Args), wffTerm(Op), wffTerms(Args).
 wffTerm(T) :- locOfAst(T,Lc), reportError("term %s not well formed",[T],Lc).
 
@@ -270,7 +263,7 @@ wffCond(C) :- isBinary(C,"|",L,R), wffCond(L), wffCond(R).
 wffCond(C) :- isUnary(C,"!",R), wffCond(R).
 wffCond(C) :- isUnary(C,"\\+",R), wffCond(R).
 wffCond(C) :- isBinary(C,"*>",L,R), wffCond(L), wffCond(R).
-wffCond(C) :- isTuple(C,[Cx]), wffCond(Cx).
+wffCond(C) :- isTuple(C,Cx), wffConds(Cx).
 wffCond(C) :- isBinary(C,"==",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"\\=",L,R), wffTerm(L),wffTerm(R).
@@ -287,6 +280,9 @@ wffCond(T) :- isBinary(T,"%%",L,R), isBinary(R,"~",S,M), wffTerm(S), wffGrammarN
 wffCond(T) :- isBinary(T,"%%",L,R), wffTerm(L), wffTerm(R).
 wffCond(C) :- isRoundTerm(C,Op,Args), wffTerm(Op), wffTerms(Args).
 wffCond(T) :- locOfAst(T,Lc), reportError("Condition not well formed: %s",[T],Lc).
+
+wffConds([]).
+wffConds([C|M]) :- wffCond(C), wffConds(M).
 
 wffIden(Nm) :- isName(Nm,_),\+isKeyword(Nm).
 wffIden(Id) :- isTuple(Id,[Nm]), isName(Nm,_), \+ isKeyword(Nm).

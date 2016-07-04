@@ -168,10 +168,8 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
 
 */
   escape(_display,141,False,False,"P2+T3iii+A","Display a term on console")
-/*
-
-  escape(_logmsg,142,False,False,"P1+S","log a message in logfile")
-  
+  escape(_logmsg,142,False,False,"P1+S","log a message in logfile or console")
+/*  
   // Socket handling functions
   escape(_connect,143,True,False,"p5+S+i+i-O-O","connect to remote host")
   escape(_listen,144,True,False,"p2+i-O","listen on a port")

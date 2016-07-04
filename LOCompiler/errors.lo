@@ -1,0 +1,9 @@
+lo.comp.errors{
+  import lo.comp.location.
+  import lo.
+
+  reportError:(string,location){}.
+  reportError(Msg,Lc) :-
+    _logmsg("Error @ $(Lc)"),
+    _logmsg(Msg).
+}

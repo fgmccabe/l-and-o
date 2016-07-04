@@ -3,21 +3,22 @@ lo.comp.token{
   import lo.
 
   tok ::= lpar
-         |  rpar
-         |  lbra
-         |  rbra
-         |  lbrce
-         |  rbrce
-         |  lqpar
-         |  rqpar
-         |  idTok(string)
-         |  intTok(integer)
-         |  fltTok(float)
-         |  stringTok(list[stringSegment])
-         |  period
-         |  terminal.
+       |  rpar
+       |  lbra
+       |  rbra
+       |  lbrce
+       |  rbrce
+       |  lqpar
+       |  rqpar
+       |  idTok(string)
+       |  intTok(integer)
+       |  fltTok(float)
+       |  stringTok(list[stringSegment])
+       |  period
+       |  terminal.
 
-  stringSegment ::= segment(location,string) | interpolate(string,string).
+  stringSegment ::= segment(location,string) 
+                | interpolate(location,string,string).
 
   token <~ hasLoc.
 
@@ -52,7 +53,7 @@ lo.comp.token{
   segmentDisp : display[stringSegment].
   segmentDisp .. {
     display(segment(_,T)) => ss(T).
-    display(interpolate(In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
-    display(interpolate(In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).
+    display(interpolate(_,In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
+    display(interpolate(_,In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).
   }
 }

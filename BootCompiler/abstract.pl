@@ -1,5 +1,5 @@
 :- module(abstract,[locOfAst/2,isAst/1,
-      binary/5,unary/4,apply/4,isApply/3,
+      nary/4,binary/5,unary/4,apply/4,isApply/3,
       isUnary/3,isUnary/4,isBinary/4,isBinary/5,isBinaryTerm/4,
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,

@@ -608,7 +608,7 @@ genTpVars([_|I],[Tp|More]) :-
 recordAccessExp(Lc,Rc,Fld,ET,Tp,Env,Ev,dot(Lc,Rec,Fld)) :-
   typeOfTerm(Rc,in(topType),AT,Env,Ev,Rec),
   getTypeFace(AT,Env,Face),
-  fieldInFace(Face,Fld,Lc,FTp),!,
+  fieldInFace(Face,AT,Fld,Lc,FTp),!,
   freshen(FTp,AT,_,Tp), % the record is this to the right of dot.
   checkType(Lc,Tp,ET,Env). % dot is contra variant!
 
@@ -618,10 +618,10 @@ typeOfRecord(Lc,Rec,ClassTp,Tp,Env,Env,record(Lc,Defs,Others,Types)) :-
   Tp = faceType(Fields),
   checkType(Lc,Tp,ClassTp,Env).
 
-fieldInFace(Fields,Nm,_,Tp) :-
+fieldInFace(Fields,_,Nm,_,Tp) :-
   is_member((Nm,Tp),Fields),!.
-fieldInFace(_,Nm,Lc,anonType) :-
-  reportError("field %s not declared",[Nm],Lc).
+fieldInFace(_,Tp,Nm,Lc,anonType) :-
+  reportError("field %s not declared in %s",[Nm,Tp],Lc).
 
 typeOfVar(Lc,"true",ET,Tp,Env,Env,v(Lc,"true")) :-
   findType("logical",Lc,Env,Tp),
@@ -814,7 +814,7 @@ checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
 
 checkConds([C],Env,Ex,Cond) :-
   checkCond(C,Env,Ex,Cond).
-checkConds([C|More],Env,Ex,(L,R)) :-
+checkConds([C|More],Env,Ex,conj(L,R)) :-
   checkCond(C,Env,E0,L),
   checkConds(More,E0,Ex,R).
 

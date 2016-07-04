@@ -10,7 +10,7 @@ hedHedChar(tokenState([_,Ch|_],_,_,_),Ch).
 
 hedHedHedChar(tokenState([_,_,Ch|_],_,_,_),Ch).
 
-initSt(Txt,tokenState(Txt,1,0,0)).
+initSt(Txt,tokenState(Txt,1,0,1)).
 initSt(Chars,LineNo,Column,Base,tokenState(Chars,LineNo,Column,Base)).
 isTerminal(tokenState([],_,_,_)).
 

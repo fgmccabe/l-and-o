@@ -1,1 +1,30 @@
- 10.01
+u{
+  import lo.
+  import lo.comp.token.
+  import lo.comp.operators.
+  import lo.comp.location.
+  import lo.comp.ast.
+  import lo.comp.lexer.
+  import lo.comp.errors.
+
+    tokMark ::= endBrce | otherMark.
+
+  term:(integer+,ast-,tokMark-) --> list[token].
+  term(Pr,Term,Mark) --> [].
+  
+  private
+  term0:(ast-,tokMark-) --> list[token].
+  term0(tupl(Lc,"[]",tupleize(Seq)),otherMark) -->
+    [tok(lbra,Lc0)],
+    term(2000,Seq,_),
+    checkFor(rbra,Lc1,"missing close bracket"),
+    Lc = Lc0.merge(Lc1).
+
+  private
+  checkFor:(tok+,location-,string+) --> list[token].
+  checkFor(Tk,Lc,_) --> [tok(Tk,Lc)].
+
+  private
+  tupleize:(ast)=>list[ast].
+  tupleize(T) => [T].
+}

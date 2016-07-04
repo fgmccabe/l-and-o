@@ -46,7 +46,10 @@ lo.comp.lexer{
     Lc = makeLocation(Start,End),
     skipSpaces(),
     allTokens(More).
-  
+
+  subTokenize:(location,string) => list[token].
+  subTokenize(loc(Ln,Off,Col,_),Text) :: tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col) => Toks.
+
   nxtTok:(tok) --> tokenState.
   nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
   nxtTok(Num) --> digit(_)+, readNumber(Num).
@@ -105,9 +108,11 @@ lo.comp.lexer{
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
   interpolation:(stringSegment-) --> tokenState.
-  interpolation(interpolate(implode(Text),implode(Format))) --> 
+  interpolation(interpolate(Lc,implode(Text),implode(Format))) --> 
+    @currentLocation(Start),
     countBrackets(Text,[]),
     readFormat(Format),
+    @currentLocation(End),
     Lc = makeLocation(Start,End).
 
   countBrackets:(list[integer],list[integer]) --> tokenState.
