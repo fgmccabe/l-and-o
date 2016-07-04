@@ -189,7 +189,7 @@ dcgBody(goal(_,Goal),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   trGoal(Goal,G0,Gx,Q,Qx,Map,Opts,Ex,Exx).
 dcgBody(dip(_,V,Cond),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   joinStream(Strm,Strmx,G,G0),
-  trExp(V,StrmVr,Q,Q0,G0,G1,G1,[equals(Strm,StrmVr)|G2],Map,Opts,Ex,Ex0),
+  trExp(V,StrmVr,Q,Q0,G0,G1,G1,[unify(Strm,StrmVr)|G2],Map,Opts,Ex,Ex0),
   trGoal(Cond,G2,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
 dcgBody(call(Lc,NT,Args),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
@@ -279,7 +279,7 @@ pushTerminals([E|More],V,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
 streamCall(Verb,El,Strm,Strmx,[ocall(cons(Verb,[El,Strmx]),Strm,Strm)|G],G).
 
 joinStream(X,X,G,G).
-joinStream(Strm,Strmx,[equals(Strm,Strmx)|Gx],Gx).
+joinStream(Strm,Strmx,[unify(Strm,Strmx)|Gx],Gx).
 
 transformOthers(_,_,_,[],[neck],Rx,Rx).
 transformOthers(Pkg,Map,Opts,[assertion(Lc,G)|Others],[call(AssertName,[])|Inits],Rules,Rx) :-
@@ -545,13 +545,13 @@ trExpCallOp(pkgRef(_,Pkg,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fun,XArgs)|Tailx],P
 trExpCallDot(v(_,Nm),Rec,C,X,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
   implementDotFunCall(Reslt,Rec,C,X,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
-trExpCallDot(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|TailR],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
-  trExp(Rec,Rc,Q,Qx,APx,Px,TailR,Tailx,Map,Opts,Ex,Exx).
+trExpCallDot(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|ATlx],Pre,Px,Tail,ATlx,Map,Opts,Ex,Exx) :-
+  trExp(Rec,Rc,Q,Qx,APx,Rx,Rx,Px,Map,Opts,Ex,Exx).
 
 implementDotFunCall(inherit(_,Super,LblVr,ThVr),_,C,X,X,Q,Qx,Pre,Px,Tail,[call(Super,[C,LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   merge([X,LblVr,ThVr],Q,Qx).
-implementDotFunCall(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,ATail,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
-  trExp(Rec,Rc,Q,Q0,APx,Px,ATail,[ocall(C,Rc,Rc)|Tailx],Map,Opts,Ex,Exx),
+implementDotFunCall(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|Tailx],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
+  trExp(Rec,Rc,Q,Q0,APx,Rx,Rx,Px,Map,Opts,Ex,Exx),
   merge([X],Q0,Qx).
 
 implementFunCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
@@ -649,10 +649,6 @@ trGoal(forall(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   BCl2 = clse(LQ,BPr,LQ,[]),
   Ex1 = [ACl1,ACl2,BCl1,BCl2|Exx],
   merge(LQ,Q,Qx).
-trGoal(equals(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
-  lineDebug(Lc,G3,[equals(Lx,Rx)|Gx],Opts),
-  trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
 trGoal(match(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   lineDebug(Lc,G3,[match(Lx,Rx)|Gx],Opts),
   trExp(L,Lx,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
@@ -722,11 +718,11 @@ makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,Lbl
   collectLabelVars([],LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(enum(LclName),Extra,LblTerm),
-  (Extra =[] -> LblGl = [] ; LblGl = [equals(LbVr,LblTerm)]),
+  (Extra =[] -> LblGl = [] ; LblGl = [unify(LbVr,LblTerm)]),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
 makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
-  trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[equals(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
+  trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unify(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
   collectLabelVars(Vs,LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(Lbl,Extra,LblTerm),

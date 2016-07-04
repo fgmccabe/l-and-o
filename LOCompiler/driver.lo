@@ -14,7 +14,7 @@ lo.comp.driver{
 
   parseFile:(uri) => ast.
   parseFile(U) :: 
-      ( tokenize(Toks) %% startState(getResource(U)), 
+      ( tokenize(Toks) %% startState(getResource(U)),
         parse(Term) %% Toks ) => Term.
 
   -- Hint to the run-time:
@@ -26,7 +26,7 @@ lo.comp.driver{
   parseArgs:(uri,list[string]+){}.
   parseArgs(_,[]).
   parseArgs(B,[S,..M]) :-
-    Toks = tokenizeFile(resolveUri(B,parseUri(S))),
-    _display((0,0,0),flatten(listDisp(tokenDisp).display(Toks))),
+    Term = parseFile(resolveUri(B,parseUri(S))),
+    _logmsg(formatSS(Term.disp())),
     parseArgs(B,M).
 }

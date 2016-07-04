@@ -6,6 +6,8 @@ lo.string{
 
   string:string.
   string .. {
+    eq(this).
+    
     lt(Y) :- _str_lt(this,Y).
     ge(Y) :- _str_ge(this,Y).
   }

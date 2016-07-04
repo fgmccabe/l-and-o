@@ -24,7 +24,7 @@ lo.comp.token{
 
   tok:(tok,location) <=> token.
   tok(Tk,Loc) .. {
-    locOf = Loc.
+    loc = Loc.
   }.
 
   tokenDisp : display[token].

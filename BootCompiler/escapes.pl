@@ -25,6 +25,7 @@ escapeType("_flt_lt",predType([in(type("lo.arith*float")),in(type("lo.arith*floa
 escapeType("_flt_ge",predType([in(type("lo.arith*float")),in(type("lo.arith*float"))])).
 escapeType("_int2flt",funType([in(type("lo.arith*integer"))],type("lo.arith*float"))).
 escapeType("_flt2int",funType([in(type("lo.arith*float"))],type("lo.arith*integer"))).
+escapeType("_flt_hash",funType([in(type("lo.arith*float"))],type("lo.arith*integer"))).
 escapeType("_pwr",funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float"))).
 escapeType("_readFileContents",funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")]))).
 escapeType("_writeFileContents",predType([in(type("lo.string*string")),in(typeExp("lo.list*list",[type("lo.arith*integer")]))])).
@@ -67,6 +68,7 @@ escapeType("_int2str",funType([in(type("lo.arith*integer")),in(type("lo.arith*in
 escapeType("_flt2str",funType([in(type("lo.arith*float")),in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.logical*logical")),in(type("lo.logical*logical"))],type("lo.string*string"))).
 escapeType("_str_lt",predType([in(type("lo.string*string")),in(type("lo.string*string"))])).
 escapeType("_str_ge",predType([in(type("lo.string*string")),in(type("lo.string*string"))])).
+escapeType("_str_hash",funType([in(type("lo.string*string"))],type("lo.arith*integer"))).
 escapeType("explode",funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")]))).
 escapeType("implode",funType([in(typeExp("lo.list*list",[type("lo.arith*integer")]))],type("lo.string*string"))).
 isEscape("exit").
@@ -92,6 +94,7 @@ isEscape("_flt_lt").
 isEscape("_flt_ge").
 isEscape("_int2flt").
 isEscape("_flt2int").
+isEscape("_flt_hash").
 isEscape("_pwr").
 isEscape("_readFileContents").
 isEscape("_writeFileContents").
@@ -134,5 +137,6 @@ isEscape("_int2str").
 isEscape("_flt2str").
 isEscape("_str_lt").
 isEscape("_str_ge").
+isEscape("_str_hash").
 isEscape("explode").
 isEscape("implode").

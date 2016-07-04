@@ -75,109 +75,101 @@ formatClassStructures([(Nm,Access,Tp)|M],[tpl([strg(Nm),Access,strg(EncType)])|R
   string_chars(EncType,Chars),
   formatClassStructures(M,R).
 
-genPlRules(Rls,O,E) :-
-  rfold(Rls,genprolog:genPlRule,O,E).
+genPlRules(Rls,O,Ox) :-
+  rfold(Rls,genprolog:genPlRule,O,Ox).
 
-genPlRule(clse(_,Nm,Args,Body),O,E) :-
+genPlRule(clse(_,Nm,Args,Body),O,Ox) :-
   genTerm(Nm,O,O2),
   appStr("(",O2,O3),
   genTerms(Args,O3,O4),
   appStr(")",O4,O5),
   genBody(Body,O5,O6),
-  appStr(".\n",O6,E).
+  appStr(".\n",O6,Ox).
 
 genQuants([],O,O) :- !.
-genQuants([V|Q],O,E) :-
+genQuants([V|Q],O,Ox) :-
   appStr("all ",O,O1),
   genTerm(V,O1,O2),
   rfold(Q,genprolog:genMoreQuant,O2,O3),
-  appStr(" ~~ ",O3,E).
+  appStr(" ~~ ",O3,Ox).
 
-genMoreQuant(V,O,E) :-
+genMoreQuant(V,O,Ox) :-
   appStr(", ",O,O0),
-  genTerm(V,O0,E).
+  genTerm(V,O0,Ox).
 
 genBody([],O,O).
-genBody([G|Body],O,E) :-
+genBody([G|Body],O,Ox) :-
   appStr(" :- ",O,O0),
   genGoal(G,O0,O1),
-  rfold(Body,genprolog:genMoreGoal,O1,E).
+  rfold(Body,genprolog:genMoreGoal,O1,Ox).
 
-genMoreGoal(G,O,E) :-
+genMoreGoal(G,O,Ox) :-
   appStr(",\n    ",O,O0),
-  genGoal(G,O0,E).
+  genGoal(G,O0,Ox).
 
-genGoal(call(Pr,Args),O,E) :-
+genGoal(call(Pr,Args),O,Ox) :-
   genTerm(Pr,O,O0),
   appStr("(",O0,O1),
   genTerms(Args,O1,O2),
-  appStr(")",O2,E).
-genGoal(ecall(Escape,Args),O,E) :-
+  appStr(")",O2,Ox).
+genGoal(ecall(Escape,Args),O,Ox) :-
   genQuoted(Escape,O,O0),
   appStr("(",O0,O1),
   genTerms(Args,O1,O2),
-  appStr(")",O2,E).
-genGoal(ocall(Pr,Lbl,This),O,E) :-
+  appStr(")",O2,Ox).
+genGoal(ocall(Pr,Lbl,This),O,Ox) :-
   appStr("ocall(",O,O1),
   genTerm(Pr,O1,O2),
   appStr(",",O2,O3),
   genTerm(Lbl,O3,O4),
   appStr(",",O4,O5),
   genTerm(This,O5,O6),
-  appStr(")",O6,E).
-genGoal(neck,O,E) :-
-  appStr("!",O,E).
-genGoal(fail,O,E) :-
-  appStr("fail",O,E).
-genGoal(equals(L,R),O,E) :-
+  appStr(")",O6,Ox).
+genGoal(neck,O,Ox) :-
+  appStr("!",O,Ox).
+genGoal(fail,O,Ox) :-
+  appStr("fail",O,Ox).
+genGoal(unify(L,R),O,Ox) :-
   genTerm(L,O,O1),
   appStr(" = ",O1,O2),
-  genTerm(R,O2,E).
-genGoal(unify(L,R),O,E) :-
+  genTerm(R,O2,Ox).
+genGoal(match(L,R),O,Ox) :-
   genTerm(L,O,O1),
   appStr(" = ",O1,O2),
-  genTerm(R,O2,E).
-genGoal(match(L,R),O,E) :-
-  genTerm(L,O,O1),
-  appStr(" = ",O1,O2),
-  genTerm(R,O2,E).
-genGoal(raise(_),O,E) :-
-  appStr("abort",O,E).
+  genTerm(R,O2,Ox).
+genGoal(raise(_),O,Ox) :-
+  appStr("abort",O,Ox).
 
-genTerm(prg(Nm,_),O,E) :-
-  appStr("'",O,O0),
-  appStr(Nm,O0,O1),
- % appStr("/",O1,O2),
- % appInt(Ar,O2,O3),
-  appStr("'",O1,E).
-genTerm(strct(Nm,_),O,E) :-
-  genQuoted(Nm,O,E).
-genTerm(intgr(Ix),O,E) :-
-  appInt(Ix,O,E).
-genTerm(float(Dx),O,E) :-
-  appFlt(Dx,O,E).
+genTerm(prg(Nm,_),O,Ox) :-
+  appQuoted(Nm,'''',O,Ox).
+genTerm(strct(Nm,_),O,Ox) :-
+  genQuoted(Nm,O,Ox).
+genTerm(intgr(Ix),O,Ox) :-
+  appInt(Ix,O,Ox).
+genTerm(float(Dx),O,Ox) :-
+  appFlt(Dx,O,Ox).
 genTerm(strg(Str),O,Ox) :-
   appQuoted(Str,"""",O,Ox).
-genTerm(anon,O,E) :-
-  appStr("_",O,E).
-genTerm(enum(Nm),O,E) :-
+genTerm(anon,O,Ox) :-
+  appStr("_",O,Ox).
+genTerm(enum(Nm),O,Ox) :-
   appStr("'",O,O1),
   appStr(Nm,O1,O2),
-  appStr("'",O2,E).
-genTerm(idnt(Nm),O,E) :-
+  appStr("'",O2,Ox).
+genTerm(idnt(Nm),O,Ox) :-
   appStr("X",O,O0),
-  appStr(Nm,O0,E).
-genTerm(cons(Op,Args),O,E) :-
+  appStr(Nm,O0,Ox).
+genTerm(cons(Op,Args),O,Ox) :-
   genTerm(Op,O,O1),
   appStr("(",O1,O2),
   genTerms(Args,O2,O3),
-  appStr(")",O3,E).
+  appStr(")",O3,Ox).
 genTerm(tpl([]),O,Ox) :-!,
   appQuoted("()","'",O,Ox).
-genTerm(tpl(Args),O,E) :-
+genTerm(tpl(Args),O,Ox) :-
   appStr("(",O,O5),
   genTerms(Args,O5,O6),
-  appStr(")",O6,E).
+  appStr(")",O6,Ox).
 
 genQuoted(Str,O,Ox) :-
   appStr("'",O,O1),
@@ -185,10 +177,10 @@ genQuoted(Str,O,Ox) :-
   appStr("'",O2,Ox).
 
 genTerms([],O,O).
-genTerms([T|Rest],O,E) :-
+genTerms([T|Rest],O,Ox) :-
   genTerm(T,O,O0),
-  rfold(Rest,genprolog:genMoreTerm,O0,E).
+  rfold(Rest,genprolog:genMoreTerm,O0,Ox).
 
-genMoreTerm(G,O,E) :-
+genMoreTerm(G,O,Ox) :-
   appStr(", ",O,O0),
-  genTerm(G,O0,E).
+  genTerm(G,O0,Ox).

@@ -23,7 +23,6 @@ isCanon(where(_,_)).
 isCanon(conj(_,_)).
 isCanon(disj(_,_)).
 isCanon(conditional(_,_,_)).
-isCanon(equals(_,_,_)).
 isCanon(unify(_,_,_)).
 isCanon(match(_,_,_)).
 isCanon(one(_)).
@@ -114,13 +113,9 @@ showCanonTerm(conditional(_,Test,Either,Or),O,Ox) :-
   appStr(" | ",O4,O5),
   showCanonTerm(Or,O5,O6),
   appStr(")",O6,Ox).
-showCanonTerm(equals(_,L,R),O,Ox) :-
-  showCanonTerm(L,O,O1),
-  appStr(" = ",O1,O2),
-  showCanonTerm(R,O2,Ox).
 showCanonTerm(unify(_,L,R),O,Ox) :-
   showCanonTerm(L,O,O1),
-  appStr(" == ",O1,O2),
+  appStr(" = ",O1,O2),
   showCanonTerm(R,O2,Ox).
 showCanonTerm(match(_,L,R),O,Ox) :-
   showCanonTerm(L,O,O1),

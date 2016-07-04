@@ -4,6 +4,11 @@ lo.comparable {
 
   import lo.thing.
 
+  equality <~ {
+    eq: (this+){}.
+  }
+
+  comp <~ equality.
   comp <~ {
     lt: (this+){}.
     ge: (this+){}.
@@ -20,4 +25,10 @@ lo.comparable {
 
   (>=):all t<~comp ~~ (t+,t+){}.
   X >= Y :- X.ge(Y).
+
+  (==):all t<~equality ~~ (t+,t+){}.
+  X == Y :- X.eq(Y).
+
+  (\==):all t<~equality ~~ (t+,t+){}.
+  X \== Y :- \+X.eq(Y).
 }

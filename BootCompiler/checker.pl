@@ -776,16 +776,6 @@ checkCond(Term,Env,Ev,match(Lc,Rhs,Lhs)) :-
   newTypeVar("_#",TV),
   typeOfTerm(R,inout(TV),_,Env,E0,Lhs),
   typeOfTerm(L,in(TV),_,E0,Ev,Rhs).
-checkCond(Term,Env,Ev,equals(Lc,Lhs,Rhs)) :-
-  isBinary(Term,Lc,"==",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,in(TV),_,Env,E0,Lhs),
-  typeOfTerm(R,in(TV),_,E0,Ev,Rhs).
-checkCond(Term,Env,Ev,neg(Lc,equals(Lc,Lhs,Rhs))) :-
-  isBinary(Term,Lc,"\\==",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,in(TV),_,Env,E0,Lhs),
-  typeOfTerm(R,in(TV),_,E0,Ev,Rhs).
 checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   isBinary(Term,Lc,"%%",L,R),
   isBinary(R,"~",S,M),!,
@@ -872,16 +862,6 @@ checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,neg(Lc,unify(Lc,Lhs,Rhs)))) :-
   newTypeVar("_#",TV),
   typeOfTerm(L,inout(TV),_,Env,E0,Lhs),
   typeOfTerm(R,inout(TV),_,E0,Ev,Rhs).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,equals(Lc,Lhs,Rhs))) :-
-  isBinary(Term,Lc,"==",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,in(TV),_,Env,E0,Lhs),
-  typeOfTerm(R,in(TV),_,E0,Ev,Rhs).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,neg(Lc,equals(Lc,Lhs,Rhs)))) :-
-  isBinary(Term,Lc,"\\==",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,in(TV),_,Env,E0,Lhs),
-  typeOfTerm(R,in(TV),_,E0,Ev,Rhs).
 checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,match(Lc,Lhs,Rhs))) :-
   isBinary(Term,Lc,".=",L,R),!,
   newTypeVar("_#",TV),

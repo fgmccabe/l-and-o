@@ -20,7 +20,7 @@ frameDebug(Nm,QNo,G,Gx,Q,Opts) :-
   isOption(dbgVars(Nm,DgVr,FrVr),Opts),!,
   trCons("frame",3,RlNm),
   constructFrameList(Q,FQ),
-  G=[equals(FrVr,FQ),
+  G=[unify(FrVr,FQ),
       ocall(cons(RlNm,[strg(Nm),intgr(QNo),FrVr]),DgVr,DgVr)|Gx].
 frameDebug(_,_,F,F,_,_).
 

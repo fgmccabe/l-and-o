@@ -19,8 +19,12 @@
                     listify/2,
                     '_readFileContents'/2,
                     '_writeFileContents'/2,
-                    '_getCwd'/1
+                    '_getCwd'/1,
+                    '_logmsg'/1,
+                    '_flt_hash'/2,
+                    '_str_hash'/2
                     ]).
+
 
 exit(X) :- halt(X).
 
@@ -91,6 +95,9 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 '_display'((Ln,Col,Sz),Term) :-
   writef("@%t:%t(%t) - %w\n",[Ln,Col,Sz,Term]).
 
+'_logmsg'(Msg) :-
+  writef("%w\n",[Msg]).
+
 '_str_lt'(S1,S2) :-
      string_codes(S1,C1),
      string_codes(S2,C2),
@@ -135,3 +142,17 @@ writeCodes(Str,[Code|More]) :-
 '_getCwd'(U) :-
     working_directory(C,C),
     string_concat("file:",C,U).
+
+'_str_hash'(S,H) :-
+    stringHash(0,Str,H).
+
+stringHash(H,Str,Hx) :-
+  string_codes(Str,Codes),
+  hashCodes(Codes,H,Hx).
+
+hashCodes([],H,H).
+hashCodes([C|More],H0,Hx) :-
+  H1 is 47*H0+C,
+  hashCodes(More,H1,Hx).
+
+'_flt_hash'(F,H) :- H is truncate(F).

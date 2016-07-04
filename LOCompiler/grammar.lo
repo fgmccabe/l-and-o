@@ -35,7 +35,10 @@ lo.comp.grammar{
     M = binary(Left.loc.merge(Right.loc),Op,Left,Right),
     termRight(Pr,M,Term,InfPr,LMark,Mark).
   termRight(Pr,Left,Term,LeftPr,_,Mark) -->
-    legalPostfixOp(Op,Pr,LeftPr,PostPr),
+    [tok(idTok(Op),Lc)],
+    { postfixOp(Op,LPr,PostPr),
+        PostPr =< Pr,
+        LPr >= LeftPr},
     M = unary(Left.loc.merge(Lc),Op,Left),
     termRight(Pr,M,Term,PostPr,otherMark,Mark).
   termRight(_,Term,Term,_,Mark,Mark) --> [].
@@ -61,13 +64,6 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(stringTok(_),_)].
   followsInfix(_) --> [tok(intTok(_),_)].
   followsInfix(_) --> [tok(fltTok(_),_)].
-
-  private
-  legalPostfixOp:(string-,integer+,integer+,integer-) --> list[token].
-  legalPostfixOp(Op,Pr,LeftPr,PostPr) --> [tok(idTok(Op),_)],
-      { postfixOp(Op,LPr,PostPr),
-        PostPr =< Pr,
-        LPr >= LeftPr}.
 
   private
   term0:(ast-,tokMark-) --> list[token].
@@ -120,9 +116,18 @@ lo.comp.grammar{
   termArgs(Lft,Term,_,Mark) -->
       [tok(lpar,Lc0)],
       term(2000,Seq,_),
-      checkFor(rpar,Lc1,"missing lose paren"),
+      checkFor(rpar,Lc1,"missing close paren"),
       Lc = Lc0.merge(Lc1),
       termArgs(appl(Lc,Lft,tupl(Lc,"()",tupleize(Seq))),Term,otherMark,Mark).
+  termArgs(Lft,Term,_,Mark) -->
+      [tok(lbra,Lc0), tok(rbra,Lc1)],
+      Lc = Lft.loc.merge(Lc1),
+      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"[]",[])),Term,otherMark,Mark).
+  termArgs(Lft,appl(Lc,Lft,tupl(Lc,"[]",tupleize(Seq))),_,otherMark) -->
+      [tok(lbra,Lc0)],
+      term(2000,Seq,_),
+      checkFor(rbra,Lc1,"missing close bracket"),
+      Lc = Lc0.merge(Lc1).
   termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",[])),_,endBrce) -->
       [tok(lbrce,Lc0), tok(rbrce,Lc1)],
       Lc = Lc0.merge(Lc1).
@@ -130,6 +135,10 @@ lo.comp.grammar{
       [tok(lbrce,Lc0)],
       terms(Els),
       checkFor(rbrce,Lc1,"missing close brace").
+  termArgs(Lft,Term,_,Mark) -->
+      [tok(idTok("."),Lc), tok(idTok(Fld),LcF)],
+      termArgs(binary(Lc,".",Lft,iden(LcF,Fld)),Term,otherMark,Mark).
+  termArgs(Term,Term,Mark,Mark) --> [].
 
   private
   terms: (list[ast]-) --> list[token].

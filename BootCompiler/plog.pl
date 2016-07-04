@@ -109,10 +109,6 @@ showGoal(unify(L,R),O,Ox) :-
   showTerm(L,O,O1),
   appStr(" = ",O1,O2),
   showTerm(R,O2,Ox).
-showGoal(equals(L,R),O,Ox) :-
-  showTerm(L,O,O1),
-  appStr(" == ",O1,O2),
-  showTerm(R,O2,Ox).
 showGoal(match(L,R),O,Ox) :-
   showTerm(L,O,O1),
   appStr(" .= ",O1,O2),

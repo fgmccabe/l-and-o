@@ -64,11 +64,13 @@ findDelim(Chrs,Delim) :-
 findDelim(_,'"').
 
 encodeChars(Chars,Delim,[Delim|O],Ox) :-
- concat(Chars,[Delim|Ox],O).
+ encodeQuoted(Chars,Delim,O,Ox).
 
 encodeText(Txt,[Delim|O],Ox) :- string_chars(Txt,Chrs), findDelim(Chrs,Delim), encodeQuoted(Chrs,Delim,O,Ox).
 
 encodeQuoted([],Delim,[Delim|Ox],Ox) :- !.
+encodeQuoted(['\\'|More],Delim,['\\','\\'|O],Ox) :-
+  encodeQuoted(More,Delim,O,Ox).
 encodeQuoted([Delim|More],Delim,['\\',Delim|O],Ox) :-
   encodeQuoted(More,Delim,O,Ox).
 encodeQuoted([Ch|More],Delim,[Ch|O],Ox) :-

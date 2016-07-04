@@ -62,6 +62,8 @@ escape(_flt_ge,27,False,False,"P2+f+f","float greater or equal")
 escape(_int2flt,25,False,False,"F1+if","convert integer to float")
 escape(_flt2int,26,False,False,"F1+fi","convert float to integer")
 
+escape(_flt_hash,27,False,False,"F1+fi","compute hash of float")
+
 escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
 
 /*  escape(sqrt,26,False,False,":k'u'NF1+k'u'f","square root")
@@ -248,6 +250,8 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
 
   escape(_str_lt,216,False,False,"P2+S+S","String 1 is less than string 2")
   escape(_str_ge,217,False,False,"P2+S+S","String 1 is greater than or equals to string 2")
+
+  escape(_str_hash,218,False,False,"F1+Si","Compute hash of string")
 
 /*
   escape(_stringOf,216,False,False,":k't'AF3+k't'+i+iS","convert value to a string")

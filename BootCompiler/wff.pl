@@ -264,10 +264,8 @@ wffCond(C) :- isUnary(C,"!",R), wffCond(R).
 wffCond(C) :- isUnary(C,"\\+",R), wffCond(R).
 wffCond(C) :- isBinary(C,"*>",L,R), wffCond(L), wffCond(R).
 wffCond(C) :- isTuple(C,Cx), wffConds(Cx).
-wffCond(C) :- isBinary(C,"==",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"\\=",L,R), wffTerm(L),wffTerm(R).
-wffCond(C) :- isBinary(C,"\\==",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"!=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"<",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"=<",L,R), wffTerm(L),wffTerm(R).
@@ -344,10 +342,6 @@ wffGrammarNonTermimal(T) :-
   wffTerm(R).
 wffGrammarNonTermimal(T) :-
   isBinary(T,"\\=",L,R),
-  wffTerm(L),
-  wffTerm(R).
-wffGrammarNonTermimal(T) :-
-  isBinary(T,"==",L,R),
   wffTerm(L),
   wffTerm(R).
 wffGrammarNonTermimal(T) :-
