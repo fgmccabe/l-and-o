@@ -107,16 +107,16 @@ static char *dumpSig(char *sig, bufferPo out) {
 
   switch (*sig++) {
     case integer_sig:
-      dumpStdType("lo.arith*integer", out);
+      dumpStdType("lo.core*integer", out);
       break;
     case float_sig:
-      dumpStdType("lo.arith*float", out);
+      dumpStdType("lo.core*float", out);
       break;
     case string_sig:
-      dumpStdType("lo.string*string", out);
+      dumpStdType("lo.core*string", out);
       break;
     case logical_sig:
-      dumpStdType("lo.logical*logical", out);
+      dumpStdType("lo.core*logical", out);
       break;
     case kvar_sig:
       outStr(O_IO(out), "kVar(");
@@ -321,7 +321,7 @@ static void genLoEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cm
 static void loEscapeTypes(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out, "  escapeType:(string)=>type.\n");
+  fprintf(out, "  public escapeType:(string)=>type.\n");
 
 #include "escapes.h"
 
@@ -345,7 +345,7 @@ static void genLoIsEsc(FILE *out, bufferPo buffer, char *name) {
 static void loIsEscape(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out, "\n  isEscape:(string){}.\n");
+  fprintf(out, "\n  public isEscape:(string){}.\n");
 
 #include "escapes.h"
 

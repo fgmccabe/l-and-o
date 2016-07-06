@@ -13,11 +13,11 @@
 importPkg(Pkg,Repo,Spec) :-
   importPkg(Pkg,defltVersion,Repo,Spec).
 
-importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Imports)) :-
+importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Classes,Imports)) :-
   openPackageAsStream(Repo,Pkg,Vers,Strm),
-  pickupPieces(Strm,Pkg,[export,types],Pieces),
+  pickupPieces(Strm,Pkg,[export,types,classes],Pieces),
   close(Strm),
-  processPieces(Pieces,Export,Types,Imports).
+  processPieces(Pieces,Export,Types,Imports,Classes).
 
 pickupPieces(_,_,[],[]).
 pickupPieces(Strm,_,_,[]) :-
@@ -38,16 +38,30 @@ isAPiece(F,Args,Pkg,[L|Lookfor],[L|Rest],Pieces,More) :-
   isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More).
 isAPiece(_,_,_,[],[],Pieces,Pieces).
 
-processPieces([],_,_,[]).
-processPieces([export(Sig)|More],Export,Types,Imports) :-
+processPieces([],_,_,[],[]).
+processPieces([export(Sig)|More],Export,Types,Imports,Classes) :-
   decodeSignature(Sig,Export),
-  processPieces(More,_,Types,Imports).
-processPieces([types(Sig)|More],Export,Types,Imports) :-
+  processPieces(More,_,Types,Imports,Classes).
+processPieces([types(Sig)|More],Export,Types,Imports,Classes) :-
   decodeSignature(Sig,Types),
-  processPieces(More,Export,_,Imports).
-processPieces([import(Viz,Pkg,Version)|More],Export,Types,[Import|Imports]) :-
+  processPieces(More,Export,_,Imports,Classes).
+processPieces([import(Viz,Pkg,Version)|More],Export,Types,[Import|Imports],Classes) :-
   massageImport([Viz,Pkg,Version],Import),
-  processPieces(More,Export,Types,Imports).
+  processPieces(More,Export,Types,Imports,Classes).
+processPieces([classes(Enc)|More],Export,Types,Imports,Classes) :-
+  massageClasses(Enc,Classes,Cls),
+  processPieces(More,Export,Types,Imports,Cls).
+
+massageClasses(Enc,Classes,Cls) :-
+  decodeValue(Enc,Term),
+  findClasses(Term,Classes,Cls).
+
+findClasses(tpl(Entries),Classes,Cls) :-
+  pickupClasses(Entries,Classes,Cls).
+
+pickupClasses([],Cls,Cls).
+pickupClasses([tpl([strg(Nm),Cl,Sig])|Rest],[(Nm,Cl,Sig)|More],Cls):-
+  pickupClasses(Rest,More,Cls).
 
 loadPkg(Pkg,Vers,Repo,Code,Imports) :-
   openPackageAsStream(Repo,Pkg,Vers,Strm),

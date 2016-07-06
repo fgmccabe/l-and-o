@@ -11,33 +11,46 @@
 
 macroRewrite([],[]).
 macroRewrite([St|More],Stmts) :-
+  isUnary(St,"public",Inner),
+  isAlgebraicTypeDef(Inner,Lc,Quants,Head,Body),!,
+  convertAlgebraic(Lc,macro:markPublic,Quants,Head,Body,Stmts,S0),
+  macroRewrite(More,S0).
+macroRewrite([St|More],Stmts) :-
   isAlgebraicTypeDef(St,Lc,Quants,Head,Body),!,
-  convertAlgebraic(Lc,Quants,Head,Body,Stmts,S0),
+  convertAlgebraic(Lc,macro:noMark,Quants,Head,Body,Stmts,S0),
   macroRewrite(More,S0).
 macroRewrite([St|More],[St|Stmts]) :-
   macroRewrite(More,Stmts).
 
+markPublic(Lc,Stmt,PStmt) :-
+  unary(Lc,"public",Stmt,PStmt).
+
+noMark(_,Stmt,Stmt).
+
 % super simple conversion. Maybe later add support for auto generation of interfaces
 
-convertAlgebraic(Lc,Quants,Head,Body,[InheritThing|Elements],Tail) :-
+convertAlgebraic(Lc,Mark,Quants,Head,Body,[TypeRule|Elements],Tail) :-
   typeRule(Lc,Quants,Head,name(Lc,"thing"),InheritThing),
-  convertConstructors(Body,Head,Quants,Elements,Tail).
+  call(Mark,Lc,InheritThing,TypeRule),
+  convertConstructors(Body,Head,Mark,Quants,Elements,Tail).
 
-convertConstructors(Pair,Head,Quants,Elements,Tail) :-
+convertConstructors(Pair,Head,Mark,Quants,Elements,Tail) :-
   isBinary(Pair,"|",L,R),
-  convertConstructors(L,Head,Quants,Elements,L1),
-  convertConstructors(R,Head,Quants,L1,Tail).
-convertConstructors(Term,Head,Quants,Elements,Tail) :-
-  convertConstructor(Term,Head,Quants,Elements,Tail).
+  convertConstructors(L,Head,Mark,Quants,Elements,L1),
+  convertConstructors(R,Head,Mark,Quants,L1,Tail).
+convertConstructors(Term,Head,Mark,Quants,Elements,Tail) :-
+  convertConstructor(Term,Head,Mark,Quants,Elements,Tail).
 
-convertConstructor(name(Lc,Nm),Tp,Quants,[TpRule,Body|Tail],Tail) :-
-  hasType(Lc,Nm,Quants,Tp,TpRule),
+convertConstructor(name(Lc,Nm),Tp,Mark,Quants,[TpRule,Body|Tail],Tail) :-
+  hasType(Lc,Nm,Quants,Tp,TpRl),
+  call(Mark,Lc,TpRl,TpRule),
   emptyBody(Lc,name(Lc,Nm),Body).
-convertConstructor(Con,Tp,Quants,[TpRule,Body|Tail],Tail) :-
+convertConstructor(Con,Tp,Mark,Quants,[TpRule,Body|Tail],Tail) :-
   locOfAst(Con,Lc),
   isRound(Con,Nm,ArgTypes), /* Construct con:(T1,..,Tn)<=>Tp */
   classType(Lc,ArgTypes,Tp,ClassType),
-  hasType(Lc,Nm,Quants,ClassType,TpRule),
+  hasType(Lc,Nm,Quants,ClassType,TpRl),
+  call(Mark,Lc,TpRl,TpRule),
   genAnonArgs(ArgTypes,Args),       /* Construct con(_,..,_) <= thing */
   roundTerm(Lc,Nm,Args,Hd),
   emptyBody(Lc,Hd,Body).

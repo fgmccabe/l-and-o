@@ -1,29 +1,30 @@
 lo.list{
   -- implement the list interface for lists
   import lo.stream.
+  import lo.core.
 
-  all t ~~ list[t] <~ stream[t].
+  public all t ~~ list[t] <~ stream[t].
 
-  '[]':list[_].
+  public '[]':list[_].
   '[]'..{
     eof().
     cons(X) => [X].
     hdtl(_,_) :- false.
   }.
 
-  (,..): all t ~~ (t,list[t]) <=> list[t].
+  public (,..): all t ~~ (t,list[t]) <=> list[t].
   (H,..T)..{
     eof() :- false.
     hdtl(H,T).
     cons(X) => [X,..this].
   }.
 
-  (<>):all t ~~ (list[t]+,list[t])=>list[t].
+  public (<>):all t ~~ (list[t]+,list[t])=>list[t].
 
   [] <> X => X.
   [E,..X] <> Y => [E,..X<>Y].
 
-  reverse:all t ~~ (list[t]+) => list[t].
+  public reverse:all t ~~ (list[t]+) => list[t].
   reverse(X) => rev(X,[]).
 
   private
@@ -31,6 +32,15 @@ lo.list{
   rev([],R) => R.
   rev([E,..L],R) => rev(L,[E,..R]).
 
-  drop:all t ~~ (list[t]) => list[t].
+  public drop:all t ~~ (list[t]) => list[t].
   drop([_,..L]) => L.
+
+  public isMember:all t ~~ (t,list[t]){}.
+  isMember(E,[E,.._]).
+  isMember(E,[_,..L]) :- isMember(E,L).
+
+  public subtract:all t ~~ (t,list[t])=>list[t].
+  subtract(_,[]) => [].
+  subtract(E,[E,..R]) => R.
+  subtract(E,[X,..R]) => [E,..subtract(E,R)].
 }

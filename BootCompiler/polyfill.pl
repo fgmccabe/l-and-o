@@ -144,7 +144,7 @@ writeCodes(Str,[Code|More]) :-
     string_concat("file:",C,U).
 
 '_str_hash'(S,H) :-
-    stringHash(0,Str,H).
+    stringHash(0,S,H).
 
 stringHash(H,Str,Hx) :-
   string_codes(Str,Codes),

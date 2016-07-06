@@ -1,0 +1,5 @@
+lo.comp.dict{
+  import lo.comp.types.
+
+  env <~ { types: }
+}

@@ -1,0 +1,8 @@
+lo.comp.parseType{
+  import lo.comp.types.
+  import lo.comp.ast.
+  import lo.comp.dict.
+
+  public
+  parseType : ()  
+}

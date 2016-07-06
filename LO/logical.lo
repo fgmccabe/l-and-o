@@ -1,4 +1,0 @@
-lo.logical{
-  import lo.thing.
-  logical ::= true | false.
-}

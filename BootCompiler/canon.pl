@@ -156,7 +156,7 @@ showMoreTerms([T|More],O,Ox) :-
   showMoreTerms(More,O2,Ox).
 
 showImports([],O,O).
-showImports([import(Viz,pkg(Pkg),Version,_,_)|Imports],O,Ox) :-
+showImports([import(Viz,pkg(Pkg),Version,_,_,_)|Imports],O,Ox) :-
   showVisibility(Viz,O,O0),
   appStr("import ",O0,O1),
   appStr(Pkg,O1,O2),

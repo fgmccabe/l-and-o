@@ -17,13 +17,13 @@
 
 :- use_module(display).
 
-checkProgram(Prog,Repo,prog(Pkg,Imports,Defs,Others,Fields,Types)) :-
+checkProgram(Prog,Repo,prog(Pkg,Imports,Defs,Others,Exports,Types)) :-
   stdDict(Base),
   isBraceTerm(Prog,Pk,Els),
   packageName(Pk,Pkg),
   pushScope(Base,Env),
-  thetaEnv(Pkg,Repo,Els,[],Env,_,Defs,Private,Imports,Others),
-  computeExport(Defs,Private,Fields,Types),!.
+  thetaEnv(Pkg,Repo,Els,[],Env,_,Defs,Public,Imports,Others),
+  computeExport(Defs,[],Public,Exports,Types),!.
 
 packageName(T,Pkg) :- isIden(T,Pkg).
 packageName(T,Pkg) :- isString(T,Pkg).
@@ -49,36 +49,22 @@ packageName(T,pkg(Pkg),v(Version)) :-
 packageName(T,pkg(Pkg),defltVersion) :-
   packageName(T,Pkg).
 
-thetaEnv(Pkg,Repo,Els,Fields,Base,TheEnv,Defs,Private,Imports,Others) :-
+thetaEnv(Pkg,Repo,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   macroRewrite(Els,Stmts),
-  dependencies(Stmts,Groups,Private,Annots,Imps,Otrs),
+  dependencies(Stmts,Groups,Public,Annots,Imps,Otrs),
   processImportGroup(Imps,Imports,Repo,Base,IBase),
   pushFace(Fields,IBase,Env),
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-checkImports([],[],_,Env,Env) :- !.
-checkImports([St|Stmts],Imports,Repo,Env,Ex) :-
-  checkImport(St,private,Imports,IM,Repo,Env,E0),
-  checkImports(Stmts,IM,Repo,E0,Ex).
-
-checkImport(St,_,Imports,More,Repo,Env,Ex) :-
-  isUnary(St,"private",I),
-  checkImport(I,private,Imports,More,Repo,Env,Ex).
-checkImport(St,_,Imports,More,Repo,Env,Ex) :-
-  isUnary(St,"public",I),
-  checkImport(I,public,Imports,More,Repo,Env,Ex).
-checkImport(St,Viz,[import(Lc,Pkg,Viz,PkgSpec)|More],More,Repo,Env,Ex) :-
-  isUnary(St,Lc,"import",P),
-  packageName(P,Pkg,Version),
-  (importPkg(Pkg,Version,Repo,PkgSpec),
-   importDefs(PkgSpec,Lc,Env,Ex) ;
-   reportError("cannot locate package %s",[Pkg],Lc),
-   Env=Ex).
-
-importDefs(spec(_,_,faceType(Exported),faceType(Types),_),Lc,Env,Ex) :-
+importDefs(spec(_,_,faceType(Exported),faceType(Types),_,_),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,Ex).
+
+declareFields([],_,Env,Env).
+declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
+  declareVar(Nm,Lc,vr(Nm,Tp),Env,E0),
+  declareFields(More,Lc,E0,Ex).
 
 importTypes([],_,Env,Env).
 importTypes([(Nm,tupleType(Rules))|More],Lc,Env,Ex) :-
@@ -111,9 +97,9 @@ importAll(Imports,Repo,AllImports) :-
   closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
 
 importAllDefs([],_,[],_,Env,Env).
-importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types)|Specs],Repo,Env,Ex) :-
+importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types,Classes)|Specs],Repo,Env,Ex) :-
   importPkg(Pkg,Vers,Repo,Spec),
-  Spec = spec(_,_,Exported,Types,_),
+  Spec = spec(_,_,Exported,Types,Classes,_),
   importDefs(Spec,Lc,Env,Ev0),
   importAllDefs(More,Lc,Specs,Repo,Ev0,Ex).
 
@@ -121,7 +107,7 @@ notAlreadyImported(import(_,Pkg,Vers),SoFar) :-
   \+ is_member(import(_,Pkg,Vers),SoFar),!.
 
 importMore(Repo,import(Viz,Pkg,Vers),SoFar,[import(Viz,Pkg,Vers)|SoFar],Inp,More) :-
-  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,Imports)),
+  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,_,Imports)),
   addPublicImports(Imports,Inp,More).
 importMore(_,import(_,Pkg,Vers),SoFar,SoFar,Inp,Inp) :-
   reportError("could not import package %s,%s",[Pkg,Vers]).
@@ -386,13 +372,8 @@ checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   getTypeFace(ClassTp,Env,Fields),
   pushScope(Env,Base),
   declareVar("this",Lc,vr("this",ClassTp),Base,ThEnv),
-  thetaEnv(ClassPath,nullRepo,Els,Fields,ThEnv,_OEnv,Defs,Private,_Imports,Others),
-  computeExport(Defs,Private,BodyDefs,Types).
-
-declareFields([],_,Env,Env).
-declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
-  declareVar(Nm,Lc,vr(Nm,Tp),Env,E0),
-  declareFields(More,Lc,E0,Ex).
+  thetaEnv(ClassPath,nullRepo,Els,Fields,ThEnv,_OEnv,Defs,Public,_Imports,Others),
+  computeExport(Defs,Fields,Public,BodyDefs,Types).
 
 splitHead(tuple(_,"()",[A]),Nm,Args,Cond) :-!,
   splitHd(A,Nm,Args,Cond).
@@ -899,25 +880,35 @@ checkTerminals([T|More],[TT|Out],ElTp,Env,Ex) :-
   typeOfTerm(T,inout(ElTp),_,Env,E0,TT),
   checkTerminals(More,Out,ElTp,E0,Ex).
 
-computeExport([],_,[],[]).
-computeExport([Def|Defs],Private,Fields,Types) :-
-  exportDef(Def,Private,Fields,Fx,Types,Tx),!,
-  computeExport(Defs,Private,Fx,Tx).
+computeExport([],_,_,[],[]).
+computeExport([Def|Defs],Fields,Public,Exports,Types) :-
+  exportDef(Def,Fields,Public,Exports,Ex,Types,Tx),!,
+  computeExport(Defs,Fields,Public,Ex,Tx).
 
-exportDef(function(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(predicate(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(class(_,Nm,Tp,_,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(enum(_,Nm,Tp,_,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,value),Private), Fields=Fx ; Fields = [(Nm,Tp)|Fx] ).
-exportDef(typeDef(_,Nm,_,Rules),Private,Fields,Fields,Types,Tx) :-
-  (is_member((Nm,type),Private), Types=Tx ; Types = [(Nm,Rules)|Tx]).
-exportDef(defn(_,Nm,_,Tp,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
-exportDef(grammar(_,Nm,Tp,_),Private,Fields,Fx,Types,Types) :-
-  (is_member((Nm,type),Private),Fields=Fx ; Fields = [(Nm,Tp)|Fx]).
+exportDef(function(_,Nm,Tp,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+exportDef(predicate(_,Nm,Tp,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+exportDef(class(_,Nm,Tp,_,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+exportDef(enum(_,Nm,Tp,_,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+exportDef(typeDef(_,Nm,_,Rules),_,Public,Exports,Exports,Types,Tx) :-
+  isPublicType(Nm,Rules,Public,Types,Tx).
+exportDef(defn(_,Nm,_,Tp,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+exportDef(grammar(_,Nm,Tp,_),Fields,Public,Exports,Ex,Types,Types) :-
+  isPublic(Nm,Tp,Fields,Public,Exports,Ex).
+
+isPublic(Nm,Tp,_,Public,[(Nm,Tp)|Exx],Exx) :-
+  is_member(var(Nm),Public),!.
+isPublic(Nm,_,Fields,_,[(Nm,Tp)|Exx],Exx) :-
+  is_member((Nm,Tp),Fields),!.
+isPublic(_,_,_,_,Ex,Ex).
+
+isPublicType(Nm,Type,Public,[(Nm,Type)|Exx],Exx) :-
+  is_member(tpe(Nm),Public),!.
+isPublicType(_,_,_,Ex,Ex).
 
 mergeFields([],_,_,Fields,Fields,_,_).
 mergeFields([Rule|More],Q,Plate,SoFar,Fields,Env,Lc) :-

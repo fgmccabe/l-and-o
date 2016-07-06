@@ -140,9 +140,9 @@ int main(int argc, char **argv) {
       case genLO:
         fprintf(out, "%s{\n", prefix);
         fprintf(out, "  import lo.\n\n");
-        fprintf(out, "  infixOp:(string,integer,integer,integer){}.\n");
-        fprintf(out, "  prefixOp:(string,integer,integer){}.\n");
-        fprintf(out, "  postfixOp:(string,integer,integer){}.\n\n");
+        fprintf(out, "  public infixOp:(string,integer,integer,integer){}.\n");
+        fprintf(out, "  public prefixOp:(string,integer,integer){}.\n");
+        fprintf(out, "  public postfixOp:(string,integer,integer){}.\n\n");
         break;
     }
 
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 
     switch (genMode) {
       case genLO:
-        fprintf(out, "\n  isOperator:(string,integer){}.\n");
+        fprintf(out, "\n  public isOperator:(string,integer){}.\n");
         break;
       default:
       ;
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 
     switch (genMode) {
       case genLO:
-        fprintf(out, "\n  follows:(string,integer,string){}.\n");
+        fprintf(out, "\n  public follows:(string,integer,string){}.\n");
         break;
       default:
       ;
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 
     switch (genMode) {
       case genLO:
-        fprintf(out, "\n  final:(string){}.\n");
+        fprintf(out, "\n  public final:(string){}.\n");
         break;
       default:
       ;

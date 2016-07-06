@@ -1,70 +1,49 @@
 lo.arith{
   import lo.thing.
+  import lo.core.
   import lo.display.
-  import lo.logical.
-  import lo.comparable.
 
-  arith <~ {
-    pl:  (this+)=>this.
-    tms: (this+)=>this.
-    mns: (this+)=>this.
-    dv:  (this+)=>this.
-  }.
+  -- Implement regular arithmetic functions
 
-  (+):all t<~arith ~~ (t+,t+)=>t.
+  public (+):all t<~additive ~~ (t+,t+)=>t.
   x+y => x.pl(y).
 
-  (*):all t<~arith ~~ (t+,t+)=>t.
+  public (*):all t<~arith ~~ (t+,t+)=>t.
   x*y => x.tms(y).
 
-  (-):all t<~arith ~~ (t+,t+)=>t.
+  public (-):all t<~additive ~~ (t+,t+)=>t.
   x-y => x.mns(y).
 
-  (/):all t<~arith ~~ (t+,t+)=>t.
+  public (/):all t<~arith ~~ (t+,t+)=>t.
   x/y => x.dv(y).
 
-  integer <~ arith.
-  integer <~ comp.
+  -- Implement regular comparison predicates
 
-  float <~ arith.
-  float <~ comp.
+  public (<):all t<~comp ~~ (t+,t+){}.
+  X < Y :- X.lt(Y).
 
-  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
-  integer:integer.
-  integer..{
-    pl(Y) => _int_plus(this,Y).
-    tms(Y) => _int_times(this,Y).
-    mns(Y) => _int_minus(this,Y).
-    dv(Y) => _int_div(this,Y).
+  public (=<):all t<~comp ~~ (t+,t+){}.
+  X =< Y :- Y.ge(X).
 
-    eq(this).
+  public (>):all t<~comp ~~ (t+,t+){}.
+  X > Y :- Y.lt(X).
 
-    lt(Y) :- _int_lt(this,Y).
-    ge(Y) :- _int_ge(this,Y).
-  }.
+  public (>=):all t<~comp ~~ (t+,t+){}.
+  X >= Y :- X.ge(Y).
 
-  float:float.
-  float .. {
-    pl(Y) => _flt_plus(this,Y).
-    tms(Y) => _flt_times(this,Y).
-    mns(Y) => _flt_minus(this,Y).
-    dv(Y) => _flt_div(this,Y).
+  public (==):all t<~equality ~~ (t+,t+){}.
+  X == Y :- X.eq(Y).
 
-    eq(this).
+  public (\==):all t<~equality ~~ (t+,t+){}.
+  X \== Y :- \+X.eq(Y).
 
-    lt(Y) :- _flt_lt(this,Y).
-    ge(Y) :- _flt_ge(this,Y).
-  }
-
-  assert 2*3+4 = 10.
-
-  intDisp : display[integer].
+  public intDisp : display[integer].
   intDisp .. {
-    display(Ix) => ss(_int2str(Ix,10,0,0c )).
+    display(Ix) => Ix.disp().
   }.
 
-  fltDisp : display[float].
+  public fltDisp : display[float].
   fltDisp .. {
-    display(Dx) => ss(_flt2str(Dx,0,8,true,false)).
+    display(Dx) => Dx.disp().
   }
 }

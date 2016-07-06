@@ -1,0 +1,103 @@
+lo.core{
+  -- Core definitions of types and interfaces that are really part of the language
+
+  public import lo.thing.
+
+  public equality <~ {
+    eq: (this+){}.
+    hash:()=>integer.
+  }
+
+  public comp <~ equality.
+  comp <~ {
+    lt: (this+){}.
+    ge: (this+){}.
+  }
+
+  public additive <~ {
+    pl:  (this+)=>this.
+    mns: (this+)=>this.
+  }
+
+  public arith <~ additive.
+  arith <~ {
+    tms: (this+)=>this.
+    dv:  (this+)=>this.
+  }
+
+  -- Structured string. This is only part of the type ..
+  public ss <~ thing.
+
+  public ss:(string) <=> ss.
+  ss(S) .. {}.
+
+  -- Implementable interface
+  public displayable <~ {
+    disp:()=>ss.
+    frmt:(string)=>ss.
+  }
+
+  public integer <~ arith.
+  integer <~ comp.
+  integer <~ displayable.
+
+  public 
+  float <~ arith.
+  float <~ comp.
+  float <~ displayable.
+
+  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
+  public integer:integer.
+  integer..{
+    pl(Y) => _int_plus(this,Y).
+    tms(Y) => _int_times(this,Y).
+    mns(Y) => _int_minus(this,Y).
+    dv(Y) => _int_div(this,Y).
+
+    eq(this).
+    hash()=>this.
+
+    lt(Y) :- _int_lt(this,Y).
+    ge(Y) :- _int_ge(this,Y).
+
+    disp() => ss(_int2str(this,10,0,0c )).
+    frmt(_) => disp(). -- TODO: fix me.
+  }.
+
+  -- Same is true for floats
+  public float:float.
+  float .. {
+    pl(Y) => _flt_plus(this,Y).
+    tms(Y) => _flt_times(this,Y).
+    mns(Y) => _flt_minus(this,Y).
+    dv(Y) => _flt_div(this,Y).
+
+    eq(this).
+    hash() => _flt_hash(this).
+
+    lt(Y) :- _flt_lt(this,Y).
+    ge(Y) :- _flt_ge(this,Y).
+
+    disp() => ss(_flt2str(this,0,8,true,false)).
+    frmt(_) => disp().
+  }
+
+  -- and strings ...
+  public string <~ comp.
+  string <~ displayable.
+
+  public string:string.
+  string .. {
+    eq(this).
+    hash() => _str_hash(this).
+    
+    lt(Y) :- _str_lt(this,Y).
+    ge(Y) :- _str_ge(this,Y).
+
+    disp() => ss(this).
+    frmt(_) => disp().
+  }
+
+  -- Not strictly necessary, but makes for better symmetry.
+  public logical ::= true | false.
+}

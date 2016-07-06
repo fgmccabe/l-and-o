@@ -19,7 +19,7 @@ genImports([I|More],Pkg,O,Ox) :-
   genImport(I,Pkg,O,O1),
   genImports(More,Pkg,O1,Ox).
 
-genImport(import(Viz,pkg(PkgImp),Vers,_,_),Pkg,O,Ox) :-
+genImport(import(Viz,pkg(PkgImp),Vers,_,_,_),Pkg,O,Ox) :-
   localName(Pkg,"#","import",Imp),
   appQuoted(Imp,"'",O,O1),
   appStr("(",O1,O2),

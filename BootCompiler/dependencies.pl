@@ -6,8 +6,8 @@
 :- use_module(misc).
 :- use_module(keywords).
 
-dependencies(Els,Groups,Private,Annots,Imports,Other) :-
-  collectDefinitions(Els,Dfs,Private,Annots,Imports,Other),
+dependencies(Els,Groups,Public,Annots,Imports,Other) :-
+  collectDefinitions(Els,Dfs,Public,Annots,Imports,Other),
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
   topsort(Defs,Groups).
@@ -25,12 +25,15 @@ collectDefinitions([St|Stmts],Defs,P,[(V,St)|A],I,Other) :-
   isBinary(St,":",L,_),
   isIden(L,V),
   collectDefinitions(Stmts,Defs,P,A,I,Other).
-collectDefinitions([St|Stmts],Defs,[(Prvte,Kind)|P],A,I,O) :-
+collectDefinitions([St|Stmts],Defs,P,A,I,O) :-
   isUnary(St,"private",Inner),
-  ruleName(Inner,Prvte,Kind),
   collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
-collectDefinitions([St|Stmts],Defs,[(V,value)|P],[(V,Inner)|A],I,O) :-
-  isUnary(St,"private",Inner),
+collectDefinitions([St|Stmts],Defs,[Pblic|P],A,I,O) :-
+  isUnary(St,"public",Inner),
+  ruleName(Inner,Pblic,_),
+  collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
+collectDefinitions([St|Stmts],Defs,[var(V)|P],[(V,Inner)|A],I,O) :-
+  isUnary(St,"public",Inner),
   isBinary(Inner,":",L,_),
   isIden(L,V),
   collectDefinitions(Stmts,Defs,P,A,I,O).
@@ -58,6 +61,9 @@ ruleName(St,var(Nm),value) :-
   headName(Hd,Nm).
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
+  typeName(L,Nm).
+ruleName(St,tpe(Nm),type) :-
+  isBinary(St,"::=",L,_),
   typeName(L,Nm).
 
 collectDefines([St|Stmts],Kind,OSt,Nm,[St|Defn]) :-
@@ -98,9 +104,6 @@ headName(tuple(_,"()",[Name]),Nm) :-
 
 typeName(Tp,Nm) :- isSquare(Tp,Nm,_).
 typeName(Tp,Nm) :- isName(Tp,Nm).
-
-isPrivate(St,Inner) :-
-  isUnary(St,"private",Inner).
 
 allRefs([(N,_,_)|Defs],SoFar,AllRefs) :-
   allRefs(Defs,[N|SoFar],AllRefs).

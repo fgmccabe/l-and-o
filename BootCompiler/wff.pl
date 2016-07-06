@@ -273,7 +273,6 @@ wffCond(C) :- isBinary(C,">",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,">=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,".=",L,R), wffTerm(L),wffTerm(R).
 wffCond(C) :- isBinary(C,"=.",L,R), wffTerm(L),wffTerm(R).
-wffCond(C) :- isBinary(C,"in",L,R), wffTerm(L),wffTerm(R).
 wffCond(T) :- isBinary(T,"%%",L,R), isBinary(R,"~",S,M), wffTerm(S), wffGrammarNonTermimal(L), wffTerm(M).
 wffCond(T) :- isBinary(T,"%%",L,R), wffTerm(L), wffTerm(R).
 wffCond(C) :- isRoundTerm(C,Op,Args), wffTerm(Op), wffTerms(Args).

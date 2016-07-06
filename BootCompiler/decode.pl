@@ -39,6 +39,9 @@ decodeTerm(code(Tp,Bytes,Lits)) --> ['#'],
     decodeText(B64),
     { decode64(B64,Bytes,[])}.
 
+decTerms(0,[]) --> [].
+decTerms(Count,[D|M]) --> { Count>0}, decodeTerm(D), { C is Count-1}, decTerms(C,M).
+
 decInt(Ix) --> ['-'], digits(0,N), Ix is -N.
 decInt(Ix) --> digits(0,Ix).
 

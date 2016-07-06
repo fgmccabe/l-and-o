@@ -5,78 +5,86 @@ lo.comp.escapes{
   import lo.
   import lo.comp.types.
 
-  escapeType:(string)=>type.
-  escapeType("exit") => funType([in(type("lo.arith*integer"))],voidType).
-  escapeType("_command_line") => funType([],typeExp("lo.list*list",[type("lo.string*string")])).
-  escapeType("_command_opts") => funType([],typeExp("lo.list*list",[tupleType([type("lo.string*string"),type("lo.string*string")])])).
+  public escapeType:(string)=>type.
+  escapeType("exit") => funType([in(type("lo.core*integer"))],voidType).
+  escapeType("_command_line") => funType([],typeExp("lo.list*list",[type("lo.core*string")])).
+  escapeType("_command_opts") => funType([],typeExp("lo.list*list",[tupleType([type("lo.core*string"),type("lo.core*string")])])).
   escapeType("_unify") => univType(kVar("t"),predType([inout(kVar("t")),inout(kVar("t"))])).
   escapeType("_identical") => univType(kVar("t"),predType([in(kVar("t")),in(kVar("t"))])).
   escapeType("var") => univType(kVar("t"),predType([inout(kVar("t"))])).
   escapeType("nonvar") => univType(kVar("t"),predType([inout(kVar("t"))])).
-  escapeType("_int_plus") => funType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_int_minus") => funType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_int_times") => funType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_int_div") => funType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_flt_plus") => funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_flt_minus") => funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_flt_times") => funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_flt_div") => funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_int_abs") => funType([in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_flt_abs") => funType([in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_int_lt") => predType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))]).
-  escapeType("_int_ge") => predType([in(type("lo.arith*integer")),in(type("lo.arith*integer"))]).
-  escapeType("_flt_lt") => predType([in(type("lo.arith*float")),in(type("lo.arith*float"))]).
-  escapeType("_flt_ge") => predType([in(type("lo.arith*float")),in(type("lo.arith*float"))]).
-  escapeType("_int2flt") => funType([in(type("lo.arith*integer"))],type("lo.arith*float")).
-  escapeType("_flt2int") => funType([in(type("lo.arith*float"))],type("lo.arith*integer")).
-  escapeType("_flt_hash") => funType([in(type("lo.arith*float"))],type("lo.arith*integer")).
-  escapeType("_pwr") => funType([in(type("lo.arith*float")),in(type("lo.arith*float"))],type("lo.arith*float")).
-  escapeType("_readFileContents") => funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")])).
-  escapeType("_writeFileContents") => predType([in(type("lo.string*string")),in(typeExp("lo.list*list",[type("lo.arith*integer")]))]).
-  escapeType("_getCwd") => funType([],type("lo.string*string")).
-  escapeType("_display") => predType([in(tupleType([type("lo.arith*integer"),type("lo.arith*integer"),type("lo.arith*integer")])),in(topType)]).
-  escapeType("_logmsg") => predType([in(type("lo.string*string"))]).
-  escapeType("_isCcChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isCfChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isCnChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isCoChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isCsChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLlChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLmChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLoChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLtChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLuChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isMcChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isMeChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isMnChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isNdChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isNlChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isNoChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPcChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPdChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPeChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPfChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPiChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPoChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isPsChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isScChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isSkChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isSmChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isSoChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isZlChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isZpChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isZsChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_isLetterChar") => predType([in(type("lo.arith*integer"))]).
-  escapeType("_digitCode") => funType([in(type("lo.arith*integer"))],type("lo.arith*integer")).
-  escapeType("_int2str") => funType([in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.arith*integer"))],type("lo.string*string")).
-  escapeType("_flt2str") => funType([in(type("lo.arith*float")),in(type("lo.arith*integer")),in(type("lo.arith*integer")),in(type("lo.logical*logical")),in(type("lo.logical*logical"))],type("lo.string*string")).
-  escapeType("_str_lt") => predType([in(type("lo.string*string")),in(type("lo.string*string"))]).
-  escapeType("_str_ge") => predType([in(type("lo.string*string")),in(type("lo.string*string"))]).
-  escapeType("_str_hash") => funType([in(type("lo.string*string"))],type("lo.arith*integer")).
-  escapeType("explode") => funType([in(type("lo.string*string"))],typeExp("lo.list*list",[type("lo.arith*integer")])).
-  escapeType("implode") => funType([in(typeExp("lo.list*list",[type("lo.arith*integer")]))],type("lo.string*string")).
+  escapeType("_int_plus") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_int_minus") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_int_times") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_int_div") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_flt_plus") => funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_flt_minus") => funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_flt_times") => funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_flt_div") => funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_int_abs") => funType([in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_flt_abs") => funType([in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_int_lt") => predType([in(type("lo.core*integer")),in(type("lo.core*integer"))]).
+  escapeType("_int_ge") => predType([in(type("lo.core*integer")),in(type("lo.core*integer"))]).
+  escapeType("_flt_lt") => predType([in(type("lo.core*float")),in(type("lo.core*float"))]).
+  escapeType("_flt_ge") => predType([in(type("lo.core*float")),in(type("lo.core*float"))]).
+  escapeType("_int2flt") => funType([in(type("lo.core*integer"))],type("lo.core*float")).
+  escapeType("_flt2int") => funType([in(type("lo.core*float"))],type("lo.core*integer")).
+  escapeType("_flt_hash") => funType([in(type("lo.core*float"))],type("lo.core*integer")).
+  escapeType("_pwr") => funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float")).
+  escapeType("_band") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_bor") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_bxor") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_blsl") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_blsr") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_basr") => funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_bnot") => funType([in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_nthb") => predType([in(type("lo.core*integer")),in(type("lo.core*integer"))]).
+  escapeType("_readFileContents") => funType([in(type("lo.core*string"))],typeExp("lo.list*list",[type("lo.core*integer")])).
+  escapeType("_writeFileContents") => predType([in(type("lo.core*string")),in(typeExp("lo.list*list",[type("lo.core*integer")]))]).
+  escapeType("_getCwd") => funType([],type("lo.core*string")).
+  escapeType("_display") => predType([in(tupleType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")])),in(topType)]).
+  escapeType("_logmsg") => predType([in(type("lo.core*string"))]).
+  escapeType("_isCcChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isCfChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isCnChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isCoChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isCsChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLlChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLmChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLoChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLtChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLuChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isMcChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isMeChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isMnChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isNdChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isNlChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isNoChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPcChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPdChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPeChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPfChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPiChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPoChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isPsChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isScChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isSkChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isSmChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isSoChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isZlChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isZpChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isZsChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_isLetterChar") => predType([in(type("lo.core*integer"))]).
+  escapeType("_digitCode") => funType([in(type("lo.core*integer"))],type("lo.core*integer")).
+  escapeType("_int2str") => funType([in(type("lo.core*integer")),in(type("lo.core*integer")),in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*string")).
+  escapeType("_flt2str") => funType([in(type("lo.core*float")),in(type("lo.core*integer")),in(type("lo.core*integer")),in(type("lo.core*logical")),in(type("lo.core*logical"))],type("lo.core*string")).
+  escapeType("_str_lt") => predType([in(type("lo.core*string")),in(type("lo.core*string"))]).
+  escapeType("_str_ge") => predType([in(type("lo.core*string")),in(type("lo.core*string"))]).
+  escapeType("_str_hash") => funType([in(type("lo.core*string"))],type("lo.core*integer")).
+  escapeType("explode") => funType([in(type("lo.core*string"))],typeExp("lo.list*list",[type("lo.core*integer")])).
+  escapeType("implode") => funType([in(typeExp("lo.list*list",[type("lo.core*integer")]))],type("lo.core*string")).
 
-  isEscape:(string){}.
+  public isEscape:(string){}.
   isEscape("exit").
   isEscape("_command_line").
   isEscape("_command_opts").
@@ -102,6 +110,14 @@ lo.comp.escapes{
   isEscape("_flt2int").
   isEscape("_flt_hash").
   isEscape("_pwr").
+  isEscape("_band").
+  isEscape("_bor").
+  isEscape("_bxor").
+  isEscape("_blsl").
+  isEscape("_blsr").
+  isEscape("_basr").
+  isEscape("_bnot").
+  isEscape("_nthb").
   isEscape("_readFileContents").
   isEscape("_writeFileContents").
   isEscape("_getCwd").

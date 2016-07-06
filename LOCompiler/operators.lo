@@ -3,9 +3,9 @@
 lo.comp.operators{
   import lo.
 
-  infixOp:(string,integer,integer,integer){}.
-  prefixOp:(string,integer,integer){}.
-  postfixOp:(string,integer,integer){}.
+  public infixOp:(string,integer,integer,integer){}.
+  public prefixOp:(string,integer,integer){}.
+  public postfixOp:(string,integer,integer){}.
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp(":",1249,1250,1249).	 /* type annotation */
@@ -37,7 +37,6 @@ lo.comp.operators{
   infixOp(".=",899,900,899).	 /* match predicate */
   infixOp("=.",899,900,899).	 /* match predicate */
   infixOp("..",895,896,895).	 /* class body */
-  infixOp("in",894,895,894).	 /* set membership */
   infixOp("<>",799,800,800).	 /* list append */
   infixOp("#",759,760,759).	 /* package separator */
   infixOp("+",720,720,719).	 /* addition */
@@ -67,12 +66,12 @@ lo.comp.operators{
   postfixOp("!",904,905).	 /* one solution operator */
 
   /* Define isOperator */
-  isOperator:(string,integer){}.
+  public isOperator:(string,integer){}.
   isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
   isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).
   isOperator(Op,Pr) :- postfixOp(Op,_,Pr).
 
-  follows:(string,integer,string){}.
+  public follows:(string,integer,string){}.
   follows("",0c%,"%").
   follows("%",0c%,"%%").
   follows("",0c*,"*").
@@ -123,7 +122,7 @@ lo.comp.operators{
   follows("!",0c=,"!=").
   follows("",0c#,"#").
 
-  final:(string){}.
+  public final:(string){}.
   final("%").	 /* quotient */
   final("%%").	 /* grammar parse */
   final("*").	 /* multiplication */

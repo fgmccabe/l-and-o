@@ -138,31 +138,35 @@ makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportMap(Import,Map,M0),
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
-makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_),Map,Mx) :-
-  importFields(Pkg,Fields,Map,Mx).
 
-importFields(_,[],Map,Map).
-importFields(Pkg,[(Nm,Tp)|Fields],Map,Mx) :-
+makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes),Map,Mx) :-
+  importFields(Pkg,Classes,Fields,Map,Mx).
+
+importFields(_,_,[],Map,Map).
+importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
   moveQuants(Tp,_,Template),
-  makeImportEntry(Template,Pkg,Nm,Map,M0),
-  importFields(Pkg,Fields,M0,Mx).
+  makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
+  importFields(Pkg,Classes,Fields,M0,Mx).
 
-makeImportEntry(funType(A,_),Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeImportEntry(funType(A,_),_,Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   length(A,Ar),
   Arity is Ar+1.
-makeImportEntry(grammarType(A,_),Pkg,Nm,[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeImportEntry(grammarType(A,_),_,Pkg,Nm,[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   length(A,Ar),
   Arity is Ar+2.
-makeImportEntry(predType(A),Pkg,Nm,[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeImportEntry(predType(A),_,Pkg,Nm,[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   length(A,Arity).
-makeImportEntry(classType(A,_),Pkg,Nm,[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
+makeImportEntry(classType(A,_),_,Pkg,Nm,[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx) :-
   localName(Pkg,"#",Nm,LclName),
   length(A,Ar),
   localName(Pkg,"@",Nm,AccessName).
-makeImportEntry(_,Pkg,Nm,[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
+makeImportEntry(_,Classes,Pkg,Nm,[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx) :-
+  is_member((Nm,enum(LclName),_),Classes),
+  localName(Pkg,"@",Nm,AccessName).
+makeImportEntry(_,_,Pkg,Nm,[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName).
 
 makeTypesMap(_,_,List,List).

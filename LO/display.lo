@@ -1,34 +1,34 @@
 lo.display{
-  import lo.thing.
-  import lo.string.
+  import lo.core.
   import lo.list.
 
   -- Structured string - ss - allows post formatting.
-  ss ::= ss(string) | ssSeq(list[ss]) | ssFormat(string,ss).
+  -- The ss type is layered into two parts. This one enriches the type with more cases.
 
-  -- Implementable interface
-  displayable <~ {
-    disp:()=>ss.
-    frmt:(string)=>ss.
-  }
+  public ssSeq:(list[ss]) <=> ss.
+  ssSeq(Els) .. {}.
+
+  public ssFormat:(string,ss) <=> ss.
+  ssFormat(Fmt,S) .. {}.
 
   -- The display contract itself
-  all t ~~ display[t] <~ {
+  public all t ~~ display[t] <~ {
     display:(t+) => ss.
   }.
 
   -- To avoid circular dependency, we must implement display for what we import
 
-  thingDisp : display[thing].
+  public thingDisp : display[thing].
   thingDisp .. {
     display(_) => ss("thing").
   }.
 
-  stringDisp : display[string].
+  public stringDisp : display[string].
   stringDisp .. {
     display(S) => ssSeq([ss("\""),ss(S),ss("\"")]).
   }.
 
+  public
   listDisp : all t ~~ (display[t]) <=> display[list[t]].
   listDisp(ED) .. {
     display([]) => ss("[]").

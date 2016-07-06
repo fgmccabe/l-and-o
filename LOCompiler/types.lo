@@ -1,0 +1,61 @@
+lo.comp.types{
+  import lo.
+
+  type <~ displayable.
+  type <~ {
+    deRef : ()=>this.
+  }
+
+  anonType : type.
+  anonType .. {
+    disp()=>ss("_").
+    frmt(_) => ss("_").
+
+    deRef() => this.
+  }
+
+  voidType : type.
+  voidType .. {
+    disp()=>ss("void").
+    frmt(_) => ss("void").
+
+    deRef() => this.
+  }
+
+  topType : type.
+  topType .. {
+    disp() => ss("any").
+    frmt(_) => ss("any").
+
+    deRef() => this.
+  }
+
+  kVar : (string) <=> type.
+  kVar(Nm) .. {
+    disp() => ss(Nm).
+    frmt(_) => ss(Nm).
+
+    deRef() => this.
+  }
+
+  tVar : (type,type,type,logical,string,string) <=> type.
+  tVar(Lower,Current,Upper,Frozen,Name,Id) .. {
+    private
+    showLwr:()=>ss.
+    showLwr() :: Lower.deRef()=voidType => ss("").
+    showLwr() => ssSeq([Lower.disp(),ss(" <~ ")]).
+
+    private
+    showUpr:()=>ss.
+    showUpr() :: Upper.deRef()=topType => ss("").
+    showUpr() => ssSeq([ss(" <~ "),Upper.disp()]).
+
+    disp() :: var(Current) => ssSeq([showLwr(),ss("?"),ss(Id),showUpr()]).
+    disp() :: nonvar(Current) => Current.disp().
+
+    frmt(_) => disp().
+    
+    deRef() :: var(Current) => this.
+    deRef() => Current.deRef().
+  }
+}

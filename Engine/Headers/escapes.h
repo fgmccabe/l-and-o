@@ -85,14 +85,17 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
   escape(ldexp,40,False,False,"F2+N+Nf","raise x to 2**y")
   escape(frexp,41,False,False,"P3+f-f-i","split x into mant and exp")
   escape(modf,42,False,False,"P3+f-f-f","split x into int and frac")
+*/
+  escape(_band,43,False,False,"F2+i+ii","bitwise and two integers")
+  escape(_bor,44,False,False,"F2+i+ii","bitwise or two integers")
+  escape(_bxor,45,False,False,"F2+i+ii","bitwise xor two integers")
+  escape(_blsl,46,False,False,"F2+i+ii","logical left shift")
+  escape(_blsr,47,False,False,"F2+i+ii","logical right shift")
+  escape(_basr,47,False,False,"F2+i+ii","arithmetic right shift")
+  escape(_bnot,48,False,False,"F1+ii","bitwise negate number")
+  escape(_nthb,49,False,False,"P2+i+i","is nth bit set?")
 
-  escape(band,43,False,False,"F2+i+ii","bitwise and two numbers")
-  escape(bor,44,False,False,"F2+i+ii","bitwise or two numbers")
-  escape(bxor,45,False,False,"F2+i+ii","bitwise xor two numbers")
-  escape(bleft,46,False,False,"F2+i+ii","bitwise left shift")
-  escape(bright,47,False,False,"F2+i+ii","bitwise right shift")
-  escape(bnot,48,False,False,"F1+ii","bitwise negate number")
-
+/*
   escape(trunc,49,False,False,":k'u'NF1+k'u'k'u'","truncate to nearest integer")
   escape(floor,50,False,False,":k'u'NF1+k'u'k'u'","truncate to lower integer")
   escape(ceil,51,False,False,"F1+Ni","truncate to next integer")
@@ -285,14 +288,3 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
 #undef fileType
 #undef filePerm
 #undef debugType
-
-#if 0
-#ifdef GOXLIB
-#include "xlibescapes.h"
-#endif
-
-#ifdef GOSSLIB
-#include "sslEscapes.h"
-#endif
-
-#endif

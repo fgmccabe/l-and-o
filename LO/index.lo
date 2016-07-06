@@ -1,0 +1,136 @@
+lo.index{
+  -- Implement an index tree structure
+
+  import lo.core.
+  import lo.option.
+  import lo.arith.
+  import lo.list.
+
+  all k<~comp, v ~~ treeMap[k,v] <~ thing.
+
+  trEmpty : treeMap[_,_].
+  trEmpty .. {}.
+
+  trLeaf : all k<~comp, v ~~ (integer,list[(k,v)]) <=> treeMap[k,v].
+  trLeaf(Mask,Entries) .. {}
+
+  trNode : all k<~comp, v ~~ (integer, integer, treeMap[k,v], treeMap[k,v]) <=> treeMap[k,v].
+  trNode(Mask,MskLen,Left,Right) .. {}
+
+  private
+  look:all k<~comp,v ~~ (k,treeMap[k,v]) => option[v].
+  look(K,T) => lookIn(K.hash(),K,T).
+
+  private
+  lookIn:all k<~comp,v ~~ (integer,k,treeMap[k,v]) => option[v].
+  lookIn(H,K,trLeaf(H,Els)) => findMember(K,Els).
+  lookIn(H,K,trNode(Msk,Ln,Left,Right)) :: commonMask(H,Ln)==Msk =>
+    (_nthb(H,Ln) ? lookIn(H,K,R) | lookIn(H,K,L)).
+  lookIn(_,_,_) => none.
+
+  private
+  findMember:all k,v ~~ (k,list[(k,v)]) => option[v].
+  findMember(K,[(K,V),.._]) => some(V).
+  findMember(K,[_,..L]) => findMember(K,L).
+  findMember(_,[]) => none.
+
+  insrt:all k<~comp, v ~~ (k,v,treeMap[k,v])=>treeMap[k,v].
+  insrt(K,V,T) => mergeTree(T,trLeaf(K.hash(),[(K,V)])).
+
+  private
+  mergeTree:all k<~comp, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeTree(trEmpty,T) => T.
+  mergeTree(T,trEmpty) => T.
+  mergeTree(T1,T2) => mergeNodes(T1,T2).
+
+  private
+  mergeLeafs:all k<~comp, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeLeafs(trLeaf(H,L1),trLeaf(H,L2)) => trLeaf(H,merge(L1,L2)).
+  mergeLeafs(T1::T1 = trLeaf(H1,L1),T2::T2=trLeaf(H2,L2)) ::
+    ( CML = commonMaskLen(H1,H2,HashLen),
+      CM = commonMask(H1,CML)) =>
+      (_nthb(H1,CML) ?
+        trNode(CM,CML,T2,T1) |
+        trNode(CM,CML,T1,T2)).
+
+  private
+  merge: all k<~comp, v ~~ (list[(k,v)],list[(k,v)])=>list[(k,v)].
+  merge([],L) => L.
+  merge([(K,V),..L1],L) :: isMember((K,_),L) => merge(L1,L).
+  merge([E,..L],L1) => [E,..merge(L,L1)].
+
+  private
+  mergeNodes:all k<~comp, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeNodes(T1::T1=trLeaf(_,_),T2::T2=trLeaf(_,_)) => mergeLeafs(T1,T2).
+  mergeNodes(T1::T1=trNode(Msk1,Ln1,L1,R1),T2::T2=trLeaf(Msk2,_)) ::
+    ( CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),
+      CM = commonMask(Msk1,CML)) =>
+      (CML<Ln1 ?
+        ( _nthb(Msk2,CML) ?
+          trNode(CM,CML,T1,T2) |
+          trNode(CM,CML,T2,T1))  |
+        ( _nthb(Msk2,CML) ?
+          trNode(CM,CML,L1,mergeNodes(R1,T2),R1) |
+          trNode(CM,CML,mergeNodes(L1,T2),R1))).
+  mergeNodes(T1::T1=trLeaf(Msk1,_), T2::T2=trNode(Msk2,Ln2,L2,R2)) ::
+    ( CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln2),
+      CM = commonMask(Msk2,CML)) =>
+      (CML < Ln2 ?
+        ( _nthb(Msk1,CML) ?
+          trNode(CM,CML,T1,T2) |
+          trNode(CM,CML,T2,T1))  |
+        ( _nthb(Msk1,CML) ?
+          trNode(CM,CML,L2,mergeNodes(R2,T1)) |
+          trNode(CM,CML,mergeNodes(L2,T1),R2)
+          )).
+  mergeNodes(T1::T1=trNode(Msk1,Ln1,L1,R1),T2::TR=trNode(Msk2,Ln2,L2,R2)) ::
+    ( CML = min(min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),Ln2),
+      CM = commonMask(Msk1,CML)) =>
+      (CML < Ln1 ?
+        (_nthb(Msk1,CML) ?
+          trNode(CM,CML,L1,mergeNodes(R1,T2)) |
+          trNode(CM,CML,mergeNodes(L1,T2),R1))  |
+      CML < Ln2 ?
+        (_nthb(Msk2,CML) ?
+          trNode(CM,CML,L2,mergeNodes(T1,R2)) |
+          trNode(CM,CML,mergeNodes(L2,T1),R2))  |
+        trNode(CM,CML,mergeNodes(L1,L2),mergeNodes(R1,R2))
+      ).
+
+  private
+  rmve:all k<~comp, v ~~ (integer,k,treeMap[k,v]) => treeMap[k,v].
+  rmve(_,_,trEmpty) => trEmpty.
+  rmve(H,K,trLeaf(H,L)) => reformLeaf(H,subtract((K,_),L)).
+  rmve(H,K,T::T=trNode(M,Ln,L,R)) ::
+    CM = commonMask(H,Ln) =>
+    ( CM = M ?
+      ( _nthb(H,Ln) ?
+        reformNode(trNode(M,Ln,L,remve(H,K,R))) |
+        reformNode(trNode(M,Ln,remve(H,K,L),R))
+      ) | 
+      T). -- not present
+
+  private 
+  reformLeaf:all k<~comp, v ~~ (integer,list[(k,v)]) => treeMap[k,v].
+  reformLeaf(H,[]) => trEmpty.
+  reformLeaf(H,L) => trLeaf(H,L).
+
+  private
+  reformNode(trNode(_,_,trEmpty,R)) => R.
+  reformNode(trNode(_,_,L,trEmpty)) => L.
+  reformNode(N) => N.
+      
+  private
+  HashLen:integer.
+  HashLen = 64.
+      
+  private
+  commonMaskLen:(integer,integer,integer) => integer.
+  commonMaskLen(H1,H2,C) :: ( C>0, \+H1==H2) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1).
+  commonMaskLen(_,_,C) => C.
+
+  private
+  commonMask:(integer,integer)=>integer.
+  commonMask(_,0) => 0.
+  commonMask(M1,ML) :: CML=HashLen-ML => _band(_blsl(_blsr(0-1,CML),CML),M1).
+}

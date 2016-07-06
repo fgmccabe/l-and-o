@@ -2,7 +2,7 @@ lo.comp.token{
   import lo.comp.location.
   import lo.
 
-  tok ::= lpar
+  public tok ::= lpar
        |  rpar
        |  lbra
        |  rbra
@@ -17,22 +17,22 @@ lo.comp.token{
        |  period
        |  terminal.
 
-  stringSegment ::= segment(location,string) 
+  public stringSegment ::= segment(location,string) 
                 | interpolate(location,string,string).
 
-  token <~ hasLoc.
+  public token <~ hasLoc.
 
-  tok:(tok,location) <=> token.
+  public tok:(tok,location) <=> token.
   tok(Tk,Loc) .. {
     loc = Loc.
   }.
 
-  tokenDisp : display[token].
+  public tokenDisp : display[token].
   tokenDisp .. {
     display(tok(Tk,Loc)) => ssSeq([tokDisp.display(Tk),ss("@"),locationDisp.display(Loc)]).
   }.
 
-  tokDisp : display[tok].
+  public tokDisp : display[tok].
   tokDisp .. {
     display(lpar) => ss("(").
     display(rpar) => ss(")").

@@ -35,7 +35,6 @@
   keyword("%%").
   keyword("@").
   keyword("@@").
-  keyword("in").
   keyword("true").
   keyword("false").
   keyword("this").

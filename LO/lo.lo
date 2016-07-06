@@ -1,15 +1,12 @@
 lo{
-  public import lo.thing.
+  public import lo.core.
   public import lo.display.
   public import lo.list.
-  public import lo.logical.
   public import lo.stream.
   public import lo.arith.
-  public import lo.string.
-  public import lo.comparable.
   public import lo.option.
 
-  flatten : (ss) => string.
+  public flatten : (ss) => string.
   flatten(D) => implode(flttn(D,[])).
 
   flttn : (ss,list[integer]) => list[integer].
@@ -20,6 +17,6 @@ lo{
   flttnList([],Rest) => Rest.
   flttnList([E,..R],Rest) => flttn(E,flttnList(R,Rest)).
 
-  formatSS:(ss) => string.
+  public formatSS:(ss) => string.
   formatSS(S) => flatten(S). -- temporary definition.
 }
