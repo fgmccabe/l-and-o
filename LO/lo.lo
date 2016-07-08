@@ -5,6 +5,7 @@ lo{
   public import lo.stream.
   public import lo.arith.
   public import lo.option.
+  public import lo.index.
 
   public flatten : (ss) => string.
   flatten(D) => implode(flttn(D,[])).

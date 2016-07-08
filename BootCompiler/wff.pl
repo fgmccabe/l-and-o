@@ -4,7 +4,7 @@
 :-use_module(misc).
 :-use_module(keywords).
 
-wffModule(Term) :- 
+wffModule(Term) :-
     isBraceTerm(Term,P,Els),
     wffPackageName(P),
     wffThetaEnv(Els),!.
@@ -16,7 +16,7 @@ wffPackageName(Term) :- isIden(Term).
 wffPackageName(Term) :- isString(Term,_).
 wffPackageName(Term) :- isBinary(Term,".",L,R), wffPackageName(L), wffPackageName(R).
 wffPackageName(Term) :- isBinary(Term,"#",L,R), wffPackageName(L), wffPackageVersion(R).
-wffPackageName(Name) :- 
+wffPackageName(Name) :-
   locOfAst(Name,Lc),
   reportError("Module %s not valid",[Name],Lc).
 
@@ -79,10 +79,10 @@ wffTypeQuants(V,Q,Qx) :- isBinary(V,"::",L,R), wffTypeQuants(L,Q,Qx), wffTypeExp
 wffTypeQuants(N,Q,[Nm|Q]) :- isIden(N,Nm).
 
 wffFaceTypes([]).
-wffFaceTypes([F|A]) :- 
+wffFaceTypes([F|A]) :-
   isTypeAnnotation(F),
   wffFaceTypes(A).
-wffFaceTypes([F|A]) :- 
+wffFaceTypes([F|A]) :-
   locOfAst(F,Lc),
   reportError("%s not a valid type annotation",[F],Lc),
   wffFaceTypes(A).
@@ -102,12 +102,12 @@ isPrivate(Term,T,Lc) :- isUnary(Term,"private",T), locOfAst(T,Lc).
 
 isPublic(Term,T,Lc) :- isUnary(Term,"public",T), locOfAst(T,Lc).
 
-isAlgebraicTypeDef(Term,Lc,Quants,Head,Body) :- 
+isAlgebraicTypeDef(Term,Lc,Quants,Head,Body) :-
   isQuantified(Term,Quants,Inner),!,
   isBinary(Inner,Lc,"::=",Head,Body),
   wffNamedType(Head),
   wffTypeConstructors(Body).
-isAlgebraicTypeDef(Term,Lc,[],Head,Body) :- 
+isAlgebraicTypeDef(Term,Lc,[],Head,Body) :-
   isBinary(Term,Lc,"::=",Head,Body),
   wffNamedType(Head),
   wffTypeConstructors(Body).
@@ -182,11 +182,11 @@ wffEquation(Term) :-
   wffHead(Hd),
   wffTerm(Result).
 
-wffClause(Term) :- 
+wffClause(Term) :-
   isBinary(Term,":-",Head,Body),
   wffHead(Head),
   wffCond(Body).
-wffClause(Term) :- 
+wffClause(Term) :-
   isBinary(Term,":--",Head,Body),
   wffHead(Head),
   wffCond(Body).
@@ -211,11 +211,11 @@ wffLabelReplacement(Term) :-
   isBinary(Term,"~",L,R),
   wffLabelReplacement(L),
   wffExclusions(R).
-wffLabelReplacement(Term) :- 
+wffLabelReplacement(Term) :-
   wffTerm(Term).
 wffLabelReplacement(T) :- locOfAst(T,Lc), reportError("Cannot understand label expression %s",[T],Lc).
 
-wffExclusions(Term) :- 
+wffExclusions(Term) :-
   isSquareTuple(Term,_,A),
   wffTerms(A).
 
@@ -235,6 +235,13 @@ wffTermList([T]) :-
   wffTerm(R).
 wffTermList([P|T]) :- wffTerm(P), wffTermList(T).
 
+wffMap([]).
+wffMap([E|M]) :-
+  isBinary(E,"->",L,R),
+  wffTerm(L),
+  wffTerm(R),
+  wffMap(M).
+
 wffTerm(name(_,"this")).
 wffTerm(name(_,"true")).
 wffTerm(name(_,"false")).
@@ -245,7 +252,7 @@ wffTerm(float(_,_)).
 wffTerm(string(_,_)).
 wffTerm(tuple(_,"()",A)) :- wffTerms(A).
 wffTerm(tuple(_,"[]",A)) :- wffTermList(A).
-wffTerm(tuple(_,"{}",A)) :- wffThetaEnv(A).
+wffTerm(tuple(_,"{}",A)) :- wffMap(A).
 wffTerm(T) :- isBinary(T,":",L,R), wffTerm(L), wffTypeExp(R).
 wffTerm(T) :- isBinary(T,"::",L,R), wffTerm(L), wffCond(R).
 wffTerm(T) :- isBinary(T,".",L,R), wffTerm(L), wffTerm(R).
@@ -253,6 +260,7 @@ wffTerm(T) :- isBinary(T,"#",L,R), wffPackageName(L), wffIden(R).
 wffTerm(T) :- isUnary(T,"@",R), wffCond(R).
 wffTerm(T) :- isBinary(T,"|",L,R), isBinary(L,"?",Tst,Th), wffCond(Tst), wffTerm(Th), wffTerm(R).
 wffTerm(T) :- isRoundTerm(T,Op,Args), wffTerm(Op), wffTerms(Args).
+wffTerm(T) :- isSquareTerm(T,Op,[Arg]), wffTerm(Op), wffTerm(Arg).
 wffTerm(T) :- locOfAst(T,Lc), reportError("term %s not well formed",[T],Lc).
 
 wffCond(name(_,"true")).

@@ -4,7 +4,7 @@ lo.comp.ast{
   import lo.comp.keywords.
   import lo.comp.operators.
 
-  ast <~ hasLoc.
+  public ast <~ hasLoc.
   ast <~ displayable.
 
   ast:ast.
@@ -13,42 +13,49 @@ lo.comp.ast{
     frmt(_) => showAst(this,2000). -- may change in future
   }
 
+  public
   iden:(location,string) <=> ast.
   iden(_,_) <= ast.
   iden(Loc,Nm) .. {
     loc = Loc.
   }
 
+  public
   intg:(location,integer) <=> ast.
   intg(_,_) <= ast.
   intg(Loc,Ix) .. {
     loc = Loc.
   }
 
+  public
   flot:(location,float) <=> ast.
   flot(_,_) <= ast.
   flot(Loc,Dx) .. {
     loc = Loc
   }
 
+  public
   strg:(location,string) <=> ast.
   strg(_,_) <= ast.
   strg(Loc,St) .. {
     loc = Loc
   }
 
+  public
   tupl:(location,string,list[ast]) <=> ast.
   tupl(_,_,_) <= ast.
   tupl(Loc,Nm,Els) .. {
     loc = Loc.
   }
 
+  public
   appl:(location,ast,ast) <=> ast.
   appl(_,_,_) <= ast.
   appl(Loc,Op,Arg) .. {
     loc = Loc.
   }
 
+  public
   dispAst:display[ast].
   dispAst..{
     display(T) => showAst(T,2000).
@@ -93,12 +100,15 @@ lo.comp.ast{
   tupleBrackets("[]","[","]",1000,", ") :-- true.
   tupleBrackets("{}","{","}",2000,".\n") :-- true.
 
+  public
   binary:(location,string,ast,ast) => ast.
   binary(Lc,Op,L,R) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[L,R])).
 
+  public
   isBinary:(ast,location,string,ast,ast){}.
   isBinary(appl(Lc,iden(_,Op),tupl(_,"()",[L,R])),Lc,Op,L,R).
 
+  public
   unary:(location,string,ast) => ast.
   unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
 }

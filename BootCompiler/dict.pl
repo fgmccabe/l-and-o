@@ -7,6 +7,7 @@
 :- use_module(misc).
 :- use_module(types).
 :- use_module(escapes).
+:- use_module(freshen).
 
 typeInDict(Nm,Env,Tp) :- tpInDict(Nm,Env,tpDef(_,_,Tp,_,_)).
 
@@ -102,5 +103,4 @@ declareCatalog(Nm,Ct,[scope(Types,Nms,Rls,Cats)|Outer],[scope(Types,Nms,Rls,Cats
 
 stdDict(Base) :-
   pushScope([],Base).
-
 

@@ -22,7 +22,10 @@
                     '_getCwd'/1,
                     '_logmsg'/1,
                     '_flt_hash'/2,
-                    '_str_hash'/2
+                    '_str_hash'/2,
+                    '_band'/3,'_bor'/3,'_bxor'/3,
+                    '_blsr'/3,'_basr'/3,'_blsl'/3,
+                    '_nthb'/2
                     ]).
 
 
@@ -156,3 +159,12 @@ hashCodes([C|More],H0,Hx) :-
   hashCodes(More,H1,Hx).
 
 '_flt_hash'(F,H) :- H is truncate(F).
+
+'_band'(X,Y,Z) :- Z is X/\Y.
+'_bor'(X,Y,Z) :- Z is X\/Y.
+'_bxor'(X,Y,Z) :- Z is X xor Y.
+'_blsl'(X,Y,Z) :- Z is X<<Y.
+'_basr'(X,Y,Z) :- Z is X>>Y.
+'_blsr'(X,Y,Z) :- Z is (X>>Y)/\(1<<(64-Y)-1).
+'_nthb'(X,Y) :- 1 is getbit(X,Y).
+

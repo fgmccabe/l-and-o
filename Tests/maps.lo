@@ -1,0 +1,34 @@
+maps{
+  import lo.
+
+  all u,v ~~ pair[u,v] <~ displayable.
+
+  pair:all u<~displayable,v<~displayable ~~ (u,v) <=> pair[u,v].
+  pair(A,B) .. {
+    disp() => ssSeq([ss("("),A.disp(),ss(", "),B.disp(),ss(")")]).
+    frmt(_) => disp().
+  }
+
+  myPairs:map[string,integer].
+  myPairs = {"A"->1. "B"->2. "C"->3. }
+
+  allPairs:map[string,pair[integer,integer]].
+  allPairs = {"A"->pair(1,2). "B"->pair(3,4). }
+
+  otherPairs:map[string,pair[integer,integer]].
+  otherPairs = {"C"->pair(5,6). "B"->pair(7,8)}.
+
+  show myPairs.
+  show allPairs.
+  show otherPairs.
+
+  show allPairs+otherPairs.
+
+  checkMap:(string,map[string,pair[integer,integer]]) => option[pair[integer,integer]].
+  checkMap(Ky,{Ky->Vl}) => some(Vl).
+  checkMap(_,_) => none.
+
+  assert checkMap("A",allPairs) = some(pair(1,2)).
+
+  assert otherPairs["B"] = some(pair(7,8)).
+}

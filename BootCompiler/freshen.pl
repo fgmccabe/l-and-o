@@ -125,7 +125,7 @@ reQuant([(Nm,Tp)|B],BB,T,FT) :- isUnbound(Tp),!,
   ( (Lw \= voidType ; Up \= topType),
     freeze(Lw,BB,FLw),
     freeze(Up,BB,FUp),
-    reQuant(B,BB,univType(kVar(Nm),constrainedType(FLw,T,FUp)),FT) ;
+    reQuant(B,BB,univType(constrained(FLw,kVar(Nm),FUp),T),FT) ;
     reQuant(B,BB,univType(kVar(Nm),T),FT)).
 reQuant([_|B],BB,T,FT) :- reQuant(B,BB,T,FT).
 

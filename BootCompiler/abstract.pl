@@ -1,9 +1,9 @@
 :- module(abstract,[locOfAst/2,isAst/1,
-      nary/4,binary/5,unary/4,apply/4,isApply/3,
+      nary/4,binary/5,unary/4,zeroary/3,apply/4,isApply/3,
       isUnary/3,isUnary/4,isBinary/4,isBinary/5,isBinaryTerm/4,
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
-      squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,
+      squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,isSquareTerm/4,
       isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
       isQuantified/3]).
 :- use_module(operators).
@@ -35,6 +35,8 @@ isBinary(app(Lc,name(_,Op),tuple(_,"()",[L,R])),Lc,Op,L,R).
 
 isBinaryTerm(app(_,Op,tuple(_,"()",[L,R])),Op,L,R).
 
+zeroary(Lc,Op,app(Lc,name(Lc,Op),tuple(Lc,"()",[]))).
+
 unary(Lc,Op,L,app(Lc,name(Lc,Op),tuple(Lc,"()",[L]))).
 
 isUnary(app(_,name(_,Op),tuple(_,"()",[L])),Op,L).
@@ -57,7 +59,9 @@ isSquare(app(_,name(_,Op),tuple(_,"[]",L)),Op,L).
 
 isSquare(app(Lc,name(_,Op),tuple(_,"[]",L)),Lc,Op,L).
 
-isSquareTerm(app(_,Op,tuple(_,"[]",L)),Op,L).
+isSquareTerm(app(_,Op,tuple(_,"[]",L)),Op,L) :- \+isKeyOp(Op).
+
+isSquareTerm(app(Lc,Op,tuple(_,"[]",L)),Lc,Op,L) :- \+isKeyOp(Op).
 
 isSquareTuple(tuple(_,"[]",A),A).
 

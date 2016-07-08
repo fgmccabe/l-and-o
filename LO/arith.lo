@@ -31,6 +31,10 @@ lo.arith{
   public (>=):all t<~comp ~~ (t+,t+){}.
   X >= Y :- X.ge(Y).
 
+  public min:all t<~comp ~~ (t+,t+)=>t.
+  min(X,Y)::X<Y => X.
+  min(_,Y) => Y.
+
   public (==):all t<~equality ~~ (t+,t+){}.
   X == Y :- X.eq(Y).
 

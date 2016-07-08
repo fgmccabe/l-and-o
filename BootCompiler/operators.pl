@@ -13,6 +13,7 @@
   infixOp(":-",1199,1200,1199).	 /* clause arrow */
   infixOp(":--",1199,1200,1199).	 /* strong clause */
   infixOp("-->",1199,1200,1199).	 /* grammar rule */
+  infixOp("->",1199,1200,1199).	 /* map entry */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
@@ -75,6 +76,7 @@
   follows('','-','-').
   follows('-','-','--').
   follows('--','>','-->').
+  follows('-','>','->').
   follows('','.','.').
   follows('.','.','..').
   follows('.',' ','. ').
@@ -122,6 +124,7 @@
   final(',..',",..").	 /* list cons */
   final('-',"-").	 /* output mode */
   final('-->',"-->").	 /* grammar rule */
+  final('->',"->").	 /* map entry */
   final('.',".").	 /* object access */
   final('..',"..").	 /* class body */
   final('. ',". ").	 /* statement terminator */

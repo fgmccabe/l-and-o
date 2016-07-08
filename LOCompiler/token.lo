@@ -14,6 +14,7 @@ lo.comp.token{
        |  intTok(integer)
        |  fltTok(float)
        |  stringTok(list[stringSegment])
+       |  regTok(string)
        |  period
        |  terminal.
 
@@ -46,6 +47,7 @@ lo.comp.token{
     display(intTok(Ix)) => intDisp.display(Ix).
     display(fltTok(Dx)) => fltDisp.display(Dx).
     display(stringTok(Sx)) => listDisp(segmentDisp).display(Sx).
+    display(regTok(Rg)) => ssSeq([ss(".:"),ss(Rg),ss(":.")]).
     display(period) => ss(". ").
     display(terminal) => ss("<term>").
   }.

@@ -172,7 +172,7 @@ escape(_pwr,25,False,False,"F2+f+ff","raise X to the power Y")
   escape(_classload,141,True,False,"p4+S+s+s-Ls","load class file")
 
 */
-  escape(_display,141,False,False,"P2+T3iii+A","Display a term on console")
+  escape(_display,141,False,False,"P2+T3iii+S","Display a term on console")
   escape(_logmsg,142,False,False,"P1+S","log a message in logfile or console")
 /*  
   // Socket handling functions
