@@ -1,0 +1,7 @@
+test.ho{
+  import lo.
+
+  map:all s,t~~(list[t],((t)=>s))=>list[s].
+  map([],_) => [].
+  map([E,..X],F) => [F(E),..map(X,F)].
+}

@@ -571,6 +571,10 @@ typeOfTerm(Term,ET,Tp,Env,Ev,dict(Lc,Entries)) :-
   copyFlowMode(ET,KyTp,ExKyTp),
   typeMapEntries(Els,ExKyTp,ExElTp,Env,Ev,Entries).
 typeOfTerm(Term,ET,Tp,Env,Ev,Exp) :-
+  isUnary(Term,Lc,"-",Arg), % handle unary minus
+  binary(Lc,"-",integer(Lc,0),Arg,Sub),
+  typeOfTerm(Sub,ET,Tp,Env,Ev,Exp).
+typeOfTerm(Term,ET,Tp,Env,Ev,Exp) :-
   isRoundTerm(Term,Lc,F,A),
   typeOfKnown(F,in(topType),FnTp,Env,E0,Fun),
   typeOfCall(Lc,Fun,A,FnTp,ET,Tp,E0,Ev,Exp).

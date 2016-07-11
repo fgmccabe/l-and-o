@@ -1,5 +1,52 @@
 lo.comp.dict{
+  import lo.comp.location.
   import lo.comp.types.
+  import lo.comp.misc.
+  import lo.
 
-  env <~ { types: }
+  public
+  vr ::= vr(location,string,type).
+
+  public
+  env ::= scope(map[string,typeDef],map[string,vr]).
+
+  public
+  typeDef ::= tpDef(location,type,list[type],type).
+
+  public
+  typeInDict:(string,list[env]) => option[type].
+  typeInDict(Nm,Env) => tpInDict(Nm,Env).
+
+  private
+  tpInDict:(string,list[env]) => option[typeDef].
+  tpInDict(Nm,Env) :: typeInD(localTypeName(Nm),Env,D) => some(D).
+  tpInDict(_,_) => none.
+
+  public
+  declareTypeExists:(string,location,type,list[env]) => list[env].
+  declareTypeExists(Nm,Lc,Tp,[scope(Types,Names),..E]) => 
+      [scope(Types+{Nm->tpDef(Lc,Tp,[],voidType)},Names),..E].
+
+  private
+  localTypeName:(string) => string.
+  localTypeName(Nm) => pathSuffix(Nm,"*").
+
+  private
+  typeInD:(string+,list[env]+,typeDef){}.
+  typeInD(Key,[scope({Key->Def},_),.._],Dec):--true.
+  typeInD(Key,[_,..Env],Def) :-- typeInD(Key,Env,Def).
+
+  public
+  typeOfVar:(string,list[env])=>option[vr].
+  typeOfVar(Nm,Env) :: varInD(Nm,Env,D) => some(D).
+  typeOfVar(_,_) => none.
+
+  private
+  varInD:(string,list[env],vr){}.
+  varInD(Nm,[scope(_,{Nm->D}),.._],D) :-- true.
+  varInD(Nm,[_,..E],D) :-- varInD(Nm,E,D).
+
+  public
+  declareVar:(string,vr,list[env]) => list[env].
+  declareVar(Nm,V,[scope(Tps,Nms),..E]) => [scope(Tps,Nms+{Nm->V}),..E].
 }

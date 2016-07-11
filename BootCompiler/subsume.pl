@@ -97,6 +97,7 @@ sm(_,anonType,_).
 sm(anonType,_,_).
 sm(voidType,voidType,_).
 sm(topType,topType,_).
+sm(thisType,thisType,_) :-!.
 sm(thisType,T2,Env) :- isVar("this",Env,vr(_,T1)),!,
   sameType(T1,T2,Env).
 sm(T1,thisType,Env) :- isVar("this",Env,vr(_,T2)),!,

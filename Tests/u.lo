@@ -1,3 +1,9 @@
 u{
-  [in(kVar("t")),in(kVar("t"))].
-}
+  import lo.
+
+  public parseUri:(string){}.
+  parseUri(S) :- uriParse() %% explode(S).
+
+  public uriParse:() --> stream[integer].
+  uriParse()-->[].
+  }

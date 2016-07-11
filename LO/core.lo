@@ -2,6 +2,7 @@ lo.core{
   -- Core definitions of types and interfaces that are really part of the language
 
   public import lo.thing.
+  public import lo.stream.
 
   public equality <~ {
     eq: (this+){}.
@@ -23,6 +24,7 @@ lo.core{
   arith <~ {
     tms: (this+)=>this.
     dv:  (this+)=>this.
+    md: (this+) => this.
   }
 
   -- Structured string. This is only part of the type ..
@@ -30,6 +32,9 @@ lo.core{
 
   public ss:(string) <=> ss.
   ss(S) .. {}.
+
+  public ssSeq:(list[ss]) <=> ss.
+  ssSeq(Els) .. {}.
 
   -- Implementable interface
   public displayable <~ {
@@ -53,6 +58,7 @@ lo.core{
     tms(Y) => _int_times(this,Y).
     mns(Y) => _int_minus(this,Y).
     dv(Y) => _int_div(this,Y).
+    md(Y) => _int_mod(this,Y).
 
     eq(this).
     hash()=>this.
@@ -71,6 +77,7 @@ lo.core{
     tms(Y) => _flt_times(this,Y).
     mns(Y) => _flt_minus(this,Y).
     dv(Y) => _flt_div(this,Y).
+    md(Y) => _flt_mod(this,Y).
 
     eq(this).
     hash() => _flt_hash(this).
@@ -100,4 +107,35 @@ lo.core{
 
   -- Not strictly necessary, but makes for better symmetry.
   public logical ::= true | false.
+
+  -- We need the list type in the core
+  public
+  all t ~~ list[t] <~ stream[t].
+  all t <~ displayable ~~ list[t] <~ displayable.
+
+  public '[]':list[_].
+  '[]'..{
+    eof().
+    cons(X) => [X].
+    hdtl(_,_) :- false.
+
+    disp() => ss("[]").
+    frmt(_) => disp().
+  }.
+
+  public (,..): all t<~displayable ~~ (t,list[t]) <=> list[t].
+  (H,..T)..{
+    eof() :- false.
+    hdtl(H,T).
+    cons(X) => [X,..this].
+
+    disp() => ssSeq([ss("["),H.disp(),..showMoreList(T)]).
+
+    showMoreList:(list[t]) => list[ss].
+    showMoreList([]) => [ss("]")].
+    showMoreList([E,..M]) => [ss(","),E.disp(),..showMoreList(M)].
+
+    frmt(_) => disp().
+  }.
+
 }

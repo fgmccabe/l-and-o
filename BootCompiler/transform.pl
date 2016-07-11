@@ -416,8 +416,8 @@ trPtn(apply(_,O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
 trPtn(where(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtn(P,Ptn,Q,Q0,Pre,P0,Post,Pstx,Map,Opts,Ex,Ex0),
   trGoal(C,P0,Px,Q0,Qx,Map,Opts,Ex0,Exx).
-trPtn(XX,void,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-
-  reportMsg("internal: cannot transform %s as pattern",[XX]).
+trPtn(XX,Exp,Q,Qx,Pre,Pre,Post,Postx,Map,Opts,Ex,Exx) :-
+  trExp(XX,Exp,Q,Qx,Post,Pi,Pi,Postx,Map,Opts,Ex,Exx).
 
 trVarPtn(_,"_",idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_).
 trVarPtn(_,Nm,A,Q,Qx,Pre,Prx,Post,Pstx,Map,_) :-
@@ -440,6 +440,10 @@ implementVarPtn(inherit(Nm,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre
 implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-                 % variable local to rule
   merge([idnt(Nm)],Q,Qx).
 
+trPtnCallOp(v(_,Nm),Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
+  concat(Args,[X],XArgs),
+  merge([X],Q,Qx),
+  isEscape(Nm),!.
 trPtnCallOp(v(_,Nm),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
   genVar("X",X),

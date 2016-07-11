@@ -3,8 +3,8 @@
 :-module(escapes,[isEscape/1,escapeType/2]).
 
 escapeType("exit",funType([in(type("lo.core*integer"))],voidType)).
-escapeType("_command_line",funType([],typeExp("lo.list*list",[type("lo.core*string")]))).
-escapeType("_command_opts",funType([],typeExp("lo.list*list",[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
+escapeType("_command_line",funType([],typeExp("lo.core*list",[type("lo.core*string")]))).
+escapeType("_command_opts",funType([],typeExp("lo.core*list",[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
 escapeType("_unify",univType(kVar("t"),predType([inout(kVar("t")),inout(kVar("t"))]))).
 escapeType("_identical",univType(kVar("t"),predType([in(kVar("t")),in(kVar("t"))]))).
 escapeType("var",univType(kVar("t"),predType([inout(kVar("t"))]))).
@@ -13,10 +13,12 @@ escapeType("_int_plus",funType([in(type("lo.core*integer")),in(type("lo.core*int
 escapeType("_int_minus",funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_int_times",funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_int_div",funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer"))).
+escapeType("_int_mod",funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_flt_plus",funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float"))).
 escapeType("_flt_minus",funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float"))).
 escapeType("_flt_times",funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float"))).
 escapeType("_flt_div",funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float"))).
+escapeType("_flt_mod",funType([in(type("lo.core*float")),in(type("lo.core*float"))],type("lo.core*float"))).
 escapeType("_int_abs",funType([in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_flt_abs",funType([in(type("lo.core*float"))],type("lo.core*float"))).
 escapeType("_int_lt",predType([in(type("lo.core*integer")),in(type("lo.core*integer"))])).
@@ -35,10 +37,10 @@ escapeType("_blsr",funType([in(type("lo.core*integer")),in(type("lo.core*integer
 escapeType("_basr",funType([in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_bnot",funType([in(type("lo.core*integer"))],type("lo.core*integer"))).
 escapeType("_nthb",predType([in(type("lo.core*integer")),in(type("lo.core*integer"))])).
-escapeType("_readFileContents",funType([in(type("lo.core*string"))],typeExp("lo.list*list",[type("lo.core*integer")]))).
-escapeType("_writeFileContents",predType([in(type("lo.core*string")),in(typeExp("lo.list*list",[type("lo.core*integer")]))])).
+escapeType("_readFileContents",funType([in(type("lo.core*string"))],typeExp("lo.core*list",[type("lo.core*integer")]))).
+escapeType("_writeFileContents",predType([in(type("lo.core*string")),in(typeExp("lo.core*list",[type("lo.core*integer")]))])).
 escapeType("_getCwd",funType([],type("lo.core*string"))).
-escapeType("_display",predType([in(tupleType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")])),in(topType)])).
+escapeType("_display",predType([in(tupleType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")])),in(type("lo.core*string"))])).
 escapeType("_logmsg",predType([in(type("lo.core*string"))])).
 escapeType("_isCcChar",predType([in(type("lo.core*integer"))])).
 escapeType("_isCfChar",predType([in(type("lo.core*integer"))])).
@@ -77,8 +79,13 @@ escapeType("_flt2str",funType([in(type("lo.core*float")),in(type("lo.core*intege
 escapeType("_str_lt",predType([in(type("lo.core*string")),in(type("lo.core*string"))])).
 escapeType("_str_ge",predType([in(type("lo.core*string")),in(type("lo.core*string"))])).
 escapeType("_str_hash",funType([in(type("lo.core*string"))],type("lo.core*integer"))).
-escapeType("explode",funType([in(type("lo.core*string"))],typeExp("lo.list*list",[type("lo.core*integer")]))).
-escapeType("implode",funType([in(typeExp("lo.list*list",[type("lo.core*integer")]))],type("lo.core*string"))).
+escapeType("_str_len",funType([in(type("lo.core*string"))],type("lo.core*integer"))).
+escapeType("_str_gen",funType([in(type("lo.core*string"))],type("lo.core*string"))).
+escapeType("explode",funType([in(type("lo.core*string"))],typeExp("lo.core*list",[type("lo.core*integer")]))).
+escapeType("implode",funType([in(typeExp("lo.core*list",[type("lo.core*integer")]))],type("lo.core*string"))).
+escapeType("_str_find",predType([in(type("lo.core*string")),in(type("lo.core*string")),in(type("lo.core*integer")),inout(type("lo.core*integer"))])).
+escapeType("_sub_str",funType([in(type("lo.core*string")),in(type("lo.core*integer")),in(type("lo.core*integer"))],type("lo.core*string"))).
+escapeType("_str_split",predType([in(type("lo.core*string")),in(type("lo.core*integer")),inout(type("lo.core*string")),inout(type("lo.core*string"))])).
 isEscape("exit").
 isEscape("_command_line").
 isEscape("_command_opts").
@@ -90,10 +97,12 @@ isEscape("_int_plus").
 isEscape("_int_minus").
 isEscape("_int_times").
 isEscape("_int_div").
+isEscape("_int_mod").
 isEscape("_flt_plus").
 isEscape("_flt_minus").
 isEscape("_flt_times").
 isEscape("_flt_div").
+isEscape("_flt_mod").
 isEscape("_int_abs").
 isEscape("_flt_abs").
 isEscape("_int_lt").
@@ -154,5 +163,10 @@ isEscape("_flt2str").
 isEscape("_str_lt").
 isEscape("_str_ge").
 isEscape("_str_hash").
+isEscape("_str_len").
+isEscape("_str_gen").
 isEscape("explode").
 isEscape("implode").
+isEscape("_str_find").
+isEscape("_sub_str").
+isEscape("_str_split").

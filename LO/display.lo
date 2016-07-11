@@ -5,8 +5,6 @@ lo.display{
   -- Structured string - ss - allows post formatting.
   -- The ss type is layered into two parts. This one enriches the type with more cases.
 
-  public ssSeq:(list[ss]) <=> ss.
-  ssSeq(Els) .. {}.
 
   public ssFormat:(string,ss) <=> ss.
   ssFormat(Fmt,S) .. {}.
@@ -38,4 +36,5 @@ lo.display{
     displayMore([]) => ss("]").
     displayMore([E,..M]) => ssSeq([ss(","),ED.display(E),displayMore(M)]).
   }.
+  
 }

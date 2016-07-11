@@ -183,7 +183,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case list_sig:
       outStr(O_IO(out), "typeExp(");
-      dumpStr("lo.list*list", out);
+      dumpStr("lo.core*list", out);
       outStr(O_IO(out), ",[");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), "])");
@@ -303,7 +303,7 @@ static char *dName(char *sig, bufferPo out) {
 }
 
 #undef escape
-#define escape(name, code, priv, secr, type, cmt) genLoEsc(out,buffer,#name,type,cmt);
+#define escape(name, priv, secr, type, cmt) genLoEsc(out,buffer,#name,type,cmt);
 
 static void genLoEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cmt) {
   outStr(O_IO(buffer), "  escapeType(");
@@ -329,7 +329,7 @@ static void loEscapeTypes(FILE *out) {
 }
 
 #undef escape
-#define escape(name, code, priv, secr, type, cmt) genLoIsEsc(out,buffer,#name);
+#define escape(name, priv, secr, type, cmt) genLoIsEsc(out,buffer,#name);
 
 static void genLoIsEsc(FILE *out, bufferPo buffer, char *name) {
   outStr(O_IO(buffer), "  isEscape(");
@@ -353,7 +353,7 @@ static void loIsEscape(FILE *out) {
 }
 
 #undef escape
-#define escape(name, code, priv, secr, type, cmt) genPrologEsc(out,buffer,#name,type,cmt);
+#define escape(name, priv, secr, type, cmt) genPrologEsc(out,buffer,#name,type,cmt);
 
 static void genPrologEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cmt) {
   outStr(O_IO(buffer), "escapeType(");
@@ -377,7 +377,7 @@ static void prologEscapeTypes(FILE *out) {
 }
 
 #undef escape
-#define escape(name, code, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name);
+#define escape(name, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name);
 
 static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
   outStr(O_IO(buffer), "isEscape(");

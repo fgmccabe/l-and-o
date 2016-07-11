@@ -27,7 +27,7 @@ frshn(anonType,_,anonType).
 frshn(voidType,_,voidType) :- !.
 frshn(topType,_,topType) :- !.
 frshn(thisType,B,Tp) :- (is_member((thisType,Tp),B),! ; Tp=thisType).
-frshn(kVar(TV),B,Tp) :- is_member((TV,Tp),B),!.
+frshn(kVar(TV),B,Tp) :- (is_member((TV,Tp),B),! ; Tp=kVar(TV)).
 frshn(tVar(V),_,tVar(V)).
 frshn(type(Nm),_,type(Nm)).
 frshn(funType(A,R),B,funType(FA,FR)) :-

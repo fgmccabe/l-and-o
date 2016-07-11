@@ -1,5 +1,4 @@
 lo.arith{
-  import lo.thing.
   import lo.core.
   import lo.display.
 
@@ -16,6 +15,9 @@ lo.arith{
 
   public (/):all t<~arith ~~ (t+,t+)=>t.
   x/y => x.dv(y).
+
+  public (%):all t<~arith ~~ (t+,t+)=>t.
+  x%y => x.md(y).
 
   -- Implement regular comparison predicates
 

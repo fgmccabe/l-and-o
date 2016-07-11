@@ -100,7 +100,7 @@ In many cases a logic programmer knows full well whether their program is intend
 
 This book is intended to be read as an introduction to the language, to using it and to show how sophisticated programs can be built using its facilities. We assume some familiarity with programming, especially logic programming, although the pace is relatively gentle.
 
-Part I gets us started, with the style of L&O programs. Part II explores some programming examples and techniques. In Part III we look at the features of L&O in more detail. This book is not a reference manual for L&O; however, we do aim to cover the language in sufficient detail to impart the essence of L&O.
+Part I gets us started, with the style of L&O programs. Part II explores some programming examples and techniques. In Part III we look at the features of L&O in more detail. This book is not a reference manual for L&amp;O; however, we do aim to cover the language in sufficient detail to impart the essence of L&O.
 
 Our style in presenting L&O is rather informal; this is deliberate – our focus is to explain the shape of L&O and to show its utility. For a more detailed and formal explanation of the features of L&O the reader is referred to the L&O reference manual.
 

@@ -39,6 +39,11 @@
   keyword("false").
   keyword("this").
   keyword("import").
+  keyword("public").
+  keyword("private").
+  keyword("void").
+  keyword("top").
+  keyword("all").
   keyword("#").
 
   isRuleKeyword(X):- ruleKeyword(X), !.

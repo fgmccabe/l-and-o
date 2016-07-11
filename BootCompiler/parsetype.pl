@@ -42,6 +42,13 @@ parseType(C,Env,B,Bound,predType(AT)) :-
   isTuple(L,A),
   parseArgTypes(A,Env,B,Bound,AT).
 parseType(T,Env,B,Bound,tupleType(AT)) :-
+  isTuple(T,[A]),
+  isTuple(A,Inner),!,
+  parseTypes(Inner,Env,B,Bound,AT).
+parseType(T,Env,B,Bound,AT) :-
+  isTuple(T,[A]),
+  parseType(A,Env,B,Bound,AT).
+parseType(T,Env,B,Bound,tupleType(AT)) :-
   isTuple(T,A),
   parseTypes(A,Env,B,Bound,AT).
 parseType(T,Env,Bound,Bound,faceType(AT)) :-

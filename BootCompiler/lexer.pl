@@ -179,6 +179,10 @@ readMoreString(St,NxSt,[segment(Seg,Lc)|Segments]) :-
 
 readStr(St,St,[]) :- hedChar(St,'"'). /* Terminated by end of string */
 readStr(St,St,[]) :- hedChar(St,'$'), \+hedHedChar(St,'"'). /* or an interpolation marker */
+readStr(St,St1,[]) :- nextSt(St,St1,'\n'), !,
+  makeLoc(St,St1,Lc),
+  reportError("new line found in string",[],Lc).
+
 readStr(St,NxSt,[Ch|Seg]) :- charRef(St,St1,Ch), readStr(St1,NxSt,Seg).
 
 interpolation(St,NxSt,interpolate(Text,Fmt,Lc)) :-

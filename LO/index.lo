@@ -203,7 +203,7 @@ lo.index{
 
   commonMask:(integer,integer)=>integer.
   commonMask(_,0) => 0.
-  commonMask(M1,ML) :: CML=HashLen-ML => _band(_blsl(_blsr(0-1,CML),CML),M1).
+  commonMask(M1,ML) :: CML=HashLen-ML => _band(_blsl(_blsr(-1,CML),CML),M1).
 
   nthBit:(integer,integer){}.
   nthBit(X,N) :- _nthb(X,63-N).

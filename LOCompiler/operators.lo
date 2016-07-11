@@ -37,6 +37,7 @@ lo.comp.operators{
   infixOp(">=",899,900,899).	 /* greater than or equal */
   infixOp(".=",899,900,899).	 /* match predicate */
   infixOp("=.",899,900,899).	 /* match predicate */
+  infixOp("in",899,900,899).	 /* list membership */
   infixOp("..",895,896,895).	 /* class body */
   infixOp("<>",799,800,800).	 /* list append */
   infixOp("#",759,760,759).	 /* package separator */
@@ -44,8 +45,7 @@ lo.comp.operators{
   infixOp("-",720,720,719).	 /* subtraction */
   infixOp("*",700,700,699).	 /* multiplication */
   infixOp("/",700,700,699).	 /* division */
-  infixOp("%",700,700,699).	 /* quotient */
-  infixOp("rem",700,700,699).	 /* remainder function */
+  infixOp("%",700,700,699).	 /* modulo */
   infixOp("**",600,600,599).	 /* exponentiation */
   infixOp("%%",499,500,499).	 /* grammar parse */
   infixOp("^",499,500,499).	 /* grammar iterator */
@@ -125,7 +125,7 @@ lo.comp.operators{
   follows("",0c#,"#").
 
   public final:(string){}.
-  final("%").	 /* quotient */
+  final("%").	 /* modulo */
   final("%%").	 /* grammar parse */
   final("*").	 /* multiplication */
   final("**").	 /* exponentiation */

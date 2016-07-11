@@ -1,28 +1,14 @@
 lo.list{
-  -- implement the list interface for lists
-  import lo.stream.
+  -- implement standard list functions
   import lo.core.
 
-  public all t ~~ list[t] <~ stream[t].
-
-  public '[]':list[_].
-  '[]'..{
-    eof().
-    cons(X) => [X].
-    hdtl(_,_) :- false.
-  }.
-
-  public (,..): all t ~~ (t,list[t]) <=> list[t].
-  (H,..T)..{
-    eof() :- false.
-    hdtl(H,T).
-    cons(X) => [X,..this].
-  }.
-
   public (<>):all t ~~ (list[t]+,list[t])=>list[t].
-
   [] <> X => X.
   [E,..X] <> Y => [E,..X<>Y].
+
+  public (in):all t ~~ (t,list[t]){}.
+  X in [X,.._].
+  X in [_,..Y] :- X in Y.
 
   public reverse:all t ~~ (list[t]+) => list[t].
   reverse(X) => rev(X,[]).

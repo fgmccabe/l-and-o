@@ -95,7 +95,7 @@ lo.comp.lexer{
 
   regExp:(list[integer]) --> tokenState.
   regExp([]) --> ":."+.
-  regExp([0c\,Ch,..More]) --> [0c\], [Ch], regExp(More).
+  regExp([0c\\,Ch,..More]) --> [0c\\], [Ch], regExp(More).
   regExp([Ch,..More]) --> [Ch], regExp(More).
 
   readStringSegments:(list[stringSegment]) --> tokenState.

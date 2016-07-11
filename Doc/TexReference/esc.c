@@ -12,8 +12,8 @@ static char *pS(char *s,char delim);
 static char *pC(char c);
 
 #undef escape
-#define escape(name,fun,code,priv,secr,type,cmt) genEsc(out,name,priv,code,type,cmt);
-static void genEsc(FILE *out,char *name,logical priv,int code,char *tp,char *cmt);
+#define escape(name,fun,priv,secr,type,cmt) genEsc(out,name,priv,type,cmt);
+static void genEsc(FILE *out,char *name,logical priv,char *tp,char *cmt);
 
 #undef constr
 #define constr(name,K,type)
@@ -354,7 +354,7 @@ static char *pS(char *s,char delim)
   return buff;
 }
   
-static void genEsc(FILE *out,char *name,logical priv,int code,char *tp,char *cmt)
+static void genEsc(FILE *out,char *name,logical priv,char *tp,char *cmt)
 {  
   fprintf(out,"\\parbox{3.25in}{\\tt\\small %s:",pS(name,'\0'));
   genOpType(out,tp);

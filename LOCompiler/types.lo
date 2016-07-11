@@ -1,12 +1,15 @@
 lo.comp.types{
   import lo.
 
+  public
   type <~ displayable.
   type <~ {
     deRef : ()=>this.
   }
 
-  anonType : type.
+  public typeFlow ::= inFlow(type) | outFlow(type) | inoutFlow(type).
+
+  public anonType : type.
   anonType .. {
     disp()=>ss("_").
     frmt(_) => ss("_").
@@ -14,7 +17,7 @@ lo.comp.types{
     deRef() => this.
   }
 
-  voidType : type.
+  public voidType : type.
   voidType .. {
     disp()=>ss("void").
     frmt(_) => ss("void").
@@ -22,15 +25,23 @@ lo.comp.types{
     deRef() => this.
   }
 
-  topType : type.
+  public topType : type.
   topType .. {
-    disp() => ss("any").
-    frmt(_) => ss("any").
+    disp() => ss("top").
+    frmt(_) => ss("top").
 
     deRef() => this.
   }
 
-  kVar : (string) <=> type.
+  public thisType : type.
+  thisType .. {
+    disp() => ss("this").
+    frmt(_) => ss("this").
+
+    deRef() => this.
+  }
+
+  public kVar : (string) <=> type.
   kVar(Nm) .. {
     disp() => ss(Nm).
     frmt(_) => ss(Nm).
@@ -38,19 +49,17 @@ lo.comp.types{
     deRef() => this.
   }
 
-  tVar : (type,type,type,logical,string,string) <=> type.
+  public tVar : (list[type],type,list[type],logical,string,string) <=> type.
   tVar(Lower,Current,Upper,Frozen,Name,Id) .. {
-    private
-    showLwr:()=>ss.
-    showLwr() :: Lower.deRef()=voidType => ss("").
-    showLwr() => ssSeq([Lower.disp(),ss(" <~ ")]).
+    showLwr:(type)=>ss.
+    showLwr(T) :: var(T) => ss("").
+    showLwr(T) => ssSeq([T.disp(),ss(" <~ ")]).
 
-    private
-    showUpr:()=>ss.
-    showUpr() :: Upper.deRef()=topType => ss("").
-    showUpr() => ssSeq([ss(" <~ "),Upper.disp()]).
+    showUpr:(type)=>ss.
+    showUpr(T) :: var(T) => ss("").
+    showUpr(T) => ssSeq([ss(" <~ "),T.disp()]).
 
-    disp() :: var(Current) => ssSeq([showLwr(),ss("?"),ss(Id),showUpr()]).
+    disp() :: var(Current) => ssSeq([showLwr(tailTp(Lower)),ss("?"),ss(Id),showUpr(tailTp(Upper))]).
     disp() :: nonvar(Current) => Current.disp().
 
     frmt(_) => disp().
@@ -58,4 +67,190 @@ lo.comp.types{
     deRef() :: var(Current) => this.
     deRef() => Current.deRef().
   }
+
+  public
+  newVar:(string) => type.
+  newVar(Nm) => tVar(_,_,_,false,Nm,_str_gen(Nm)).
+
+  public
+  skolem:(string) => type.
+  skolem(Nm) => tVar(_,_,_,true,Nm,_str_gen(Nm)).
+
+  -- This is used to help with managing constraints
+  private
+  tailTp:(list[type]) => type.
+  tailTp([T,..Tl]) :: var(Tl) => T.
+  tailTp([_,..Tl]) => tailTp(Tl).
+
+  public
+  markConstraints:(type,type,type){}.
+  markConstraints(tVar(Lower,_,Upper,_,_,_),Lw,Up) :-
+    markConstraint(Lw.deRef(),tailTp(Lower)),
+    markConstraint(Up.deRef(),tailTp(Upper)).
+
+  private
+  markConstraint:(type,type){}.
+  markConstraint(voidType,_) :-- true. -- This is a slight hack
+  markConstraint(topType,_) :-- true.
+  markConstraint(Tp,Tp) :-- true.
+
+  public type:(string) <=> type.
+  type(Nm) .. {
+    disp() => ss(Nm).
+    frmt(_) => ss(Nm).
+
+    deRef() => this. 
+  }
+
+  public typeExp:(string,list[type]) <=> type.
+  typeExp(Nm,Args) .. {
+    disp() => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("]")]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public tupleType:(list[type]) <=> type.
+  tupleType(Args) .. {
+    disp() => ssSeq([ss("("),ssSeq(dispTypeEls(Args)),ss(")")]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  dispTypeEls:(list[type]) => list[ss].
+  dispTypeEls([T,..R]) => [T.disp(),..dispMoreTypes(R)].
+  dispTypeEls([]) => [].
+
+  dispMoreTypes:(list[type]) => list[ss].
+  dispMoreTypes([]) => [].
+  dispMoreTypes([T,..R]) => [ss(","),T.disp(),..dispMoreTypes(R)].
+
+  public funType:(list[typeFlow],type) <=> type.
+  funType(Args,Res) .. {
+    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss(")=>"),Res.disp()]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public predType:(list[typeFlow]) <=> type.
+  predType(Args) .. {
+    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss("){}")]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public grammarType:(list[typeFlow],type) <=> type.
+  grammarType(Args,Strm) .. {
+    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss(") --> "),Strm.disp()]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public classType:(list[type],type) <=> type.
+  classType(Args,Class) .. {
+    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeEls(Args)),ss(") <=> "),Class.disp()]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public faceType:(list[(string,type)]) <=> type.
+  faceType(Fields) .. {
+    deRef() => this.
+
+    disp() => ssSeq([ss("{"),ssSeq(showFields(Fields)),ss("}")]).
+    frmt(_) => disp().
+
+    showFields:(list[(string,type)]) => list[ss].
+    showFields([]) => [].
+    showFields([(Fld,Tp),..R]) => [ss(Fld),ss(":"),Tp.disp(),ss(".\n"),..showFields(R)].
+  }
+
+  public
+  univType:(type,type) <=> type.
+  univType(V,B) .. {
+    disp() => ssSeq([ss("all "), V.disp(), ss("~~"), B.disp()]).
+    frmt(_) => disp().
+
+    deRef() => this.
+  }
+
+  public constrained:(type,type,type) <=> type.
+  constrained(Lw,V,Up) .. {
+    deRef() => this.
+
+    disp() => ssSeq([showLower(),V.disp(),showUpper()]).
+    frmt(_) => disp().
+
+    showLower:()=>ss.
+    showLower() :: Lw=voidType => ssSeq([]).
+    showLower() => ssSeq([Lw.disp(),ss("<~")]).
+
+    showUpper:()=>ss.
+    showUpper() :: Up = topType => ssSeq([]).
+    showUpper() => ssSeq([ss("<~"),Up.disp()]).
+  }
+
+  -- Type rules are marked as types because of quantification.
+  
+  public
+  typeRule:(type,type) <=> type.
+  typeRule(Lhs,Rhs) .. {
+    deRef() => this.
+    disp() => ssSeq([Lhs.disp(),ss("<~"),Rhs.disp()]).
+
+    frmt(_) => disp().
+  }
+
+  dispTypeArgs:(list[typeFlow]) => list[ss].
+  dispTypeArgs([T,..R]) => [dispTypeFlow(T),..dispMoreArgTypes(R)].
+  dispTypeArgs([]) => [].
+
+  dispMoreArgTypes:(list[typeFlow]) => list[ss].
+  dispMoreArgTypes([]) => [].
+  dispMoreArgTypes([T,..R]) => [ss(","),dispTypeFlow(T),..dispMoreArgTypes(R)].
+
+  dispTypeFlow:(typeFlow) => ss.
+  dispTypeFlow(inFlow(T)) => ssSeq([T.disp(),ss("+")]).
+  dispTypeFlow(outFlow(T)) => ssSeq([T.disp(),ss("-")]).
+  dispTypeFlow(inoutFlow(T)) => T.disp().
+
+  public
+  occursIn:(type,type){}.
+  occursIn(tVar(_,Curr,_,_,_,Id),Tp) :: (var(Curr), \+ sameVar(Id,Tp.deRef())) :-- idOccIn(Id,Tp.deRef()).
+  occursIn(tVar(_,Curr,_,_,_,_),Tp) :: nonvar(Curr) :-- occursIn(Curr,Tp).
+  occursIn(_,Tp) :-- false.
+
+  private
+  sameVar:(string,type){}.
+  sameVar(Id,tVar(_,_,_,_,_,Id)).
+
+  private
+  idOccIn:(string,type){}.
+  idOccIn(Id,V) :- sameVar(Id,V).
+  idOccIn(Id,tVar(_,Curr,_,_,_,_)) :: nonvar(Curr) :- idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Lw,Curr,_,_,_,_)) :: var(Curr) :- idOccIn(Id,tailTp(Lw)).
+  idOccIn(Id,tVar(_,Curr,Up,_,_,_)) :: var(Curr) :- idOccIn(Id,tailTp(Up)).
+  idOccIn(Id,typeExp(_,A)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,funType(A,_)) :- TT in A, idOccIn(Id,deFlow(TT)).
+  idOccIn(Id,funType(_,R)) :- idOccIn(Id,R).
+  idOccIn(Id,predType(A)) :- TT in A, idOccIn(Id,deFlow(TT)).
+  idOccIn(Id,classType(A,C)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,classType(_,C)) :- idOccIn(Id,C).
+  idOccIn(Id,grammarType(A,_)) :- TT in A, idOccIn(Id,deFlow(TT)).
+  idOccIn(Id,grammarType(_,R)) :- idOccIn(Id,R).
+  idOccIn(Id,univType(constrained(Lw,_,Up),B)) :- (idOccIn(Id,Lw) | idOccIn(Id,Up) | idOccIn(Id,B)).
+  idOccIn(Id,univType(_,B)) :- idOccIn(Id,B).
+  idOccIn(Id,faceType(L)) :- (Fld,A) in L, idOccIn(Id,A).
+
+  private
+  deFlow:(typeFlow) => type.
+  deFlow(inFlow(T)) => T.
+  deFlow(outFlow(T)) => T.
+  deFlow(inoutFlow(T)) => T.
 }
