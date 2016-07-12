@@ -105,10 +105,6 @@ lo.comp.ast{
   binary(Lc,Op,L,R) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[L,R])).
 
   public
-  isBinary:(ast,location,string,ast,ast){}.
-  isBinary(appl(Lc,iden(_,Op),tupl(_,"()",[L,R])),Lc,Op,L,R).
-
-  public
   unary:(location,string,ast) => ast.
   unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
 }

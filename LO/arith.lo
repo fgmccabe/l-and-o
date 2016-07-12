@@ -43,6 +43,28 @@ lo.arith{
   public (\==):all t<~equality ~~ (t+,t+){}.
   X \== Y :- \+X.eq(Y).
 
+  -- bitewise operators
+  public (.|.) : (integer,integer) => integer.
+  X .|. Y => _bor(X,Y).
+
+  public (.&.) : (integer,integer) => integer.
+  X .&. Y => _band(X,Y).
+
+  public (.^.) : (integer,integer) => integer.
+  X .^. Y => _bxor(X,Y).
+
+  public (.<<.) : (integer,integer) => integer.
+  X .<<. Y => _blsl(X,Y).
+
+  public (.>>.) : (integer,integer) => integer.
+  X .>>. Y => _blsr(X,Y).
+
+  public (.>>>.) : (integer,integer) => integer.
+  X .>>>. Y => _basr(X,Y).
+
+  public (.~.) : (integer) => integer.
+  .~. X => _bnot(X).
+
   public intDisp : display[integer].
   intDisp .. {
     display(Ix) => Ix.disp().

@@ -14,8 +14,8 @@ lo.comp.dict{
   typeDef ::= tpDef(location,type,list[type],type).
 
   public
-  typeInDict:(string,list[env]) => option[type].
-  typeInDict(Nm,Env) => tpInDict(Nm,Env).
+  typeInDict:(string,list[env],type){}.
+  typeInDict(Nm,Env,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(_,Tp,_,_)).
 
   private
   tpInDict:(string,list[env]) => option[typeDef].

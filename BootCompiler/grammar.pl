@@ -153,9 +153,16 @@ checkTerminator(_,[],[]).
 checkTerminator(_,Toks,Toks) :- Toks = [rbrce(_)|_].
 checkTerminator(_,[term(_)|Toks],Toks) .
 checkTerminator(rbrce,Toks,Toks).
-checkTerminator(_,Tks,RTks) :-
-    checkToken(Tks,RTks,term(_),"missing terminator, got '%s'").
+checkTerminator(_,[Tk|Tks],RTks) :-
+  locOfToken(Tk,Lc),
+  reportError("missing terminator, got %s",[Tk],Lc),
+  scanForTerminator(Tks,RTks).
 
+scanForTerminator([term(_)|Tks],Tks).
+scanForTerminator([],[]).
+scanForTerminator([_|Tk],Tks) :-
+  scanForTerminator(Tk,Tks).
+  
 handleInterpolation([segment(Str,Lc)],_,string(Lc,Str)).
 handleInterpolation([],Lc,string(Lc,"")).
 handleInterpolation(Segments,Lc,Term) :- 

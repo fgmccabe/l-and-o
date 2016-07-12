@@ -1,0 +1,52 @@
+lo.comp.abstract{
+  -- Utilities for parsing ast structures
+
+  import lo.
+  import lo.comp.ast.
+  import lo.comp.location.
+  import lo.comp.keywords.
+
+  public isBinary:(ast,string,location,ast,ast){}.
+  isBinary(appl(Lc,iden(_,Nm),tupl(_,"()",[L,R])),Nm,Lc,L,R).
+
+  public isUnary:(ast,string,location,ast){}.
+  isUnary(appl(Lc,iden(_,Nm),tupl(_,"()",[L])),Nm,Lc,L).
+
+  public
+  isSquare:(ast,location,string,list[ast]){}.
+  isSquare(appl(Lc,iden(_,Nm),tupl(_,"[]",A)),Lc,Nm,A).
+
+  public
+  isBraceTerm:(ast,location,ast,list[ast]){}.
+  isBraceTerm(appl(Lc,Op,tupl(_,"{}",A)),Lc,Op,A).
+
+  public
+  isName:(ast,location,string){}.
+  isName(iden(Lc,Nm),Lc,Nm).
+  isName(tupl(Lc,"()",[iden(_,Nm)]),Lc,Nm).
+
+  public
+  isRoundTuple:(ast,location,list[ast]){}.
+  isRoundTuple(tupl(Lc,"()",A),Lc,A).
+
+  public
+  isSquareTuple:(ast,location,list[ast]){}.
+  isSquareTuple(tupl(Lc,"[]",A),Lc,A).
+
+  public
+  isBraceTuple:(ast,location,list[ast]){}.
+  isBraceTuple(tupl(Lc,"{}",A),Lc,A).
+
+  public
+  isRoundTerm:(ast,location,ast,list[ast]){}.
+  isRoundTerm(appl(Lc,Op,tupl(_,"()",A)),Lc,Op,A) :- \+ keyword(Op).
+
+  public
+  keyword:(ast+){}.
+  keyword(iden(_,Nm)) :- isKeyword(Nm).
+
+  public isQuantified:(ast,ast,ast){}.
+  isQuantified(T,V,B) :-
+    isUnary(T,"all",_,R),
+    isBinary(R,"~~",_,V,B).
+}

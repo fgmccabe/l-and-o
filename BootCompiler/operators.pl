@@ -38,10 +38,16 @@
   infixOp("#",759,760,759).	 /* package separator */
   infixOp("+",720,720,719).	 /* addition */
   infixOp("-",720,720,719).	 /* subtraction */
+  infixOp(".|.",720,720,719).	 /* bitwise or */
+  infixOp(".^.",720,720,719).	 /* bitwise xor */
   infixOp("*",700,700,699).	 /* multiplication */
   infixOp("/",700,700,699).	 /* division */
+  infixOp(".&.",700,700,699).	 /* bitwise and */
   infixOp("%",700,700,699).	 /* modulo */
   infixOp("**",600,600,599).	 /* exponentiation */
+  infixOp(".<<.",600,600,599).	 /* shift left */
+  infixOp(".>>.",600,600,599).	 /* logical shift right */
+  infixOp(".>>>.",600,600,599).	 /* arithmetic shift right */
   infixOp("%%",499,500,499).	 /* grammar parse */
   infixOp("^",499,500,499).	 /* grammar iterator */
   infixOp("~",934,935,934).	 /* grammar remainder */
@@ -54,6 +60,7 @@
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
   prefixOp("import",900,899).	 /* import module */
+  prefixOp(".~.",650,649).	 /* bitwise 1's complement */
   prefixOp("-",300,299).	 /* arithmetic negation */
   postfixOp(". ",1899,1900).	 /* statement terminator */
   postfixOp(";",1149,1150).	 /* action terminator */
@@ -78,9 +85,25 @@
   follows('--','>','-->').
   follows('-','>','->').
   follows('','.','.').
+  follows('.','&','.&').
+  follows('.&','.','.&.').
+  follows('.','|','.|').
+  follows('.|','.','.|.').
+  follows('.','~','.~').
+  follows('.~','.','.~.').
+  follows('.','<','.<').
+  follows('.<','<','.<<').
+  follows('.<<','.','.<<.').
+  follows('.','^','.^').
+  follows('.^','.','.^.').
+  follows('.','=','.=').
+  follows('.','>','.>').
+  follows('.>','>','.>>').
+  follows('.>>','.','.>>.').
+  follows('.>>','>','.>>>').
+  follows('.>>>','.','.>>>.').
   follows('.','.','..').
   follows('.',' ','. ').
-  follows('.','=','.=').
   follows('','/','/').
   follows('','|','|').
   follows('|','|','||').
@@ -126,9 +149,16 @@
   final('-->',"-->").	 /* grammar rule */
   final('->',"->").	 /* map entry */
   final('.',".").	 /* object access */
+  final('.&.',".&.").	 /* bitwise and */
+  final('.|.',".|.").	 /* bitwise or */
+  final('.~.',".~.").	 /* bitwise 1's complement */
+  final('.<<.',".<<.").	 /* shift left */
+  final('.^.',".^.").	 /* bitwise xor */
+  final('.=',".=").	 /* match predicate */
+  final('.>>.',".>>.").	 /* logical shift right */
+  final('.>>>.',".>>>.").	 /* arithmetic shift right */
   final('..',"..").	 /* class body */
   final('. ',". ").	 /* statement terminator */
-  final('.=',".=").	 /* match predicate */
   final('/',"/").	 /* division */
   final('|',"|").	 /* type union and disjunction */
   final('||',"||").	 /* bag of constructor */

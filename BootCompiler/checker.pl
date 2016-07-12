@@ -448,7 +448,7 @@ collectMoreClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   collectMoreClauses(Stmts,Sx,Nm,Ex).
 collectMoreClauses([Cl|Stmts],Sx,Nm,Clses) :-
   Cl = strong(Lc,Nm,_,_,_),!,
-  reportError("not allowed to mix strong and regular clauses",[],Lc),
+  reportError("not allowed to mix regular and strong clauses",[],Lc),
   collectMoreClauses(Stmts,Sx,Nm,Clses).
 collectMoreClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectMoreClauses(Stmts,Sx,Nm,Eqns).
@@ -456,11 +456,11 @@ collectMoreClauses([],[],_,[]).
 
 collectStrongClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   Cl = strong(_,Nm,_,_,_),!,
-  collectMoreClauses(Stmts,Sx,Nm,Ex).
+  collectStrongClauses(Stmts,Sx,Nm,Ex).
 collectStrongClauses([Cl|Stmts],Sx,Nm,Clses) :-
   Cl = clause(Lc,Nm,_,_,_),!,
   reportError("not allowed to mix strong and regular clauses",[],Lc),
-  collectMoreClauses(Stmts,Sx,Nm,Clses).
+  collectStrongClauses(Stmts,Sx,Nm,Clses).
 collectStrongClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectMoreClauses(Stmts,Sx,Nm,Eqns).
 collectStrongClauses([],[],_,[]).

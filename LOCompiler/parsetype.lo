@@ -1,8 +1,114 @@
-lo.comp.parseType{
+lo.comp.prsType{
+  import lo.
   import lo.comp.types.
   import lo.comp.ast.
+  import lo.comp.abstract.
   import lo.comp.dict.
+  import lo.comp.errors.
+  import lo.comp.location.
+  import lo.comp.freshen.
 
-  public
-  parseType : ()  
+  private
+  prsType : (ast,list[env],map[string,type],map[string,type],type){}.
+  prsType(T,Env,B,Bound,PT) :: isQuantified(T,V,BT) :--
+    prsBound(V,B,B0,Env,PT,Inner),
+    prsType(BT,Env,B0,Bound,Inner).
+  prsType(T,Env,B,B,Tp) :: isName(T,Lc,Nm) :--
+    prsTypeName(Lc,Nm,Env,B,Tp).
+  prsType(Sq,Env,B,Bound,typeExp(Op,ArgTps)) :: isSquare(Sq,Lc,N,Args) :--
+    prsTypeName(Lc,N,Env,B,typeExp(Op,_ATs)),
+    prsTypes(Args,Env,B,Bound,ArgTps). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
+  prsType(F,Env,B,Bound,funType(AT,RT)) :: isBinary(F,"=>",_,L,R) :--
+    isRoundTuple(L,_,LA),
+    prsArgTypes(LA,Env,B,B0,AT),
+    prsType(R,Env,B0,Bound,RT).
+  prsType(F,Env,B,Bound,grammarType(AT,RT)) :: isBinary(F,"-->",_,L,R) :--
+    isRoundTuple(L,_,LA),
+    prsArgTypes(LA,Env,B,B0,AT),
+    prsType(R,Env,B0,Bound,RT).
+  prsType(F,Env,B,Bound,classType(AT,RT)) :: isBinary(F,"<=>",_,L,R) :--
+    isRoundTuple(L,_,LA),
+    prsTypes(LA,Env,B,B0,AT),
+    prsType(R,Env,B0,Bound,RT).
+  prsType(C,Env,B,Bound,predType(AT)) :: ( isBraceTerm(C,_,L,[]),  isRoundTuple(L,_,A)) :--
+    prsArgTypes(A,Env,B,Bound,AT).
+  prsType(T,Env,B,Bound,tupleType(AT)) :: ( isRoundTuple(T,_,[A]), isRoundTuple(A,_,Inner)) :--
+    prsTypes(Inner,Env,B,Bound,AT).
+  prsType(T,Env,B,Bound,AT) :: isRoundTuple(T,_,[A]) :--
+    prsType(A,Env,B,Bound,AT).
+  prsType(T,Env,B,Bound,tupleType(AT)) :: isRoundTuple(T,_,A) :--
+    prsTypes(A,Env,B,Bound,AT).
+  prsType(T,Env,B,Bound,faceType(AT)) :: isBraceTuple(T,_,L) :--
+    prsTypeFields(L,Env,B,Bound,AT).
+  prsType(T,_,B,B,anonType) :--
+    reportError("cannot understand type $(T)",T.loc).
+
+  private
+  prsTypes:(list[ast],list[env],map[string,type],map[string,type],list[type]){}.
+  prsTypes([],_,B,B,[]).
+  prsTypes([T,..R],E,B,Bx,[PT,..M]) :-
+    prsType(T,E,B,B0,PT),
+    prsTypes(R,E,B0,Bx,M).
+
+  private
+  prsArgTypes:(list[ast],list[env],map[string,type],map[string,type],list[typeFlow]){}.
+    prsArgTypes([],_,B,B,[]).
+  prsArgTypes([A,..AT],Env,B,Bound,[Atype,..ArgTypes]) :-
+    prsArgType(A,Env,B,B0,Atype),
+    prsArgTypes(AT,Env,B0,Bound,ArgTypes).
+
+  private
+  prsArgType:(ast,list[env],map[string,type],map[string,type],typeFlow){}.
+  prsArgType(A,Env,B,Bound,inFlow(AType)) :-
+    isUnary(A,"+",_,AA),
+    prsType(AA,Env,B,Bound,AType).
+  prsArgType(A,Env,B,Bound,outFlow(AType)) :-
+    isUnary(A,"-",_,AA),
+    prsType(AA,Env,B,Bound,AType).
+  prsArgType(A,Env,B,Bound,inoutFlow(AType)) :-
+    prsType(A,Env,B,Bound,AType).
+
+  private
+  prsTypeFields:(list[ast],list[env],map[string,type],map[string,type],list[(string,type)]){}.
+  prsTypeFields([],_,B,B,[]).
+  prsTypeFields([A,..AT],Env,B,Bound,[(Fld,FldTp),..ArgTypes]) :-
+    isBinary(A,":",_,L,R),
+    isName(L,_,Fld),
+    prsType(R,Env,B,B0,FldTp),
+    prsTypeFields(AT,Env,B0,Bound,ArgTypes).
+  prsTypeFields([A,..AT],Env,B,Bound,ArgTypes) :-
+    reportError("$(A) is not a valid field designator",A.loc),
+    prsTypeFields(AT,Env,B,Bound,ArgTypes).
+
+  prsTypeName:(location,string,list[env],map[string,type],type){}.
+  prsTypeName(_,"_",_,_,anonType).
+  prsTypeName(_,"void",_,_,voidType).
+  prsTypeName(_,"top",_,_,topType).
+  prsTypeName(_,"this",_,_,thisType).
+  prsTypeName(_,Id,_,{Id->Tp},Tp).
+  prsTypeName(_,Id,Env,_,freshen(Tp,{})) :- typeInDict(Id,Env,Tp).
+  prsTypeName(Lc,Id,_,_,anonType) :- 
+    reportError("type $(Id) not declared",Lc).
+
+  prsBound:(ast,map[string,type],map[string,type],list[env],type,type){}.
+  prsBound(P,BV,Bound,Env,QT,Inner) :-
+    isBinary(P,",",_,L,R),
+    prsBound(L,BV,B0,Env,QT,Q0),
+    prsBound(R,B0,Bound,Env,Q0,Inner).
+  prsBound(V,B,B1,Env,univType(constrained(Lower,kVar(Nm),Upper),Inner),Inner) :-
+    B1 = B+{Nm->kVar(Nm)},
+    isBinary(V,"<~",_,L,Up),
+    isBinary(L,"<~",_,Lw,Vr),
+    isName(Vr,_,Nm),
+    prsType(Up,Env,B1,_,Upper),
+    prsType(Lw,Env,B1,_,Lower).
+  prsBound(V,B,B1,Env,univType(constrained(voidType,kVar(Nm),Upper),Inner),Inner) :-
+    B1 = B+{Nm->kVar(Nm)},
+    isBinary(V,"<~",_,Vr,Up),
+    isName(Vr,_,Nm),
+    prsType(Up,Env,B1,_,Upper).
+  prsBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
+    B1 = B+{Nm->kVar(Nm)},
+    isName(V,_,Nm).
+
 }

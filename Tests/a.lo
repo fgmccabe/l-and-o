@@ -1,42 +1,35 @@
 a{
   import lo.
 
- a:all t ~~ (list[t]+,list[t])=>list[t].
- a([],X) => X.
- a([E,..X],Y) => [E,..a(X,Y)].
+  a:all t ~~ (list[t]+,list[t])=>list[t].
+  a([],X) => X.
+  a([E,..X],Y) => [E,..a(X,Y)].
 
- assert a([1,2,3],[4,5,6]) = [1,2,3,4,5,6].
+  assert a([1,2,3],[4,5,6]) = [1,2,3,4,5,6].
 
- p:(string,string){}.
- p("a","b").
- p("c","b").
- p("b","d").
- p("g","d").
+  p:(string,string){}.
+  p("a","b").
+  p("c","b").
+  p("b","d").
+  p("g","d").
 
- m:(string){}.
- m("d").
+  m:(string){}.
+  m("d").
 
- f:(string){}.
- f("a").
- f("g").
+  f:(string){}.
+  f("a").
+  f("g").
 
- gp:(string,string){}.
- gp(x,y) :-- p(x,z), p(z,y).
+  gp:(string,string){}.
+  gp(x,y) :-- p(x,z), p(z,y).
 
- assert p("a","b"), gp("a","d").
+  assert p("a","b"), gp("a","d").
 
- assert gp(x,y) *> m(y).
+  assert gp(x,y) *> m(y).
 
- assert \+ (gp(x,y) *> f(x)).
+  assert \+ (gp(x,y) *> f(x)).
 
- fred:string.
- fred = "fred".
-/*
- xx : ()=>{p:(string,string){}. n:string}.
- xx() => {
-  p("alpha","beta").
-  n = fred.
- }
- */
+  fred:string.
+  fred = "fred".
 }.
 
