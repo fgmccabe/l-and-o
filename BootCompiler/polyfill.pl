@@ -50,8 +50,8 @@ exit(X) :- halt(X).
 
 explode(S,C) :- string_codes(S,CC), listify(CC,C).
 
-listify([],'lo.list#[]').
-listify([E|L],'lo.list#,..'(E,LL)) :- listify(L,LL).
+listify([],'lo.core#[]').
+listify([E|L],'lo.core#,..'(E,LL)) :- listify(L,LL).
 
 implode(C,S) :- listify(L,C),string_codes(S,L).
 

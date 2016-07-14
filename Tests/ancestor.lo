@@ -26,4 +26,6 @@ ancestor{
   }.
                                         
   main(_) :- checkUnit(ancestorTester).
+
+  
 }
