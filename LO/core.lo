@@ -1,141 +1,163 @@
 lo.core{
   -- Core definitions of types and interfaces that are really part of the language
 
-  public import lo.thing.
-  public import lo.stream.
+  public thing ::= thing.
 
-  public equality <~ {
-    eq: (this+){}.
-    hash:()=>integer.
+  public 
+  contract all x ~~ equality[x] :: {
+    eq: (x,x){}.
+    hash:(x)=>integer.
   }
 
-  public comp <~ equality.
-  comp <~ {
-    lt: (this+){}.
-    ge: (this+){}.
+  public 
+  contract all x ~~ equality[x] |: comp[x] :: {
+    lt: (x,x){}.
+    ge: (x,x){}.
+  }
+  
+  public
+  all t ~~ option[t] ::= none | some(t).
+  
+  public 
+  contract all x ~~ additive[x] :: {
+    pl:  (x,x)=>x.
+    mns: (x,x)=>x.
   }
 
-  public additive <~ {
-    pl:  (this+)=>this.
-    mns: (this+)=>this.
-  }
-
-  public arith <~ additive.
-  arith <~ {
-    tms: (this+)=>this.
-    dv:  (this+)=>this.
-    md: (this+) => this.
+  public  
+  contract all x ~~ additive[x] |: arith[x] :: {
+    tms: (x,x)=>x.
+    dv:  (x,x)=>x.
+    md: (x,x)=>x.
   }
 
   -- Structured string. This is only part of the type ..
-  public ss <~ thing.
+  public ss ::= ss(string) | ssSeq(list[ss]).
 
-  public ss:(string) <=> ss.
-  ss(S) .. {}.
-
-  public ssSeq:(list[ss]) <=> ss.
-  ssSeq(Els) .. {}.
-
-  -- Implementable interface
-  public displayable <~ {
-    disp:()=>ss.
-    frmt:(string)=>ss.
+  -- Displayable contract
+  public  
+  contract all t ~~ display[t] :: {
+    disp:(t)=>ss.
   }
 
-  public integer <~ arith.
-  integer <~ comp.
-  integer <~ displayable.
+  -- stream contract
+  public
+  contract all S,E ~~ stream[S ->> E] :: {
+    eof:(S){}.
+    hdtl:(S,E,S){}.
+    cons:(E,S)=>S.
+  }
+
+  -- implement standard contracts for integers
+
+  public
+  implementation arith[integer] .. {
+    pl(X,Y) => _int_plus(X,Y).
+    tms(X,Y) => _int_times(X,Y).
+    mns(X,Y) => _int_minus(X,Y).
+    dv(X,Y) => _int_div(X,Y).
+    md(X,Y) => _int_mod(X,Y).
+  }
+
+  public
+  implementation comp[integer] .. {
+    eq(X,X).
+    hash(X) => X.
+
+    lt(X,Y) :- _int_lt(X,Y).
+    ge(X,Y) :- _int_ge(X,Y).
+  }
+
+  public
+  implementation display[integer] .. {
+    disp(X) => ss(_int2str(X,10,0,0c )).
+  }
+
+  -- implement standard contracts for floats
+  public
+  implementation arith[float] .. {
+    pl(X,Y) => _flt_plus(X,Y).
+    tms(X,Y) => _flt_times(X,Y).
+    mns(X,Y) => _flt_minus(X,Y).
+    dv(X,Y) => _flt_div(X,Y).
+    md(X,Y) => _flt_mod(X,Y).
+  }
 
   public 
-  float <~ arith.
-  float <~ comp.
-  float <~ displayable.
+  implementation comp[float] .. {
+    eq(X,X).
+    hash(X) => _flt_hash(X).
 
-  -- There is sleight-of-hand going on here: literal integers automatically inherit from integer.
-  public integer:integer.
-  integer..{
-    pl(Y) => _int_plus(this,Y).
-    tms(Y) => _int_times(this,Y).
-    mns(Y) => _int_minus(this,Y).
-    dv(Y) => _int_div(this,Y).
-    md(Y) => _int_mod(this,Y).
+    lt(X,Y) :- _flt_lt(X,Y).
+    ge(X,Y) :- _flt_ge(X,Y).
+  }
 
-    eq(this).
-    hash()=>this.
-
-    lt(Y) :- _int_lt(this,Y).
-    ge(Y) :- _int_ge(this,Y).
-
-    disp() => ss(_int2str(this,10,0,0c )).
-    frmt(_) => disp(). -- TODO: fix me.
-  }.
-
-  -- Same is true for floats
-  public float:float.
-  float .. {
-    pl(Y) => _flt_plus(this,Y).
-    tms(Y) => _flt_times(this,Y).
-    mns(Y) => _flt_minus(this,Y).
-    dv(Y) => _flt_div(this,Y).
-    md(Y) => _flt_mod(this,Y).
-
-    eq(this).
-    hash() => _flt_hash(this).
-
-    lt(Y) :- _flt_lt(this,Y).
-    ge(Y) :- _flt_ge(this,Y).
-
-    disp() => ss(_flt2str(this,0,8,true,false)).
-    frmt(_) => disp().
+  public
+  implementation display[float] .. {
+    disp(X) => ss(_flt2str(this,0,8,true,false)).
   }
 
   -- and strings ...
-  public string <~ comp.
-  string <~ displayable.
 
-  public string:string.
-  string .. {
-    eq(this).
-    hash() => _str_hash(this).
-    
-    lt(Y) :- _str_lt(this,Y).
-    ge(Y) :- _str_ge(this,Y).
+  public
+  implementation comp[string] .. {
+    eq(X,X).
+    hash(X) => _str_hash(X).
 
-    disp() => ss(this).
-    frmt(_) => disp().
+    lt(X,Y) :- _str_lt(X,Y).
+    ge(X,Y) :- _str_ge(X,Y).
+  }
+
+
+  public
+  implementation display[string] .. {
+    disp(X) => ss(X).
   }
 
   -- Not strictly necessary, but makes for better symmetry.
-  public logical ::= true | false.
+  public
+  logical ::= true | false.
 
   -- We need the list type in the core
   public
-  all t ~~ list[t] <~ stream[t].
-  all t <~ displayable ~~ list[t] <~ displayable.
+  all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
-  public '[]':list[_].
-  '[]'..{
-    eof().
-    cons(X) => [X].
-    hdtl(_,_) :- false.
+  -- Implement equality for lists
+  public
+  implementation all x ~~ equality[x] |: equality[list[x]] .. {
+    eq(L1,L2) :- listEq(L1,L2).
+    hash(L) => listHash(L).
+  }
 
-    disp() => ss("[]").
-    frmt(_) => disp().
-  }.
+  private
+  listEq:all x ~~ equality[x] |: (list[x],list[x]){}.
+  listEq([],[]).
+  listEq([E1,..L1],[E2,..L2]) :- eq(E1,E2), listEq(L1,L2).
 
-  public (,..): all t<~displayable ~~ (t,list[t]) <=> list[t].
-  (H,..T)..{
-    eof() :- false.
-    hdtl(H,T).
-    cons(X) => [X,..this].
+  private
+  listHash:all x ~~ equality[x] |: (list[x])=>integer.
+  listHash([]) => 0.
+  listHash([E,..L]) => hash(E)*37+listHash(L).
 
-    disp() => ssSeq([ss("["),H.disp(),..showMoreList(T)]).
+  -- stream contract
+  public
+  implementation all x ~~ stream[list[x] ->> x] .. {
+    eof([]).
 
-    showMoreList:(list[t]) => list[ss].
-    showMoreList([]) => [ss("]")].
-    showMoreList([E,..M]) => [ss(","),E.disp(),..showMoreList(M)].
+    hdtl([E,.L],E,L).
 
-    frmt(_) => disp().
-  }.
+    cons(E,L) => [E,..L].
+  }
 
+  -- display contract for lists
+  public
+  implementation all x ~~ display[x] |: display[list[x]] .. {
+    disp(L) => ssSeq([ss("["),..listDisp(L,"")]).
+  }
+
+  private
+  listDisp:all x ~~ display[x] |: (list[x],string) => list[ss].
+  listDisp(X,_) :: var(X) => [ss(",.."),disp(X),ss("]")].
+  listDisp([],_) => [ss("]")].
+  listDisp([E,..L],Sep) => [ss(Sep),disp(E),..listDisp(L,",")].
 }

@@ -1,16 +1,15 @@
-:- module(types,[isType/1,isTypeFlow/1,newTypeVar/2,newTypeVar/4,deRef/2, 
+:- module(types,[isType/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2, 
       typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
-      showType/3, showTypeRule/3,showTypeFlow/3,
-      occursIn/2,isUnbound/1,isBound/2, upperBound/2, upperBoundOf/2, lowerBound/2, lowerBoundOf/2, bounds/3, 
-      bind/2, isIdentical/2, moveQuants/3,
-      markLower/2, markUpper/2,identicalVar/2]).
+      dispType/1,showType/3, showTypeRule/3,showConstraint/3,
+      occursIn/2,isUnbound/1,isBound/1, constraints/2, isIdenticalVar/2, 
+      bind/2, moveQuants/3,
+      moveConstraints/3,moveConstraints/4,setConstraint/2,setConstraints/2, implementationName/2]).
 :- use_module(misc).
 
 isType(anonType).
 isType(voidType).
-isType(topType).
-isType(kVar(_)).
-isType(tVar(_)).
+isType(kVar(_,_)).
+isType(tVar(_,_,_,_)).
 isType(type(_)).
 isType(typeExp(_,_)).
 isType(tupleType(_)).
@@ -20,59 +19,57 @@ isType(classType(_,_)).
 isType(predType(_)).
 isType(univType(_,_)).
 isType(faceType(_)).
-isType(constrained(_,_,_)).
+isType(constrained(_,_)).
 
-isTypeFlow(in(T)) :- isType(T).
-isTypeFlow(out(T)) :- isType(T).
-isTypeFlow(inout(T)) :- isType(T).
+isConstraint(conTract(_,_,_)).
+isConstraint(implementsFace(_,_)).
 
 % the _ in unb(_) is to work around issues with SWI-Prolog's assignment.
-newTypeVar(Nm,tVar(v{lower:voidType,upper:topType,curr:unb(_),name:Nm,id:Id})) :- gensym("_#",Id).
-newTypeVar(Nm,tVar(v{lower:Lower,upper:Upper,curr:unb(_),name:Nm,id:Id}),Lower,Upper) :- gensym("_#",Id).
+newTypeVar(Nm,tVar(_,_,Nm,Id)) :- gensym("_#",Id).
+newTypeVar(Nm,Constraints,tVar(_,C,Nm,Id)) :- gensym("_#",Id), concat(Constraints,_,C).
 
-deRef(tVar(V),Tp) :- V.curr \= unb(_),!,deRef(V.curr,Tp),!.
+readOnlyTypeVar(Nm,tVar(kVar(Nm),_,Nm,Id)) :- gensym("_#",Id).
+
+deRef(tVar(Curr,_,_,_),Tp) :- nonvar(Curr), !, deRef(Curr,Tp),!.
 deRef(T,T).
 
-isIdentical(tVar(V1),tVar(V2)) :- V1.id=V2.id.
+isIdenticalVar(tVar(_,_,_,Id),tVar(_,_,_,Id)).
 
-isUnbound(T) :- deRef(T,tVar(V)), V.curr = unb(_).
+isUnbound(T) :- deRef(T,tVar(Curr,_,_,_)), var(Curr).
 
-isBound(tVar(TV),Tp) :- TV.curr = Tp, Tp \= unb(_).
+isBound(T) :- deRef(T,TV), TV\=tVar(_,_,_,_).
 
-upperBound(V,Tp) :- V.curr \=unb(_), !, upperBoundOf(V.curr,Tp).
-upperBound(V,V.upper).
+constraints(Tp,Cons) :- deRef(Tp,tVar(_,Cons,_,_)).
 
-upperBoundOf(tVar(V),Tp) :- upperBound(V,Tp).
-upperBoundOf(T,T).
+setConstraints(constrained(Tp,Con),XTp) :-
+  setConstraint(Con),
+  setConstraints(Tp,XTp).
+setConstraints(Tp,Tp).
 
-lowerBound(V,Tp) :- V.curr \=unb(_), !, lowerBoundOf(V.curr,Tp).
-lowerBound(V,V.lower).
+setConstraint(conTract(Nm,Args,Deps)) :-
+  constrainArgs(Args,conTract(Nm,Args,Deps)).
+setConstraint(implementsFace(Tp,Face)) :-
+  setConstraint(Tp,implementsFace(Tp,Face)).
 
-lowerBoundOf(tVar(V),Tp) :- lowerBound(V,Tp).
-lowerBoundOf(T,T).
+constrainArgs([],_).
+constrainArgs([V|L],C) :-
+  setConstraint(V,C),
+  constrainArgs(L,C).
 
-bounds(tVar(V),Lw,Up) :- !, boundsOf(V,Lw,Up).
-bounds(T,T,T).
+setConstraint(tVar(_,Cons,_,_),C) :-
+  setCon(Cons,C).
+setConstraint(_,_).
 
-boundsOf(V,Lw,Up) :- V.curr \= unb(_), bounds(V.curr,Lw,Up).
-boundsOf(V,Lw,Up) :- deRef(V.lower,Lw), deRef(V.upper,Up).
+setCon([Cons|_],C) :- var(Cons), !, Cons = C.
+setCon([Cons|L],C) :- notSameConstraint(C,Cons),!, setCon(L,C).
+setCon([Cons|_],C) :- sameConstraint(Cons,C),!.
 
-markUpper(T,Tp) :- \+occursIn(T,Tp), T=tVar(V), b_set_dict(upper,V,Tp).
+bind(T,Tp) :- \+occursIn(T,Tp), T=tVar(Tp,_,_,_).
 
-markLower(T,Tp) :- \+occursIn(T,Tp), T=tVar(V), b_set_dict(lower,V,Tp).
+occursIn(TV,Tp) :- deRef(Tp,DTp), \+ isIdenticalVar(TV,DTp), TV = tVar(_,_,_,Id), occIn(Id,DTp),!.
 
-bind(T,Tp) :- \+occursIn(T,Tp), T=tVar(V),b_set_dict(curr,V,Tp).
-
-occursIn(tVar(TV),Tp) :- deRef(Tp,DTp), \+ sameVar(TV,DTp), occIn(TV.id,DTp),!.
-
-sameVar(V1,tVar(V2)) :- V1.id = V2.id.
-
-identicalVar(tVar(V1),tVar(V2)) :- V1.id = V2.id.
-
-occIn(Id,tVar(V)) :- isBound(tVar(V),Tp), !, occIn(Id,Tp).
-occIn(Id,tVar(V)) :- V.id=Id,!.
-occIn(Id,tVar(V)) :- upperBound(V,Tp), !, occIn(Id,Tp).
-occIn(Id,tVar(V)) :- lowerBound(V,Tp), !, occIn(Id,Tp).
+occIn(Id,tVar(_,_,_,Id)) :-!.
+occIn(Id,tVar(Curr,_,_,_)) :- nonvar(Curr), !, occIn(Id,Curr).
 occIn(Id,typeExp(_,L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,tupleType(L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,funType(L,_)) :- is_member(A,L), occIn(Id,A).
@@ -80,9 +77,9 @@ occIn(Id,funType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,grammarType(L,_)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,grammarType(_,R)) :- is_member(A,R), occIn(Id,A).
 occIn(Id,classType(L,_)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,classType(_,R)) :- is_member(A,R), occIn(Id,A).
+occIn(Id,classType(_,R)) :- occIn(Id,R).
 occIn(Id,predType(L)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,univType(constrained(Lw,_,Up),Tp)) :- occIn(Id,Lw) ; occIn(Id,Up) ; occIn(Id,Tp).
+occIn(Id,constrained(Tp,Con)) :- occIn(Id,Con) ; occIn(Id,Tp).
 occIn(Id,univType(_,Tp)) :- occIn(Id,Tp).
 occIn(Id,faceType(L)) :- is_member((_,A),L), occIn(Id,A).
 
@@ -90,54 +87,63 @@ moveQuants(univType(B,Tp),[B|Q],Tmpl) :- !,
   moveQuants(Tp,Q,Tmpl).
 moveQuants(Tp,[],Tp).
 
-showTypeRule(typeRule(Hd,Bd),O,E) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,E).
-showTypeRule(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showTypeRule,O2,E).
+moveConstraints(constrained(Tp,Con),[Con|C],Tmp) :-!,
+  moveConstraints(Tp,C,Tmp).
+moveConstraints(Tp,[],Tp).
 
-showType(T,O,E) :- isBound(T,Tp),!,showType(Tp,O,E).
-showType(anonType,O,E) :- appStr("_",O,E).
-showType(voidType,O,E) :- appStr("void",O,E).
-showType(topType,O,E) :- appStr("top",O,E).
-showType(thisType,O,E) :- appStr("this",O,E).
-showType(kVar(Nm),O,E) :- appStr(Nm,O,E).
-showType(tVar(St),O,E) :- showLower(St.lower,O,O1),appStr("%",O1,O2),appStr(St.name,O2,O3),appSym(St.id,O3,O4),showUpper(St.upper,O4,E).
-showType(type(Nm),O,E) :- appStr(Nm,O,E).
-showType(typeExp(Nm,A),O,E) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,E).
-showType(tupleType(A),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,E).
-showType(funType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,E).
-showType(grammarType(A,R),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("-->",O3,O4), showType(R,O4,E).
-showType(classType(A,R),O,E) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("<=>",O3,O4), showType(R,O4,E).
-showType(predType(A),O,E) :- appStr("(",O,O1), showTypeArgs(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,E).
-showType(univType(V,Tp),O,E) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showType,O2,E).
-showType(faceType(Els),O,E) :- appStr("{ ",O,O1), showTypeFields(Els,O1,O2), appStr("}",O2,E).
-showType(typeRule(Hd,Bd),O,E) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,E).
+moveConstraints(constrained(Tp,Con),C,Cx,Inner) :-
+  moveConstraints(Tp,[Con|C],Cx,Inner).
+moveConstraints(Tp,C,C,Tp).
 
-showBound(constrained(voidType,Nm,Upper),O,E) :- showType(Nm,O,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
-showBound(constrained(Lower,Nm,Upper),O,E) :- showType(Lower,O,O0), showType(Nm,O0,O1),appStr("<~",O1,O2),showType(Upper,O2,E).
-showBound(Nm,O,E) :- showType(Nm,O,E).
+showTypeRule(typeRule(Hd,Bd),O,Ox) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,Ox).
+showTypeRule(univType(V,Tp),O,Ox) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showTypeRule,O2,Ox).
 
-showLower(voidType,O,O) :-!.
-showLower(Tp,O,E) :- isBound(Tp,B), !, showLower(B,O,E).
-showLower(Tp,O,E) :- showType(Tp,O,O1), appStr("<~",O1,E).
+showType(anonType,O,Ox) :- appStr("_",O,Ox).
+showType(voidType,O,Ox) :- appStr("void",O,Ox).
+showType(thisType,O,Ox) :- appStr("this",O,Ox).
+showType(kVar(Nm),O,Ox) :- appStr(Nm,O,Ox).
+showType(tVar(Curr,_,_,_),O,Ox) :- nonvar(Curr),!,showType(Curr,O,Ox).
+showType(tVar(_,_,Nm,Id),O,Ox) :- appStr("%",O,O1),appStr(Nm,O1,O2),appSym(Id,O2,Ox).
+showType(type(Nm),O,Ox) :- appStr(Nm,O,Ox).
+showType(typeExp(Nm,A),O,Ox) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,Ox).
+showType(tupleType(A),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,Ox).
+showType(funType(A,R),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,Ox).
+showType(grammarType(A,R),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("-->",O3,O4), showType(R,O4,Ox).
+showType(classType(A,R),O,Ox) :- showTypeEls(A,O,O1), appStr("<=>",O1,O2), showType(R,O2,Ox).
+showType(predType(A),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("{}",O3,Ox).
+showType(univType(V,Tp),O,Ox) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showType,O2,Ox).
+showType(faceType(Els),O,Ox) :- appStr("{ ",O,O1), showTypeFields(Els,O1,O2), appStr("}",O2,Ox).
+showType(typeRule(Hd,Bd),O,Ox) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,Ox).
+showType(constrained(Tp,Con),O,Ox) :- showConstraint(Con,O,O1), showMoreConstraints(Tp,O1,Ox).
 
-showUpper(topType,O,O) :-!.
-showUpper(Tp,O,E) :- isBound(Tp,B), !, showUpper(B,O,E).
-showUpper(Tp,O,E) :- appStr("<~",O,O1), showType(Tp,O1,E).
+showMoreConstraints(constrained(Tp,Con),O,Ox) :- appStr(",",O,O1), showConstraint(Con,O1,O2), showMoreConstraints(Tp,O2,Ox).
+showMoreConstraints(Tp,O,Ox) :- appStr("|:",O,O1),showType(Tp,O1,Ox).
+
+showConstraint(univType(V,B),O,Ox) :-
+  appStr("all ",O,O1),
+  showBound(V,O1,O2),
+  showMoreQuantified(B,showConstraint,O2,Ox).
+showConstraint(conTract(Nm,Els,[]),O,Ox) :-!,
+  appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(Els,O2,O3),appStr("]",O3,Ox).
+showConstraint(conTract(Nm,Els,Deps),O,Ox) :-
+  appStr(Nm,O,O1), 
+  appStr("[",O1,O2),
+  showTypeEls(Els,O2,O3),
+  appStr("->>",O3,O4),
+  showTypeEls(Deps,O4,O5),
+  appStr("]",O5,Ox).
+showConstraint(implementsFace(Tp,Els),O,Ox) :-
+  showType(Tp,O,O1),
+  appStr("<~",O1,O2),
+  showType(faceType(Els),O2,Ox).
+
+showBound(Nm,O,Ox) :- showType(Nm,O,Ox).
 
 showTypeEls([],O,O).
 showTypeEls([Tp|More],O,E) :- showType(Tp,O,O1), showMoreTypeEls(More,O1,E).
 
 showMoreTypeEls([],O,O).
 showMoreTypeEls([Tp|More],O,E) :- appStr(", ",O,O1),showType(Tp,O1,O2), showMoreTypeEls(More,O2,E).
-
-showTypeArgs([],O,O).
-showTypeArgs([Tp|More],O,E) :- showTypeFlow(Tp,O,O1), showMoreTypeArgs(More,O1,E).
-
-showMoreTypeArgs([],O,O).
-showMoreTypeArgs([Tp|More],O,E) :- appStr(", ",O,O1),showTypeFlow(Tp,O1,O2), showMoreTypeArgs(More,O2,E).
-
-showTypeFlow(in(Tp),O,Ox) :- showType(Tp,O,O0), appStr("+",O0,Ox).
-showTypeFlow(out(Tp),O,Ox) :- showType(Tp,O,O0), appStr("-",O0,Ox).
-showTypeFlow(inout(Tp),O,Ox) :- showType(Tp,O,Ox).
 
 showMoreQuantified(univType(Nm,Tp),P,O,E) :- appStr(", ",O,O1), showType(Nm,O1,O2), showMoreQuantified(Tp,P,O2,E).
 showMoreQuantified(Tp,P,O,E) :- appStr(" ~~ ",O,O1), call(P,Tp,O1,E).
@@ -150,8 +156,13 @@ showMoreTypeFields([Fld|More],O,E) :- appStr(". ",O,O1), showTypeField(Fld,O1,O2
 
 showTypeField((Nm,Tp),O,E) :- appStr(Nm,O,O1), appStr(" : ",O1,O2), showType(Tp,O2,E).
 
+dispType(Tp) :-
+  showType(Tp,Chrs,[]),
+  string_chars(Text,Chrs),
+  writeln(Text).
+
 typeArity(univType(_,Tp),Ar) :- typeArity(Tp,Ar).
-typeArity(constrained(_,Tp,_),Ar) :- typeArity(Tp,Ar).
+typeArity(constrained(Tp,_),Ar) :- typeArity(Tp,Ar).
 typeArity(funType(A,_),Ar) :- length(A,Ar).
 typeArity(grammarType(A,_),Ar) :- length(A,Ar).
 typeArity(predType(A),Ar) :- length(A,Ar).
@@ -170,3 +181,21 @@ isClassType(classType(A,_),Ar) :- length(A,Ar).
 
 isGrammarType(univType(_,Tp),Ar) :- isGrammarType(Tp,Ar).
 isGrammarType(grammarType(A,_),Ar) :- length(A,Ar).
+
+implementationName(conTract(Nm,Args,_),INm) :-
+  appStr(Nm,S0,S1),
+  marker(conTract,M),
+  surfaceNames(Args,M,S1,[]),
+  string_chars(INm,S0).
+
+surfaceNames([],_,S,S).
+surfaceNames([T|L],Sep,S0,Sx) :-
+  deRef(T,TT),
+  surfaceName(TT,SN),
+  appStr(Sep,S0,S1),
+  appStr(SN,S1,S2),
+  surfaceNames(L,Sep,S2,Sx).
+
+surfaceName(type(Nm),Nm).
+surfaceName(typeExp(Nm,_),Nm).
+surfaceName(kVar(Nm),Nm).

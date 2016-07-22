@@ -75,32 +75,8 @@ static void dumpStdType(char *name, bufferPo out);
 static void dumpStr(char *str, bufferPo out);
 static char *dName(char *sig, bufferPo out);
 static char *dSequence(char *sig, bufferPo out);
-static char *dArgSequence(char *sig, bufferPo out);
 static char *dFields(char *sig, bufferPo out);
 static char *dumpSig(char *sig, bufferPo out);
-
-static char *dumpArgSig(char *sig,bufferPo out){
-  switch(*sig++){
-    case '-':
-      outStr(O_IO(out),"out(");
-      sig = dumpSig(sig,out);
-      outStr(O_IO(out),")");
-      return sig;
-    case '+':
-      outStr(O_IO(out),"in(");
-      sig = dumpSig(sig,out);
-      outStr(O_IO(out),")");
-      return sig;
-    case '?':
-      outStr(O_IO(out),"inout(");
-      sig = dumpSig(sig,out);
-      outStr(O_IO(out),")");
-      return sig;
-    default:
-      fprintf(stderr, "illegal argument signature %s\n", sig);
-      exit(99);
-  }
-}
 
 static char *dumpSig(char *sig, bufferPo out) {
   assert(sig != NULL && *sig != '\0');
@@ -126,9 +102,6 @@ static char *dumpSig(char *sig, bufferPo out) {
     case anon_sig:
       outStr(O_IO(out), "topType");
       break;
-    case top_sig:
-      outStr(O_IO(out), "topType");
-      break;
     case void_sig:
       outStr(O_IO(out), "voidType");
       break;
@@ -152,19 +125,19 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case funct_sig:
       outStr(O_IO(out), "funType(");
-      sig = dArgSequence(sig, out);
+      sig = dSequence(sig, out);
       outStr(O_IO(out), ",");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), ")");
       break;
     case pred_sig:
       outStr(O_IO(out), "predType(");
-      sig = dArgSequence(sig, out);
+      sig = dSequence(sig, out);
       outStr(O_IO(out), ")");
       break;
     case grammar_sig:
       outStr(O_IO(out), "grammarType(");
-      sig = dArgSequence(sig, out);
+      sig = dSequence(sig, out);
       outStr(O_IO(out), ",");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), ")");
@@ -197,8 +170,6 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case constrained_sig:
       outStr(O_IO(out), "constrained(");
-      sig = dumpSig(sig, out);
-      outStr(O_IO(out), ",");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), ",");
       sig = dumpSig(sig, out);
@@ -236,20 +207,6 @@ static char *dSequence(char *sig, bufferPo out) {
   while (ar-- > 0) {
     outStr(O_IO(out), sep);
     sig = dumpSig(sig, out);
-    sep = ",";
-  }
-  outStr(O_IO(out), "]");
-  return sig;
-}
-
-static char *dArgSequence(char *sig, bufferPo out) {
-  int ar;
-  sig = dInt(sig,&ar);
-  char *sep = "";
-  outStr(O_IO(out), "[");
-  while (ar-- > 0) {
-    outStr(O_IO(out), sep);
-    sig = dumpArgSig(sig, out);
     sep = ",";
   }
   outStr(O_IO(out), "]");

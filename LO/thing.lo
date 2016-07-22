@@ -1,9 +1,0 @@
-lo.thing{
-  -- The root of the hierarchy. Everything is a thing.
-  public thing <~ {
-  }.
-
-  public thing:thing.
-  thing..{
-  }.
-}

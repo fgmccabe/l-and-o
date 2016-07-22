@@ -2,94 +2,57 @@ lo.index{
   -- Implement an index tree structure
 
   import lo.core.
-  import lo.option.
-  import lo.arith.
-  import lo.list.
-  import lo.display.
+  import lo.arithmetic.
 
   public
-  all k<~equality, v ~~ map[k,v] <~ additive.
-  all k<~equality, v ~~ map[k,v] <~ displayable.
-  all k<~equality, v ~~ map[k,v] <~ {
-    find:(k) => option[v].
-    get:(k)=>v.
-    put:(k,v) => this.
-    remove:(k) => this.
-    present:(k,v){}.
+  all m,k,v ~~ equality[k] |: map[m ->> k,v] :: {
+      present:(m,k,v){}.
+      remove:(m,k) => m.
+      put:(m,k,v) => m.
+    }.
+
+  public
+  all k,v ~~ equality[k] |: treeMap[k,v] ::= 
+      trEmpty
+    | trLeaf(integer,list[(k,v)])
+    | trNode(integer,integer,treeMap[k,v],treeMap[k,v]).
+
+  public
+  implementation all k,v ~~ equality[k] |: map[treeMap[k,v] ->> k,v] .. {
+    present(M,K,V) :- lookIn(hash(K),M,K,V).
+    remove(M,K) => rmve(hash(K),K,M).
+    put(M,K,V) => insrt(K,V,M).
   }
 
   public
-  all k<~equality, v ~~ treeMap[k,v] <~ map[k,v].
-
-  public
-  trEmpty : treeMap[_,_].
-  trEmpty .. {
-    find(_) => none.
-    put(K,V) => insrt(K,V,this).
-    remove(_) => this.
-    present(_,_) :- false.
-
-    pl(Other) => mergeTree(this,Other).
-    mns(Other) => subtractTree(this,Other).
-
-    disp() => treeDisp.display(this).
-    frmt(_) => treeDisp.display(this).
+  implementation all k,v ~~ additive[treeMap[k,v]] .. {
+    pl(M1,M2) => mergeTree(M1,M2).
+    mns(M1,M2) => subtractTree(M1,M2).
   }
 
-  trLeaf : all k<~equality, v ~~ (integer,list[(k,v)]) <=> treeMap[k,v].
-  trLeaf(Mask,Entries) .. {
-    find(Ky) => look(Ky,this).
-    put(k,v) => insrt(k,v,this).
-    remove(Ky) => rmve(Ky.hash(),Ky,this).
-    present(Ky,Vl) :- look(Ky,this) =. some(Vl).
+  private
+  lookIn: all k,v ~~ equality[k] |: (integer,treeMap[k,v],k,v){}.
+  lookIn(H,trLeaf(H,Els),K,V) :- findMember(K,Els,V).
+  lookIn(H,trNode(Msk,Ln,Left,Right),K,V) :: commonMask(H,Ln)==Msk :--
+    (nthBit(H,Ln) ? lookIn(H,Right,K,V) | lookIn(H,Left,K,V)).
 
-    pl(Other) => mergeTree(this,Other).
-    mns(Other) => subtractTree(this,Other).
+  look:all all k,v ~~ equality[k] |: (k,treeMap[k,v]) => option[v].
+  look(K,T) :: lookIn(hash(K),T,V) => some(V).
+  look(_,_) => none.
 
-    disp() => treeDisp.display(this).
-    frmt(_) => treeDisp.display(this).
-  }
+  findMember:all k,v ~~ equality[k] |: (k,list[(k,v)],v){}.
+  findMember(K,[(K,V),.._],V).
+  findMember(K,[_,..L],V) :- findMember(K,L,V).
 
-  trNode : all k<~equality, v ~~ (integer, integer, treeMap[k,v], treeMap[k,v]) <=> treeMap[k,v].
-  trNode(Mask,MskLen,Left,Right) .. {
-    find(Ky) => look(Ky,this).
-    put(k,v) => insrt(k,v,this).
-    remove(Ky) => rmve(Ky.hash(),Ky,this).
-    present(Ky,Vl) :- look(Ky,this) =. some(Vl).
+  insrt:all k,v ~~ equality[k] |: (k,v,treeMap[k,v])=>treeMap[k,v].
+  insrt(K,V,T) => mergeTree(T,trLeaf(hash(K),[(K,V)])).
 
-    pl(Other) => mergeTree(this,Other).
-    mns(Other) => subtractTree(this,Other).
-
-    disp() => treeDisp.display(this).
-    frmt(_) => treeDisp.display(this).
-  }
-
-  look:all k<~equality,v ~~ (k,treeMap[k,v]) => option[v].
-  look(K,T) => lookIn(K.hash(),K,T).
-
-  lookIn:all k<~equality,v ~~ (integer,k,treeMap[k,v]) => option[v].
-  lookIn(H,K,trLeaf(H,Els)) => findMember(K,Els).
-  lookIn(H,K,trNode(Msk,Ln,Left,Right)) :: commonMask(H,Ln)==Msk =>
-    (nthBit(H,Ln) ? lookIn(H,K,Right) | lookIn(H,K,Left)).
-  lookIn(_,_,_) => none.
-
-  findMember:all k,v ~~ (k,list[(k,v)]) => option[v].
-  findMember(K,[(K,V),.._]) => some(V).
-  findMember(K,[_,..L]) => findMember(K,L).
-  findMember(_,[]) => none.
-
-  insrt:all k<~equality, v ~~ (k,v,treeMap[k,v])=>treeMap[k,v].
-  insrt(K,V,T) => mergeTree(T,trLeaf(K.hash(),[(K,V)])).
-
-  remove:all k<~equality, v ~~ (k,treeMap[k,v])=>treeMap[k,v].
-  remove(K,T) => rmve(K.hash(),K,T).
-
-  mergeTree:all k<~equality, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeTree:all k,v ~~ equality[k] |: (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
   mergeTree(trEmpty,T) => T.
   mergeTree(T,trEmpty) => T.
   mergeTree(T1,T2) => mergeNodes(T1,T2).
 
-  mergeLeafs:all k<~equality, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeLeafs:all k,v ~~ equality[k] |: (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
   mergeLeafs(trLeaf(H,L1),trLeaf(H,L2)) => trLeaf(H,merge(L1,L2)).
   mergeLeafs(T1::T1 = trLeaf(H1,L1),T2::T2=trLeaf(H2,L2)) ::
     ( CML = commonMaskLen(H1,H2,HashLen),
@@ -98,13 +61,13 @@ lo.index{
         trNode(CM,CML,T2,T1) |
         trNode(CM,CML,T1,T2)).
 
-  merge: all k<~equality, v ~~ (list[(k,v)],list[(k,v)])=>list[(k,v)].
+  merge: all k,v ~~ equality[k] |: (list[(k,v)],list[(k,v)])=>list[(k,v)].
   merge([],L) => L.
   merge([(K,V),..L1],L) :: isMember((K,_),L) => merge(L1,L).
   merge([E,..L],L1) => [E,..merge(L,L1)].
 
   private
-  mergeNodes:all k<~equality, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  mergeNodes:all k,v ~~ equality[k] |: (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
   mergeNodes(T1::T1=trLeaf(_,_),T2::T2=trLeaf(_,_)) => mergeLeafs(T1,T2).
   mergeNodes(T1::T1=trNode(Msk1,Ln1,L1,R1),T2::T2=trLeaf(Msk2,_)) ::
     ( CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),
@@ -142,7 +105,7 @@ lo.index{
       ).
 
   private
-  rmve:all k<~equality, v ~~ (integer,k,treeMap[k,v]) => treeMap[k,v].
+  rmve:all k,v ~~ equality[k] |: (integer,k,treeMap[k,v]) => treeMap[k,v].
   rmve(_,_,trEmpty) => trEmpty.
   rmve(H,K,trLeaf(H,L)) => reformLeaf(H,subtract((K,_),L)).
   rmve(H,K,T::T=trNode(M,Ln,L,R)) ::
@@ -155,56 +118,62 @@ lo.index{
       T). -- not present
 
   private 
-  reformLeaf:all k<~equality, v ~~ (integer,list[(k,v)]) => treeMap[k,v].
+  reformLeaf:all  k,v ~~ equality[k] |: (integer,list[(k,v)]) => treeMap[k,v].
   reformLeaf(H,[]) => trEmpty.
   reformLeaf(H,L) => trLeaf(H,L).
 
   private
-  reformNode:all k<~equality, v ~~ (treeMap[k,v]) => treeMap[k,v].
+  reformNode:all k,v ~~ equality[k] |: (treeMap[k,v]) => treeMap[k,v].
   reformNode(trNode(_,_,trEmpty,R)) => R.
   reformNode(trNode(_,_,L,trEmpty)) => L.
   reformNode(N) => N.
 
-  subtractTree:all k<~equality, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  subtractTree:all k,v ~~ equality[k] |: (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
   subtractTree(trEmpty,T) => T.
   subtractTree(T,trEmpty) => T.
   subtractTree(T1,T2) => subtractNodes(T1,T2).
 
-  subtractNodes:all k<~equality, v ~~ (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
+  subtractNodes:all k,v ~~ equality[k] |: (treeMap[k,v],treeMap[k,v])=>treeMap[k,v].
   subtractNodes(T1,trLeaf(_,Leaves)) => subtractLeafs(T1,Leaves).
   subtractNodes(T1,trNode(Msk2,Ln2,L2,R2)) =>
     subtractNodes(subtractNodes(T1,L2),R2).
 
-  subtractLeafs:all k<~equality, v ~~ (treeMap[k,v],list[(k,v)])=>treeMap[k,v].
+  subtractLeafs:all k,v ~~ equality[k] |: (treeMap[k,v],list[(k,v)])=>treeMap[k,v].
   subtractLeafs(T,[]) => T.
   subtractLeafs(T,[(K,_),..Lvs]) =>
-    subtractLeafs(rmve(K.hash(),K,T),Lvs).
+    subtractLeafs(rmve(hash(K),K,T),Lvs).
 
-  treeDisp:all k<~displayable,v<~displayable ~~ display[treeMap[k,v]].
-  treeDisp..{
-    display(Tree) => ssSeq([ss("{"),displayElements(Tree),ss("}")]).
-
-    displayElements:(treeMap[k,v])=>ss.
-    displayElements(trEmpty) => ssSeq([]).
-    displayElements(trLeaf(_,Lvs)) => ssSeq(displayLeaves(Lvs)).
-    displayElements(trNode(_,_,Lft,Rgt)) => ssSeq([displayElements(Lft),displayElements(Rgt)]).
-
-    displayLeaves:(list[(k,v)]) => list[ss].
-    displayLeaves([]) => [].
-    displayLeaves([(K,V),..More]) => [K.disp(),ss("->"),V.disp(),ss(". "),..displayLeaves(More)].
+  public
+  implementation all k,v ~~ display[k], display[v] |: display[treeMap[k,v]] .. {
+    disp(Tree) => ssSeq([ss("{"),displayElements(Tree),ss("}")]).
   }
 
+  private
+  displayElements:all k,v ~~ display[k], display[v] |: (treeMap[k,v]) => ss.
+  displayElements(trEmpty) => ssSeq([]).
+  displayElements(trLeaf(_,Lvs)) => ssSeq(displayLeaves(Lvs)).
+  displayElements(trNode(_,_,Lft,Rgt)) => ssSeq([displayElements(Lft),displayElements(Rgt)]).
+
+  private
+  displayLeaves:all k,v ~~ display[k], display[v] |: (list[(k,v)]) => list[ss].
+  displayLeaves([]) => [].
+  displayLeaves([(K,V),..More]) => [disp(K),ss("->"),disp(V),ss(". "),..displayLeaves(More)].
+
+  private
   HashLen:integer.
   HashLen = 64.
       
+  private
   commonMaskLen:(integer,integer,integer) => integer.
   commonMaskLen(H1,H2,C) :: ( C>0, \+H1==H2) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1).
   commonMaskLen(_,_,C) => C.
 
+  private
   commonMask:(integer,integer)=>integer.
   commonMask(_,0) => 0.
   commonMask(M1,ML) :: CML=HashLen-ML => _band(_blsl(_blsr(-1,CML),CML),M1).
 
+  private
   nthBit:(integer,integer){}.
   nthBit(X,N) :- _nthb(X,63-N).
 }

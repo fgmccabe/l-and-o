@@ -1,10 +1,7 @@
 lo{
   public import lo.core.
-  public import lo.display.
   public import lo.list.
-  public import lo.stream.
-  public import lo.arith.
-  public import lo.option.
+  public import lo.arithmetic.
   public import lo.index.
 
   public flatten : (ss) => string.

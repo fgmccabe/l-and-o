@@ -1,0 +1,85 @@
+lo.arithmetic{
+  -- Lay out the arithmetic contracts
+
+  public 
+  contract all t ~~ equality[t] .. { -- A contract rather than a regular interface
+    eq: (t,t){}.
+    hash: (t)=>integer.
+  }
+
+  -- The type of eq in isolation is:
+  eq : all t ~~ equality[t] |: (t,t){}.
+
+  -- A function that accesses a field:
+  nameOf:all t,v ~~ t<~{name:()=>v} |: (t)=>v.
+  nameOf(R) => R.name().
+
+  public 
+  contract all t ~~ equality[t] |: comp[t] .. { -- another contract
+    lt: (t,t){}.
+    ge: (t,t){}.
+  }
+
+  public 
+  contract all t ~~ additive[t] .. {
+    pl:  (t,t)=>t.
+    mns: (t,t)=>t.
+  }
+
+  public 
+  contract all t ~~ additive[t] |: arith[t] .. {
+    tms: (t,t)=>t.
+    dv:  (t,t)=>t.
+    md: (t,t)=>t.
+  }
+
+  public
+  implementation arith[integer] .. {
+    pl(X,Y) => _int_plus(X,Y).
+    mns(X,Y) => _int_minus(X,Y).
+    tms(X,Y) => _int_times(X,Y).
+    dv(X,Y) => _int_div(X,Y).
+    md(X,Y) => _int_mod(X,Y).
+  }
+
+  public
+  implementation all u, v ~~ additive[u], additive[v] |: additive[(u,v)] .. {
+    pl((A,B),(U,V)) => (A+U,B+V).
+    mns((A,B),(U,V)) => (A-U,B-V).
+  }
+
+  -- Implement regular arithmetic functions
+
+  public (+):all t ~~ additive[t] |: (t,t)=>t.
+  x+y => pl(x,y).
+
+  public (*):all t ~~ arith[t] |: (t,t)=>t.
+  x*y => tms(x,y).
+
+  public (-):all t ~~ additive[t] |: (t,t)=>t.
+  x-y => mns(x,y).
+
+  public (/):all t ~~ arith[t] |: (t,t)=>t.
+  x/y => dv(x,y).
+
+  public (%):all t ~~ arith[t] |: (t,t)=>t.
+  x%y => md(x,y).
+
+  -- Implement regular comparison predicates
+
+  public (<):all t ~~ comp[t] |: (t,t){}.
+  X < Y :- lt(X,Y).
+
+  public (=<):all t ~~ comp[t] |: (t,t){}.
+  X =< Y :- ge(Y,X).
+
+  public (>):all t ~~ comp[t] |: (t,t){}.
+  X > Y :- lt(Y,X).
+
+  public (>=):all t ~~ comp[t] |: (t,t){}.
+  X >= Y :- ge(X,Y).
+
+  public min:all t ~~ comp[t] |: (t,t)=>t.
+  min(X,Y)::X<Y => X.
+  min(_,Y) => Y.
+}

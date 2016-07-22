@@ -116,7 +116,7 @@ nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.',' '],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\t'],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\n'],Lc).
 nxTok(St,NxSt,regTok(Rg,Lc)) :- lookingAt(St,St0,['.',':'],_), readRegexp(St0,NxSt,Rg), makeLoc(St,NxSt,Lc).
-nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), !, followGraph(Ch,Id,St1,NxSt), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), followGraph(Ch,Id,St1,NxSt), !, makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :-
   nextSt(St,St1,Ch), 
   makeLoc(St,St1,Lc),

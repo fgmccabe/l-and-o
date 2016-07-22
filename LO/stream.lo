@@ -1,8 +1,0 @@
-lo.stream{
-  public 
-  all E ~~ stream[E] <~ {
-    eof:(){}.
-    hdtl:(E,this){}.
-    cons:(E+)=>this.
-  }.
-}

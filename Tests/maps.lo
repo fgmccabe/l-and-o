@@ -1,13 +1,16 @@
 maps{
   import lo.
 
-  all u,v ~~ pair[u,v] <~ displayable.
+  all u,v ~~ pair[u,v] ::= pair(u,v).
 
-  pair:all u<~displayable,v<~displayable ~~ (u,v) <=> pair[u,v].
-  pair(A,B) .. {
-    disp() => ssSeq([ss("("),A.disp(),ss(", "),B.disp(),ss(")")]).
-    frmt(_) => disp().
+  implementation
+  all u,v ~~ display[u], display[v] |: display[pair[u,v]] .. {
+    disp(P) => dispPair(P).
   }
+
+  private
+  dispPair:all u,v ~~ display[u], display[v] |: (pair[u,v]) => ss.
+  dispPair(pair(A,B)) => ssSeq([ss("("),disp(A),ss(", "),disp(B),ss(")")]).
 
   myPairs:map[string,integer].
   myPairs = {"A"->1. "B"->2. "C"->3. }

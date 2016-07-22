@@ -2,71 +2,50 @@ lo.comp.types{
   import lo.
 
   public
-  type <~ displayable.
-  type <~ {
-    deRef : ()=>this.
+  type ::= anonType 
+        | voidType
+        | thisType
+        | kVar(string)
+        | tVar(type,logical,list[constraint],string,string)
+        | type(string)
+        | typeExp(string,list[type])
+        | tupleType(list[type])
+        | funType(list[type],type)
+        | predType(list[type])
+        | grammarType(list[type],type)
+        | classType(type,type)
+        | typeRule(type,type)
+        | faceType(list[(string,type)])
+        | constrained(constraint,type)
+        | univType(type,type).
+
+  public
+  constraint ::= conTract(string,list[type],list[type])
+              |  implementsFace(type,list[(string,type)]).
+
+  public
+  implementation display[type] .. {
+    disp(T) => dispType(T).
   }
 
-  public typeFlow ::= inFlow(type) | outFlow(type) | inoutFlow(type).
+  private
+  dispType:(type)=>ss.
+  dispType(anonType) => ss("_").
+  dispType(voidType) => ss("void").
+  dispType(thisType) => ss("this").
+  dispType(kVar(Nm)) => ss(Nm).
+  dispType(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => dispType(Curr).
+  dispType(tVar(_,_,_,Nm,Id)) => ssSeq([ss(Nm),ss("_"),ss(Id)]).
 
-  public anonType : type.
-  anonType .. {
-    disp()=>ss("_").
-    frmt(_) => ss("_").
+  public
+  deRef:(type)=>type.
+  deRef(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => deRef(Curr).
+  deRef(T) => T.
 
-    deRef() => this.
-  }
+  private
+  collectConstraints:(type,list[constraint]) => list[constraint].
 
-  public voidType : type.
-  voidType .. {
-    disp()=>ss("void").
-    frmt(_) => ss("void").
 
-    deRef() => this.
-  }
-
-  public topType : type.
-  topType .. {
-    disp() => ss("top").
-    frmt(_) => ss("top").
-
-    deRef() => this.
-  }
-
-  public thisType : type.
-  thisType .. {
-    disp() => ss("this").
-    frmt(_) => ss("this").
-
-    deRef() => this.
-  }
-
-  public kVar : (string) <=> type.
-  kVar(Nm) .. {
-    disp() => ss(Nm).
-    frmt(_) => ss(Nm).
-
-    deRef() => this.
-  }
-
-  public tVar : (list[type],type,list[type],logical,string,string) <=> type.
-  tVar(Lower,Current,Upper,Frozen,Name,Id) .. {
-    showLwr:(type)=>ss.
-    showLwr(T) :: var(T) => ss("").
-    showLwr(T) => ssSeq([T.disp(),ss(" <~ ")]).
-
-    showUpr:(type)=>ss.
-    showUpr(T) :: var(T) => ss("").
-    showUpr(T) => ssSeq([ss(" <~ "),T.disp()]).
-
-    disp() :: var(Current) => ssSeq([showLwr(tailTp(Lower)),ss("?"),ss(Id),showUpr(tailTp(Upper))]).
-    disp() :: nonvar(Current) => Current.disp().
-
-    frmt(_) => disp().
-    
-    deRef() :: var(Current) => this.
-    deRef() => Current.deRef().
-  }
 
   public
   newVar:(string) => type.

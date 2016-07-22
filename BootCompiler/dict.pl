@@ -1,23 +1,16 @@
-:- module(dict,[typeInDict/4,typeFaceRule/3,typeRules/3,declareType/5,declareType/7,
-    declareVar/5,isVar/3,isVar/4,
+:- module(dict,[declareType/4,isType/3,
+    declareVar/4,isVar/3,
+    declareContract/4,getContract/3,
+    declareImplementation/4,getImplementations/3,
     processNames/3,processTypes/3,
-    pushScope/2,pushFace/3,makeKey/2,stdDict/1,marker/2,
-    getCatalog/3,declareCatalog/4]).
+    pushScope/2,pushFace/4,makeKey/2,stdDict/1]).
 
 :- use_module(misc).
 :- use_module(types).
 :- use_module(escapes).
 :- use_module(freshen).
 
-typeInDict(Nm,Env,Tp) :- tpInDict(Nm,Env,tpDef(_,_,Tp,_,_)).
-
-typeInDict(Nm,Env,Lc,Tp) :- tpInDict(Nm,Env,tpDef(_,Lc,Tp,_,_)).
-
-typeFaceRule(Nm,Env,Rule) :- tpInDict(Nm,Env,tpDef(_,_,_,Rule,_)).
-
-typeRules(Nm,Env,Rules) :- tpInDict(Nm,Env,tpDef(_,_,_,_,Rules)).
-
-tpInDict(Nm,Env,Tp) :- 
+isType(Nm,Env,Tp) :- 
   marker(type,M),
   pathSuffix(Nm,M,Id),
   makeKey(Id,Key),
@@ -26,38 +19,52 @@ tpInDict(Nm,Env,Tp) :-
 typeInD(Key,[scope(Types,_,_,_)|_],Tp) :- get_dict(Key,Types,Tp),!.
 typeInD(Key,[_|Env],Tp) :- typeInD(Key,Env,Tp).
 
-declareType(Nm,Lc,Tp,Face,Rules,[scope(Types,Nms,Rls,Cats)|Outer],[scope(Types1,Nms,Rls1,Cats)|Outer]) :-
+declareType(Nm,TpDef,[scope(Types,Nms,Impls,Contracts)|Outer],[scope(Types1,Nms,Impls,Contracts)|Outer]) :-
   makeKey(Nm,Key),
-  put_dict(Key,Types,tpDef(Nm,Lc,Tp,Face,Rules),Types1),
-  put_dict(Key,Rls,Rules,Rls1).
+  put_dict(Key,Types,TpDef,Types1).
 
-declareType(Nm,Lc,Tp,[scope(Types,Nms,Rls,Cats)|Outer],[scope(Types1,Nms,Rls,Cats)|Outer]) :-
+declareVar(Nm,Vr,[scope(Types,Names,Rules,Contracts)|Outer],[scope(Types,Names1,Rules,Contracts)|Outer]) :-
   makeKey(Nm,Key),
-  moveQuants(Tp,B,Inner),
-  moveQuants(FaceRule,B,typeRule(Inner,faceType([]))),
-  put_dict(Key,Types,tpDef(Nm,Lc,Tp,FaceRule,[FaceRule]),Types1).
+  put_dict(Key,Names,Vr,Names1).
 
-declareVar(Nm,Lc,Vr,[scope(Types,Names,Rules,Cats)|Outer],[scope(Types,Names1,Rules,Cats)|Outer]) :-
+isVar(Nm,_,vr(Nm,std,Tp)) :- escapeType(Nm,Tp),!.
+isVar(Nm,Env,Vr) :- makeKey(Nm,Key), isVr(Key,Env,Vr).
+
+isVr(Key,[scope(_,Names,_,_)|_],Vr) :- get_dict(Key,Names,Vr),!.
+isVr(Key,[_|Outer],Vr) :- isVr(Key,Outer,Vr).
+
+declareContract(Nm,Con,[scope(Types,Nms,Impls,Contracts)|Outer],[scope(Types,Nms,Impls,Cons)|Outer]) :-
   makeKey(Nm,Key),
-  put_dict(Key,Names,vEntry(Vr,Lc),Names1).
+  put_dict(Key,Contracts,Con,Cons).
 
-isVar(Nm,_,vr(Nm,Tp),std) :- escapeType(Nm,Tp),!.
-isVar(Nm,Env,Vr,Lc) :- makeKey(Nm,Key), isVr(Key,Env,Vr,Lc).
-isVar(Nm,Env,Vr) :- isVar(Nm,Env,Vr,_).
+getContract(Nm,Env,Con) :-
+  marker(conTract,M),
+  pathSuffix(Nm,M,Id),
+  makeKey(Id,Key),
+  contractInD(Key,Env,Con).
 
-marker(type,"*").
-marker(value,"@").
-marker(class,"#").
+contractInD(Ky,[scope(_,_,_,Cons)|_],Con) :- get_dict(Ky,Cons,Con),!.
+contractInD(Key,[_|Env],Con) :- contractInD(Key,Env,Con).
 
-isVr(Key,[scope(_,Names,_,_)|_],Vr,Lc) :- get_dict(Key,Names,vEntry(Vr,Lc)),!.
-isVr(Key,[_|Outer],Vr,Lc) :- isVr(Key,Outer,Vr,Lc).
+declareImplementation(Con,Impl,[scope(Types,Nms,I,Cons)|Outer],[scope(Types,Nms,I1,Cons)|Outer]) :-
+  makeKey(Con,Key),
+  (get_dict(Key,I,Impls) -> put_dict(Key,I,[Impl|Impls],I1); put_dict(Key,I,[Impl],I1)).
 
-pushScope(Env,[scope(types{},vars{},rules{},catalogs{})|Env]).
+getImplementations(Nm,Env,Impls) :-
+  marker(conTract,M),
+  pathSuffix(Nm,M,Id),
+  makeKey(Id,Key),
+  implInD(Key,Env,Impls).
 
-pushFace([],Env,Env).
-pushFace([(Nm,Tp)|Fields],Env,ThEnv) :-
-  declareVar(Nm,'',vr(Nm,Tp),Env,Env0),
-  pushFace(Fields,Env0,ThEnv).
+implInD(Ky,[scope(_,_,Impls,_)|_],I) :- get_dict(Ky,Impls,I),!.
+implInD(Key,[_|Env],Con) :- implInD(Key,Env,Con).
+
+pushScope(Env,[scope(types{},vars{},impls{},contracts{})|Env]).
+
+pushFace([],_,Env,Env).
+pushFace([(Nm,Tp)|Fields],Lc,Env,ThEnv) :-
+  declareVar(Nm,vr(Nm,Lc,Tp),Env,Env0),
+  pushFace(Fields,Lc,Env0,ThEnv).
 
 processNames(Dict,P,Result) :-
   processNames(Dict,P,[],Result).
@@ -92,15 +99,9 @@ makeKey(Id,Key) :-
 
 stdVar(Nm,Vr,Env,Ex) :- declareVar(Nm,'std',Vr,Env,Ex).
 
-getCatalog(Nm,Env,Cat) :-
-  makeKey(Nm,Ky),
-  is_member(scope(_,_,_,C),Env),
-  get_dict(Ky,C,Cat).
-
-declareCatalog(Nm,Ct,[scope(Types,Nms,Rls,Cats)|Outer],[scope(Types,Nms,Rls,Cats1)|Outer]) :-
-  makeKey(Nm,Key),
-  put_dict(Key,Cats,Ct,Cats1).
-
 stdDict(Base) :-
-  pushScope([],Base).
+  pushScope([],B),
+  declareType("string",tpDef(std,type("lo.core*string"),typeRule(type("lo.core*string"),faceType([]))),B,B0),
+  declareType("integer",tpDef(std,type("lo.core*integer"),typeRule(type("lo.core*integer"),faceType([]))),B0,B1),
+  declareType("float",tpDef(std,type("lo.core*float"),typeRule(type("lo.core*float"),faceType([]))),B1,Base).
 

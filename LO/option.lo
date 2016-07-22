@@ -1,6 +1,0 @@
-lo.option{
-  import lo.core.
-  
-  public
-  all t ~~ option[t] ::= none | some(t).
-}

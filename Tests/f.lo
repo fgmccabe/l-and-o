@@ -1,0 +1,38 @@
+f{
+  public 
+  contract all t ~~ additive[t] .. {
+    (+): (t,t)=>t.
+    (-): (t,t)=>t.
+  }
+
+  fib:(integer)=>integer.
+  fib(0) => 0.
+  fib(1) => 1.
+  fib(N) => fib(N-1) + fib(N-2).
+
+  assert fib(10) = 55.
+
+  public
+  implementation additive[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+  }
+
+  all t ~~ cons[t] ::= nil | pair(t,cons[t]).
+
+  public
+  implementation all t ~~ additive[t] |: additive[cons[t]] .. {
+    X+Y => addEls(X,Y).
+    X-Y => subEls(X,Y).
+  }
+
+  addEls:all t ~~ additive[t] |: (cons[t],cons[t]) => cons[t].
+  addEls(nil,nil) => nil.
+  addEls(pair(A,L1),pair(B,L2)) => pair(A+B,addEls(L1,L2)).
+
+  subEls:all t ~~ additive[t] |: (cons[t],cons[t]) => cons[t].
+  subEls(nil,nil) => nil.
+  subEls(pair(A,L1),pair(B,L2)) => pair(A-B,subEls(L1,L2)).
+
+  assert pair(1,pair(2,nil))+pair(2,pair(1,nil)) = pair(3,pair(3,nil)).
+}

@@ -5,7 +5,7 @@
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,isSquareTerm/4,
       isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
-      isQuantified/3]).
+      sameTerm/2]).
 :- use_module(operators).
 :- use_module(keywords).
 
@@ -90,4 +90,17 @@ locOfAst(string(Lc,_),Lc).
 locOfAst(tuple(Lc,_,_),Lc).
 locOfAst(app(Lc,_,_),Lc).
 
-isQuantified(T,V,B) :- isUnary(T,"all",R), isBinary(R,"~~",V,B).
+sameTerm(name(_,Nm),name(_,Nm)).
+sameTerm(integer(_,Ix),integer(_,Ix)).
+sameTerm(float(_,Dx),float(_,Dx)).
+sameTerm(string(_,S),string(_,S)).
+sameTerm(tuple(_,T,A),tuple(_,T,B)) :-
+  sameTerms(A,B).
+sameTerm(app(_,OA,AA),app(_,OB,BA)) :-
+  sameTerm(OA,OB),
+  sameTerm(AA,BA).
+
+sameTerms([],[]).
+sameTerms([A|L1],[B|L2]) :-
+  sameTerm(A,B),
+  sameTerms(L1,L2).

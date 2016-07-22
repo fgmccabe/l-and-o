@@ -1,7 +1,7 @@
 lo.comp.location{
   import lo.
   
-  public location <~ displayable.
+  public location <~ display.
   location <~ {
     merge:(location)=>location.
     line:integer.

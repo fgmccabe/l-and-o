@@ -5,12 +5,14 @@
 :- use_module(errors).
 :- use_module(misc).
 :- use_module(keywords).
+:- use_module(wff).
 
 dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   collectDefinitions(Els,Dfs,Public,Annots,Imports,Other),
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
-  topsort(Defs,Groups).
+  topsort(Defs,Groups),
+  showGroups(Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,[St|I],Other) :-
   isImport(St),
@@ -28,14 +30,24 @@ collectDefinitions([St|Stmts],Defs,P,[(V,St)|A],I,Other) :-
 collectDefinitions([St|Stmts],Defs,P,A,I,O) :-
   isUnary(St,"private",Inner),
   collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
-collectDefinitions([St|Stmts],Defs,[Pblic|P],A,I,O) :-
-  isUnary(St,"public",Inner),
-  ruleName(Inner,Pblic,_),
-  collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
 collectDefinitions([St|Stmts],Defs,[var(V)|P],[(V,Inner)|A],I,O) :-
   isUnary(St,"public",Inner),
   isBinary(Inner,":",L,_),
   isIden(L,V),
+  collectDefinitions(Stmts,Defs,P,A,I,O).
+collectDefinitions([St|Stmts],Defs,[Pblic|P],A,I,O) :-
+  isUnary(St,"public",Inner),
+  ruleName(Inner,Pblic,_),
+  collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
+collectDefinitions([St|Stmts],[(Nm,Lc,[St])|Defs],P,A,I,O) :-
+  isUnary(St,Lc,"contract",Inner),
+  isBinary(Inner,"..",C,_),
+  contractName(C,Nm),
+  collectDefinitions(Stmts,Defs,P,A,I,O).
+collectDefinitions([St|Stmts],[(Nm,Lc,[St])|Defs],P,A,I,O) :-
+  isUnary(St,Lc,"implementation",Inner),
+  isBinary(Inner,"..",Im,_),
+  implementationName(Im,Nm),
   collectDefinitions(Stmts,Defs,P,A,I,O).
 collectDefinitions([St|Stmts],[(Nm,Lc,[St|Defn])|Defs],P,A,I,O) :-
   ruleName(St,Nm,Kind),
@@ -56,15 +68,61 @@ isImport(St) :-
 ruleName(St,Name,Mode) :-
   isQuantified(St,_,B),!,
   ruleName(B,Name,Mode).
+ruleName(St,Name,Mode) :-
+  isBinary(St,"|:",_,R),
+  ruleName(R,Name,Mode).
+ruleName(St,Nm,con) :-
+  isUnary(St,"contract",I),
+  isBinary(I,"..",L,_),
+  contractName(L,Nm),!.
+ruleName(St,Nm,impl) :-
+  isUnary(St,"implementation",I),
+  isBinary(I,"..",L,_),
+  implementationName(L,Nm),!.
 ruleName(St,var(Nm),value) :-
   headOfRule(St,Hd),
   headName(Hd,Nm).
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
   typeName(L,Nm).
-ruleName(St,tpe(Nm),type) :-
-  isBinary(St,"::=",L,_),
-  typeName(L,Nm).
+
+contractName(St,Nm) :-
+  isQuantified(St,_,B),
+  contractName(B,Nm).
+contractName(St,Nm) :-
+  isBinary(St,"|:",_,R),
+  contractName(R,Nm).
+contractName(St,con(Nm)) :-
+  isSquare(St,Nm,_).
+
+%% Thus must mirror the definition in types.pl 
+implementationName(St,Nm) :-
+  isQuantified(St,_,B),
+  implementationName(B,Nm).
+implementationName(St,Nm) :-
+  isBinary(St,"|:",_,R),
+  implementationName(R,Nm).
+implementationName(St,imp(Nm)) :-
+  implementedContractName(St,Nm).
+
+implementedContractName(Sq,INm) :-
+  isSquare(Sq,Nm,A),
+  appStr(Nm,S0,S1),
+  marker(conTract,M),
+  surfaceNames(A,M,S1,[]),
+  string_chars(INm,S0).
+
+surfaceNames([],_,S,S).
+surfaceNames([T|L],Sep,S0,Sx) :-
+  surfaceName(T,SN),
+  appStr(Sep,S0,S1),
+  appStr(SN,S1,S2),
+  surfaceNames(L,Sep,S2,Sx).
+
+surfaceName(N,Nm) :-
+  isIden(N,Nm).
+surfaceName(N,Nm) :-
+  isSquare(N,Nm,_).
 
 collectDefines([St|Stmts],Kind,OSt,Nm,[St|Defn]) :-
   ruleName(St,Nm,Kind),
@@ -97,13 +155,19 @@ headName(Head,Nm) :-
 headName(Head,Nm) :-
   isRoundTerm(Head,Op,_),
   headName(Op,Nm).
+headName(Head,Nm) :-
+  isBrace(Head,Nm,_).
 headName(Name,Nm) :-
-  isName(Name,Nm).
+  isName(Name,Nm),
+  \+isKeyword(Nm).
 headName(tuple(_,"()",[Name]),Nm) :-
   headName(Name,Nm).
 
-typeName(Tp,Nm) :- isSquare(Tp,Nm,_).
-typeName(Tp,Nm) :- isName(Tp,Nm).
+typeName(Tp,Nm) :-
+  isBinary(Tp,"|:",_,R),
+  typeName(R,Nm).
+typeName(Tp,Nm) :- isSquare(Tp,Nm,_), \+ isKeyword(Nm).
+typeName(Tp,Nm) :- isName(Tp,Nm), \+ isKeyword(Nm).
 
 allRefs([(N,_,_)|Defs],SoFar,AllRefs) :-
   allRefs(Defs,[N|SoFar],AllRefs).
@@ -120,9 +184,12 @@ collectStmtRefs([St|Stmts],All,Annots,SoFar,Refs) :-
   collectStmtRefs(Stmts,All,Annots,S0,Refs).
 
 collRefs(St,All,Annots,SoFar,Refs) :-
-  isQuantified(St,V,B),
-  collectQuants(V,All,SoFar,R0),
-  collRefs(B,All,Annots,R0,Refs).
+  isQuantified(St,_,B),
+  collRefs(B,All,Annots,SoFar,Refs).
+collRefs(St,All,Annots,SoFar,Rest) :-
+  isBinary(St,"|:",L,Inner),
+  collConstraints(L,All,SoFar,R0),
+  collRefs(Inner,All,Annots,R0,Rest).
 collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"=",H,Exp),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
@@ -161,6 +228,12 @@ collRefs(St,All,Annots,SoFar,Refs) :-
 collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
+collRefs(St,All,_,R0,Refs) :-
+  isUnary(St,"implementation",I),
+  isBinary(I,"..",L,R),
+  collectContractRefs(L,All,R0,R1),
+  collectExpRefs(R,All,R1,Refs).
+
 collRefs(St,All,Annots,SoFar,Refs) :-
   collectAnnotRefs(St,All,Annots,SoFar,R0),
   collectHeadRefs(St,All,R0,Refs).
@@ -192,6 +265,15 @@ collectAnnotRefs(H,All,Annots,SoFar,Refs) :-
   isBinary(Annot,":",_,Tp),
   collectTypeRefs(Tp,All,SoFar,Refs).
 collectAnnotRefs(_,_,_,Refs,Refs).
+
+collConstraints(C,All,SoFar,Refs) :-
+  isBinary(C,",",L,R),
+  collConstraints(L,All,SoFar,R0),
+  collConstraints(R,All,R0,Refs).
+collConstraints(C,All,[con(Nm)|Refs],Refs) :-
+  isSquare(C,_,Nm,_),
+  is_member(con(Nm),All).
+collConstraints(_,_,Refs,Refs).
 
 locallyDefined([],All,All).
 locallyDefined([St|Stmts],All,Rest) :-
@@ -310,6 +392,10 @@ collectTypeRefs(T,All,SoFar,Refs) :-
   isTuple(L,A),
   collectTypeList(A,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
+collectTypeRefs(T,All,SoFar,Rest) :-
+  isBinary(T,"|:",L,R),
+  collConstraints(L,All,SoFar,R0),
+  collectTypeRefs(R,All,R0,Rest).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTerm(T,L,[]), isTuple(L,A),
   collectTypeList(A,All,SoFar,Refs).
@@ -317,34 +403,11 @@ collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTuple(T,_,A), 
   collectFaceTypes(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
-  isUnary(T,"+",L),
-  collectTypeRefs(L,All,SoFar,Refs).
-collectTypeRefs(T,All,SoFar,Refs) :-
-  isUnary(T,"-",L),
-  collectTypeRefs(L,All,SoFar,Refs).
-collectTypeRefs(T,All,SoFar,Refs) :-
-  isQuantified(T,V,A),
-  collectQuants(V,All,SoFar,R0),
-  collectTypeRefs(A,All,R0,Refs).
+  isQuantified(T,_,A),
+  collectTypeRefs(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isTuple(T,Args),
   collectTypeList(Args,All,SoFar,Refs).
-
-collectQuants(T,All,SoFar,Refs) :-
-  isIden(T,Nm),
-  collectTypeName(Nm,All,SoFar,Refs).
-collectQuants(T,All,SoFar,Refs) :-
-  isBinary(T,",",L,R),
-  collectQuants(L,All,SoFar,R0),
-  collectQuants(R,All,R0,Refs).
-collectQuants(T,All,SoFar,Refs) :-
-  isBinary(T,"<~",L,Up),
-  isBinary(L,"<~",Lw,_),
-  collectTypeRefs(Lw,All,SoFar,R0),
-  collectTypeRefs(Up,All,R0,Refs).
-collectQuants(T,All,SoFar,Refs) :-
-  isBinary(T,"<~",_,Up),
-  collectTypeRefs(Up,All,SoFar,Refs).
 
 collectTypeList([],_,Refs,Refs).
 collectTypeList([Tp|List],All,SoFar,Refs) :-
@@ -361,5 +424,24 @@ collectTypeName(Nm,All,[tpe(Nm)|SoFar],SoFar) :-
   is_member(tpe(Nm),All),!.
 collectTypeName(_,_,Refs,Refs).
 
+collectContractRefs(C,All,R0,Refs) :-
+  isQuantified(C,_,B),
+  collectContractRefs(B,All,R0,Refs).
+collectContractRefs(C,All,R0,Refs) :-
+  isBinary(C,"|:",L,R),
+  collConstraints(L,All,R0,R1),
+  collectTypeRefs(R,All,R1,Refs).
+collectContractRefs(C,All,R0,Refs) :-
+  collectTypeRefs(C,All,R0,Refs).
 
 collectLabelRefs(Lb,All,R0,Refs) :- collectExpRefs(Lb,All,R0,Refs).
+
+showGroups([]).
+showGroups([G|M]) :- 
+  reportMsg("Group:",[]),
+  showGroup(G),
+  showGroups(M).
+showGroup([]).
+showGroup([(Def,Lc,_)|M]) :-
+  reportMsg("Def %s",[Def],Lc),
+  showGroup(M).

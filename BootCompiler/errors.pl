@@ -36,15 +36,14 @@ noErrors :-
 
 reportMsg(Msg,A,Lc) :- 
   showLocation(Lc,OLc,[]),
-  writef("Info: at %s",[OLc]),
+  writef("Info: at %s ",[OLc]),
   genDisplay(A,AA),
   writef(Msg,AA),nl().
 
 reportMsg(Msg,A) :- 
-  writef("\nInfo: "),
+  writef("Info: "),
   genDisplay(A,AA),
-  writef(Msg,AA),nl(),
-  write("\n").
+  writef(Msg,AA),nl().
 
 genDisplay([],[]).
 genDisplay([A|L],[D|LL]) :- showTerm(A,D), !, genDisplay(L,LL).
@@ -60,9 +59,6 @@ showTerm(L,O) :-
 showTerm(T,O) :-
   isType(T),!,
   showType(T,O,[]).
-showTerm(T,O) :-
-  isTypeFlow(T),!,
-  showTypeFlow(T,O,[]).
 showTerm(T,O) :-
   isCanon(T),!,
   showCanonTerm(T,O,[]).

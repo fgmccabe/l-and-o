@@ -4,8 +4,10 @@
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp(":",1249,1250,1249).	 /* type annotation */
+  infixOp("..",1249,1250,1249).	 /* class body */
   infixOp("~~",1239,1240,1239).	 /* quantifier */
-  infixOp("::=",1238,1239,1238).	 /* user type definition */
+  infixOp("|:",1234,1235,1234).	 /* constrained type */
+  infixOp("::=",1230,1231,1230).	 /* user type definition */
   infixOp("|",1229,1230,1230).	 /* type union and disjunction */
   infixOp("?",1199,1200,1199).	 /* conditional operator */
   infixOp("<=>",1199,1200,1199).	 /* class constructor type */
@@ -14,6 +16,7 @@
   infixOp(":--",1199,1200,1199).	 /* strong clause */
   infixOp("-->",1199,1200,1199).	 /* grammar rule */
   infixOp("->",1199,1200,1199).	 /* map entry */
+  infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
@@ -33,7 +36,6 @@
   infixOp(".=",899,900,899).	 /* match predicate */
   infixOp("=.",899,900,899).	 /* match predicate */
   infixOp("in",899,900,899).	 /* list membership */
-  infixOp("..",895,896,895).	 /* class body */
   infixOp("<>",799,800,800).	 /* list append */
   infixOp("#",759,760,759).	 /* package separator */
   infixOp("+",720,720,719).	 /* addition */
@@ -56,6 +58,8 @@
   prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
   prefixOp("show",1260,1259).	 /* display debug message */
+  prefixOp("contract",1260,1259).	 /* contract definition */
+  prefixOp("implementation",1260,1259).	 /* contract implementation */
   prefixOp("all",1245,1244).	 /* universal quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
@@ -84,6 +88,7 @@
   follows('-','-','--').
   follows('--','>','-->').
   follows('-','>','->').
+  follows('->','>','->>').
   follows('','.','.').
   follows('.','&','.&').
   follows('.&','.','.&.').
@@ -106,6 +111,7 @@
   follows('.',' ','. ').
   follows('','/','/').
   follows('','|','|').
+  follows('|',':','|:').
   follows('|','|','||').
   follows('','~','~').
   follows('~','~','~~').
@@ -148,6 +154,7 @@
   final('-',"-").	 /* output mode */
   final('-->',"-->").	 /* grammar rule */
   final('->',"->").	 /* map entry */
+  final('->>',"->>").	 /* dependent type marker */
   final('.',".").	 /* object access */
   final('.&.',".&.").	 /* bitwise and */
   final('.|.',".|.").	 /* bitwise or */
@@ -161,6 +168,7 @@
   final('. ',". ").	 /* statement terminator */
   final('/',"/").	 /* division */
   final('|',"|").	 /* type union and disjunction */
+  final('|:',"|:").	 /* constrained type */
   final('||',"||").	 /* bag of constructor */
   final('~',"~").	 /* grammar remainder */
   final('~~',"~~").	 /* quantifier */

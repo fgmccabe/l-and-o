@@ -1,4 +1,4 @@
-:- module(bootgrammar,[parse/3]).
+:- module(grammar,[parse/3]).
 
 :- use_module(operators).
 :- use_module(abstract).

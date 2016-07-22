@@ -9,7 +9,6 @@ typedef enum {
     string_sig = 'S', /* String */
     logical_sig = 'l', /* Logical value */
     kvar_sig = 'k', /* quantified type variable */
-    top_sig = 'A', /* Top value -- of unknown type */
     void_sig = 'v', /* Bottom type - no value has this type */
     type_sig = 't',                         /* A type */
     this_sig = 'h', // this type is a special type
@@ -19,6 +18,9 @@ typedef enum {
     tuple_sig = 'T', /* Tuple - followed by length byte */
     forall_sig = ':', /* universally quantified formula */
     constrained_sig = 'c',                /* A constrained type variable */
+
+ /* Contract signatures */
+    implements_sig = 'I',
 
 /* signatures for user-defined types */
     poly_sig = 'U',                       /* polymorphic user type */

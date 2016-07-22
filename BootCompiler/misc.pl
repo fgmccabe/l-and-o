@@ -4,7 +4,8 @@
         appStr/3,appInt/3,appFlt/3,appSym/3,appQuoted/4,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
         localName/4,
-        stringHash/3,hashSixtyFour/2]).
+        stringHash/3,hashSixtyFour/2,
+        marker/2]).
 
 concat([],X,X).
 concat([E|X],Y,[E|Z]) :- concat(X,Y,Z).
@@ -120,3 +121,8 @@ localName(_,Glue,Nm,Nm) :-
 localName(Pkg,Glue,Nm,LclName) :-
   string_concat(Pkg,Glue,T),
   string_concat(T,Nm,LclName).
+
+marker(type,"*").
+marker(value,"@").
+marker(class,"#").
+marker(conTract,"$").

@@ -5,7 +5,7 @@ lo.comp.ast{
   import lo.comp.operators.
 
   public ast <~ hasLoc.
-  ast <~ displayable.
+  ast <~ display.
 
   ast:ast.
   ast .. {

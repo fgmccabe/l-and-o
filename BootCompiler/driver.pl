@@ -7,7 +7,6 @@
 :- use_module(grammar).
 :- use_module(display).
 :- use_module(canon).
-:- use_module(wff).
 :- use_module(checker).
 :- use_module(transform).
 :- use_module(plog).
@@ -65,8 +64,6 @@ processFile(Fl,CWD,Repo,Rx,Opts) :-
   getSrcUri(Fl,CWD,FUrl),
   locateResource(FUrl,Src),
   parseFile(Src,Term),!,
-  noErrors,
-  wffModule(Term),!,
   noErrors,
   checkProgram(Term,Repo,Prog),!,
   noErrors,
