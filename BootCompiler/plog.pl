@@ -3,13 +3,15 @@
 :- use_module(misc).
 :- use_module(types).
 
-displayPlRules(export(_,Imports,Fields,Types,Classes,Rules)) :-
+displayPlRules(export(_,Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
   showImports(Imports,Chrs,O1),
   showType(faceType(Fields),O1,O2),
   appStr(".\n",O2,O3),
   showTypes(Types,O3,O4),
-  showClasses(Classes,O4,O5),
-  showPlRules(Rules,O5,[]),
+  showContracts(Contracts,O4,O5),
+  showClasses(Classes,O5,O6),
+  showPlRules(Rules,O6,O7),
+  showImpls(Impls,O7,[]),
   string_chars(Text,Chrs),
   write(Text).
 
@@ -32,6 +34,20 @@ showTypes(Types,O,Ox) :-
   formatTypeRules(Types,Fields),
   showType(faceType(Fields),O,O1),
   appStr(".\n",O1,Ox).
+
+showContracts(Cons,O,Ox) :-
+  listShow(Cons,plog:showContract,".\n",O,Ox).
+
+showContract(contract(LclNm,Nm,Con,Mtds),O,Ox) :-
+  appStr("contract: ",O,O0),
+  appStr(LclNm,O0,O1),
+  appStr("@",O1,O2),
+  appStr(Nm,O2,O3),
+  appStr(":",O3,O4),
+  showConstraint(Con,O4,O5),
+  appStr(" .. ",O5,O6),
+  showType(Mtds,O6,O7),
+  appStr(".\n",O7,Ox).
 
 showClasses([],O,O).
 showClasses([(Nm,Access,Tp)|Cl],O,Ox) :-
@@ -152,11 +168,15 @@ showTerm(tpl(Args),O,Ox) :-
 showTerm(anon,O,Ox) :-
   appStr("_",O,Ox).
 
-showTerms([],O,O).
-showTerms([T|Rest],O,Ox) :-
-  showTerm(T,O,O0),
-  rfold(Rest,plog:showMoreTerm,O0,Ox).
+showTerms(Terms,O,Ox) :-
+  listShow(Terms,plog:showTerm,", ",O,Ox).
 
-showMoreTerm(G,O,Ox) :-
-  appStr(", ",O,O0),
-  showTerm(G,O0,Ox).
+showImpls(L,O,Ox) :-
+  listShow(L,canon:showImpl,"",O,Ox).
+
+showImpl(imp(ImplName,Spec),O,Ox) :-
+  appStr("implementation: ",O,O1),
+  appStr(ImplName,O1,O2),
+  appStr(" for ",O2,O3),
+  showConstraint(Spec,O3,O4),
+  appStr("\n",O4,Ox).

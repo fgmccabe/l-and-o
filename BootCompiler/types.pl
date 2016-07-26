@@ -136,6 +136,10 @@ showConstraint(implementsFace(Tp,Els),O,Ox) :-
   showType(Tp,O,O1),
   appStr("<~",O1,O2),
   showType(faceType(Els),O2,Ox).
+showConstraint(constrained(Con,Extra),O,Ox) :-
+  showConstraint(Extra,O,O1),
+  appStr("|:",O1,O2),
+  showConstraint(Con,O2,Ox).
 
 showBound(Nm,O,Ox) :- showType(Nm,O,Ox).
 

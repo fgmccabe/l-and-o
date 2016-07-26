@@ -9,7 +9,8 @@
 :- use_module(escapes).
 :- use_module(location).
 
-transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types),Opts,export(Pkg,Imports,Fields,Types,Classes,Rules)) :-
+transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types,Contracts,Impls),
+    Opts,export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
   makePkgMap(Pkg,Defs,Types,Imports,Classes,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
   transformModuleDefs(Pkg,Map,POpts,Defs,R1,Rx,Rx,[]),
@@ -18,28 +19,30 @@ transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types),Opts,export(Pkg,Imports
 
 transformModuleDefs(_,_,_,[],Rules,Rules,Ex,Ex).
 transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
-  transformMdlDef(Pkg,Map,Opts,Def,Rules,R0,Ex,Ex1),
+  transformMdlDef(Def,Pkg,Map,Opts,Rules,R0,Ex,Ex1),
   transformModuleDefs(Pkg,Map,Opts,Defs,R0,Rx,Ex1,Exx).
 
-transformMdlDef(Pkg,Map,Opts,function(Lc,Nm,Tp,Eqns),Rules,Rx,Ex,Exx) :-
-  transformFunction(Pkg,Map,Opts,function(Lc,Nm,Tp,Eqns),_,Rules,Rx,Ex,Exx).
-transformMdlDef(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Rls),Rules,Rx,Ex,Exx) :-
-  transformGrammar(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Rls),_,Rules,Rx,Ex,Exx).
-transformMdlDef(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),Rules,Rx,Ex,Exx) :-
-  transformPredicate(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Clses),_,Rules,Rx,Ex,Exx).
-transformMdlDef(Pkg,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Ex,Exx) :-
+transformMdlDef(function(Lc,Nm,Tp,Cx,Eqns),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformFunction(Pkg,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),_,Rules,Rx,Ex,Exx).
+transformMdlDef(grammar(Lc,Nm,Tp,Cx,Rls),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformGrammar(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Cx,Rls),_,Rules,Rx,Ex,Exx).
+transformMdlDef(predicate(Lc,Nm,Tp,Cx,Clses),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformPredicate(Pkg,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),_,Rules,Rx,Ex,Exx).
+transformMdlDef(defn(Lc,Nm,_,Cond,_,Value),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformDefn(Pkg,Map,Opts,Lc,Nm,_,Cond,Value,Rules,Rx,Ex,Exx).
-transformMdlDef(_,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
-transformMdlDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),_,Rules,Rx,_,_,Ex,Ex0),
+transformMdlDef(class(Lc,Nm,Tp,Cx,Defs,Face),_,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformClass(Map,Opts,class(Lc,Nm,Tp,Cx,Defs,Face),_,Rules,Rx,_,_,Ex,Exx).
+transformMdlDef(enum(Lc,Nm,Tp,Cx,Defs,Face),Prefix,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Cx,Defs,Face),_,Rules,Rx,_,_,Ex,Ex0),
   localName(Prefix,"@",Nm,LclName),
   localName(Prefix,"#",Nm,EnumName),
   Ex0 = [clse([],prg(LclName,1),[enum(EnumName)],[neck])|Exx].
+transformMdlDef(typeDef(_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
+transformMdlDef(contract(_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
+transformMdlDef(impl(Lc,INm,ImplName,Arity,Spec,OCx,Body,Face),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformImplementation(Lc,INm,ImplName,Arity,Spec,OCx,Body,Face,Pkg,Map,Opts,Rules,Rx,Ex,Exx).
 
-transformMdlDef(_,_,_,typeDef(_,_,_,_),Rules,Rules,Ex,Ex).
-
-transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Eqns),LclFun,Rules,Rx,Ex,Exx) :-
+transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,[],Eqns),LclFun,Rules,Rx,Ex,Exx) :-
   localName(Prefix,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+1,
@@ -79,7 +82,7 @@ genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(Lno),intgr(Off
   lcColumn(Lc,Off),
   lcSize(Lc,Sz).
 
-transformPredicate(Prefix,Map,Opts,predicate(_,Nm,Tp,Clses),LclFun,Rules,Rx,Ex,Exx) :-
+transformPredicate(Prefix,Map,Opts,predicate(_,Nm,Tp,[],Clses),LclFun,Rules,Rx,Ex,Exx) :-
   localName(Prefix,"@",Nm,LclName),
   typeArity(Tp,Arity),
   LclFun = prg(LclName,Arity),
@@ -115,7 +118,8 @@ transformClause(Map,Opts,LclFun,QNo,strong(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Arg
   deframeDebug(Nm,QNo,G8,[],ClOpts),                      % generate frame exit debugging
   breakDebug(Nm,G3,G4,ClOpts).                           % generate break point debugging
 
-transformDefn(Outer,Map,Opts,Lc,Nm,prg(LclName,1),Cond,Value,[clse(Q,prg(LclName,Arity),[Rep|Extra],Body)|Rx],Rx,Ex,Exx) :-
+transformDefn(Outer,Map,Opts,Lc,Nm,prg(LclName,1),Cond,Value,
+      [clse(Q,prg(LclName,Arity),[Rep|Extra],Body)|Rx],Rx,Ex,Exx) :-
   localName(Outer,"@",Nm,LclName),
   pushOpt(Opts,inProg(Nm),DOpts),
   extraVars(Map,Extra),                                   % extra variables coming from labels
@@ -129,7 +133,7 @@ transformDefn(Outer,Map,Opts,Lc,Nm,prg(LclName,1),Cond,Value,[clse(Q,prg(LclName
   length([_|Extra],Arity),
   breakDebug(Nm,G3,G4,ClOpts).                         % generate break point debugging
 
-transformGrammar(Prefix,Map,Opts,grammar(_,Nm,Tp,Rls),LclFun,Rules,Rx,Ex,Exx) :-
+transformGrammar(Prefix,Map,Opts,grammar(_,Nm,Tp,[],Rls),LclFun,Rules,Rx,Ex,Exx) :-
   localName(Prefix,"@",Nm,LclName),
   typeArity(Tp,Arity),
   LclFun = prg(LclName,Arity),
@@ -157,9 +161,9 @@ transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
   deframeDebug(Nm,QNo,G8,[],ClOpts),                     % generate frame exit debugging
   breakDebug(Nm,G3,G4,ClOpts).                          % generate break point debugging
 
-dcgBody(stringLit(Lc,Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
+dcgBody(stringLit(Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
   trCons("hdtl",2,Verb),
-  pushString(Lc,Txt,Verb,G,Gx,Strm,Strmx,Q,Qx).
+  pushString(Txt,Verb,G,Gx,Strm,Strmx,Q,Qx).
 dcgBody(terminals(_,Terms),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   trCons("hdtl",2,Verb),
   pushTerminals(Terms,Verb,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
@@ -257,16 +261,16 @@ dcgAhead(Tst,[call(HdProg,[Strm|TQ])|G],G,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
   C1 = clse([HedStrm|TQ],HdProg,[HedStrm|TQ],TG),
   merge(TQ,Q,Qx).
 
-pushString(Lc,Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
+pushString(Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
   string_codes(Str,Chrs),
-  pushCharList(Lc,Chrs,V,G,Gx,Strm,Strmx,Q,Qx).
+  pushCharList(Chrs,V,G,Gx,Strm,Strmx,Q,Qx).
 
-pushCharList(_,[],_,G,Gx,Strm,Strmx,Q,Q) :-
+pushCharList([],_,G,Gx,Strm,Strmx,Q,Q) :-
   joinStream(Strm,Strmx,G,Gx).
-pushCharList(Lc,[Ch|Chrs],Verb,G,Gx,Strm,Strmx,Q,Qx) :-
+pushCharList([Ch|Chrs],Verb,G,Gx,Strm,Strmx,Q,Qx) :-
   genVar("X",X),
   streamCall(Verb,intgr(Ch),Strm,X,G,G0),
-  pushCharList(Lc,Chrs,Verb,G0,Gx,X,Strmx,[X|Q],Qx).
+  pushCharList(Chrs,Verb,G0,Gx,X,Strmx,[X|Q],Qx).
 
 pushTerminals([],_,G,Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
   joinStream(Strm,Strmx,G,Gx).
@@ -310,12 +314,12 @@ collectShow(show(Lc,G),O,conj(O,show(Lc,G))).
 packageInit(Pkg,_,_,Inits,[clse([],prg(InitNm,0),[],Inits)|R],R) :-
   localName(Pkg,"@","init",InitNm).
 
-transformClass(Map,Opts,class(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Entry,Ex,Exx) :-
+transformClass(Map,Opts,class(Lc,Nm,_,_,Defs,Face),LblPrg,Rules,Rx,Entry,Entry,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Rules,R0),
   genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,R0,En0,Ex,Ex1),!,
   transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
 
-transformEnum(Map,Opts,enum(Lc,Nm,_,Defs,Face),LblPrg,Rules,Rx,Entry,Enx,Ex,Exx) :-
+transformEnum(Map,Opts,enum(Lc,Nm,_,_,Defs,Face),LblPrg,Rules,Rx,Entry,Enx,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,Entry,Enx),
   genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,Rules,En0,Ex,Ex1),!,
   transformClassBody(LclName,Defs,CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
@@ -336,9 +340,12 @@ labelDefn(Map,Opts,Lc,Nm,LblPrg,LclName,[clse(Q,Access,[cons(Con,[LblTerm])|Extr
 
 makeLabelTerm(localClass(LclName,Strct,LblPrg,LblVr,ThVr),prg(LclName,3),cons(Strct,[LblVr,ThVr]),LblPrg).
 makeLabelTerm(moduleClass(Access,Strct,LblPrg),Access,cons(Strct,[]),LblPrg).
+makeLabelTerm(moduleImpl(Access,Strct,LblPrg),Access,cons(Strct,[]),LblPrg).
 
-findClassBody(Defs,classBody(Lc,Nm,Hd,Stmts,Others,Types)) :-
-  is_member(classBody(Lc,Nm,Hd,Stmts,Others,Types),Defs),!.
+findClassBody(Defs,Stmts) :-
+  is_member(classBody(_,_,_,Stmts,_,_),Defs),!.
+findClassBody(Defs,Stmts) :-
+  is_member(implBody(_,_,Stmts,_,_),Defs),!.
 
 /* A class body of the form
 lbl(A1,..,Ak)..{
@@ -351,7 +358,7 @@ pkg#lbl(prog1(X1,..,Xm),Lb,Th) :- pkg#lbl@prog(X1,..,Xm,Lb,Th)
 together with the specific translations of prog1
 */
 transformClassBody(Outer,Defs,Map,Opts,Rules,Rx,Entry,Enx,Ex,Exx) :-
-  findClassBody(Defs,classBody(_,_,_,Stmts,_,_)),!,
+  findClassBody(Defs,Stmts),!,
   transformClassDefs(Outer,Map,Opts,Stmts,Rules,Rx,Entry,Enx,Ex,Exx).
 transformClassBody(_,_,_,_,Rules,Rules,Entry,Entry,Ex,Ex).
 
@@ -360,29 +367,35 @@ transformClassDefs(Outer,Map,Opts,[Def|Defs],Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformClassDef(Outer,Map,Opts,Def,Rules,R0,Entry,En0,Ex,Ex1),
   transformClassDefs(Outer,Map,Opts,Defs,R0,Rx,En0,Enx,Ex1,Exx).
 
-transformClassDef(Prefix,Map,Opts,function(Lc,Nm,Tp,Eqns),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Eqns),LclFun,Rules,Rx,Ex,Exx),
+transformClassDef(Prefix,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),Rules,Rx,Entry,Enx,Ex,Exx) :-
+  transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),LclFun,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclFun,Entry,Enx).
-transformClassDef(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Clses),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformPredicate(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Clses),LclPred,Rules,Rx,Ex,Exx),
+transformClassDef(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),Rules,Rx,Entry,Enx,Ex,Exx) :-
+  transformPredicate(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),LclPred,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclPred,Entry,Enx).
-transformClassDef(Prefix,Map,Opts,defn(Lc,Nm,Cond,_,Value),Rules,Rx,Entry,Enx,Ex,Exx) :-
+transformClassDef(Prefix,Map,Opts,defn(Lc,Nm,Cond,_,_,Value),Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformDefn(Prefix,Map,Opts,Lc,Nm,LclDefn,Cond,Value,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclDefn,Entry,Enx).
-transformClassDef(Prefix,Map,Opts,class(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformClass(Map,Opts,class(Lc,Nm,Tp,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
+transformClassDef(Prefix,Map,Opts,class(Lc,Nm,Tp,Cx,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
+  transformClass(Map,Opts,class(Lc,Nm,Tp,Cx,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
   entryClause(Nm,Prefix,LclProg,E0,Enx).
-transformClassDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
+transformClassDef(Prefix,Map,Opts,enum(Lc,Nm,Tp,Cx,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
+  transformEnum(Map,Opts,enum(Lc,Nm,Tp,Cx,Defs,Face),LclProg,Rules,Rx,Entry,E0,Ex,Exx),
   entryClause(Nm,Prefix,LclProg,E0,Enx).
 
-entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),[cons(Con,Args),LblVr,ThVr],[neck,call(EntryPrg,Q)])|Rx],Rx) :-
+entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),
+      [cons(Con,Args),LblVr,ThVr],[neck,call(EntryPrg,Q)])|Rx],Rx) :-
   EntryPrg = prg(_,Arity),
   genVars(Arity,Args),
   genVar("This",ThVr),
   genVar("Lbl",LblVr),
   concat(Args,[LblVr,ThVr],Q),
   trCons(Name,Arity,Con).
+
+transformImplementation(Lc,_,ImplName,0,_,[],Def,Face,_,Map,Opts,Rules,Rx,Ex,Exx) :-
+  labelDefn(Map,Opts,Lc,ImplName,_,LclName,Rules,R0),
+  genClassMap(Map,Opts,Lc,LclName,[Def],Face,CMap,R0,En0,Ex,Ex1),!,
+  transformClassBody(LclName,[Def],CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
   
 trPtns([],Args,Args,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtns([P|More],[A|Args],Ax,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
@@ -400,7 +413,7 @@ trPtn(enum(Lc,Nm),A,Q,Qx,Pre,Prx,Post,Pstx,Map,Opts,Ex,Ex) :- !,
   trVarPtn(Lc,Nm,A,Q,Qx,Pre,Prx,Post,Pstx,Map,Opts).
 trPtn(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trPtn(stringLit(_,Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
+trPtn(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   lookupPkgRef(Map,Pkg,Rf,Reslt),
   genVar("Xi",Xi),
@@ -410,7 +423,7 @@ trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
 trPtn(dict(_,A),Xi,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   genVar("Xi",Xi),
   trEntryPtrns(A,Xi,[Xi|Q],Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
-trPtn(apply(_,O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
+trPtn(apply(O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0),
   trPtnCallOp(O,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
 trPtn(where(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
@@ -455,15 +468,18 @@ implementPtnCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XA
 implementPtnCall(moduleFun(_,Fn),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx).
-implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx):-
+implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,
+      [call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx):-
   concat(Args,[X],XArgs),
   trCons(Nm,XArgs,Op),
   merge([X,LblVr,ThVr],Q,Qx).
 implementPtnCall(moduleClass(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
-implementPtnCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementPtnCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,
+      cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   concat(Args,[LbVr,ThVr],XArgs),
   merge([LbVr,ThVr],Q,Qx).
-implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,Args,cons(strct(Nm,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,Args,
+      cons(strct(Nm,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   merge([LbVr,ThVr],Q,Qx),
   length(Args,Ar).
 
@@ -492,7 +508,7 @@ trExp(v(Lc,Nm),Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Ex) :-
   trVarExp(Lc,Nm,Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts).
 trExp(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trExp(stringLit(_,Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
+trExp(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
   lookupPkgRef(Map,Pkg,Rf,Reslt),
   genVar("Xi",Xi),
@@ -501,11 +517,11 @@ trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,TA,[],Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(dict(_,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trMapEntries(A,enum('lo.index#trEmpty'),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
-trExp(apply(_,Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
+trExp(apply(Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,Args,[],Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
   genVar("X",X),
   trExpCallOp(Op,X,Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
-trExp(dot(_,Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
+trExp(dot(Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   genVar("XV",X),
   trCons(Fld,[X],S),
   C = cons(S,[X]),
@@ -558,7 +574,7 @@ trExpCallOp(v(_,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tai
 trExpCallOp(v(_,Nm),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
   implementFunCall(Reslt,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
-trExpCallOp(dot(_,Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
+trExpCallOp(dot(Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Q1),
   trCons(Fld,XArgs,Op),
@@ -575,7 +591,8 @@ trExpCallDot(v(_,Nm),Rec,C,X,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map
 trExpCallDot(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|ATlx],Pre,Px,Tail,ATlx,Map,Opts,Ex,Exx) :-
   trExp(Rec,Rc,Q,Qx,APx,Rx,Rx,Px,Map,Opts,Ex,Exx).
 
-implementDotFunCall(inherit(_,Super,LblVr,ThVr),_,C,X,X,Q,Qx,Pre,Px,Tail,[call(Super,[C,LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
+implementDotFunCall(inherit(_,Super,LblVr,ThVr),_,C,X,X,Q,Qx,Pre,Px,Tail,
+      [call(Super,[C,LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   merge([X,LblVr,ThVr],Q,Qx).
 implementDotFunCall(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|Tailx],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   trExp(Rec,Rc,Q,Q0,APx,Rx,Rx,Px,Map,Opts,Ex,Exx),
@@ -587,7 +604,8 @@ implementFunCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XA
 implementFunCall(moduleFun(_,Fn),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx).
-implementFunCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx):-
+implementFunCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,
+      [call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx):-
   concat(Args,[X],XArgs),
   trCons(Nm,XArgs,Op),
   merge([X,LblVr,ThVr],Q,Qx).
@@ -595,7 +613,8 @@ implementFunCall(moduleClass(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Ta
 implementFunCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   concat(Args,[LbVr,ThVr],XArgs),
   merge([LbVr,ThVr],Q,Qx).
-implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,
+      cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   merge([LbVr,ThVr],Q,Qx),
   length(Args,Ar).
 
@@ -610,6 +629,7 @@ implementVarExp(inheritField(Super,LblVr,ThVr),_,Nm,X,X,Q,Qx,
   trCons(Nm,1,V),
   merge([X,LblVr,ThVr],Q,Qx).
 implementVarExp(moduleClass(_,enum(Enum),_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Tail,Tail).
+implementVarExp(moduleImpl(_,enum(Enum),_),_,_,_,enum(Enum),Q,Q,Pre,Pre,Tail,Tail).
 implementVarExp(localClass(_,Enum,_,LbVr,ThVr),_,_,_,cons(Enum,[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
   merge([LbVr,ThVr],Q,Qx).
 implementVarExp(inherit(Nm,_,LbVr,ThVr),_,_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre,Pre,Tail,Tail) :-
@@ -716,7 +736,7 @@ trGoalCall(v(_,Nm),Args,[ecall(Nm,Args)|Tail],Tail,Q,Q,_,_,Ex,Ex) :-
 trGoalCall(v(_,Nm),Args,G,Gx,Q,Qx,Map,_,Ex,Ex) :-
   lookupRelName(Map,Nm,RSpec),
   implementGoalCall(RSpec,Nm,Args,G,Gx,Q,Qx).
-trGoalCall(dot(_,Rec,Pred),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+trGoalCall(dot(Rec,Pred),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trCons(Pred,Args,Op),
   trGoalDot(Rec,cons(Op,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx).
 trGoalCall(pkgRef(_,Pkg,Rf),Args,[call(Rel,Args)|Gx],Gx,Q,Q,Map,_,Ex,Ex) :-
@@ -726,7 +746,8 @@ implementGoalCall(localRel(Fn,LblVr,ThVr),_,Args,[call(Fn,XArgs)|Tail],Tail,Q,Qx
   concat(Args,[LblVr,ThVr],XArgs),
   merge([LblVr,ThVr],Q,Qx).
 implementGoalCall(moduleRel(_,Fn),_,Args,[call(Fn,Args)|Tail],Tail,Q,Q).
-implementGoalCall(inheritField(Super,LblVr,ThVr),Pred,Args,[call(Super,[cons(Op,Args),LblVr,ThVr])|Tail],Tail,Q,Qx) :-
+implementGoalCall(inheritField(Super,LblVr,ThVr),Pred,Args,
+      [call(Super,[cons(Op,Args),LblVr,ThVr])|Tail],Tail,Q,Qx) :-
   trCons(Pred,Args,Op),
   merge([LblVr,ThVr],Q,Qx).
 implementGoalCall(_,Pred,G,G,Q,Q) :-
@@ -766,6 +787,13 @@ makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
 makeClassMtdMap([labelRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
+makeClassMtdMap([implBody(_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+  collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
+  collectLabelVars([],LbVr,ThVr,L0,L1),
+  extraVars(Map,Extra),
+  makeLblTerm(enum(LclName),Extra,LblTerm),
+  (Extra =[] -> LblGl = [] ; LblGl = [unify(LbVr,LblTerm)]),
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
 
 makeLblTerm(enum(Nm),[],enum(Nm)) :- !.
 makeLblTerm(enum(Nm),Extra,cons(strct(Nm,Ar),Extra)) :- !, length(Extra,Ar).
@@ -775,6 +803,8 @@ makeLblTerm(cons(strct(Nm,_),Args),Extra,cons(strct(Nm,Arity),As)) :- !,
 
 makeInheritanceMap([],_,_,_,_,_,List,List,_,En,En,Ex,Ex).
 makeInheritanceMap([classBody(_,_,_,_,_,_)|Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx) :-
+  makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx).
+makeInheritanceMap([implBody(_,_,_,_,_)|Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx) :-
   makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx).
 makeInheritanceMap([labelRule(_,_,P,R,FaceTp)|Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx) :-
   pickAllFieldsFromFace(FaceTp,InhFields),
@@ -799,7 +829,8 @@ makeInheritFields([(Nm,Tp)|InhFields],Test,LclName,Super,Fields,LbVr,ThVr,Entry,
   inheritClause(Nm,Tp,LclName,Super,Entry,En0),
   makeInheritFields(InhFields,Test,LclName,Super,Fields,LbVr,ThVr,En0,En,[(Nm,inheritField(Super,LbVr,ThVr))|List],Lx).
 
-inheritClause(Name,Tp,Prefix,Super,[clse(Q,prg(Prefix,3),[cons(Con,Args),LbVr,ThVr],[neck,call(Super,[cons(Con,Args),LbVr,ThVr])])|En],En) :-
+inheritClause(Name,Tp,Prefix,Super,[clse(Q,prg(Prefix,3),[cons(Con,Args),LbVr,ThVr],
+      [neck,call(Super,[cons(Con,Args),LbVr,ThVr])])|En],En) :-
   fieldArity(Tp,Arity),
   genVars(Arity,Args),
   genVar("This",ThVr),
@@ -817,23 +848,25 @@ collectMtds([Entry|Defs],OuterNm,LbVr,ThVr,List,Lx,Fields) :-
   collectMtd(Entry,OuterNm,LbVr,ThVr,List,L0),
   collectMtds(Defs,OuterNm,LbVr,ThVr,L0,Lx,Fields).
 
-collectMtd(function(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localFun(prg(LclName,Arity),Lbl,ThV))|List]) :-
+collectMtd(function(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localFun(prg(LclName,Arity),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+3.
-collectMtd(predicate(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
+collectMtd(predicate(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.
-collectMtd(grammar(_,Nm,Tp,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
+collectMtd(grammar(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+4.
-collectMtd(defn(_,Nm,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(prg(LclName,3),Lbl,ThV))|List]) :-
+collectMtd(defn(_,Nm,_,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(prg(LclName,3),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName).
-collectMtd(enum(_,Nm,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(OuterNm,strct(LclName,2),prg(LclName,3),Lbl,ThV))|List]) :-
+collectMtd(enum(_,Nm,_,_,_,_),OuterNm,Lbl,ThV,List,
+      [(Nm,localClass(OuterNm,strct(LclName,2),prg(LclName,3),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName).
-collectMtd(class(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localClass(OuterNm,strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-
+collectMtd(class(_,Nm,Tp,_,_,_),OuterNm,Lbl,ThV,List,
+      [(Nm,localClass(OuterNm,strct(LclName,Arity),prg(LclName,3),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.

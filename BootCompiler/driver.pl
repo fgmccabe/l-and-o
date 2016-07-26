@@ -76,7 +76,7 @@ processFile(Fl,CWD,Repo,Rx,Opts) :-
   packageVersion(Opts,Vers),
   addPackage(Repo,Pkg,Vers,Text,Rx).
 
-packageName(prog(Pkg,_,_,_,_,_),Pkg).
+packageName(prog(Pkg,_,_,_,_,_,_,_),Pkg).
 
 packageVersion(Opts,v(Vers)) :-
   is_member(version(Vers),Opts),!.

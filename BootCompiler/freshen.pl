@@ -1,11 +1,14 @@
-:- module(freshen,[freshn/3,freshen/4,freshenConstraint/2,frshnConstraint/3,freshenContract/4,
+:- module(freshen,[freshn/3,freshen/4,freshenConstraint/2,frshnConstraint/3,freshenContract/3,freshenContract/4,
   bindConstraint/1,contractedType/2,rewriteType/3,addThisType/3,
   evidence/2,evidence/4,contractEvidence/4,freeze/3,freezeType/3]).
 
 :- use_module(misc).
 :- use_module(types).
 
-freshen(Tp,ThisType,B,FTp) :- addThisType(ThisType,[],B0),deQuant(Tp,B0,B,T0),  freshn(T0,B,FTp),!.
+freshen(Tp,ThisType,B,FTp) :- 
+  addThisType(ThisType,[],B0),
+  deQuant(Tp,B0,B,T0),
+  freshn(T0,B,FTp),!.
 
 freshenConstraint(Con,FCon) :-
   deQuant(Con,[],B,C0),
@@ -80,6 +83,10 @@ frshnContract(conTract(Nm,Args,Deps),B,conTract(Nm,FArgs,FDeps)) :-
 freshenContract(Con,ThisType,Q,FCon) :-
   addThisType(ThisType,[],B0),
   deQuant(Con,B0,Q,CC),
+  frshnContract(CC,Q,FCon),!.
+
+freshenContract(Con,Q,FCon) :-
+  deQuant(Con,[],Q,CC),
   frshnContract(CC,Q,FCon),!.
 
 contractEvidence(Tp,ThisType,Q,Con) :-

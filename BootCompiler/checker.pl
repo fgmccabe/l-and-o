@@ -15,17 +15,21 @@
 :- use_module(macro).
 :- use_module(import).
 :- use_module(transitive).
+:- use_module(resolve).
 
 :- use_module(display).
 
-checkProgram(Prog,Repo,prog(Pkg,Imports,Defs,Others,Exports,Types,Contracts,Impls)) :-
+checkProgram(Prog,Repo,prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
   stdDict(Base),
   isBraceTerm(Prog,Pk,Els),
   packageName(Pk,Pkg),
   pushScope(Base,Env),
   locOfAst(Prog,Lc),
   thetaEnv(Pkg,Repo,Lc,Els,[],Env,_,Defs,Public,Imports,Others),
-  computeExport(Defs,[],Public,Exports,Types,Contracts,Impls),!.
+  findImportedImplementations(Imports,[],OverDict),
+  overload(Defs,OverDict,ODict,ODefs),
+  overloadOthers(Others,ODict,OOthers),
+  computeExport(ODefs,[],Public,Exports,Types,Contracts,Impls),!.
 
 thetaEnv(Pkg,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   macroRewrite(Els,Stmts),
@@ -76,11 +80,12 @@ importAll(Imports,Repo,AllImports) :-
   closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
 
 importAllDefs([],_,[],_,Env,Env).
-importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types,Classes)|Specs],Repo,Env,Ex) :-
+importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
   importPkg(Pkg,Vers,Repo,Spec),
-  Spec = spec(_,_,Exported,Types,Classes,_),
+  Spec = spec(_,_,Exported,Types,Classes,_,Contracts,Impls),
   importDefs(Spec,Lc,Env,Ev0),
-  importAllDefs(More,Lc,Specs,Repo,Ev0,Ex).
+  importAllDefs(More,Lc,Specs,Repo,Ev0,Ev1),
+  importContracts(Contracts,Ev1,Ex).
 
 notAlreadyImported(import(_,Pkg,Vers),SoFar) :-
   \+ is_member(import(_,Pkg,Vers),SoFar),!.
@@ -96,6 +101,11 @@ addPublicImports([import(public,Pkg,Vers)|I],Rest,[import(public,Pkg,Vers)|Out])
   addPublicImports(I,Rest,Out).
 addPublicImports([import(private,_,_)|I],Rest,Out) :-
   addPublicImports(I,Rest,Out).
+
+findImportedImplementations([import(_,_,_,_,_,_,_,Impls)|Specs],D,OverDict) :-
+  rfold(Impls,D,checker:declImpl,D1),
+  findImportedImplementations(Specs,D1,OverDict).
+findImportedImplementations([],D,D).
 
 checkOthers([],[],_,_).
 checkOthers([St|Stmts],Ass,Env,Path) :-
@@ -353,7 +363,7 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   pushScope(Env,E0),
   typeOfTerms(A,AT,E0,E1,Lc,Args),
   checkCond(C,E1,Ex,Cond),
-  Hd = apply(Lc,v(Lc,Nm),Args),
+  Hd = apply(v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
 checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
@@ -494,7 +504,7 @@ implementationGroup([(imp(Nm),_,[Stmt])],[Impl|Defs],Defs,E,Env,Path) :-
   buildImplementation(Stmt,Nm,Impl,E,Path),
   declareImplementation(Nm,Impl,E,Env).
 
-buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,ISpec,OCx,Cx,ThDefs,BodyDefs,Types,Others),Env,Path) :-
+buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,BodyDefs,Types,Others),Env,Path) :-
   isUnary(Stmt,Lc,"implementation",I),
   isBinary(I,"..",Sq,Body),
   isBraceTuple(Body,_,Els),
@@ -503,22 +513,22 @@ buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,ISpec,OCx,Cx,ThDefs,
   % We have to unify the implemented contract and the contract specification
   moveQuants(ConTp,_,Qcon),
   moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
-  moveQuants(Spec,SQ,ASpec),
+  moveQuants(Spec,_,ASpec),
   moveConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
   sameLength(OArgs,AArgs,Lc),
   sameLength(ODeps,ADeps,Lc),
   % match up the type variables of the original contract with the actual implemented contract
   bindAT(OArgs,AArgs,[],AQ),
   bindAT(ODeps,ADeps,AQ,QQ),
-  rewriteConstraints(OC,QQ,[],OCx),
-  rewriteConstraints(AC,QQ,[],Cx), % Cx will become additional contract requirements
+  rewriteConstraints(OC,QQ,[],OCx),% OCx will become additional contract requirements
   moveQuants(ConFace,_,Face),
   rewriteType(Face,QQ,faceType(Fields)),
   pushScope(Env,ThEnv),
   thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others),
   computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
-  moveQuants(ISpec,SQ,conTract(ConNm,AArgs,ADeps)),
   implementationName(conTract(CNm,AArgs,ADeps),ImplName).
+
+declImpl(imp(ImplNm,Spec),SoFar,[(ImplNm,Spec)|SoFar]).
 
 bindAT([],_,Q,Q).
 bindAT(_,[],Q,Q).
@@ -543,7 +553,7 @@ typeOfTerm(integer(Lc,Ix),Tp,Env,Env,intLit(Ix)) :- !,
 typeOfTerm(float(Lc,Ix),Tp,Env,Env,floatLit(Ix)) :- !,
   findType("float",Lc,Env,FltTp),
   checkType(Lc,FltTp,Tp,Env).
-typeOfTerm(string(Lc,Ix),Tp,Env,Env,stringLit(Lc,Ix)) :- !,
+typeOfTerm(string(Lc,Ix),Tp,Env,Env,stringLit(Ix)) :- !,
   findType("string",Lc,Env,StrTp),
   checkType(Lc,StrTp,Tp,Env).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
@@ -616,10 +626,10 @@ typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),
   reportError("illegal expression: %s, expecting a %s",[Term,Tp],Lc).
 
-typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Lc,Fun,Args)) :-
+typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Args).
-typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Lc,Fun,Args)) :-
+typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
 
@@ -628,7 +638,7 @@ genTpVars([_|I],[Tp|More]) :-
   newTypeVar("__",Tp),
   genTpVars(I,More).
 
-recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Lc,Rec,Fld)) :-
+recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld)) :-
   typeOfTerm(Rc,AT,Env,Ev,Rec),
   getTypeFace(AT,Env,Face),
   fieldInFace(Face,AT,Fld,Lc,FTp),!,
@@ -654,18 +664,18 @@ fieldInFace(_,Tp,Nm,Lc,anonType) :-
 typeOfVar(Lc,Nm,Tp,vr(_,_,VT),Env,Exp) :-
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,VrTp),
-  manageConstraints(VrTp,[],v(Lc,Nm),MTp,Exp),
+  manageConstraints(VrTp,[],Lc,v(Lc,Nm),MTp,Exp),
   checkType(Lc,MTp,Tp,Env).
 typeOfVar(Lc,Nm,Tp,mtd(_,_,MTp),Env,Exp) :-
   pickupThisType(Env,ThisType),
   freshen(MTp,ThisType,_,VrTp),
-  manageConstraints(VrTp,[],mtd(Lc,Nm),MtTp,Exp),
+  manageConstraints(VrTp,[],Lc,mtd(Lc,Nm),MtTp,Exp),
   checkType(Lc,MtTp,Tp,Env).
 
-manageConstraints(constrained(Tp,Con),Cons,V,MTp,Exp) :- !,
-  manageConstraints(Tp,[Con|Cons],V,MTp,Exp).
-manageConstraints(Tp,[],V,Tp,V) :- !.
-manageConstraints(Tp,Cons,V,Tp,over(V,Cons)).
+manageConstraints(constrained(Tp,Con),Cons,Lc,V,MTp,Exp) :- !,
+  manageConstraints(Tp,[Con|Cons],Lc,V,MTp,Exp).
+manageConstraints(Tp,[],_,V,Tp,V) :- !.
+manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons)).
 
 typeOfKnown(T,Tp,Env,Env,Exp) :-
   isIden(T,Lc,Nm),
@@ -690,13 +700,13 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
 
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,Env,Ev,Exp).
-typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[Hd,Tl])) :-
+typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-
   isBinary(Last,Lc,",..",L,R),
   newTypeVar("_",LiTp),
   typeOfKnown(name(Lc,",.."),LiTp,Env,E0,Op),
   typeOfTerm(L,ElTp,E0,E1,Hd),
   typeOfTerm(R,ListTp,E1,Ev,Tl).
-typeOfListTerm([El|More],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[Hd,Tl])) :-
+typeOfListTerm([El|More],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-
   locOfAst(El,Lc),
   newTypeVar("_",LiTp),
   typeOfKnown(name(Lc,",.."),LiTp,Env,E0,Op),
@@ -814,7 +824,7 @@ processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|De
 
 checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
   checkTerminals(Els,Terms,ElTp,E,Env).
-checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,stringLit(Lc,Text)) :- !,
+checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,stringLit(Text)) :- !,
   findType("integer",Lc,Env,IntTp),     % strings are exploded into code points
   checkType(Lc,IntTp,ElTp).
 checkNonTerminals(tuple(_,"()",[NT]),Tp,ElTp,Env,Ex,GrNT) :-
@@ -915,8 +925,8 @@ exportDef(grammar(_,Nm,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons
   isPublicVar(Nm,Fields,Public).
 exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con|Cons],Cons,Impl,Impl) :-
   isPublicContract(Con,Public).
-exportDef(Impl,_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[Impl|Ix],Ix) :-
-  isPublicImplementation(Impl,Public).
+exportDef(impl(_,INm,ImplName,_,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[imp(ImplName,Spec)|Ix],Ix) :-
+  is_member(imp(INm),Public),!.
 exportDef(_,_,_,Ex,Ex,Tps,Tps,Cons,Cons,Impls,Impls).
 
 isPublicVar(Nm,_,Public) :-
@@ -929,13 +939,6 @@ isPublicType(Nm,Public) :-
 
 isPublicContract(contract(Nm,_,_,_),Public) :-
   is_member(con(Nm),Public),!.
-
-isPublicImplementation(implementation(_,ConNm,_,_,_,_,_,_,_,_),Public) :-
-  is_member(imp(ConNm),Public),!.
-
-isPublicImplementation(Nm,Con,Public,[impl(Nm,Con)|Exx],Exx) :-
-  is_member(imp(Nm),Public),!.
-isPublicImplementation(_,_,_,Ex,Ex).
 
 mergeFields([],_,_,Fields,Fields,_,_).
 mergeFields([Rule|More],Q,Plate,SoFar,Fields,Env,Lc) :-

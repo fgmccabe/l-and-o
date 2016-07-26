@@ -1,4 +1,4 @@
-:- module(decode,[decodeTerm//1, decodeValue/2, decodeType//1, decodeSignature/2]).
+:- module(decode,[decodeTerm//1, decodeValue/2, decodeType//1, decodeConstraint//1, decodeSignature/2]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -57,33 +57,24 @@ decodeSignature(S,Tp) :-
 
 decodeType(anonType) --> ['_'].
 decodeType(voidType) --> ['v'].
-decodeType(topType) --> ['A'].
 decodeType(thisType) --> ['h'].
-decodeType(type("lo.arith*integer")) --> ['i'].
-decodeType(type("lo.arith*float")) --> ['f'].
-decodeType(type("lo.thing*string")) --> ['S'].
-decodeType(type("lo.logical*logical")) --> ['l'].
+decodeType(type("lo.core*integer")) --> ['i'].
+decodeType(type("lo.core*float")) --> ['f'].
+decodeType(type("lo.core*string")) --> ['S'].
+decodeType(type("lo.core*logical")) --> ['l'].
 decodeType(kVar(Nm)) --> ['k'], decodeName(Nm).
 decodeType(type(Nm)) --> ['t'], decodeName(Nm).
-decodeType(typeExp("lo.list*list",[ElTp])) --> ['L'], decodeType(ElTp).
+decodeType(typeExp("lo.core*list",[ElTp])) --> ['L'], decodeType(ElTp).
 decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeName(Nm), decodeTypes(ArgTypes).
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
-decodeType(constrained(Lower,Tp,Upper)) --> ['c'], decodeType(Lower), decodeType(Tp), decodeType(Upper).
+decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
-decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
-decodeType(grammarType(A,T)) --> ['G'], decodeArgTypes(A), decodeType(T).
-decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
+decodeType(funType(A,T)) --> ['F'], decodeTypes(A), decodeType(T).
+decodeType(grammarType(A,T)) --> ['G'], decodeTypes(A), decodeType(T).
+decodeType(predType(A)) --> ['P'], decodeTypes(A).
 decodeType(classType(A,T)) --> ['C'], decodeTypes(A), decodeType(T).
 decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).
 decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
-
-decodeArgType(in(Tp)) --> ['+'], decodeType(Tp).
-decodeArgType(out(Tp)) --> ['-'], decodeType(Tp).
-decodeArgType(inout(Tp)) --> ['?'], decodeType(Tp).
-
-decodeArgTypes(0,[]) --> [].
-decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeArgType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).
-decodeArgTypes(Types) --> typeLen(Len), decodeArgTypes(Len,Types).
 
 typeLen(Len) --> digits(0,Len).
 
@@ -96,6 +87,9 @@ decodeFields(Ln,[(Nm,Tp)|More]) --> { Ln > 0 }, decodeName(Nm), decodeType(Tp), 
 decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
 
 decodeName(Str) --> [C], collectUntil(C,Text), { string_chars(Str,Text)}.
+
+decodeConstraint(conTract(Nm,Args,Deps)) --> ['c'], decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
+decodeConstraint(implementsFace(Tp,Face)) --> ['a'], decodeType(Tp), decodeType(faceType(Face)).
 
 collectUntil(C,[]) --> [C].
 collectUntil(C,[B|More]) --> [B], collectUntil(C,More).

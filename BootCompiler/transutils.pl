@@ -107,33 +107,36 @@ makePkgMap(Pkg,Defs,Types,Imports,Classes,Map) :-
 pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void)|Std]).
 
 makeModuleMap(Pkg,[Def|Rest],Map,Mx,Classes) :-
-  makeMdkEntry(Pkg,Def,Map,M0,Classes,Clx),
+  makeMdlEntry(Pkg,Def,Map,M0,Classes,Clx),
   makeModuleMap(Pkg,Rest,M0,Mx,Clx).
 makeModuleMap(_,[],Map,Map,[]).
 
-makeMdkEntry(Pkg,function(_,Nm,Tp,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,function(_,Nm,Tp,_,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+1.
-makeMdkEntry(Pkg,grammar(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,grammar(_,Nm,Tp,_,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
   Arity is Ar+2.
-makeMdkEntry(Pkg,predicate(_,Nm,Tp,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,predicate(_,Nm,Tp,_,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Arity).
-makeMdkEntry(Pkg,defn(_,Nm,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,defn(_,Nm,_,_,_,_),[(Nm,moduleVar(Pkg,prg(LclName,1)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName).
-makeMdkEntry(Pkg,class(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx,[(Nm,strct(LclName,Ar),Tp)|Clx],Clx) :-
+makeMdlEntry(Pkg,class(_,Nm,Tp,_,_,_),[(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(LclName,3)))|Mx],Mx,[(Nm,strct(LclName,Ar),Tp)|Clx],Clx) :-
   localName(Pkg,"#",Nm,LclName),
   typeArity(Tp,Ar),
   localName(Pkg,"@",Nm,AccessName).
-makeMdkEntry(Pkg,enum(_,Nm,Tp,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx,[(Nm,enum(LclName),Tp)|Clx],Clx) :-
+makeMdlEntry(Pkg,enum(_,Nm,Tp,_,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx,[(Nm,enum(LclName),Tp)|Clx],Clx) :-
   localName(Pkg,"#",Nm,LclName),
   localName(Pkg,"@",Nm,AccessName).
-makeMdkEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"*",Nm,LclName).
-
+makeMdlEntry(Pkg,contract(Nm,CNm,ConTp,_),[(Nm,moduleContract(Pkg,CNm,ConTp))|Mx],Mx,Clx,Clx).
+makeMdlEntry(_,impl(_,_,ImplNm,0,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),enum(ImplNm),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
+makeMdlEntry(_,impl(_,_,ImplNm,Arity,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),strct(ImplNm,Arity),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
+  
 makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportMap(Import,Map,M0),
   makeImportsMap(Rest,M0,Mx).
@@ -191,6 +194,8 @@ anyDef(localClass(_,_,_,_,_)).
 anyDef(moduleClass(_,_,_)).
 anyDef(inherit(_,_,_,_)).
 anyDef(inheritField(_,_,_)).
+anyDef(moduleContract(_,_,_)).
+anyDef(moduleImpl(_,_,_)).
 
 lookupRelName(Map,Nm,V) :-
   lookup(Map,Nm,relDef,V).

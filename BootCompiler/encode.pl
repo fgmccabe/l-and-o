@@ -1,4 +1,4 @@
-:- module(encode,[encodeTerm/3,encodeType/3]).
+:- module(encode,[encodeTerm/3,encodeType/3,encodeConstraint/3]).
 
 :- use_module(types).
 :- use_module(misc).
@@ -36,24 +36,23 @@ encodeInt(N,O,Ox) :- N1 is N div 10, encodeInt(N1,O,[D|Ox]), K is N mod 10, digi
 
 encodeType(anonType,['_'|O],O).
 encodeType(voidType,['v'|O],O).
-encodeType(topType,['A'|O],O).
 encodeType(thisType,['h'|O],O).
-encodeType(typeExp("lo.list*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
-encodeType(type("lo.logical*logical"),['l'|O],O).
-encodeType(type("lo.arith*integer"),['i'|O],O).
-encodeType(type("lo.arith*float"),['f'|O],O).
-encodeType(type("lo.thing*string"),['S'|O],O).
+encodeType(typeExp("lo.core*list",[T]),['L'|O],Ox) :- encodeType(T,O,Ox).
+encodeType(type("lo.core*logical"),['l'|O],O).
+encodeType(type("lo.core*integer"),['i'|O],O).
+encodeType(type("lo.core*float"),['f'|O],O).
+encodeType(type("lo.core*string"),['S'|O],O).
 encodeType(kVar(Nm),['k'|O],Ox) :- encodeName(Nm,O,Ox).
 encodeType(type(Nm),['t'|O],Ox) :- encodeName(Nm,O,Ox).
 encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeName(Nm,O,O1), encodeTypes(Args,O1,Ox).
-encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
-encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeArgTypes(Args,O,O1), encodeType(Tp,O1,Ox).
-encodeType(predType(Args),['P'|O],Ox) :- encodeArgTypes(Args,O,Ox).
+encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(predType(Args),['P'|O],Ox) :- encodeTypes(Args,O,Ox).
 encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(tupleType(Args),['T'|O],Ox) :- encodeTypes(Args,O,Ox).
 encodeType(faceType(Fields),['I'|O],Ox) :- encodeFieldTypes(Fields,O,Ox).
 encodeType(univType(B,Tp),[':'|O],Ox) :- encodeType(B,O,O1),encodeType(Tp,O1,Ox).
-encodeType(constrained(Lw,Tp,Up),['c'|O],Ox) :- encodeType(Lw,O,O1), encodeType(Tp,O1,O2),encodeType(Up,O2,Ox).
+encodeType(constrained(Tp,Con),['|'|O],Ox) :- encodeType(Tp,O,O1),encodeConstraint(Con,O1,Ox).
 encodeType(typeRule(L,R),['Y'|O],Ox) :- encodeType(L,O,O1), encodeType(R,O1,Ox).
 
 encodeName(Nm,O,Ox) :- string_chars(Nm,Chrs), findDelim(Chrs,Delim), encodeChars(Chrs,Delim,O,Ox).
@@ -92,17 +91,18 @@ encodeTypes(Tps,O,Ox) :- length(Tps,L), encodeInt(L,O,O1),encodeTps(Tps,O1,Ox).
 encodeTps([],O,O).
 encodeTps([Tp|More],O,Ox) :- encodeType(Tp,O,O1), encodeTps(More,O1,Ox).
 
-encodeArgTypes(Args,O,Ox) :- length(Args,L), encodeInt(L,O,O1),encodeArgTps(Args,O1,Ox).
-
-encodeArgTps([],O,O).
-encodeArgTps([Tp|More],O,Ox) :- encodeArgType(Tp,O,O1), encodeArgTps(More,O1,Ox).
-
-encodeArgType(in(Tp),['+'|O],Ox) :- encodeType(Tp,O,Ox).
-encodeArgType(out(Tp),['-'|O],Ox) :- encodeType(Tp,O,Ox).
-encodeArgType(inout(Tp),['?'|O],Ox) :- encodeType(Tp,O,Ox).
-
 encodeFieldTypes(Fields,O,Ox) :- length(Fields,L), encodeInt(L,O,O1),encodeFieldTps(Fields,O1,Ox).
 
 encodeFieldTps([],O,O).
 encodeFieldTps([(Nm,Tp)|More],O,Ox) :- encodeName(Nm,O,O1),encodeType(Tp,O1,O2), encodeFieldTps(More,O2,Ox).
 
+encodeConstraint(univType(V,C),[':'|O],Ox) :- 
+  encodeType(V,O,O1),
+  encodeConstraint(C,O1,Ox).
+encodeConstraint(conTract(Nm,Args,Deps),['c'|O],Ox) :- 
+  encodeName(Nm,O,O1),
+  encodeType(tupleType(Args),O1,O2),
+  encodeType(tupleType(Deps),O2,Ox).
+encodeConstraint(implementsFace(Tp,Face),['a'|O],Ox) :-
+  encodeType(Tp,O,O1),
+  encodeType(faceType(Face),O1,Ox).

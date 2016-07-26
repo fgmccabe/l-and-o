@@ -4,6 +4,7 @@
         appStr/3,appInt/3,appFlt/3,appSym/3,appQuoted/4,genstr/2,
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
         localName/4,
+        listShow/5,
         stringHash/3,hashSixtyFour/2,
         marker/2]).
 
@@ -126,3 +127,14 @@ marker(type,"*").
 marker(value,"@").
 marker(class,"#").
 marker(conTract,"$").
+
+listShow([],_,_,O,O) :-!.
+listShow([E|L],C,Sep,O,Ox) :-
+  call(C,E,O,O1),
+  listShowMore(L,C,Sep,O1,Ox).
+
+listShowMore([],_,_,O,O).
+listShowMore([E|L],C,S,O,Ox) :-
+  appStr(S,O,O1),
+  call(C,E,O1,O2),
+  listShowMore(L,C,S,O2,Ox).

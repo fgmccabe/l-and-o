@@ -6,12 +6,14 @@
 :- use_module(encode).
 :- use_module(uri).
 
-genRules(export(Pkg,Imports,Fields,Types,Classes,Rules),Text) :-
+genRules(export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls),Text) :-
   genImports(Imports,Pkg,Chrs,O1),
   genFieldTypes(Fields,Pkg,O1,O2),
   genTypes(Types,Pkg,O2,O3),
   genClasses(Classes,Pkg,O3,O4),
-  genPlRules(Rules,O4,[]),
+  genContracts(Contracts,Pkg,O4,O5),
+  genImpls(Impls,Pkg,O5,O6),
+  genPlRules(Rules,O6,[]),
   string_chars(Text,Chrs).
 
 genImports([],_,O,O).
@@ -74,6 +76,40 @@ formatClassStructures([(Nm,Access,Tp)|M],[tpl([strg(Nm),Access,strg(EncType)])|R
   encodeType(Tp,Chars,[]),
   string_chars(EncType,Chars),
   formatClassStructures(M,R).
+
+genContracts(Contracts,Pkg,O,Ox) :-
+  localName(Pkg,"#","contracts",C),
+  appQuoted(C,"'",O,O0),
+  appStr("(",O0,O1),
+  formatContracts(Contracts,Struct),
+  encodeTerm(tpl(Struct),B,[]),
+  string_codes(Txt,B),
+  appQuoted(Txt,"\"",O1,O2),
+  appStr(").\n",O2,Ox).
+
+formatContracts([],[]).
+formatContracts([contract(Nm,CnNm,Spec,Face)|M],[tpl([strg(Nm),strg(CnNm),strg(CSig),strg(FSig)])|R]) :-
+  encodeConstraint(Spec,CChars,[]),
+  string_chars(CSig,CChars),
+  encodeType(Face,FChars,[]),
+  string_chars(FSig,FChars),
+  formatContracts(M,R).
+
+genImpls(Impls,Pkg,O,Ox) :-
+  localName(Pkg,"#","implementations",C),
+  appQuoted(C,"'",O,O0),
+  appStr("(",O0,O1),
+  formatImpls(Impls,Struct),
+  encodeTerm(tpl(Struct),B,[]),
+  string_codes(Txt,B),
+  appQuoted(Txt,"\"",O1,O2),
+  appStr(").\n",O2,Ox).
+  
+formatImpls([],[]).
+formatImpls([imp(Nm,Spec)|M],[tpl([strg(Nm),strg(Sig)])|R]) :-
+  encodeConstraint(Spec,Chars,[]),
+  string_chars(Sig,Chars),
+  formatImpls(M,R).
 
 genPlRules(Rls,O,Ox) :-
   rfold(Rls,genprolog:genPlRule,O,Ox).
@@ -158,7 +194,7 @@ genTerm(enum(Nm),O,Ox) :-
   appStr("'",O2,Ox).
 genTerm(idnt(Nm),O,Ox) :-
   appStr("X",O,O0),
-  appStr(Nm,O0,Ox).
+  genVar(Nm,O0,Ox).
 genTerm(cons(Op,Args),O,Ox) :-
   genTerm(Op,O,O1),
   appStr("(",O1,O2),
@@ -170,6 +206,21 @@ genTerm(tpl(Args),O,Ox) :-
   appStr("(",O,O5),
   genTerms(Args,O5,O6),
   appStr(")",O6,Ox).
+
+genVar(Nm,O,Ox) :-
+  string_chars(Nm,Chars),
+  filterChars(Chars,O,Ox).
+
+filterChars([],O,O).
+filterChars([Ch|M],[Ch|O],Ox) :-
+  isLetter(Ch),
+  filterChars(M,O,Ox).
+filterChars([Ch|M],['_'|O],Ox) :-
+  \+isLetter(Ch),
+  filterChars(M,O,Ox).
+
+isLetter('_').
+isLetter(Ch) :- char_type(Ch,alnum).
 
 genQuoted(Str,O,Ox) :-
   appStr("'",O,O1),

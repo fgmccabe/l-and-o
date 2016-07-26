@@ -18,6 +18,16 @@ f{
     X-Y => _int_minus(X,Y).
   }
 
+  plus:all t ~~ additive[t] |: (t,t)=>t.
+  plus(X,Y) => X+Y.
+
+  double:all t ~~ additive[t] |: (t)=>t.
+  double(X) => plus(X,X).
+
+  assert double(fib(10)) = 110.
+
+  /*
+
   all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   public
@@ -35,4 +45,5 @@ f{
   subEls(pair(A,L1),pair(B,L2)) => pair(A-B,subEls(L1,L2)).
 
   assert pair(1,pair(2,nil))+pair(2,pair(1,nil)) = pair(3,pair(3,nil)).
+  */
 }
