@@ -88,6 +88,7 @@ decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
 
 decodeName(Str) --> [C], collectUntil(C,Text), { string_chars(Str,Text)}.
 
+decodeConstraint(constrained(Con,Extra)) --> ['|'], decodeConstraint(Con), decodeConstraint(Extra).
 decodeConstraint(conTract(Nm,Args,Deps)) --> ['c'], decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
 decodeConstraint(implementsFace(Tp,Face)) --> ['a'], decodeType(Tp), decodeType(faceType(Face)).
 

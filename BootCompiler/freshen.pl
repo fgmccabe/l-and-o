@@ -79,6 +79,9 @@ frshnConstraint(implementsFace(Tp,Els),B,implementsFace(FTp,FL)) :-
 frshnContract(conTract(Nm,Args,Deps),B,conTract(Nm,FArgs,FDeps)) :-
   frshnTypes(Args,B,FArgs),
   frshnTypes(Deps,B,FDeps).
+frshnContract(constrained(Con,Other),B,constrained(FCon,FOther)) :-
+  frshnConstraint(Other,B,FOther),
+  frshnContract(Con,B,FCon).
 
 freshenContract(Con,ThisType,Q,FCon) :-
   addThisType(ThisType,[],B0),

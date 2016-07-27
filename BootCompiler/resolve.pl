@@ -5,6 +5,7 @@
 :- use_module(types).
 :- use_module(freshen).
 :- use_module(canon).
+:- use_module(unify).
 
 overload(Defs,Dict,RDict,RDefs) :-
   declareImplementations(Defs,Dict,RDict),
@@ -20,9 +21,8 @@ overloadDef(predicate(Lc,Nm,Tp,Cx,Cls),Dict,RP) :-
 overloadDef(D,Dict,RD) :-
   D = defn(_,_,_,_,_,_),
   overloadDefn(D,Dict,RD).
-overloadDef(E,Dict,RE) :-
-  E = enum(_,_,_,_,_,_),
-  overloadEnum(E,Dict,RE).
+overloadDef(enum(Lc,Nm,Tp,Cx,Rules,Face),Dict,RE) :-
+  overloadEnum(Lc,Nm,Tp,Cx,Rules,Face,Dict,RE).
 overloadDef(class(Lc,Nm,Tp,Cx,Rules,Face),Dict,RC) :-
   overloadClass(Lc,Nm,Tp,Cx,Rules,Face,Dict,RC).
 overloadDef(grammar(Lc,Nm,Tp,Cx,Rules),Dict,RG) :-
@@ -222,22 +222,23 @@ resolveContracts(Lc,[Con|C],Dict,[CV|Vs]) :-
 resolveContract(Lc,C,Dict,Over) :-
   implementationName(C,ImpNm),
   findImplementation(ImpNm,Dict,Impl),!,
-  resolve(Impl,Lc,Dict,Over).
+  resolve(Impl,C,ImpNm,Lc,Dict,Over).
 resolveContract(Lc,C,_,v(Lc,ImpNm)) :-
   implementationName(C,ImpNm),
   reportError("no implementation known for %s",[C],Lc).
 
-resolve(v(Lc,Nm),_,_,v(Lc,Nm)) :-!.
-resolve(I,Lc,Dict,Over) :-
+resolve(v(Lc,Nm),_,_,_,_,v(Lc,Nm)) :-!.
+resolve(I,C,ImpNm,Lc,Dict,Over) :-
   freshenContract(I,_,Con),
-  resolveDependents(Con,Dict,ImplNm,[],Args),
-  formOver(v(Lc,ImplNm),Args,Over).
+  moveConstraints(Con,Cx,CT),
+  sameContract(CT,C,[]),
+  resolveDependents(Cx,Lc,Dict,[],Args),
+  formOver(v(Lc,ImpNm),Args,Over).
 
-resolveDependents(constrained(C,O),Dict,ImplNm,As,Args) :-
-  resolveContract(O,Dict,A),
-  resolveDependents(C,Dict,ImplNm,[A|As],Args).
-resolveDependents(C,_,ImplNm,Args,Args) :-
-  implementationName(C,ImplNm).
+resolveDependents([],_,_,Args,Args).
+resolveDependents([C|L],Lc,Dict,As,Args) :-
+  resolveContract(Lc,C,Dict,A),
+  resolveDependents(L,Lc,Dict,[A|As],Args).
 
 formOver(V,[],V).
 formOver(V,Args,apply(V,Args)).
@@ -270,4 +271,32 @@ overloadOther(show(Lc,Show),Dict,show(Lc,RShow)) :-
   resolveTerm(Show,Dict,RShow).
 overloadOther(assertion(Lc,Cond),Dict,assertion(Lc,RCond)) :-
   resolveCond(Cond,Dict,RCond).
+
+overloadEnum(Lc,Nm,Tp,[],Rules,Face,Dict,enum(Lc,Nm,Tp,[],ORules,Face)) :-
+  overloadClassRules(Rules,[],Dict,ORules).
+overloadEnum(Lc,Nm,Tp,Cx,Rules,Face,Dict,class(Lc,Nm,Tp,[],ORules,Face)) :-
+  defineCVars(Lc,Cx,Dict,EVars,EDict),
+  overloadClassRules(Rules,EVars,EDict,ORules).
+
+overloadClass(Lc,Nm,Tp,Cx,Rules,Face,Dict,class(Lc,Nm,Tp,[],ORules,Face)) :-
+  defineCVars(Lc,Cx,Dict,EVars,EDict),
+  overloadClassRules(Rules,EVars,EDict,ORules).
+
+overloadClassRule(labelRule(Lc,Nm,Hd,Repl,Face),CVars,Dict,labelRule(Lc,Nm,OHd,ORepl,Face)) :-
+  resolveHead(Hd,CVars,OHd),
+  resolveTerm(Repl,Dict,ORepl).
+overloadClassRule(classBody(Lc,Nm,Hd,Stmts,Others,Types),CVars,Dict,classBody(Lc,Nm,OHd,OStmts,OOthers,Types)) :-
+  resolveHead(Hd,CVars,OHd),
+  overloadDefs(Stmts,Dict,OStmts),
+  overloadOthers(Others,Dict,OOthers).
+
+resolveHead(Hd,[],Hd).
+resolveHead(enum(Lc,Nm),CVars,apply(v(Lc,Nm),CVars)).
+resolveHead(apply(v(Lc,Nm),Args),CVars,apply(v(Lc,Nm),OArgs)) :-
+  concat(CVars,Args,OArgs).
+
+overloadClassRules([],_,_,[]).
+overloadClassRules([Rl|L],V,D,[ORl|M]) :-
+  overloadClassRule(Rl,V,D,ORl),
+  overloadClassRules(L,V,D,M).
 

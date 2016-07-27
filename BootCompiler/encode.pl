@@ -99,6 +99,9 @@ encodeFieldTps([(Nm,Tp)|More],O,Ox) :- encodeName(Nm,O,O1),encodeType(Tp,O1,O2),
 encodeConstraint(univType(V,C),[':'|O],Ox) :- 
   encodeType(V,O,O1),
   encodeConstraint(C,O1,Ox).
+encodeConstraint(constrained(Con,Extra),['|'|O],Ox) :-
+  encodeConstraint(Con,O,O1),
+  encodeConstraint(Extra,O1,Ox).
 encodeConstraint(conTract(Nm,Args,Deps),['c'|O],Ox) :- 
   encodeName(Nm,O,O1),
   encodeType(tupleType(Args),O1,O2),

@@ -392,7 +392,7 @@ entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),
   concat(Args,[LblVr,ThVr],Q),
   trCons(Name,Arity,Con).
 
-transformImplementation(Lc,_,ImplName,0,_,[],Def,Face,_,Map,Opts,Rules,Rx,Ex,Exx) :-
+transformImplementation(Lc,_,ImplName,_,_,[],Def,Face,_,Map,Opts,Rules,Rx,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,ImplName,_,LclName,Rules,R0),
   genClassMap(Map,Opts,Lc,LclName,[Def],Face,CMap,R0,En0,Ex,Ex1),!,
   transformClassBody(LclName,[Def],CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
@@ -482,6 +482,7 @@ implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,Args,
       cons(strct(Nm,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   merge([LbVr,ThVr],Q,Qx),
   length(Args,Ar).
+implementPtnCall(moduleImpl(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
 
 implementPkgRefPtn(moduleVar(_,Vn),_,_,_,Xi,Xi,Q,[Xi|Q],[call(Vn,[Xi])|Tail],Tail).
 implementPkgRefPtn(moduleClass(_,enum(Enum),_),_,_,_,_,enum(Enum),Q,Q,Tail,Tail).
@@ -617,6 +618,7 @@ implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,
       cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
   merge([LbVr,ThVr],Q,Qx),
   length(Args,Ar).
+implementFunCall(moduleImpl(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
 
 implementVarExp(localVar(Vn,LblVr,ThVr),_,_,X,X,Q,Qx,[call(Vn,[X,LblVr,ThVr])|Pre],Pre,Tail,Tail) :-
   merge([X,LblVr,ThVr],Q,Qx).
@@ -794,6 +796,13 @@ makeClassMtdMap([implBody(_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,
   makeLblTerm(enum(LclName),Extra,LblTerm),
   (Extra =[] -> LblGl = [] ; LblGl = [unify(LbVr,LblTerm)]),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
+makeClassMtdMap([implBody(_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+  collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
+  trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unify(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
+  collectLabelVars(Vs,LbVr,ThVr,L0,L1),
+  extraVars(Map,Extra),
+  makeLblTerm(Lbl,Extra,LblTerm),
+  makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
 
 makeLblTerm(enum(Nm),[],enum(Nm)) :- !.
 makeLblTerm(enum(Nm),Extra,cons(strct(Nm,Ar),Extra)) :- !, length(Extra,Ar).

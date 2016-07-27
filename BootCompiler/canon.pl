@@ -1,4 +1,4 @@
-:- module(canon,[displayType/1,displayCanon/1,showCanon/3,showCanonTerm/3,isCanon/1,isAssertion/1,isShow/1]).
+:- module(canon,[displayType/1,displayCanon/1,dispCanonTerm/1,showCanon/3,showCanonTerm/3,isCanon/1,isAssertion/1,isShow/1]).
 
 :- use_module(misc).
 :- use_module(operators).
@@ -39,6 +39,8 @@ isShow(show(_,_)).
 displayCanon(Term) :- showCanon(Term,Chrs,[]), string_chars(Res,Chrs), write(Res).
 
 displayType(Tp) :- showType(Tp,Chrs,[]), string_chars(Res,Chrs), write(Res).
+
+dispCanonTerm(Term) :- showCanonTerm(Term,Chrs,[]), string_chars(Res,Chrs), writeln(Res).
 
 showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types,Cons,Impls),O,Ox) :-
   appStr(Pkg,O,O1),

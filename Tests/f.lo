@@ -5,12 +5,14 @@ f{
     (-): (t,t)=>t.
   }
 
+/*
   fib:(integer)=>integer.
   fib(0) => 0.
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
   assert fib(10) = 55.
+*/
 
   public
   implementation additive[integer] .. {
@@ -24,9 +26,7 @@ f{
   double:all t ~~ additive[t] |: (t)=>t.
   double(X) => plus(X,X).
 
-  assert double(fib(10)) = 110.
-
-  /*
+  -- assert double(fib(10)) = 110.
 
   all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
@@ -45,5 +45,4 @@ f{
   subEls(pair(A,L1),pair(B,L2)) => pair(A-B,subEls(L1,L2)).
 
   assert pair(1,pair(2,nil))+pair(2,pair(1,nil)) = pair(3,pair(3,nil)).
-  */
 }

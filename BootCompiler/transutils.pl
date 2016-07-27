@@ -214,6 +214,7 @@ funDef(inherit(_,_,_,_)).
 funDef(inheritField(_,_,_)).
 funDef(localClass(_,_,_,_,_)).
 funDef(moduleClass(_,_,_)).
+funDef(moduleImpl(_,_,_)).
 
 lookupClassName(Map,Nm,V) :-
   lookup(Map,Nm,classDef,V).
