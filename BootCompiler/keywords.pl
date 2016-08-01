@@ -35,8 +35,6 @@
   keyword("%%").
   keyword("@").
   keyword("@@").
-  keyword("true").
-  keyword("false").
   keyword("this").
   keyword("import").
   keyword("public").

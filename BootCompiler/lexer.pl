@@ -39,6 +39,7 @@ locOfToken(rbra(Lc),Lc).
 locOfToken(lbrce(Lc),Lc).
 locOfToken(rbrce(Lc),Lc).
 locOfToken(idTok(_,Lc),Lc).
+locOfToken(idQTok(_,Lc),Lc).
 locOfToken(lqpar(Lc),Lc).
 locOfToken(rqpar(Lc),Lc).
 locOfToken(integerTok(_,Lc),Lc).
@@ -54,6 +55,7 @@ dispToken(lbra(_),['[']).
 dispToken(rbra(_),[']']).
 dispToken(lbrce(_),['{']).
 dispToken(rbrce(_),['}']).
+dispToken(idQTok(Id,_),St) :- string_chars(Id,St).
 dispToken(idTok(Id,_),St) :- string_chars(Id,St).
 dispToken(lqpar(_),['<','|']).
 dispToken(rqpar(_),['|','>']).
@@ -101,7 +103,7 @@ blockComment(St,NxSt) :- nxtSt(St,St1), blockComment(St1,NxSt).
 
 nxTok(St,NxSt,integerTok(Code,Lc)) :- lookingAt(St,St1,['0','c'],_), charRef(St1,NxSt,Ch), char_code(Ch,Code), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :- hedChar(St,Ch), isDigit(Ch,_), readNumber(St,NxSt,Tk).
-nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,''''), readQuoted(St1,NxSt,Id), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,idQTok(Id,Lc)) :- nextSt(St,St1,''''), readQuoted(St1,NxSt,Id), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Str) :- nextSt(St,St1,'"'), readString(St1,NxSt,Str).
 nxTok(St,NxSt,idTok(Id,Lc)) :- hedChar(St,Ch), idStart(Ch), readIden(St,NxSt,Id), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,lpar(Lc)) :- lookingAt(St,NxSt,['('],Lc).

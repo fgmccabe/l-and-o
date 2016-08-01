@@ -14,47 +14,45 @@ dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   topsort(Defs,Groups),
   showGroups(Groups).
 
-collectDefinitions([St|Stmts],Defs,P,A,[St|I],Other) :-
-  isImport(St),
-  collectDefinitions(Stmts,Defs,P,A,I,Other).
-collectDefinitions([St|Stmts],Defs,P,A,I,[St|Other]) :-
-  isUnary(St,"assert",_),
-  collectDefinitions(Stmts,Defs,P,A,I,Other).
-collectDefinitions([St|Stmts],Defs,P,A,I,[St|Other]) :-
-  isUnary(St,"show",_),
-  collectDefinitions(Stmts,Defs,P,A,I,Other).
-collectDefinitions([St|Stmts],Defs,P,[(V,St)|A],I,Other) :-
+collectDefinitions([St|Stmts],Defs,P,A,I,Other) :-
+  collectDefinition(St,Stmts,S0,Defs,D0,P,P0,A,A0,I,I0,Other,O0,dependencies:nop),
+  collectDefinitions(S0,D0,P0,A0,I0,O0).
+collectDefinitions([],[],[],[],[],[]).
+
+collectDefinition(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St|I],I,Other,Other,_) :-
+  isImport(St).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St|Other],Other,_) :-
+  isUnary(St,"assert",_).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St|Other],Other,_) :-
+  isUnary(St,"show",_).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,P,Px,[(V,St)|A],A,I,I,Other,Other,Export) :-
   isBinary(St,":",L,_),
   isIden(L,V),
-  collectDefinitions(Stmts,Defs,P,A,I,Other).
-collectDefinitions([St|Stmts],Defs,P,A,I,O) :-
+  call(Export,var(V),P,Px).
+collectDefinition(St,Stmts,Stx,Defs,Dfx,P,P,A,Ax,I,Ix,O,Ox,_) :-
   isUnary(St,"private",Inner),
-  collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
-collectDefinitions([St|Stmts],Defs,[var(V)|P],[(V,Inner)|A],I,O) :-
+  collectDefinition(Inner,Stmts,Stx,Defs,Dfx,P,_,A,Ax,I,Ix,O,Ox,dependencies:nop).
+collectDefinition(St,Stmts,Stx,Defs,Dfx,P,Px,A,Ax,I,Ix,O,Ox,_) :-
   isUnary(St,"public",Inner),
-  isBinary(Inner,":",L,_),
-  isIden(L,V),
-  collectDefinitions(Stmts,Defs,P,A,I,O).
-collectDefinitions([St|Stmts],Defs,[Pblic|P],A,I,O) :-
-  isUnary(St,"public",Inner),
-  ruleName(Inner,Pblic,_),
-  collectDefinitions([Inner|Stmts],Defs,P,A,I,O).
-collectDefinitions([St|Stmts],[(Nm,Lc,[St])|Defs],P,A,I,O) :-
+  collectDefinition(Inner,Stmts,Stx,Defs,Dfx,P,Px,A,Ax,I,Ix,O,Ox,dependencies:export).
+collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   isUnary(St,Lc,"contract",Inner),
   isBinary(Inner,"..",C,_),
   contractName(C,Nm),
-  collectDefinitions(Stmts,Defs,P,A,I,O).
-collectDefinitions([St|Stmts],[(Nm,Lc,[St])|Defs],P,A,I,O) :-
+  call(Export,Nm,P,Px).
+collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   isUnary(St,Lc,"implementation",Inner),
   isBinary(Inner,"..",Im,_),
   implementationName(Im,Nm),
-  collectDefinitions(Stmts,Defs,P,A,I,O).
-collectDefinitions([St|Stmts],[(Nm,Lc,[St|Defn])|Defs],P,A,I,O) :-
+  call(Export,Nm,P,Px).
+collectDefinition(St,Stmts,Stx,[(Nm,Lc,[St|Defn])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   ruleName(St,Nm,Kind),
   locOfAst(St,Lc),
-  collectDefines(Stmts,Kind,OS,Nm,Defn),
-  collectDefinitions(OS,Defs,P,A,I,O).
-collectDefinitions([],[],[],[],[],[]).
+  collectDefines(Stmts,Kind,Stx,Nm,Defn),
+  call(Export,Nm,P,Px).
+
+export(Nm,[Nm|P],P).
+nop(_,P,P).
 
 isImport(St) :-
   isUnary(St,"public",I),!,

@@ -3,6 +3,7 @@
 :- use_module(misc).
 
 locOf(idTok(_,Lc),Lc).
+locOf(idQTok(_,Lc),Lc).
 locOf(integerTok(_,Lc),Lc).
 locOf(floatTok(_,Lc),Lc).
 locOf(stringTok(_,Lc),Lc).

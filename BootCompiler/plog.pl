@@ -7,7 +7,7 @@ displayPlRules(export(_,Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
   showImports(Imports,Chrs,O1),
   showType(faceType(Fields),O1,O2),
   appStr(".\n",O2,O3),
-  showTypes(Types,O3,O4),
+  showTypeDefs(Types,O3,O4),
   showContracts(Contracts,O4,O5),
   showClasses(Classes,O5,O6),
   showPlRules(Rules,O6,O7),
@@ -30,10 +30,11 @@ showViz(private,O,Ox) :-
 showViz(public,O,Ox) :-
   appStr("public import ",O,Ox).
 
-showTypes(Types,O,Ox) :-
-  formatTypeRules(Types,Fields),
-  showType(faceType(Fields),O,O1),
-  appStr(".\n",O1,Ox).
+showTypeDefs(L,O,Ox) :-
+  listShow(L,plog:showTypeDef,"\n",O,Ox).
+
+showTypeDef((_,Type),O,Ox) :-
+  showType(Type,O,Ox).
 
 showContracts(Cons,O,Ox) :-
   listShow(Cons,plog:showContract,".\n",O,Ox).
@@ -61,10 +62,6 @@ showClass(Nm,Access,Tp,O,Ox) :-
   showType(Tp,O3,O4),
   appStr("@",O4,O5),
   showTerm(Access,O5,Ox).
-
-formatTypeRules([],[]).
-formatTypeRules([(Nm,Rules)|More],[(Nm,tupleType(Rules))|Out]) :-
-  formatTypeRules(More,Out).
 
 showPlRules(Rls,O,Ox) :-
   rfold(Rls,plog:showPlRule,O,Ox).

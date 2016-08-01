@@ -49,17 +49,13 @@ genFieldTypes(Fields,Pkg,O,Ox) :-
   encodeType(faceType(Fields),O1,O2),
   appStr(""").\n",O2,Ox).
 
-genTypes(Types,Pkg,O,Ox) :-
+genTypes(Fields,Pkg,O,Ox) :-
   localName(Pkg,"#","types",Ex),
   appQuoted(Ex,"'",O,O0),
   appStr("(""",O0,O1),
-  formatTypeRules(Types,Fields),
   encodeType(faceType(Fields),O1,O2),
   appStr(""").\n",O2,Ox).
 
-formatTypeRules([],[]).
-formatTypeRules([(Nm,Rules)|More],[(Nm,tupleType(Rules))|Out]) :-
-  formatTypeRules(More,Out).
 
 genClasses(Classes,Pkg,O,Ox) :-
   localName(Pkg,"#","classes",C),

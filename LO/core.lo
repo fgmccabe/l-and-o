@@ -144,7 +144,7 @@ lo.core{
   implementation all x ~~ stream[list[x] ->> x] .. {
     eof([]).
 
-    hdtl([E,.L],E,L).
+    hdtl([E,..L],E,L).
 
     cons(E,L) => [E,..L].
   }

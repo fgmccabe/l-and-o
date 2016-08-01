@@ -7,6 +7,18 @@ g{
     _cons:(E,S)=>S.
   }
 
+  public 
+  contract all t ~~ additive[t] .. {
+    (+): (t,t)=>t.
+    (-): (t,t)=>t.
+  }
+
+  public
+  implementation additive[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+  }
+
   type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   implementation all e ~~ stream[cons[e] ->> e] .. {
@@ -17,10 +29,9 @@ g{
     _cons(E,L) => pair(E,L).
   }.
 
-  brackets:all s ~~ stream[s->>integer] |: ()-->s.
-  brackets() --> "[", brackets(), "]".
-  brackets() --> [].
+  brackets:all s ~~ stream[s->>integer] |: (integer)-->s.
+  brackets(N+1) --> "[", brackets(N), "]".
+  brackets(0) --> [].
 
-  assert brackets()%%pair(0c[,pair(0c[,pair(0c],pair(0c],nil)))).
-
+  assert brackets(C)%%pair(0c[,pair(0c[,pair(0c],pair(0c],nil)))).
 }

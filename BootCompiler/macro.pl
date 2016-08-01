@@ -92,6 +92,8 @@ algebraicFace(T,SoFar,Face) :-
   algebraicFace(R,SF,Face).
 algebraicFace(T,SoFar,SoFar) :-
   isRound(T,_,_),!.
+algebraicFace(T,Face,Face) :-
+  isIden(T,_,_),!.
 algebraicFace(T,SoFar,Face) :-
   isBraceTerm(T,_,Args),
   pickupFields(Args,SoFar,Face).

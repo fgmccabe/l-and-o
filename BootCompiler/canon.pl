@@ -202,16 +202,10 @@ showVersion(v(V),O,Ox) :-
   appStr(V,O1,Ox).
 
 showTypeDefs(L,O,Ox) :-
-  listShow(L,types:showTypeRule,"\n",O,Ox).
+  listShow(L,canon:showTypeDef,"\n",O,Ox).
 
-showTypeDef((_,Rules),O,Ox) :-
-  showTypeDef(Rules,O,Ox).
-
-showTypeDef([],O,O) :- !.
-showTypeDef([Rl|Rules],O,Ox) :-
-  showTypeRule(Rl,O,O1),
-  appStr(".\n",O1,O2),
-  showTypeDef(Rules,O2,Ox).
+showTypeDef((_,Type),O,Ox) :-
+  showType(Type,O,Ox).
 
 showContracts(L,O,Ox) :-
   listShow(L,canon:showContract,"\n",O,Ox).

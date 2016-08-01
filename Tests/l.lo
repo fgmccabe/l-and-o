@@ -1,0 +1,4 @@
+l{
+  public
+  type logical ::= true | false.
+}

@@ -53,6 +53,7 @@ termRight([idTok(Id,_)|Tks],Pr,LPr,Left,T,Toks,_,Lst) :-
 termRight(Toks,_,_,Left,Left,Toks,Lst,Lst).
 
 legalNextRight([idTok(I,_)|_],Pr) :- ( prefixOp(I,PPr,_), PPr=<Pr ; \+ isOperator(I,_)) , !.
+legalNextRight([idQTok(_,_)|_],_).
 legalNextRight([lpar(_)|_],_).
 legalNextRight([lbra(_)|_],_).
 legalNextRight([lbrce(_)|_],_).
@@ -87,6 +88,7 @@ term0(Tks,T,Toks,Lst) :- term00(Tks,Op,RTks,LLst), termArgs(RTks,Op,T,Toks,LLst,
 term00([idTok(I,Lc)|Toks],T,Toks,id) :- 
       (isOperator(I,_), \+lookAhead(rpar(_),Toks), !, reportError("unexpected operator: '%s'",[I],Lc),T=void(Lc);
       T = name(Lc,I)).
+term00([idQTok(I,Lc)|Toks],name(Lc,I),Toks,id).
 term00([lpar(Lc0),rpar(Lc2)|Toks],tuple(Lc,"()",[]),Toks,rpar) :- 
   mergeLoc(Lc0,Lc2,Lc).
 term00([lpar(Lcx)|Tks],T,Toks,rpar) :- 

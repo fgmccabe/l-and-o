@@ -929,19 +929,19 @@ computeExport([Def|Defs],Fields,Public,Exports,Types,Contracts,Impls) :-
   exportDef(Def,Fields,Public,Exports,Ex,Types,Tx,Contracts,Cx,Impls,Ix),!,
   computeExport(Defs,Fields,Public,Ex,Tx,Cx,Ix).
 
-exportDef(function(_,Nm,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(function(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(predicate(_,Nm,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(predicate(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(class(_,Nm,Tp,_,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(class(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(enum(_,Nm,Tp,_,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(enum(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(typeDef(_,Nm,Tp,_),_,Public,Exports,Exports,[tpe(Nm,Tp)|Tx],Tx,Cons,Cons,Impl,Impl) :-
+exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule)|Tx],Tx,Cons,Cons,Impl,Impl) :-
   isPublicType(Nm,Public).
-exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(grammar(_,Nm,Tp,_,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(grammar(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
 exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con|Cons],Cons,Impl,Impl) :-
   isPublicContract(Con,Public).
