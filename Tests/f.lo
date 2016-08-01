@@ -1,18 +1,18 @@
 f{
+  type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
+
   public 
   contract all t ~~ additive[t] .. {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
   }
 
-/*
   fib:(integer)=>integer.
   fib(0) => 0.
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
   assert fib(10) = 55.
-*/
 
   public
   implementation additive[integer] .. {
@@ -27,8 +27,6 @@ f{
   double(X) => plus(X,X).
 
   -- assert double(fib(10)) = 110.
-
-  all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   public
   implementation all t ~~ additive[t] |: additive[cons[t]] .. {

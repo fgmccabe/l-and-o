@@ -60,7 +60,7 @@ parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
   parseTypes(A,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,faceType(AT)) :-
   isBraceTuple(T,_,L),
-  parseTypeFields(L,Env,B,C0,Cx,AT).
+  parseTypeFields(L,Env,B,C0,Cx,[],AT).
 parseType(T,_,_,Cx,Cx,anonType) :-
   locOfAst(T,Lc),
   reportError("cannot understand type %s",[T],Lc).
@@ -82,15 +82,15 @@ parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,typeExp(Op,ArgTps)) :-
   moveQuants(T,_,TT),
   moveConstraints(TT,C,typeExp(Op,AT)),
   sameLength(AT,Args,Lc),
-  bindAT(AT,ArgTps,CQ),
+  bindAT(AT,ArgTps,[],CQ),
   rewriteConstraints(C,CQ,C1,Cx).
 
-bindAT([],_,[]).
-bindAT(_,[],[]).
-bindAT([kVar(N)|L1],[kVar(N)|L2],Q) :-
-  bindAT(L1,L2,Q).
-bindAT([kVar(V)|L],[Tp|TL],[(V,Tp)|M]) :-
-  bindAT(L,TL,M).
+bindAT([],_,Q,Q).
+bindAT(_,[],Q,Q).
+bindAT([kVar(N)|L1],[kVar(N)|L2],Q,Qx) :-
+  bindAT(L1,L2,Q,Qx).
+bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
+  bindAT(L,TL,[(V,Tp)|Q],Qx).
 
 rewriteConstraints([],_,Cx,Cx).
 rewriteConstraints([Con|Cons],Q,C0,Cx) :-
@@ -110,7 +110,7 @@ parseBound(T,B,B,Inner,Inner) :-
 
 parseTypeFace(T,Env,Bound,C0,Cx,faceType(AT)) :-
   isBraceTuple(T,_,L),
-  parseTypeFields(L,Env,Bound,C0,Cx,AT).
+  parseTypeFields(L,Env,Bound,C0,Cx,[],AT).
 parseTypeFace(T,_,_,Cx,Cx,faceType([])) :-
   locOfAst(T,Lc),
   reportError("%s is not a type interface",[T],Lc).
@@ -163,10 +163,12 @@ parseContractName(_,Id,Env,_,FTp) :-
 parseContractName(Lc,Id,_,_,anonType) :- 
   reportError("contract %s not declared",[Id],Lc).
 
-parseContractArgs(A,Env,B,C0,Cx,Args,Deps) :-
+parseContractArgs([A],Env,B,C0,Cx,Args,Deps) :-
   isBinary(A,"->>",L,R),!,
-  parseTypes(L,Env,B,C0,C1,Args),
-  parseTypes(R,Env,B,C1,Cx,Deps).
+  deComma(L,LA),
+  deComma(R,RA),
+  parseTypes(LA,Env,B,C0,C1,Args),
+  parseTypes(RA,Env,B,C1,Cx,Deps).
 parseContractArgs(A,Env,B,C0,Cx,Args,[]) :-
   parseTypes(A,Env,B,C0,Cx,Args).
 
@@ -175,20 +177,35 @@ parseTypes([A|AT],Env,B,C0,Cx,[Atype|ArgTypes]) :-
   parseType(A,Env,B,C0,C1,Atype),
   parseTypes(AT,Env,B,C1,Cx,ArgTypes).
 
-parseTypeFields([],_,_,Cx,Cx,[]).
-parseTypeFields([F|L],Env,Bound,C0,Cx,[(Fld,FldTp)|Fields]) :-
+parseTypeFields([],_,_,Cx,Cx,Flds,Flds).
+parseTypeFields([F|L],Env,Bound,C0,Cx,Flds,Fields) :-
   isBinary(F,":",Nm,FT),
   isIden(Nm,Fld),
   parseType(FT,Env,Bound,C0,C1,FldTp),
-  parseTypeFields(L,Env,Bound,C1,Cx,Fields).
+  parseTypeFields(L,Env,Bound,C1,Cx,[(Fld,FldTp)|Flds], Fields).
 
 parseContract(T,Env,Path,contract(Nm,ConNm,Spec,Face)) :-
   isUnary(T,"contract",TI),
   isBinary(TI,"..",L,R),
-  parseContractSpec(L,Q,[],C0,Env,Spec,Nm,ConNm,Path),
-  parseTypeFace(R,Env,Q,C0,Cx,F),
-  wrapConstraints(Cx,F,FF),
-  reQuant(Q,FF,Face).
+  isBraceTuple(R,_,TLs),
+  parseContractSpec(L,Q,[],C0,Env,Spc,Nm,ConNm,Path),
+  collectContract(C0,Env,[],InhFlds),
+  parseTypeFields(TLs,Env,Q,C0,_,InhFlds,F),
+  reQuant(Q,faceType(F),Face),
+  reQuant(Q,Spc,Spec).
+
+collectContract([],_,Flds,Flds).
+collectContract([conTract(Nm,Args,Deps)|C],Env,Flds,Fields) :-
+  getContract(Nm,Env,contract(_,_,Spec,Face)),
+  moveQuants(Spec,_,TSpec),
+  moveConstraints(TSpec,_,conTract(_,CArgs,CDeps)),
+  bindAT(CArgs,Args,[],Q1),
+  bindAT(CDeps,Deps,Q1,CQ),
+  moveQuants(Face,_,F1),
+  moveConstraints(F1,_,FF),
+  rewriteType(FF,CQ,faceType(InhFlds)),
+  concat(Flds,InhFlds,InhF1),
+  collectContract(C,Env,InhF1,Fields).
 
 % reapply quantifiers to a type to get full form
 reQuant([],Tp,Tp).
@@ -201,12 +218,12 @@ wrapConstraints([Con|C],Tp,WTp) :-
 
 parseContractSpec(T,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
   isQuantified(T,V,B),
-  parseBound(V,[],Q,Spec,Inner),
-  parseContractSpec(B,Q,C0,Cx,Env,Inner,Nm,ConNm,Path).
+  parseBound(V,[],Q,_,_),
+  parseContractSpec(B,Q,C0,Cx,Env,Spec,Nm,ConNm,Path).
 parseContractSpec(T,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
   isBinary(T,"|:",L,R),
   parseConstraint(L,Env,Q,C0,C1),
-  parseContractSpec(R,Env,Q,C1,Cx,Spec,Nm,ConNm,Path).
+  parseContractSpec(R,Q,C1,Cx,Env,Spec,Nm,ConNm,Path).
 parseContractSpec(T,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path) :-
   isSquare(T,_,Nm,A),
   parseContractArgs(A,Env,Q,C0,Cx,ArgTps,Deps),

@@ -12,7 +12,7 @@ lo.index{
     }.
 
   public
-  all k,v ~~ equality[k] |: treeMap[k,v] ::= 
+  type all k,v ~~ equality[k] |: treeMap[k,v] ::= 
       trEmpty
     | trLeaf(integer,list[(k,v)])
     | trNode(integer,integer,treeMap[k,v],treeMap[k,v]).

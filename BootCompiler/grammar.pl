@@ -5,6 +5,7 @@
 :- use_module(location).
 :- use_module(errors).
 :- use_module(lexer).
+:- use_module(wff).
 
 parse(Tks,T,RTks) :-
     term(Tks,2000,T,Tks1,Lst),!,
@@ -130,14 +131,6 @@ termArgs([idTok(".",Lcd),idTok(Fld,LcF)|Tks],Op,T,Toks,_,Lst) :-
     termArgs(Tks,NOP,T,Toks,id,Lst).
 termArgs(Toks,T,T,Toks,Lst,Lst).
 
-tupleize(app(_,name(_,","),tuple(_,"()",[L,R])), Lc, Op, tuple(Lc,Op,[L|Rest])) :-
-    getTupleArgs(R,Rest).
-tupleize(T,Lc,Op,tuple(Lc,Op,[T])).
-
-getTupleArgs(app(_,name(_,","),tuple(_,"()",[L,R])), [L|Rest]) :-
-    getTupleArgs(R,Rest).
-getTupleArgs(T,[T]).
-
 terms([],[],[]).
 terms([rbrce(Lc)|Toks],[rbrce(Lc)|Toks],[]) :- !.
 terms(Tks,Toks,[T|R]) :- 
@@ -178,15 +171,10 @@ stringSegment(segment(Str,Lc),S) :-
 stringSegment(interpolate(Text,"",Lc),Disp) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX,_),
-  formatDisp(Lc,Term,"disp",[],Disp),
+  unary(Lc,"disp",Term,Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).
 stringSegment(interpolate(Text,Fmt,Lc),Disp) :-
   subTokenize(Lc,Text,Toks),
   term(Toks,2000,Term,TksX,_),
-  formatDisp(Lc,Term,"frmt",[string(Lc,Fmt)],Disp),
+  binary(Lc,"frmt",Term,string(Lc,Fmt),Disp),
   ( TksX = [] ; lookAhead(ATk,TksX),locOf(ATk,ALc),reportError("extra tokens in string interpolation",[],ALc)).
-
-formatDisp(Lc,tuple(_,"()",[Term]),Verb,Extra,app(Lc,Op,tuple(Lc,"()",Extra))) :-
-  binary(Lc,".",Term,name(Lc,Verb),Op).
-formatDisp(Lc,Term,Verb,Extra,app(Lc,Op,tuple(Lc,"()",Extra))) :-
-  binary(Lc,".",Term,name(Lc,Verb),Op).

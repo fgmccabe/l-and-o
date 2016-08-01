@@ -4,17 +4,17 @@ lo.uri {
 
   import lo.
 
-  public uri ::= absUri(string,rsrcName,query) | relUri(rsrcName,query).
-  public rsrcName ::= netRsrc(authority,resourcePath) | localRsrc(resourcePath).
-  public resourcePath ::= absPath(list[string]) | relPath(list[string]).
+  public type uri ::= absUri(string,rsrcName,query) | relUri(rsrcName,query).
+  public type rsrcName ::= netRsrc(authority,resourcePath) | localRsrc(resourcePath).
+  public type resourcePath ::= absPath(list[string]) | relPath(list[string]).
 
-  public authority ::= server(option[userInfo],host).
+  public type authority ::= server(option[userInfo],host).
 
-  public userInfo ::= user(string).
+  public type userInfo ::= user(string).
 
-  public host ::= hostPort(string,string) | host(string).
+  public type host ::= hostPort(string,string) | host(string).
 
-  public query ::= qry(string) | noQ.
+  public type query ::= qry(string) | noQ.
 
   public parseUri:(string) => uri.
   parseUri(S) :: uriParse(U) %% explode(S) => U.

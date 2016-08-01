@@ -1,0 +1,35 @@
+aa{
+  public 
+  contract all t ~~ additive[t] .. {
+    (+): (t,t)=>t.
+    (-): (t,t)=>t.
+  }
+
+  public 
+  contract all t ~~ additive[t] |: arith[t] .. {
+    (*): (t,t)=>t.
+    (/): (t,t)=>t.
+    (%): (t,t)=>t.
+  }
+
+  public
+  implementation additive[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+  }
+
+  public 
+  implementation arith[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+    X*Y => _int_times(X,Y).
+    X/Y => _int_div(X,Y).
+    X%Y => _int_mod(X,Y).
+  }
+
+  fact:(integer)=>integer.
+  fact(0) => 1.
+  fact(N) => N*fact(N-1).
+
+  assert fact(6) = 720.
+}

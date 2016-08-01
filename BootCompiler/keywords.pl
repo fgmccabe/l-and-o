@@ -41,6 +41,9 @@
   keyword("import").
   keyword("public").
   keyword("private").
+  keyword("type").
+  keyword("contract").
+  keyword("implementation").
   keyword("void").
   keyword("top").
   keyword("all").

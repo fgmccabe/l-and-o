@@ -141,35 +141,31 @@ transformGrammar(Prefix,Map,Opts,grammar(_,Nm,Tp,[],Rls),LclFun,Rules,Rx,Ex,Exx)
   transformGrammarRules(Map,POpts,LclFun,Rls,1,_,Rules,Rx,Ex,Exx).
 
 transformGrammarRules(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
-transformGrammarRules(Map,Opts,LclFun,[Cl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
-  transformGrammarRule(Map,Opts,LclFun,No,Cl,Rules,R0,Ex,Ex0),
+transformGrammarRules(Map,Opts,LclFun,[Rl|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
+  transformGrammarRule(Rl,Map,Opts,LclFun,No,Rules,R0,Ex,Ex0),
   N1 is No+1,
   transformGrammarRules(Map,Opts,LclFun,Defs,N1,Nx,R0,Rx,Ex0,Exx).
 
-transformGrammarRule(Map,Opts,LclFun,QNo,grammarRule(Lc,Nm,A,PB,Body),
+transformGrammarRule(grammarRule(Lc,Nm,A,PB,Body),Map,Opts,LclFun,QNo,
       [clse(Q,LclFun,[StIn,StX|Args],Goals)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),        % are we debugging?
   trPtns(A,Args,Extra,Q0,Q1,G4,G5,G6,G7,Map,ClOpts,Ex,Ex0), % head args
   genVar("StIn",StIn),
   dcgBody(Body,G5,G6,StIn,StOut,[StIn|Q1],Q2,Map,ClOpts,Ex0,Ex1), % grammar body
-  trCons("cons",2,Ahead),
-  pushTerminals(PB,Ahead,G7,G8,StOut,StX,Q2,Q3,Map,ClOpts,Ex1,Exx),                % push back
-  labelAccess(Q3,Q,Map,Goals,G0),                       % generate label access goals
+  pushTerminals(PB,G7,G8,StOut,StX,Q2,Q4,Map,ClOpts,Ex1,Exx),                % push back
+  labelAccess(Q4,Q,Map,Goals,G0),                       % generate label access goals
   frameDebug(Nm,QNo,G1,G2,Q,ClOpts),                     % generate frame entry debugging
   lineDebug(Lc,G2,G3,ClOpts),                           % line debug after setting up frame
   deframeDebug(Nm,QNo,G8,[],ClOpts),                     % generate frame exit debugging
   breakDebug(Nm,G3,G4,ClOpts).                          % generate break point debugging
 
-dcgBody(stringLit(Txt),G,Gx,Strm,Strmx,Q,Qx,_,_,Ex,Ex) :-
-  trCons("hdtl",2,Verb),
-  pushString(Txt,Verb,G,Gx,Strm,Strmx,Q,Qx).
 dcgBody(terminals(_,Terms),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
-  trCons("hdtl",2,Verb),
-  pushTerminals(Terms,Verb,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
-dcgBody(eof(_),[ocall(cons(Verb,[]),Strm,Strm)|G],Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
-  trCons("eof",0,Verb),
-  joinStream(Strm,Strmx,G,Gx).
+  pushTerminals(Terms,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx).
+dcgBody(eof(Lc,StrmVar),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
+  mkCanon(Lc,Strm,S0),
+  trGoal(call(Lc,StrmVar,[S0]),G,G0,Q,Qx,Map,Opts,Ex,Exx),
+  joinStream(Strm,Strmx,G0,Gx).
 dcgBody(conj(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   dcgBody(Lhs,G,G0,Strm,Strm0,Q,Q0,Map,Opts,Ex,Ex0),
   dcgBody(Rhs,G0,Gx,Strm0,Strmx,Q0,Qx,Map,Opts,Ex0,Exx).
@@ -261,26 +257,16 @@ dcgAhead(Tst,[call(HdProg,[Strm|TQ])|G],G,Strm,Q,Qx,Map,Opts,Ex,Exx) :-
   C1 = clse([HedStrm|TQ],HdProg,[HedStrm|TQ],TG),
   merge(TQ,Q,Qx).
 
-pushString(Str,V,G,Gx,Strm,Strmx,Q,Qx) :-
-  string_codes(Str,Chrs),
-  pushCharList(Chrs,V,G,Gx,Strm,Strmx,Q,Qx).
-
-pushCharList([],_,G,Gx,Strm,Strmx,Q,Q) :-
+pushTerminals([],G,Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
   joinStream(Strm,Strmx,G,Gx).
-pushCharList([Ch|Chrs],Verb,G,Gx,Strm,Strmx,Q,Qx) :-
-  genVar("X",X),
-  streamCall(Verb,intgr(Ch),Strm,X,G,G0),
-  pushCharList(Chrs,Verb,G0,Gx,X,Strmx,[X|Q],Qx).
-
-pushTerminals([],_,G,Gx,Strm,Strmx,Q,Q,_,_,Ex,Ex) :-
-  joinStream(Strm,Strmx,G,Gx).
-pushTerminals([E|More],V,G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
-  trPtn(E,Ptn,Q,Q0,G,G0,G1,G2,Map,Opts,Ex,Ex0),
+pushTerminals([term(Lc,SV,T)|More],G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   genVar("NStrm",NStrm),
-  streamCall(V,Ptn,Strm,NStrm,G0,G1),
-  pushTerminals(More,V,G2,Gx,NStrm,Strmx,[NStrm|Q0],Qx,Map,Opts,Ex0,Exx).
+  mkCanon(Lc,Strm,S0),
+  mkCanon(Lc,NStrm,S1),
+  trGoal(call(Lc,SV,[S0,T,S1]),G,G0,Q,Q0,Map,Opts,Ex,Ex0),
+  pushTerminals(More,G0,Gx,NStrm,Strmx,[NStrm|Q0],Qx,Map,Opts,Ex0,Exx).
 
-streamCall(Verb,El,Strm,Strmx,[ocall(cons(Verb,[El,Strmx]),Strm,Strm)|G],G).
+mkCanon(Lc,idnt(Nm),v(Lc,Nm)).
 
 joinStream(X,X,G,G).
 joinStream(Strm,Strmx,[unify(Strm,Strmx)|Gx],Gx).
@@ -720,9 +706,9 @@ trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   dcgBody(NT,G1,G2,StIn,StOut,[StIn,StOut|Q0],Q2,Map,Opts,Ex0,Ex1), % grammar body
   trExp(Rem,StOut,Q2,Qx,G2,G3,G3,Gx,Q2,Qx,Map,Opts,Ex1,Exx).
-trGoal(phrase(Lc,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+trGoal(phrase(_,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  dcgBody(conj(Lc,NT,eof(Lc)),G1,Gx,StIn,_,[StIn|Q0],Qx,Map,Opts,Ex0,Exx).
+  dcgBody(NT,G1,Gx,StIn,_,[StIn|Q0],Qx,Map,Opts,Ex0,Exx).
 trGoal(show(Lc,Exp),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trLocation(Lc,Loc,G,G0,Q,Q0,Map,Opts,Ex,Ex0),
   trExp(Exp,Trm,Q0,Qx,G0,G1,G1,[ecall("_display",[Loc,Trm])|Gx],Map,Opts,Ex0,Exx).

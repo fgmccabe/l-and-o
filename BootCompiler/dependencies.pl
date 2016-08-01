@@ -113,6 +113,10 @@ implementedContractName(Sq,INm) :-
   string_chars(INm,S0).
 
 surfaceNames([],_,S,S).
+surfaceNames([T|_],Sep,S0,Sx) :-
+  isBinary(T,Lc,"->>",L,_),!,
+  tupleize(L,"()",Lc,tuple(_,_,Els)),
+  surfaceNames(Els,Sep,S0,Sx).
 surfaceNames([T|L],Sep,S0,Sx) :-
   surfaceName(T,SN),
   appStr(Sep,S0,S1),

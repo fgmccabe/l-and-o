@@ -1,48 +1,48 @@
 lo.core{
   -- Core definitions of types and interfaces that are really part of the language
 
-  public thing ::= thing.
+  public type thing ::= thing.
 
   public 
-  contract all x ~~ equality[x] :: {
+  contract all x ~~ equality[x] .. {
     eq: (x,x){}.
     hash:(x)=>integer.
   }
 
   public 
-  contract all x ~~ equality[x] |: comp[x] :: {
+  contract all x ~~ equality[x] |: comp[x] .. {
     lt: (x,x){}.
     ge: (x,x){}.
   }
   
   public
-  all t ~~ option[t] ::= none | some(t).
+  type all t ~~ option[t] ::= none | some(t).
   
   public 
-  contract all x ~~ additive[x] :: {
+  contract all x ~~ additive[x] .. {
     pl:  (x,x)=>x.
     mns: (x,x)=>x.
   }
 
   public  
-  contract all x ~~ additive[x] |: arith[x] :: {
+  contract all x ~~ additive[x] |: arith[x] .. {
     tms: (x,x)=>x.
     dv:  (x,x)=>x.
     md: (x,x)=>x.
   }
 
   -- Structured string. This is only part of the type ..
-  public ss ::= ss(string) | ssSeq(list[ss]).
+  public type ss ::= ss(string) | ssSeq(list[ss]).
 
   -- Displayable contract
   public  
-  contract all t ~~ display[t] :: {
+  contract all t ~~ display[t] .. {
     disp:(t)=>ss.
   }
 
   -- stream contract
   public
-  contract all S,E ~~ stream[S ->> E] :: {
+  contract all S,E ~~ stream[S ->> E] .. {
     eof:(S){}.
     hdtl:(S,E,S){}.
     cons:(E,S)=>S.
@@ -116,11 +116,11 @@ lo.core{
 
   -- Not strictly necessary, but makes for better symmetry.
   public
-  logical ::= true | false.
+  type logical ::= true | false.
 
   -- We need the list type in the core
   public
-  all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
+  type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
   -- Implement equality for lists
   public

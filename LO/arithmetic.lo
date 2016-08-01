@@ -7,9 +7,6 @@ lo.arithmetic{
     hash: (t)=>integer.
   }
 
-  -- The type of eq in isolation is:
-  eq : all t ~~ equality[t] |: (t,t){}.
-
   -- A function that accesses a field:
   nameOf:all t,v ~~ t<~{name:()=>v} |: (t)=>v.
   nameOf(R) => R.name().

@@ -2,7 +2,7 @@ lo.list{
   -- implement standard list functions
   import lo.core.
 
-  public (<>):all t ~~ (list[t]+,list[t])=>list[t].
+  public (<>):all t ~~ (list[t],list[t])=>list[t].
   [] <> X => X.
   [E,..X] <> Y => [E,..X<>Y].
 
@@ -10,11 +10,11 @@ lo.list{
   X in [X,.._].
   X in [_,..Y] :- X in Y.
 
-  public reverse:all t ~~ (list[t]+) => list[t].
+  public reverse:all t ~~ (list[t]) => list[t].
   reverse(X) => rev(X,[]).
 
   private
-  rev:all t ~~ (list[t]+,list[t]) => list[t].
+  rev:all t ~~ (list[t],list[t]) => list[t].
   rev([],R) => R.
   rev([E,..L],R) => rev(L,[E,..R]).
 

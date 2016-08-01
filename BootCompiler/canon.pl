@@ -417,8 +417,19 @@ showGrammarRule(grammarRule(_,Nm,Args,PB,Body),O,Ox) :-
 showPushBack([],O,O).
 showPushBack(Els,O,Ox) :-
   appStr("[",O,O1),
-  showTerms(Els,O1,O2),
+  showTerminals(Els,O1,O2),
   appStr("]",O2,Ox).
+
+showTerminals([],O,O).
+showTerminals([term(_,_,T)|L],O,Ox) :-
+  showCanonTerm(T,O,O1),
+  showMoreTerminals(L,O1,Ox).
+
+showMoreTerminals([],O,O).
+showMoreTerminals([term(_,_,T)|L],O,Ox) :-
+  appStr(", ",O,O1),
+  showCanonTerm(T,O1,O2),
+  showMoreTerminals(L,O2,Ox).
 
 showNonTerminal(terminals(_,Terms),O,Ox) :-
   showPushBack(Terms,O,Ox).
@@ -465,7 +476,7 @@ showNonTerminal(goal(_,Rhs),O,Ox) :-
   appStr("{",O,O1),
   showCanonTerm(Rhs,O1,O2),
   appStr(")",O2,Ox).
-showNonTerminal(eof(_),O,Ox) :-
+showNonTerminal(eof(_,_),O,Ox) :-
   appStr("eof",O,Ox).
 showNonTerminal(NT,O,Ox) :-
   showCanonTerm(NT,O,Ox).

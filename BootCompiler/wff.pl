@@ -1,14 +1,13 @@
 :-module(wff,[isAlgebraicTypeDef/6,isQuantified/3,getQuantifiers/3,isConstrained/3,
-    isContractSpec/6,packageName/2,packageName/3,sameLength/3]).
+    isContractSpec/6,packageName/2,packageName/3,sameLength/3,deComma/2,tupleize/4]).
 :-use_module(abstract).
 :-use_module(misc).
 
-
-isAlgebraicTypeDef(Term,Lc,Quants,Constraints,Head,Body) :-
-  locOfAst(Term,Lc),
+isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
+  isUnary(Stmt,Lc,"type",Term),
   getQuantifiers(Term,Quants,Inner),
-  isConstrained(Inner,Constraints,Stmt),
-  isBinary(Stmt,"::=",Head,Body).
+  isConstrained(Inner,Constraints,TpStmt),
+  isBinary(TpStmt,"::=",Head,Body).
 
 isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_,_,_).
 
@@ -72,4 +71,12 @@ sameLength(L1,L2,_) :- length(L1,L), length(L2,L),!.
 sameLength(L1,_,Lc) :-
   length(L1,L),
   reportError("expecting %s elements",[L],Lc).
+
+tupleize(app(_,name(_,","),tuple(_,"()",[L,R])), Lc, Op, tuple(Lc,Op,[L|Rest])) :-
+    getTupleArgs(R,Rest).
+tupleize(T,Lc,Op,tuple(Lc,Op,[T])).
+
+getTupleArgs(app(_,name(_,","),tuple(_,"()",[L,R])), [L|Rest]) :-
+    getTupleArgs(R,Rest).
+getTupleArgs(T,[T]).
   

@@ -1,0 +1,26 @@
+g{
+  -- stream contract
+  public
+  contract all S,E ~~ stream[S ->> E] .. {
+    _eof:(S){}.
+    _hdtl:(S,E,S){}.
+    _cons:(E,S)=>S.
+  }
+
+  type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
+
+  implementation all e ~~ stream[cons[e] ->> e] .. {
+    _eof(nil).
+
+    _hdtl(pair(E,L),E,L).
+
+    _cons(E,L) => pair(E,L).
+  }.
+
+  brackets:all s ~~ stream[s->>integer] |: ()-->s.
+  brackets() --> "[", brackets(), "]".
+  brackets() --> [].
+
+  assert brackets()%%pair(0c[,pair(0c[,pair(0c],pair(0c],nil)))).
+
+}

@@ -121,10 +121,10 @@ checkOther(St,[assertion(Lc,Cond)|More],More,Env,_) :-
   checkCond(C,Env,_,Cond).
 checkOther(St,[show(Lc,Show)|More],More,Env,_) :-
   isUnary(St,Lc,"show",E),!,
-  binary(Lc,".",E,name(Lc,"disp"),Op),
-  unary(Lc,"formatSS",app(Lc,Op,tuple(Lc,"()",[])),FCall),
+  unary(Lc,"disp",E,Ex),
+  unary(Lc,"formatSS",Ex,FC), % create the call formatSS(disp(E))
   findType("string",Lc,Env,StringTp),
-  typeOfTerm(FCall,StringTp,Env,_,Show).
+  typeOfTerm(FC,StringTp,Env,_,Show).
 
 checkGroups([],_,_,[],E,E,_).
 checkGroups([Gp|More],Fields,Annots,Defs,Env,E,Path) :-
@@ -774,11 +774,11 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   isBinary(R,"~",S,M),!,
   newTypeVar("_S",StrmTp),
   newTypeVar("_E",ElTp),
-  findContract("stream",Lc,Env,[StrmTp],[ElTp],StreamType),
-  setConstraint(StrmTp,StreamType),
+  checkGrammarType(Lc,Env,StrmTp,ElTp),
   typeOfTerm(S,StrmTp,Env,E0,Strm),
   typeOfTerm(M,StrmTp,E0,E1,Rest),
-  checkNonTerminals(L,StrmTp,E1,Ev,NT).
+  declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
+  checkNonTerminals(L,StrmTp,E2,Ev,NT).
 checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
   checkInvokeGrammar(Lc,L,R,Env,Ev,Goal).
@@ -786,7 +786,8 @@ checkCond(Term,Env,Ev,Call) :-
   isRoundTerm(Term,Lc,F,A),
   newTypeVar("_P",PrTp),
   typeOfKnown(F,PrTp,Env,E0,Pred),
-  checkCondCall(Lc,Pred,A,PrTp,Call,E0,Ev).
+  deRef(PrTp,PredTp),
+  checkCondCall(Lc,Pred,A,PredTp,Call,E0,Ev).
 
 checkCondCall(Lc,Pred,A,predType(ArgTps),Call,Env,Ev) :-
   checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,Call).
@@ -794,15 +795,25 @@ checkCondCall(Lc,Pred,_,Tp,true(Lc),Env,Env) :-
   reportError("type of %s:%s not a predicate",[Pred,Tp],Lc).
 
 checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,call(Lc,Pred,Args)) :-
-  typeOfTerms(A,ArgTps,_,Env,Ev,Lc,Args).
+  typeOfTerms(A,ArgTps,Env,Ev,Lc,Args).
 checkCallArgs(Lc,Pred,A,ArgTps,Env,Env,true(Lc)) :-
   reportError("arguments %s of %s not consistent with expected types %s",[A,Pred,tupleType(ArgTps)],Lc).
 
 checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
-  findType("stream",Lc,Env,StreamType),
-  typeOfTerm(R,in(StreamType),StrType,Env,E1,Strm),
-  StreamType = typeExp(_,[ElTp]),
-  checkNonTerminals(L,inout(StrType),in(ElTp),E1,Ev,NT).
+  newTypeVar("_S",StrTp),
+  newTypeVar("_E",ElTp),
+  checkGrammarType(Lc,Env,StrTp,ElTp),
+  typeOfTerm(R,StrTp,Env,E1,Strm),
+  binary(Lc,",",L,name(Lc,"eof"),Phrase),
+  declareVar("stream$X",vr("stream$X",Lc,StrTp),E1,E2),
+  checkNonTerminals(Phrase,StrTp,ElTp,E2,Ev,NT).
+
+checkGrammarType(Lc,Env,Tp,ElTp) :-
+  getContract("stream",Env,contract(_,_,Spec,_)),
+  pickupThisType(Env,ThisType),
+  freshenContract(Spec,ThisType,_,conTract(_,[Arg],[Dep])),
+  checkType(Lc,Arg,Tp,Env),
+  checkType(Lc,Dep,ElTp,Env).
 
 checkConds([C],Env,Ex,Cond) :-
   checkCond(C,Env,Ex,Cond).
@@ -812,21 +823,18 @@ checkConds([C|More],Env,Ex,conj(L,R)) :-
 
 processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|Defs],Defs,E,_) :-
   splitGrHead(L,Nm,A,P),
-  pushScope(E,Env),
-  newTypeVar("_S",StrmTp),
+  pushScope(E,E0),
+  declareVar("stream$X",vr("stream$X",Lc,Tp),E0,E1),
   newTypeVar("_E",ElTp),
-  findContract("stream",Lc,Env,[StrmTp],[ElTp],StreamType),
-  setConstraint(StrmTp,StreamType),
-  checkType(Lc,Tp,StrmTp),
-  typeOfTerms(A,AT,Env,E0,Lc,Args),!,
-  checkNonTerminals(R,StrmTp,ElTp,E0,E1,Body),
-  checkTerminals(P,PB,StrmTp,ElTp,E1,_).
+  typeOfTerms(A,AT,E1,E2,Lc,Args),!,
+  checkNonTerminals(R,Tp,ElTp,E2,E3,Body),
+  checkTerminals(P,"_cons",PB,ElTp,E3,_).
 
 checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
-  checkTerminals(Els,Terms,ElTp,E,Env).
-checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,stringLit(Text)) :- !,
-  findType("integer",Lc,Env,IntTp),     % strings are exploded into code points
-  checkType(Lc,IntTp,ElTp).
+  checkTerminals(Els,"_hdtl",Terms,ElTp,E,Env).
+checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,terminals(Lc,Terms)) :- !,
+  explodeStringLit(Lc,Text,IntLits),
+  checkTerminals(IntLits,"_hdtl",Terms,ElTp,Env,_).  % strings are exploded into code points
 checkNonTerminals(tuple(_,"()",[NT]),Tp,ElTp,Env,Ex,GrNT) :-
   checkNonTerminals(NT,Tp,ElTp,Env,Ex,GrNT).
 checkNonTerminals(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-
@@ -887,22 +895,34 @@ checkNonTerminals(Term,Tp,_,Env,Ev,NT) :-
   isRoundTerm(Term,Lc,F,A),
   newTypeVar("_G",GrTp),
   typeOfKnown(F,GrTp,Env,E0,Pred),
-  ( deRef(GrTp,grammarType(ArgTps,_)), % must be done out of call to typeOfKnown
-    typeOfTerms(A,ArgTps,E0,Ev,Lc,Args),
-    NT = call(Lc,Pred,Args) ,!;
-    reportError("type of %s:%s not consistent with expected stream type: %s",[F,GrTp,Tp],Lc),
-    NT = terminals(Lc,[]),
-    Env=Ev).
-checkNonTerminals(Term,_,_,Env,Env,eof(Lc)) :-
-  isIden(Term,Lc,"eof").
+  deRef(GrTp,GrType),
+  checkGrCall(Lc,Pred,A,Tp,GrType,NT,E0,Ev).
+checkNonTerminals(Term,_,_,Env,Env,eof(Lc,Op)) :-
+  isIden(Term,Lc,"eof"),
+  unary(Lc,"_eof",name(Lc,"stream$X"),EO),
+  checkCond(EO,Env,_,call(_,Op,_)).
 checkNonTerminals(Term,_,_,Env,Ex,goal(Lc,Cond)) :-
   isBraceTuple(Term,Lc,Els),
   checkConds(Els,Env,Ex,Cond).
 
-checkTerminals([],[],_,Env,Env) :- !.
-checkTerminals([T|More],[TT|Out],ElTp,Env,Ex) :-
-  typeOfTerm(T,ElTp,Env,E0,TT),
-  checkTerminals(More,Out,ElTp,E0,Ex).
+explodeStringLit(Lc,Str,Terms) :-
+  string_codes(Str,Codes),
+  map(Codes,checker:makeIntLit(Lc),Terms).
+
+makeIntLit(Lc,C,integer(Lc,C)).
+
+checkGrCall(Lc,Pred,A,Tp,grammarType(ArgTps,StrmTp),Call,Env,Ev) :-
+  checkType(Lc,StrmTp,Tp,Env),
+  checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,Call).
+checkGrCall(Lc,Pred,_,StrmTp,Tp,terminals(Lc,[]),Env,Env) :-
+  reportError("type of %s:%s not a grammar of right type %s",[Pred,StrmTp,Tp],Lc).
+
+checkTerminals([],_,[],_,Env,Env) :- !.
+checkTerminals([T|More],V,[term(Lc,Op,TT)|Out],ElTp,Env,Ex) :-
+  locOfAst(T,Lc),
+  ternary(Lc,V,name(Lc,"stream$X"),T,name(Lc,"stream$X"),C),
+  checkCond(C,Env,E1,call(_,Op,[_,TT,_])),
+  checkTerminals(More,V,Out,ElTp,E1,Ex).
 
 computeExport([],_,_,[],[],[],[]).
 computeExport([Def|Defs],Fields,Public,Exports,Types,Contracts,Impls) :-
@@ -921,7 +941,7 @@ exportDef(typeDef(_,Nm,Tp,_),_,Public,Exports,Exports,[tpe(Nm,Tp)|Tx],Tx,Cons,Co
   isPublicType(Nm,Public).
 exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(grammar(_,Nm,Tp,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(grammar(_,Nm,Tp,_,_,_),Fields,Public,[var(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
 exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con|Cons],Cons,Impl,Impl) :-
   isPublicContract(Con,Public).

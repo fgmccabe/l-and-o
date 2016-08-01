@@ -51,7 +51,7 @@ dispAst(app(_,name(_,Nm),tuple(_,"()",[A,B])),Pr,O,E) :-
 dispAst(app(_,Op,A),_,O,E) :- dispAst(Op,0,O,O1), dispAst(A,0,O1,E).
 
 bracket("()","(",")",", ",1000).
-bracket("[]","[","]",", ",1000).
+bracket("[]","[","]",", ",2000).
 bracket("{}","{","}",".\n",2000).
 bracket("<||>","<|","|>",". ",2000).
 

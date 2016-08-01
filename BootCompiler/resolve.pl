@@ -1,4 +1,4 @@
-:- module(resolve,[overload/4,overloadOthers/3]).
+:- module(resolve,[overload/4,overloadOthers/3,resolveContract/4]).
 
 :- use_module(misc).
 :- use_module(errors).
@@ -55,15 +55,15 @@ overloadPredicate(Lc,Nm,Tp,Cx,Cls,Dict,predicate(Lc,Nm,Tp,[],RCls)) :-
   defineCVars(Lc,Cx,Dict,CVars,FDict),
   overloadClauses(Cls,FDict,CVars,RCls).
 
-overloadClauses(Eqns,Dict,REqns) :-
-  overloadList(Eqns,overloadClause,Dict,REqns).
+overloadClauses(Eqns,Dict,Extra,REqns) :-
+  overloadList(Eqns,overloadClause(Extra),Dict,REqns).
 
-overloadClause(clause(Lc,Nm,Args,Cond,Body),Dict,Extra,clause(Lc,Nm,RArgs,RCond,RBody)) :-
+overloadClause(Extra,clause(Lc,Nm,Args,Cond,Body),Dict,clause(Lc,Nm,RArgs,RCond,RBody)) :-
   resolveTerms(Args,Dict,RA),
   concat(Extra,RA,RArgs),
   resolveCond(Cond,Dict,RCond),
   resolveCond(Body,Dict,RBody).
-overloadClause(strong(Lc,Nm,Args,Cond,Body),Dict,Extra,strong(Lc,Nm,RArgs,RCond,RBody)) :-
+overloadClause(Extra,strong(Lc,Nm,Args,Cond,Body),Dict,strong(Lc,Nm,RArgs,RCond,RBody)) :-
   resolveTerms(Args,Dict,RA),
   concat(Extra,RA,RArgs),
   resolveCond(Cond,Dict,RCond),
@@ -75,13 +75,13 @@ overloadGrammar(Lc,Nm,Tp,Cx,Rules,Dict,grammar(Lc,Nm,Tp,[],RRules)) :-
   defineCVars(Lc,Cx,Dict,CVars,FDict),
   overloadGrRules(Rules,FDict,CVars,RRules).
 
-overloadGrRules(Rules,Dict,RRules) :-
-  overloadList(Rules,overloadGrRule,Dict,RRules).
+overloadGrRules(Rules,Dict,Extra,RRules) :-
+  overloadList(Rules,overloadGrRule(Extra),Dict,RRules).
 
-overloadGrRule(grammarRule(Lc,Nm,Args,PB,Body),Dict,Extra,grammarRule(Lc,Nm,RArgs,RPB,RBody)) :-
+overloadGrRule(Extra,grammarRule(Lc,Nm,Args,PB,Body),Dict,grammarRule(Lc,Nm,RArgs,RPB,RBody)) :-
   resolveTerms(Args,Dict,RA),
   concat(Extra,RA,RArgs),
-  resolveGr(PB,Dict,RPB),
+  resolveTerminals(PB,Dict,RPB),
   resolveGr(Body,Dict,RBody).
 
 defineCVars(_,[],Dict,[],Dict).
@@ -115,9 +115,10 @@ resolveTerm(apply(over(Lc,T,Cx),Args),Dict,apply(OverOp,NArgs)) :-
 resolveTerm(apply(Op,Args),Dict,apply(ROp,RArgs)) :-
   resolveTerm(Op,Dict,ROp),
   resolveTerms(Args,Dict,RArgs).
-resolveTerm(over(Lc,T,Cx),Dict,apply(OverOp,NArgs)) :-
+resolveTerm(over(Lc,T,Cx),Dict,Over) :-
   resolveContracts(Lc,Cx,Dict,DTerms),
-  overloadRef(Lc,T,DTerms,[],OverOp,NArgs).
+  overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
+  (NArgs=[] -> Over = OverOp ; Over = apply(OverOp,NArgs)).
 resolveTerm(mtd(Lc,Nm),_,v(Lc,Nm)) :-
   reportError("cannot find implementation for %s",[Nm],Lc).
 
@@ -166,17 +167,18 @@ resolveCond(show(Lc,E),Dict,show(Lc,RE)) :-
 resolveCond(call(Lc,Op,Args),Dict,call(Lc,ROp,RArgs)) :-
   resolveTerm(Op,Dict,ROp),
   resolveTerms(Args,Dict,RArgs).
-resolveCond(over(Lc,T,Cx),Dict,apply(OverOp,NArgs)) :-
+resolveCond(over(Lc,T,Cx),Dict,Over) :-
   resolveContracts(Lc,Cx,Dict,DTerms),
-  overloadRef(Lc,T,DTerms,[],OverOp,NArgs).
+  overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
+  (NArgs=[] -> Over = OverOp ; Over = call(OverOp,NArgs)).
 resolveCond(call(Lc,P,Args),Dict,call(Lc,RP,RArgs)) :-
   resolveTerm(P,Dict,RP),
   resolveTerms(Args,Dict,RArgs).
 
-resolveGr(stringLit(St),_,stringLit(St)).
 resolveGr(terminals(Lc,Terms),Dict,terminals(Lc,RTerms)) :-
-  resolveTerms(Terms,Dict,RTerms).
-resolveGr(eof(Lc),_,eof(Lc)).
+  resolveTerminals(Terms,Dict,RTerms).
+resolveGr(eof(Lc,Op),Dict,eof(Lc,ROp)) :-
+  resolveTerm(Op,Dict,ROp).
 resolveGr(conj(Lc,L,R),Dict,conj(Lc,RL,RR)) :-
   resolveGr(L,Dict,RL),
   resolveGr(R,Dict,RR).
@@ -201,15 +203,22 @@ resolveGr(goal(Lc,T),Dict,goal(Lc,RT)) :-
 resolveGr(dip(Lc,V,T),Dict,dip(Lc,RV,RT)) :-
   resolveTerm(V,Dict,RV),
   resolveCond(T,Dict,RT).
+resolveGr(call(Lc0,over(Lc,T,Cx),Args),Dict,call(Lc0,OverOp,NArgs)) :-
+  resolveTerms(Args,Dict,RArgs),
+  resolveContracts(Lc,Cx,Dict,DTerms),
+  overloadRef(Lc,T,DTerms,RArgs,OverOp,NArgs).
 resolveGr(call(Lc,Op,Args),Dict,call(Lc,ROp,RArgs)) :-
   resolveTerm(Op,Dict,ROp),
   resolveTerms(Args,Dict,RArgs).
-resolveGr(over(Lc,T,Cx),Dict,call(OverOp,NArgs)) :-
-  resolveContracts(Lc,Cx,Dict,DTerms),
-  overloadRef(Lc,T,DTerms,[],OverOp,NArgs).
 resolveGr(call(Lc,P,Args),Dict,call(Lc,RP,RArgs)) :-
   resolveTerm(P,Dict,RP),
   resolveTerms(Args,Dict,RArgs).
+
+resolveTerminals([],_,[]).
+resolveTerminals([term(Lc,Op,TT)|L],Dict,[term(Lc,ROp,RTT)|M]) :-
+  resolveTerm(Op,Dict,ROp),
+  resolveTerm(TT,Dict,RTT),
+  resolveTerminals(L,Dict,M).
 
 overloadRef(_,mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
 overloadRef(_,v(Lc,Nm),DT,RArgs,v(Lc,Nm),Args) :- concat(DT,RArgs,Args).

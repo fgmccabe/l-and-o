@@ -1,6 +1,7 @@
 :- module(abstract,[locOfAst/2,isAst/1,
       nary/4,binary/5,unary/4,zeroary/3,apply/4,isApply/3,
       isUnary/3,isUnary/4,isBinary/4,isBinary/5,isBinaryTerm/4,
+      isTernary/5,ternary/6,
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,isSquareTerm/4,
@@ -42,6 +43,10 @@ unary(Lc,Op,L,app(Lc,name(Lc,Op),tuple(Lc,"()",[L]))).
 isUnary(app(_,name(_,Op),tuple(_,"()",[L])),Op,L).
 
 isUnary(app(Lc,name(_,Op),tuple(_,"()",[L])),Lc,Op,L).
+
+isTernary(app(_,name(_,Op),tuple(_,"()",[L,M,R])),Op,L,M,R).
+
+ternary(Lc,Op,L,M,R,app(Lc,name(Lc,Op),tuple(Lc,"()",[L,M,R]))).
 
 nary(Lc,Op,Args,app(Lc,name(Lc,Op),tuple(Lc,"()",Args))).
 
