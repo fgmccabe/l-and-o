@@ -77,10 +77,9 @@ ruleName(St,Nm,impl) :-
   isUnary(St,"implementation",I),
   isBinary(I,"..",L,_),
   implementationName(L,Nm),!.
-ruleName(St,tpe(Nm),type) :-
+ruleName(St,Nm,type) :-
   isUnary(St,"type",I),
-  isBinary(I,"<~",L,_),
-  typeName(L,Nm).
+  ruleName(I,Nm,type).
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
   typeName(L,Nm).

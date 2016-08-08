@@ -235,7 +235,35 @@ parseTypeRule(St,B,C0,Cx,Env,Rule,Path) :-
 parseTypeRule(St,B,C0,Cx,Env,typeRule(Lhs,Rhs),Path) :-
   isBinary(St,"<~",L,R),
   parseTypeHead(L,B,Env,Lhs,Path),!,
-  parseTypeFace(R,Env,B,C0,Cx,Rhs).
+  parseType(R,Env,B,C0,Cx,Tp),
+  deRef(Tp,DTp),
+  getFace(DTp,Env,Rhs).
+
+getFace(faceType(F),_,faceType(F)) :- !.
+getFace(type(Nm),Env,F) :-
+  isType(Nm,Env,tpDef(_,_,FR)),
+  moveQuants(FR,_,FQR),
+  moveConstraints(FQR,_,typeRule(_,F)).
+getFace(typeExp(Nm,Args),Env,Face) :-
+  isType(Nm,Env,tpDef(_,_,FR)),
+  moveQuants(FR,_,FQR),
+  moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
+  bindAT(AT,Args,[],BB),
+  rewriteType(F,BB,Face).
+
+getFace(type(Nm),Env,Face) :- !,
+  isType(Nm,Env,tpDef(_,_,FaceRule)),
+  freshen(FaceRule,voidType,_,typeRule(Lhs,Face)),
+  sameType(type(Nm),Lhs,Env),!.
+getFace(typeExp(Nm,Args),Env,Face) :- !,
+  isType(Nm,Env,tpDef(_,_,FaceRule)),
+  freshen(FaceRule,voidType,_,Rl),
+  moveConstraints(Rl,_,typeRule(Lhs,Face)),
+  sameType(Lhs,typeExp(Nm,Args),Env),!.
+getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
+  constraints(T,C),
+  collectImplements(C,Env,[],Face).
+getFace(faceType(Face),_,faceType(Face)) :- !.
 
 parseTypeTemplate(St,B,Env,Type,Path) :-
   parseTypeTemplate(St,B,Env,[],Cx,Tp,Path),

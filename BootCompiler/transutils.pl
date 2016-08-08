@@ -142,8 +142,9 @@ makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
 
-makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes,_,_),Map,Mx) :-
-  importFields(Pkg,Classes,Fields,Map,Mx).
+makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes,_,Impls),Map,Mx) :-
+  importFields(Pkg,Classes,Fields,Map,M0),
+  importImplementations(Impls,M0,Mx).
 
 importFields(_,_,[],Map,Map).
 importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
@@ -151,6 +152,19 @@ importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
   moveConstraints(QTp,_,Template),
   makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
   importFields(Pkg,Classes,Fields,M0,Mx).
+
+importImplementations([],Map,Map).
+importImplementations([imp(Nm,Con)|L],[(Nm,moduleImpl(prg(Nm,1),Struct,prg(Nm,3)))|M],Mx) :-
+  contractArity(Con,Ar),
+  contractStruct(Ar,Nm,Struct),
+  importImplementations(L,M,Mx).
+
+contractArity(univType(_,Con),Ar) :- contractArity(Con,Ar).
+contractArity(constrained(Con,_),Ar) :- contractArity(Con,A), Ar is A+1.
+contractArity(_,0).
+
+contractStruct(0,Nm,enum(Nm)).
+contractStruct(Ar,Nm,strct(Nm,Ar)).
 
 makeImportEntry(funType(A,_),_,Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),

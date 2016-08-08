@@ -141,13 +141,11 @@ lo.core{
     hash(X) => _str_hash(X).
   }
 
-
   public
   implementation comp[string] .. {
     X<Y :- _str_lt(X,Y).
     X>=Y :- _str_ge(X,Y).
   }
-
 
   public
   implementation display[string] .. {

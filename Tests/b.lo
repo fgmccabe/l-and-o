@@ -1,5 +1,5 @@
 b{
-  type all k,v ~~ named[k], named[v] |: keyVal[k,v] ::= empty | pair{left:keyVal[k,v]. ky:k. vl:v. right:keyVal[k,v]}.
+  type all k,v ~~ nkeyVal[k,v] ::= empty | pair{left:keyVal[k,v]. ky:k. vl:v. right:keyVal[k,v]}.
 
   contract
   all t ~~ named[t] .. {

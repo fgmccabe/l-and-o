@@ -13,14 +13,14 @@ transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types,Contracts,Impls),
     Opts,export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
   makePkgMap(Pkg,Defs,Types,Imports,Classes,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
-  transformModuleDefs(Pkg,Map,POpts,Defs,R1,Rx,Rx,[]),
+  transformModuleDefs(Defs,Pkg,Map,POpts,R1,Rx,Rx,[]),
   transformOthers(Pkg,Map,POpts,Others,Inits,Rules,R0),
   packageInit(Pkg,Map,POpts,Inits,R0,R1).
 
-transformModuleDefs(_,_,_,[],Rules,Rules,Ex,Ex).
-transformModuleDefs(Pkg,Map,Opts,[Def|Defs],Rules,Rx,Ex,Exx) :-
+transformModuleDefs([],_,_,_,Rules,Rules,Ex,Ex).
+transformModuleDefs([Def|Defs],Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformMdlDef(Def,Pkg,Map,Opts,Rules,R0,Ex,Ex1),
-  transformModuleDefs(Pkg,Map,Opts,Defs,R0,Rx,Ex1,Exx).
+  transformModuleDefs(Defs,Pkg,Map,Opts,R0,Rx,Ex1,Exx).
 
 transformMdlDef(function(Lc,Nm,Tp,Cx,Eqns),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformFunction(Pkg,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),_,Rules,Rx,Ex,Exx).

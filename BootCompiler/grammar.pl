@@ -66,13 +66,7 @@ term0([stringTok(St,Lc)|Toks],Str,Toks,id) :-
   handleInterpolation(St,Lc,Str).
 term0([integerTok(In,Lc)|Toks],integer(Lc,In),Toks,id).
 term0([floatTok(Fl,Lc)|Toks],float(Lc,Fl),Toks,id).
-term0([lbra(Lc0),rbra(Lc2)|Toks],tuple(Lc,"[]",[]),Toks,rbra) :-
-  mergeLoc(Lc0,Lc2,Lc).
-term0([lbra(Lcx)|Tks],T,Toks,rbra) :-
-  term(Tks,2000,Seq,Tks2,_), 
-  checkToken(Tks2,Toks,rbra(Lcy),"mising close bracket, got %s"), 
-  mergeLoc(Lcx,Lcy,Lc), 
-  tupleize(Seq,Lc,"[]",T).
+
 term0([lbrce(Lc0),rbrce(Lc2)|Toks],tuple(Lc,"{}",[]),Toks,rbrce) :- 
   mergeLoc(Lc0,Lc2,Lc).
 term0([lbrce(Lcx)|Tks],tuple(Lc,"{}",Seq),Toks,rbrce) :- 
@@ -96,6 +90,13 @@ term00([lpar(Lcx)|Tks],T,Toks,rpar) :-
   checkToken(Tks2,Toks,rpar(Lcy),"missing close parenthesis, got %w"), 
   mergeLoc(Lcx,Lcy,Lc),
   tupleize(Seq,Lc,"()",T).
+term00([lbra(Lc0),rbra(Lc2)|Toks],tuple(Lc,"[]",[]),Toks,rbra) :-
+  mergeLoc(Lc0,Lc2,Lc).
+term00([lbra(Lcx)|Tks],T,Toks,rbra) :-
+  term(Tks,2000,Seq,Tks2,_), 
+  checkToken(Tks2,Toks,rbra(Lcy),"mising close bracket, got %s"), 
+  mergeLoc(Lcx,Lcy,Lc), 
+  tupleize(Seq,Lc,"[]",T).
   
 termArgs([],T,T,[],Lst,Lst).
 termArgs([lpar(Lcx),rpar(Lcy)|Tks],Op,T,Toks,_,Lst) :- 

@@ -30,34 +30,38 @@ lo.comp.token{
     loc = Loc.
   }.
 
-  public tokenDisp : display[token].
-  tokenDisp .. {
-    display(tok(Tk,Loc)) => ssSeq([tokDisp.display(Tk),ss("@"),locationDisp.display(Loc)]).
-  }.
+  public implementation display[token] .. {
+    disp(Tk) => dispToken(Tk).
+  }
 
-  public tokDisp : display[tok].
-  tokDisp .. {
-    display(lpar) => ss("(").
-    display(rpar) => ss(")").
-    display(lbra) => ss("[").
-    display(rbra) => ss("]").
-    display(lbrce) => ss("{").
-    display(rbrce) => ss("}").
-    display(lqpar) => ss("<|").
-    display(rqpar) => ss("|>").
-    display(idTok(Nm)) => ss(Nm).
-    display(intTok(Ix)) => intDisp.display(Ix).
-    display(fltTok(Dx)) => fltDisp.display(Dx).
-    display(stringTok(Sx)) => listDisp(segmentDisp).display(Sx).
-    display(regTok(Rg)) => ssSeq([ss(".:"),ss(Rg),ss(":.")]).
-    display(period) => ss(". ").
-    display(terminal) => ss("<term>").
-  }.
+  dispToken:(token)=>ss.
+  dispToken(tok(Tk,Lc)) => ssSeq([disp(Tk),ss("@"),disp(Lc)]).
 
-  segmentDisp : display[stringSegment].
-  segmentDisp .. {
-    display(segment(_,T)) => ss(T).
-    display(interpolate(_,In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
-    display(interpolate(_,In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).
+  public implementation display[tok] .. {
+    disp(Tk) => tokDisp(Tk).
+  }
+
+  tokDisp : (tok) => ss.
+  tokDisp(lpar) => ss("(").
+  tokDisp(rpar) => ss(")").
+  tokDisp(lbra) => ss("[").
+  tokDisp(rbra) => ss("]").
+  tokDisp(lbrce) => ss("{").
+  tokDisp(rbrce) => ss("}").
+  tokDisp(lqpar) => ss("<|").
+  tokDisp(rqpar) => ss("|>").
+  tokDisp(idTok(Nm)) => ss(Nm).
+  tokDisp(intTok(Ix)) => disp(Ix).
+  tokDisp(fltTok(Dx)) => disp(Dx).
+  tokDisp(stringTok(Sx)) => disp(Sx).
+  tokDisp(regTok(Rg)) => ssSeq([ss("`"),ss(Rg),ss("`")]).
+  tokDisp(period) => ss(". ").
+  tokDisp(terminal) => ss("<term>").
+
+  private
+  implementation display[stringSegment] .. {
+    disp(segment(_,T)) => ss(T).
+    disp(interpolate(_,In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
+    disp(interpolate(_,In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).
   }
 }
