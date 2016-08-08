@@ -1,0 +1,7 @@
+c{
+  import lo.core.
+
+  commonMaskLen:(integer,integer,integer) => integer.
+  commonMaskLen(H1,H2,C) :: ( C>0, \+H1==H2) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1).
+  commonMaskLen(_,_,C) => C.
+}

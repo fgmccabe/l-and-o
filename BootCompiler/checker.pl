@@ -40,9 +40,10 @@ thetaEnv(Pkg,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-importDefs(spec(_,_,faceType(Exported),faceType(Types),_,_),Lc,Env,Ex) :-
+importDefs(spec(_,_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
-  importTypes(Types,Lc,E0,Ex).
+  importTypes(Types,Lc,E0,E1),
+  importContracts(Cons,Lc,E1,Ex).
 
 declareFields([],_,Env,Env).
 declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
@@ -50,10 +51,9 @@ declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
   declareFields(More,Lc,E0,Ex).
 
 importTypes([],_,Env,Env).
-importTypes([(Nm,tupleType(Rules))|More],Lc,Env,Ex) :-
-  pickTypeTemplate(Rules,Type),
-  pickFaceRule(Rules,FaceRule),
-  declareType(Nm,tpDef(Lc,Type,FaceRule),Env,E0),
+importTypes([(Nm,Rule)|More],Lc,Env,Ex) :-
+  pickTypeTemplate(Rule,Type),
+  declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
   importTypes(More,Lc,E0,Ex).
 
 findAllImports([],_,[]).
@@ -82,16 +82,21 @@ importAll(Imports,Repo,AllImports) :-
 importAllDefs([],_,[],_,Env,Env).
 importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
   importPkg(Pkg,Vers,Repo,Spec),
-  Spec = spec(_,_,Exported,Types,Classes,_,Contracts,Impls),
+  Spec = spec(_,_,Exported,Types,Classes,Contracts,Impls,_),
   importDefs(Spec,Lc,Env,Ev0),
-  importAllDefs(More,Lc,Specs,Repo,Ev0,Ev1),
-  importContracts(Contracts,Ev1,Ex).
+  importAllDefs(More,Lc,Specs,Repo,Ev0,Ex).
+
+importContracts([],_,Env,Env).
+importContracts([C|L],Lc,E,Env) :-
+  C = contract(Nm,_,_,_,_),
+  defineContract(Nm,Lc,C,E,E0),
+  importContracts(L,Lc,E0,Env).
 
 notAlreadyImported(import(_,Pkg,Vers),SoFar) :-
   \+ is_member(import(_,Pkg,Vers),SoFar),!.
 
 importMore(Repo,import(Viz,Pkg,Vers),SoFar,[import(Viz,Pkg,Vers)|SoFar],Inp,More) :-
-  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,_,Imports)),
+  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,_,_,_,Imports)),
   addPublicImports(Imports,Inp,More).
 importMore(_,import(_,Pkg,Vers),SoFar,SoFar,Inp,Inp) :-
   reportError("could not import package %s,%s",[Pkg,Vers]).
@@ -103,7 +108,7 @@ addPublicImports([import(private,_,_)|I],Rest,Out) :-
   addPublicImports(I,Rest,Out).
 
 findImportedImplementations([import(_,_,_,_,_,_,_,Impls)|Specs],D,OverDict) :-
-  rfold(Impls,D,checker:declImpl,D1),
+  rfold(Impls,checker:declImpl,D,D1),
   findImportedImplementations(Specs,D1,OverDict).
 findImportedImplementations([],D,D).
 
@@ -148,11 +153,14 @@ checkGroup(Grp,imp,_,_,Defs,Dx,Env,Ex,Path) :-
 
 contractGroup([(con(N),Lc,[ConStmt])|_],[Contract|Defs],Defs,Env,Ex,Path) :-
   parseContract(ConStmt,Env,Path,Contract),
-  declareContract(N,Contract,Env,E0),
-  declareMethods(Contract,Lc,E0,Ex).
+  defineContract(N,Lc,Contract,Env,Ex).
 
-declareMethods(contract(_,_,QCon,MtdsTp),Lc,Env,Ev) :-
-  moveQuants(QCon,Q,Con),
+defineContract(N,Lc,Contract,E0,Ex) :-
+  declareContract(N,Contract,E0,E1),
+  declareMethods(Contract,Lc,E1,Ex).
+
+declareMethods(contract(_,_,Spec,_,MtdsTp),Lc,Env,Ev) :-
+  moveQuants(Spec,Q,Con),
   moveQuants(MtdsTp,_,faceType(Methods)),
   formMethods(Methods,Lc,Q,Con,Env,Ev).
 
@@ -368,7 +376,8 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
 
 checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   isBraceTuple(Body,Lc,Els),
-  getTypeFace(ClassTp,Env,Fields),
+  getTypeFace(ClassTp,Env,Face),
+  moveConstraints(Face,_,faceType(Fields)),
   pushScope(Env,Base),
   declareVar("this",vr("this",Lc,ClassTp),Base,ThEnv),
   thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,ThEnv,_OEnv,Defs,Public,_Imports,Others),
@@ -509,9 +518,9 @@ buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,B
   isBinary(I,"..",Sq,Body),
   isBraceTuple(Body,_,Els),
   parseContractConstraint(Sq,Env,Nm,Spec),
-  getContract(Nm,Env,contract(_,CNm,ConTp,ConFace)),
-  % We have to unify the implemented contract and the contract specification
-  moveQuants(ConTp,_,Qcon),
+  getContract(Nm,Env,contract(_,CNm,_,FullSpec,ConFace)),
+  % We have to unify the implemented contract and the contract (spec)ification
+  moveQuants(FullSpec,_,Qcon),
   moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
   moveQuants(Spec,_,ASpec),
   moveConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
@@ -639,9 +648,11 @@ genTpVars([_|I],[Tp|More]) :-
   genTpVars(I,More).
 
 recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld)) :-
-  typeOfTerm(Rc,AT,Env,Ev,Rec),
+  newTypeVar("_R",AT),
+  typeOfKnown(Rc,AT,Env,Ev,Rec),
   getTypeFace(AT,Env,Face),
-  fieldInFace(Face,AT,Fld,Lc,FTp),!,
+  moveConstraints(Face,_,faceType(Fields)),
+  fieldInFace(Fields,AT,Fld,Lc,FTp),!,
   freshen(FTp,AT,_,Tp), % the record is this to the right of dot.
   checkType(Lc,Tp,ET,Env).
 
@@ -809,7 +820,7 @@ checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
   checkNonTerminals(Phrase,StrTp,ElTp,E2,Ev,NT).
 
 checkGrammarType(Lc,Env,Tp,ElTp) :-
-  getContract("stream",Env,contract(_,_,Spec,_)),
+  getContract("stream",Env,contract(_,_,Spec,_,_)),
   pickupThisType(Env,ThisType),
   freshenContract(Spec,ThisType,_,conTract(_,[Arg],[Dep])),
   checkType(Lc,Arg,Tp,Env),
@@ -945,7 +956,7 @@ exportDef(grammar(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,
   isPublicVar(Nm,Fields,Public).
 exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con|Cons],Cons,Impl,Impl) :-
   isPublicContract(Con,Public).
-exportDef(impl(_,INm,ImplName,_,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[imp(ImplName,Spec)|Ix],Ix) :-
+exportDef(impl(_,INm,ImplName,_,Spec,_,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[imp(ImplName,Spec)|Ix],Ix) :-
   is_member(imp(INm),Public),!.
 exportDef(_,_,_,Ex,Ex,Tps,Tps,Cons,Cons,Impls,Impls).
 
@@ -957,7 +968,7 @@ isPublicVar(Nm,Fields,_) :-
 isPublicType(Nm,Public) :-
   is_member(tpe(Nm),Public),!.
 
-isPublicContract(contract(Nm,_,_,_),Public) :-
+isPublicContract(contract(Nm,_,_,_,_),Public) :-
   is_member(con(Nm),Public),!.
 
 mergeFields([],_,_,Fields,Fields,_,_).
@@ -998,19 +1009,12 @@ collectFields([(Nm,_)|More],SoFar,Flds,Lc) :-
 collectFields([(Nm,Tp)|More],SoFar,Flds,Lc) :-
   collectFields(More,[(Nm,Tp)|SoFar],Flds,Lc).
 
-pickTypeTemplate([Rl|_],Type) :-
-  deRule(Rl,Type).
-
-pickFaceRule(Rules,Rl) :-
-  is_member(Rl,Rules),
-  isFaceRule(Rl),!.
-
-deRule(univType(B,Tp),univType(B,XTp)) :-
-  deRule(Tp,XTp).
-deRule(typeRule(Lhs,_),Lhs).
+pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
+  pickTypeTemplate(Tp,XTp).
+pickTypeTemplate(typeRule(Lhs,_),Lhs).
 
 generateClassFace(Tp,Env,Face) :-
   freshen(Tp,voidType,Q,Plate),
   (Plate = classType(_,T); T=Plate),
   getTypeFace(T,Env,F),
-  freezeType(faceType(F),Q,Face),!.
+  freezeType(F,Q,Face),!.

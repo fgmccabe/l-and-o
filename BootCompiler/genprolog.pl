@@ -21,7 +21,7 @@ genImports([I|More],Pkg,O,Ox) :-
   genImport(I,Pkg,O,O1),
   genImports(More,Pkg,O1,Ox).
 
-genImport(import(Viz,pkg(PkgImp),Vers,_,_,_),Pkg,O,Ox) :-
+genImport(import(Viz,pkg(PkgImp),Vers,_,_,_,_,_),Pkg,O,Ox) :-
   localName(Pkg,"#","import",Imp),
   appQuoted(Imp,"'",O,O1),
   appStr("(",O1,O2),
@@ -84,8 +84,8 @@ genContracts(Contracts,Pkg,O,Ox) :-
   appStr(").\n",O2,Ox).
 
 formatContracts([],[]).
-formatContracts([contract(Nm,CnNm,Spec,Face)|M],[tpl([strg(Nm),strg(CnNm),strg(CSig),strg(FSig)])|R]) :-
-  encodeConstraint(Spec,CChars,[]),
+formatContracts([contract(Nm,CnNm,_,FullSpec,Face)|M],[tpl([strg(Nm),strg(CnNm),strg(CSig),strg(FSig)])|R]) :-
+  encodeConstraint(FullSpec,CChars,[]),
   string_chars(CSig,CChars),
   encodeType(Face,FChars,[]),
   string_chars(FSig,FChars),

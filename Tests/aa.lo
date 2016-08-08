@@ -3,33 +3,35 @@ aa{
   contract all t ~~ additive[t] .. {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
+    zero : t.
   }
 
   public 
-  contract all t ~~ additive[t] |: arith[t] .. {
+  contract all t ~~ arith[t] .. {
     (*): (t,t)=>t.
     (/): (t,t)=>t.
     (%): (t,t)=>t.
+    one : t.
   }
 
   public
   implementation additive[integer] .. {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
+    zero = 0.
   }
 
   public 
   implementation arith[integer] .. {
-    X+Y => _int_plus(X,Y).
-    X-Y => _int_minus(X,Y).
     X*Y => _int_times(X,Y).
     X/Y => _int_div(X,Y).
     X%Y => _int_mod(X,Y).
+    one = 1.
   }
 
   fact:(integer)=>integer.
-  fact(0) => 1.
-  fact(N) => N*fact(N-1).
+  fact(zero) => one.
+  fact(N) => N*fact(N-one).
 
   assert fact(6) = 720.
 }

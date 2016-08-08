@@ -15,51 +15,51 @@ parseType(T,Env,Type) :-
   wrapConstraints(Cons,Tp,Type).
 
 parseType(Tp,Env,B,C,C,PT) :-
-  isQuantified(Tp,V,BT),
+  isQuantified(Tp,V,BT),!,
   parseBound(V,B,B0,PT,Inner),
   parseType(BT,Env,B0,[],C0,BTp),
   wrapConstraints(C0,BTp,Inner).
 parseType(F,Env,B,C0,Cx,Tp) :-
-  isBinary(F,"|:",L,R),
+  isBinary(F,"|:",L,R),!,
   parseConstraint(L,Env,B,C0,C1),
   parseType(R,Env,B,C1,Cx,Tp).
 parseType(Nm,Env,B,C0,Cx,Tp) :- 
   isIden(Nm,Lc,Id), !, 
   parseTypeName(Lc,Id,Env,B,C0,Cx,Tp).
 parseType(Sq,Env,B,C0,Cx,Type) :- 
-  isSquare(Sq,Lc,N,Args),
+  isSquare(Sq,Lc,N,Args),!,
   parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,Type).
 parseType(F,Env,B,C0,Cx,funType(AT,RT)) :-
   isBinary(F,"=>",L,R),
-  isTuple(L,LA),
+  isTuple(L,LA),!,
   parseTypes(LA,Env,B,C0,C1,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(F,Env,B,C0,Cx,grammarType(AT,RT)) :-
   isBinary(F,"-->",L,R),
-  isTuple(L,LA),
+  isTuple(L,LA),!,
   parseTypes(LA,Env,B,C0,C1,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(F,Env,B,C0,Cx,classType(AT,RT)) :-
   isBinary(F,"<=>",L,R),
-  isTuple(L,LA),
+  isTuple(L,LA),!,
   parseTypes(LA,Env,B,C0,C1,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(C,Env,B,C0,Cx,predType(AT)) :-
   isBraceTerm(C,L,[]),
-  isTuple(L,A),
+  isTuple(L,A),!,
   parseTypes(A,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
   isTuple(T,[A]),
   isTuple(A,Inner),!,
   parseTypes(Inner,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,AT) :-
-  isTuple(T,[A]),
+  isTuple(T,[A]),!,
   parseType(A,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
-  isTuple(T,A),
+  isTuple(T,A),!,
   parseTypes(A,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,faceType(AT)) :-
-  isBraceTuple(T,_,L),
+  isBraceTuple(T,_,L),!,
   parseTypeFields(L,Env,B,C0,Cx,[],AT).
 parseType(T,_,_,Cx,Cx,anonType) :-
   locOfAst(T,Lc),
@@ -144,9 +144,8 @@ parseContractConstraint(Tp,Env,B,C,C,N,PT) :-
   wrapConstraints(C0,BTp,Inner).
 parseContractConstraint(Tp,Env,B,C0,Cx,N,Cn) :-
   isBinary(Tp,"|:",L,R),
-  parseContractConstraint(L,Env,B,C0,C1,_,CL),
-  addConstraint(CL,C1,C2),
-  parseContractConstraint(R,Env,B,C2,Cx,N,Cn).
+  parseConstraint(L,Env,B,C0,C1),
+  parseContractConstraint(R,Env,B,C1,Cx,N,Cn).
 parseContractConstraint(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,Deps)) :-
   isSquare(Sq,Lc,N,Args),
   parseContractName(Lc,N,Env,Q,conTract(Op,ATs,Dps)),
@@ -158,7 +157,7 @@ addConstraint(Con,C0,C0) :- is_member(Con,C0),!.
 addConstraint(Con,C0,[Con|C0]).
 
 parseContractName(_,Id,Env,_,FTp) :-
-  getContract(Id,Env,contract(_,_,Con,_)),
+  getContract(Id,Env,contract(_,_,Con,_,_)),
   freshenConstraint(Con,FTp).
 parseContractName(Lc,Id,_,_,anonType) :- 
   reportError("contract %s not declared",[Id],Lc).
@@ -184,28 +183,16 @@ parseTypeFields([F|L],Env,Bound,C0,Cx,Flds,Fields) :-
   parseType(FT,Env,Bound,C0,C1,FldTp),
   parseTypeFields(L,Env,Bound,C1,Cx,[(Fld,FldTp)|Flds], Fields).
 
-parseContract(T,Env,Path,contract(Nm,ConNm,Spec,Face)) :-
+parseContract(T,Env,Path,contract(Nm,ConNm,Spec,FullSpec,Face)) :-
   isUnary(T,"contract",TI),
   isBinary(TI,"..",L,R),
   isBraceTuple(R,_,TLs),
   parseContractSpec(L,Q,[],C0,Env,Spc,Nm,ConNm,Path),
-  collectContract(C0,Env,[],InhFlds),
-  parseTypeFields(TLs,Env,Q,C0,_,InhFlds,F),
+  parseTypeFields(TLs,Env,Q,C0,_,[],F),
   reQuant(Q,faceType(F),Face),
-  reQuant(Q,Spc,Spec).
-
-collectContract([],_,Flds,Flds).
-collectContract([conTract(Nm,Args,Deps)|C],Env,Flds,Fields) :-
-  getContract(Nm,Env,contract(_,_,Spec,Face)),
-  moveQuants(Spec,_,TSpec),
-  moveConstraints(TSpec,_,conTract(_,CArgs,CDeps)),
-  bindAT(CArgs,Args,[],Q1),
-  bindAT(CDeps,Deps,Q1,CQ),
-  moveQuants(Face,_,F1),
-  moveConstraints(F1,_,FF),
-  rewriteType(FF,CQ,faceType(InhFlds)),
-  concat(Flds,InhFlds,InhF1),
-  collectContract(C,Env,InhF1,Fields).
+  reQuant(Q,Spc,Spec),
+  moveConstraints(SpcC,C0,Spc),
+  reQuant(Q,SpcC,FullSpec).
 
 % reapply quantifiers to a type to get full form
 reQuant([],Tp,Tp).
@@ -233,6 +220,9 @@ parseContractSpec(T,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path) :-
 parseTypeRule(St,Env,Rule,Path) :-
   parseTypeRule(St,[],[],_,Env,Rule,Path).
 
+parseTypeRule(St,B,C,Cx,Env,Rule,Path) :-
+  isUnary(St,"type",L),
+  parseTypeRule(L,B,C,Cx,Env,Rule,Path).
 parseTypeRule(St,B,C,C,Env,Rule,Path) :-
   isQuantified(St,V,Body),
   parseBound(V,B,B0,Rule,Rl),
@@ -251,6 +241,9 @@ parseTypeTemplate(St,B,Env,Type,Path) :-
   parseTypeTemplate(St,B,Env,[],Cx,Tp,Path),
   wrapConstraints(Cx,Tp,Type).
 
+parseTypeTemplate(St,B,Env,Type,Path) :-
+  isUnary(St,"type",L),
+  parseTypeTemplate(L,B,Env,Type,Path).
 parseTypeTemplate(St,B,Env,C,C,Type,Path) :-
   isQuantified(St,V,Body),
   parseBound(V,B,BB,Type,Tmplte),

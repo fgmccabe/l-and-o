@@ -77,12 +77,16 @@ ruleName(St,Nm,impl) :-
   isUnary(St,"implementation",I),
   isBinary(I,"..",L,_),
   implementationName(L,Nm),!.
-ruleName(St,var(Nm),value) :-
-  headOfRule(St,Hd),
-  headName(Hd,Nm).
+ruleName(St,tpe(Nm),type) :-
+  isUnary(St,"type",I),
+  isBinary(I,"<~",L,_),
+  typeName(L,Nm).
 ruleName(St,tpe(Nm),type) :-
   isBinary(St,"<~",L,_),
   typeName(L,Nm).
+ruleName(St,var(Nm),value) :-
+  headOfRule(St,Hd),
+  headName(Hd,Nm).
 
 contractName(St,Nm) :-
   isQuantified(St,_,B),
@@ -234,7 +238,7 @@ collRefs(St,All,_,R0,Refs) :-
   isUnary(St,"implementation",I),
   isBinary(I,"..",L,R),
   collectContractRefs(L,All,R0,R1),
-  collectExpRefs(R,All,R1,Refs).
+  collectClassRefs(R,All,R1,Refs).
 
 collRefs(St,All,Annots,SoFar,Refs) :-
   collectAnnotRefs(St,All,Annots,SoFar,R0),
@@ -398,6 +402,14 @@ collectTypeRefs(T,All,SoFar,Rest) :-
   isBinary(T,"|:",L,R),
   collConstraints(L,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Rest).
+collectTypeRefs(T,All,SoFar,Rest) :-
+  isBinary(T,"->>",L,R),
+  collectTypeRefs(L,All,SoFar,R0),
+  collectTypeRefs(R,All,R0,Rest).
+collectTypeRefs(C,All,SoFar,Refs) :-
+  isBinary(C,",",L,R),
+  collectTypeRefs(L,All,SoFar,R0),
+  collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTerm(T,L,[]), isTuple(L,A),
   collectTypeList(A,All,SoFar,Refs).
@@ -447,3 +459,6 @@ showGroup([]).
 showGroup([(Def,Lc,_)|M]) :-
   reportMsg("Def %s",[Def],Lc),
   showGroup(M).
+
+showRefs(Msg,Refs) :-
+  reportMsg("%s references: %s",[Msg,Refs]).

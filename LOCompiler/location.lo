@@ -1,8 +1,8 @@
 lo.comp.location{
   import lo.
   
-  public location <~ display.
-  location <~ {
+  public 
+  type location <~ {
     merge:(location)=>location.
     line:integer.
     column:integer.
@@ -18,17 +18,16 @@ lo.comp.location{
     length = Len.
 
     merge(loc(_,_,C,L)) => loc(Line,Off,Col,C-Col+L).
-
-    disp()=>locationDisp.display(this).
-    frmt(_)=>locationDisp.display(this).
   }.
+
+  public
+  implementation display[location] .. {
+    disp(L) => locDisp(L).
+  }
+
+  locDisp:(location)=>ss.
+  locDisp(loc(Ln,Off,Col,Len)) => 
+        ssSeq([disp(Ln),ss(":"),disp(Col),ss("("),disp(Len),ss(")")]).
 
   public hasLoc <~ { loc:location. }.
-
-  public locationDisp : display[location].
-  locationDisp .. {
-    display(loc(Ln,Off,Col,Len)) => 
-        ssSeq([intDisp.display(Ln),ss(":"),
-                intDisp.display(Col),ss("("),intDisp.display(Len),ss(")")]).
-  }.
 }

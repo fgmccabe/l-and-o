@@ -20,7 +20,7 @@ showImports([I|More],O,Ox) :-
   showImport(I,O,O1),
   showImports(More,O1,Ox).
 
-showImport(import(Viz,pkg(Pkg),_,_,_,_),O,Ox) :-
+showImport(import(Viz,pkg(Pkg),_,_,_,_,_,_),O,Ox) :-
   showViz(Viz,O,O1),
   appStr(Pkg,O1,O2),
   appStr(".\n",O2,Ox).
@@ -39,7 +39,7 @@ showTypeDef((_,Type),O,Ox) :-
 showContracts(Cons,O,Ox) :-
   listShow(Cons,plog:showContract,".\n",O,Ox).
 
-showContract(contract(LclNm,Nm,Con,Mtds),O,Ox) :-
+showContract(contract(LclNm,Nm,_,Con,Mtds),O,Ox) :-
   appStr("contract: ",O,O0),
   appStr(LclNm,O0,O1),
   appStr("@",O1,O2),

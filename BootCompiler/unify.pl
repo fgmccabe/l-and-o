@@ -56,7 +56,7 @@ checkConstraints([C|M],Env) :- checkConstraint(C,Env),!,
 checkConstraint(conTract(Nm,Args,Deps),Env) :-
   (surfaceBound(Args) -> checkForImpl(conTract(Nm,Args,Deps),Env) ; true).
 checkConstraint(implementsFace(Tp,Face),Env) :-
-  getTypeFace(Tp,Env,TpFace),
+  getTypeFace(Tp,Env,faceType(TpFace)),
   checkFace(Face,TpFace,Env).
 
 surfaceBound([]) :-!.
@@ -90,16 +90,17 @@ getTypeFace(T,Env,Face) :-
 
 getFace(type(Nm),Env,Face) :- !,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
-  freshen(FaceRule,voidType,_,typeRule(Lhs,faceType(Face))),
+  freshen(FaceRule,voidType,_,typeRule(Lhs,Face)),
   sameType(type(Nm),Lhs,Env),!.
 getFace(typeExp(Nm,Args),Env,Face) :- !,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
-  freshen(FaceRule,voidType,_,typeRule(Lhs,faceType(Face))),
+  freshen(FaceRule,voidType,_,Rl),
+  moveConstraints(Rl,_,typeRule(Lhs,Face)),
   sameType(Lhs,typeExp(Nm,Args),Env),!.
-getFace(T,Env,Face) :- isUnbound(T), !,
+getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
   constraints(T,C),
   collectImplements(C,Env,[],Face).
-getFace(faceType(Face),_,Face) :- !.
+getFace(faceType(Face),_,faceType(Face)) :- !.
 
 collectImplements(C,_,Face,Face) :- var(C),!.
 collectImplements([C|_],_,Face,Face) :- var(C),!.

@@ -5,7 +5,7 @@ lo.comp.misc{
   pathSuffix(Src,Marker) :: splitString(Src,Marker,Before,After) => After.
   pathSuffix(Src,_) => Src.
 
-  splitString:(string+,string+,string,string){}.
+  splitString:(string,string,string,string){}.
   splitString(Src,Mrk,Before,After) :: _str_find(Src,Mrk,0,Pt) :-- 
     _str_split(Src,Pt,Before,Second),
     _str_split(Second,_str_len(Mrk),_,After).

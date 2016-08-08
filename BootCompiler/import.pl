@@ -74,8 +74,11 @@ processContracts(Enc,C,Cx) :-
   findContracts(Cons,C,Cx).
 
 findContracts([],C,C).
-findContracts([tpl([strg(Nm),strg(CnNm),strg(Sig),strg(FSig)])|M],[contract(Nm,CnNm,Spec,Face)|C],Cx) :-
-  decodeConstraint(Sig,Spec),
+findContracts([tpl([strg(Nm),strg(CnNm),strg(Sig),strg(FSig)])|M],[contract(Nm,CnNm,Spec,FullSpec,Face)|C],Cx) :-
+  decodeConstraint(Sig,FullSpec),
+  moveQuants(FullSpec,Q,FS),
+  moveConstraints(FS,_,S),
+  moveQuants(Spec,Q,S),
   decodeSignature(FSig,Face),
   findContracts(M,C,Cx).
 

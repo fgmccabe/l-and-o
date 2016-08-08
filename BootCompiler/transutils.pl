@@ -133,21 +133,22 @@ makeMdlEntry(Pkg,enum(_,Nm,Tp,_,_,_),[(Nm,moduleClass(prg(AccessName,1),enum(Lcl
   localName(Pkg,"@",Nm,AccessName).
 makeMdlEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"*",Nm,LclName).
-makeMdlEntry(Pkg,contract(Nm,CNm,ConTp,_),[(Nm,moduleContract(Pkg,CNm,ConTp))|Mx],Mx,Clx,Clx).
-makeMdlEntry(_,impl(_,_,ImplNm,0,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),enum(ImplNm),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
-makeMdlEntry(_,impl(_,_,ImplNm,Arity,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),strct(ImplNm,Arity),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
+makeMdlEntry(Pkg,contract(Nm,CNm,ConTp,_,_),[(Nm,moduleContract(Pkg,CNm,ConTp))|Mx],Mx,Clx,Clx).
+makeMdlEntry(_,impl(_,_,ImplNm,0,_,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),enum(ImplNm),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
+makeMdlEntry(_,impl(_,_,ImplNm,Arity,_,_,_,_,_),[(ImplNm,moduleImpl(prg(ImplNm,1),strct(ImplNm,Arity),prg(ImplNm,3)))|Mx],Mx,Clx,Clx).
   
 makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportMap(Import,Map,M0),
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
 
-makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes),Map,Mx) :-
+makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes,_,_),Map,Mx) :-
   importFields(Pkg,Classes,Fields,Map,Mx).
 
 importFields(_,_,[],Map,Map).
 importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
-  moveQuants(Tp,_,Template),
+  moveQuants(Tp,_,QTp),
+  moveConstraints(QTp,_,Template),
   makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
   importFields(Pkg,Classes,Fields,M0,Mx).
 

@@ -184,7 +184,7 @@ showEntries([(Ky,Vl)|M],O,Ox) :-
 showImports(L,O,Ox) :-
   listShow(L,canon:showImport,"\n",O,Ox).
 
-showImport(import(Viz,pkg(Pkg),Version,_,_,_),O,Ox) :-
+showImport(import(Viz,pkg(Pkg),Version,_,_,_,_,_),O,Ox) :-
   showVisibility(Viz,O,O0),
   appStr("import ",O0,O1),
   appStr(Pkg,O1,O2),
@@ -210,13 +210,13 @@ showTypeDef((_,Type),O,Ox) :-
 showContracts(L,O,Ox) :-
   listShow(L,canon:showContract,"\n",O,Ox).
 
-showContract(contract(LclNm,Nm,Con,Mtds),O,Ox) :-
+showContract(contract(LclNm,Nm,_,FullSpec,Mtds),O,Ox) :-
   appStr("contract: ",O,O0),
   appStr(LclNm,O0,O1),
   appStr("@",O1,O2),
   appStr(Nm,O2,O3),
   appStr(":",O3,O4),
-  showConstraint(Con,O4,O5),
+  showConstraint(FullSpec,O4,O5),
   appStr(" .. ",O5,O6),
   showType(Mtds,O6,O7),
   appStr(".\n",O7,Ox).
@@ -231,7 +231,7 @@ showImpl(imp(ImplName,Spec),O,Ox) :-
   showConstraint(Spec,O3,O4),
   appStr("\n",O4,Ox).
 
-showImplementation(impl(Lc,_,_,_,Spec,OCx,implBody(_,Hd,ThDefs,Others,Types),_),O,Ox) :- 
+showImplementation(impl(Lc,_,_,_,Spec,OCx,implBody(_,Hd,ThDefs,Others,Types),_,_),O,Ox) :- 
   appStr("implementation: ",O,O1),
   showCanonTerm(Hd,O1,O2),
   appStr("for",O2,O3),
@@ -275,7 +275,7 @@ showDef(predicate(Lc,Nm,Type,Cx,Clauses),O,Ox) :-
   showConstraints(Cx,O6,O7),
   appStr("\n",O7,O8),
   showClauses(Clauses,O8,Ox),!.
-showDef(defn(Lc,Nm,Cond,Tp,Cx,Value),O,Ox) :-
+showDef(defn(Lc,Nm,Cx,Cond,Tp,Value),O,Ox) :-
   appStr("var definition: ",O,O1),
   appStr(Nm,O1,O2),
   appStr(":",O2,O3),
@@ -329,12 +329,12 @@ showDef(typeDef(Lc,Nm,Tp,Rl),O,Ox) :-
   appStr("\n",O6,O7),
   showTypeRule(Rl,O7,O8),
   appStr("\n",O8,Ox).
-showDef(contract(_,_,Spec,_),O,Ox) :-
+showDef(contract(_,_,_,Spec,_),O,Ox) :-
   appStr("contract: ",O,O1),
   showConstraint(Spec,O1,O2),
   appStr("\n",O2,Ox).
-showDef(impl(Lc,INm,ImplName,Arity,Spec,OCx,ImplBody,faceType(Face)),O,Ox) :-
-  showImplementation(impl(Lc,INm,ImplName,Arity,Spec,OCx,ImplBody,faceType(Face)),O,Ox).
+showDef(impl(Lc,INm,ImplName,Arity,Spec,OCx,ImplBody,InhRules,faceType(Face)),O,Ox) :-
+  showImplementation(impl(Lc,INm,ImplName,Arity,Spec,OCx,ImplBody,InhRules,faceType(Face)),O,Ox).
 
 showClassRules([],O,O).
 showClassRules([Rl|Rules],O,Ox) :-

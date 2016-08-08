@@ -1,4 +1,4 @@
-:- module(decode,[decodeTerm//1, decodeValue/2, decodeType//1, decodeConstraint//1, decodeSignature/2]).
+:- module(decode,[decodeTerm//1, decodeValue/2, decodeType//1, decodeConstraint//1, decodeConstraint/2,decodeSignature/2]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -88,9 +88,15 @@ decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
 
 decodeName(Str) --> [C], collectUntil(C,Text), { string_chars(Str,Text)}.
 
+
+decodeConstraint(S,Con) :-
+  string_chars(S,Chrs),
+  phrase(decodeConstraint(Con),Chrs).
+
 decodeConstraint(constrained(Con,Extra)) --> ['|'], decodeConstraint(Con), decodeConstraint(Extra).
 decodeConstraint(conTract(Nm,Args,Deps)) --> ['c'], decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
 decodeConstraint(implementsFace(Tp,Face)) --> ['a'], decodeType(Tp), decodeType(faceType(Face)).
+decodeConstraint(univType(TV,Con)) --> [':'], decodeType(TV), decodeConstraint(Con).
 
 collectUntil(C,[]) --> [C].
 collectUntil(C,[B|More]) --> [B], collectUntil(C,More).

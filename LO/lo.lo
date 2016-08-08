@@ -1,7 +1,6 @@
 lo{
   public import lo.core.
   public import lo.list.
-  public import lo.arithmetic.
   public import lo.index.
 
   public flatten : (ss) => string.

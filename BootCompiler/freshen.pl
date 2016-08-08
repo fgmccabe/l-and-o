@@ -75,6 +75,9 @@ frshnConstraint(conTract(Nm,Args,Deps),B,conTract(Nm,FArgs,FDeps)) :-
 frshnConstraint(implementsFace(Tp,Els),B,implementsFace(FTp,FL)) :-
   frshn(Tp,B,FTp),
   frshnFields(Els,B,FL).
+frshnConstraint(constrained(C1,C2),B,constrained(FC1,FC2)) :-
+  frshnConstraint(C1,B,FC1),
+  frshnConstraint(C2,B,FC2).
 
 frshnContract(conTract(Nm,Args,Deps),B,conTract(Nm,FArgs,FDeps)) :-
   frshnTypes(Args,B,FArgs),

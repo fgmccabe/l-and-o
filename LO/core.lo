@@ -5,14 +5,14 @@ lo.core{
 
   public 
   contract all x ~~ equality[x] .. {
-    eq: (x,x){}.
+    (==): (x,x){}.
     hash:(x)=>integer.
   }
 
   public 
-  contract all x ~~ equality[x] |: comp[x] .. {
-    lt: (x,x){}.
-    ge: (x,x){}.
+  contract all x ~~ /*equality[x] |: */ comp[x] .. {
+    (<): (x,x){}.
+    (>=): (x,x){}.
   }
   
   public
@@ -20,15 +20,16 @@ lo.core{
   
   public 
   contract all x ~~ additive[x] .. {
-    pl:  (x,x)=>x.
-    mns: (x,x)=>x.
+    (+):  (x,x)=>x.
+    (-): (x,x)=>x.
+    zero: x.
   }
 
-  public  
-  contract all x ~~ additive[x] |: arith[x] .. {
-    tms: (x,x)=>x.
-    dv:  (x,x)=>x.
-    md: (x,x)=>x.
+  public
+  contract all x ~~ /*additive[x] |: */ arith[x] .. {
+    (*): (x,x)=>x.
+    (/):  (x,x)=>x.
+    (%): (x,x)=>x.
   }
 
   -- Structured string. This is only part of the type ..
@@ -43,29 +44,37 @@ lo.core{
   -- stream contract
   public
   contract all S,E ~~ stream[S ->> E] .. {
-    eof:(S){}.
-    hdtl:(S,E,S){}.
-    cons:(E,S)=>S.
+    _eof:(S){}.
+    _hdtl:(S,E,S){}.
+    _cons:(E,S)=>S.
   }
 
   -- implement standard contracts for integers
 
   public
+  implementation additive[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+    zero = 0.
+  }
+
+  public
   implementation arith[integer] .. {
-    pl(X,Y) => _int_plus(X,Y).
-    tms(X,Y) => _int_times(X,Y).
-    mns(X,Y) => _int_minus(X,Y).
-    dv(X,Y) => _int_div(X,Y).
-    md(X,Y) => _int_mod(X,Y).
+    X*Y => _int_times(X,Y).
+    X/Y => _int_div(X,Y).
+    X%Y => _int_mod(X,Y).
+  }
+
+  public
+  implementation equality[integer] .. {
+    X == X.
+    hash(X) => X.
   }
 
   public
   implementation comp[integer] .. {
-    eq(X,X).
-    hash(X) => X.
-
-    lt(X,Y) :- _int_lt(X,Y).
-    ge(X,Y) :- _int_ge(X,Y).
+    X<Y :- _int_lt(X,Y).
+    X>=Y :- _int_ge(X,Y).
   }
 
   public
@@ -75,22 +84,49 @@ lo.core{
 
   -- implement standard contracts for floats
   public
+  implementation additive[float] .. {
+    X+Y => _flt_plus(X,Y).
+    X-Y => _flt_minus(X,Y).
+
+    zero = 0.0.
+  }
+
+  public
   implementation arith[float] .. {
-    pl(X,Y) => _flt_plus(X,Y).
-    tms(X,Y) => _flt_times(X,Y).
-    mns(X,Y) => _flt_minus(X,Y).
-    dv(X,Y) => _flt_div(X,Y).
-    md(X,Y) => _flt_mod(X,Y).
+    X*Y => _flt_times(X,Y).
+    X/Y => _flt_div(X,Y).
+    X%Y => _flt_mod(X,Y).
+  }
+
+  public 
+  implementation equality[float] .. {
+    X == X.
+    hash(X) => _flt_hash(X).
   }
 
   public 
   implementation comp[float] .. {
-    eq(X,X).
-    hash(X) => _flt_hash(X).
-
-    lt(X,Y) :- _flt_lt(X,Y).
-    ge(X,Y) :- _flt_ge(X,Y).
+    X<Y :- _flt_lt(X,Y).
+    X>=Y :- _flt_ge(X,Y).
   }
+
+  public
+  (>) : all t ~~ comp[t] |: (t,t){}.
+  X > Y :- Y<X.
+
+  public
+  (=<): all t ~~ comp[t] |: (t,t){}.
+  X =< Y :- Y>=X.
+
+  public
+  min: all t ~~ comp[t] |: (t,t)=>t.
+  min(X,Y) :: X<Y => X.
+  min(_,Y) => Y.
+
+  public 
+  max: all t ~~ comp[t] |: (t,t)=>t.
+  max(X,Y) :: X>Y => X.
+  max(_,Y) => Y.
 
   public
   implementation display[float] .. {
@@ -100,12 +136,16 @@ lo.core{
   -- and strings ...
 
   public
-  implementation comp[string] .. {
-    eq(X,X).
+  implementation equality[string] .. {
+    X == X.
     hash(X) => _str_hash(X).
+  }
 
-    lt(X,Y) :- _str_lt(X,Y).
-    ge(X,Y) :- _str_ge(X,Y).
+
+  public
+  implementation comp[string] .. {
+    X<Y :- _str_lt(X,Y).
+    X>=Y :- _str_ge(X,Y).
   }
 
 
@@ -125,14 +165,14 @@ lo.core{
   -- Implement equality for lists
   public
   implementation all x ~~ equality[x] |: equality[list[x]] .. {
-    eq(L1,L2) :- listEq(L1,L2).
+    L1 == L2 :- listEq(L1,L2).
     hash(L) => listHash(L).
   }
 
   private
   listEq:all x ~~ equality[x] |: (list[x],list[x]){}.
   listEq([],[]).
-  listEq([E1,..L1],[E2,..L2]) :- eq(E1,E2), listEq(L1,L2).
+  listEq([E1,..L1],[E2,..L2]) :- E1==E2, listEq(L1,L2).
 
   private
   listHash:all x ~~ equality[x] |: (list[x])=>integer.
@@ -142,11 +182,9 @@ lo.core{
   -- stream contract
   public
   implementation all x ~~ stream[list[x] ->> x] .. {
-    eof([]).
-
-    hdtl([E,..L],E,L).
-
-    cons(E,L) => [E,..L].
+    _eof([]).
+    _hdtl([E,..L],E,L).
+    _cons(E,L) => [E,..L].
   }
 
   -- display contract for lists

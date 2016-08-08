@@ -2,7 +2,8 @@ lo.comp.token{
   import lo.comp.location.
   import lo.
 
-  public tok ::= lpar
+  public type
+  tok ::= lpar
        |  rpar
        |  lbra
        |  rbra
@@ -18,7 +19,8 @@ lo.comp.token{
        |  period
        |  terminal.
 
-  public stringSegment ::= segment(location,string) 
+  public 
+  type stringSegment ::= segment(location,string) 
                 | interpolate(location,string,string).
 
   public token <~ hasLoc.

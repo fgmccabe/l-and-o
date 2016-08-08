@@ -38,9 +38,9 @@ transformMdlDef(enum(Lc,Nm,Tp,Cx,Defs,Face),Prefix,Map,Opts,Rules,Rx,Ex,Exx) :-
   localName(Prefix,"#",Nm,EnumName),
   Ex0 = [clse([],prg(LclName,1),[enum(EnumName)],[neck])|Exx].
 transformMdlDef(typeDef(_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
-transformMdlDef(contract(_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
-transformMdlDef(impl(Lc,INm,ImplName,Arity,Spec,OCx,Body,Face),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
-  transformImplementation(Lc,INm,ImplName,Arity,Spec,OCx,Body,Face,Pkg,Map,Opts,Rules,Rx,Ex,Exx).
+transformMdlDef(contract(_,_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
+transformMdlDef(impl(Lc,_,ImplName,_,_,_,Body,_,Face),_,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformImplementation(Lc,ImplName,Body,Face,Map,Opts,Rules,Rx,Ex,Exx).
 
 transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,[],Eqns),LclFun,Rules,Rx,Ex,Exx) :-
   localName(Prefix,"@",Nm,LclName),
@@ -53,11 +53,11 @@ transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,[],Eqns),LclFun,Rules,Rx,Ex,
 
 transformEquations(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
 transformEquations(Map,Opts,LclFun,[Eqn|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
-  transformEqn(Map,Opts,LclFun,No,Eqn,Rules,R0,Ex,Ex0),
+  transformEqn(Eqn,Map,Opts,LclFun,No,Rules,R0,Ex,Ex0),
   N1 is No+1,
   transformEquations(Map,Opts,LclFun,Defs,N1,Nx,R0,Rx,Ex0,Exx).
 
-transformEqn(Map,Opts,LclFun,QNo,equation(Lc,Nm,A,Cond,Value),[clse(Q,LclFun,Args,Body)|Rx],Rx,Ex,Exx) :-
+transformEqn(equation(Lc,Nm,A,Cond,Value),Map,Opts,LclFun,QNo,[clse(Q,LclFun,Args,Body)|Rx],Rx,Ex,Exx) :-
   extraVars(Map,Extra),                                   % extra variables coming from labels
   debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        % are we debugging?
   trPtns(A,Args,[Rep|Extra],Q0,Q1,PreG,PreGx,PostG,PreV,Map,ClOpts,Ex,Ex0), % head args
@@ -359,7 +359,7 @@ transformClassDef(Prefix,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),Rules,Rx,Entry,Enx,
 transformClassDef(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformPredicate(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),LclPred,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclPred,Entry,Enx).
-transformClassDef(Prefix,Map,Opts,defn(Lc,Nm,Cond,_,_,Value),Rules,Rx,Entry,Enx,Ex,Exx) :-
+transformClassDef(Prefix,Map,Opts,defn(Lc,Nm,_,Cond,_,Value),Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformDefn(Prefix,Map,Opts,Lc,Nm,LclDefn,Cond,Value,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclDefn,Entry,Enx).
 transformClassDef(Prefix,Map,Opts,class(Lc,Nm,Tp,Cx,Defs,Face),Rules,Rx,Entry,Enx,Ex,Exx) :-
@@ -378,7 +378,7 @@ entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),
   concat(Args,[LblVr,ThVr],Q),
   trCons(Name,Arity,Con).
 
-transformImplementation(Lc,_,ImplName,_,_,[],Def,Face,_,Map,Opts,Rules,Rx,Ex,Exx) :-
+transformImplementation(Lc,ImplName,Def,Face,Map,Opts,Rules,Rx,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,ImplName,_,LclName,Rules,R0),
   genClassMap(Map,Opts,Lc,LclName,[Def],Face,CMap,R0,En0,Ex,Ex1),!,
   transformClassBody(LclName,[Def],CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
@@ -404,6 +404,11 @@ trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
   lookupPkgRef(Map,Pkg,Rf,Reslt),
   genVar("Xi",Xi),
   implementPkgRefPtn(Reslt,Lc,Pkg,Rf,Xi,Ptn,Q,Qx,Post,Pstx).
+trPtn(dot(Rc,Fld),Exp,Q,Qx,Pre,Px,Post,Post,Map,Opts,Ex,Exx) :-
+  genVar("XV",X),
+  trCons(Fld,[X],S),
+  C = cons(S,[X]),
+  trDotExp(Rc,C,X,Exp,Q,Qx,Pre,Pi,Pi,Px,Map,Opts,Ex,Exx).
 trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
   trPtns(Ptns,P,[],Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
 trPtn(dict(_,A),Xi,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
