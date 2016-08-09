@@ -7,7 +7,6 @@ lo.comp.lexer{
   -- Define the lexer for the L&O syntax
 
   public
-  tokenState <~ stream[integer].
   tokenState <~ {
     currentLocation:((integer,integer,integer)){}
   }.
@@ -18,15 +17,17 @@ lo.comp.lexer{
 
   tkState:(list[integer],integer,integer,integer) <=> tokenState.
   tkState(Chars,Line,Off,Col) .. {
-    eof() :- Chars = [].
-
-    hdtl(0c\n,Next) :: Chars =. [0c\n,..Rest] :-- Next = tkState(Rest,Line+1,Off+1,1).
-    hdtl(Ch,Next) :: Chars =. [Ch,..Rest] :-- Next = tkState(Rest,Line,Off+1,Col+1).
-
-    cons(Ch) => tkState([Ch,..Chars],Line,Off,Col).
-
     currentLocation((Line,Off,Col)).
   }.
+
+  public implementation stream[tokenState ->> integer] .. {
+    _eof(tkState([],_,_,_)).
+
+    _hdtl(tkState([0c\n,..Rest],Line,Off,Col),0c\n,tkState(Rest,Line+1,Off+1,1)) :-- true.
+    _hdtl(tkState([Ch,..Rest],Line,Off,Col),Ch,tkState(Rest,Line,Off+1,Col+1)) :-- true .
+
+    _cons(Ch,tkState(Chars,Line,Off,Col)) => tkState([Ch,..Chars],Line,Off-1,Col-1).
+  }
 
   private
   makeLocation:((integer,integer,integer),(integer,integer,integer)) => location.
@@ -66,10 +67,10 @@ lo.comp.lexer{
   nxtTok(lqpar) --> [0c<, 0c|].
   nxtTok(rqpar) --> [0c|, 0c>].
   nxtTok(period) --> [0c.], whiteSpace().
-  nxtTok(regTok(Rg)) --> ".:", regExp(Chars), ":.", { Rg = implode(Chars) }.
+  nxtTok(regTok(Rg)) --> "`", regExp(Chars), "`", { Rg = implode(Chars) }.
   nxtTok(terminal) --> eof.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
-  nxtTok(idTok(Id)) --> [0c'], readQuoted(Q), { Id = implode(Q)}.
+  nxtTok(idQTok(Id)) --> [0c'], readQuoted(Q), [0c'], { Id = implode(Q)}.
   nxtTok(stringTok(Text)) --> [0c"], readStringSegments(Text), [0c"].
   nxtTok(idTok(Op)) --> [Ch], { follows("",Ch,Next)}, followGraph(Next,Op)!.
 
@@ -79,7 +80,7 @@ lo.comp.lexer{
 
   readQuoted : (list[integer]) --> tokenState.
   readQuoted([C,..R]) --> charRef(C), readQuoted(R).
-  readQuoted([]) --> [0c'].
+  readQuoted([]) --> [0c']+.
 
   readIden : (list[integer]) --> tokenState.
   readIden([C,..R]) --> alphaNum(C), readIden(R).
@@ -94,7 +95,7 @@ lo.comp.lexer{
   alphaNum(Ch) --> [Ch] :: (_isNdChar(Ch) | _isMnChar(Ch) | _isMcChar(Ch) | _isPcChar(Ch) | _isCfChar(Ch) )!.
 
   regExp:(list[integer]) --> tokenState.
-  regExp([]) --> ":."+.
+  regExp([]) --> "`"+.
   regExp([0c\\,Ch,..More]) --> [0c\\], [Ch], regExp(More).
   regExp([Ch,..More]) --> [Ch], regExp(More).
 
@@ -116,7 +117,7 @@ lo.comp.lexer{
   readStr([]) --> [0c$]+.
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
-  interpolation:(stringSegment-) --> tokenState.
+  interpolation:(stringSegment) --> tokenState.
   interpolation(interpolate(Lc,implode(Text),implode(Format))) --> 
     @currentLocation(Start),
     countBrackets(Text,[]),
@@ -154,15 +155,15 @@ lo.comp.lexer{
       exponent(_int2flt(Decimal)+Fr,Fp).
   readMoreNumber(intTok(Ix),Ix) --> [].
 
-  fraction:(float+,float+,float-) --> tokenState.
+  fraction:(float,float,float) --> tokenState.
   fraction(Scale,SoFar,Result) --> digit(D), fraction(Scale*0.1,SoFar+_int2flt(D)*Scale,Result).
   fraction(_,Fract,Fract) --> [].
 
-  exponent:(float+,float-) --> tokenState.
+  exponent:(float,float) --> tokenState.
   exponent(SoFar,Fp) --> ([0ce] | [0cE]), readDecimal(Exp), Fp = SoFar*_pwr(10.0,_int2flt(Exp)).
   exponent(Fp,Fp) --> [].
 
-  digit:(integer) --> stream[integer].
+  digit:(integer) --> tokenState.
   digit(0) --> [0c0].
   digit(1) --> [0c1].
   digit(2) --> [0c2].
@@ -175,11 +176,11 @@ lo.comp.lexer{
   digit(9) --> [0c9].
 
   public
-  charRef:(integer) --> stream[integer].
+  charRef:(integer) --> tokenState.
   charRef(Chr) --> [0c\\], backSlashRef(Chr).
   charRef(Chr) --> [Chr].
 
-  backSlashRef:(integer) --> stream[integer].
+  backSlashRef:(integer) --> tokenState.
   backSlashRef(0c\a) --> [0ca].
   backSlashRef(0c\b) --> [0cb].
   backSlashRef(0c\t) --> [0ct].
@@ -188,11 +189,11 @@ lo.comp.lexer{
   backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
   backSlashRef(Ch) --> [Ch].
 
-  hexChars:(integer,integer)-->stream[integer].
+  hexChars:(integer,integer)-->tokenState.
   hexChars(SoFar,Ch) --> hexDigit(N), hexChars(SoFar*16+N,Ch).
   hexChars(SoFar,SoFar) --> [0c;].
 
-  hexDigit:(integer) --> stream[integer].
+  hexDigit:(integer) --> tokenState.
   hexDigit(D) --> digit(D).
   hexDigit(10) --> [0ca].
   hexDigit(11) --> [0cb].

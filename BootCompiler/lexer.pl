@@ -117,7 +117,7 @@ nxTok(St,NxSt,rqpar(Lc)) :- lookingAt(St,NxSt,['|>'],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.',' '],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\t'],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\n'],Lc).
-nxTok(St,NxSt,regTok(Rg,Lc)) :- lookingAt(St,St0,['.',':'],_), readRegexp(St0,NxSt,Rg), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,regTok(Rg,Lc)) :- lookingAt(St,St0,['`'],_), readRegexp(St0,NxSt,Rg), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), followGraph(Ch,Id,St1,NxSt), !, makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :-
   nextSt(St,St1,Ch), 
@@ -204,6 +204,8 @@ bracketCount(_,St1,NxSt,Ch,Stk,[Ch|Chrs]) :- nextSt(St1,St2,Chr), bracketCount(S
 
 readFormat(St,NxSt,Chrs) :- nextSt(St,St1,':'), readUntil(St1,NxSt,';',Chrs).
 readFormat(St,St,[]) :- \+ hedChar(St,':').
+
+readRegexp(St,NxSt,Id) :- readUntil(St,NxSt,'`',Chrs), string_chars(Id,Chrs).
 
 idStart(L) :- char_type(L,alpha).
 idStart('_').

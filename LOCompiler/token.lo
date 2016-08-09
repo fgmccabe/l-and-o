@@ -12,6 +12,7 @@ lo.comp.token{
        |  lqpar
        |  rqpar
        |  idTok(string)
+       |  idQTok(string)
        |  intTok(integer)
        |  fltTok(float)
        |  stringTok(list[stringSegment])
@@ -51,6 +52,7 @@ lo.comp.token{
   tokDisp(lqpar) => ss("<|").
   tokDisp(rqpar) => ss("|>").
   tokDisp(idTok(Nm)) => ss(Nm).
+  tokDisp(idQTok(Nm)) => ssSeq([ss("'"),ss(Nm),ss("'")]).
   tokDisp(intTok(Ix)) => disp(Ix).
   tokDisp(fltTok(Dx)) => disp(Dx).
   tokDisp(stringTok(Sx)) => disp(Sx).
