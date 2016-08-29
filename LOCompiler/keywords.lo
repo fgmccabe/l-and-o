@@ -1,7 +1,7 @@
 lo.comp.keywords{
   import lo.
 
-  public isKeyword:(string+){}.
+  public isKeyword:(string){}.
   isKeyword(X) :: keyword(X) :-- true.
 
   private keyword:(string){}.
@@ -26,6 +26,7 @@ lo.comp.keywords{
   keyword(":-").
   keyword(":--").
   keyword("-->").
+  keyword("->>").
   keyword("::=").
   keyword("<=").
   keyword("<~").
@@ -38,13 +39,18 @@ lo.comp.keywords{
   keyword("%%").
   keyword("@").
   keyword("@@").
-  keyword("true").
-  keyword("false").
   keyword("this").
   keyword("import").
+  keyword("private").
+  keyword("public").
+  keyword("contract").
+  keyword("all").
+  keyword("type").
+  keyword("implementation").
+  keyword("void").
   keyword("#").
 
-  public isRuleKeyword:(string+){}.
+  public isRuleKeyword:(string){}.
   isRuleKeyword(X) :: ruleKeyword(X) :-- true.
 
   private

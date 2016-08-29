@@ -14,7 +14,7 @@ importPkg(Pkg,Repo,Spec) :-
   importPkg(Pkg,defltVersion,Repo,Spec).
 
 importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
-  openPackageAsStream(Repo,Pkg,Vers,Strm),
+  openPackageAsStream(Repo,Pkg,Vers,_,Strm),
   pickupPieces(Strm,Pkg,[export,types,classes,contracts,implementations],Pieces),
   close(Strm),
   processPieces(Pieces,Export,Types,Imports,Classes,Contracts,Impls).
@@ -92,7 +92,7 @@ pickupImplementations([tpl([strg(Nm),strg(Sig)])|M],[imp(Nm,Spec)|I],RI) :-
   pickupImplementations(M,I,RI).
 
 loadPkg(Pkg,Vers,Repo,Code,Imports) :-
-  openPackageAsStream(Repo,Pkg,Vers,Strm),
+  openPackageAsStream(Repo,Pkg,Vers,_,Strm),
   loadPieces(Strm,Pkg,Code,Imports),
   close(Strm).
 

@@ -50,6 +50,10 @@ patterns:
   name: constant.numeric
   match: ((0c(\\u[0-9a-fA-F]+;|\\.|.))|(\d+(\.\d+([eE][-+]?\d+)?)?)|(0x[0-9a-zA-F]*))
 
+- comment: Variables 
+  name: variable.language.lo
+  match: ([A-Za-z_](\w|\d)*)
+
 - comment: Variable definition
   name: entity.name.function
   match: (\w+) *[^:][:][^:] *(.*)\.

@@ -139,6 +139,13 @@ overloadList([T|L],C,D,[RT|RL]) :-
 resolveTerms(L,D,RL) :-
   overloadList(L,resolve:resolveTerm,D,RL).
 
+resolveEntries(E,D,RE) :-
+  overloadList(E,resolve:resolvePair,D,RE).
+
+resolvePair((L,R),D,(RL,RR)) :-
+  resolveTerm(L,D,RL),
+  resolveTerm(R,D,RR).
+
 resolveCond(true(Lc),_,true(Lc)).
 resolveCond(false(Lc),_,false(Lc)).
 resolveCond(conj(L,R),Dict,conj(RL,RR)) :-

@@ -134,6 +134,13 @@ lo.core{
   }
 
   -- and strings ...
+  public
+  implementation additive[string] .. {
+    X+Y => _str_concat(X,Y).
+    X-Y => "".
+
+    zero = "".
+  }
 
   public
   implementation equality[string] .. {

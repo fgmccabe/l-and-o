@@ -43,7 +43,6 @@
   keyword("contract").
   keyword("implementation").
   keyword("void").
-  keyword("top").
   keyword("all").
   keyword("#").
 

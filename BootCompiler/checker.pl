@@ -619,7 +619,7 @@ typeOfTerm(Term,Tp,Env,Ev,dict(Lc,Entries)) :-
   typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isUnary(Term,Lc,"-",Arg), % handle unary minus
-  binary(Lc,"-",integer(Lc,0),Arg,Sub),
+  binary(Lc,"-",name(Lc,"zero"),Arg,Sub),
   typeOfTerm(Sub,Tp,Env,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isRoundTerm(Term,Lc,F,A),
@@ -799,6 +799,9 @@ checkCond(Term,Env,Ev,Call) :-
   typeOfKnown(F,PrTp,Env,E0,Pred),
   deRef(PrTp,PredTp),
   checkCondCall(Lc,Pred,A,PredTp,Call,E0,Ev).
+checkCond(Term,Env,Env,true(Lc)) :-
+  locOfAst(Term,Lc),
+  reportError("cannot understand condition %s",[Term],Lc).
 
 checkCondCall(Lc,Pred,A,predType(ArgTps),Call,Env,Ev) :-
   checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,Call).

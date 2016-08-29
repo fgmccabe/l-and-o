@@ -8,6 +8,7 @@
 
 isType(anonType).
 isType(voidType).
+isType(thisType).
 isType(kVar(_,_)).
 isType(tVar(_,_,_,_)).
 isType(type(_)).

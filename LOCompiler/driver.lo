@@ -18,12 +18,12 @@ lo.comp.driver{
         parse(Term) %% Toks ) => Term.
 
   -- Hint to the run-time:
-  main:(list[string]+){}.
+  main:(list[string]){}.
   main(Strs) :-
     B = cwd(),
     parseArgs(B,Strs).
 
-  parseArgs:(uri,list[string]+){}.
+  parseArgs:(uri,list[string]){}.
   parseArgs(_,[]).
   parseArgs(B,[S,..M]) :-
     Term = parseFile(resolveUri(B,parseUri(S))),

@@ -76,12 +76,14 @@ parseTypeName(_,Id,Env,_,C,Cx,Tp) :-
 parseTypeName(Lc,Id,_,_,C,C,anonType) :- 
   reportError("type %s not declared",[Id],Lc).
 
-parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,typeExp(Op,ArgTps)) :- 
+parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,Tp) :- 
   parseTypes(Args,Env,B,C0,C1,ArgTps),
-  isType(N,Env,tpDef(_,T,_)),
+  ( isType(N,Env,tpDef(_,T,_)) -> checkType(T,Lc,ArgTps,C1,Cx,Tp) ; reportError("type %s not known",[N],Lc), Tp = typeExp(N,ArgTps), Cx=C1).
+
+checkType(T,Lc,ArgTps,C1,Cx,typeExp(Op,ArgTps)) :-
   moveQuants(T,_,TT),
   moveConstraints(TT,C,typeExp(Op,AT)),
-  sameLength(AT,Args,Lc),
+  sameLength(AT,ArgTps,Lc),
   bindAT(AT,ArgTps,[],CQ),
   rewriteConstraints(C,CQ,C1,Cx).
 
@@ -250,7 +252,6 @@ getFace(typeExp(Nm,Args),Env,Face) :-
   moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
   bindAT(AT,Args,[],BB),
   rewriteType(F,BB,Face).
-
 getFace(type(Nm),Env,Face) :- !,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
   freshen(FaceRule,voidType,_,typeRule(Lhs,Face)),

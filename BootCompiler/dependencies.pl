@@ -50,6 +50,9 @@ collectDefinition(St,Stmts,Stx,[(Nm,Lc,[St|Defn])|Defs],Defs,P,Px,A,A,I,I,O,O,Ex
   locOfAst(St,Lc),
   collectDefines(Stmts,Kind,Stx,Nm,Defn),
   call(Export,Nm,P,Px).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_) :-
+  locOfAst(St,Lc),
+  reportError("Cannot fathom %s",[St],Lc).
 
 export(Nm,[Nm|P],P).
 nop(_,P,P).

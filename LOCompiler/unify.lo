@@ -1,0 +1,119 @@
+lo.comp.unify{
+  import lo.
+  import lo.comp.types.
+  import lo.comp.dict.
+  import lo.comp.freshen.
+
+  sameType:(tipe,tipe,list[env]){}.
+  sameType(T1,T2,Env) :-
+    sm(deRef(T1),deRef(T2),Env)!.
+
+  sm:(tipe,tipe,list[env]){}.
+  sm(_,anonType,_).
+  sm(anonType,_,_).
+  sm(voidType,voidType,_).
+  sm(thisType,thisType,_).
+  sm(thisType,T2,Env) :-
+    isVar("this",Env,vr(_,_,T)),
+    sameType(T,T2,Env).
+  sm(T1,thisType,Env) :-
+    isVar("this",Env,vr(_,_,T)),
+    sameType(T,T2,Env).
+  sm(kVar(Nm),kVar(Nm),_).
+  sm(V1,V2,Env) :- isUnbound(V1), isUnbound(V2), varBinding(V1,V2,Env).
+  sm(V1,T2,Env) :- isUnbound(V1), checkBinding(V1,T2,Env).
+  sm(T1,V2,Env) :- isUnbound(V2), checkBinding(V2,T1,Env).
+  sm(tipe(Nm),tipe(Nm),_).
+  sm(typeExp(Nm,A1),typeExp(Nm,A2),Env) :- smList(A1,A2,Env).
+  sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
+  sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
+  sm(predType(A1),predType(A2),Env) :- sameType(A1,A2,Env).
+  sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
+  sm(classType(A1,C1),classType(A2,C2),Env) :- sameType(A1,A2,Env), sameType(C1,C2,Env).
+  sm(faceType(F1),faceType(F2),Env) :- length(F1)=length(F2), smFields(F1,F2,Env).
+
+  smList:(list[tipe],list[tipe],list[env]){}.
+  smList([],[],_).
+  smList([E1,..L1],[E2,..L2],Env) :- sameType(E1,E2,Env), smList(L1,L2,Env).
+
+  smFields:(list[(string,tipe)],list[(string,tipe)],list[env]){}.
+  smFields([],_,_).
+  smFields([(F,E1),..L1],L2,Env) :- (F,E2) in L2, sameType(E1,E2,Env), smFields(L1,L2,Env).
+
+  varBinding:(tipe,tipe,list[env]){}.
+  varBinding(T1,T2,_) :: isIdenticalVar(T1,T2) :-- true.
+  varBinding(V1,V2,Env) :-- 
+    mergeConstraints(constraints(V1),constraints(V2),Env), 
+    bind(V1,V2).
+
+  mergeConstraints:(list[constraint],list[constraint],list[env]){}.
+  mergeConstraints(C1,C2,Env) :: var(C1) :-- copyConstraints(C2,C1,Env).
+  mergeConstraints([_,..L1],C2,Env) :- mergeConstraints(L1,C2,Env).
+
+  copyConstraints:(list[constraint],list[constraint],list[env]){}.
+  copyConstraints(_,C,_) :: var(C) :-- true.
+  copyConstraints([C,..L1],[C,..L2],Env) :-- copyConstraints(L1,L2,Env).
+
+  checkBinding:(tipe,tipe,list[env]){}.
+  checkBinding(V,Tp,Env) :- 
+    C = constraints(V),
+    bind(V,Tp),
+    checkConstraints(C,Env).
+
+  checkConstraints:(list[constraint],list[env]){}.
+  checkConstraints(C,_) :: var(C) :-- true.
+  checkConstraints([C,..M],Env) :: checkConstraint(C,Env) :--
+    checkConstraints(M,Env).
+
+  checkConstraint:(constraint,list[env]){}.
+  checkConstraint(conTract(Nm,Args,Deps),Env) :-
+    (surfaceBound(Args) ? checkForImpl(conTract(Nm,Args,Deps),Env) | true).
+  checkConstraint(implementsFace(Tp,Face),Env) :-
+    faceOfType(Tp,Env,faceType(TpFace)),
+    checkFace(Face,TpFace,Env).
+
+  surfaceBound:(list[tipe]){}.
+  surfaceBound([]).
+  surfaceBound([E,..M]) :- \+isUnbound(deRef(E)), surfaceBound(M).
+
+  checkForImpl:(constraint,list[env]){}.
+  checkForImpl(Con,Env) :-
+    isImplemented(Con,Env,impl(_,ITp)),
+    sameContract(freshen(ITp,{}),Con,Env).
+
+  sameContract:(constraint,constraint,list[env]){}.
+  sameContract(conTract(Nm,A1,D1),conTract(Nm,A2,D2),Env) :-
+    smList(A1,A2,Env),
+    smList(D1,D2,Env).
+
+  checkFace:(list[(string,tipe)],list[(string,tipe)],list[env]){}.
+  checkFace([],_,_).
+  checkFace([(Nm,ElTp),..R],TpFace,Env) :-
+    (Nm,XTp) in TpFace,
+    sameType(ElTp,XTp,Env),
+    checkFace(R,TpFace,Env).
+
+  public
+  faceOfType:(tipe,list[env],tipe){}.
+  faceOfType(faceType(F),_,faceType(F)).
+  faceOfType(tipe(Nm),Env,F) :-
+    typeInDict(Nm,Env,FR),
+    moveQuants(FR,_,FQR),
+    moveConstraints(FQR,_,typeRule(_,F)).
+  faceOfType(typeExp(Nm,Args),Env,freshen(F,bindAT(AT,Args,{}))) :-
+    typeInDict(Nm,Env,FR),
+    moveQuants(FR,_,FQR),
+    moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)).
+  faceOfType(T,Env,faceType(collectImplements(T,constraints(T),Env,[]))) :- isUnbound(T).
+
+  collectImplements:(tipe,list[constraint],list[env],list[(string,tipe)]) => list[(string,tipe)].
+  collectImplements(_,C,_,Face) :: var(C) => Face.
+  collectImplements(V,[implementsFace(T,Els),..C],Env,SoFar) =>
+    collectImplements(V,C,Env,mergeFields(Els,Env,SoFar)).
+  collectImplements(_,[],_,Face) => Face.
+
+  mergeFields:(list[(string,tipe)],list[env],list[(string,tipe)]) => list[(string,tipe)].
+  mergeFields([],_,SoFar) => SoFar.
+  mergeFields([(Nm,F),..Els],Env,SoFar) :: ((Nm,V) in SoFar,sameType(F,V,Env)) => mergeFields(Els,Env,SoFar).
+  mergeFields([(Nm,F),..Els],Env,SoFar) => mergeFields(Els,Env,[(Nm,F),..SoFar]).
+}

@@ -1,0 +1,58 @@
+test.topsort{
+  import lo.
+  import lo.topsort.
+
+  type all x,y ~~ df[x,y] ::= df(x,list[y]).
+
+  implementation all x ~~ depends[df[x,x]->>x] .. {
+    defines(df(X,_),X).
+    references(df(_,R)) => R.
+  }
+
+  implementation all x,y ~~ display[x], display[y] |: display[df[x,y]] .. {
+    disp(D) => dispDf(D).
+  }
+
+  dispDf: all x,y ~~ display[x], display[y] |: (df[x,y]) => ss.
+  dispDf(df(X,Y)) => ssSeq([ss("("),disp(X),ss(","),disp(Y),ss(")")]).
+
+
+  implementation all x,y ~~ equality[x], equality[y] |: equality[df[x,y]] .. {
+    X == Y :- dfEq(X,Y).
+
+    hash(D) => dfHash(D).
+  }
+
+  dfEq:all x,y ~~ equality[x], equality[y] |: (df[x,y],df[x,y]){}. 
+  dfEq(df(X1,Y1),df(X2,Y2)) :- X1==X2, Y1==Y2.
+
+  dfHash:all x,y ~~ equality[x], equality[y] |: (df[x,y]) => integer.
+  dfHash(df(X,Y)) => (37*hash(X))+hash(Y).
+
+  -- lots of little groups
+
+  a1:list[df[string,string]].
+  a1 = [df("one",["one"]), df("two",["two"]), df("three",["three"]), df("four",["four"])].
+
+  show topsort(a1).
+
+  assert length(topsort(a1)) == 4.
+
+  -- one big group
+
+  a2:list[df[string,string]].
+  a2 = [df("1",["2"]),df("2",["4"]),df("3",["1"]),df("4",["3"])].
+
+  show topsort(a2).
+
+  assert length(topsort(a2)) == 1.
+
+  -- group with a tail
+
+  a3:list[df[string,string]].
+  a3 = [df("alpha",["beta"]),df("beta",["gamma"]),df("gamma",["alpha"]),df("delta",["gamma"])].
+
+  show topsort(a3).
+
+  assert length(topsort(a3)) == 2.
+}

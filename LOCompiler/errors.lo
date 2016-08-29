@@ -7,4 +7,14 @@ lo.comp.errors{
   reportError(Msg,Lc) :-
     _logmsg("Error @ $(Lc)"),
     _logmsg(Msg).
+
+  public
+  reportMsg:(string,location){}.
+  reportMsg(Msg,Lc) :-
+    _logmsg("Info @ $(Lc)"),
+    _logmsg(Msg).
+
+  public
+  logMsg:(string){}.
+  logMsg(Msg) :- _logmsg(Msg).
 }

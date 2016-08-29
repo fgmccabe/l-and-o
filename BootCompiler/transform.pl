@@ -414,9 +414,9 @@ trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
 trPtn(dict(_,A),Xi,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   genVar("Xi",Xi),
   trEntryPtrns(A,Xi,[Xi|Q],Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
-trPtn(apply(O,A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
+trPtn(apply(v(_,Nm),A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0),
-  trPtnCallOp(O,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
+  trPtnCallOp(Nm,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
 trPtn(where(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtn(P,Ptn,Q,Q0,Pre,P0,Post,Pstx,Map,Opts,Ex,Ex0),
   trGoal(C,P0,Px,Q0,Qx,Map,Opts,Ex0,Exx).
@@ -444,11 +444,11 @@ implementVarPtn(inherit(Nm,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx,Pre
 implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-                 % variable local to rule
   merge([idnt(Nm)],Q,Qx).
 
-trPtnCallOp(v(_,Nm),Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
+trPtnCallOp(Nm,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx),
   isEscape(Nm),!.
-trPtnCallOp(v(_,Nm),Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
+trPtnCallOp(Nm,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
   genVar("X",X),
   implementPtnCall(Reslt,Nm,X,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).

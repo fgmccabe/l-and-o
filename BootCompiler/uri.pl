@@ -184,6 +184,8 @@ pHierPath(net(A,P),['/','/'|O],Ox) :-
   pPath(P,O1,Ox).
 pHierPath(abs(P),['/'|O],Ox) :-
   pSegs(P,O,Ox).
+pHierPath(rel(P),O,Ox) :-
+  pSegs(P,O,Ox).
 
 pAuthority(userHost(U,H),O,Ox) :-
   pUser(U,O,O1),

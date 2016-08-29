@@ -258,6 +258,7 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
 
   escape(_str_gen,False,False,"F1SS","Generate a unique string")
 
+
 /*
   escape(_stringOf,False,False,":k't'AF3k't'iiS","convert value to a string")
   escape(_trim,False,False,"F2SiS","trim a string to a width")
@@ -268,6 +269,7 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
   escape(_str_find,False,False,"P4SSii","find a substring in string")
   escape(_sub_str,False,False,"F3SiiS","extract a substring")
   escape(_str_split,False,False,"P4SiSS","split a string at a point")
+  escape(_str_concat,False,False,"F2SSS","Concatenate two strings")
 /*
   escape(getenv,False,False,"F2SSS","get an environment variable")
   escape(setenv,True,False,"P2SS","set an environment variable")

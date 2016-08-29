@@ -29,4 +29,9 @@ lo.list{
   subtract(_,[]) => [].
   subtract(E,[E,..R]) => R.
   subtract(E,[X,..R]) => [E,..subtract(E,R)].
+
+  public
+  length:all t ~~ (list[t]) => integer.
+  length([]) => 0.
+  length([_,..L]) => length(L)+1.
 }

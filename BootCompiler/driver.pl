@@ -61,7 +61,7 @@ processFiles([_|More],CWD,Repo,Opts) :-
 
 processFile(Fl,CWD,Repo,Rx,Opts) :-
   startCount,
-  getSrcUri(Fl,CWD,FUrl),
+  getSrcUri(Fl,CWD,SrcUri,FUrl),
   locateResource(FUrl,Src),
   parseFile(Src,Term),!,
   noErrors,
@@ -74,7 +74,7 @@ processFile(Fl,CWD,Repo,Rx,Opts) :-
   genRules(Rules,Text),
   packageName(Prog,Pkg),
   packageVersion(Opts,Vers),
-  addPackage(Repo,Pkg,Vers,Text,Rx).
+  addPackage(Repo,SrcUri,Pkg,Vers,Text,Rx).
 
 packageName(prog(Pkg,_,_,_,_,_,_,_),Pkg).
 
@@ -96,6 +96,6 @@ getCWDUri(WD) :-
   string_concat("file:",D,DT),
   parseURI(DT,WD).
 
-getSrcUri(Fl,WD,FUri) :-
+getSrcUri(Fl,WD,FU,FUri) :-
   parseURI(Fl,FU),
   resolveURI(WD,FU,FUri).

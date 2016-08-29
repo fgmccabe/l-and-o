@@ -6,15 +6,38 @@ lo.comp.abstract{
   import lo.comp.location.
   import lo.comp.keywords.
 
+  public isScalar:(ast){}.
+  isScalar(intg(_,_)).
+  isScalar(flot(_,_)).
+  isScalar(strg(_,_)).
+
+  public isString:(ast,location,string){}.
+  isString(strg(Lc,St),Lc,St).
+
+  public isInteger:(ast,location,integer){}.
+  isInteger(intg(Lc,Ix),Lc,Ix).
+
   public isBinary:(ast,string,location,ast,ast){}.
   isBinary(appl(Lc,iden(_,Nm),tupl(_,"()",[L,R])),Nm,Lc,L,R).
+
+  public
+  binary:(location,string,ast,ast) => ast.
+  binary(Lc,Op,L,R) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[L,R])).
 
   public isUnary:(ast,string,location,ast){}.
   isUnary(appl(Lc,iden(_,Nm),tupl(_,"()",[L])),Nm,Lc,L).
 
   public
-  isSquare:(ast,location,string,list[ast]){}.
-  isSquare(appl(Lc,iden(_,Nm),tupl(_,"[]",A)),Lc,Nm,A).
+  unary:(location,string,ast) => ast.
+  unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
+
+  public
+  isSquare:(ast,location,ast,list[ast]){}.
+  isSquare(appl(Lc,Op,tupl(_,"[]",A)),Lc,Nm,A).
+
+  public
+  squareTerm:(location,ast,list[ast]) => ast.
+  squareTerm(Lc,Op,Els) => appl(Lc,Op,tupl(Lc,"[]",Els)).
 
   public
   isBraceTerm:(ast,location,ast,list[ast]){}.
@@ -38,15 +61,40 @@ lo.comp.abstract{
   isBraceTuple(tupl(Lc,"{}",A),Lc,A).
 
   public
+  braceTuple:(location,list[ast]) => ast.
+  braceTuple(Lc,Els) => tupl(Lc,"{}",Els).
+
+  public
   isRoundTerm:(ast,location,ast,list[ast]){}.
   isRoundTerm(appl(Lc,Op,tupl(_,"()",A)),Lc,Op,A) :- \+ keyword(Op).
 
   public
-  keyword:(ast+){}.
+  roundTerm:(location,ast,list[ast]) => ast.
+  roundTerm(Lc,Op,Els) => appl(Lc,Op,tupl(Lc,"()",Els)).
+
+  public
+  keyword:(ast){}.
   keyword(iden(_,Nm)) :- isKeyword(Nm).
 
-  public isQuantified:(ast,ast,ast){}.
-  isQuantified(T,V,B) :-
-    isUnary(T,"all",_,R),
-    isBinary(R,"~~",_,V,B).
+  public
+  deComma:(ast) => list[ast].
+  deComma(T) :: isBinary(T,",",_,L,R) => [L,..deComma(R)].
+  deComma(T) => [T].
+
+  public sameTerm:(ast,ast){}.
+  sameTerm(iden(_,Nm),iden(_,Nm)).
+  sameTerm(intg(_,Ix),intg(_,Ix)).
+  sameTerm(flot(_,Dx),flot(_,Dx)).
+  sameTerm(strg(_,S),strg(_,S)).
+  sameTerm(tupl(_,T,A),tupl(_,T,B)) :-
+    sameTerms(A,B).
+  sameTerm(appl(_,OA,AA),appl(_,OB,BA)) :-
+    sameTerm(OA,OB),
+    sameTerm(AA,BA).
+
+  private sameTerms:(list[ast],list[ast]){}.
+  sameTerms([],[]).
+  sameTerms([A,..L1],[B,..L2]) :-
+    sameTerm(A,B),
+    sameTerms(L1,L2).
 }

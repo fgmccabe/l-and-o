@@ -100,15 +100,23 @@ static char *dumpSig(char *sig, bufferPo out) {
       outStr(O_IO(out), ")");
       break;
     case anon_sig:
-      outStr(O_IO(out), "topType");
+      outStr(O_IO(out), "anonType");
       break;
     case void_sig:
       outStr(O_IO(out), "voidType");
       break;
     case type_sig:
-      outStr(O_IO(out), "type(");
-      sig = dName(sig, out);
-      outStr(O_IO(out), ")");
+      switch (genMode) {
+        case genProlog:
+          outMsg(O_IO(out), "type(");
+          sig = dName(sig, out);
+          outMsg(O_IO(out), ")");
+          return sig;
+        case genLO:
+          outMsg(O_IO(out), "tipe(");
+          sig = dName(sig, out);
+          outMsg(O_IO(out), ")");
+      }
       break;
     case poly_sig:
       outStr(O_IO(out), "typeExp(");
@@ -124,31 +132,69 @@ static char *dumpSig(char *sig, bufferPo out) {
       outStr(O_IO(out), ")");
       break;
     case funct_sig:
-      outStr(O_IO(out), "funType(");
-      sig = dSequence(sig, out);
-      outStr(O_IO(out), ",");
-      sig = dumpSig(sig, out);
-      outStr(O_IO(out), ")");
-      break;
+      switch (genMode) {
+        case genProlog:
+          outStr(O_IO(out), "funType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), ",");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+        case genLO:
+          outStr(O_IO(out), "funType(tupleType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), "),");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+      }
     case pred_sig:
-      outStr(O_IO(out), "predType(");
-      sig = dSequence(sig, out);
-      outStr(O_IO(out), ")");
-      break;
+      switch (genMode) {
+        case genProlog:
+          outStr(O_IO(out), "predType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+        case genLO:
+          outStr(O_IO(out), "predType(tupleType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), "))");
+          return sig;
+      }
     case grammar_sig:
-      outStr(O_IO(out), "grammarType(");
-      sig = dSequence(sig, out);
-      outStr(O_IO(out), ",");
-      sig = dumpSig(sig, out);
-      outStr(O_IO(out), ")");
-      break;
+      switch (genMode) {
+        case genProlog:
+          outStr(O_IO(out), "grammarType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), ",");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+        case genLO:
+          outStr(O_IO(out), "grammarType(tupleType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), "),");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+      }
     case class_sig:
-      outStr(O_IO(out), "classType(");
-      sig = dSequence(sig, out);
-      outStr(O_IO(out), ",");
-      sig = dumpSig(sig, out);
-      outStr(O_IO(out), ")");
-      break;
+      switch (genMode) {
+        case genProlog:
+          outStr(O_IO(out), "classType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), ",");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+        case genLO:
+          outStr(O_IO(out), "classType(tupleType(");
+          sig = dSequence(sig, out);
+          outStr(O_IO(out), "),");
+          sig = dumpSig(sig, out);
+          outStr(O_IO(out), ")");
+          return sig;
+      }
     case face_sig:
       outStr(O_IO(out), "faceType(");
       sig = dFields(sig, out);
@@ -183,9 +229,17 @@ static char *dumpSig(char *sig, bufferPo out) {
 }
 
 static void dumpStdType(char *name, bufferPo out) {
-  outMsg(O_IO(out), "type(");
-  dumpStr(name, out);
-  outMsg(O_IO(out), ")");
+  switch (genMode) {
+    case genProlog:
+      outMsg(O_IO(out), "type(");
+      dumpStr(name, out);
+      outMsg(O_IO(out), ")");
+      return;
+    case genLO:
+      outMsg(O_IO(out), "tipe(");
+      dumpStr(name, out);
+      outMsg(O_IO(out), ")");
+    }
 }
 
 static char *dInt(char *sig,int *len) {
@@ -278,7 +332,7 @@ static void genLoEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cm
 static void loEscapeTypes(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out, "  public escapeType:(string)=>type.\n");
+  fprintf(out, "  public escapeType:(string)=>tipe.\n");
 
 #include "escapes.h"
 

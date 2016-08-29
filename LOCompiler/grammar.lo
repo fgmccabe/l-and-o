@@ -4,24 +4,25 @@ lo.comp.grammar{
   import lo.comp.operators.
   import lo.comp.location.
   import lo.comp.ast.
+  import lo.comp.abstract.
   import lo.comp.lexer.
   import lo.comp.errors.
 
-  tokMark ::= endBrce | otherMark.
+  type tokMark ::= endBrce | otherMark.
 
   public
-  parse:(ast-) --> list[token].
+  parse:(ast) --> list[token].
   parse(Term) --> term(2000,Term,Mark)!,
     checkForTerminator(Mark).
 
   private
-  term:(integer+,ast-,tokMark-) --> list[token].
+  term:(integer,ast,tokMark) --> list[token].
   term(Pr,Term,Mark) -->
     termLeft(Pr,Left,LftPr,LLend),
     termRight(Pr,Left,Term,LftPr,LLend,Mark).
 
   private
-  termLeft:(integer+,ast-,integer-,tokMark-) --> list[token].
+  termLeft:(integer,ast,integer,tokMark) --> list[token].
   termLeft(Pr,Left,OPr,Mark) -->
     [tok(idTok(Op),Lc)], \+[tok(rpar,_)], { prefixOp(Op,OPr,ORight), OPr=<Pr},
     term(ORight,Arg,Mark),
@@ -29,7 +30,7 @@ lo.comp.grammar{
   termLeft(_,Term,0,Mark) --> term0(Term,Mark).
 
   private
-  termRight:(integer+,ast+,ast-,integer+,tokMark+,tokMark-) --> list[token].
+  termRight:(integer,ast,ast,integer,tokMark,tokMark) --> list[token].
   termRight(Pr,Left,Term,LeftPr,_,Mark) -->
     legalInfixOp(Op,Pr,LeftPr,InfPr,RightPr),
     term(RightPr,Right,LMark),
@@ -45,7 +46,7 @@ lo.comp.grammar{
   termRight(_,Term,Term,_,Mark,Mark) --> [].
 
   private
-  legalInfixOp:(string-,integer+,integer+,integer-,integer-) --> list[token].
+  legalInfixOp:(string,integer,integer,integer,integer) --> list[token].
   legalInfixOp(Op,Pr,LeftPr,OPr,RPr) -->
       [tok(idTok(Op),_)],
       { infixOp(Op,LPr,OPr,RPr),
@@ -54,7 +55,7 @@ lo.comp.grammar{
       followsInfix(RPr)+.
 
   private
-  followsInfix:(integer+) --> list[token].
+  followsInfix:(integer) --> list[token].
   followsInfix(Pr) -->
     [tok(idTok(Op),_)] , 
     { prefixOp(Op,OpPr,_) ? OpPr =< Pr | \+ isOperator(Op,_)}.
@@ -67,7 +68,7 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(fltTok(_),_)].
 
   private
-  term0:(ast-,tokMark-) --> list[token].
+  term0:(ast,tokMark) --> list[token].
   term0(parseString(Lc,Segments),otherMark) --> [tok(stringTok(Segments),Lc)].
   term0(intg(Lc,Ix),otherMark) --> [tok(intTok(Ix),Lc)].
   term0(flot(Lc,Dx),otherMark) --> [tok(fltTok(Dx),Lc)].
@@ -97,7 +98,7 @@ lo.comp.grammar{
     termArgs(Left,Term,LMark,Mark).
 
   private
-  term00:(ast-,tokMark-) --> list[token].
+  term00:(ast,tokMark) --> list[token].
   term00(iden(Lc,Nm),otherMark) --> [tok(idTok(Nm),Lc)].
   term00(tupl(Lc,"()",[]),otherMark) --> 
       [tok(lpar,Lc0),tok(rpar,Lc1)],
@@ -109,7 +110,7 @@ lo.comp.grammar{
       Lc = Lc0.merge(Lc1).
 
   private
-  termArgs:(ast+,ast-,tokMark,tokMark-) --> list[token].
+  termArgs:(ast,ast,tokMark,tokMark) --> list[token].
   termArgs(Lft,Term,_,Mark) -->
       [tok(lpar,Lc0), tok(rpar,Lc1)],
       Lc = Lft.loc.merge(Lc1),
@@ -142,17 +143,17 @@ lo.comp.grammar{
   termArgs(Term,Term,Mark,Mark) --> [].
 
   private
-  terms: (list[ast]-) --> list[token].
+  terms: (list[ast]) --> list[token].
   terms([T,..R]) --> parse(T), terms(R).
   terms([]) --> [].
 
   private
   tupleize:(ast)=>list[ast].
-  tupleize(Term) :: isBinary(Term,_,",",L,R) => [L,..tupleize(R)].
+  tupleize(Term) :: isBinary(Term,",",_,L,R) => [L,..tupleize(R)].
   tupleize(T) => [T].
 
   private
-  checkFor:(tok+,location-,string+) --> list[token].
+  checkFor:(tok,location,string) --> list[token].
   checkFor(Tk,Lc,_) --> [tok(Tk,Lc)].
   checkFor(Tk,Lc,Msg) --> [tok(_,Lc)]+,
     { reportError(Msg,Lc) }.

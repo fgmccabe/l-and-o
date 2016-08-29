@@ -5,68 +5,53 @@ lo.comp.ast{
   import lo.comp.operators.
 
   public ast <~ hasLoc.
-  ast <~ display.
 
-  ast:ast.
-  ast .. {
-    disp() => showAst(this,2000).
-    frmt(_) => showAst(this,2000). -- may change in future
+  public implementation display[ast] .. {
+    disp(T) => showAst(T,2000).
   }
 
   public
   iden:(location,string) <=> ast.
-  iden(_,_) <= ast.
   iden(Loc,Nm) .. {
     loc = Loc.
   }
 
   public
   intg:(location,integer) <=> ast.
-  intg(_,_) <= ast.
   intg(Loc,Ix) .. {
     loc = Loc.
   }
 
   public
   flot:(location,float) <=> ast.
-  flot(_,_) <= ast.
   flot(Loc,Dx) .. {
     loc = Loc
   }
 
   public
   strg:(location,string) <=> ast.
-  strg(_,_) <= ast.
   strg(Loc,St) .. {
     loc = Loc
   }
 
   public
   tupl:(location,string,list[ast]) <=> ast.
-  tupl(_,_,_) <= ast.
   tupl(Loc,Nm,Els) .. {
     loc = Loc.
   }
 
   public
   appl:(location,ast,ast) <=> ast.
-  appl(_,_,_) <= ast.
   appl(Loc,Op,Arg) .. {
     loc = Loc.
-  }
-
-  public
-  dispAst:display[ast].
-  dispAst..{
-    display(T) => showAst(T,2000).
   }
 
   private
   showAst:(ast,integer) => ss.
   showAst(iden(_,Nm),_) :: isOperator(Nm,_) => ssSeq([ss("("), ss(Nm), ss(")")]).
   showAst(iden(_,Nm),_) => ss(Nm).
-  showAst(intg(_,Ix),_) => intDisp.display(Ix).
-  showAst(flot(_,Dx),_) => fltDisp.display(Dx).
+  showAst(intg(_,Ix),_) => disp(Ix).
+  showAst(flot(_,Dx),_) => disp(Dx).
   showAst(strg(_,Sx),_) => ss(Sx).
   showAst(tupl(_,Nm,Els),_) :: tupleBrackets(Nm,Lft,Rgt,Pr,Sep) => 
       ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]).
@@ -96,15 +81,7 @@ lo.comp.ast{
 
   private
   tupleBrackets:(string,string,string,integer,string){}.
-  tupleBrackets("()","(",")",1000,", ") :-- true.
+  tupleBrackets("()","(",")",2000,", ") :-- true.
   tupleBrackets("[]","[","]",1000,", ") :-- true.
   tupleBrackets("{}","{","}",2000,".\n") :-- true.
-
-  public
-  binary:(location,string,ast,ast) => ast.
-  binary(Lc,Op,L,R) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[L,R])).
-
-  public
-  unary:(location,string,ast) => ast.
-  unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
 }

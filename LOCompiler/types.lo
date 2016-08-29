@@ -1,235 +1,185 @@
 lo.comp.types{
   import lo.
+  import lo.comp.wff.
 
   public
-  type ::= anonType 
+  type tipe ::= anonType 
         | voidType
         | thisType
         | kVar(string)
-        | tVar(type,logical,list[constraint],string,string)
-        | type(string)
-        | typeExp(string,list[type])
-        | tupleType(list[type])
-        | funType(list[type],type)
-        | predType(list[type])
-        | grammarType(list[type],type)
-        | classType(type,type)
-        | typeRule(type,type)
-        | faceType(list[(string,type)])
-        | constrained(constraint,type)
-        | univType(type,type).
+        | tVar(tipe,logical,list[constraint],string,string)
+        | tipe(string)
+        | typeExp(string,list[tipe])
+        | tupleType(list[tipe])
+        | funType(tipe,tipe)
+        | predType(tipe)
+        | grammarType(tipe,tipe)
+        | classType(tipe,tipe)
+        | typeRule(tipe,tipe)
+        | faceType(list[(string,tipe)])
+        | constrained(tipe,constraint)
+        | univType(tipe,tipe).
 
   public
-  constraint ::= conTract(string,list[type],list[type])
-              |  implementsFace(type,list[(string,type)]).
+  type constraint ::= conTract(string,list[tipe],list[tipe])
+        |  implementsFace(tipe,list[(string,tipe)])
+        |  conRule(list[constraint],constraint)
+        |  univCon(tipe,constraint).
 
   public
-  implementation display[type] .. {
+  implementation display[tipe] .. {
     disp(T) => dispType(T).
   }
 
   private
-  dispType:(type)=>ss.
+  dispType:(tipe)=>ss.
   dispType(anonType) => ss("_").
   dispType(voidType) => ss("void").
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
   dispType(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => dispType(Curr).
   dispType(tVar(_,_,_,Nm,Id)) => ssSeq([ss(Nm),ss("_"),ss(Id)]).
+  dispType(tipe(Nm)) =>ss(Nm).
+  dispType(typeExp(Nm,A)) => ssSeq([ss(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
+  dispType(tupleType(A)) => ssSeq([ss("("),ssSeq(dispTypeEls(A)),ss(")")]).
+  dispType(funType(A,R)) => ssSeq([dispType(A),ss("=>"), dispType(R)]).
+  dispType(grammarType(A,R)) => ssSeq([dispType(A),ss("-->"), dispType(R)]).
+  dispType(classType(A,R)) => ssSeq([dispType(A),ss("<=>"), dispType(R)]).
+  dispType(predType(A)) => ssSeq([dispType(A),ss("{}")]).
+  dispType(univType(V,Tp)) => ssSeq([ss("all "), dispType(V),.. showMoreQuantified(Tp)]).
+  dispType(faceType(Els)) => ssSeq([ss("{ "), ssSeq(dispTypeFields(Els)), ss("}")]).
+  dispType(typeRule(Hd,Bd)) => ssSeq([dispType(Hd), ss("<~"),dispType(Bd)]).
+  dispType(constrained(Tp,Con)) => ssSeq([showConstraint(Con),.. showMoreConstraints(Tp)]).
+
+  showMoreQuantified:(tipe) => list[ss].
+  showMoreQuantified(univType(V,Tp)) => [ss(","), dispType(V),.. showMoreQuantified(Tp)].
+  showMoreQuantified(Tp) => [ss(" ~~ "),dispType(Tp)].
+
+  showMoreConstraints:(tipe) => list[ss].
+  showMoreConstraints(constrained(Tp,Con)) => [ss(","), showConstraint(Con) ,.. showMoreConstraints(Tp)].
+  showMoreConstraints(Tp) => [ss("|:"),dispType(Tp)].
+
+  showConstraint:(constraint) => ss.
+  showConstraint(conTract(Nm,Args,[])) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("]")]).
+  showConstraint(conTract(Nm,Args,Deps)) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("->>"),ssSeq(dispTypeEls(Deps)),ss("]")]).
+  showConstraint(implementsFace(Tp,Els)) => ssSeq([dispType(Tp),ss("<~"),dispType(faceType(Els))]).
+  showConstraint(conRule([],Con)) => showConstraint(Con).
+  showConstraint(conRule([C,..Cons],Con)) => ssSeq([showConstraint(C),..showMoreCons(Cons,Con)]).
+  showConstraint(univCon(V,Con)) => ssSeq([ss("all "),dispType(V),..showMoreConQ(Con)]).
+
+  -- This code is ugly. But, we dont have lambdas or higher-order programs at the moment.
+  showMoreCons:(list[constraint],constraint) => list[ss].
+  showMoreCons([],Con) => [ss("|"),showConstraint(Con)].
+  showMoreCons([C,..Cons],Con) => [ss(", "),showConstraint(C),..showMoreCons(Cons,Con)].
+
+  showMoreConQ:(constraint) => list[ss].
+  showMoreConQ(univCon(V,Con)) => [ss(", "),dispType(V),..showMoreConQ(Con)].
+  showMoreConQ(Con) => [ss("~~"),showConstraint(Con)].
+
+  dispTypeEls:(list[tipe]) => list[ss].
+  dispTypeEls([]) => [].
+  dispTypeEls([T,..M]) => [dispType(T),..showMoreTypes(M)].
+
+  showMoreTypes:(list[tipe]) => list[ss].
+  showMoreTypes([]) => [].
+  showMoreTypes([T,..M]) => [ss(", "),dispType(T),..showMoreTypes(M)].
+
+  dispTypeFields:(list[(string,tipe)]) => list[ss].
+  dispTypeFields([]) => [].
+  dispTypeFields([(K,T),..M]) => [ss(K),ss("->"),dispType(T),..showMoreTypeFields(M)].
+
+  showMoreTypeFields:(list[(string,tipe)]) => list[ss].
+  showMoreTypeFields([]) => [].
+  showMoreTypeFields([(K,T),..M]) => [ss(". "),ss(K),ss("->"),dispType(T),..showMoreTypeFields(M)].
 
   public
-  deRef:(type)=>type.
+  deRef:(tipe)=>tipe.
   deRef(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => deRef(Curr).
   deRef(T) => T.
 
-  private
-  collectConstraints:(type,list[constraint]) => list[constraint].
-
-
+  public
+  isUnbound:(tipe){}.
+  isUnbound(T) :- deRef(T) = tVar(Curr,_,_,_,_), var(Curr).
 
   public
-  newVar:(string) => type.
-  newVar(Nm) => tVar(_,_,_,false,Nm,_str_gen(Nm)).
+  isIdenticalVar:(tipe,tipe){}.
+  isIdenticalVar(tVar(_,_,_,_,Id),tVar(_,_,_,_,Id)).
 
   public
-  skolem:(string) => type.
-  skolem(Nm) => tVar(_,_,_,true,Nm,_str_gen(Nm)).
-
-  -- This is used to help with managing constraints
-  private
-  tailTp:(list[type]) => type.
-  tailTp([T,..Tl]) :: var(Tl) => T.
-  tailTp([_,..Tl]) => tailTp(Tl).
-
-  public
-  markConstraints:(type,type,type){}.
-  markConstraints(tVar(Lower,_,Upper,_,_,_),Lw,Up) :-
-    markConstraint(Lw.deRef(),tailTp(Lower)),
-    markConstraint(Up.deRef(),tailTp(Upper)).
+  constraints:(tipe)=>list[constraint].
+  constraints(tVar(_,_,Con,_,_)) => Con.
 
   private
-  markConstraint:(type,type){}.
-  markConstraint(voidType,_) :-- true. -- This is a slight hack
-  markConstraint(topType,_) :-- true.
-  markConstraint(Tp,Tp) :-- true.
-
-  public type:(string) <=> type.
-  type(Nm) .. {
-    disp() => ss(Nm).
-    frmt(_) => ss(Nm).
-
-    deRef() => this. 
-  }
-
-  public typeExp:(string,list[type]) <=> type.
-  typeExp(Nm,Args) .. {
-    disp() => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("]")]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  public tupleType:(list[type]) <=> type.
-  tupleType(Args) .. {
-    disp() => ssSeq([ss("("),ssSeq(dispTypeEls(Args)),ss(")")]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  dispTypeEls:(list[type]) => list[ss].
-  dispTypeEls([T,..R]) => [T.disp(),..dispMoreTypes(R)].
-  dispTypeEls([]) => [].
-
-  dispMoreTypes:(list[type]) => list[ss].
-  dispMoreTypes([]) => [].
-  dispMoreTypes([T,..R]) => [ss(","),T.disp(),..dispMoreTypes(R)].
-
-  public funType:(list[typeFlow],type) <=> type.
-  funType(Args,Res) .. {
-    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss(")=>"),Res.disp()]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  public predType:(list[typeFlow]) <=> type.
-  predType(Args) .. {
-    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss("){}")]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  public grammarType:(list[typeFlow],type) <=> type.
-  grammarType(Args,Strm) .. {
-    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeArgs(Args)),ss(") --> "),Strm.disp()]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  public classType:(list[type],type) <=> type.
-  classType(Args,Class) .. {
-    disp() => ssSeq([ss(Nm),ss("("),ssSeq(dispTypeEls(Args)),ss(") <=> "),Class.disp()]).
-    frmt(_) => disp().
-
-    deRef() => this.
-  }
-
-  public faceType:(list[(string,type)]) <=> type.
-  faceType(Fields) .. {
-    deRef() => this.
-
-    disp() => ssSeq([ss("{"),ssSeq(showFields(Fields)),ss("}")]).
-    frmt(_) => disp().
-
-    showFields:(list[(string,type)]) => list[ss].
-    showFields([]) => [].
-    showFields([(Fld,Tp),..R]) => [ss(Fld),ss(":"),Tp.disp(),ss(".\n"),..showFields(R)].
-  }
+  collectConstraints:(tipe,list[constraint]) => list[constraint].
+  collectConstraints(constrained(T,C),Cx) => collectConstraints(T,[C,..Cx]).
+  collectConstraints(T,Cx) => Cx.
 
   public
-  univType:(type,type) <=> type.
-  univType(V,B) .. {
-    disp() => ssSeq([ss("all "), V.disp(), ss("~~"), B.disp()]).
-    frmt(_) => disp().
+  moveConstraints:(tipe,list[constraint],tipe){}.
+  moveConstraints(constrained(T,C),[C,..C0],Inner) :--
+    moveConstraints(T,C0,Inner).
+  moveConstraints(T,[],T) :-- true.
 
-    deRef() => this.
-  }
-
-  public constrained:(type,type,type) <=> type.
-  constrained(Lw,V,Up) .. {
-    deRef() => this.
-
-    disp() => ssSeq([showLower(),V.disp(),showUpper()]).
-    frmt(_) => disp().
-
-    showLower:()=>ss.
-    showLower() :: Lw=voidType => ssSeq([]).
-    showLower() => ssSeq([Lw.disp(),ss("<~")]).
-
-    showUpper:()=>ss.
-    showUpper() :: Up = topType => ssSeq([]).
-    showUpper() => ssSeq([ss("<~"),Up.disp()]).
-  }
-
-  -- Type rules are marked as types because of quantification.
-  
-  public
-  typeRule:(type,type) <=> type.
-  typeRule(Lhs,Rhs) .. {
-    deRef() => this.
-    disp() => ssSeq([Lhs.disp(),ss("<~"),Rhs.disp()]).
-
-    frmt(_) => disp().
-  }
-
-  dispTypeArgs:(list[typeFlow]) => list[ss].
-  dispTypeArgs([T,..R]) => [dispTypeFlow(T),..dispMoreArgTypes(R)].
-  dispTypeArgs([]) => [].
-
-  dispMoreArgTypes:(list[typeFlow]) => list[ss].
-  dispMoreArgTypes([]) => [].
-  dispMoreArgTypes([T,..R]) => [ss(","),dispTypeFlow(T),..dispMoreArgTypes(R)].
-
-  dispTypeFlow:(typeFlow) => ss.
-  dispTypeFlow(inFlow(T)) => ssSeq([T.disp(),ss("+")]).
-  dispTypeFlow(outFlow(T)) => ssSeq([T.disp(),ss("-")]).
-  dispTypeFlow(inoutFlow(T)) => T.disp().
+  public moveQuants:(tipe,list[tipe],tipe){}.
+  moveQuants(univType(B,Tp),[B,..Q],Tmpl) :-
+    moveQuants(Tp,Q,Tmpl).
+  moveQuants(Tp,[],Tp).
 
   public
-  occursIn:(type,type){}.
-  occursIn(tVar(_,Curr,_,_,_,Id),Tp) :: (var(Curr), \+ sameVar(Id,Tp.deRef())) :-- idOccIn(Id,Tp.deRef()).
-  occursIn(tVar(_,Curr,_,_,_,_),Tp) :: nonvar(Curr) :-- occursIn(Curr,Tp).
+  newVar:(string) => tipe.
+  newVar(Nm) => tVar(_,false,_,Nm,_str_gen(Nm)).
+
+  public
+  skolem:(string) => tipe.
+  skolem(Nm) => tVar(_,true,_,Nm,_str_gen(Nm)).
+
+  public
+  bind:(tipe,tipe){}.
+  bind(T,Tp) :- \+occursIn(T,Tp), T=tVar(Tp,_,_,_,_).
+
+  public
+  occursIn:(tipe,tipe){}.
+  occursIn(tVar(Curr,_,_,_,Id),Tp) :: (var(Curr), \+ sameVar(Id,deRef(Tp))) :-- idOccIn(Id,deRef(Tp)).
+  occursIn(tVar(Curr,_,_,_,_),Tp) :: nonvar(Curr) :-- occursIn(Curr,Tp).
   occursIn(_,Tp) :-- false.
 
   private
-  sameVar:(string,type){}.
-  sameVar(Id,tVar(_,_,_,_,_,Id)).
+  sameVar:(string,tipe){}.
+  sameVar(Id,tVar(_,_,_,_,Id)).
 
   private
-  idOccIn:(string,type){}.
-  idOccIn(Id,V) :- sameVar(Id,V).
-  idOccIn(Id,tVar(_,Curr,_,_,_,_)) :: nonvar(Curr) :- idOccIn(Id,Curr).
-  idOccIn(Id,tVar(Lw,Curr,_,_,_,_)) :: var(Curr) :- idOccIn(Id,tailTp(Lw)).
-  idOccIn(Id,tVar(_,Curr,Up,_,_,_)) :: var(Curr) :- idOccIn(Id,tailTp(Up)).
+  idOccIn:(string,tipe){}.
+  idOccIn(Id,tVar(Curr,_,_,_,_)) :: nonvar(Curr) :- idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Curr,_,_,_,Id)) :: var(Curr) :- true.
   idOccIn(Id,typeExp(_,A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
-  idOccIn(Id,funType(A,_)) :- TT in A, idOccIn(Id,deFlow(TT)).
+  idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).
   idOccIn(Id,funType(_,R)) :- idOccIn(Id,R).
-  idOccIn(Id,predType(A)) :- TT in A, idOccIn(Id,deFlow(TT)).
-  idOccIn(Id,classType(A,C)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,predType(A)) :- idOccIn(Id,A).
+  idOccIn(Id,classType(A,C)) :- idOccIn(Id,A).
   idOccIn(Id,classType(_,C)) :- idOccIn(Id,C).
-  idOccIn(Id,grammarType(A,_)) :- TT in A, idOccIn(Id,deFlow(TT)).
+  idOccIn(Id,grammarType(A,_)) :- idOccIn(Id,A).
   idOccIn(Id,grammarType(_,R)) :- idOccIn(Id,R).
-  idOccIn(Id,univType(constrained(Lw,_,Up),B)) :- (idOccIn(Id,Lw) | idOccIn(Id,Up) | idOccIn(Id,B)).
   idOccIn(Id,univType(_,B)) :- idOccIn(Id,B).
   idOccIn(Id,faceType(L)) :- (Fld,A) in L, idOccIn(Id,A).
+  idOccIn(Id,constrained(T,_)) :- idOccIn(Id,T).
 
-  private
-  deFlow:(typeFlow) => type.
-  deFlow(inFlow(T)) => T.
-  deFlow(outFlow(T)) => T.
-  deFlow(inoutFlow(T)) => T.
+  public implementationName:(constraint)=>string.
+  implementationName(conTract(Nm,Args,_)) =>
+    flatten(ssSeq([ss(Nm),..surfaceNames(Args,marker(con))])).
+
+  surfaceNames:(list[tipe],string) => list[ss].
+  surfaceNames([],_) => [].
+  surfaceNames([T,..L],M) => [ss(M),ss(surfaceName(deRef(T))),..surfaceNames(L,M)].
+
+  surfaceName:(tipe) => string.
+  surfaceName(tipe(Nm)) => Nm.
+  surfaceName(typeExp(Nm,_)) =>Nm.
+  surfaceName(kVar(Nm)) => Nm.
+
+  public bindAT:(list[tipe],list[tipe],map[string,tipe]) => map[string,tipe].
+  bindAT([],_,Q) => Q.
+  bindAT(_,[],Q) => Q.
+  bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
+  bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q+{V->Tp}).
 }

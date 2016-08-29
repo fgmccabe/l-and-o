@@ -3,61 +3,66 @@ lo.comp.freshen{
   import lo.comp.misc.
   import lo.comp.types.
 
+  public contract all s ~~ freshen[s] .. {
+    freshen:(s,map[string,tipe]) => s.
+  }.
+
   public
-  freshen:(type,map[string,type]) => type.
-  freshen(univType(V,T),B) :: deQuant(V,B,NV,NB) => freshen(T,NB).
-  freshen(T,B) => frshn(T,B).
+  implementation freshen[tipe] .. {
+    freshen(T,M) => freshenType(T,M).
+  }
+
+  freshenType:(tipe,map[string,tipe]) => tipe.
+  freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+{Nm->newVar(Nm)}).
+  freshenType(T,B) => frshnType(T,B).
+
+  frshnType:(tipe,map[string,tipe]) => tipe.
+  frshnType(anonType,_) => anonType.
+  frshnType(voidType,_) => voidType.
+  frshnType(thisType,{"this"->Tp}) => Tp.
+  frshnType(thisType,_) => thisType.
+  frshnType(kVar(Nm),{Nm->Tp}) => Tp.
+  frshnType(kVar(Nm),_) => kVar(Nm).
+  frshnType(V :: V=tVar(Curr,_,_,_,_),B) => (var(Curr) ? V | frshnType(Curr,B)).
+  frshnType(tipe(Nm),_) => tipe(Nm).
+  frshnType(typeExp(Nm,A),B) => typeExp(Nm,frshnTypes(A,B)).
+  frshnType(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).
+  frshnType(predType(A),B) => predType(frshnType(A,B)).
+  frshnType(grammarType(A,R),B) => grammarType(frshnType(A,B),frshnType(R,B)).
+  frshnType(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
+  frshnType(tupleType(A),B) => tupleType(frshnTypes(A,B)).
+  frshnType(faceType(F),B) => faceType(frshnFields(F,B)).
+  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B-{Nm->_})).
+  frshnType(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
+  frshnType(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
 
   private
-  deQuant:(type,map[string,type],type-,map[string,type]-){}.
-  deQuant(kVar(Nm),B,NV,B+{Nm->NV}) :- NV = newVar(Nm).
-  deQuant(constrained(Lw,V,Up),B,NV,NB) :-
-    deQuant(V,B,NV,NB),
-    markConstraints(NV,frshn(Lw,NB),frshn(Up,NB)).
-
-  frshn:(type,map[string,type]) => type.
-  frshn(anonType,_) => anonType.
-  frshn(voidType,_) => voidType.
-  frshn(topType,_) => topType.
-  frshn(thisType,{"this"->Tp}) => Tp.
-  frshn(thisType,_) => thisType.
-  frshn(kVar(Nm),{Nm->Tp}) => Tp.
-  frshn(kVar(Nm),_) => kVar(Nm).
-  frshn(V :: V=tVar(_,Curr,_,_,_,_),B) => (var(Curr) ? V | frshn(Curr,B)).
-  frshn(type(Nm),_) => type(Nm).
-  frshn(typeExp(Nm,A),B) => typeExp(Nm,frshnTypes(A,B)).
-  frshn(funType(A,R),B) => funType(frshnArgTypes(A,B),frshn(R,B)).
-  frshn(predType(A),B) => predType(frshnArgTypes(A,B)).
-  frshn(grammarType(A,R),B) => grammarType(frshnArgTypes(A,B),frshn(R,B)).
-  frshn(classType(A,R),B) => classType(frshnTypes(A,B),frshn(R,B)).
-  frshn(tupleType(A),B) => tupleType(frshnTypes(A,B)).
-  frshn(faceType(F),B) => faceType(frshnFields(F,B)).
-  frshn(univType(V,T),B) :: frshnBounds(V,B,NV,NB) => univType(NV,frshn(T,NB)).
-
-  private
-  frshnTypes:(list[type],map[string,type]) => list[type].
+  frshnTypes:(list[tipe],map[string,tipe]) => list[tipe].
   frshnTypes([],_) => [].
-  frshnTypes([E,..R],B) => [frshn(E,B),..frshnTypes(R,B)].
+  frshnTypes([E,..R],B) => [frshnType(E,B),..frshnTypes(R,B)].
 
   private
-  frshnArgTypes:(list[typeFlow],map[string,type]) => list[typeFlow].
-  frshnArgTypes([],_) => [].
-  frshnArgTypes([E,..R],B) => [frshnArg(E,B),..frshnArgTypes(R,B)].
-
-  private
-  frshnArg:(typeFlow,map[string,type]) => typeFlow.
-  frshnArg(inFlow(Tp),B) => inFlow(frshn(Tp,B)).
-  frshnArg(outFlow(Tp),B) => outFlow(frshn(Tp,B)).
-  frshnArg(inoutFlow(Tp),B) => inoutFlow(frshn(Tp,B)).
-
-  private
-  frshnFields:(list[(string,type)],map[string,type]) => list[(string,type)].
+  frshnFields:(list[(string,tipe)],map[string,tipe]) => list[(string,tipe)].
   frshnFields([],_) => [].
-  frshnFields([(F,E),..R],B) => [(F,frshn(E,B)),..frshnFields(R,B)].
+  frshnFields([(F,E),..R],B) => [(F,frshnType(E,B)),..frshnFields(R,B)].
+
+  public
+  implementation freshen[constraint] .. {
+    freshen(C,B) => freshenConstraint(C,B).
+  }
+
+  freshenConstraint:(constraint,map[string,tipe]) => constraint.
+  freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B+{Nm->newVar(Nm)}).
+  freshenConstraint(C,B) => frshnConstraint(C,B).
+
+  frshnConstraint:(constraint,map[string,tipe]) => constraint.
+  frshnConstraint(conTract(Nm,Args,Deps),B) => conTract(Nm,frshnTypes(Args,B),frshnTypes(Deps,B)).
+  frshnConstraint(implementsFace(Tp,Els),B) => implementsFace(frshnType(Tp,B),frshnFields(Els,B)).
+  frshnConstraint(conRule(Args,C),B) => conRule(frshnConstraints(Args,B),frshnConstraint(C,B)).
+  frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B-{Nm->_}).
 
   private
-  frshnBounds:(type,map[string,type],type-,map[string,type]-){}.
-  frshnBounds(kVar(V),B,kVar(V),B-{V->_}) :-- true.
-  frshnBounds(constrained(Lw,V,Up),B,constrained(frshn(Lw,NB),NV,frshn(Up,NB)),NB) :--
-    frshnBounds(V,B,NV,NB).
+  frshnConstraints:(list[constraint],map[string,tipe]) => list[constraint].
+  frshnConstraints([],_) => [].
+  frshnConstraints([C,..R],B) => [frshnConstraint(C,B),..frshnConstraints(R,B)].
 }

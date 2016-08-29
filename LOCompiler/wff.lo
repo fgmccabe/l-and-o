@@ -1,0 +1,88 @@
+lo.comp.wff {
+  
+  import lo.
+  import lo.comp.location.
+  import lo.comp.ast.
+  import lo.comp.abstract.
+  import lo.comp.errors.
+
+  public
+  type defnKind ::= tpe | con | impl | valu | clss.
+
+  public isAlgebraicTypeDef:(ast,location,list[ast],list[ast],ast,ast){}.
+  isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
+    isUnary(Stmt,"type",Lc,Term),
+    getQuantifiers(Term,Quants,Inner),
+    isConstrained(Inner,Constraints,TpStmt),
+    isBinary(TpStmt,"::=",_,Head,Body).
+
+  public isQuantified:(ast,ast,ast){}.
+  isQuantified(T,V,B) :-
+    isUnary(T,"all",_,R),
+    isBinary(R,"~~",_,V,B).
+
+  getQuantifiers:(ast,list[ast],ast){}.
+  getQuantifiers(T,deComma(V),B) :- isQuantified(T,V,B).
+  getQuantifiers(T,[],T).
+
+  public
+  isContractSpec:(ast,location,list[ast],list[ast],ast,list[ast]){}.
+  isContractSpec(St,Lc,Quants,Constraints,Con,Body) :-
+    isUnary(St,"contract",Lc,I),
+    isBinary(I,"..",_,L,R),
+    isBraceTuple(R,_,Body),
+    contractSpec(L,Quants,Constraints,Con).
+
+  contractSpec:(ast,list[ast],list[ast],ast){}.
+  contractSpec(S,deComma(V),Constraints,Con) :-
+    isQuantified(S,V,B),
+    contractSpec(B,_,Constraints,Con).
+  contractSpec(S,[],deComma(L),Con) :-
+    isBinary(S,"|:",_,L,Con).
+  contractSpec(S,[],[],S).
+
+  public isConstrained:(ast,list[ast],ast){}.
+  isConstrained(T,deComma(L),R) :-
+    isBinary(T,"|:",_,L,R).
+  isConstrained(T,[],T).
+
+  public
+  packageName:(ast) => string.
+  packageName(T) :: isName(T,_,Pkg) => Pkg.
+  packageName(T) :: isString(T,_,Pkg) => Pkg.
+  packageName(T) :: isBinary(T,".",_,L,R) =>
+    packageName(L)+"."+packageName(R).
+
+  public 
+  type pkgName ::= pkg(string,string) | defltPkg(string).
+
+  public
+  pkgName:(ast) => pkgName.
+  pkgName(T) :: isBinary(T,"#",_,L,R) =>
+    pkg(packageName(L),packageVersion(R)).
+  pkgName(T) => defltPkg(packageName(T)).
+
+  packageVersion:(ast) => string.
+  packageVersion(T) :: isName(T,_,Pkg) => Pkg.
+  packageVersion(T) :: isString(T,_,Pkg) => Pkg.
+  packageVersion(T) :: isInteger(T,_,Ix) => "$(Ix)".
+  packageVersion(T) :: isBinary(T,".",_,L,R) => packageVersion(L)+"."+packageVersion(R).
+
+  public
+  sameLength:all t ~~ (list[t],list[t],location){}.
+  sameLength(L1,L2,_) :- length(L1) = length(L2).
+  sameLength(L1,_,Lc) :-
+    reportError("expecting $(length(L1)) elements",Lc).
+
+  public
+  tupleize:(ast,string,ast){}.
+  tupleize(P,Op,tupl(Lc,Op,[L,..deComma(R)])) :-
+    isBinary(P,",",Lc,L,R).
+  tupleize(P,Op,tupl(P.loc,Op,[P])).
+
+  public marker:(defnKind)=>string.
+  marker(tpe)=>"*".
+  marker(valu)=>"@".
+  marker(clss)=>"#".
+  marker(con)=>"$".
+}
