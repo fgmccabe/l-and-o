@@ -13,7 +13,7 @@ tree{
   -- Define the tree type's interface
   all a<~comp ~~ 
     tree[a] <~ {
-	    insert:(a)=>tree[a]. /* ::sorted(this). insert::sorted(this)=>sorted(this). */ 
+	    insert:(a)=>tree[a]. /* @@sorted(this). insert@@sorted(this)=>sorted(this). */ 
 	    empty:(){}.
     }.
 
@@ -30,9 +30,9 @@ tree{
 
   nd:all T<~comp ~~ (tree[T],T,tree[T])<=>tree[T].
   nd(L,B,R)..{
-    insert(E)::E.eq(B) => this.
-    insert(E)::E.less(B) => nd(L.insert(E),B,R).
-    insert(E)::\+E.less(B) => nd(L,B,R.insert(E)).
+    insert(E)=> this :- E.eq(B).
+    insert(E)=> nd(L.insert(E),B,R) :- E.less(B) .
+    insert(E)=> nd(L,B,R.insert(E)) :- \+E.less(B) .
     empty() :- false.
   }.
 

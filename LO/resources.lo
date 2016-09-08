@@ -8,7 +8,7 @@ lo.resources{
 
   public
   putResource:(uri,list[integer])=>().
-  putResource(U,Content) :: _writeFileContents(getUriPath(U),Content) => ().
+  putResource(U,Content) => () :- _writeFileContents(getUriPath(U),Content).
 
   public
   cwd:()=>uri.

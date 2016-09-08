@@ -144,9 +144,8 @@ headOfRule(St,Hd) :-
 headOfRule(St,Hd) :-
   isBinary(St,"=>",Hd,_).
 headOfRule(St,Hd) :-
-  isBinary(St,":-",Hd,_).
-headOfRule(St,Hd) :-
-  isBinary(St,":--",Hd,_).
+  isBinary(St,":-",L,_),
+  headOfRule(L,Hd).
 headOfRule(St,Hd) :-
   isBinary(St,"<=",Hd,_).
 headOfRule(St,Hd) :-
@@ -158,7 +157,7 @@ headOfRule(St,St) :-
   isRound(St,Nm,_), \+ isRuleKeyword(Nm).
 
 headName(Head,Nm) :-
-  isBinary(Head,"::",H,_),
+  isBinary(Head,"@@",H,_),
   headName(H,Nm).
 headName(Head,Nm) :-
   isRoundTerm(Head,Op,_),
@@ -209,6 +208,13 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectHeadRefs(H,All,R0,R1),
   collectExpRefs(Exp,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
+  isBinary(St,":-",L,C),
+  isBinary(L,"=>",H,R),
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
+  collectHeadRefs(H,All,R0,R1),
+  collectCondRefs(C,All,R1,R2),
+  collectExpRefs(R,All,R2,Refs).
+collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"-->",H,Exp),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
   collectGrHeadRefs(H,All,R0,R1),
@@ -228,11 +234,6 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectAnnotRefs(H,All,Annots,SoFar,R0),
   collectHeadRefs(H,All,R0,R1),
   collectCondRefs(Exp,All,R1,Refs).
-collRefs(St,All,Annots,SoFar,Refs) :-
-  isBinary(St,":--",H,Exp),
-  collectAnnotRefs(H,All,Annots,SoFar,R0),
-  collectHeadRefs(H,All,R0,R1),
-  collectCondRefs(Exp,All,R1,Refs).
 collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
@@ -247,7 +248,7 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectHeadRefs(St,All,R0,Refs).
 
 collectHeadRefs(Hd,All,R0,Refs) :-
-  isBinary(Hd,"::",L,R),
+  isBinary(Hd,"@@",L,R),
   collectHeadRefs(L,All,R0,R1),
   collectCondRefs(R,All,R1,Refs).
 collectHeadRefs(Hd,All,R0,Refs) :-
@@ -361,7 +362,7 @@ collectPtnListRefs([E|L],A,R0,Refs) :-
   collectPtnListRefs(L,A,R1,Refs).
 
 collectPtnRefs(P,A,R0,Refs) :-
-  isBinary(P,"::",L,R),
+  isBinary(P,"@@",L,R),
   collectPtnRefs(L,A,R0,R1),
   collectCondRefs(R,A,R1,Refs).
 collectPtnRefs(P,A,R0,Refs) :-

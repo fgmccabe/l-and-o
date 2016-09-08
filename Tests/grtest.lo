@@ -6,8 +6,8 @@ grtest{
   ident() --> [C], { isLetter(C)}, alphaNums().
 
   alphaNum: () --> stream[integer].
-  alphaNum() --> [C] :: isLetter(C).
-  alphaNum() --> [C] :: isDigit(C).
+  alphaNum() --> [C] , {isLetter(C)}.
+  alphaNum() --> [C] , {isDigit(C)}.
 
   alphaNums: () --> stream[integer].
   alphaNums() --> alphaNum(), alphaNums().

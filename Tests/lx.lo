@@ -29,7 +29,7 @@ lx{
   tkState(Chars,Off) .. {
     eof() :- Chars = [].
 
-    hdtl(Ch,Next) :: Chars =. [Ch,..Rest] :-- Next = tkState(Rest,Off+1).
+    hdtl(Ch,Next) :- Chars =. [Ch,..Rest],  Next = tkState(Rest,Off+1).
 
     cons(Ch) => tkState([Ch,..Chars],Off).
 
@@ -128,9 +128,7 @@ lx{
 
   assert tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
-  -- show Toks :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
-
-  show flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) :: tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+  show flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) @@ tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
   main:(list[string]+){}.
   main(Strs) :-

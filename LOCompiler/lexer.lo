@@ -23,8 +23,8 @@ lo.comp.lexer{
   public implementation stream[tokenState ->> integer] .. {
     _eof(tkState([],_,_,_)).
 
-    _hdtl(tkState([0c\n,..Rest],Line,Off,Col),0c\n,tkState(Rest,Line+1,Off+1,1)) :-- true.
-    _hdtl(tkState([Ch,..Rest],Line,Off,Col),Ch,tkState(Rest,Line,Off+1,Col+1)) :-- true .
+    _hdtl(tkState([0c\n,..Rest],Line,Off,Col),0c\n,tkState(Rest,Line+1,Off+1,1)).
+    _hdtl(tkState([Ch,..Rest],Line,Off,Col),Ch,tkState(Rest,Line,Off+1,Col+1)) :- \+ Ch = 0c\n.
 
     _cons(Ch,tkState(Chars,Line,Off,Col)) => tkState([Ch,..Chars],Line,Off-1,Col-1).
   }
@@ -53,7 +53,8 @@ lo.comp.lexer{
 
   public
   subTokenize:(location,string) => list[token].
-  subTokenize(loc(Ln,Off,Col,_),Text) :: tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col) => Toks.
+  subTokenize(loc(Ln,Off,Col,_),Text) => Toks :-
+    tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col).
 
   nxtTok:(tok) --> tokenState.
   nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
@@ -82,17 +83,17 @@ lo.comp.lexer{
   readQuoted([C,..R]) --> charRef(C), readQuoted(R).
   readQuoted([]) --> [0c']+.
 
-  readIden : (list[integer]) --> tokenState.
+  public readIden : (list[integer]) --> tokenState.
   readIden([C,..R]) --> alphaNum(C), readIden(R).
   readIden([]) --> [].
 
   idStart:(integer) --> tokenState.
   idStart(0c_) --> [0c_].
-  idStart(Ch) --> [Ch] :: _isLetterChar(Ch).
+  idStart(Ch) --> [Ch] , {_isLetterChar(Ch)}.
 
   alphaNum:(integer) --> tokenState.
   alphaNum(Ch) --> idStart(Ch).
-  alphaNum(Ch) --> [Ch] :: (_isNdChar(Ch) | _isMnChar(Ch) | _isMcChar(Ch) | _isPcChar(Ch) | _isCfChar(Ch) )!.
+  alphaNum(Ch) --> [Ch] , {_isNdChar(Ch) | _isMnChar(Ch) | _isMcChar(Ch) | _isPcChar(Ch) | _isCfChar(Ch) }!.
 
   regExp:(list[integer]) --> tokenState.
   regExp([]) --> "`"+.
@@ -209,7 +210,7 @@ lo.comp.lexer{
   hexDigit(15) --> [0cF].
 
   whiteSpace:() --> tokenState.
-  whiteSpace() --> [X] :: (_isZsChar(X) | _isZlChar(X) | _isZpChar(X) | _isCcChar(X))!.
+  whiteSpace() --> [X] , {_isZsChar(X) | _isZlChar(X) | _isZpChar(X) | _isCcChar(X)}!.
 
   skipSpaces: () --> tokenState.
   skipSpaces() --> whiteSpace(), skipSpaces().

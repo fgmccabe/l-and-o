@@ -110,7 +110,7 @@ showCanonTerm(over(_,V,Cons),O,Ox) :-
 showCanonTerm(where(Ptn,Cond),O,Ox) :-
   appStr("(",O,O0),
   showCanonTerm(Ptn,O0,O1),
-  appStr(" :: ",O1,O2),
+  appStr(" @@ ",O1,O2),
   showCanonTerm(Cond,O2,O3),
   appStr(")",O3,Ox).
 showCanonTerm(conj(L,R),O,Ox) :-
@@ -366,7 +366,7 @@ showEq(equation(_,Nm,Args,Cond,Value),O,Ox) :-
 
 showGuard(true(_),O,O) :- !.
 showGuard(C,O,Ox) :-
-  appStr(" :: ",O,O1),
+  appStr(" @@ ",O,O1),
   showCanonTerm(C,O1,Ox).
 
 showClauses([],O,O).
@@ -381,15 +381,6 @@ showClause(clause(_,Nm,Args,Cond,Body),O,Ox) :-
   appStr(") ",O3,O4),
   showGuard(Cond,O4,O5),
   appStr(" :- ",O5,O6),
-  showCanonTerm(Body,O6,O7),
-  appStr(".\n",O7,Ox).
-showClause(strong(_,Nm,Args,Cond,Body),O,Ox) :-
-  appStr(Nm,O,O1),
-  appStr("(",O1,O2),
-  showTerms(Args,O2,O3),
-  appStr(")",O3,O4),
-  showGuard(Cond,O4,O5),
-  appStr(" :-- ",O5,O6),
   showCanonTerm(Body,O6,O7),
   appStr(".\n",O7,Ox).
 
@@ -433,7 +424,7 @@ showNonTerminal(conj(_,Lhs,Rhs),O,Ox) :-
   showNonTerminal(Rhs,O2,Ox).
 showNonTerminal(guard(_,Lhs,Rhs),O,Ox) :-
   showNonTerminal(Lhs,O,O1),
-  appStr(" :: ",O1,O2),
+  appStr(" @@ ",O1,O2),
   showCanonTerm(Rhs,O2,Ox).
 showNonTerminal(disj(_,Lhs,Rhs),O,Ox) :-
   appStr("(",O,O0),

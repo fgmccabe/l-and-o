@@ -78,7 +78,7 @@ lo.comp.abstract{
 
   public
   deComma:(ast) => list[ast].
-  deComma(T) :: isBinary(T,",",_,L,R) => [L,..deComma(R)].
+  deComma(T) => [L,..deComma(R)] :-  isBinary(T,",",_,L,R).
   deComma(T) => [T].
 
   public sameTerm:(ast,ast){}.

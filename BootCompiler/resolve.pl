@@ -62,11 +62,6 @@ overloadClause(Extra,clause(Lc,Nm,Args,Cond,Body),Dict,clause(Lc,Nm,RArgs,RCond,
   concat(Extra,RA,RArgs),
   resolveCond(Cond,Dict,RCond),
   resolveCond(Body,Dict,RBody).
-overloadClause(Extra,strong(Lc,Nm,Args,Cond,Body),Dict,strong(Lc,Nm,RArgs,RCond,RBody)) :-
-  resolveTerms(Args,Dict,RA),
-  concat(Extra,RA,RArgs),
-  resolveCond(Cond,Dict,RCond),
-  resolveCond(Body,Dict,RBody).
 
 overloadDefn(Lc,Nm,[],Cond,Tp,Exp,Dict,defn(Lc,Nm,[],RCond,Tp,RExp)) :-
   resolveCond(Cond,Dict,RCond),

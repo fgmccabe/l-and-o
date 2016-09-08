@@ -1,73 +1,52 @@
 lo.comp.repository{
   import lo.uri.
   import lo.resources.
+  import lo.comp.misc.
 
   public type repository ::= repo(uri,manifest).
 
   type manifest ::= manifest(list[manifestEntry]).
 
-  type manifestEntry ::= manifestEntry(package,list[version]).
+  type manifestEntry ::= manifestEntry(string,list[(version,uri,string)]).
 
-  public type package ::= pkg(string).
   public type version ::= vers(string) | defaultVersion.
 
-  versionName:(version) --> list[integer].
-  versionName(defaultVersion) --> spaces, "*".
-  versionName(vers(implode(S))) --> spaces, fileSeg(S).
+  public openRepository:(uri) => repository.
+  openRepository(Root) => repo(Root,Manifest) :- 
+      Chrs = getResource(resolveFile(Root,"manifest")),
+      parseManifest(Chrs,Manifest).
+  openRepository(Root) => repo(Root,man([])).
 
-  openRepository:(uri) => repository.
-  openRepository(Root) :: (resolveFile(Root,"manifest",MF),
-        access_file(MF,read),
-        readFile(MF,Chrs),
-        parseManifest(Chrs,Manifest)) => repo(Root,Manifest).
-  openRepository(Root,repo(Root,man([]))) :-
-    resolveFile(Root,"manifest",MF),
-    access_file(MF,write),!.
+  public locatePackage:(repository,string,version) => (version,list[integer]).
+  locatePackage(Repo,Pkg,V) => (ActV,Text) :-
+    findPkg(Repo,Pkg,V,ActV,Text).
 
-  locatePackage(repo(Root,Man),Pkg,V,Vers,U,Text) :-
-    locateVersion(Man,Pkg,V,Vers,U,Fn),
-    resolveFile(Root,Fn,FileNm),
-    readFile(FileNm,Text).
+  findPkg:(repository,string,version,version,list[integer]){}.
+  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveFile(Root,Fn))) :-
+    locateVersion(Man,Pkg,V,ActV,Fn).
 
-  locatePackage(repo(Root,Man),Pkg,Vers,U,Text) :-
-    locateVersion(Man,Pkg,defltVersion,Vers,U,Fn),
-    resolveFile(Root,Fn,FileNm),
-    readFile(FileNm,Text).
+  resolveFile:(uri,string) => uri.
+  resolveFile(Root,Fl) => resolveURI(Root,parseURI(Fl)).
 
-  resolveFile(Root,Fl,MF) :-
-    parseURI(Fl,Rel),
-    resolveURI(Root,Rel,F),
-    getUriPath(F,MF).
+  locateVersion:(list[manifestEntry],string,version,version,string){}.
+  locateVersion(man(Entries),Pkg,Vers,Act,Fn) :-
+    entry(Pkg,V) in Entries,
+    getVersion(Vers,Act,V,_,Fn).
 
-  openPackageAsStream(repo(Root,Man),Pkg,Vers,U,Stream) :-
-    locateVersion(Man,Pkg,defltVersion,Vers,U,fl(Fn)),
-    resolveFile(Root,Fn,Fl),
-    open(Fl,read,Stream).
+  getVersion:(version,version,uri,string){}.
+  getVersion(Vers,Vers,V,U,Fn) :- (Vers,U,Fn) in V!
+  getVersion(defltVersion,Act,V,U,Fn) :- (Act,U,Fn) in V!.
 
-  locateVersion(man(Entries),Pkg,Vers,Act,U,Fn) :-
-    is_member(entry(Pkg,V),Entries),
-    getVersion(Vers,Act,V,U,Fn).
-
-  getVersion(Vers,Vers,V,U,Fn) :- is_member((Vers,U,Fn),V),!.
-  getVersion(defltVersion,Act,V,U,Fn) :- is_member((Act,U,Fn),V),!.
-
-  addPackage(Repo,U,Pkg,Text,Rx) :-
-    addPackage(Repo,U,Pkg,defltVersion,Text,Rx).
+  public addPackage:(repository,uri,string,version,list[integer]) => repository.
   addPackage(repo(Root,Man),U,Pkg,Vers,Text,repo(Root,NM)) :-
-    packageHash(Pkg,Vers,Hash),
-    string_concat(Pkg,Hash,Fn),
-    resolveFile(Root,Fn,FileNm),
+    resolveFile(Root,Pkg+packageHash(Pkg,Vers),FileNm),
     writeFile(FileNm,Text),!,
     addToManifest(Man,U,pkg(Pkg),Vers,fl(Fn),NM),
     flushManifest(Root,NM).
 
-  packageHash(Pkg,defltVersion,Hash) :-
-    stringHash(0,Pkg,H),
-    hashSixtyFour(H,Hash).
-  packageHash(Pkg,v(V),Hash) :-
-    stringHash(0,Pkg,H1),
-    stringHash(H1,V,H2),
-    hashSixtyFour(H2,Hash).
+  packageHash:(string,version) => integer.
+  packageHash(Pkg,defltVersion) => hash(Pkg)::string.
+  packageHash(Pkg,v(V)) => ((37*hash(Pkg))+hash(V))::string.
 
   packagePresent(repo(Root,man(Entries)),Pkg,Vers) :-
     is_member(entry(Pkg,V),Entries),
@@ -84,90 +63,93 @@ lo.comp.repository{
   -- Each end-point directory has a manifest file in it.
   -- The role of the manifest is to map URIs to files
 
+  readManifest:(string,manifest){}.
   readManifest(Path,Manifest) :-
     readFile(Path,Chars),
     parseManifest(Chars,Manifest).
 
+  parseManifest:(list[integer],manifest){}.
   parseManifest(Chrs,M) :-
-    phrase(manifest(M),Chrs).
+    manifest(M) %% Chrs.
 
-  manifest(man(E)) --> manifst, lbrce, entries(E), rbrce,spaces.
+  -- A manifest looks like:
+  -- packageName : { (version:file[uri])* }
 
-  -- An entry looks like:
-  -- packageName : { (version:file)* }
+  manifest:(manifest) --> list[integer].
+  manifest(manifest(E)) --> manifst(), lbrce(), entries(E), rbrce(), spaces().
 
-  entries([Entry|More]) --> entry(Entry), entries(More).
+  entries:(list[manifestEntry]) --> list[integer].
+  entries([Entry,..More]) --> entry(Entry), entries(More).
   entries([]) --> [].
 
-  entry(entry(Package,Versions)) --> package(Package), colon, lbrce, versions(Versions), rbrce.
+  entry(entry(Package,Versions)) --> package(Package), colon(), lbrce(), versions(Versions), rbrce().
 
-  manifst --> spaces, ['m','a','n','i','f','e','s','t'].
+  manifst:()-->list[integer].
+  manifst() --> spaces(), "manifest".
 
-  colon --> spaces, [':'].
+  colon:()-->list[integer].
+  colon() --> spaces(), ":".
 
-  lbrce --> spaces, ['{'].
+  lbrce:()-->list[integer].
+  lbrce() --> spaces(), "{".
 
-  rbrce --> spaces, ['}'].
+  rbrce:()-->list[integer].
+  rbrce() --> spaces(), "}".
 
-  equals --> spaces, ['='].
+  equals:()-->list[integer].
+  equals() --> spaces(), "=".
 
-  package(pkg(Pkg)) --> spaces, iden(Id), suffixes(Suf), { flatten([Id|Suf], P), string_chars(Pkg,P)}.
+  package(pkg(implode(multiCat([Id,..Suf])))) --> spaces(), iden(Id), suffixes(Suf).
 
-  suffixes([['.'|Id]|More]) --> ['.'], iden(Id), suffixes(More).
+  suffixes:(list[list[integer]]) --> list[integer].
+  suffixes([[0c.,..Id]|More]) --> ".", iden(Id), suffixes(More).
   suffixes([]) --> [].
 
-  fileName(fl(Fn)) --> spaces, fileSeg(F), segments(Rest), { flatten([F|Rest],Fl), string_chars(Fn,Fl)}.
+  fileName:(string) --> list[integer].
+  fileName(implode(multiCat([F,..Rest]))) --> spaces(), fileSeg(F), segments(Rest).
 
-  fileSeg([Ch|Mo]) --> (alpha(Ch) ; digit(Ch) ; period(Ch)), fileSeg(Mo).
+  fileSeg:(list[integer]) --> list[integer].
+  fileSeg([Ch,..Mo]) --> (alpha(Ch) | digit(Ch) | period(Ch)), fileSeg(Mo).
   fileSeg([]) --> [].
 
-  segments([['/'|Seg]|More]) --> ['/'], fileSeg(Seg), segments(More).
-  segments([]) --> \+['/'].
+  segments:(list[list[integer]]) --> list[integer].
+  segments([[0c/|Seg]|More]) --> "/", fileSeg(Seg), segments(More).
+  segments([]) --> \+ "/".
 
-  period('.') --> ['.'].
+  period:(integer) --> list[integer].
+  period(0c.) --> ".".
 
-  versions([V|More]) --> version(V), versions(More).
+  versions:(list[(version,uri,string)]) --> list[integer].
+  versions([V,..More]) --> version(V), versions(More).
   versions([]) --> [].
 
-  version((V,U,F)) --> versionName(V), equals, fileName(F), ['['], uri(U), [']'], !.
+  version:((version,uri,string)) --> list[integer].
+  version((V,U,F)) --> versionName(V), equals, fileName(F), "[", uri(U), "]", !.
 
-  versionName(defltVersion) --> spaces, ['*'].
-  versionName(v(V)) --> spaces, fileSeg(S), { string_chars(V,S) }. %% do more later
+  versionName:(version) --> list[integer].
+  versionName(defaultVersion) --> spaces, "*".
+  versionName(vers(implode(S))) --> spaces, fileSeg(S).
 
-  showManifest(man(E),O,Ox) :- 
-    appStr("manifest",O,O1),
-    appStr("{\n",O1,O2),
-    showEntries(E,O2,O3),
-    appStr("}\n",O3,Ox).
+  implementation display[manifest] .. {
+    disp(man(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
+  }
 
-  showEntries([],O,O).
-  showEntries([E|M],O,Ox) :-
-    showEntry(E,O,O1),
-    showEntries(M,O1,Ox).
+  showEntries:(list[manifestEntry]) => list[ss].
+  showEntries([]) => [].
+  showEntries([E,..L]) => [showEntry(E),..showEntries(L)].
 
-  showEntry(entry(Pkg,Versions),O,Ox) :-
-    appStr("  ",O,O0),
-    showPkg(Pkg,O0,O1),
-    appStr(":{\n",O1,O2),
-    showVersions(Versions,O2,O3),
-    appStr("  }\n",O3,Ox).
+  showEntry:(manifestEntry) => ss.
+  showEntry(entry(Pkg,Versions)) => ssSeq([ss("  "),showPkg(Pkg),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
 
-  showPkg(pkg(Pkg),O,Ox) :-
-    appStr(Pkg,O,Ox).
+  showPkg:(package) => ss.
+  showPkg(pkg(Pkg)) => ss(Pkg).
 
-  showVersions([],O,O).
-  showVersions([V|M],O,Ox) :-
-    showVersion(V,O,O1),
-    showVersions(M,O1,Ox).
+  showVersions:(list[version]) => list[ss].
+  showVersions([]) => [].
+  showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
 
-  showVersion((V,U,F),O,Ox) :-
-    appStr("    ",O,O1),
-    showV(V,O1,O2),
-    appStr("=",O2,O3),
-    showFileName(F,O3,O4),
-    appStr("[",O4,O5),
-    showUri(U,O5,O6),
-    appStr("]\n",O6,Ox).
+  showVersion:((version,uri,uri)) => ss.
+  showVersion((V,U,F)) => ssSeq([ss("    "),showV(V),ss("="),showFileName(F),ss("["),disp(U),ss("]\n")]).
 
   showV(v(V),O,Ox) :-
     appStr(V,O,Ox).

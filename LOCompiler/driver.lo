@@ -10,12 +10,12 @@ lo.comp.driver{
   import lo.comp.grammar.
 
   tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) :: tokenize(Toks) %% startState(getResource(U)) => Toks.
+  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U)).
 
   parseFile:(uri) => ast.
-  parseFile(U) :: 
-      ( tokenize(Toks) %% startState(getResource(U)),
-        parse(Term) %% Toks ) => Term.
+  parseFile(U) => Term :-
+    tokenize(Toks) %% startState(getResource(U)),
+    parse(Term) %% Toks .
 
   -- Hint to the run-time:
   main:(list[string]){}.
@@ -27,6 +27,6 @@ lo.comp.driver{
   parseArgs(_,[]).
   parseArgs(B,[S,..M]) :-
     Term = parseFile(resolveUri(B,parseUri(S))),
-    _logmsg(formatSS(Term.disp())),
+    _logmsg(flatten(disp(Term))),
     parseArgs(B,M).
 }

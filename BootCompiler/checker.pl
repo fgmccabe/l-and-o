@@ -300,16 +300,13 @@ processStmts([St|More],ProgramType,Defs,Dx,Env,Path) :-
 
 processStmt(St,ProgramType,Defs,Defx,E,_) :-
   isBinary(St,Lc,"=>",L,R),!,
-  checkEquation(Lc,L,R,ProgramType,Defs,Defx,E).
+  checkEquation(Lc,L,name(Lc,"true"),R,ProgramType,Defs,Defx,E).
+processStmt(St,ProgramType,Defs,Defx,E,_) :-
+  isBinary(St,Lc,":-",L,G),
+  isBinary(L,_,"=>",H,R),!,
+  checkEquation(Lc,H,G,R,ProgramType,Defs,Defx,E).
 processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :-
   isBinary(St,Lc,":-",L,R),!,
-  splitHead(L,Nm,A,C),
-  pushScope(E,Env),
-  typeOfTerms(A,AT,Env,E0,Lc,Args),
-  checkCond(C,E0,E1,Cond),
-  checkCond(R,E1,_,Body).
-processStmt(St,predType(AT),[strong(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :-
-  isBinary(St,Lc,":--",L,R),!,
   splitHead(L,Nm,A,C),
   pushScope(E,Env),
   typeOfTerms(A,AT,Env,E0,Lc,Args),
@@ -348,13 +345,13 @@ processStmt(St,Tp,Defs,Defs,_,_) :-
   locOfAst(St,Lc),
   reportError("Statement %s not consistent with expected type %s",[St,Tp],Lc).
 
-checkEquation(Lc,L,R,funType(AT,RT),[equation(Lc,Nm,Args,Cond,Exp)|Defs],Defs,E) :-
-  splitHead(L,Nm,A,C),
+checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Cond,Exp)|Defs],Defs,E) :-
+  splitHead(H,Nm,A,_),
   pushScope(E,Env),
   typeOfTerms(A,AT,Env,E0,Lc,Args),
-  checkCond(C,E0,E1,Cond),
+  checkCond(G,E0,E1,Cond),
   typeOfTerm(R,RT,E1,_,Exp).
-checkEquation(Lc,_,_,ProgramType,Defs,Defs,_) :-
+checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_) :-
   reportError("equation not consistent with expected type: %s",[ProgramType],Lc).
 
 checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Cond,Value),Env) :-
@@ -389,7 +386,7 @@ splitHead(Term,Nm,Args,Cond) :-
   splitHd(Term,Nm,Args,Cond).
 
 splitHd(Term,Nm,Args,Cond) :-
-  isBinary(Term,"::",L,Cond),!,
+  isBinary(Term,"@@",L,Cond),!,
   splitHead(L,Nm,Args,_).
 splitHd(Term,Nm,Args,name(Lc,"true")) :-
   isRound(Term,Nm,Args),
@@ -418,7 +415,7 @@ generalizeStmts([Eqn|Stmts],Env,Cx,[function(Lc,Nm,Tp,Cx,[Eqn|Eqns])|Defs],Dx) :
   pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Cx,Defs,Dx).
 generalizeStmts([Cl|Stmts],Env,Cx,[predicate(Lc,Nm,Tp,Cx,[Cl|Clses])|Defs],Dx) :-
-  (Cl = clause(Lc,Nm,_,_,_) ; Cl = strong(Lc,Nm,_,_,_)),!,
+  Cl = clause(Lc,Nm,_,_,_),
   collectClauses(Stmts,S0,Nm,Clses),
   pickupVarType(Nm,Lc,Env,Tp),
   generalizeStmts(S0,Env,Cx,Defs,Dx).
@@ -447,31 +444,13 @@ collectClauses([],[],_,[]).
 collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   Cl = clause(_,Nm,_,_,_),!,
   collectMoreClauses(Stmts,Sx,Nm,Ex).
-collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
-  Cl = strong(_,Nm,_,_,_),!,
-  collectStrongClauses(Stmts,Sx,Nm,Ex).
 
 collectMoreClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
   Cl = clause(_,Nm,_,_,_),!,
   collectMoreClauses(Stmts,Sx,Nm,Ex).
-collectMoreClauses([Cl|Stmts],Sx,Nm,Clses) :-
-  Cl = strong(Lc,Nm,_,_,_),!,
-  reportError("not allowed to mix regular and strong clauses",[],Lc),
-  collectMoreClauses(Stmts,Sx,Nm,Clses).
 collectMoreClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
   collectMoreClauses(Stmts,Sx,Nm,Eqns).
 collectMoreClauses([],[],_,[]).
-
-collectStrongClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-
-  Cl = strong(_,Nm,_,_,_),!,
-  collectStrongClauses(Stmts,Sx,Nm,Ex).
-collectStrongClauses([Cl|Stmts],Sx,Nm,Clses) :-
-  Cl = clause(Lc,Nm,_,_,_),!,
-  reportError("not allowed to mix strong and regular clauses",[],Lc),
-  collectStrongClauses(Stmts,Sx,Nm,Clses).
-collectStrongClauses([Rl|Stmts],[Rl|Sx],Nm,Eqns) :-
-  collectMoreClauses(Stmts,Sx,Nm,Eqns).
-collectStrongClauses([],[],_,[]).
 
 collectEquations([Eqn|Stmts],Sx,Nm,[Eqn|Ex]) :-
   Eqn = equation(_,Nm,_,_,_),
@@ -570,12 +549,17 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   parseType(R,Env,RT),
   checkType(Lc,RT,Tp,Env),
   typeOfTerm(L,RT,Env,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+  isBinary(Term,Lc,"::",L,R), !,
+  unary(Lc,"_coerce",L,LT),
+  binary(Lc,":",LT,R,NT),
+  typeOfTerm(NT,Tp,Env,Ev,Exp).
 typeOfTerm(P,Tp,Env,Ex,where(Ptn,Cond)) :-
-  isBinary(P,"::",L,R),
+  isBinary(P,"@@",L,R),
   typeOfTerm(L,Tp,Env,E0,Ptn),
   checkCond(R,E0,Ex,Cond).
 typeOfTerm(Call,Tp,Env,Ev,where(V,Cond)) :-
-  isUnary(Call,Lc,"@",Test), % @Test = NV :: NV.Test where NV is a new name
+  isUnary(Call,Lc,"@",Test), % @Test = NV @@ NV.Test where NV is a new name
   isRoundTerm(Test,_,_,_),
   genstr("_",NV),
   typeOfTerm(name(Lc,NV),Tp,Env,E0,V),
@@ -865,10 +849,6 @@ checkNonTerminals(Term,Tp,ElTp,Env,Ex,disj(Lc,Either,Or)) :-
   isBinary(Term,Lc,"|",L,R),!,
   checkNonTerminals(L,Tp,ElTp,Env,E1,Either),
   checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
-checkNonTerminals(Term,Tp,ElTp,Env,Ex,guard(Lc,NonTerm,Cond)) :-
-  isBinary(Term,Lc,"::",L,R),!,
-  checkNonTerminals(L,Tp,ElTp,Env,E1,NonTerm),
-  checkCond(R,E1,Ex,Cond).
 checkNonTerminals(Term,Tp,ElTp,Env,Ex,one(Lc,Test)) :-
   isUnary(Term,Lc,"!",N),!,
   checkNonTerminals(N,Tp,ElTp,Env,Ex,Test).
@@ -955,7 +935,7 @@ exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule)|Tx],T
   isPublicType(Nm,Public).
 exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
-exportDef(grammar(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(grammar(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
 exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con|Cons],Cons,Impl,Impl) :-
   isPublicContract(Con,Public).

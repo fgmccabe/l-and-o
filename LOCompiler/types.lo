@@ -37,7 +37,7 @@ lo.comp.types{
   dispType(voidType) => ss("void").
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
-  dispType(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => dispType(Curr).
+  dispType(tVar(Curr,false,_,_,_)) =>  dispType(Curr) :-  nonvar(Curr) .
   dispType(tVar(_,_,_,Nm,Id)) => ssSeq([ss(Nm),ss("_"),ss(Id)]).
   dispType(tipe(Nm)) =>ss(Nm).
   dispType(typeExp(Nm,A)) => ssSeq([ss(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
@@ -94,7 +94,7 @@ lo.comp.types{
 
   public
   deRef:(tipe)=>tipe.
-  deRef(tVar(Curr,false,_,_,_)) :: nonvar(Curr) => deRef(Curr).
+  deRef(tVar(Curr,false,_,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
   deRef(T) => T.
 
   public
@@ -116,9 +116,9 @@ lo.comp.types{
 
   public
   moveConstraints:(tipe,list[constraint],tipe){}.
-  moveConstraints(constrained(T,C),[C,..C0],Inner) :--
+  moveConstraints(constrained(T,C),[C,..C0],Inner) :-
     moveConstraints(T,C0,Inner).
-  moveConstraints(T,[],T) :-- true.
+  moveConstraints(T,[],T).
 
   public moveQuants:(tipe,list[tipe],tipe){}.
   moveQuants(univType(B,Tp),[B,..Q],Tmpl) :-
@@ -135,13 +135,11 @@ lo.comp.types{
 
   public
   bind:(tipe,tipe){}.
-  bind(T,Tp) :- \+occursIn(T,Tp), T=tVar(Tp,_,_,_,_).
+  bind(T,Tp) :- \+ occursIn(T,Tp), T=tVar(Tp,_,_,_,_).
 
   public
   occursIn:(tipe,tipe){}.
-  occursIn(tVar(Curr,_,_,_,Id),Tp) :: (var(Curr), \+ sameVar(Id,deRef(Tp))) :-- idOccIn(Id,deRef(Tp)).
-  occursIn(tVar(Curr,_,_,_,_),Tp) :: nonvar(Curr) :-- occursIn(Curr,Tp).
-  occursIn(_,Tp) :-- false.
+  occursIn(T,Tp) :- (T = tVar(Curr,_,_,_,Id) ? ( var(Curr) ? \+sameVar(Id,deRef(Tp)), idOccIn(Id,deRef(Tp)) | occursIn(Curr,Tp)) | false).
 
   private
   sameVar:(string,tipe){}.
@@ -149,8 +147,8 @@ lo.comp.types{
 
   private
   idOccIn:(string,tipe){}.
-  idOccIn(Id,tVar(Curr,_,_,_,_)) :: nonvar(Curr) :- idOccIn(Id,Curr).
-  idOccIn(Id,tVar(Curr,_,_,_,Id)) :: var(Curr) :- true.
+  idOccIn(Id,tVar(Curr,_,_,_,_)) :- nonvar(Curr), idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Curr,_,_,_,Id)) :- var(Curr).
   idOccIn(Id,typeExp(_,A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).

@@ -1,0 +1,12 @@
+lo.coerce{
+  import lo.core.
+
+  public 
+  contract all s,d ~~ coercion[s,d] .. {
+    _coerce:(s)=>d.
+  }
+
+  public implementation coercion[integer,string] .. {
+    _coerce(Ix) => _int2str(Ix,10,0,0)
+  }
+}

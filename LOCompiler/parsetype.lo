@@ -11,46 +11,59 @@ lo.comp.parseType{
 
   public
   parseType:(ast,list[env],tipe){}.
-  parseType(T,Env,Type) :--
+  parseType(T,Env,Type) :-
     prsType(T,Env,{},[],Cons,Tp),
     moveConstraints(Type,Cons,Tp).
 
   private
   prsType : (ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe){}.
-  prsType(T,Env,Q,Cx,Cx,PT) :: isQuantified(T,V,BT) :--
+  prsType(T,Env,Q,Cx,Cx,PT) :-
+    isQuantified(T,V,BT),
     prsBound(V,Q,B0,Env,PT,Inner),
     prsType(BT,Env,B0,[],C0,BTp),
     moveConstraints(Inner,C0,BTp). -- no constraints migrate out of quantified type
-  prsType(T,Env,Q,C,Cx,Type) :--
+  prsType(T,Env,Q,C,Cx,Type) :-
     isBinary(T,"|:",_,L,R),
     parseConstraint(L,Env,Q,C,C0),
     prsType(R,Env,Q,C0,Cx,Type). -- This has the effect of pulling all constraints to the outside
-  prsType(T,Env,Q,C,Cx,Tp) :: isName(T,Lc,Nm) :--
+  prsType(T,Env,Q,C,Cx,Tp) :-
+    isName(T,Lc,Nm),
     prsTypeName(Lc,Nm,Env,Q,C,Cx,Tp).
-  prsType(Sq,Env,Q,C,Cx,Type) :: (isSquare(Sq,Lc,Op,Args), isName(Op,_,Nm)) :--
+  prsType(Sq,Env,Q,C,Cx,Type) :-
+    isSquare(Sq,Lc,Op,Args), 
+    isName(Op,_,Nm),
     prsTypeName(Lc,N,Env,Q,C,C0,TpCon),
     prsTypes(Args,Env,Q,C0,Cx,ArgTps),
     applyTypeExp(TpCon,ArgTps,Lc,Type). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
-  prsType(F,Env,Q,C,Cx,funType(AT,RT)) :: isBinary(F,"=>",_,L,R) :--
+  prsType(F,Env,Q,C,Cx,funType(AT,RT)) :-
+    isBinary(F,"=>",_,L,R),
     prsType(L,Env,Q,C,C1,AT),
     prsType(R,Env,Q,C1,Cx,RT).
-  prsType(F,Env,Q,C,Cx,grammarType(AT,RT)) :: isBinary(F,"-->",_,L,R) :--
+  prsType(F,Env,Q,C,Cx,grammarType(AT,RT)) :-
+    isBinary(F,"-->",_,L,R),
     prsType(L,Env,Q,C,C1,AT),
     prsType(R,Env,Q,C1,Cx,RT).
-  prsType(F,Env,Q,C,Cx,classType(AT,RT)) :: isBinary(F,"<=>",_,L,R) :--
+  prsType(F,Env,Q,C,Cx,classType(AT,RT)) :-
+    isBinary(F,"<=>",_,L,R),
     prsType(L,Env,Q,C,C1,AT),
     prsType(R,Env,Q,C1,Cx,RT).
-  prsType(T,Env,Q,C,Cx,predType(AT)) :: isBraceTerm(T,_,L,[]) :--
+  prsType(T,Env,Q,C,Cx,predType(AT)) :-
+    isBraceTerm(T,_,L,[]),
     prsType(L,Env,Q,C,Cx,AT).
-  prsType(T,Env,Q,C,Cx,tupleType(AT)) :: ( isRoundTuple(T,_,[A]), isRoundTuple(A,_,Inner)) :--
+  prsType(T,Env,Q,C,Cx,tupleType(AT)) :-
+    isRoundTuple(T,_,[A]), 
+    isRoundTuple(A,_,Inner),
     prsTypes(Inner,Env,Q,C,Cx,AT).
-  prsType(T,Env,Q,C,Cx,AT) :: isRoundTuple(T,_,[A]) :--
+  prsType(T,Env,Q,C,Cx,AT) :-
+    isRoundTuple(T,_,[A]),
     prsType(A,Env,Q,C,Cx,AT).
-  prsType(T,Env,Q,C,Cx,tupleType(AT)) :: isRoundTuple(T,_,A) :--
+  prsType(T,Env,Q,C,Cx,tupleType(AT)) :-
+    isRoundTuple(T,_,A),
     prsTypes(A,Env,Q,C,Cx,AT).
-  prsType(T,Env,Q,C,Cx,faceType(AT)) :: isBraceTuple(T,_,L) :--
+  prsType(T,Env,Q,C,Cx,faceType(AT)) :-
+    isBraceTuple(T,_,L),
     prsTypeFields(L,Env,Q,C,Cx,AT).
-  prsType(T,_,_,Cx,Cx,anonType) :--
+  prsType(T,_,_,Cx,Cx,anonType) :-
     reportError("cannot understand type $(T)",T.loc).
 
   private
@@ -127,8 +140,8 @@ lo.comp.parseType{
     mergeConstraints(L,C1,Cx).
 
   addConstraint:(constraint,list[constraint],list[constraint]){}.
-  addConstraint(Con,C0,C0) :: Con in C0 :-- true.
-  addConstraint(Con,C0,[Con,..C0]) :-- true.
+  addConstraint(Con,C0,C0) :- Con in C0!.
+  addConstraint(Con,C0,[Con,..C0]) :- \+Con in C0.
 
   parseContractName:(location,string,list[env],constraint){}.
   parseContractName(_,Id,Env,freshen(Spec,{})) :-
@@ -137,9 +150,10 @@ lo.comp.parseType{
     reportError("contract $(Id) not declared",Lc).
 
   parseContractArgs:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],list[tipe]){}.
-  parseContractArgs([A],Env,B,C0,Cx,Args,Deps) :: isBinary(A,"->>",_,L,R) :--
+  parseContractArgs([A],Env,B,C0,Cx,Args,Deps) :-
+    isBinary(A,"->>",_,L,R),
     prsTypes(deComma(L),Env,B,C0,C1,Args),
     prsTypes(deComma(R),Env,B,C1,Cx,Deps).
-  parseContractArgs(A,Env,B,C0,Cx,Args,[]) :--
+  parseContractArgs(A,Env,B,C0,Cx,Args,[]) :-
     prsTypes(A,Env,B,C0,Cx,Args).
 }

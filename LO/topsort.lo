@@ -12,7 +12,8 @@ lo.topsort{
 
   analyseDefs:all e,t ~~ depends[t->>e] |: (list[t],list[list[t]]) => list[list[t]].
   analyseDefs([],Groups) => Groups.
-  analyseDefs([Def,..Defs],Grps) :: analyseDef(Def,Defs,IDefs,[],_,Grps,G0,_) => analyseDefs(IDefs,G0).
+  analyseDefs([Def,..Defs],Grps) => analyseDefs(IDefs,G0) :- 
+    analyseDef(Def,Defs,IDefs,[],_,Grps,G0,_).
 
   analyseDef:all e,t ~~ depends[t->>e] |: 
       (t,list[t],list[t],list[(t,integer)],list[(t,integer)],list[list[t]],list[list[t]],integer){}.

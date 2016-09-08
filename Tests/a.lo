@@ -21,7 +21,7 @@ a{
   f("g").
 
   gp:(string,string){}.
-  gp(x,y) :-- p(x,z), p(z,y).
+  gp(x,y) :- p(x,z), p(z,y).
 
   assert p("a","b"), gp("a","d").
 

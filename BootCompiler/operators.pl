@@ -8,22 +8,22 @@
   infixOp("~~",1239,1240,1239).	 /* quantifier */
   infixOp("|:",1234,1235,1234).	 /* constrained type */
   infixOp("::=",1230,1231,1230).	 /* user type definition */
-  infixOp("|",1229,1230,1230).	 /* type union and disjunction */
+  infixOp(":-",1219,1220,1219).	 /* clause arrow */
+  infixOp("|",1219,1220,1220).	 /* type union and disjunction */
   infixOp("?",1199,1200,1199).	 /* conditional operator */
   infixOp("<=>",1199,1200,1199).	 /* class constructor type */
   infixOp("=>",1199,1200,1199).	 /* function arrow */
-  infixOp(":-",1199,1200,1199).	 /* clause arrow */
-  infixOp(":--",1199,1200,1199).	 /* strong clause */
   infixOp("-->",1199,1200,1199).	 /* grammar rule */
   infixOp("->",1199,1200,1199).	 /* map entry */
   infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
+  infixOp("@@",1004,1005,1004).	 /* guard marker */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
+  infixOp("::",998,999,998).	 /* type coercion */
   infixOp("<=",949,950,949).	 /* class rule arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
-  infixOp("::",919,920,919).	 /* guard marker */
   infixOp("=",899,900,899).	 /* unifies predicate */
   infixOp("==",899,900,899).	 /* equality predicate */
   infixOp("\\=",899,900,899).	 /* not unifyable */
@@ -125,7 +125,6 @@
   follows(':',':','::').
   follows('::','=','::=').
   follows(':','-',':-').
-  follows(':-','-',':--').
   follows('',';',';').
   follows('','<','<').
   follows('<','~','<~').
@@ -141,6 +140,7 @@
   follows('>','=','>=').
   follows('','?','?').
   follows('','@','@').
+  follows('@','@','@@').
   follows('','!','!').
   follows('!','=','!=').
   follows('','#','#').
@@ -178,10 +178,9 @@
   final('\\==',"\\==").	 /* not equals */
   final('^',"^").	 /* grammar iterator */
   final(':',":").	 /* type annotation */
-  final('::',"::").	 /* guard marker */
+  final('::',"::").	 /* type coercion */
   final('::=',"::=").	 /* user type definition */
   final(':-',":-").	 /* clause arrow */
-  final(':--',":--").	 /* strong clause */
   final(';',";").	 /* action terminator */
   final('<',"<").	 /* less than */
   final('<~',"<~").	 /* type interface rule */
@@ -197,6 +196,7 @@
   final('>=',">=").	 /* greater than or equal */
   final('?',"?").	 /* conditional operator */
   final('@',"@").	 /* tau pattern */
+  final('@@',"@@").	 /* guard marker */
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */
   final('#',"#").	 /* package separator */

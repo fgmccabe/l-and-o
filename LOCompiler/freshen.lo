@@ -23,7 +23,7 @@ lo.comp.freshen{
   frshnType(thisType,_) => thisType.
   frshnType(kVar(Nm),{Nm->Tp}) => Tp.
   frshnType(kVar(Nm),_) => kVar(Nm).
-  frshnType(V :: V=tVar(Curr,_,_,_,_),B) => (var(Curr) ? V | frshnType(Curr,B)).
+  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_,_,_).
   frshnType(tipe(Nm),_) => tipe(Nm).
   frshnType(typeExp(Nm,A),B) => typeExp(Nm,frshnTypes(A,B)).
   frshnType(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).

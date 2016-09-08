@@ -120,12 +120,12 @@ lo.core{
 
   public
   min: all t ~~ comp[t] |: (t,t)=>t.
-  min(X,Y) :: X<Y => X.
+  min(X,Y) => X :- X<Y.
   min(_,Y) => Y.
 
   public 
   max: all t ~~ comp[t] |: (t,t)=>t.
-  max(X,Y) :: X>Y => X.
+  max(X,Y)  => X:- X>Y.
   max(_,Y) => Y.
 
   public
@@ -200,7 +200,7 @@ lo.core{
 
   private
   listDisp:all x ~~ display[x] |: (list[x],string) => list[ss].
-  listDisp(X,_) :: var(X) => [ss(",.."),disp(X),ss("]")].
+  listDisp(X,_) => [ss(",.."),disp(X),ss("]")] :- var(X).
   listDisp([],_) => [ss("]")].
   listDisp([E,..L],Sep) => [ss(Sep),disp(E),..listDisp(L,",")].
 }

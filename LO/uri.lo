@@ -17,7 +17,7 @@ lo.uri {
   public type query ::= qry(string) | noQ.
 
   public parseUri:(string) => uri.
-  parseUri(S) :: uriParse(U) %% explode(S) => U.
+  parseUri(S) => U :- uriParse(U) %% explode(S).
 
   public uriParse:(uri) --> list[integer].
   uriParse(absUri(Scheme,Hier,Query)) --> absoluteUri(Scheme,Hier,Query).
@@ -60,7 +60,7 @@ lo.uri {
   pChars:(list[integer],list[integer]) --> list[integer].
   pChars([C,..M],R) --> unreserved(C), pChars(M,R).
   pChars([0c%,U,L,..M],R) --> escaped(U,L), pChars(M,R).
-  pChars([C,..M],R) --> [C]::pChar(C), pChars(M,R).
+  pChars([C,..M],R) --> [C], { pChar(C)} , pChars(M,R).
   pChars(X,X) --> [].
 
   pChar:(integer){}.
@@ -138,7 +138,7 @@ lo.uri {
   dot(0c.) --> "-".
 
   alpha:(integer)-->list[integer].
-  alpha(C) --> [C] :: (isLowAlpha(C)|isUpAlpha(C)).
+  alpha(C) --> [C] , {isLowAlpha(C)|isUpAlpha(C)}.
 
   alphaNum:(integer) --> list[integer].
   alphaNum(C) --> alpha(C).
@@ -290,7 +290,7 @@ lo.uri {
   -- Resolve a url against a base. The base must be an absolute URI, either net or local.
   public 
   resolveUri:(uri,uri) => uri.
-  resolveUri(_,U)::absUri(_,_,_).=U => U.
+  resolveUri(_,U) => U :- absUri(_,_,_).=U.
   resolveUri(absUri(Scheme,Base,_),relUri(Path,Query)) => absUri(Scheme,resolvePath(Base,Path),Query).
 
   resolvePath:(rsrcName,rsrcName)=>rsrcName.

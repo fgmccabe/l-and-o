@@ -2,17 +2,18 @@ lo.comp.misc{
   import lo.
 
   public pathSuffix:(string,string) => string.
-  pathSuffix(Src,Marker) :: splitString(Src,Marker,Before,After) => After.
+  pathSuffix(Src,Marker) => After :-  splitString(Src,Marker,Before,After).
   pathSuffix(Src,_) => Src.
 
   splitString:(string,string,string,string){}.
-  splitString(Src,Mrk,Before,After) :: _str_find(Src,Mrk,0,Pt) :-- 
+  splitString(Src,Mrk,Before,After) :-
+    _str_find(Src,Mrk,0,Pt),
     _str_split(Src,Pt,Before,Second),
     _str_split(Second,_str_len(Mrk),_,After).
 
   public type all x,y ~~ pr[x,y] ::= pr(x,y).
 
-  implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] .. {
+  public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] .. {
     disp(D) => dispDf(D).
   }
 
@@ -30,4 +31,12 @@ lo.comp.misc{
 
   prHash:all x,y ~~ equality[x], equality[y] |: (pr[x,y]) => integer.
   prHash(pr(X,Y)) => (37*hash(X))+hash(Y).
+
+  public multiCat:all x ~~ (list[list[x]]) => list[x].
+  multiCat([]) => [].
+  multiCat([E,..L]) => cat(E,L).
+
+  cat:all x ~~ (list[x], list[list[x]]) => list[x].
+  cat([],M) => multiCat(M).
+  cat([E,..L],M) => [E,..cat(L,M)].
 }

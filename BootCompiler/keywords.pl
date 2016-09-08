@@ -21,7 +21,6 @@
   keyword("<=>").
   keyword("->").
   keyword(":-").
-  keyword(":--").
   keyword("-->").
   keyword("::=").
   keyword("<=").
@@ -48,14 +47,13 @@
 
   isRuleKeyword(X):- ruleKeyword(X), !.
 
-  ruleKeyword("::").
+  ruleKeyword("@@").
   ruleKeyword("..").
   ruleKeyword("~~").
   ruleKeyword("=>").
   ruleKeyword("<=>").
   ruleKeyword("->").
   ruleKeyword(":-").
-  ruleKeyword(":--").
   ruleKeyword("-->").
   ruleKeyword("::=").
   ruleKeyword("<=").

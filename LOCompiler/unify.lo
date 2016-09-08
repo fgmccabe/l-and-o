@@ -41,18 +41,18 @@ lo.comp.unify{
   smFields([(F,E1),..L1],L2,Env) :- (F,E2) in L2, sameType(E1,E2,Env), smFields(L1,L2,Env).
 
   varBinding:(tipe,tipe,list[env]){}.
-  varBinding(T1,T2,_) :: isIdenticalVar(T1,T2) :-- true.
-  varBinding(V1,V2,Env) :-- 
+  varBinding(T1,T2,_) :- isIdenticalVar(T1,T2).
+  varBinding(V1,V2,Env) :- \+ isIdenticalVar(T1,T2),
     mergeConstraints(constraints(V1),constraints(V2),Env), 
     bind(V1,V2).
 
   mergeConstraints:(list[constraint],list[constraint],list[env]){}.
-  mergeConstraints(C1,C2,Env) :: var(C1) :-- copyConstraints(C2,C1,Env).
-  mergeConstraints([_,..L1],C2,Env) :- mergeConstraints(L1,C2,Env).
+  mergeConstraints(C1,C2,Env) :-
+    ( var(C1) ? copyConstraints(C2,C1,Env) | C1 = [_,..L1], mergeConstraints(L1,C2,Env) ).
 
   copyConstraints:(list[constraint],list[constraint],list[env]){}.
-  copyConstraints(_,C,_) :: var(C) :-- true.
-  copyConstraints([C,..L1],[C,..L2],Env) :-- copyConstraints(L1,L2,Env).
+  copyConstraints(C1,C2,_) :-
+    ( var(C2) ? true | C1 = [C,..L1], C2 = [C,..L2], copyConstraints(L1,L2,Env)).
 
   checkBinding:(tipe,tipe,list[env]){}.
   checkBinding(V,Tp,Env) :- 
@@ -61,9 +61,7 @@ lo.comp.unify{
     checkConstraints(C,Env).
 
   checkConstraints:(list[constraint],list[env]){}.
-  checkConstraints(C,_) :: var(C) :-- true.
-  checkConstraints([C,..M],Env) :: checkConstraint(C,Env) :--
-    checkConstraints(M,Env).
+  checkConstraints(C,_) :- (var(C) ? true | C = [C1,..M], checkConstraint(C1,Env), checkConstraints(M,Env)).
 
   checkConstraint:(constraint,list[env]){}.
   checkConstraint(conTract(Nm,Args,Deps),Env) :-
@@ -107,13 +105,13 @@ lo.comp.unify{
   faceOfType(T,Env,faceType(collectImplements(T,constraints(T),Env,[]))) :- isUnbound(T).
 
   collectImplements:(tipe,list[constraint],list[env],list[(string,tipe)]) => list[(string,tipe)].
-  collectImplements(_,C,_,Face) :: var(C) => Face.
+  collectImplements(_,C,_,Face) =>  Face :-  var(C) .
   collectImplements(V,[implementsFace(T,Els),..C],Env,SoFar) =>
     collectImplements(V,C,Env,mergeFields(Els,Env,SoFar)).
   collectImplements(_,[],_,Face) => Face.
 
   mergeFields:(list[(string,tipe)],list[env],list[(string,tipe)]) => list[(string,tipe)].
   mergeFields([],_,SoFar) => SoFar.
-  mergeFields([(Nm,F),..Els],Env,SoFar) :: ((Nm,V) in SoFar,sameType(F,V,Env)) => mergeFields(Els,Env,SoFar).
+  mergeFields([(Nm,F),..Els],Env,SoFar) => mergeFields(Els,Env,SoFar) :- ((Nm,V) in SoFar,sameType(F,V,Env)).
   mergeFields([(Nm,F),..Els],Env,SoFar) => mergeFields(Els,Env,[(Nm,F),..SoFar]).
 }

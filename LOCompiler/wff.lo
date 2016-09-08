@@ -48,25 +48,24 @@ lo.comp.wff {
 
   public
   packageName:(ast) => string.
-  packageName(T) :: isName(T,_,Pkg) => Pkg.
-  packageName(T) :: isString(T,_,Pkg) => Pkg.
-  packageName(T) :: isBinary(T,".",_,L,R) =>
-    packageName(L)+"."+packageName(R).
+  packageName(T) =>  Pkg :-  isName(T,_,Pkg).
+  packageName(T) =>  Pkg :-  isString(T,_,Pkg).
+  packageName(T)  => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
 
   public 
   type pkgName ::= pkg(string,string) | defltPkg(string).
 
   public
   pkgName:(ast) => pkgName.
-  pkgName(T) :: isBinary(T,"#",_,L,R) =>
-    pkg(packageName(L),packageVersion(R)).
+  pkgName(T) => pkg(packageName(L),packageVersion(R)) :- 
+    isBinary(T,"#",_,L,R).
   pkgName(T) => defltPkg(packageName(T)).
 
   packageVersion:(ast) => string.
-  packageVersion(T) :: isName(T,_,Pkg) => Pkg.
-  packageVersion(T) :: isString(T,_,Pkg) => Pkg.
-  packageVersion(T) :: isInteger(T,_,Ix) => "$(Ix)".
-  packageVersion(T) :: isBinary(T,".",_,L,R) => packageVersion(L)+"."+packageVersion(R).
+  packageVersion(T) =>  Pkg :-  isName(T,_,Pkg).
+  packageVersion(T) =>  Pkg :-  isString(T,_,Pkg).
+  packageVersion(T) =>  "$(Ix)" :-  isInteger(T,_,Ix).
+  packageVersion(T) =>  packageVersion(L)+"."+packageVersion(R) :-  isBinary(T,".",_,L,R).
 
   public
   sameLength:all t ~~ (list[t],list[t],location){}.

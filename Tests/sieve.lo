@@ -4,7 +4,7 @@ sieve{
 
   filter:(list[integer],integer) => list[integer].
   filter([],_) => [].
-  filter([I,..R],K) :: I % K = 0 => filter(R,K).
+  filter([I,..R],K) => filter(R,K) :-  I % K = 0 .
   filter([I,..R],K) => [I,..filter(R,K)].
 
   sieve:(list[integer]) => list[integer].
@@ -12,7 +12,7 @@ sieve{
   sieve([Pr,..R]) => [Pr,..sieve(filter(R,Pr))].
 
   iota:(integer,integer) => list[integer].
-  iota(Mx,Cu) :: Mx<Cu => [].
+  iota(Mx,Cu) => [] :-  Mx<Cu.
   iota(Mx,Cu) => [Cu,..iota(Mx,Cu+2)].
 
   show "Sieve up to 1000 is $(sieve(iota(1000,3)))".

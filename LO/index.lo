@@ -31,12 +31,13 @@ lo.index{
   }
 
   lookIn: all k,v ~~ equality[k] |: (integer,map[k,v],k,v){}.
-  lookIn(H,trLeaf(H,Els),K,V) :-- findMember(K,Els,V).
-  lookIn(H,trNode(Msk,Ln,Left,Right),K,V) :: commonMask(H,Ln)==Msk :--
+  lookIn(H,trLeaf(H,Els),K,V) :- findMember(K,Els,V).
+  lookIn(H,trNode(Msk,Ln,Left,Right),K,V) :- 
+    commonMask(H,Ln)==Msk,
     (nthBit(H,Ln) ? lookIn(H,Right,K,V) | lookIn(H,Left,K,V)).
 
   look: all k,v ~~ equality[k] |: (k,map[k,v]) => option[v].
-  look(K,T) :: lookIn(hash(K),T,K,V) => some(V).
+  look(K,T) => some(V) :- lookIn(hash(K),T,K,V).
   look(_,_) => none.
 
   findMember:all k,v ~~ equality[k] |: (k,list[(k,v)],v){}.
@@ -53,33 +54,33 @@ lo.index{
 
   mergeLeafs:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
   mergeLeafs(trLeaf(H,L1),trLeaf(H,L2)) => trLeaf(H,merge(L1,L2)).
-  mergeLeafs(T1::T1 = trLeaf(H1,L1),T2::T2=trLeaf(H2,L2)) ::
-    ( CML = commonMaskLen(H1,H2,HashLen),
-      CM = commonMask(H1,CML)) =>
-      (nthBit(H1,CML) ?
-        trNode(CM,CML,T2,T1) |
-        trNode(CM,CML,T1,T2)).
+  mergeLeafs(T1,T2) =>
+      (nthBit(H1,CML) ? trNode(CM,CML,T2,T1) | trNode(CM,CML,T1,T2)) :-
+      T1 = trLeaf(H1,L1),
+      T2=trLeaf(H2,L2),
+      CML = commonMaskLen(H1,H2,HashLen),
+      CM = commonMask(H1,CML).
 
   merge: all k,v ~~ equality[k] |: (list[(k,v)],list[(k,v)])=>list[(k,v)].
   merge([],L) => L.
-  merge([(K,V),..L1],L) :: isMember((K,_),L) => merge(L1,L).
+  merge([(K,V),..L1],L) => merge(L1,L) :- isMember((K,_),L).
   merge([E,..L],L1) => [E,..merge(L,L1)].
 
   mergeNodes:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
-  mergeNodes(T1::T1=trLeaf(_,_),T2::T2=trLeaf(_,_)) => mergeLeafs(T1,T2).
-  mergeNodes(T1::T1=trNode(Msk1,Ln1,L1,R1),T2::T2=trLeaf(Msk2,_)) ::
-    ( CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),
-      CM = commonMask(Msk1,CML)) =>
+  mergeNodes(T1,T2) => mergeLeafs(T1,T2) :- T1=trLeaf(_,_), T2=trLeaf(_,_).
+  mergeNodes(T1,T2) =>
       (CML<Ln1 ?
         ( nthBit(Msk2,CML) ?
           trNode(CM,CML,T1,T2) |
           trNode(CM,CML,T2,T1))  |
         ( nthBit(Msk2,CML) ?
           trNode(CM,CML,L1,mergeNodes(R1,T2)) |
-          trNode(CM,CML,mergeNodes(L1,T2),R1))).
-  mergeNodes(T1::T1=trLeaf(Msk1,_), T2::T2=trNode(Msk2,Ln2,L2,R2)) ::
-    ( CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln2),
-      CM = commonMask(Msk2,CML)) =>
+          trNode(CM,CML,mergeNodes(L1,T2),R1))) :-
+      T1=trNode(Msk1,Ln1,L1,R1),
+      T2=trLeaf(Msk2,_),
+      CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),
+      CM = commonMask(Msk1,CML).
+  mergeNodes(T1, T2) =>
       (CML < Ln2 ?
         ( nthBit(Msk1,CML) ?
           trNode(CM,CML,T1,T2) |
@@ -87,10 +88,12 @@ lo.index{
         ( nthBit(Msk1,CML) ?
           trNode(CM,CML,L2,mergeNodes(R2,T1)) |
           trNode(CM,CML,mergeNodes(L2,T1),R2)
-          )).
-  mergeNodes(T1::T1=trNode(Msk1,Ln1,L1,R1),T2::T2=trNode(Msk2,Ln2,L2,R2)) ::
-    ( CML = min(min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),Ln2),
-      CM = commonMask(Msk1,CML)) =>
+          )) :-  
+      T1=trLeaf(Msk1,_),
+      T2=trNode(Msk2,Ln2,L2,R2),
+      CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln2),
+      CM = commonMask(Msk2,CML).
+  mergeNodes(T1,T2) =>
       (CML < Ln1 ?
         (nthBit(Msk2,CML) ?
           trNode(CM,CML,L1,mergeNodes(R1,T2)) |
@@ -100,19 +103,24 @@ lo.index{
           trNode(CM,CML,L2,mergeNodes(T1,R2)) |
           trNode(CM,CML,mergeNodes(L2,T1),R2))  |
         trNode(CM,CML,mergeNodes(L1,L2),mergeNodes(R1,R2))
-      ).
+      ) :-
+      T1=trNode(Msk1,Ln1,L1,R1),
+      T2=trNode(Msk2,Ln2,L2,R2),
+      CML = min(min(commonMaskLen(Msk1,Msk2,HashLen),Ln1),Ln2),
+      CM = commonMask(Msk1,CML).
 
   rmve:all k,v ~~ equality[k] |: (integer,k,map[k,v]) => map[k,v].
   rmve(_,_,trEmpty) => trEmpty.
   rmve(H,K,trLeaf(H,L)) => reformLeaf(H,subtract((K,_),L)).
-  rmve(H,K,T::T=trNode(M,Ln,L,R)) ::
-    CM = commonMask(H,Ln) =>
+  rmve(H,K,T) =>
     ( CM = M ?
       ( nthBit(H,Ln) ?
         reformNode(trNode(M,Ln,L,rmve(H,K,R))) |
         reformNode(trNode(M,Ln,rmve(H,K,L),R))
-      ) | 
-      T). -- not present
+      ) |  -- not present
+      T) :-
+    T=trNode(M,Ln,L,R),
+    CM = commonMask(H,Ln).
 
   reformLeaf:all  k,v ~~ equality[k] |: (integer,list[(k,v)]) => map[k,v].
   reformLeaf(H,[]) => trEmpty.
@@ -156,12 +164,14 @@ lo.index{
   HashLen = 64.
       
   commonMaskLen:(integer,integer,integer) => integer.
-  commonMaskLen(H1,H2,C) :: ( C>0, \+H1==H2) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1).
+  commonMaskLen(H1,H2,C) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1) :- 
+    C>0, \+H1==H2.
   commonMaskLen(_,_,C) => C.
 
   commonMask:(integer,integer)=>integer.
   commonMask(_,0) => 0.
-  commonMask(M1,ML) :: CML=HashLen-ML => _band(_blsl(_blsr(-1,CML),CML),M1).
+  commonMask(M1,ML) => _band(_blsl(_blsr(-1,CML),CML),M1) :-
+     CML=HashLen-ML.
 
   nthBit:(integer,integer){}.
   nthBit(X,N) :- _nthb(X,63-N).

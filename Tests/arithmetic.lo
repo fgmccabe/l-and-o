@@ -77,6 +77,6 @@ lo.arithmetic{
   X >= Y :- ge(X,Y).
 
   public min:all t ~~ comp[t] |: (t,t)=>t.
-  min(X,Y)::X<Y => X.
+  min(X,Y) => X :- X<Y.
   min(_,Y) => Y.
 }

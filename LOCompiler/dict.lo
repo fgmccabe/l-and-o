@@ -25,7 +25,7 @@ lo.comp.dict{
 
   private
   tpInDict:(string,list[env]) => option[typeDef].
-  tpInDict(Nm,Env) :: typeInD(localTypeName(Nm),Env,D) => some(D).
+  tpInDict(Nm,Env) => some(D) :- typeInD(localTypeName(Nm),Env,D).
   tpInDict(_,_) => none.
 
   public
@@ -39,18 +39,18 @@ lo.comp.dict{
 
   private
   typeInD:(string,list[env],typeDef){}.
-  typeInD(Key,[scope({Key->Def},_,_,_),.._],Dec):--true.
-  typeInD(Key,[_,..Env],Def) :-- typeInD(Key,Env,Def).
+  typeInD(Key,[scope({Key->Def},_,_,_),.._],Dec).
+  typeInD(Key,[_,..Env],Def) :- typeInD(Key,Env,Def).
 
   public
   typeOfVar:(string,list[env])=>option[vr].
-  typeOfVar(Nm,Env) :: varInD(Nm,Env,D) => some(D).
+  typeOfVar(Nm,Env) =>  some(D) :-  varInD(Nm,Env,D).
   typeOfVar(_,_) => none.
 
   private
   varInD:(string,list[env],vr){}.
-  varInD(Nm,[scope(_,{Nm->D},_,_),.._],D) :-- true.
-  varInD(Nm,[_,..E],D) :-- varInD(Nm,E,D).
+  varInD(Nm,[scope(_,{Nm->D},_,_),.._],D).
+  varInD(Nm,[_,..E],D) :- varInD(Nm,E,D).
 
   public
   isVar:(string,list[env],vr){}.
@@ -65,12 +65,12 @@ lo.comp.dict{
   declareContract(Nm,Con,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tp,Nms,Cons+{Nm->Con},Imps),..E].
 
   conInD:(string,list[env],conDef){}.
-  conInD(Nm,[scope(_,_,{Nm->Dec},_),.._],Dec) :-- true.
-  conInD(Nm,[_,..Env],Con) :-- conInD(Nm,Env,Con).
+  conInD(Nm,[scope(_,_,{Nm->Dec},_),.._],Dec).
+  conInD(Nm,[_,..Env],Con) :- conInD(Nm,Env,Con).
 
   public
   getContract:(string,list[env]) => option[conDef].
-  getContract(Nm,Env) :: conInD(Nm,Env,Def) => some(Def).
+  getContract(Nm,Env) =>  some(Def) :-  conInD(Nm,Env,Def) .
   getContract(_,_) => none.
 
   public
@@ -79,12 +79,12 @@ lo.comp.dict{
 
   public
   declareImplementation:(string,string,implDef,list[env]) => list[env].
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) :: present(Imps,Nm,I) => [scope(Tp,Nms,Cons,Imps+{Nm->I+{ImplNm->Con}}),..E].
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) =>  [scope(Tp,Nms,Cons,Imps+{Nm->I+{ImplNm->Con}}),..E] :-  present(Imps,Nm,I) .
   declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tp,Nms,Cons,Imps+{Nm->{ImplNm->Con}}),..E].
 
   impInD:(string,list[env],map[string,implDef]){}.
-  impInD(Nm,[scope(_,_,_,{Nm->Dec}),.._],Dec) :-- true.
-  impInD(Nm,[_,..Env],Con) :-- impInD(Nm,Env,Con).
+  impInD(Nm,[scope(_,_,_,{Nm->Dec}),.._],Dec).
+  impInD(Nm,[_,..Env],Con) :- impInD(Nm,Env,Con).
 
   public
   isImplemented:(constraint,list[env],implDef){}.

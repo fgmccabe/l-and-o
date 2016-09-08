@@ -106,17 +106,6 @@ transformClause(Map,Opts,LclFun,QNo,clause(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Arg
   lineDebug(Lc,G2,G3,ClOpts),                           % line debug after setting up frame
   deframeDebug(Nm,QNo,G8,[],ClOpts),                      % generate frame exit debugging
   breakDebug(Nm,G3,G4,ClOpts).                           % generate break point debugging
-transformClause(Map,Opts,LclFun,QNo,strong(Lc,Nm,A,Cond,Body),[clse(Q,LclFun,Args,Goals)|Rx],Rx,Ex,Exx) :-
-  extraVars(Map,Extra),                                   % extra variables coming from labels
-  debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),        % are we debugging?
-  trPtns(A,Args,Extra,Q0,Q1,G4,G5,G7,G8,Map,ClOpts,Ex,Ex0), % head args
-  trGoal(Cond,G5,[neck|G6],Q1,Q2,Map,ClOpts,Ex0,Ex1), % condition goals
-  trGoal(Body,G6,G7,Q2,Q3,Map,ClOpts,Ex1,Exx),
-  labelAccess(Q3,Q,Map,Goals,G0),                       % generate label access goals
-  frameDebug(Nm,QNo,G1,G2,Q,ClOpts),                     % generate frame entry debugging
-  lineDebug(Lc,G2,G3,ClOpts),                           % line debug after setting up frame
-  deframeDebug(Nm,QNo,G8,[],ClOpts),                      % generate frame exit debugging
-  breakDebug(Nm,G3,G4,ClOpts).                           % generate break point debugging
 
 transformDefn(Outer,Map,Opts,Lc,Nm,prg(LclName,1),Cond,Value,
       [clse(Q,prg(LclName,Arity),[Rep|Extra],Body)|Rx],Rx,Ex,Exx) :-

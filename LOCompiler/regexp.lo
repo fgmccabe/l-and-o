@@ -4,7 +4,7 @@ lo.comp.regexp{
   import lo.comp.lexer.
 
   public
-  regExp ::= reChars(list[integer]) 
+  type regExp ::= reChars(list[integer]) 
          | reNegChars(list[integer])
          | reGroup(regExp,string)
          | reChoice(regExp,regExp)
@@ -16,31 +16,33 @@ lo.comp.regexp{
          | reLiteral(integer)
          | reSeq(list[regExp]).
 
-  public
-  regDisp:display[regExp].
-  regDisp..{
-    display(reChars[Chars]) => ssSeq([ss("["),ss(implode(Chars)),ss("]")]).
-    display(reNegChars[Chars]) => ssSeq([ss("[^"),ss(implode(Chars)),ss("]")]).
-    display(reGroup(R,"")) => ssSeq([ss("("),display(R),ss(")")]).
-    display(reGroup(R,Nm)) => ssSeq([ss("("),display(R),ss(":"),ss(Nm),ss(")")]).
-    display(reChoice(A,B)) => ssSeq([display(A),ss("|"),display(B)]).
-    display(rePlus(A)) => ssSeq([display(A),ss("+")]).
-    display(reStar(A)) => ssSeq([display(A),ss("*")]).
-    display(rePeriod) => ss(".").
-    display(reEof) => ss("$").
-    display(reStart) => ss("^").
-    display(reLiteral(Code)) => ss(implode([Code])).
-    display(reSeq(A)) => ssSeq(dispSeq(A)).
-
-    dispSeq([]) => [].
-    dispSeq([R,..M]) => [display(R),..dispSeq(M)].
+  public implementation display[regExp] .. {
+    disp(RE) => dispRegexp(RE).
   }
 
+  private dispRegexp:(regExp) => ss.
+  dispRegexp(reChars(Chars)) => ssSeq([ss("["),ss(implode(Chars)),ss("]")]).
+  dispRegexp(reNegChars(Chars)) => ssSeq([ss("[^"),ss(implode(Chars)),ss("]")]).
+  dispRegexp(reGroup(R,"")) => ssSeq([ss("("),dispRegexp(R),ss(")")]).
+  dispRegexp(reGroup(R,Nm)) => ssSeq([ss("("),dispRegexp(R),ss(":"),ss(Nm),ss(")")]).
+  dispRegexp(reChoice(A,B)) => ssSeq([dispRegexp(A),ss("|"),dispRegexp(B)]).
+  dispRegexp(rePlus(A)) => ssSeq([dispRegexp(A),ss("+")]).
+  dispRegexp(reStar(A)) => ssSeq([dispRegexp(A),ss("*")]).
+  dispRegexp(rePeriod) => ss(".").
+  dispRegexp(reEof) => ss("$").
+  dispRegexp(reStart) => ss("^").
+  dispRegexp(reLiteral(Code)) => ss(implode([Code])).
+  dispRegexp(reSeq(A)) => ssSeq(dispSeq(A)).
+
+  private dispSeq:(list[regExp]) => list[ss].
+  dispSeq([]) => [].
+  dispSeq([R,..M]) => [dispRegexp(R),..dispSeq(M)].
+
   -- Parse regular expressions
-  regularExp:(regExp) --> stream[integer].
+  regularExp:(regExp) --> tokenState.
   regularExp(R) --> reExp(F), reFollow(F,R).
 
-  reExp:(regExp) --> stream[integer].
+  reExp:(regExp) --> tokenState.
   reExp(rePeriod) --> ".".
   reExp(reStart) --> "^".
   reExp(reEof) --> "$".
@@ -49,12 +51,16 @@ lo.comp.regexp{
   reExp(reGroup(R,V)) --> "(", regularExp(R), groupVar(V), ")".
   reExp(reLiteral(Ch)) --> charRef(Ch).
 
-  charClass:(list[integer]) --> stream[integer].
+  groupVar:(string) --> tokenState.
+  groupVar(implode(I)) --> ":", readIden(I).
+  groupVar("") --> ")"+.
+
+  charClass:(list[integer]) --> tokenState.
   charClass([]) --> "]"+.
   charClass(Chrs) --> charRef(St), "-", charRef(En), charClass(More), { Chrs = mergeChars(More,charRange(St,End))}.
   charClass([Ch,..More]) --> charRef(Ch), charClass(More).
 
-  reFollow:(regExp,regExp) --> stream[integer].
+  reFollow:(regExp,regExp) --> tokenState.
   reFollow(R,F) --> "*", reFollow(reStar(R),F).
   reFollow(R,F) --> "+", reFollow(rePlus(R),F).
   reFollow(R,reChoice(R,N)) --> "|", regularExp(N).
@@ -62,11 +68,10 @@ lo.comp.regexp{
 
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].
-  charRange(St,En) :: St<En => [St,..charRange(St+1,En)].
+  charRange(St,En) => [St,..charRange(St+1,En)] :-  St<En.
 
   mergeChars:(list[integer],list[integer]) => list[integer].
   mergeChars([],X) => X.
-  mergeChars([E,..X],Y) :: isMember(E,Y) => mergeChars(X,Y).
+  mergeChars([E,..X],Y) => mergeChars(X,Y) :-  isMember(E,Y).
   mergeChars([E,..X],Y) => [E,..mergeChars(X,Y)]. 
-
 }

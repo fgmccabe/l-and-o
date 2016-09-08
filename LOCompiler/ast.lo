@@ -48,19 +48,23 @@ lo.comp.ast{
 
   private
   showAst:(ast,integer) => ss.
-  showAst(iden(_,Nm),_) :: isOperator(Nm,_) => ssSeq([ss("("), ss(Nm), ss(")")]).
+  showAst(iden(_,Nm),_) =>  ssSeq([ss("("), ss(Nm), ss(")")]) :-  isOperator(Nm,_).
   showAst(iden(_,Nm),_) => ss(Nm).
   showAst(intg(_,Ix),_) => disp(Ix).
   showAst(flot(_,Dx),_) => disp(Dx).
   showAst(strg(_,Sx),_) => ss(Sx).
-  showAst(tupl(_,Nm,Els),_) :: tupleBrackets(Nm,Lft,Rgt,Pr,Sep) => 
-      ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]).
-  showAst(appl(_,iden(_,Op),tupl(_,"()",[A])),Pr) :: prefixOp(Op,PrOp,PrR) =>
-    ssSeq([showOpen(Pr,PrOp), ss(Op), ss(" "), showAst(A,PrR), showClose(Pr,PrOp)]).
-  showAst(appl(_,iden(_,Op),tupl(_,"()",[A])),Pr) :: postfixOp(Op,PrL,PrOp) =>
-    ssSeq([showOpen(Pr,PrOp), showAst(A,PrL), ss(" "), ss(Op), showClose(Pr,PrOp)]).
-  showAst(appl(_,iden(_,Op),tupl(_,"()",[L,R])),Pr) :: infixOp(Op,PrL,PrOp,PrR) =>
-    ssSeq([showOpen(Pr,PrOp), showAst(L,PrL), ss(" "), ss(Op), ss(" "), showAst(R,PrR), showClose(Pr,PrOp)]).
+  showAst(tupl(_,Nm,Els),_) => 
+      ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]) :- 
+    tupleBrackets(Nm,Lft,Rgt,Pr,Sep).
+  showAst(appl(_,iden(_,Op),tupl(_,"()",[A])),Pr) =>
+      ssSeq([showOpen(Pr,PrOp), ss(Op), ss(" "), showAst(A,PrR), showClose(Pr,PrOp)]) :-
+    prefixOp(Op,PrOp,PrR).
+  showAst(appl(_,iden(_,Op),tupl(_,"()",[A])),Pr) =>
+      ssSeq([showOpen(Pr,PrOp), showAst(A,PrL), ss(" "), ss(Op), showClose(Pr,PrOp)]) :-
+    postfixOp(Op,PrL,PrOp).
+  showAst(appl(_,iden(_,Op),tupl(_,"()",[L,R])),Pr) =>
+      ssSeq([showOpen(Pr,PrOp), showAst(L,PrL), ss(" "), ss(Op), ss(" "), showAst(R,PrR), showClose(Pr,PrOp)]) :-
+    infixOp(Op,PrL,PrOp,PrR).
   showAst(appl(_,Op,Args),_) =>
     ssSeq([showAst(Op,0), showAst(Args,0)]).
 
@@ -71,17 +75,17 @@ lo.comp.ast{
 
   private
   showOpen:(integer,integer)=>ss.
-  showOpen(Pr,PrOp) :: PrOp>Pr => ss("(").
+  showOpen(Pr,PrOp) => ss("(") :- PrOp>Pr.
   showOpen(_,_) => ss("").
 
   private
   showClose:(integer,integer)=>ss.
-  showClose(Pr,PrOp) :: PrOp>Pr => ss(")").
+  showClose(Pr,PrOp) => ss(")") :-  PrOp>Pr.
   showClose(_,_) => ss("").
 
   private
   tupleBrackets:(string,string,string,integer,string){}.
-  tupleBrackets("()","(",")",2000,", ") :-- true.
-  tupleBrackets("[]","[","]",1000,", ") :-- true.
-  tupleBrackets("{}","{","}",2000,".\n") :-- true.
+  tupleBrackets("()","(",")",2000,", ").
+  tupleBrackets("[]","[","]",1000,", ").
+  tupleBrackets("{}","{","}",2000,".\n").
 }
