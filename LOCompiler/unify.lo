@@ -4,7 +4,7 @@ lo.comp.unify{
   import lo.comp.dict.
   import lo.comp.freshen.
 
-  sameType:(tipe,tipe,list[env]){}.
+  public sameType:(tipe,tipe,list[env]){}.
   sameType(T1,T2,Env) :-
     sm(deRef(T1),deRef(T2),Env)!.
 

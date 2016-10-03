@@ -1,0 +1,114 @@
+lo.comp.base64{
+  import lo.
+
+  public encode64:(list[integer]) => list[integer].
+  encode64([H,M,L,..R]) => encodeWord((H.<<.16).|.(M.<<.8).|.L,encode64(R)).
+  encode64([H,M]) => encLast(Up,Hi,Md,[0c=]) :- mapToSix((H.<<.16).|.(M.<<.8),Up,Hi,Md,_).
+  encode64([H]) => encLast(Up,Hi,Md,[0c=,0c=]) :- mapToSix((H.<<.16),Up,Hi,Md,_).
+  encode64([]) => []. 
+
+  private encLast:(integer,integer,integer,list[integer]) => list[integer].
+  encLast(Up,0,0,Rest) => [encByte(Up),..Rest].
+  encLast(Up,Hi,0,Rest) => [encByte(Up),encByte(Hi),..Rest].
+  encLast(Up,Hi,Md,Rest) => [encByte(Up),encByte(Hi),encByte(Md),..Rest].
+
+  private mapToSix:(integer,integer,integer,integer,integer){}.
+  mapToSix(W,(W.>>.18).&.63,(W.>>.12).&.63,(W.>>.6).&.63,(W).&.63).
+
+  private encodeWord:(integer,list[integer])=>list[integer].
+  encodeWord(W,O)=>[encByte(Up),encByte(Hi),encByte(Md),encByte(Lw),..O] :-
+    mapToSix(W,Up,Hi,Md,Lw).
+
+  public decode64:(list[integer]) => list[integer].
+  decode64([U,H,0c=,0c=]) => [B1] :-
+    enc64(Up,U),
+    enc64(Hi,H),
+    W = (Up.<<.18).|.(Hi.<<.12),
+    B1 = (W.>>.16).&.255.
+  decode64([U,H,M,0c=]) =>[B1,B2] :-
+    enc64(Up,U),
+    enc64(Hi,H),
+    enc64(Md,M),
+    W = (Up.<<.18).|.(Hi.<<.12).|.(Md.<<.6),
+    B1 = (W.>>.16).&.255,
+    B2 = (W.>>.8).&.255.
+  decode64([U,H,M,L,..Rest]) => [B1,B2,B3,..decode64(Rest)] :-
+    enc64(Up,U),
+    enc64(Hi,H),
+    enc64(Md,M),
+    enc64(Lw,L),
+    W = (Up.<<.18).|.(Hi.<<.12).|.(Md.<<.6).|.Lw,
+    B1 = (W.>>.16).&.255,
+    B2 = (W.>>.8).&.255,
+    B3 = W.&.255.
+  decode64([]) => [].
+
+  encByte:(integer)=>integer.
+  encByte(B) => b :- enc64(B,b).
+
+  enc64:(integer,integer){}.
+  enc64(0,0cA).
+  enc64(1,0cB).
+  enc64(2,0cC).
+  enc64(3,0cD).
+  enc64(4,0cE).
+  enc64(5,0cF).
+  enc64(6,0cG).
+  enc64(7,0cH).
+  enc64(8,0cI).
+  enc64(9,0cJ).
+  enc64(10,0cK).
+  enc64(11,0cL).
+  enc64(12,0cM).
+  enc64(13,0cN).
+  enc64(14,0cO).
+  enc64(15,0cP).
+  enc64(16,0cQ).
+  enc64(17,0cR).
+  enc64(18,0cS).
+  enc64(19,0cT).
+  enc64(20,0cU).
+  enc64(21,0cV).
+  enc64(22,0cW).
+  enc64(23,0cX).
+  enc64(24,0cY).
+  enc64(25,0cZ).
+  enc64(26,0ca).
+  enc64(27,0cb).
+  enc64(28,0cc).
+  enc64(29,0cd).
+  enc64(30,0ce).
+  enc64(31,0cf).
+  enc64(32,0cg).
+  enc64(33,0ch).
+  enc64(34,0ci).
+  enc64(35,0cj).
+  enc64(36,0ck).
+  enc64(37,0cl).
+  enc64(38,0cm).
+  enc64(39,0cn).
+  enc64(40,0co).
+  enc64(41,0cp).
+  enc64(42,0cq).
+  enc64(43,0cr).
+  enc64(44,0cs).
+  enc64(45,0ct).
+  enc64(46,0cu).
+  enc64(47,0cv).
+  enc64(48,0cw).
+  enc64(49,0cx).
+  enc64(50,0cy).
+  enc64(51,0cz).
+  enc64(52,0c0).
+  enc64(53,0c1).
+  enc64(54,0c2).
+  enc64(55,0c3).
+  enc64(56,0c4).
+  enc64(57,0c5).
+  enc64(58,0c6).
+  enc64(59,0c7).
+  enc64(60,0c8).
+  enc64(61,0c9).
+  enc64(62,0c+).
+  enc64(63,0c/).
+}

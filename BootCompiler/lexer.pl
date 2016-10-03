@@ -14,11 +14,11 @@ initSt(Txt,tokenState(Txt,1,0,1)).
 initSt(Chars,LineNo,Column,Base,tokenState(Chars,LineNo,Column,Base)).
 isTerminal(tokenState([],_,_,_)).
 
-nxtSt(tokenState(['\n'|T],L,_,CP),tokenState(T,LN,0,CP1)) :- succ(L,LN), succ(CP,CP1).
+nxtSt(tokenState(['\n'|T],L,_,CP),tokenState(T,LN,1,CP1)) :- succ(L,LN), succ(CP,CP1).
 nxtSt(tokenState([Ch|T],L,O,P),tokenState(T,L,O1,P1)) :- Ch\='\n',succ(O,O1),succ(P,P1).
 nxtSt(tokenState([],L,O,P),tokenState([],L,O,P)).
 
-nextSt(tokenState(['\n'|T],L,_,CP),tokenState(T,LN,0,CP1),'\n') :- succ(L,LN), succ(CP,CP1).
+nextSt(tokenState(['\n'|T],L,_,CP),tokenState(T,LN,1,CP1),'\n') :- succ(L,LN), succ(CP,CP1).
 nextSt(tokenState([Ch|T],L,O,P),tokenState(T,L,O1,P1),Ch) :- Ch\='\n',succ(O,O1),succ(P,P1).
 
 nxtNxtSt(St,St2) :- nxtSt(St,St1), nxtSt(St1,St2).

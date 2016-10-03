@@ -2,10 +2,11 @@ lo.comp.dict{
   import lo.comp.location.
   import lo.comp.types.
   import lo.comp.misc.
+  import lo.comp.canon.
   import lo.
 
   public
-  type vr ::= vr(location,string,tipe).
+  type vr ::= vr(location,canonTerm,tipe).
 
   public
   type conDef ::= conDef(string,string,constraint,constraint,tipe).
@@ -17,7 +18,7 @@ lo.comp.dict{
   type env ::= scope(map[string,typeDef],map[string,vr],map[string,conDef],map[string,map[string,implDef]]).
 
   public
-  type typeDef ::= tpDef(location,tipe,tipe).
+  type typeDef ::= tpDef(option[location],tipe,tipe).
 
   public
   typeInDict:(string,list[env],tipe){}.
@@ -29,9 +30,13 @@ lo.comp.dict{
   tpInDict(_,_) => none.
 
   public
-  declareTypeExists:(string,location,tipe,list[env]) => list[env].
+  declareTypeExists:(string,option[location],tipe,list[env]) => list[env].
   declareTypeExists(Nm,Lc,Tp,[scope(Types,Names,Cons,Imps),..E]) => 
       [scope(Types+{Nm->tpDef(Lc,Tp,voidType)},Names,Cons,Imps),..E].
+
+  private standardType:(string,tipe,list[env]) => list[env].
+  standardType(Nm,Tp,[scope(Types,Names,Cons,Imps),..E]) => 
+      [scope(Types+{Nm->tpDef(none,Tp,typeRule(Tp,faceType([])))},Names,Cons,Imps),..E].
 
   private
   localTypeName:(string) => string.
@@ -61,6 +66,13 @@ lo.comp.dict{
   declareVar(Nm,V,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tps,Nms+{Nm->V},Cons,Imps),..E].
 
   public
+  topVars:(list[env]) => map[string,vr].
+  topVars([scope(_,Vars,_,_),.._]) => Vars.
+
+  public pushScope:(list[env]) => list[env].
+  pushScope(E) => [scope({},{},{},{}),..E].
+
+  public
   declareContract:(string,conDef,list[env]) => list[env].
   declareContract(Nm,Con,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tp,Nms,Cons+{Nm->Con},Imps),..E].
 
@@ -79,7 +91,7 @@ lo.comp.dict{
 
   public
   declareImplementation:(string,string,implDef,list[env]) => list[env].
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) =>  [scope(Tp,Nms,Cons,Imps+{Nm->I+{ImplNm->Con}}),..E] :-  present(Imps,Nm,I) .
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tp,Nms,Cons,Imps+{Nm->I+{ImplNm->Con}}),..E] :-  present(Imps,Nm,I) .
   declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Imps),..E]) => [scope(Tp,Nms,Cons,Imps+{Nm->{ImplNm->Con}}),..E].
 
   impInD:(string,list[env],map[string,implDef]){}.
@@ -92,4 +104,9 @@ lo.comp.dict{
     impInD(Nm,Env,Impls), 
     present(Impls,implementationName(conTract(Nm,Args,Deps)),Impl).
 
+  public stdDict : list[env].
+  stdDict = standardType("string",tipe("lo.core*string"),
+              standardType("integer",tipe("lo.core*integer"),
+                standardType("float",tipe("lo.core*float"),
+                  pushScope([])))).
 }

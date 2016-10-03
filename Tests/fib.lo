@@ -13,5 +13,5 @@ fib{
   fibList(Curr,Mx,L) =>  L :-  Curr>Mx .
   fibList(Curr,Max,[N1,N2,..L]) => fibList(N1+N2,Max,[N1+N2,N1,N2,..L]).
 
-  show flatten(listDisp(intDisp).display(fibList(0,4000000,[1,0]))).
+  show formatSS(listDisp(intDisp).display(fibList(0,4000000,[1,0]))).
 }

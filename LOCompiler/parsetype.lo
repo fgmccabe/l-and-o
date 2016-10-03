@@ -27,11 +27,11 @@ lo.comp.parseType{
     parseConstraint(L,Env,Q,C,C0),
     prsType(R,Env,Q,C0,Cx,Type). -- This has the effect of pulling all constraints to the outside
   prsType(T,Env,Q,C,Cx,Tp) :-
-    isName(T,Lc,Nm),
+    isIden(T,Lc,Nm),
     prsTypeName(Lc,Nm,Env,Q,C,Cx,Tp).
   prsType(Sq,Env,Q,C,Cx,Type) :-
-    isSquare(Sq,Lc,Op,Args), 
-    isName(Op,_,Nm),
+    isSquareTerm(Sq,Lc,Op,Args), 
+    isIden(Op,_,Nm),
     prsTypeName(Lc,N,Env,Q,C,C0,TpCon),
     prsTypes(Args,Env,Q,C0,Cx,ArgTps),
     applyTypeExp(TpCon,ArgTps,Lc,Type). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
@@ -85,7 +85,7 @@ lo.comp.parseType{
   prsTypeFields([],_,_,B,B,[]).
   prsTypeFields([A,..AT],Env,Q,C,Cx,[(Fld,FldTp),..ArgTypes]) :-
     isBinary(A,":",_,L,R),
-    isName(L,_,Fld),
+    isIden(L,_,Fld),
     prsType(R,Env,Q,C,C0,FldTp),
     prsTypeFields(AT,Env,Q,C0,Cx,ArgTypes).
   prsTypeFields([A,..AT],Env,Q,C,Cx,ArgTypes) :-
@@ -111,7 +111,7 @@ lo.comp.parseType{
     prsBound(R,B0,Bound,Env,Q0,Inner).
   prsBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
     B1 = B+{Nm->kVar(Nm)},
-    isName(V,_,Nm).
+    isIden(V,_,Nm).
 
   parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint]){}.
   parseConstraint(T,Env,B,C0,Cx) :-
@@ -125,8 +125,8 @@ lo.comp.parseType{
     prsTypeFields(E,Env,B,C1,C2,AT).
     addConstraint(implementsFace(TV,AT),C2,Cx).
   parseConstraint(Sq,Env,B,C0,Cx) :- 
-    isSquare(Sq,Lc,Op,Args),
-    isName(Op,_,Nm),
+    isSquareTerm(Sq,Lc,Op,Args),
+    isIden(Op,_,Nm),
     parseContractName(Lc,N,Env,conTract(Nm,_ATs,_Dps)),
     parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps),
     addConstraint(conTract(Nm,ArgTps,Deps),C1,Cx).

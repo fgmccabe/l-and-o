@@ -42,6 +42,11 @@ escapeType("_writeFileContents",predType([type("lo.core*string"),typeExp("lo.cor
 escapeType("_getCwd",funType([],type("lo.core*string"))).
 escapeType("_display",predType([tupleType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")]),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
+escapeType("_file_mode",funType([type("lo.core*string")],type("lo.core*integer"))).
+escapeType("_file_access",predType([type("lo.core*string"),type("lo.core*integer")])).
+escapeType("_file_type",funType([type("lo.core*string")],type("lo.core*integer"))).
+escapeType("_file_size",funType([type("lo.core*string")],type("lo.core*integer"))).
+escapeType("_file_date",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")])).
 escapeType("_isCcChar",predType([type("lo.core*integer")])).
 escapeType("_isCfChar",predType([type("lo.core*integer")])).
 escapeType("_isCnChar",predType([type("lo.core*integer")])).
@@ -76,6 +81,7 @@ escapeType("_isLetterChar",predType([type("lo.core*integer")])).
 escapeType("_digitCode",funType([type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int2str",funType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")],type("lo.core*string"))).
 escapeType("_flt2str",funType([type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*logical"),type("lo.core*logical")],type("lo.core*string"))).
+escapeType("_str2flt",funType([type("lo.core*string")],type("lo.core*float"))).
 escapeType("_str_lt",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_ge",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_hash",funType([type("lo.core*string")],type("lo.core*integer"))).
@@ -127,6 +133,11 @@ isEscape("_writeFileContents").
 isEscape("_getCwd").
 isEscape("_display").
 isEscape("_logmsg").
+isEscape("_file_mode").
+isEscape("_file_access").
+isEscape("_file_type").
+isEscape("_file_size").
+isEscape("_file_date").
 isEscape("_isCcChar").
 isEscape("_isCfChar").
 isEscape("_isCnChar").
@@ -161,6 +172,7 @@ isEscape("_isLetterChar").
 isEscape("_digitCode").
 isEscape("_int2str").
 isEscape("_flt2str").
+isEscape("_str2flt").
 isEscape("_str_lt").
 isEscape("_str_ge").
 isEscape("_str_hash").

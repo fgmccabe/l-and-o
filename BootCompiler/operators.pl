@@ -21,7 +21,6 @@
   infixOp("@@",1004,1005,1004).	 /* guard marker */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
-  infixOp("::",998,999,998).	 /* type coercion */
   infixOp("<=",949,950,949).	 /* class rule arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
   infixOp("=",899,900,899).	 /* unifies predicate */
@@ -50,10 +49,12 @@
   infixOp(".<<.",600,600,599).	 /* shift left */
   infixOp(".>>.",600,600,599).	 /* logical shift right */
   infixOp(".>>>.",600,600,599).	 /* arithmetic shift right */
+  infixOp(".#.",600,600,599).	 /* test nth bit */
   infixOp("%%",499,500,499).	 /* grammar parse */
   infixOp("^",499,500,499).	 /* grammar iterator */
   infixOp("~",934,935,934).	 /* grammar remainder */
   infixOp(".",450,450,449).	 /* object access */
+  infixOp("::",399,400,399).	 /* type coercion */
   prefixOp("private",1700,1699).	 /* private program */
   prefixOp("public",1700,1699).	 /* public program */
   prefixOp("assert",1260,1259).	 /* assert condition */
@@ -91,6 +92,8 @@
   follows('-','>','->').
   follows('->','>','->>').
   follows('','.','.').
+  follows('.','#','.#').
+  follows('.#','.','.#.').
   follows('.','&','.&').
   follows('.&','.','.&.').
   follows('.','|','.|').
@@ -157,6 +160,7 @@
   final('->',"->").	 /* map entry */
   final('->>',"->>").	 /* dependent type marker */
   final('.',".").	 /* object access */
+  final('.#.',".#.").	 /* test nth bit */
   final('.&.',".&.").	 /* bitwise and */
   final('.|.',".|.").	 /* bitwise or */
   final('.~.',".~.").	 /* bitwise 1's complement */

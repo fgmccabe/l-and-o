@@ -1,0 +1,16 @@
+lo.comp.term {
+  import lo.
+  import lo.comp.types.
+
+  public type term ::= anon
+                   | intgr(integer)
+                   | flot(float)
+                   | enum(string)
+                   | strng(string)
+                   | strct(string,integer)
+                   | prg(string,integer)
+                   | tupl(list[term])
+                   | cons(term,list[term])
+                   | code(tipe,list[integer],list[term]).
+
+}

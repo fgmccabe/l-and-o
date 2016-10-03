@@ -20,7 +20,6 @@
 #define processState "t'#processState'"
 #define threadType "t'#thread'"
 #define thingType "t'#thing'"
-#define fileType "t'lo.io#fileType'"
 
 /* Define the standard escapes */
 escape(exit,True,False,"F1iv","terminate L&O engine")
@@ -192,11 +191,14 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
   escape(_rmdir,True,False,"p1S","delete directory")
   escape(_chmod,True,False,"p2Si","change mode of a file or directory")
   escape(_ls,True,False,"F1SLT2S"fileType"","report on contents of a directory")
-  escape(_file_present,True,False,"P1S","test for file")
+  */
+
   escape(_file_mode,True,False,"F1Si","report modes of a file")
-  escape(_file_type,True,False,"F1S"fileType,"report on the type of a file")
+  escape(_file_access,True,False,"P2Si","check access on a file")
+  escape(_file_type,True,False,"F1Si","report on the type of a file")
   escape(_file_size,True,False,"F1Si","report on the size of a file")
-  escape(_file_date,True,False,"p4Sfff","report on file access time and modification times")
+  escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
+  /*
 
 // Timing and delaying
   escape(delay,False,False,"p1N","delay for period of time")  
@@ -249,6 +251,7 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
 // String and symbol handling escapes
   escape(_int2str,False,False,"F4iiiiS","format an integer as a string")
   escape(_flt2str,False,False,"F5fiillS","format a floating as a string")
+  escape(_str2flt,False,False,"F1Sf","parse a string as a float")
 
   escape(_str_lt,False,False,"P2SS","String 1 is less than string 2")
   escape(_str_ge,False,False,"P2SS","String 1 is greater than or equals to string 2")
@@ -292,4 +295,3 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
 #undef processState
 #undef threadType
 #undef thingType
-#undef fileType

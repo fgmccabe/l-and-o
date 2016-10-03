@@ -80,7 +80,8 @@ importAll(Imports,Repo,AllImports) :-
   closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
 
 importAllDefs([],_,[],_,Env,Env).
-importAllDefs([import(Viz,Pkg,Vers)|More],Lc,[import(Viz,Pkg,Vers,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
+importAllDefs([import(Viz,Pkg,Vers)|More],Lc,
+      [import(Viz,Pkg,Vers,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
   importPkg(Pkg,Vers,Repo,Spec),
   Spec = spec(_,_,Exported,Types,Classes,Contracts,Impls,_),
   importDefs(Spec,Lc,Env,Ev0),
@@ -134,7 +135,7 @@ checkOther(St,[show(Lc,Show)|More],More,Env,_) :-
 checkGroups([],_,_,[],E,E,_).
 checkGroups([Gp|More],Fields,Annots,Defs,Env,E,Path) :-
   groupType(Gp,GrpType),
-  checkGroup(Gp,GrpType,Fields,Annots,Defs,D0,Env,E0,Path),
+  checkGroup(Gp,GrpType,Fields,Annots,Defs,D0,Env,E0,Path),!,
   checkGroups(More,Fields,Annots,D0,E0,E,Path).
 
 groupType([(var(_),_,_)|_],var).
@@ -488,11 +489,10 @@ collectEnumRules([],[],_,[]).
 isRuleForEnum(labelRule(Lc,Nm,enum(_,_),_,_),Lc,Nm).
 isRuleForEnum(classBody(Lc,Nm,enum(_,_),_,_,_),Lc,Nm).
 
-implementationGroup([(imp(Nm),_,[Stmt])],[Impl|Defs],Defs,E,Env,Path) :-
-  buildImplementation(Stmt,Nm,Impl,E,Path),
-  declareImplementation(Nm,Impl,E,Env).
+implementationGroup([(imp(Nm),_,[Stmt])],Defs,Dfs,E,Env,Path) :-
+  buildImplementation(Stmt,Nm,Defs,Dfs,E,Env,Path).
 
-buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,BodyDefs,Types,Others),Env,Path) :-
+buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
   isUnary(Stmt,Lc,"implementation",I),
   isBinary(I,"..",Sq,Body),
   isBraceTuple(Body,_,Els),
@@ -514,7 +514,12 @@ buildImplementation(Stmt,INm,implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,B
   pushScope(Env,ThEnv),
   thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others),
   computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
-  implementationName(conTract(CNm,AArgs,ADeps),ImplName).
+  implementationName(conTract(CNm,AArgs,ADeps),ImplName),
+  Impl = implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,BodyDefs,Types,Others),
+  declareImplementation(Nm,Impl,Env,Ex),!.
+buildImplementation(Stmt,_,Defs,Defs,Env,Env,_) :-
+  locOfAst(Stmt,Lc),
+  reportError("could not check implementation statement",[Lc]).
 
 declImpl(imp(ImplNm,Spec),SoFar,[(ImplNm,Spec)|SoFar]).
 

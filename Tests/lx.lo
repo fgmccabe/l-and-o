@@ -128,7 +128,7 @@ lx{
 
   assert tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
-  show flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) @@ tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+  show formatSS(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) @@ tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
   main:(list[string]+){}.
   main(Strs) :-
@@ -138,6 +138,6 @@ lx{
   parseArgs([]).
   parseArgs([S,..M]) :-
     tokenize(Toks) %% tkState(explode(S),0),
-    _display((0,0,0),flatten(listDisp(pairDisp(tokDisp,locDisp)).display(Toks))),
+    _display((0,0,0),formatSS(listDisp(pairDisp(tokDisp,locDisp)).display(Toks))),
     parseArgs(M).
 }

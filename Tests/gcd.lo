@@ -1,0 +1,10 @@
+gcd {
+  import lo.
+
+  public gcd:(integer,integer) => integer.
+  gcd(0,X) => X.
+  gcd(X,0) => X.
+  gcd(X,Y) => gcd(Y, X % Y).
+
+  show gcd(3,6).
+}

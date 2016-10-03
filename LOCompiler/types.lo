@@ -31,6 +31,11 @@ lo.comp.types{
     disp(T) => dispType(T).
   }
 
+  public 
+  implementation display[constraint] .. {
+    disp(C) => showConstraint(C).
+  }
+
   private
   dispType:(tipe)=>ss.
   dispType(anonType) => ss("_").
@@ -69,7 +74,7 @@ lo.comp.types{
 
   -- This code is ugly. But, we dont have lambdas or higher-order programs at the moment.
   showMoreCons:(list[constraint],constraint) => list[ss].
-  showMoreCons([],Con) => [ss("|"),showConstraint(Con)].
+  showMoreCons([],Con) => [ss("|:"),showConstraint(Con)].
   showMoreCons([C,..Cons],Con) => [ss(", "),showConstraint(C),..showMoreCons(Cons,Con)].
 
   showMoreConQ:(constraint) => list[ss].
@@ -164,7 +169,7 @@ lo.comp.types{
 
   public implementationName:(constraint)=>string.
   implementationName(conTract(Nm,Args,_)) =>
-    flatten(ssSeq([ss(Nm),..surfaceNames(Args,marker(con))])).
+    formatSS(ssSeq([ss(Nm),..surfaceNames(Args,marker(con))])).
 
   surfaceNames:(list[tipe],string) => list[ss].
   surfaceNames([],_) => [].

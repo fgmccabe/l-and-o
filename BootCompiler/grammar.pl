@@ -71,11 +71,11 @@ term0([lbrce(Lc0),rbrce(Lc2)|Toks],tuple(Lc,"{}",[]),Toks,rbrce) :-
   mergeLoc(Lc0,Lc2,Lc).
 term0([lbrce(Lcx)|Tks],tuple(Lc,"{}",Seq),Toks,rbrce) :- 
   terms(Tks,Tks2,Seq), 
-  checkToken(Tks2,Toks,rbrce(Lcy),Lcy,"missing close brace, got %s"),
+  checkToken(Tks2,Toks,rbrce(Lcy),Lcy,"missing close brace, got %s, left brace at %s",[Lcx]),
   mergeLoc(Lcx,Lcy,Lc).
 term0([lqpar(Lcx)|Tks],unary(Lc,"<||>",T),Toks,rpar) :- 
   term(Tks,2000,T,Tks2,_), 
-  checkToken(Tks2,Toks,rpar(Lcy),Lcy,"missing close quote, got %s"),
+  checkToken(Tks2,Toks,rpar(Lcy),Lcy,"missing close quote, got %s",[]),
   mergeLoc(Lcx,Lcy,Lc).
 term0(Tks,T,Toks,Lst) :- term00(Tks,Op,RTks,LLst), termArgs(RTks,Op,T,Toks,LLst,Lst).
 
@@ -87,50 +87,58 @@ term00([lpar(Lc0),rpar(Lc2)|Toks],tuple(Lc,"()",[]),Toks,rpar) :-
   mergeLoc(Lc0,Lc2,Lc).
 term00([lpar(Lcx)|Tks],T,Toks,rpar) :- 
   term(Tks,2000,Seq,Tks2,_), 
-  checkToken(Tks2,Toks,rpar(Lcy),Lcy,"missing close parenthesis, got %s"), 
+  checkToken(Tks2,Toks,rpar(Lcy),Lcy,"missing close parenthesis, got %s, left paren at %s",[Lcx]), 
   mergeLoc(Lcx,Lcy,Lc),
   tupleize(Seq,Lc,"()",T).
 term00([lbra(Lc0),rbra(Lc2)|Toks],tuple(Lc,"[]",[]),Toks,rbra) :-
   mergeLoc(Lc0,Lc2,Lc).
 term00([lbra(Lcx)|Tks],T,Toks,rbra) :-
   term(Tks,2000,Seq,Tks2,_), 
-  checkToken(Tks2,Toks,rbra(Lcy),Lcy,"mising close bracket, got %s"), 
+  checkToken(Tks2,Toks,rbra(Lcy),Lcy,"mising close bracket, got %s, left bracket at %s",[Lcx]), 
   mergeLoc(Lcx,Lcy,Lc), 
   tupleize(Seq,Lc,"[]",T).
   
 termArgs([],T,T,[],Lst,Lst).
-termArgs([lpar(Lcx),rpar(Lcy)|Tks],Op,T,Toks,_,Lst) :- 
+termArgs([lpar(_),rpar(Lcy)|Tks],Op,T,Toks,_,Lst) :- 
+    locOfAst(Op,Lcx),
     mergeLoc(Lcx,Lcy,Lc),
     apply(Lc,Op,tuple(Lc,"()",[]),NOP),
     termArgs(Tks,NOP,T,Toks,rpar,Lst).
-termArgs([lpar(Lcx)|Tks],Op,T,Toks,_,Lst) :- 
+termArgs([lpar(_)|Tks],Op,T,Toks,_,Lst) :- 
+    locOfAst(Op,Lcx),
     term(Tks,2000,Seq,Tks2,LLst),
-    checkToken(Tks2,Tks3,rpar(Lcy),Lcy,"missing close parenthesis"),
+    checkToken(Tks2,Tks3,rpar(Lcy),Lcy,"missing close parenthesis, got %s, left paren at %s",[Lcx]),
     mergeLoc(Lcx,Lcy,Lc),
     tupleize(Seq,Lc,"()",Args),
     apply(Lc,Op,Args,NOP),
     termArgs(Tks3,NOP,T,Toks,LLst,Lst).
-termArgs([lbra(Lcx),rbra(Lcy)|Tks],Op,T,Toks,_,Lst) :- 
+termArgs([lbra(_),rbra(Lcy)|Tks],Op,T,Toks,_,Lst) :- 
+    locOfAst(Op,Lcx),
     mergeLoc(Lcx,Lcy,Lc),
     apply(Lc,Op,tuple(Lc,"[]",[]),NOP),
     termArgs(Tks,NOP,T,Toks,rbra,Lst).
-termArgs([lbra(Lcx)|Tks],Op,T,Toks,_,Lst) :- 
+termArgs([lbra(_)|Tks],Op,T,Toks,_,Lst) :- 
+    locOfAst(Op,Lcx),
     term(Tks,2000,Seq,Tks2,_),
-    checkToken(Tks2,Tks3,rbra(Lcy),Lcy,"missing close bracket, got %w"),
+    checkToken(Tks2,Tks3,rbra(Lcy),Lcy,"missing close bracket, got %s, left bracket at %s",[Lcx]),
     mergeLoc(Lcx,Lcy,Lc),
     tupleize(Seq,Lc,"[]",Args),
     apply(Lc,Op,Args,NOP),
     termArgs(Tks3,NOP,T,Toks,rbra,Lst).
-termArgs([lbrce(Lcx),rbrce(Lcy)|Tks],Op,T,Tks,_,rbrce) :- 
+termArgs([lbrce(_),rbrce(Lcy)|Tks],Op,T,Tks,_,rbrce) :- 
+    locOfAst(Op,Lcx),
     mergeLoc(Lcx,Lcy,Lc),
     apply(Lc,Op,tuple(Lc,"{}",[]),T).
-termArgs([lbrce(Lcx)|Tks],Op,T,Toks,_,rbrce) :- 
+termArgs([lbrce(_)|Tks],Op,T,Toks,_,rbrce) :- 
+    locOfAst(Op,Lcx),
     terms(Tks,Tks2,Seq),
-    checkToken(Tks2,Toks,rbrce(Lcy),Lcy,"missing close brace, got %w"),
+    checkToken(Tks2,Toks,rbrce(Lcy),Lcy,"missing close brace, got %s, left brace at %s",[Lcx]),
     mergeLoc(Lcx,Lcy,Lc),
     apply(Lc,Op,tuple(Lc,"{}",Seq),T).
-termArgs([idTok(".",Lcd),idTok(Fld,LcF)|Tks],Op,T,Toks,_,Lst) :-
-    binary(Lcd,".",Op,name(LcF,Fld),NOP),
+termArgs([idTok(".",_),idTok(Fld,LcF)|Tks],Op,T,Toks,_,Lst) :-
+    locOfAst(Op,Lcx),
+    mergeLoc(Lcx,LcF,Lc),
+    binary(Lc,".",Op,name(LcF,Fld),NOP),
     termArgs(Tks,NOP,T,Toks,id,Lst).
 termArgs(Toks,T,T,Toks,Lst,Lst).
 
@@ -142,8 +150,8 @@ terms(Tks,Toks,[T|R]) :-
 
 lookAhead(Tk,[Tk|_]).
 
-checkToken([Tk|Toks],Toks,Tk,_,_) :- !.
-checkToken([Tk|Toks],Toks,_,Lc,Msg) :- locOfToken(Tk,Lc), reportError(Msg,[Tk],Lc).
+checkToken([Tk|Toks],Toks,Tk,_,_,_) :- !.
+checkToken([Tk|Toks],Toks,_,Lc,Msg,Extra) :- locOfToken(Tk,Lc), reportError(Msg,[Tk|Extra],Lc).
 
 checkTerminator(_,[],[]).
 checkTerminator(_,Toks,Toks) :- Toks = [rbrce(_)|_].

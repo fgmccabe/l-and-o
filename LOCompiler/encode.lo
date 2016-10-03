@@ -1,0 +1,99 @@
+lo.comp.encode{
+  import lo.
+  import lo.comp.term.
+  import lo.comp.base64.
+  import lo.comp.types.
+  import lo.comp.parseutils.
+
+  public encodeTerm:(term) => list[integer].
+  encodeTerm(T) => encTerm(T,[]).
+
+  private encTerm:(term,list[integer]) => list[integer].
+  encTerm(anon,L) => [0ca,..L].
+  encTerm(intgr(Ix),L) => [0cx,..encInt(Ix,L)].
+  encTerm(flot(Dx),L) => [0cd,..encFlot(Dx,L)].
+  encTerm(enum(Nm),L) => [0ce,..encodeText(Nm,L)].
+  encTerm(strng(Sx),L) => [0cs,..encodeText(Sx,L)].
+  encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
+  encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
+  encTerm(tupl(Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))].
+  encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
+  encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(tupl(Lits),encodeChars(encode64(Code),0c',L)))].
+
+  private encInt:(integer,list[integer]) => list[integer].
+  encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.
+  encInt(N,L) => [D,..L] :- digitVal(D,N), N>=0, N=<9.
+  encInt(N,L) => encInt(N / 10,[D,..L]) :- N>10, digitVal(D,N%10).
+
+  private encEls:(list[term],list[integer]) => list[integer].
+  encEls([],L) => L.
+  encEls([E,..M],L) => encTerm(E,encEls(M,L)).
+
+  -- Temporary version
+  private encFlot:(float,list[integer]) => list[integer].
+  encFlot(Dx,L) => encodeText(Dx::string,L).
+
+  private encodeText:(string,list[integer]) => list[integer].
+  encodeText(Nm,L) => encodeChars(Chrs,Delim,L) :- Chrs = explode(Nm), findDelim(Chrs,Delim)!.
+
+  private findDelim:(list[integer],integer){}.
+  findDelim(Chrs,Delim) :-
+    Delim in [0c', 0c", 0c|, 0c/, 0c%],
+    \+ Delim in Chrs.
+  findDelim(_,0c").
+
+  private encodeChars:(list[integer],integer,list[integer]) => list[integer].
+  encodeChars(Chars,Delim,L) => [Delim,..encodeQuoted(Chars,Delim,L)].
+
+  private encodeQuoted:(list[integer],integer,list[integer]) => list[integer].
+  encodeQuoted([],Delim,L) => [Delim,..L].
+  encodeQuoted([0c\\,..M],Delim,L) => [0c\\, 0c\\,..encodeQuoted(M,Delim,L)].
+  encodeQuoted([Delim,..M],Delim,L) => [0c\\, Delim,.. encodeQuoted(M,Delim,L)].
+  encodeQuoted([Ch,..M],Delim,L) => [Ch,..encodeQuoted(M,Delim,L)].
+
+  public encodeType:(tipe) => list[integer].
+  encodeType(Tp) => encType(Tp,[]).
+
+  private encType:(tipe,list[integer]) => list[integer].
+  encType(anonType,L) => [0c_,..L].
+  encType(voidType,L) => [0cv,..L].
+  encType(thisType,L) => [0ch,..L].
+  encType(tipe("lo.core*logical"),L) => [0cl,..L].
+  encType(tipe("lo.core*integer"),L) => [0ci,..L].
+  encType(tipe("lo.core*float"),L) => [0cf,..L].
+  encType(tipe("lo.core*string"),L) => [0cS,..L].
+  encType(typeExp("lo.core*list",[E]),L) => [0cL,..encType(E,L)].
+  encType(kVar(Nm),L) => [0ck,..encodeText(Nm,L)].
+  encType(tipe(Nm),L) => [0ct,..encodeText(Nm,L)].
+  encType(typeExp(Nm,Els),L) => [0cU,..encodeText(Nm,encTypes(Els,L))].
+  encType(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
+  encType(funType(A,R),L) => [0cF,..encType(A,encType(R,L))].
+  encType(classType(A,R),L) => [0cC,..encType(A,encType(R,L))].
+  encType(predType(A),L) => [0cP,..encType(A,L)].
+  encType(grammarType(A,R),L) => [0cG,..encType(A,encType(R,L))].
+  encType(typeRule(A,R),L) => [0cY,..encType(A,encType(R,L))].
+  encType(faceType(Els),L) => [0cI,..encFieldTypes(Els,L)].
+  encType(constrained(T,C),L) => [0c|,..encType(T,encConstraint(C,L))].
+  encType(univType(V,T),L) => [0c:,..encType(V,encType(T,L))].
+
+  private encTypes:(list[tipe],list[integer]) => list[integer].
+  encTypes(Els,L) => encInt(length(Els),encTps(Els,L)).
+
+  private encTps:(list[tipe],list[integer]) => list[integer].
+  encTps([],L) => L.
+  encTps([T,..M],L) => encType(T,encTps(M,L)).
+
+  private encFieldTypes:(list[(string,tipe)],list[integer]) => list[integer].
+  encFieldTypes(F,L) => encInt(length(F),encFieldTps(F,L)).
+
+  private encFieldTps:(list[(string,tipe)],list[integer]) => list[integer].
+  encFieldTps([],L) => L.
+  encFieldTps([(Fld,Tp),..M],L) => encodeText(Fld,encType(Tp,encFieldTps(M,L))).
+            
+  private encConstraint:(constraint,list[integer]) => list[integer].
+  encConstraint(univCon(V,C),L) => [0c:,..encType(V,encConstraint(C,L))].
+  encConstraint(conTract(Nm,Args,Deps),L) => [0cc,..encodeText(Nm,encTypes(Args,encTypes(Deps,L)))].
+  encConstraint(implementsFace(Tp,Flds),L) => [0ca,..encType(Tp,encFieldTypes(Flds,L))].
+  encConstraint(conRule([],C),L) => encConstraint(C,L).
+  encConstraint(conRule([Cs,..M],C),L) => [0c|,..encConstraint(Cs,encConstraint(conRule(M,C),L))].
+}

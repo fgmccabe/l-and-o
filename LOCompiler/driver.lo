@@ -27,6 +27,6 @@ lo.comp.driver{
   parseArgs(_,[]).
   parseArgs(B,[S,..M]) :-
     Term = parseFile(resolveUri(B,parseUri(S))),
-    _logmsg(flatten(disp(Term))),
+    _logmsg(formatSS(disp(Term))),
     parseArgs(B,M).
 }

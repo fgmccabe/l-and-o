@@ -1,5 +1,4 @@
 lo.comp.wff {
-  
   import lo.
   import lo.comp.location.
   import lo.comp.ast.
@@ -48,7 +47,7 @@ lo.comp.wff {
 
   public
   packageName:(ast) => string.
-  packageName(T) =>  Pkg :-  isName(T,_,Pkg).
+  packageName(T) =>  Pkg :-  isIden(T,_,Pkg).
   packageName(T) =>  Pkg :-  isString(T,_,Pkg).
   packageName(T)  => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
 
@@ -62,7 +61,7 @@ lo.comp.wff {
   pkgName(T) => defltPkg(packageName(T)).
 
   packageVersion:(ast) => string.
-  packageVersion(T) =>  Pkg :-  isName(T,_,Pkg).
+  packageVersion(T) =>  Pkg :-  isIden(T,_,Pkg).
   packageVersion(T) =>  Pkg :-  isString(T,_,Pkg).
   packageVersion(T) =>  "$(Ix)" :-  isInteger(T,_,Ix).
   packageVersion(T) =>  packageVersion(L)+"."+packageVersion(R) :-  isBinary(T,".",_,L,R).

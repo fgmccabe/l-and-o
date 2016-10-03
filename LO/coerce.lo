@@ -9,4 +9,12 @@ lo.coerce{
   public implementation coercion[integer,string] .. {
     _coerce(Ix) => _int2str(Ix,10,0,0)
   }
+
+  public implementation coercion[float,string] .. {
+    _coerce(Dx) => _flt2str(Dx,0,8,true,false)
+  }
+
+  public implementation coercion[string,float] .. {
+    _coerce(Sx) => _str2flt(Sx).
+  }
 }

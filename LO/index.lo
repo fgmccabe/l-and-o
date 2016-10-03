@@ -9,6 +9,8 @@ lo.index{
       present:(m,k,v){}.
       remove:(m,k) => m.
       put:(m,k,v) => m.
+      keys:(m) => list[k].
+      pairs:(m) => list[(k,v)].
     }.
 
   public
@@ -22,6 +24,8 @@ lo.index{
     present(M,K,V) :- lookIn(hash(K),M,K,V).
     remove(M,K) => rmve(hash(K),K,M).
     put(M,K,V) => insrt(K,V,M).
+    keys(M) => keyMap(M,[]).
+    pairs(M) => mapPairs(M,[]).
   }
 
   public
@@ -29,6 +33,9 @@ lo.index{
     M1+M2 => mergeTree(M1,M2).
     M1-M2 => subtractTree(M1,M2).
   }
+
+  public find:all m,k,v ~~ equality[k], map[m->>k,v] |: (m,k) => v.
+  find(M,K) => V :- present(M,K,V).
 
   lookIn: all k,v ~~ equality[k] |: (integer,map[k,v],k,v){}.
   lookIn(H,trLeaf(H,Els),K,V) :- findMember(K,Els,V).
@@ -145,6 +152,20 @@ lo.index{
   subtractLeafs(T,[]) => T.
   subtractLeafs(T,[(K,_),..Lvs]) =>
     subtractLeafs(rmve(hash(K),K,T),Lvs).
+
+  private keyMap:all k,v ~~ (map[k,v],list[k]) => list[k].
+  keyMap(trEmpty,L) => L.
+  keyMap(trLeaf(_,Leaves),L) => leafKeys(Leaves,L).
+  keyMap(trNode(_,_,Lf,Rg),L) => keyMap(Rg,keyMap(Lf,L)).
+
+  private leafKeys:all k,v ~~ (list[(k,v)],list[k]) => list[k].
+  leafKeys([],L) => L.
+  leafKeys([(K1,V1),..M],L) => leafKeys(M,[K1,..L]).
+
+  private mapPairs:all k,v ~~ (map[k,v],list[(k,v)]) => list[(k,v)].
+  mapPairs(trEmpty,L) => L.
+  mapPairs(trLeaf(_,Lf),L) => Lf<>L.
+  mapPairs(trNode(_,_,Lf,Rg),L) => mapPairs(Rg,mapPairs(Lf,L)).
 
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] .. {

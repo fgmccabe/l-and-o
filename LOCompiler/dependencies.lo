@@ -61,7 +61,7 @@ lo.comp.dependencies{
     collectDefn(Inner,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,true).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Exp) :-
     isBinary(St,":",_,L,_),
-    isName(L,_,Nm),
+    isIden(L,_,Nm),
     checkPublic(Exp,Nm,valu,P,Px).
   collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Exp) :-
     ruleNameKind(St,Nm,K),
@@ -117,8 +117,8 @@ lo.comp.dependencies{
 
   headName:(ast)=>string.
   headName(H) =>  headName(L) :-  isBinary(H,"@@",_,L,_).
-  headName(H) =>  Nm :-  (isRoundTerm(H,_,N,_), isName(N,_,Nm)).
-  headName(H) =>  Nm :-  isName(H,_,Nm).
+  headName(H) =>  Nm :-  (isRoundTerm(H,_,N,_), isIden(N,_,Nm)).
+  headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
   headName(H) =>  "()$(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
 
@@ -130,7 +130,7 @@ lo.comp.dependencies{
     isConstrained(S,_,R),
     contractName(R,Nm).
   contractName(S,Nm) :-
-    isSquare(S,_,Op,_), isName(Op,_,Nm).
+    isSquareTerm(S,_,Op,_), isIden(Op,_,Nm).
 
   typeRuleName:(ast,string){}.
   typeRuleName(S,Nm) :-
@@ -141,7 +141,7 @@ lo.comp.dependencies{
     typeRuleName(I,Nm).
   typeRuleName(S,Nm) :-
     isBinary(S,"<~",_,L,_),
-    isSquare(L,_,Op,_), isName(Op,_,Nm).
+    isSquareTerm(L,_,Op,_), isIden(Op,_,Nm).
 
   implementationName:(ast,string){}.
   implementationName(S,Nm) :-
@@ -150,9 +150,9 @@ lo.comp.dependencies{
   implementationName(S,Nm) :-
     isConstrained(S,_,I),
     implementationName(I,Nm).
-  implementationName(S,flatten(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
-    isSquare(S,_,Op,A),
-    isName(Op,_,Nm).
+  implementationName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
+    isSquareTerm(S,_,Op,A),
+    isIden(Op,_,Nm).
 
   surfaceNames:(list[ast],string) => list[ss].
   surfaceNames([T,.._],Sep) => surfaceNames(deComma(T),Sep) :-
@@ -161,8 +161,8 @@ lo.comp.dependencies{
   surfaceNames([T,..Els],Sep) => [surfaceName(T),ss(Sep),..surfaceNames(Els,Sep)].
 
   surfaceName:(ast)=>ss.
-  surfaceName(N) =>  ss(Nm) :-  isName(N,_,Nm).
-  surfaceName(S) =>  ss(Nm) :-  (isSquare(S,_,Op,_), isName(Op,_,Nm)).
+  surfaceName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
+  surfaceName(S) =>  ss(Nm) :-  (isSquareTerm(S,_,Op,_), isIden(Op,_,Nm)).
 
   collectDefines:(list[ast],string,defnKind,list[ast],list[ast]){}.
   collectDefines([],_,_,[],[]).
@@ -209,8 +209,8 @@ lo.comp.dependencies{
   refsInHead(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
 
   refsInType:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isName(T,_,Nm).
-  refsInType(T,All,So) =>  refsInTypes(Args,All,refsInType(Op,All,So)) :-  isSquare(T,_,Op,Args).
+  refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).
+  refsInType(T,All,So) =>  refsInTypes(Args,All,refsInType(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"=>",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R).
@@ -231,15 +231,15 @@ lo.comp.dependencies{
   refsInScope([E,..L],All,So) =>  refsInScope(L,All,refsInType(T,All,So)) :-  isBinary(E,":",_,_,T).
 
   refsInConstraint:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInConstraint(T,All,So) =>  (((Nm,con) in All, \+ (Nm,con) in So) ? [(Nm,con),..So] | So) :-  isName(T,_,Nm).
-  refsInConstraint(T,All,So) =>  refsInTypes(Args,All,refsInConstraint(Op,All,So)) :-  isSquare(T,_,Op,Args).
+  refsInConstraint(T,All,So) =>  (((Nm,con) in All, \+ (Nm,con) in So) ? [(Nm,con),..So] | So) :-  isIden(T,_,Nm).
+  refsInConstraint(T,All,So) =>  refsInTypes(Args,All,refsInConstraint(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInConstraint(T,All,So) =>  refsInConstraint(L,All,refsInConstraint(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInConstraint(T,All,So) =>  refsInConstraint(L,All,refsInConstraint(R,All,So)) :-  isBinary(T,"|:",_,L,R).
   refsInConstraint(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"<~",_,L,R).
   refsInConstraint(T,All,So) =>  refsInConstraint(I,All,So) :-  isQuantified(T,_,I).
 
   refsInCond:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInCond(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isName(T,_,Nm).
+  refsInCond(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isIden(T,_,Nm).
   refsInCond(T,All,So) =>  refsInCond(L,All,refsInCond(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInCond(T,All,So) =>  refsInCond(R,All,refsInCond(LR,All,refsInCond(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
   refsInCond(T,All,So) =>  refsInCond(R,All,refsInCond(L,All,So)) :-  isBinary(T,"|",_,L,R).
@@ -272,14 +272,14 @@ lo.comp.dependencies{
   refsInNT(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
 
   refsInTerm:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInTerm(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isName(T,_,Nm).
+  refsInTerm(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isIden(T,_,Nm).
   refsInTerm(T,_,So) =>  So :-  isScalar(T).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,":",_,L,R).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
   refsInTerm(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
   refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
-  refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isSquare(T,_,Op,Args).
+  refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).
   refsInTerm(T,All,So) =>  refsInMapEntries(Els,All,So) :-  isBraceTuple(T,_,Els).
@@ -297,6 +297,6 @@ lo.comp.dependencies{
   showGroups([]).
   showGroups([G,..L]) :-
     logMsg("Group"),
-    logMsg(flatten(disp(G))),
+    logMsg(formatSS(disp(G))),
     showGroups(L).
 }

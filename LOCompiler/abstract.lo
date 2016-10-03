@@ -32,8 +32,8 @@ lo.comp.abstract{
   unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
 
   public
-  isSquare:(ast,location,ast,list[ast]){}.
-  isSquare(appl(Lc,Op,tupl(_,"[]",A)),Lc,Nm,A).
+  isSquareTerm:(ast,location,ast,list[ast]){}.
+  isSquareTerm(appl(Lc,Op,tupl(_,"[]",A)),Lc,Nm,A).
 
   public
   squareTerm:(location,ast,list[ast]) => ast.
@@ -44,9 +44,9 @@ lo.comp.abstract{
   isBraceTerm(appl(Lc,Op,tupl(_,"{}",A)),Lc,Op,A).
 
   public
-  isName:(ast,location,string){}.
-  isName(iden(Lc,Nm),Lc,Nm).
-  isName(tupl(Lc,"()",[iden(_,Nm)]),Lc,Nm).
+  isIden:(ast,location,string){}.
+  isIden(iden(Lc,Nm),Lc,Nm).
+  isIden(tupl(Lc,"()",[iden(_,Nm)]),Lc,Nm).
 
   public
   isRoundTuple:(ast,location,list[ast]){}.
@@ -67,6 +67,10 @@ lo.comp.abstract{
   public
   isRoundTerm:(ast,location,ast,list[ast]){}.
   isRoundTerm(appl(Lc,Op,tupl(_,"()",A)),Lc,Op,A) :- \+ keyword(Op).
+
+  public
+  isRound:(ast,location,ast,ast){}.
+  isRound(appl(Lc,Op,A),Lc,Op,A) :- \+ keyword(Op), isRoundTuple(A,_,_).
 
   public
   roundTerm:(location,ast,list[ast]) => ast.

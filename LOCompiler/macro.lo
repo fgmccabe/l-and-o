@@ -57,7 +57,7 @@ lo.comp.macro{
 
   convertConstructor:(ast,ast,mark,list[ast],list[ast],list[ast],list[ast]){}.
   convertConstructor(Nm,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
-    isName(Nm,Lc,_),
+    isIden(Nm,Lc,_),
     wrapConstraints(Constraints,Lc,Tp,TpCon),
     wrapQuants(Quants,Lc,TpCon,QTp),
     mark(Mark,Lc,binary(Lc,":",Nm,QTp),TpRule),
@@ -86,7 +86,7 @@ lo.comp.macro{
   algebraicFace(T,SoFar,SoFar) :-
     isRoundTerm(T,_,_,_).
   algebraicFace(T,Face,Face) :-
-    isName(T,_,_).
+    isIden(T,_,_).
   algebraicFace(T,SoFar,Face) :-
     isBraceTerm(T,_,_,Args),
     pickupFields(Args,SoFar,Face).
@@ -95,7 +95,7 @@ lo.comp.macro{
   pickupFields([],Face,Face).
   pickupFields([T,..M],SF,Face) :-
     isBinary(T,":",Lc,L,R),
-    isName(L,_,Nm),
+    isIden(L,_,Nm),
     checkSoFar(Nm,R,SF,SF0),
     pickupFields(M,[T,..SF0],Face).
   pickupFields([T,..M],SF,Face) :-
@@ -106,7 +106,7 @@ lo.comp.macro{
   checkSoFar(_,_,[],[]).
   checkSoFar(Nm,T,[P,..L],L) :-
     isBinary(P,":",Lc,NN,RR),
-    isName(NN,_,Nm),
+    isIden(NN,_,Nm),
     (sameTerm(RR,T) | reportError("field $(Nm) : $(T) must be identical to: $(RR)",Lc)).
   checkSoFar(Nm,T,[P,..L],[P,..LL]) :-
     checkSoFar(Nm,T,L,LL).

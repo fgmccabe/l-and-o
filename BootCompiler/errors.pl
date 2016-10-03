@@ -62,4 +62,7 @@ showTerm(T,O) :-
 showTerm(T,O) :-
   isCanon(T),!,
   showCanonTerm(T,O,[]).
+showTerm(T,O) :-
+  isLocation(T),
+  showLocation(T,O,[]).
 showTerm(T,O) :- term_string(T,S), !,string_chars(S,O).

@@ -1,0 +1,149 @@
+lo.comp.parseutils{
+  import lo.
+
+  public iden:(list[integer]) --> list[integer].
+  iden([F,..Rest]) --> alpha(F), alphaNumStar(Rest).
+
+  alphaNumStar:(list[integer]) --> list[integer].
+  alphaNumStar([C,..More]) --> alphanum(C), alphaNumStar(More).
+  alphaNumStar([]) --> [], \+ alphanum(_).
+
+  public alpha:(integer)-->list[integer].
+  alpha(C) --> (lowAlpha(C) | upAlpha(C)).
+
+  lowAlpha:(integer) --> list[integer].
+  lowAlpha(C) --> [C], { isLowAlpha(C) }.
+ 
+  upAlpha:(integer) --> list[integer].
+  upAlpha(C) --> [C], { isUpAlpha(C) }.
+
+  public natural:(list[integer]) --> list[integer].
+  natural([F,..R]) --> digit(F), digitStar(R).
+
+  public digit:(integer) --> list[integer].
+  digit(C) --> [C], { isDigit(C) }.
+
+  digitStar:(list[integer]) --> list[integer].
+  digitStar([X,..M]) --> digit(X), digitStar(M).
+  digitStar([]) --> \+ digit(_).
+
+  public alphanum:(integer) --> list[integer].
+  alphanum(C) --> (alpha(C) | digit(C)).
+
+  hex:(integer) --> list[integer].
+  hex(C) --> [C], { isHexDigit(C)! }.
+
+  public spaces:()-->list[integer].
+  spaces() --> space(), spaces().
+  spaces() --> \+ space().
+
+  space:()-->list[integer].
+  space() --> ([0c ] | [0c\t] | [0c\n])!.
+  space() --> "--", ([0c ] | [0c\t] | [0c\n]), eol(). -- universal comment syntax
+  space() --> "/*", block_comment().
+
+  eol:()-->list[integer].
+  eol() --> "\n".
+  eol() --> [C], { C \= 0c\n}, eol().
+  eol() --> eof.
+
+  block_comment:()-->list[integer].
+  block_comment() --> "*/".
+  block_comment() --> "*", \+ "/", block_comment().
+  block_comment() --> [_], block_comment().
+
+  isLowAlpha:(integer){}.
+  isLowAlpha(0ca).
+  isLowAlpha(0cb).
+  isLowAlpha(0cc).
+  isLowAlpha(0cd).
+  isLowAlpha(0ce).
+  isLowAlpha(0cf).
+  isLowAlpha(0cg).
+  isLowAlpha(0ch).
+  isLowAlpha(0ci).
+  isLowAlpha(0cj).
+  isLowAlpha(0ck).
+  isLowAlpha(0cl).
+  isLowAlpha(0cm).
+  isLowAlpha(0cn).
+  isLowAlpha(0co).
+  isLowAlpha(0cp).
+  isLowAlpha(0cq).
+  isLowAlpha(0cr).
+  isLowAlpha(0cs).
+  isLowAlpha(0ct).
+  isLowAlpha(0cu).
+  isLowAlpha(0cv).
+  isLowAlpha(0cw).
+  isLowAlpha(0cx).
+  isLowAlpha(0cy).
+  isLowAlpha(0cz).
+
+  isUpAlpha:(integer){}.
+  isUpAlpha(0cA).
+  isUpAlpha(0cB).
+  isUpAlpha(0cC).
+  isUpAlpha(0cD).
+  isUpAlpha(0cE).
+  isUpAlpha(0cF).
+  isUpAlpha(0cG).
+  isUpAlpha(0cH).
+  isUpAlpha(0cI).
+  isUpAlpha(0cJ).
+  isUpAlpha(0cK).
+  isUpAlpha(0cL).
+  isUpAlpha(0cM).
+  isUpAlpha(0cN).
+  isUpAlpha(0cO).
+  isUpAlpha(0cP).
+  isUpAlpha(0cQ).
+  isUpAlpha(0cR).
+  isUpAlpha(0cS).
+  isUpAlpha(0cT).
+  isUpAlpha(0cU).
+  isUpAlpha(0cV).
+  isUpAlpha(0cW).
+  isUpAlpha(0cX).
+  isUpAlpha(0cY).
+  isUpAlpha(0cZ).
+
+  isDigit:(integer){}.
+  isDigit(0c0).
+  isDigit(0c1).
+  isDigit(0c2).
+  isDigit(0c3).
+  isDigit(0c4).
+  isDigit(0c5).
+  isDigit(0c6).
+  isDigit(0c7).
+  isDigit(0c8).
+  isDigit(0c9).
+
+  public digitVal:(integer,integer){}.
+  digitVal(0c0,0).
+  digitVal(0c1,1).
+  digitVal(0c2,2).
+  digitVal(0c3,3).
+  digitVal(0c4,4).
+  digitVal(0c5,5).
+  digitVal(0c6,6).
+  digitVal(0c7,7).
+  digitVal(0c8,8).
+  digitVal(0c9,9).
+
+  isHexDigit:(integer){}.
+  isHexDigit(X) :- isDigit(X).
+  isHexDigit(0ca).
+  isHexDigit(0cb).
+  isHexDigit(0cc).
+  isHexDigit(0cd).
+  isHexDigit(0ce).
+  isHexDigit(0cf).
+  isHexDigit(0cA).
+  isHexDigit(0cB).
+  isHexDigit(0cC).
+  isHexDigit(0cD).
+  isHexDigit(0cE).
+  isHexDigit(0cF).
+}

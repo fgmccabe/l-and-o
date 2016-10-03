@@ -136,7 +136,7 @@ parseConstraint(T,_,B,B,C,C) :-
   reportError("invalid type constraint %s",[T],Lc).
 
 parseContractConstraint(T,Env,N,Con) :-
-  parseContractConstraint(T,Env,[],[],Cons,N,Tp),
+  parseContractConstraint(T,Env,[],[],Cons,N,Tp),!,
   wrapConstraints(Cons,Tp,Con).
 
 parseContractConstraint(Tp,Env,B,C,C,N,PT) :-
@@ -150,10 +150,11 @@ parseContractConstraint(Tp,Env,B,C0,Cx,N,Cn) :-
   parseContractConstraint(R,Env,B,C1,Cx,N,Cn).
 parseContractConstraint(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,Deps)) :-
   isSquare(Sq,Lc,N,Args),
-  parseContractName(Lc,N,Env,Q,conTract(Op,ATs,Dps)),
   parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,Deps),
-  sameType(tupleType(ATs),tupleType(ArgTps),Env),
-  sameType(tupleType(Dps),tupleType(Deps),Env).
+  ( parseContractName(Lc,N,Env,Q,conTract(Op,ATs,Dps)) ->
+      sameType(tupleType(ATs),tupleType(ArgTps),Env),
+      sameType(tupleType(Dps),tupleType(Deps),Env)
+    | reportError("contract %s not declared",[N],Lc), Op = N).
 
 addConstraint(Con,C0,C0) :- is_member(Con,C0),!.
 addConstraint(Con,C0,[Con|C0]).
@@ -161,8 +162,6 @@ addConstraint(Con,C0,[Con|C0]).
 parseContractName(_,Id,Env,_,FTp) :-
   getContract(Id,Env,contract(_,_,Con,_,_)),
   freshenConstraint(Con,FTp).
-parseContractName(Lc,Id,_,_,anonType) :- 
-  reportError("contract %s not declared",[Id],Lc).
 
 parseContractArgs([A],Env,B,C0,Cx,Args,Deps) :-
   isBinary(A,"->>",L,R),!,

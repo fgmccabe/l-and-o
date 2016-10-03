@@ -26,10 +26,11 @@ lo.core{
   }
 
   public
-  contract all x ~~ /*additive[x] |: */ arith[x] .. {
+  contract all x ~~ /* additive[x] |: */ arith[x] .. {
     (*): (x,x)=>x.
     (/):  (x,x)=>x.
     (%): (x,x)=>x.
+    one:x.
   }
 
   -- Structured string. This is only part of the type ..
@@ -63,6 +64,7 @@ lo.core{
     X*Y => _int_times(X,Y).
     X/Y => _int_div(X,Y).
     X%Y => _int_mod(X,Y).
+    one = 1.
   }
 
   public
@@ -96,6 +98,8 @@ lo.core{
     X*Y => _flt_times(X,Y).
     X/Y => _flt_div(X,Y).
     X%Y => _flt_mod(X,Y).
+
+    one = 1.0.
   }
 
   public 

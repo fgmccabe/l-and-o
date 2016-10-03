@@ -1,0 +1,95 @@
+lo.comp.decode{
+  import lo.
+  import lo.resources.
+  import lo.comp.term.
+  import lo.comp.types.
+  import lo.comp.parseutils.
+  import lo.comp.base64.
+
+  public decodeValue:(string) => term.
+  decodeValue(Txt) => Term :- decodeTerm(Term) %% explode(Txt).
+
+  private decodeTerm:(term) --> list[integer].
+  decodeTerm(anon) --> "a".
+  decodeTerm(intgr(Ix)) --> "x", decInt(Ix).
+  decodeTerm(flot(Dx)) --> "d", decFloat(Dx).
+  decodeTerm(enum(Nm)) --> "e", decodeName(Nm).
+  decodeTerm(strng(Sx)) --> "s", decodeText(Chrs), { Sx = implode(Chrs)}.
+  decodeTerm(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
+  decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
+  decodeTerm(tupl(Els)) --> "u", decInt(Len), decTerms(Len,Els).
+  decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tupl(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
+
+  private decTerms:(integer,list[term]) --> list[integer].
+  decTerms(0,[]) --> [].
+  decTerms(N,[T,..L]) --> decodeTerm(T), decTerms(N-1,L).
+
+  private decInt:(integer) --> list[integer].
+  decInt(-Ix) --> "-", decInt(Ix).
+  decInt(Ix) --> digits(0,Ix).
+
+  private digits:(integer,integer) --> list[integer].
+  digits(SoFar,Ix) --> digit(D), { digitVal(D,Dv) }, digits(SoFar*10+Dv,Ix).
+  digits(Ix,Ix) --> \+ digit(_).
+
+  private decFloat:(float) --> list[integer].
+  decFloat(Sx::float) --> decodeName(Sx). -- This needs to be fixed in final implementation
+
+  private decodeText:(list[integer]) --> list[integer].
+  decodeText(Chrs) --> [C], collectQuoted(C,Chrs).
+
+  private collectQuoted:(integer,list[integer]) --> list[integer].
+  collectQuoted(C,[]) --> [C].
+  collectQuoted(C,[Ch,..L]) --> [0c\\, Ch], collectQuoted(C,L).
+  collectQuoted(C,[Ch,..L]) --> [Ch], collectQuoted(C,L).
+
+  private decodeName:(string) --> list[integer].
+  decodeName(implode(Text)) --> [C], collectUntil(C,Text).
+
+  private collectUntil:(integer,list[integer]) --> list[integer].
+  collectUntil(C,[]) --> [C].
+  collectUntil(C,[Ch,..L]) --> [Ch], collectUntil(C,L).
+
+  public decodeType:(tipe) --> list[integer].
+  decodeType(anonType) --> "_".
+  decodeType(voidType) --> "v".
+  decodeType(thisType) --> "h".
+  decodeType(tipe("lo.core*integer")) --> "i".
+  decodeType(tipe("lo.core*float")) --> "f".
+  decodeType(tipe("lo.core*string")) --> "S".
+  decodeType(tipe("lo.core*logical")) --> "l".
+  decodeType(kVar(Nm)) --> "k", decodeName(Nm).
+  decodeType(tipe(Nm)) --> "t", decodeName(Nm).
+  decodeType(typeExp("lo.core*list",[ElTp])) --> "L", decodeType(ElTp).
+  decodeType(typeExp(Nm,ArgTypes)) --> "U", decodeName(Nm), typeLen(Ln), decodeTypes(Ln,ArgTypes).
+  decodeType(univType(TV,Tp)) --> ":", decodeType(TV), decodeType(Tp).
+  decodeType(constrained(Tp,Con)) --> "|", decodeType(Tp), decodeConstraint(Con).
+  decodeType(faceType(Fields)) --> "I", typeLen(Ln),decodeFields(Ln,Fields).
+  decodeType(funType(A,T)) --> "F", decodeType(A), decodeType(T).
+  decodeType(grammarType(A,T)) --> "G", decodeType(A), decodeType(T).
+  decodeType(predType(A)) --> "P", decodeType(A).
+  decodeType(classType(A,T)) --> "C", decodeType(A), decodeType(T).
+  decodeType(tupleType(Tps)) --> "T", typeLen(Ln),decodeTypes(Ln,Tps).
+  decodeType(typeRule(L,R)) --> "Y", decodeType(L), decodeType(R).
+
+  private typeLen:(integer) --> list[integer].
+  typeLen(Ix) --> digits(0,Ix).
+
+  private decodeTypes:(integer,list[tipe]) --> list[integer].
+  decodeTypes(0,[]) --> [].
+  decodeTypes(Ix,[T,..L]) --> decodeType(T), decodeTypes(Ix-1,L).
+
+  private decodeFields:(integer,list[(string,tipe)]) --> list[integer].
+  decodeFields(0,[]) --> [].
+  decodeFields(Ix,[(Nm,T),..L]) --> decodeName(Nm),decodeType(T), decodeFields(Ix-1,L).
+
+  private decodeConstraint:(constraint) --> list[integer].
+  decodeConstraint(conRule([Con,..Cons],C)) --> "|", decodeConstraint(Con), decodeConstraints(Cons), decodeConstraint(C).
+  decodeConstraint(conTract(Nm,Args,Deps)) --> "c", decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
+  decodeConstraint(implementsFace(Tp,Face)) --> "a", decodeType(Tp), decodeType(faceType(Face)).
+  decodeConstraint(univCon(TV,Con)) --> ":", decodeType(TV), decodeConstraint(Con).
+
+  private decodeConstraints:(list[constraint]) --> list[integer].
+  decodeConstraints([Con,..Cons]) --> "|", decodeConstraint(Con), decodeConstraints(Cons).
+  decodeConstraints([]) --> \+"|".
+}

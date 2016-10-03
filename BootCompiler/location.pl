@@ -1,4 +1,4 @@
-:- module(location,[locOf/2, mergeLoc/3,showLocation/3,lcLine/2,lcColumn/2,lcSize/2,lcOff/2]).
+:- module(location,[locOf/2, mergeLoc/3,showLocation/3,lcLine/2,lcColumn/2,lcSize/2,lcOff/2,isLocation/1]).
 
 :- use_module(misc).
 
@@ -23,3 +23,5 @@ lcLine(loc(Ln,_,_,_),Ln).
 lcColumn(loc(_,Col,_,_),Col).
 lcSize(loc(_,_,_,Sz),Sz).
 lcOff(loc(_,_,Off,_),Off).
+
+isLocation(loc(_,_,_,_)).

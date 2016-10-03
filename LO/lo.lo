@@ -3,9 +3,10 @@ lo{
   public import lo.list.
   public import lo.index.
   public import lo.coerce.
+  public import lo.bits.
 
-  public flatten : (ss) => string.
-  flatten(D) => implode(flttn(D,[])).
+  public flatten : (ss) => list[integer].
+  flatten(D) => flttn(D,[]).
 
   flttn : (ss,list[integer]) => list[integer].
   flttn(ss(S),Rest) => explode(S)<>Rest.
@@ -16,5 +17,5 @@ lo{
   flttnList([E,..R],Rest) => flttn(E,flttnList(R,Rest)).
 
   public formatSS:(ss) => string.
-  formatSS(S) => flatten(S). -- temporary definition.
+  formatSS(S) => implode(flatten(S)). -- temporary definition.
 }

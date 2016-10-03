@@ -1,0 +1,459 @@
+lo.comp.typecheck{
+  import lo.
+  import lo.comp.location.
+  import lo.comp.ast.
+  import lo.comp.abstract.
+  import lo.comp.wff.
+  import lo.comp.canon.
+  import lo.comp.types.
+  import lo.comp.parseType.
+  import lo.comp.freshen.
+  import lo.comp.unify.
+  import lo.comp.dependencies.
+  import lo.comp.dict.
+  import lo.comp.errors.
+  import lo.comp.macro.
+  import lo.comp.repository.
+
+
+  private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
+      list[canonDef],list[(string,defnKind)],list[(visibility,uri,version)],list[canonDef]){}.
+  thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
+    macroRewrite(Els,Stmts),
+    displayAll(Stmts),
+    dependencies(Stmts,Groups,Public,Annots,Imps,Otrs),
+    processImportGroup(Imps,Imports,Repo,Base,IBase),
+    checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path),
+    checkOthers(Otrs,Others,TheEnv,Path).
+
+  private checkGroups:(list[list[defn]],list[(string,tipe)],list[(string,ast)],list[canonDef],list[env],list[env],string){}.
+  checkGroups([],_,_,[],E,E,_).
+  checkGroups([Gp,..More],Fields,Annots,Defs,Env,E,Path) :-
+    checkGroup(Gp,Gp,Fields,Annots,Defs,D0,Env,E0,Path),
+    checkGroups(More,Fields,Annots,D0,E0,E,Path).
+
+  private checkGroup:(list[defn],list[defn],list[(string,tipe)],list[(string,ast)],list[canonDef],list[canonDef],list[env],list[env],string){}.
+  checkGroup(Grp,[defn(_,tpe,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path) :-
+    typeGroup(Grp,Defs,Dx,Env,Ex,Path).
+  checkGroup(Grp,[defn(_,var,_,_,_),.._],Fields,Annots,Defs,Dx,Env,Ex,Path) :-
+    varGroup(Grp,Fields,Annots,Defs,Dx,Env,Ex,Path).
+  checkGroup(Grp,[defn(_,con,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path) :-
+    contractGroup(Grp,Defs,Dx,Env,Ex,Path).
+  checkGroup(Grp,[defn(_,impl,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path) :-
+    implementationGroup(Grp,Defs,Dx,Env,Ex,Path).
+
+  -- This is very elaborate - to support mutual recursion amoung types.
+
+  private typeGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string){}.
+  typeGroup(Grp,Defs,Dx,Env,Ex,Path) :-
+    defineTypes(Grp,Env,TmpEnv,Path),
+    parseTypeDefs(Grp,TpDefs,[],TmpEnv,Path),
+    declareTypes(TpDefs,TpDefs,Defs,Dx,Env,Ex).
+
+  private defineTypes:(list[defn],list[env],list[env],string){}.
+  defineTypes([],Env,Env,_).
+  defineTypes([defn(N,tpe,Lc,_,[Stmt]),..More],Env,Ex,Path) :-
+    defineType(N,Lc,Stmt,Env,E0,Path),
+    defineTypes(More,E0,Ex,Path).
+  defineTypes([defn(N,tpe,Lc,_,[_,.._]),..More],Env,Ex,Path) :-
+    reportError("multiple type definition statement for $(N)",Lc),
+    defineTypes(More,Env,Ex,Path).
+
+  private defineType:(string,location,ast,list[env],list[env],string){}.
+  defineType(N,Lc,_,Env,Env,_) :-
+    ( isType(N,Env,tpDef(_,OLc,_)) ?
+    reportError("type %s already defined at %s",[N,OLc],Lc).
+  defineType(N,Lc,St,Env,Ex,Path) :-
+    parseTypeTemplate(St,[],Env,Type,Path),
+    declareType(N,tpDef(Lc,Type,faceType([])),Env,Ex).
+
+  parseTypeDefs([],Defs,Defs,_,_).
+  parseTypeDefs([(tpe(N),Lc,[Stmt])|More],Defs,Dx,TmpEnv,Path) :-
+    parseTypeDefinition(N,Lc,Stmt,Defs,D0,TmpEnv,Path),
+    parseTypeDefs(More,D0,Dx,TmpEnv,Path).
+
+  parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule)|Defs],Defs,Env,Path) :-
+    parseTypeRule(St,Env,FaceRule,Path),
+    isType(N,Env,tpDef(_,Type,_)).
+
+  declareTypes([],_,Defs,Defs,Env,Env).
+  declareTypes([typeDef(Lc,N,Type,FaceRule)|More],TpDefs,[typeDef(Lc,N,Type,FaceRule)|Defs],Dx,Env,Ex) :-
+    declareType(N,tpDef(Lc,Type,FaceRule),Env,E0),
+    declareTypes(More,TpDefs,Defs,Dx,E0,Ex).
+
+  faceOfType(Lc,TpDefs,Env,Rules,Tmplate,Face) :-
+    moveQuants(Tmplate,Q,Plate),
+    findAllFields(Rules,Q,Plate,[],Fields,TpDefs,Env,Lc),
+    moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
+
+  isFaceRule(Rl) :-
+    moveQuants(Rl,_,typeRule(_,faceType(_))).
+
+  findAllFields([],_,_,Fields,Fields,_,_,_).
+  findAllFields([Rl|Rules],Q,Plate,SoFar,Fields,TpDefs,Env,Lc) :-
+    moveQuants(Rl,_,typeRule(Lhs,Rhs)),
+    matchTypes(Plate,Lhs,Binding),
+    freshn(Rhs,Binding,FRhs),
+    findFields(FRhs,Q,TpDefs,TpDefs1,Env,SoFar,Flds,Lc),
+    findAllFields(Rules,Q,Plate,Flds,Fields,TpDefs1,Env,Lc).
+
+  findFields(faceType(Flds),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+    collectFace(faceType(Flds),Env,SoFar,Fields,Lc).
+  findFields(type(Nm),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+    typeFaceRule(Nm,Env,FaceRule),!,
+    mergeFields([FaceRule],[],type(Nm),SoFar,Fields,Env,Lc).
+  findFields(typeExp(Nm,Args),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
+    typeFaceRule(Nm,Env,FaceRule),
+    mergeFields([FaceRule],[],typeExp(Nm,Args),SoFar,Fields,Env,Lc).
+  findFields(type(Nm),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
+    subtract(typeDef(_,_,type(Nm),Rules),TpDefs,TpDefs1),
+    findAllFields(Rules,Q,type(Nm),SoFar,Fields,TpDefs1,Env,Lc).
+  findFields(typeExp(Nm,Args),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
+    subtract(typeDef(_,_,typeExp(Nm,Args),Rules),TpDefs,TpDefs1),
+    findAllFields(Rules,Q,typExp(Nm,Args),SoFar,Fields,TpDefs1,Env,Lc).
+  findFields(anonType,_,TpDefs,TpDefs,_,SoFar,SoFar,_).
+
+  private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[env]) => list[canonRule].
+
+  private checkCond:(ast,list[env],list[env],canonCond){}.
+  checkCond(Term,Env,Env,trueCond) :-
+    isIden(Term,Lc,"true").
+  checkCond(Term,Env,Env,falseCond) :-
+    isIden(Term,Lc,"false").
+  checkCond(Term,Env,Ex,conjCond(Lhs,Rhs)) :-
+    isBinary(Term,",",_,L,R),
+    checkCond(L,Env,E1,Lhs),
+    checkCond(R,E1,Ex,Rhs).
+  checkCond(Term,Env,Ex,condCond(Test,Either,Or)) :-
+    isBinary(Term,"|",_,L,R),
+    isBinary(L,"?",T,Th),
+    checkCond(T,Env,E0,Test),
+    checkCond(Th,E0,E1,Either),
+    checkCond(R,E1,Ex,Or).
+  checkCond(Term,Env,Ex,disjCond(Either,Or)) :-
+    isBinary(Term,"|",_,L,R),
+    checkCond(L,Env,E1,Either),
+    checkCond(R,E1,Ex,Or).
+  checkCond(Term,Env,Ex,oneCond(Test)) :-
+    isUnary(Term,"!",_,N),
+    checkCond(N,Env,Ex,Test).
+  checkCond(Term,Env,Env,negCond(Test)) :-
+    isUnary(Term,"\\+",_,N),
+    checkCond(N,Env,_,Test).
+  checkCond(Term,Env,Env,forallCond(Gen,Test)) :-
+    isBinary(Term,"*>",_,L,R),
+    checkCond(L,Env,E0,Gen),
+    checkCond(R,E0,_,Test).
+  checkCond(Term,Env,Ex,Cond) :-
+    isRoundTuple(Term,_,C),
+    checkConds(C,Env,Ex,Cond).
+  checkCond(Term,Env,Ev,negCond(unifyCond(Lhs,Rhs))) :-
+    isBinary(Term,"\\=",_,L,R),
+    TV = newVar("_#"),
+    typeOfTerm(L,TV,Env,E0,Lhs),
+    typeOfTerm(R,TV,E0,Ev,Rhs).
+  checkCond(Term,Env,Ev,unifyCond(Lhs,Rhs)) :-
+    isBinary(Term,"=",_,L,R),
+    TV = newVar("_#"),
+    typeOfTerm(L,TV,Env,E0,Lhs),
+    typeOfTerm(R,TV,E0,Ev,Rhs).
+  checkCond(Term,Env,Ev,phraseCond(Lc,NT,Strm,Rest)) :-
+    isBinary(Term,"%%",Lc,L,R),
+    isBinary(R,"~",_,S,M),
+    StrmTp = newVar("_S"),
+    ElTp = newVar("_E"),
+    checkGrammarType(Lc,Env,StrmTp,ElTp),
+    typeOfTerm(S,StrmTp,Env,E0,Strm),
+    typeOfTerm(M,StrmTp,E0,E1,Rest),
+    declareVar(streamVar,vr(Lc,v(streamVar),StrmTp),E1,E2),
+    checkNonTerminals(L,StrmTp,E2,Ev,NT).
+  checkCond(Term,Env,Ev,phraseCond(Lc,NT,Strm,Rest)) :-
+    isBinary(Term,"%%",Lc,L,R),
+    StrmTp = newVar("_S"),
+    ElTp = newVar("_E"),
+    checkGrammarType(Lc,Env,StrmTp,ElTp),
+    typeOfTerm(S,StrmTp,Env,E0,Strm),
+    M = iden(Lc,_str_gen("_")),
+    typeOfTerm(M,StrmTp,E0,E1,Rest),
+    declareVar("stream_X",vr(Lc,v("stream_X"),StrmTp),E1,E2),
+    checkNonTerminals(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,E2,Ev,NT).
+  checkCond(Term,Env,Ev,Call) :-
+    isRound(Term,Lc,F,A),
+    PrTp = newVar("_P"),
+    typeOfKnown(F,PrTp,Env,E0,Pred),
+    ( deRef(PrTp) = predType(ArgTp) ?
+      typeOfTerm(A,ArgTp,E0,Ev,Arg),
+      Call = goal(Lc,Pred,Arg) |
+      reportError("$(Pred)|=$(Tp) not a predicate",Lc),
+      Call = trueCond).
+  checkCond(Term,Env,Env,trueCond) :-
+    reportError("cannot understand condition $(Term)",Term.loc).
+
+  private checkConds:(list[ast],list[env],list[env],list[canonCond]){}.
+  checkConds([],Env,Env,[]).
+  checkConds([C,..L],Ev,Env,[Co,..M]) :-
+    checkCond(C,Ev,E0,Co),
+    checkConds(L,E0,Env,M).
+
+  private typeOfTerm:(ast,tipe,list[env],list[env],canonTerm){}.
+  typeOfTerm(V,_,Env,Env,v(_str_gen("_"))) :- isIden(V,_,"_").
+  typeOfTerm(V,Tp,Env,Ev,Term) :-
+    isIden(V,Lc,Nm),
+    ( isVar(Nm,Env,Spec) ?
+      typeOfVar(Lc,Spec,Tp,Env,Term), Env=Ev |
+      Ev = declareVar(Nm,vr(Lc,v(Nm),Tp),Env), Term=v(Nm)).
+  typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix)) :- 
+    checkType(Lc,findType("integer",Lc,Env),Tp,Env).
+  typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Ix)) :- 
+    checkType(Lc,findType("float",Lc,Env),Tp,Env).
+  typeOfTerm(strg(Lc,Sx),Tp,Env,Env,str(Sx)) :- 
+    checkType(Lc,findType("string",Lc,Env),Tp,Env).
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isBinary(Term,":",Lc,L,R),
+    ( parseType(R,Env,RT) ?
+        checkType(Lc,RT,Tp,Env),
+        typeOfTerm(L,RT,Env,Ev,Exp) |
+        reportError("cannot parse type $(R)",Lc),
+        typeOfTerm(L,Tp,Env,Ev,Exp)).  
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isBinary(Term,"::",Lc,L,R),
+    typeOfTerm(binary(Lc,":",unary(Lc,"_coerce",L),R),Tp,Env,Ev,Exp).
+  typeOfTerm(P,Tp,Env,Ex,whre(Ptn,Cond)) :-
+    isBinary(P,"@@",_,L,R),
+    typeOfTerm(L,Tp,Env,E0,Ptn),
+    checkCond(R,E0,Ex,Cond).
+  typeOfTerm(Call,Tp,Env,Ev,whre(V,Cond)) :-
+    isUnary(Call,"@",Lc,Test), -- @Test = NV @@ NV.Test where NV is a new name
+    isRoundTerm(Test,_,_,_),
+    NV = iden(Lc,_str_gen("_")),
+    typeOfTerm(NV,Tp,Env,E0,V),
+    checkCond(binary(Lc,".",NV,Test),E0,Ev,Cond).
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isBinary(Term,".",Lc,L,F),
+    isIden(F,Fld),
+    recordAccessExp(Lc,L,Fld,Tp,Env,Ev,Exp).
+  typeOfTerm(Term,Tp,Env,Ev,conExp(Lc,Test,Then,Else)) :-
+    isBinary(Term,"|",Lc,L,El),
+    isBinary(L,"?",_,Tst,Th),
+    checkCond(Tst,Env,E0,Test),
+    typeOfTerm(Th,Tp,E0,E1,Then),
+    typeOfTerm(El,Tp,E1,Ev,Else).
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isSquareTuple(Term,Lc,Els),
+    typeExp(_,[ElTp]) = findType("list",Lc,Env),
+    checkType(Lc,ListTp,Tp,Env),
+    typeOfListTerm(Els,Lc,ElTp,ListTp,classType(tupleType([ElTp,ListTp]),Env,Ev,Exp).
+  typeOfTerm(tuple(_,"()",[Inner]),Tp,Env,Ev,Exp) :-  -- a unary round tuple might just be parenthetic expression
+    \+ isRoundTuple(Inner,_,_),
+    typeOfTerm(Inner,Tp,Env,Ev,Exp).
+  typeOfTerm(Term,Tp,Env,Ev,tpl(Els)) :-
+    isRoundTuple(Term,Lc,A),
+    genTpVars(A,ArgTps),
+    checkType(Lc,tupleType(ArgTps),Tp,Env),
+    typeOfTerms(A,ArgTps,Env,Ev,Lc,Els).
+  typeOfTerm(Term,Tp,Env,Ev,dict(Lc,Entries)) :-
+    isBraceTuple(Term,Lc,Els),
+    MapTp = findType("map",Lc,Env),
+    MapTp = typeExp(_,[KyTp,ElTp]),
+    checkType(Lc,MapTp,Tp,Env),
+    typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries).
+  typeOfTerm(Term,Tp,Env,Env,Exp) :-
+    isUnary(Term,"-",Lc,Arg),         -- handle unary minus
+    typeOfTerm(binary(Lc,"-",name(Lc,"zero"),Arg),Tp,Env,Ev,Exp).
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isBinary(Term,"=>",Lc,Lhs,Rhs),
+    isRoundTuple(Lhs,_,A),
+    ArgTp = tupleType(mkTypes(length(A))),
+    ResTp = newVar("_"),
+    FunTp = funType(ArgTp,ResTp),
+    checkType(Lc,FunTp,Tp,Env),
+    E0 = pushScope(Env),
+    typeOfTerm(Lhs,ArgTp,E0,E1,Arg),
+    typeOfTerm(Rhs,ResTp,E1,E2,Res),
+    Exp = lambda(equation(Lc,Arg,Res,trueCond)). -- Have to sort out free variables at some point
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isRound(Term,Lc,F,A),
+    FnTp = newVar("F"),
+    knownType(F,FnTp,Env,E0,Fun),
+    typeOfCall(Lc,Fun,A,deRef(FnTp),Tp,E0,Ev,Exp).
+  typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+    isSquareTerm(Term,Lc,F,[A]),
+    typeOfTerm(binary(Lc,"find",F,A),Tp,Env,Ev,Exp).
+  typeOfTerm(Term,Tp,Env,Env,v(_str_gen("_"))) :-
+    reportError("illegal expression: $(Term), expecting a $(Tp)",Term.loc).
+
+
+  private checkNonTerminals:(ast,tipe,tipe,list[env],list[env],canonNT){}.
+  checkNonTerminals(Tpl,_,ElTp,E,Env,grTerms(Terms)) :-
+    isSquareTuple(Tpl,_,Els),
+    checkTerminals(Els,"_hdtl",Terms,ElTp,E,Env).
+  checkNonTerminals(strg(Lc,Text),_,ElTp,Env,Env,grTerms(Lc,Terms)) :- !,
+    checkTerminals(explodeStringLit(Lc,Text),"_hdtl",Terms,ElTp,Env,_).  -- strings are exploded into code points
+  checkNonTerminals(Term,Tp,ElTp,Env,Ex,GrNT) :-
+    isRoundTuple(Term,_,[NT]),
+    checkNonTerminals(NT,Tp,ElTp,Env,Ex,GrNT).
+  checkNonTerminals(Term,Tp,ElTp,Env,Ex,grConj(Lhs,Rhs)) :-
+    isBinary(Term,",",Lc,L,R),
+    checkNonTerminals(L,Tp,ElTp,Env,E1,Lhs),
+    checkNonTerminals(R,Tp,ElTp,E1,Ex,Rhs).
+  checkNonTerminals(Term,Tp,ElTp,Env,Ex,grCond(Test,Either,Or)) :-
+    isBinary(Term,"|",_,L,R),
+    isBinary(L,"?",_,T,Th),!,
+    checkNonTerminals(T,Tp,ElTp,Env,E0,Test),
+    checkNonTerminals(Th,Tp,ElTp,E0,E1,Either),
+    checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
+  checkNonTerminals(Term,Tp,ElTp,Env,Ex,grDisj(Either,Or)) :-
+    isBinary(Term,"|",_,L,R),
+    \+isBinary(L,"?",_,_,_),
+    checkNonTerminals(L,Tp,ElTp,Env,E1,Either),
+    checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
+  checkNonTerminals(Term,Tp,ElTp,Env,Ex,grOne(Test)) :-
+    isUnary(Term,"!",_,N),
+    checkNonTerminals(N,Tp,ElTp,Env,Ex,Test).
+  checkNonTerminals(Term,Tp,ElTp,Env,Env,grNeg(Test)) :-
+    isUnary(Term,"\\+",Lc,N),
+    checkNonTerminals(N,Tp,ElTp,Env,_,Test).
+  checkNonTerminals(Term,Tp,ElTp,Env,Env,grAhed(Test)) :-
+    isUnary(Term,"+",Lc,N),
+    checkNonTerminals(N,Tp,ElTp,Env,_,Test).
+  checkNonTerminals(Term,_,_,Env,Ev,grTest(unify(Lc,Lhs,Rhs))) :-
+    isBinary(Term,"=",Lc,L,R),
+    TV = newVar("_"),
+    typeOfTerm(L,TV,Env,E0,Lhs),
+    typeOfTerm(R,TV,E0,Ev,Rhs).
+  checkNonTerminals(Term,_,_,Env,Ev,grTest(negCond(unify(Lc,Lhs,Rhs)))) :-
+    isBinary(Term,"\\=",Lc,L,R),
+    TV = newVar("_"),
+    typeOfTerm(L,TV,Env,E0,Lhs),
+    typeOfTerm(R,TV,E0,Ev,Rhs).
+  checkNonTerminals(Term,Tp,_,Env,Ev,dip(v(Lc,NV),Cond)) :-
+    isUnary(Term,"@",Lc,Test),
+    isRoundTerm(Test,_,Op,Args),
+    genstr("_",NV),
+    declareVar(NV,vr(NV,Lc,Tp),Env,E0),
+    binary(Lc,".",iden(Lc,NV),Op,NOp),
+    checkCond(appl(Lc,NOp,tupl(Lc,"()",Args)),E0,Ev,Cond).
+  checkNonTerminals(Term,Tp,_,Env,Ev,NT) :-
+    isRound(Term,Lc,F,A),
+    GrTp = newVar("_G"),
+    typeOfKnown(F,GrTp,Env,E0,Op),
+    ( deRef(GrTp) = grammarType(ArgTp,StrmTp) ?
+      ( checkType(Lc,StrmTp,Tp,Env) ?
+        typeOfTerm(A,ArgTp,E0,Ev,Arg),
+        NT = grCall(Lc,Op,Arg) |
+        reportError("type of $(Op) : $(GrTp) not consistent with stream type $(Tp)"),
+        NT = grTerms([]), Ev = E0) |
+      reportError("$(F) : $(GrTp) not a grammar"),
+      NT = grTerms([]),
+      Ev = Env).
+  checkNonTerminals(Term,_,_,Env,Env,grTest(EOF)) :-
+    isIden(Term,Lc,"eof"),
+    checkCond(unary(Lc,"_eof",iden(Lc,streamVar)),Env,_,EOF).
+  checkNonTerminals(Term,_,_,Env,Ex,grTest(Cond)) :-
+    isBraceTuple(Term,Lc,Els),
+    checkConds(Els,Env,Ex,Cond).
+
+  private checkTerminals:(list[ast],string,list[canonNT],tipe,list[env],list[env]){}.
+  checkTerminals([],_,[],_,Env,Env).
+  checkTerminals([T,..L],V,[(Lc.loc,V,TT),..M],ElTp,Env,Ev) :-
+    typeOfTerm(T,ElTp,Env,E0,TT),
+    checkTerminals(L,V,M,ElTp,E0,Ev).
+
+  private explodeStringLit:(location,string) => list[ast].
+  explodeStringLit(Lc,Str) => makeIntList(explode(Str),Lc).
+
+  private makeIntList:(list[integer],location) => lisst[ast].
+  makeIntList([],_) => [].
+  makeIntList([Code,..L],Lc) => [intg(Lc,Code),..makeIntList(L,Lc)].
+
+  private streamVar:string.
+  streamVar = "stream_X".
+
+  private typeOfVar:(location,vr,tipe,list[env],canonTerm){}.
+  typeOfVar(Lc,vr(VLc,VNm,VT),Tp,Env,Term) :-
+    manageConstraints(freshen(VT,pickupThisType(Env)),[],VNm,MTp,Term),
+    checkType(Lc,MTp,Tp,Env).
+
+  private manageConstraints:(tipe,list[constraint],canonTerm,tipe,canonTerm){}.
+  manageConstraints(constrained(T,C),Cons,V,MTp,Exp) :-
+    manageConstraints(T,[C,..Cons],V,MTp,Exp).
+  manageConstraints(Tp,[],V,Tp,V).
+  manageConstraints(Tp,Cons,V,Tp,over(V,Cons)).
+
+  private knownType:(ast,tipe,list[env],list[env],canonTerm){}.
+  knownType(V,Tp,Env,Env,Term) :-
+    ( isIden(V,Lc,Nm) ?
+      ( isVar(Nm,Env,Spec) ?
+        typeOfVar(Lc,Spec,Tp,Env,Term), Env=Ev |
+        reportError("variable $(V) not declared",Lc),
+        Term=v(Nm)) |
+      typeOfTerm(V,Tp,Env,Ex,Term)).
+
+  private typeOfCall:(location,canonTerm,canonTerm,tipe,tipe,list[env],list[env],canonTerm){}.
+  typeOfCall(Lc,Fun,A,funType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args)) :-
+    checkType(Lc,ResTp,Tp,Env),
+    typeOfTerm(A,ArgTp,Env,Ev,Args).
+  typeOfCall(Lc,Fun,A,classType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args)) :-
+    checkType(Lc,ResTp,Tp,Env),
+    typeOfTerm(A,ArgTp,Env,Ev,Args).
+  typeOfCall(Lc,Fun,_,Ftp,_,Env,Env,Fun) :-
+    reportError("$(Fun) : $(Ftp) is not a function",Lc).
+
+  private typeOfListTerm:(list[ast],location,tipe,tipe,tipe,list[env],list[env],canonTerm){}.
+  typeOfListTerm([],Lc,_,ListTp,_,Env,Ev,Exp) :-
+    typeOfTerm(iden(Lc,"[]"),ListTp,Env,Ev,Exp).
+  typeOfListTerm([Last],_,ElTp,ListTp,ConTp,Env,Ev,apply(Op,[Hd,Tl])) :-
+    isBinary(Last,",..",Lc,L,R),
+    typeOfKnown(iden(Lc,",.."),ConTp,Env,E0,Op),
+    typeOfTerm(L,ElTp,E0,E1,Hd),
+    typeOfTerm(R,ListTp,E1,Ev,Tl).
+  typeOfListTerm([El,..More],_,ElTp,ListTp,ConTp,Env,Ev,apply(Lc,Op,tpl([Hd,Tl]))) :-
+    Lc = EL.loc,
+    typeOfKnown(iden(Lc,",.."),ConTp,Env,E0,Op),
+    typeOfTerm(El,ElTp,E0,E1,Hd),
+    typeOfListTerm(More,Lc,ElTp,ListTp,ConTp,E1,Ev,Tl).
+
+  private typeMapEntries:(list[ast],tipe,tipe,list[env],list[env],list[(string,canonTerm)]){}.
+  typeMapEntries([],_,_,Env,Env,[]).
+  typeMapEntries([En,..Els],KyTp,ElTp,Env,Ev,[(Ky,Vl),..Entries]) :-
+    isBinary(En,"->",_,Lhs,Rhs),
+    typeOfTerm(Lhs,KyTp,Env,E0,Ky),
+    typeOfTerm(Rhs,ElTp,E0,E1,Vl),
+    typeMapEntries(Els,KyTp,ElTp,E1,Ev,Entries).
+  typeMapEntries([En,..Els],KyTp,ElTp,Env,Ev,Entries) :-
+    reportError("invalid entry '$(En)' in map",En.loc),
+    typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries).
+
+  private checkType:(location,tipe,tipe,list[env]){}.
+  checkType(Lc,Actual,Expected,Env) :-
+    ( sameType(Actual,Expected,Env) ? true | reportError("$(Actual) not consistent with $(Expected)",Lc)).
+
+  private checkGrammarType:(location,list[env],tipe,tipe){}.
+  checkGrammarType(Lc,Env,Tp,ElTp) :-
+    isContract("stream",Env,conDef(_,_,Spec,_,_)),
+    freshen(Spec,pickupThisType(Env)) = conTract(_,[Arg],[Dep]),
+    checkType(Lc,Arg,Tp,Env),
+    checkType(Lc,Dep,ElTp,Env).
+
+  private pickupThisType:(list[env]) => map[string,tipe].
+  pickupThisType(Env) => { "this" -> ThisType} :- isVar("this",Env,vr(_,_,ThisType)).
+  pickupThisType(_) => {}.
+
+  private findType:(string,location,list[env]) => tipe.
+  findType(Nm,_,Env) => freshen(T,pickupThisType(Env)) :-
+    findType(Nm,Env,T).
+  findType(Nm,Lc,_) => anonType :-
+    reportError("type $(Nm) not known",Lc).
+
+  private mkTypes:(integer) => list[tipe].
+  mkTypes(0) => [].
+  mkTypes(N) => [newVar("_"),..mkTypes(N-1)].
+
+  private computeNewVars:(list[env]) => list[string].
+  computeNewVars(Env) => keys(topVars(Env)).
+
+  private pushFace:(list[(string,tipe)],location,list[env]) => list[env].
+  pushFace([],_,E) => E.
+  pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(N),T))).
+
+}
