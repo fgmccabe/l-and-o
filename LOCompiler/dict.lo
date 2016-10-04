@@ -22,7 +22,10 @@ lo.comp.dict{
 
   public
   typeInDict:(string,list[env],tipe){}.
-  typeInDict(Nm,Env,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(_,Tp,_))!.
+  typeInDict(Nm,Env,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(_,_,Tp))!.
+
+  public isType:(string,list[env],option[location],tipe){}.
+  isType(Nm,Env,Lc,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(Lc,Tp,_))!.
 
   private
   tpInDict:(string,list[env]) => option[typeDef].

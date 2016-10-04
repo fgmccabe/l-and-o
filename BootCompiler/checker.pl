@@ -208,38 +208,6 @@ declareTypes([typeDef(Lc,N,Type,FaceRule)|More],TpDefs,[typeDef(Lc,N,Type,FaceRu
   declareType(N,tpDef(Lc,Type,FaceRule),Env,E0),
   declareTypes(More,TpDefs,Defs,Dx,E0,Ex).
 
-faceOfType(Lc,TpDefs,Env,Rules,Tmplate,Face) :-
-  moveQuants(Tmplate,Q,Plate),
-  findAllFields(Rules,Q,Plate,[],Fields,TpDefs,Env,Lc),
-  moveQuants(Face,Q,typeRule(Plate,faceType(Fields))).
-
-isFaceRule(Rl) :-
-  moveQuants(Rl,_,typeRule(_,faceType(_))).
-
-findAllFields([],_,_,Fields,Fields,_,_,_).
-findAllFields([Rl|Rules],Q,Plate,SoFar,Fields,TpDefs,Env,Lc) :-
-  moveQuants(Rl,_,typeRule(Lhs,Rhs)),
-  matchTypes(Plate,Lhs,Binding),
-  freshn(Rhs,Binding,FRhs),
-  findFields(FRhs,Q,TpDefs,TpDefs1,Env,SoFar,Flds,Lc),
-  findAllFields(Rules,Q,Plate,Flds,Fields,TpDefs1,Env,Lc).
-
-findFields(faceType(Flds),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
-  collectFace(faceType(Flds),Env,SoFar,Fields,Lc).
-findFields(type(Nm),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
-  typeFaceRule(Nm,Env,FaceRule),!,
-  mergeFields([FaceRule],[],type(Nm),SoFar,Fields,Env,Lc).
-findFields(typeExp(Nm,Args),_,TpDefs,TpDefs,Env,SoFar,Fields,Lc) :-
-  typeFaceRule(Nm,Env,FaceRule),
-  mergeFields([FaceRule],[],typeExp(Nm,Args),SoFar,Fields,Env,Lc).
-findFields(type(Nm),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
-  subtract(typeDef(_,_,type(Nm),Rules),TpDefs,TpDefs1),
-  findAllFields(Rules,Q,type(Nm),SoFar,Fields,TpDefs1,Env,Lc).
-findFields(typeExp(Nm,Args),Q,TpDefs,TpDefs1,Env,SoFar,Fields,Lc) :-
-  subtract(typeDef(_,_,typeExp(Nm,Args),Rules),TpDefs,TpDefs1),
-  findAllFields(Rules,Q,typExp(Nm,Args),SoFar,Fields,TpDefs1,Env,Lc).
-findFields(anonType,_,TpDefs,TpDefs,_,SoFar,SoFar,_).
-
 varGroup(Grp,Fields,Annots,Defs,Dx,Base,Env,Path) :-
   parseAnnotations(Grp,Fields,Annots,Base,Env,Path),!,
   checkVarRules(Grp,Env,Defs,Dx,Path).
