@@ -9,24 +9,25 @@ lo.comp.canon {
   canonPkg ::= canonPkg(location,string,list[(string,visibility)],list[canonDef],list[constraint],list[constraint]).
 
   public type
-  canonDef ::= function(location,string,visibility,tipe,list[canonRule])
-           |   relation(location,string,visibility,tipe,list[canonRule])
-           |   grammar(location,string,visibility,tipe,list[canonRule])
-           |   class(location,string,visibility,tipe,list[canonRule])
-           |   vardef(location,string,visibility,tipe,canonTerm)
+  canonDef ::= function(location,string,tipe,list[canonRule])
+           |   relation(location,string,tipe,list[canonRule])
+           |   grammar(location,string,tipe,list[canonRule])
+           |   class(location,string,tipe,list[canonRule])
+           |   vardef(location,string,tipe,canonTerm)
            |   other(canonOther)
-           |   typedef(location,string,visibility,tipe,list[canonRule])
-           |   conDef(location,string,visibility,constraint,tipe)
-           |   implDef(location,visibility,constraint,list[canonDef]).
+           |   typedef(location,string,tipe,tipe)
+           |   conDef(location,string,constraint,tipe)
+           |   implDef(location,constraint,list[canonDef]).
 
   canonOther ::= integrity(location,canonCond)
            | expShow(location,canonTerm).
 
   public type
-  canonRule ::= clause(location,canonTerm,canonCond)
-             | equation(location,canonTerm,canonTerm,canonCond)
-             | clRule(location,canonTerm,canonTerm)
-             | clBody(location,canonTerm,list[canonDef])
+  canonRule ::= clause(location,string,canonTerm,canonCond)
+             | equation(location,string,canonTerm,canonTerm,canonCond)
+             | vrDef(location,string,canonTerm,canonCond)
+             | clRule(location,string,canonTerm,canonTerm,tipe)
+             | clBody(location,string,canonTerm,list[canonDef],list[canonOther],list[canonDef])
              | grRule(location,canonTerm,list[canonTerm],canonNT)
              | tpRule(location,tipe).
 

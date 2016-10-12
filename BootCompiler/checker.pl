@@ -927,17 +927,6 @@ isPublicType(Nm,Public) :-
 isPublicContract(contract(Nm,_,_,_,_),Public) :-
   is_member(con(Nm),Public),!.
 
-mergeFields([],_,_,Fields,Fields,_,_).
-mergeFields([Rule|More],Q,Plate,SoFar,Fields,Env,Lc) :-
-  mergeFromTypeRule(Rule,Plate,SoFar,Flds,Env,Lc),
-  mergeFields(More,Q,Plate,Flds,Fields,Env,Lc).
-
-mergeFromTypeRule(Rule,Plate,SoFar,Fields,Env,Lc) :-
-  moveQuants(Rule,_,typeRule(Lhs,Rhs)),
-  matchTypes(Plate,Lhs,Binding),
-  freshn(Rhs,Binding,FRhs),
-  collectFace(FRhs,Env,SoFar,Fields,Lc).
-
 matchTypes(type(Nm),type(Nm),[]) :-!.
 matchTypes(typeExp(Nm,L),typeExp(Nm,R),Binding) :-
   matchArgTypes(L,R,Binding).
@@ -947,23 +936,6 @@ matchArgTypes([kVar(Nm)|L],[kVar(Nm)|R],Binding) :- !,
   matchArgTypes(L,R,Binding).
 matchArgTypes([Tp|L],[kVar(Ot)|R],[(Ot,Tp)|Binding]) :-
   matchArgTypes(L,R,Binding).
-
-collectFace(faceType(Fs),_,SoFar,Flds,Lc) :-
-  collectFields(Fs,SoFar,Flds,Lc).
-collectFace(type(Nm),Env,SoFar,Fields,Lc) :-
-  typeFaceRule(Nm,Env,FaceRule),
-  mergeFields([FaceRule],[],type(Nm),SoFar,Fields,Env,Lc). % some laziness here: how do we know no quants?
-collectFace(typeExp(Nm,_),Env,SoFar,Fields,Lc) :-
-  typeFaceRule(Nm,Env,FaceRule),
-  mergeFields([FaceRule],[],type(Nm),SoFar,Fields,Env,Lc). % some laziness here: how do we know no quants?
-
-collectFields([],Flds,Flds,_).
-collectFields([(Nm,_)|More],SoFar,Flds,Lc) :-
-  is_member((Nm,_),SoFar),!,
-  reportError("multiple declaration of field %s",[Nm],Lc),
-  collectFields(More,SoFar,Flds,Lc).
-collectFields([(Nm,Tp)|More],SoFar,Flds,Lc) :-
-  collectFields(More,[(Nm,Tp)|SoFar],Flds,Lc).
 
 pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
   pickTypeTemplate(Tp,XTp).

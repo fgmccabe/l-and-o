@@ -11,6 +11,11 @@ lo.comp.misc{
     _str_split(Src,Pt,Before,Second),
     _str_split(Second,_str_len(Mrk),_,After).
 
+  public subPath:(string,string,string)=>string.
+  subPath(Path,Marker,Suffix) => Path+"."+Suffix :-
+    splitString(Path,Marker,_,_).
+  subPath(Path,Marker,Suffix) => Path+Marker+Suffix.
+
   public type all x,y ~~ pr[x,y] ::= pr(x,y).
 
   public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] .. {

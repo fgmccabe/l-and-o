@@ -5,7 +5,7 @@ lo.comp.repository{
   import lo.comp.misc.
   import lo.comp.parseutils.
 
-  public type repository ::= repo(uri,manifest).
+  public type repository ::= repo(uri,manifest) | nullRepo.
 
   type manifest ::= manifest(list[manifestEntry]).
 

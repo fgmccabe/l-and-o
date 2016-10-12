@@ -106,7 +106,129 @@ lo.comp.typecheck{
     reportError("no type annotation for variable $(N)",Lc),
     parseAnnotations(More,Fields,Annots,Env,Ex,Path).
 
-  private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[env]) => list[canonRule].
+  private checkVarRules:(list[defn],list[env],list[canonDef],list[canonDef],string){}.
+  checkVarRules([],_,Defs,Defs,_).
+  checkVarRules([defn(N,var,Lc,_,Stmts),..More],Env,Defs,Dx,Path) :-
+    forEvidence(pickupVarType(N,Lc,Env),pickupThisType(Env),Q,PT),
+    declareTypeVars(pairs(Q),Lc,Env,StmtEnv),
+    moveConstraints(PT,Cx,ProgramType),
+    processStmts(Stmts,ProgramType,Rules,[],StmtEnv,Path),
+    generalizeStmts(Rules,Env,Cx,Defs,D0),
+    checkVarRules(More,Env,D0,Dx,Path).
+
+  private pickupVarType:(string,location,list[env]) => tipe.
+  pickupVarType(N,_,Env)=>Tp :-
+    isVar(N,Env,vr(_,_,Tp)),!.
+  pickupVarType(N,Lc,_) => newVar("_") :- reportError("$(N) not declared",Lc).
+
+  private declareTypeVars:(list[(string,tipe)],location,list[env],list[env]){}.
+  declareTypeVars([],_,Env,Env).
+  declareTypeVars([("this",_),..Vars],Lc,Env,Ex) :- !,
+    declareTypeVars(Vars,Lc,Env,Ex).
+  declareTypeVars([(Nm,Tp),..Vars],Lc,Env,Ex) :-
+    declareTypeVars(Vars,Lc,declareTypeExists(Nm,Tp,some(Lc),Env),Ex).
+
+  private processStmts:(list[ast],tipe,list[canonRule],list[canonRule],list[env],string){}.
+  processStmts([],_,Defs,Defs,_,_).
+  processStmts([St,..More],ProgramType,Defs,Dx,Env,Path) :-
+    processStmt(St,ProgramType,Defs,D0,Env,Path)!,
+    processStmts(More,ProgramType,D0,Dx,Env,Path).
+
+  private processStmt:(ast,tipe,list[canonRule],list[canonRule],list[env],string){}.
+  processStmt(St,ProgramType,Defs,Defx,E,_) :-
+    isBinary(St,"=>",Lc,L,R),
+    checkEquation(Lc,L,iden(Lc,"true"),R,ProgramType,Defs,Defx,E).
+  processStmt(St,ProgramType,Defs,Defx,E,_) :-
+    isBinary(St,":-",Lc,L,G),
+    isBinary(L,"=>",_,H,R),
+    checkEquation(Lc,H,G,R,ProgramType,Defs,Defx,E).
+  processStmt(St,ProgramType,Defs,Defx,E,_) :-
+    isBinary(St,":-",Lc,L,G),
+    isBinary(L,"=",_,H,R),
+    checkDefn(Lc,H,G,R,ProgramType,Defs,Defx,E).
+  processStmt(St,ProgramType,Defs,Defx,E,_) :-
+    isBinary(St,":-",Lc,L,G),
+    isBinary(L,"<=",_,H,R),
+    checkClassRule(Lc,H,G,R,ProgramType,Defs,Defx,E).
+  processStmt(St,predType(AT),[clause(Lc,Nm,Args,Body),..Defs],Defs,E,_) :-
+    isBinary(St,":-",Lc,L,R),
+    splitHead(L,Nm,A),
+    typeOfTerm(A,AT,pushScope(E),E0,Lc,Args),
+    checkCond(R,E1,_,Body).
+  processStmt(St,predType(AT),[clause(Lc,Nm,Args,trueCond,..Defs],Defs,E,_) :-
+    splitHead(St,Nm,A),
+    typeOfTerm(A,AT,pushScope(E),E0,St.loc,Args).
+  processStmt(St,Tp,Defs,Dx,Env,_) :-
+    isBinary(St,"=",Lc,L,R),
+    checkDefn(Lc,L,iden(Lc,"true"),R,Tp,Defs,Dx,Env).
+  processStmt(St,ProgramType,Defs,Defx,E,_) :-
+    isBinary(St,"<=",Lc,H,R),
+    checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E).
+  processStmt(St,Tp,[clBody(Lc,Nm,tpl([]),Stmts,Others,Types),..Defs],Defs,E,Path) :-
+    isBinary(St,"..",Lc,L,R),
+    isIden(L,_,Nm),
+    subPath(Path,marker(clss),Nm,ClassPath),
+    checkClassBody(Tp,R,pushScope(E),Stmts,Others,Types,ClassPath).
+  processStmt(St,classType(AT,Tp),[clBody(Lc,Nm,Arg,Stmts,Others,Types),..Defs],Defs,E,Path) :-
+    isBinary(St,"..",Lc,L,R),
+    splitHead(L,Nm,A),
+    typeOfTerm(A,AT,pushScope(E),E1,Arg),
+    subPath(Path,marker(clss),Nm,ClassPath),
+    checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
+  processStmt(St,Tp,Defs,Dx,E,Path) :-
+    isBinary(St,"-->",Lc,L,R),
+    checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path).
+  processStmt(St,Tp,Defs,Defs,_,_) :-
+    reportError("Statement $(St) not consistent with expected type $(Tp)",St.loc).
+
+  private splitHead:(ast,string,ast){}.
+  splitHead(T,Nm,A) :- isRound(T,_,Nm,A).
+
+  private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env]){}.
+  checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Cond,Exp)|Defs],Defs,E) :-
+    splitHead(H,Nm,A),
+    typeOfTerm(A,AT,pushScope(E),E0,Lc,Args),
+    checkCond(G,E0,E1,Cond),
+    typeOfTerm(R,RT,E1,_,Exp).
+  checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_) :-
+    reportError("equation not consistent with expected type: $(ProgramType)",Lc).
+
+  private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env]){}.
+  checkClassRule(Lc,H,G,R,classType(AT,_),[clRule(Lc,Nm,Arg,Repl,Cond,SuperFace),..Defs],Defs,E) :-
+    isRound(H,_,Nm,A),
+    typeOfTerm(A,AT,pushScope(E),E1,Arg),
+    SuperTp = newVar("S"),
+    checkCond(G,E1,E2,Cond),
+    typeOfTerm(R,SuperTp,E2,_,Repl),
+    generateClassFace(SuperTp,E1,SuperFace).
+  checkClassRule(Lc,H,G,R,Tp,[clRule(Lc,Nm,tpl([]),Repl,Cond,SuperFace),..Defs],Defs,E) :-
+    isIden(H,_,Nm),
+    SuperTp = newVar("S"),
+    checkCond(G,pushScope(E),E2,Cond),
+    typeOfTerm(R,SuperTp,E2,_,Repl),
+    generateClassFace(SuperTp,E1,SuperFace).
+
+  private generateClassFace:(tipe,list[env],tipe){}.
+  generateClassFace(Tp,Env,Face) :-
+    freshen(Tp,voidType,Q,Plate),
+    (Plate = classType(_,T); T=Plate),
+    getTypeFace(T,Env,F),
+    freezeType(F,Q,Face),!.
+
+  private checkClassBody:(tipe,ast,list[env],list[canonDef],list[canonOther],list[canonDef],string){}.
+  checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
+    isBraceTuple(Body,Lc,Els),
+    getTypeFace(ClassTp,Env,Face),
+    moveConstraints(Face,_,faceType(Fields)),
+    declareVar("this",vr("this",Lc,ClassTp),pushScope(Env),ThEnv),
+    thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,ThEnv,_OEnv,Defs,Public,_Imports,Others),
+    computeExport(Defs,Fields,Public,BodyDefs,Types,[],[]).
+
+  private checkDefn:(location,ast,ast,ast,tipe,list[canonDef],list[canonDef]){}
+  checkDefn(Lc,L,C,R,Tp,[defn(Lc,Nm,Cond,Value),..Dx],Dx,E) :-
+    isIden(L,_,Nm),
+    checkCond(C,pushScope(E),E1,Cond),
+    typeOfTerm(R,Tp,E1,_,Value).
 
   private checkCond:(ast,list[env],list[env],canonCond){}.
   checkCond(Term,Env,Env,trueCond) :-
@@ -448,5 +570,55 @@ lo.comp.typecheck{
   private pushFace:(list[(string,tipe)],location,list[env]) => list[env].
   pushFace([],_,E) => E.
   pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(N),T))).
+
+  computeExport:(list[canonDef],list[(string,tipe)],list[(string,defnKind)],
+                  list[canonDef],list[canonDef],list[canonDef],list[canonDef]){}.
+  computeExport([],_,_,[],[],[],[]).
+  computeExport([Def,..Defs],Fields,Public,Exports,Types,Contracts,Impls) :-
+    exportDef(Def,Fields,Public,Exports,Ex,Types,Tx,Contracts,Cx,Impls,Ix)!,
+    computeExport(Defs,Fields,Public,Ex,Tx,Cx,Ix).
+
+  exportDef:(canonDef,list[(string,tipe)],list[(string,defnKind)],
+          list[(string,tipe)],list[(string,tipe)],
+          list[(string,tipe)],list[(string,tipe)],
+          list[canonDef],list[canonDef],
+          list[canonDef],list[canonDef]){}.
+  exportDef(function(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(predicate(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(class(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(enum(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Cons,Cons,Impl,Impl) :-
+    isPublicType(Nm,Public).
+  exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(grammar(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+    isPublicVar(Nm,Fields,Public).
+  exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con,..Cons],Cons,Impl,Impl) :-
+    isPublicContract(Con,Public).
+  exportDef(impl(_,INm,ImplName,_,Spec,_,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[imp(ImplName,Spec)|Ix],Ix) :-
+    isPublicImplementation(INm,Public)!.
+  exportDef(_,_,_,Ex,Ex,Tps,Tps,Cons,Cons,Impls,Impls).
+
+  isPublicVar:(string,list[(string,tipe)],list[(string,defnKind)]){}.
+  isPublicVar(Nm,_,Public) :-
+    (Nm,valu) in Public.
+  isPublicVar(Nm,Fields,_) :-
+    (Nm,_) in Fields).
+
+  isPublicType:(string,list[(string,defnKind)]){}.
+  isPublicType(Nm,Public) :-
+    (Nm,tpe) in Public.
+
+  isPublicContract:(canonDef,list[(string,defnKind)]){}.
+  isPublicContract(conDef(_,Nm,_,_),Public) :-
+    (Nm,con) in Public.
+
+  isPublicImplementation:(string,list[(string,defnKind)]){}.
+  isPublicImplementation(Nm,Public) :-
+    (Nm,impl) in Public.
 
 }

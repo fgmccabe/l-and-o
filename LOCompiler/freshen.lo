@@ -16,6 +16,15 @@ lo.comp.freshen{
   freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+{Nm->newVar(Nm)}).
   freshenType(T,B) => frshnType(T,B).
 
+  public forEvidence:(tipe,tipe,map[string,tipe],map[string,tipe],tipe){}.
+  forEvidence(Tp,B,Q,freshen(SkTp,Q)) :-
+    skolemize(Tp,B,Q,SkTp).
+
+  private skolemize:(tipe,map[string,tipe],map[string,tipe],tipe){}.
+  skolemize(univType(kVar(V),Tp),B,BV,FTp) :- 
+    skolemize(Tp,B+{V->skolem(V)},BV,FTp).
+  skolemize(Tp,B,B,Tp).
+
   frshnType:(tipe,map[string,tipe]) => tipe.
   frshnType(anonType,_) => anonType.
   frshnType(voidType,_) => voidType.
