@@ -15,6 +15,14 @@ lo.comp.typecheck{
   import lo.comp.macro.
   import lo.comp.repository.
 
+  public checkProgram:(ast,repository)=>canonProg.
+  checkProgram(Prog,Repo) => prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
+    isBraceTerm(Prog,Lc,Pk,Els),
+    thetaEnv(packageName(Pk),Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others),
+    findImportedImplementations(Imports,[],OverDict),
+    overload(Defs,OverDict,ODict,ODefs),
+    overloadOthers(Others,ODict,OOthers),
+    computeExport(ODefs,[],Public,Exports,Types,Contracts,Impls).
 
   private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
       list[canonDef],list[(string,defnKind)],list[(visibility,uri,version)],list[canonDef]){}.
