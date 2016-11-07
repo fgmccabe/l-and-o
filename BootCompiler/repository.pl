@@ -2,7 +2,7 @@
           locatePackage/6,locatePackage/5,
           openPackageAsStream/5,
           addPackage/5,addPackage/6,
-          packagePresent/3]).
+          packagePresent/7]).
 
 % Implement a file-based repository.
 
@@ -65,11 +65,13 @@ packageHash(Pkg,v(V),Hash) :-
   stringHash(H1,V,H2),
   hashSixtyFour(H2,Hash).
 
-packagePresent(repo(Root,man(Entries)),Pkg,Vers) :-
-  is_member(entry(Pkg,V),Entries),
-  is_member((Vers,FN),V),
-  resolveFile(Root,FN,FileNm),
-  access_file(FileNm,read).
+packagePresent(repo(Root,Man),Pkg,V,Vers,SrcFn,SrcWhen,When) :-
+  locateVersion(Man,Pkg,V,Vers,U,fl(Fn)),
+  resolveFile(Root,Fn,FileNm),
+  access_file(FileNm,read),
+  time_file(FileNm,When),
+  getUriPath(U,SrcFn),
+  time_file(SrcFn,SrcWhen).
 
 flushManifest(Root,M) :-
   showManifest(M,Chrs,[]),

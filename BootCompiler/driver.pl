@@ -1,4 +1,4 @@
-:- module(driver,[main/1,test/1]).
+:- module(driver,[main/1,test/1,openR/3]).
 
 /* Logic and Object compiler driver */
 
@@ -17,6 +17,7 @@
 :- use_module(misc).
 :- use_module(import).
 :- use_module(repository).
+:- use_module(grapher).
 
 parseFlags([],_,[],[]).
 parseFlags(['-g'|More],CWD,[debugging|Opts],Files) :- 
@@ -44,7 +45,13 @@ main(Args) :-
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,Files),
   openRepo(Opts,Repo),!,
-  processFiles(Files,CWD,Repo,Opts).
+  makeGraph(Repo,CWD,Files,Groups),
+  processGroups(Groups,[],Repo,CWD,Opts).
+
+openR(Args,CWD,Repo) :-
+  getCWDUri(CWD),
+  parseFlags(Args,CWD,Opts,_),
+  openRepo(Opts,Repo).
 
 openRepo(Opts,Repo) :-
   is_member(repository(Repo),Opts),!.
@@ -52,12 +59,29 @@ openRepo(_,Repo) :-
   getCWDUri(CWD),
   openRepository(CWD,Repo).
 
-processFiles([],_,_,_).
-processFiles([Fn|More],CWD,Repo,Opts) :-
-  processFile(Fn,CWD,Repo,Rx,Opts),!,
-  processFiles(More,CWD,Rx,Opts).
-processFiles([_|More],CWD,Repo,Opts) :-
-  processFiles(More,CWD,Repo,Opts).
+processGroups([],_,_,_,_).
+processGroups([G|L],CPkgs,Repo,CWD,Opts) :-
+  (length(G,1) ; reportError("circular dependency in packages",G)),
+  processGroup(G,CPkgs,CP0,Repo,R0,CWD,Opts),
+  processGroups(L,CP0,R0,CWD,Opts).
+
+processGroup([],CP,CP,Repo,Repo,_,_).
+processGroup([(pk(P,V),Imps,Fl)|L],CP,CPx,Repo,Rx,CWD,Opts) :-
+  processPkg(P,V,Imps,Fl,CP,CP0,CWD,Repo,R0,Opts),
+  processGroup(L,CP0,CPx,R0,Rx,CWD,Opts).
+
+processPkg(P,V,Imps,_,CP,CP,_,Repo,Repo,_) :-
+  importsOk(Imps,CP),
+  pkgOk(P,V,Repo),!,
+  reportMsg("skipping package %s",[P]).
+processPkg(P,V,_,Fl,CP,[pk(P,V)|CP],CWD,Repo,Rx,Opts) :-
+  reportMsg("compiling package %s",[P]),
+  processFile(Fl,CWD,Repo,Rx,Opts).
+
+importsOk([],_).
+importsOk([P|I],CP) :-
+  \+ is_member(P,CP),
+  importsOk(I,CP).
 
 processFile(Fl,CWD,Repo,Rx,Opts) :-
   startCount,

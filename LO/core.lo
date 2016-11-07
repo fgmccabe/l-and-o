@@ -20,7 +20,7 @@ lo.core{
   
   public 
   contract all x ~~ additive[x] .. {
-    (+):  (x,x)=>x.
+    (+): (x,x)=>x.
     (-): (x,x)=>x.
     zero: x.
   }
@@ -28,7 +28,7 @@ lo.core{
   public
   contract all x ~~ /* additive[x] |: */ arith[x] .. {
     (*): (x,x)=>x.
-    (/):  (x,x)=>x.
+    (/): (x,x)=>x.
     (%): (x,x)=>x.
     one:x.
   }

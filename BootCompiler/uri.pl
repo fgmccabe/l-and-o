@@ -156,7 +156,7 @@ resolvePath(_,net(A,P),net(A,P)).
 resolvePath(net(A,_),abs(P),net(A,P)).
 resolvePath(net(A,P),rel(Segs),net(A,NP)) :-
   reverse(P,[_|R]),
-  edit(Segs,R,NP).
+  edit(Segs,P,R,NP).
 resolvePath(abs(_),abs(P),abs(P)).
 resolvePath(abs(B),rel(P),abs(NewPath)) :-
   reverse(B,[_|R]),

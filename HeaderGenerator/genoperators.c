@@ -11,6 +11,7 @@
 static void genInfix(FILE *out, char *op, int left, int prior, int right, char *cmt);
 static void genPrefix(FILE *out, char *op, int prior, int right, char *cmt);
 static void genPostfix(FILE *out, char *op, int left, int prior, char *cmt);
+static void genToken(char *op, char *cmt);
 
 #undef lastOp
 #define lastOp sep = "\t";
@@ -48,7 +49,7 @@ enum {
 typedef struct {
   char *name;
   char *cmt;
-} OpRecord, *operatorPo;
+} TokenRecord, *tokenPo;
 
 char *prefix = NULL;
 static triePo tokenTrie;
@@ -57,7 +58,7 @@ static poolPo opPool;
 static void initTries() {
   tokenTrie = emptyTrie();
 
-  opPool = newPool(sizeof(OpRecord), 128);
+  opPool = newPool(sizeof(TokenRecord), 128);
 }
 
 int getOptions(int argc, char **argv) {
@@ -96,8 +97,8 @@ static void dumpFollows(char *K, void *V, void *cl) {
     fprintf(out, "  follows(\"%s\",0c%s,\"%s\").\n", pS(&b1[0], prefix), pC(b2, &ix, last), pS(b3, K));
 }
 
-static void dumpOperator(char *K, void *V, void *cl) {
-  operatorPo op = (operatorPo) V;
+static void dumpFinal(char *K, void *V, void *cl) {
+  tokenPo op = (tokenPo) V;
   FILE *out = (FILE *) cl;
   char b1[32], b2[32];
   if (op != NULL) {
@@ -162,6 +163,9 @@ int main(int argc, char **argv) {
 #undef postfixOp
 #define postfixOp(op, left, prior, cmt) genPostfix(out,op,left,prior,cmt);
 
+#undef token
+#define token(op,cmt) genToken(op,cmt);
+
 #include "operators.h"
 
     fprintf(out, "\n  /* Define isOperator */");
@@ -196,7 +200,7 @@ int main(int argc, char **argv) {
       ;
     }
 
-    processTrie(tokenTrie, dumpOperator, out);
+    processTrie(tokenTrie, dumpFinal, out);
 
     switch (genMode) {
       case genProlog:
@@ -211,32 +215,28 @@ int main(int argc, char **argv) {
   }
 }
 
-static void genInfix(FILE *out, char *op, int left, int prior, int right, char *cmt) {
-  char b[32];
-  fprintf(out, "  infixOp(\"%s\",%d,%d,%d).\t /* %s */\n", pS(b, op), left, prior, right, cmt);
-  operatorPo opRecord = (operatorPo) allocPool(opPool);
+static void genToken(char *op,char *cmt){
+  tokenPo opRecord = (tokenPo) allocPool(opPool);
   opRecord->name = op;
   opRecord->cmt = cmt;
   if(!isAlphaNumeric(op))
     addToTrie(op, opRecord, tokenTrie);
+}
+
+static void genInfix(FILE *out, char *op, int left, int prior, int right, char *cmt) {
+  char b[32];
+  fprintf(out, "  infixOp(\"%s\",%d,%d,%d).\t /* %s */\n", pS(b, op), left, prior, right, cmt);
+  genToken(op,cmt);
 }
 
 static void genPrefix(FILE *out, char *op, int prior, int right, char *cmt) {
   char b[32];
   fprintf(out, "  prefixOp(\"%s\",%d,%d).\t /* %s */\n", pS(b, op), prior, right, cmt);
-  operatorPo opRecord = (operatorPo) allocPool(opPool);
-  opRecord->name = op;
-  opRecord->cmt = cmt;
-  if(!isAlphaNumeric(op))
-    addToTrie(op, opRecord, tokenTrie);
+  genToken(op,cmt);
 }
 
 static void genPostfix(FILE *out, char *op, int left, int prior, char *cmt) {
   char b[32];
   fprintf(out, "  postfixOp(\"%s\",%d,%d).\t /* %s */\n", pS(b, op), left, prior, cmt);
-  operatorPo opRecord = (operatorPo) allocPool(opPool);
-  opRecord->name = op;
-  opRecord->cmt = cmt;
-  if(!isAlphaNumeric(op))
-    addToTrie(op, opRecord, tokenTrie);
+  genToken(op,cmt);
 }
