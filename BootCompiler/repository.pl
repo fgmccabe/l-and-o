@@ -79,8 +79,8 @@ flushManifest(Root,M) :-
 addToManifest(man(M),U,Pkg,Version,FileName,man(NM)) :-
   addEntry(M,U,Pkg,Version,FileName,NM).
 
-addEntry([],U,Pkg,Version,FileName,[(entry(Pkg,[(Version,U,FileName)]))]).
-addEntry([entry(Pkg,Vers)|E],U,Pkg,Version,FileName,[entry(Pkg,NV)|E]) :- !,
+addEntry([],U,Pkg,Version,FileName,[(entry(Pkg,[(pkg(Pkg,Version),U,FileName)]))]).
+addEntry([entry(Pkg,Vers)|E],U,Pkg,Version,FileName,[entry(pkg(Pkg,Vers),NV)|E]) :- !,
   addVersion(Vers,U,Version,FileName,NV).
 addEntry([E|M],U,Pkg,Version,FileName,[E|R]) :-
   addEntry(M,U,Pkg,Version,FileName,R).

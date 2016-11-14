@@ -184,7 +184,7 @@ showEntries([(Ky,Vl)|M],O,Ox) :-
 showImports(L,O,Ox) :-
   listShow(L,canon:showImport,"\n",O,Ox).
 
-showImport(import(Viz,pkg(Pkg),Version,_,_,_,_,_),O,Ox) :-
+showImport(import(Viz,pkg(Pkg,Version),_,_,_,_,_),O,Ox) :-
   showVisibility(Viz,O,O0),
   appStr("import ",O0,O1),
   appStr(Pkg,O1,O2),

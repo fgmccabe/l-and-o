@@ -72,15 +72,12 @@ showEntry(entry(Pkg,Versions),O,Ox) :-
   showVersions(Versions,O2,O3),
   appStr("  }\n",O3,Ox).
 
-showPkg(pkg(Pkg),O,Ox) :-
-  appStr(Pkg,O,Ox).
-
 showVersions([],O,O).
 showVersions([V|M],O,Ox) :-
   showVersion(V,O,O1),
   showVersions(M,O1,Ox).
 
-showVersion((V,U,F),O,Ox) :-
+showVersion((pkg(_,V),U,F),O,Ox) :-
   appStr("    ",O,O1),
   showV(V,O1,O2),
   appStr("=",O2,O3),

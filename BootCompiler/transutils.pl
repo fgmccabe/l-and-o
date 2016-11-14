@@ -142,7 +142,7 @@ makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
 
-makeImportMap(import(_,pkg(Pkg),_,faceType(Fields),_,Classes,_,Impls),Map,Mx) :-
+makeImportMap(import(_,pkg(Pkg,_),faceType(Fields),_,Classes,_,Impls),Map,Mx) :-
   importFields(Pkg,Classes,Fields,Map,M0),
   importImplementations(Impls,M0,Mx).
 

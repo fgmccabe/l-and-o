@@ -40,7 +40,7 @@ thetaEnv(Pkg,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-importDefs(spec(_,_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
+importDefs(spec(_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
   declareFields(Exported,Lc,Env,E0),
   importTypes(Types,Lc,E0,E1),
   importContracts(Cons,Lc,E1,Ex).
@@ -80,10 +80,10 @@ importAll(Imports,Repo,AllImports) :-
   closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
 
 importAllDefs([],_,[],_,Env,Env).
-importAllDefs([import(Viz,Pkg,Vers)|More],Lc,
-      [import(Viz,Pkg,Vers,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
-  importPkg(Pkg,Vers,Repo,Spec),
-  Spec = spec(_,_,Exported,Types,Classes,Contracts,Impls,_),
+importAllDefs([import(Viz,Pkg)|More],Lc,
+      [import(Viz,Pkg,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
+  importPkg(Pkg,Repo,Spec),
+  Spec = spec(_,Exported,Types,Classes,Contracts,Impls,_),
   importDefs(Spec,Lc,Env,Ev0),
   importAllDefs(More,Lc,Specs,Repo,Ev0,Ex).
 
@@ -93,22 +93,22 @@ importContracts([C|L],Lc,E,Env) :-
   defineContract(Nm,Lc,C,E,E0),
   importContracts(L,Lc,E0,Env).
 
-notAlreadyImported(import(_,Pkg,Vers),SoFar) :-
-  \+ is_member(import(_,Pkg,Vers),SoFar),!.
+notAlreadyImported(import(_,Pkg),SoFar) :-
+  \+ is_member(import(_,Pkg),SoFar),!.
 
-importMore(Repo,import(Viz,Pkg,Vers),SoFar,[import(Viz,Pkg,Vers)|SoFar],Inp,More) :-
-  importPkg(Pkg,Vers,Repo,spec(_,_,_,_,_,_,_,Imports)),
+importMore(Repo,import(Viz,Pkg),SoFar,[import(Viz,Pkg)|SoFar],Inp,More) :-
+  importPkg(Pkg,Repo,spec(_,_,_,_,_,_,Imports)),
   addPublicImports(Imports,Inp,More).
-importMore(_,import(_,Pkg,Vers),SoFar,SoFar,Inp,Inp) :-
-  reportError("could not import package %s,%s",[Pkg,Vers]).
+importMore(_,import(_,Pkg),SoFar,SoFar,Inp,Inp) :-
+  reportError("could not import package %s",[Pkg]).
 
 addPublicImports([],Imp,Imp).
-addPublicImports([import(public,Pkg,Vers)|I],Rest,[import(public,Pkg,Vers)|Out]) :-
+addPublicImports([import(public,Pkg)|I],Rest,[import(public,Pkg)|Out]) :-
   addPublicImports(I,Rest,Out).
-addPublicImports([import(private,_,_)|I],Rest,Out) :-
+addPublicImports([import(private,_)|I],Rest,Out) :-
   addPublicImports(I,Rest,Out).
 
-findImportedImplementations([import(_,_,_,_,_,_,_,Impls)|Specs],D,OverDict) :-
+findImportedImplementations([import(_,_,_,_,_,_,Impls)|Specs],D,OverDict) :-
   rfold(Impls,checker:declImpl,D,D1),
   findImportedImplementations(Specs,D1,OverDict).
 findImportedImplementations([],D,D).
