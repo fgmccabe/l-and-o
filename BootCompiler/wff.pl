@@ -1,5 +1,5 @@
 :-module(wff,[isAlgebraicTypeDef/6,isQuantified/3,getQuantifiers/3,isConstrained/3,
-    isContractSpec/6,packageName/2,pkgName/3,sameLength/3,deComma/2,tupleize/4]).
+    isContractSpec/6,packageName/2,pkgName/2,sameLength/3,deComma/2,tupleize/4]).
 :-use_module(abstract).
 :-use_module(misc).
 
@@ -29,7 +29,6 @@ contractSpec(S,[],Constraints,Con) :-
   isBinary(S,"|:",L,Con),
   deComma(L,Constraints).
 contractSpec(S,[],[],S).
-
 
 isConstrained(T,C,R) :-
   isBinary(T,"|:",L,R),
