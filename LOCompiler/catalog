@@ -8,6 +8,7 @@ catalog{
     lo.comp.decode -> "decode.lo".
     lo.comp.dependencies -> "dependencies.lo".
     lo.comp.dict -> "dict.lo".
+    lo.comp.driver -> "driver.lo".
     lo.comp.encode -> "encode.lo".
     lo.comp.errors -> "errors.lo".
     lo.comp.escapes -> "escapes.lo".
