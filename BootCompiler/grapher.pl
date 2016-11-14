@@ -1,4 +1,4 @@
-:- module(grapher,[scanPkg/6,scanFile/5,graphPkgs/2,makeGraph/4,pkgOk/3]).
+:- module(grapher,[scanPkg/6,scanFile/6,makeGraph/5,pkgOk/2]).
 
 :- use_module(topsort).
 :- use_module(uri).
@@ -9,48 +9,58 @@
 :- use_module(misc).
 :- use_module(abstract).
 :- use_module(import).
+:- use_module(catalog).
 
-makeGraph(Repo,CWD,Fls,Groups) :-
-  scanFiles(Fls,Repo,CWD,[],Pkgs),
+makeGraph(Repo,Cat,CWD,Fls,Groups) :-
+  scanPkgs(Fls,Repo,Cat,CWD,[],Pkgs),
   graphPkgs(Pkgs,Groups).
 
 graphPkgs(Pkgs,Groups) :-
   topsort(Pkgs,Groups).
 
-scanPkg(Pkg,Vers,_,_,SoFar,SoFar) :-
-  is_member((pk(Pkg,Vers),_,_,_),SoFar),!.
-scanPkg(Pkg,Vers,Repo,CWD,SoFar,Pkgs) :-
-  packagePresent(Repo,Pkg,Vers,_,SrcFn,SrcWhen,CodeWhen),
-  ( CodeWhen>SrcWhen ->
-    importPkg(Pkg,Vers,Repo,Spec),
-    checkPkg(Spec,Repo,CWD,SrcFn,SoFar,Pkgs) ;
-    scanFile(SrcFn,CWD,Repo,SoFar,Pkgs)).
+scanPkgs([],_,_,_,Pkgs,Pkgs).
+scanPkgs([P|L],Repo,Cat,CWD,SoFar,Pkgs) :-
+  parsePkgName(P,Pkg),
+  scanPkg(Pkg,Repo,Cat,CWD,SoFar,P1),
+  scanPkgs(L,Repo,Cat,CWD,P1,Pkgs).
 
-checkPkg(spec(Pkg,Vers,_,_,_,_,_,Imports),Repo,CWD,SrcFn,SoFar,Pkgs) :-
+scanPkg(Pkg,_,_,_,SoFar,SoFar) :-
+  is_member((Pkg,_,_,_),SoFar),!.
+scanPkg(Pkg,Repo,Cat,CWD,SoFar,Pkgs) :-
+  packagePresent(Repo,Pkg,_,SrcFn,SrcWhen,CodeWhen),
+  ( CodeWhen>SrcWhen ->
+    importPkg(Pkg,Repo,Spec),
+    checkPkg(Spec,Repo,Cat,CWD,SrcFn,SoFar,Pkgs) ;
+    scanFile(SrcFn,Repo,Cat,CWD,SoFar,Pkgs)).
+scanPkg(Pkg,Repo,Cat,CWD,Pi,Px) :-
+  resolveCatalog(Cat,Pkg,Uri),
+  scanFile(Uri,Repo,Cat,CWD,Pi,Px).
+
+parsePkgName(P,pkg(Pkg,Version)) :-
+  sub_string(P,Before,_,After,"#"),!,
+  sub_string(P,0,Before,_,Pkg),
+  sub_string(P,_,After,0,Version).
+parsePkgName(P,pkg(P,defltVersion)).
+
+checkPkg(spec(Pkg,_,_,_,_,_,Imports),Repo,Cat,CWD,SrcFn,SoFar,Pkgs) :-
   reformatImports(Imports,Imps),
-  scanImports(Imps,Repo,CWD,[(pk(Pkg,Vers),Imps,Imps,SrcFn)|SoFar],Pkgs).
+  scanImports(Imps,Repo,Cat,CWD,[(Pkg,Imps,Imps,SrcFn)|SoFar],Pkgs).
 
 reformatImports([],[]).
-reformatImports([import(_,P,V)|L],[pk(P,V)|M]) :- reformatImports(L,M).
+reformatImports([import(_,P)|L],[P|M]) :- reformatImports(L,M).
 
-scanImports([],_,_,Pkgs,Pkgs).
-scanImports([pk(Pkg,Vers)|Imports],Repo,CWD,SoFar,Pkgs) :-
-  scanPkg(Pkg,Vers,Repo,CWD,SoFar,Pkg1),
-  scanImports(Imports,Repo,CWD,Pkg1,Pkgs).
+scanImports([],_,_,_,Pkgs,Pkgs).
+scanImports([Pkg|Imports],Repo,Cat,CWD,SoFar,Pkgs) :-
+  scanPkg(Pkg,Repo,Cat,CWD,SoFar,Pkg1),
+  scanImports(Imports,Repo,Cat,CWD,Pkg1,Pkgs).
 
-scanFiles([],_,_,Pkgs,Pkgs).
-scanFiles([Fl|L],Repo,CWD,SoFar,Pkgs) :-
-  scanFile(Fl,CWD,Repo,SoFar,P1),
-  scanFiles(L,Repo,CWD,P1,Pkgs).
-
-scanFile(Fl,CWD,Repo,SoFar,Pkgs) :-
-  parseFile(Fl,CWD,Term),
+scanFile(Fl,Repo,Cat,CWD,SoFar,Pkgs) :-
+  parseFile(Fl,Term),
   scanForImports(Term,Pkg,Imps),
-  scanImports(Imps,Repo,CWD,[(pk(pkg(Pkg),defltVersion),Imps,Imps,Fl)|SoFar],Pkgs).
+  scanImports(Imps,Repo,Cat,CWD,[(pkg(Pkg,defltVersion),Imps,Imps,Fl)|SoFar],Pkgs).
 
-parseFile(Fl,CWD,Term) :-
-  getSrcUri(Fl,CWD,FUrl),
-  locateResource(FUrl,Txt),
+parseFile(Fl,Term) :-
+  locateResource(Fl,Txt),
   allTokens(Txt,Toks),
   parse(Toks,Term,_), !.
 
@@ -85,11 +95,11 @@ scanStmt(St,Imp,More) :-
 scanStmt(St,Imp,More) :-
   isUnary(St,"private",El),!,
   scanStmt(El,Imp,More).
-scanStmt(St,[pk(pkg(Pk),defltVersion)|More],More) :- 
+scanStmt(St,[pkg(Pk,defltVersion)|More],More) :- 
   isUnary(St,"import",P),
   scanPackageName(P,Pk).
 scanStmt(_,Imp,Imp).
 
-pkgOk(Pkg,Vers,Repo) :-
-  packagePresent(Repo,Pkg,Vers,_,_,SrcWhen,CodeWhen),
+pkgOk(Pkg,Repo) :-
+  packagePresent(Repo,Pkg,_,_,SrcWhen,CodeWhen),
   CodeWhen>SrcWhen.

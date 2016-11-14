@@ -1,5 +1,5 @@
 :-module(wff,[isAlgebraicTypeDef/6,isQuantified/3,getQuantifiers/3,isConstrained/3,
-    isContractSpec/6,packageName/2,packageName/3,sameLength/3,deComma/2,tupleize/4]).
+    isContractSpec/6,packageName/2,pkgName/3,sameLength/3,deComma/2,tupleize/4]).
 :-use_module(abstract).
 :-use_module(misc).
 
@@ -51,11 +51,11 @@ packageName(T,Pkg) :- isBinary(T,".",L,R),
   string_concat(LP,".",I),
   string_concat(I,RP,Pkg).
 
-packageName(T,pkg(Pkg),v(Version)) :-
+pkgName(T,pkg(Pkg,v(Version))) :-
   isBinary(T,"#",L,R),
   packageName(L,Pkg),
   packageVersion(R,Version).
-packageName(T,pkg(Pkg),defltVersion) :-
+pkgName(T,pkg(Pkg,defltVersion)) :-
   packageName(T,Pkg).
 
 packageVersion(T,Pkg) :- isIden(T,Pkg).

@@ -1,0 +1,13 @@
+catalog{
+  content {
+    lo.core -> "core.lo".
+    lo.bits -> "bits.lo".
+    lo.coerce -> "coerce.lo".
+    lo.index -> "index.lo".
+    lo.resources -> "resources.lo".
+    lo.uri -> "uri.lo".
+    lo.topsort -> "topsort.lo".
+    lo -> "lo.lo".
+    lo.list -> "lists.lo".
+  }
+}

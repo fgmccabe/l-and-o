@@ -5,8 +5,9 @@
         subPath/4,pathSuffix/3,starts_with/2,ends_with/2,
         localName/4,
         listShow/5,
-        stringHash/3,hashSixtyFour/2,
-        marker/2]).
+        stringHash/3,hashSixtyFour/2,stringEndsWith/2,
+        marker/2,
+        interleave/3,concatStrings/2]).
 
 concat([],X,X).
 concat([E|X],Y,[E|Z]) :- concat(X,Y,Z).
@@ -49,6 +50,22 @@ subtract(E,[X|I],[X|O]) :-
 intersect([],_,[]).
 intersect([E|X],Y,[E|Z]) :- is_member(E,Y), intersect(X,Y,Z).
 intersect([_|X],Y,Z) :- intersect(X,Y,Z).
+
+interleave([],_,[]).
+interleave([F|L],S,[F|M]) :-
+  mixin(L,S,M).
+  
+mixin([],_,[]).
+mixin([F|L],S,[S,F|M]) :- mixin(L,S,M).
+
+concatStrings(L,S) :-
+  concStrings(L,O,[]),
+  string_chars(S,O).
+
+concStrings([],O,O).
+concStrings([S|L],I,O) :-
+  appStr(S,I,I0),
+  concStrings(L,I0,O).
 
 collect([],_,[],[]) :- !.
 collect([El|More],T,[El|Ok],Not) :-
@@ -138,3 +155,6 @@ listShowMore([E|L],C,S,O,Ox) :-
   appStr(S,O,O1),
   call(C,E,O1,O2),
   listShowMore(L,C,S,O2,Ox).
+
+stringEndsWith(S,E) :-
+  string_concat(_,E,S).

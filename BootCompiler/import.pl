@@ -1,4 +1,4 @@
-:- module(import, [importPkg/3,importPkg/4,loadPkg/5]).
+:- module(import, [importPkg/3,loadPkg/5]).
 
 % This is specific to the Prolog translation of L&O code
  
@@ -10,12 +10,9 @@
 :- use_module(decode).
 :- use_module(repository).
 
-importPkg(Pkg,Repo,Spec) :-
-  importPkg(Pkg,defltVersion,Repo,Spec).
-
-importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
-  openPackageAsStream(Repo,Pkg,Vers,_,Strm),
-  pickupPieces(Strm,Pkg,[export,types,classes,contracts,implementations],Pieces),
+importPkg(Pkg,Repo,spec(Act,Export,Types,Classes,Contracts,Impls,Imports)) :-
+  openPackageAsStream(Repo,Pkg,Act,_,Strm),
+  pickupPieces(Strm,Act,[export,types,classes,contracts,implementations],Pieces),
   close(Strm),
   processPieces(Pieces,Export,Types,Imports,Classes,Contracts,Impls).
 
@@ -28,10 +25,10 @@ pickupPieces(Strm,Pkg,Lookfor,Pieces) :-
   isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More),
   pickupPieces(Strm,Pkg,Rest,More).
 
-isAPiece(F,Args,pkg(Pkg),L,L,[Term|Pieces],Pieces) :-
+isAPiece(F,Args,pkg(Pkg,_),L,L,[Term|Pieces],Pieces) :-
   localName(Pkg,"#","import",F),!,
   Term =..['import'|Args].
-isAPiece(F,Args,pkg(Pkg),[L|Rest],Rest,[Term|Pieces],Pieces) :-
+isAPiece(F,Args,pkg(Pkg,_),[L|Rest],Rest,[Term|Pieces],Pieces) :-
   localName(Pkg,"#",L,F),!,
   Term =..[L|Args].
 isAPiece(F,Args,Pkg,[L|Lookfor],[L|Rest],Pieces,More) :-
@@ -106,6 +103,6 @@ loadPieces(Strm,Pkg,Code,Imports) :-
     Imports = [I|MoreImports], loadPieces(Strm,Pkg,Code,MoreImports) ;
     Code = [Term|MoreCode], loadPieces(Strm,Pkg,MoreCode,Imports)).
 
-massageImport([Viz,Pkg,'*'],import(Viz,pkg(Pkg),defltVersion)).
-massageImport([Viz,Pkg,Vers],import(Viz,pkg(Pkg),v(Vers))).
+massageImport([Viz,Pkg,'*'],import(Viz,pkg(Pkg,defltVersion))).
+massageImport([Viz,Pkg,Vers],import(Viz,pkg(Pkg,v(Vers)))).
 

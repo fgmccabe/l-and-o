@@ -3,6 +3,7 @@
 :- use_module(ocall).
 :- use_module(polyfill).
 :- use_module(repository).
+:- use_module(catalog).
 :- use_module(import).
 :- use_module(uri).
 :- use_module(misc).

@@ -1,0 +1,34 @@
+catalog{
+  content {
+    lo.comp.abstract -> "abstract.lo".
+    lo.comp.ast -> "ast.lo".
+    lo.comp.base64 -> "base64.lo".
+    lo.comp.canon -> "canon.lo".
+    lo.comp.typecheck -> "checker.lo".
+    lo.comp.decode -> "decode.lo".
+    lo.comp.dependencies -> "dependencies.lo".
+    lo.comp.dict -> "dict.lo".
+    lo.comp.encode -> "encode.lo".
+    lo.comp.errors -> "errors.lo".
+    lo.comp.escapes -> "escapes.lo".
+    lo.comp.freshen -> "freshen.lo".
+    lo.comp.grammar -> "grammar.lo".
+    lo.comp.imports -> "imports.lo".
+    lo.comp.keywords -> "keywords.lo".
+    lo.comp.lexer -> "lexer.lo".
+    lo.comp.location -> "location.lo".
+    lo.comp.macro -> "macro.lo".
+    lo.comp.misc -> "misc.lo".
+    lo.comp.operators -> "operators.lo".
+    lo.comp.parseType -> "parsetype.lo".
+    lo.comp.parseutils -> "parseutils.lo".
+    lo.comp.regexp -> "regexp.lo".
+    lo.comp.repository -> "repository.lo".
+    lo.comp.term -> "term.lo".
+    lo.comp.token -> "token.lo".
+    lo.comp.types -> "types.lo".
+    lo.comp.unify -> "unify.lo".
+    lo.comp.wff -> "wff.lo".
+  }
+  default: "../LO/catalog".
+}

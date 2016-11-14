@@ -67,9 +67,9 @@ findImport(St,Lc,_,Spec) :-
 findImport(St,Lc,_,Spec) :-
   isUnary(St,Lc,"public",I),
   findImport(I,_,public,Spec).
-findImport(St,Lc,Viz,import(Viz,Pkg,Version)) :-
+findImport(St,Lc,Viz,import(Viz,Pkg)) :-
   isUnary(St,Lc,"import",P),
-  packageName(P,Pkg,Version).
+  pkgName(P,Pkg).
 
 processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex) :-
   findAllImports(Stmts,Lc,Imports),
@@ -545,8 +545,8 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
 typeOfTerm(Term,Tp,Env,Env,pkgRef(Lc,Pkg,Fld)) :-
   isBinary(Term,Lc,"#",L,F), !,
   isIden(F,FLc,Fld),
-  packageName(L,Pkg,Version),
-  isExported(Pkg,Version,Fld,ExTp),
+  pkgName(L,Pkg),
+  isExported(Pkg,Fld,ExTp),
   freshen(ExTp,voidType,_,FlTp), % replace with package type
   checkType(FLc,FlTp,Tp,Env).
 typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-

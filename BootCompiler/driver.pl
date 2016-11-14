@@ -1,4 +1,4 @@
-:- module(driver,[main/1,test/1,openR/3]).
+:- module(driver,[main/1,test/1,openR/5]).
 
 /* Logic and Object compiler driver */
 
@@ -19,22 +19,27 @@
 :- use_module(repository).
 :- use_module(grapher).
 
-parseFlags([],_,[],[]).
-parseFlags(['-g'|More],CWD,[debugging|Opts],Files) :- 
-  parseFlags(More,CWD,Opts,Files).
-parseFlags(['-p'|More],CWD,[profiling|Opts],Files) :- 
-  parseFlags(More,CWD,Opts,Files).
-parseFlags(['-r', R|More],CWD,[repository(Repo)|Opts],Files) :- 
+parseFlags([],CWD,CWD,[],[]).
+parseFlags(['-g'|More],CWD,Cx,[debugging|Opts],Files) :- 
+  parseFlags(More,CWD,Cx,Opts,Files).
+parseFlags(['-p'|More],CWD,Cx,[profiling|Opts],Files) :- 
+  parseFlags(More,CWD,Cx,Opts,Files).
+parseFlags(['-w',W|M],CW,Cx,Opts,Files) :-
+  atom_string(W,WN),
+  parseURI(WN,WU),
+  resolveURI(CW,WU,CWD),
+  parseFlags(M,CWD,Cx,Opts,Files).
+parseFlags(['-r', R|More],CWD,Cx,[repository(Repo)|Opts],Files) :- 
   atom_string(R,RN),
   parseURI(RN,RU),
   resolveURI(CWD,RU,Ruri),
   openRepository(Ruri,Repo),
-  parseFlags(More,CWD,Opts,Files).
-parseFlags(['-v', V|More],CWD,[version(Vers)|Opts],Files) :-
+  parseFlags(More,CWD,Cx,Opts,Files).
+parseFlags(['-v', V|More],CWD,Cx,[version(Vers)|Opts],Files) :-
   atom_string(V,Vers),
-  parseFlags(More,CWD,Opts,Files).
-parseFlags(['--'|More], _, [], Files) :- stringify(More,Files).
-parseFlags(More, _, [], Files) :- stringify(More,Files).
+  parseFlags(More,CWD,Cx,Opts,Files).
+parseFlags(['--'|More], CWD,CWD, [], Files) :- stringify(More,Files).
+parseFlags(More, CWD,CWD, [], Files) :- stringify(More,Files).
 
 stringify([],[]).
 stringify([Name|More],[Fn|Files]) :- 
@@ -42,16 +47,19 @@ stringify([Name|More],[Fn|Files]) :-
   stringify(More,Files).
 
 main(Args) :- 
-  getCWDUri(CWD),
-  parseFlags(Args,CWD,Opts,Files),
-  openRepo(Opts,Repo),!,
-  makeGraph(Repo,CWD,Files,Groups),
+  getCWDUri(CW),
+  parseFlags(Args,CW,CWD,Opts,Pkgs),
+  openRepo(Opts,Repo),
+  locateCatalog(CWD,Cat),!,
+  makeGraph(Repo,Cat,CWD,Pkgs,Groups),
   processGroups(Groups,[],Repo,CWD,Opts).
 
-openR(Args,CWD,Repo) :-
-  getCWDUri(CWD),
-  parseFlags(Args,CWD,Opts,_),
-  openRepo(Opts,Repo).
+openR(Args,CWD,Cat,Repo,Groups) :-
+  getCWDUri(CW),
+  parseFlags(Args,CW,CWD,Opts,Pkgs),
+  openRepo(Opts,Repo),
+  locateCatalog(CWD,Cat),
+  makeGraph(Repo,Cat,CWD,Pkgs,Groups).
 
 openRepo(Opts,Repo) :-
   is_member(repository(Repo),Opts),!.
@@ -61,32 +69,31 @@ openRepo(_,Repo) :-
 
 processGroups([],_,_,_,_).
 processGroups([G|L],CPkgs,Repo,CWD,Opts) :-
-  (length(G,1) ; reportError("circular dependency in packages",G)),
+  (length(G,1) ; reportError("circular dependency in packages %s",G)),
   processGroup(G,CPkgs,CP0,Repo,R0,CWD,Opts),
   processGroups(L,CP0,R0,CWD,Opts).
 
 processGroup([],CP,CP,Repo,Repo,_,_).
-processGroup([(pk(P,V),Imps,Fl)|L],CP,CPx,Repo,Rx,CWD,Opts) :-
-  processPkg(P,V,Imps,Fl,CP,CP0,CWD,Repo,R0,Opts),
+processGroup([(P,Imps,Fl)|L],CP,CPx,Repo,Rx,CWD,Opts) :-
+  processPkg(P,Imps,Fl,CP,CP0,Repo,R0,Opts),
   processGroup(L,CP0,CPx,R0,Rx,CWD,Opts).
 
-processPkg(P,V,Imps,_,CP,CP,_,Repo,Repo,_) :-
+processPkg(P,Imps,_,CP,CP,Repo,Repo,_) :-
   importsOk(Imps,CP),
-  pkgOk(P,V,Repo),!,
+  pkgOk(P,Repo),!,
   reportMsg("skipping package %s",[P]).
-processPkg(P,V,_,Fl,CP,[pk(P,V)|CP],CWD,Repo,Rx,Opts) :-
+processPkg(P,_,Fl,CP,[P|CP],Repo,Rx,Opts) :-
   reportMsg("compiling package %s",[P]),
-  processFile(Fl,CWD,Repo,Rx,Opts).
+  processFile(Fl,P,Repo,Rx,Opts).
 
 importsOk([],_).
 importsOk([P|I],CP) :-
   \+ is_member(P,CP),
   importsOk(I,CP).
 
-processFile(Fl,CWD,Repo,Rx,Opts) :-
+processFile(SrcUri,Pkg,Repo,Rx,Opts) :-
   startCount,
-  getSrcUri(Fl,CWD,SrcUri,FUrl),
-  locateResource(FUrl,Src),
+  locateResource(SrcUri,Src),
   parseFile(Src,Term),!,
   noErrors,
   checkProgram(Term,Repo,Prog),!,
@@ -96,11 +103,7 @@ processFile(Fl,CWD,Repo,Rx,Opts) :-
   noErrors,
   displayPlRules(Rules),
   genRules(Rules,Text),
-  packageName(Prog,Pkg),
-  packageVersion(Opts,Vers),
-  addPackage(Repo,SrcUri,Pkg,Vers,Text,Rx).
-
-packageName(prog(Pkg,_,_,_,_,_,_,_),Pkg).
+  addPackage(Repo,SrcUri,Pkg,Text,Rx).
 
 packageVersion(Opts,v(Vers)) :-
   is_member(version(Vers),Opts),!.
