@@ -2,6 +2,7 @@ catalog{
   content {
     lo.comp.abstract -> "abstract.lo".
     lo.comp.ast -> "ast.lo".
+    lo.comp.args -> "args.lo".
     lo.comp.base64 -> "base64.lo".
     lo.comp.canon -> "canon.lo".
     lo.comp.catalog -> "catalog.lo".

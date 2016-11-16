@@ -40,7 +40,7 @@ locateVersion(man(Entries),pkg(Pkg,Vers),Act,U,Fn) :-
   is_member(entry(Pkg,Versions),Entries),
   getVersion(Vers,Versions,Act,U,Fn).
 
-getVersion(Vers,V,Vers,U,Fn) :- is_member((Vers,U,Fn),V),!.
+getVersion(Vers,V,Vers,U,Fn) :- is_member((pkg(_,Vers),U,Fn),V),!.
 getVersion(defltVersion,V,Act,U,Fn) :- is_member((Act,U,Fn),V),!.
 
 addPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text,repo(Root,NM)) :-
@@ -80,8 +80,8 @@ addToManifest(man(M),U,Pkg,Version,FileName,man(NM)) :-
   addEntry(M,U,Pkg,Version,FileName,NM).
 
 addEntry([],U,Pkg,Version,FileName,[(entry(Pkg,[(pkg(Pkg,Version),U,FileName)]))]).
-addEntry([entry(Pkg,Vers)|E],U,Pkg,Version,FileName,[entry(pkg(Pkg,Vers),NV)|E]) :- !,
-  addVersion(Vers,U,Version,FileName,NV).
+addEntry([entry(Pkg,Vers)|E],U,Pkg,Version,FileName,[entry(Pkg,NV)|E]) :- !,
+  addVersion(Vers,U,pkg(Pkg,Version),FileName,NV).
 addEntry([E|M],U,Pkg,Version,FileName,[E|R]) :-
   addEntry(M,U,Pkg,Version,FileName,R).
 

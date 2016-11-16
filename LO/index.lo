@@ -3,6 +3,7 @@ lo.index{
 
   import lo.core.
   import lo.list.
+  import lo.collection.
 
   public
   contract all m,k,v ~~ /*equality[k] |: */ map[m ->> k,v] .. {

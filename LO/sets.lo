@@ -1,0 +1,19 @@
+lo.sets {
+  import lo.
+  import lo.collection.
+
+  public contract all k,e ~~ setops[k->>e] .. {
+    union : (k,k)=>k.
+    intersect : (k,k)=>k.
+    difference : (k,k)=>k.
+    pick: (k,e){}.
+    empty: k.
+  }.
+
+  public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
+
+  public implementation all e ~~ equality[e] |: setops[set[e]] .. {
+    union(set(M1),set(M2)) => set(M1+M2).
+    intersect(set[M1],set[M2]) => set()
+  }
+}

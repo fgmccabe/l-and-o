@@ -4,6 +4,7 @@ lo{
   public import lo.index.
   public import lo.coerce.
   public import lo.bits.
+  public import lo.collection.
 
   public flatten : (ss) => list[integer].
   flatten(D) => flttn(D,[]).

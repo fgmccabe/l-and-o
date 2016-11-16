@@ -9,5 +9,7 @@ catalog{
     lo.topsort -> "topsort.lo".
     lo -> "lo.lo".
     lo.list -> "lists.lo".
+    lo.sets -> "sets.lo".
+    lo.collection -> "collection.lo".
   }
 }
