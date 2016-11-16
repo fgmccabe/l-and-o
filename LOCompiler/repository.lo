@@ -4,14 +4,10 @@ lo.comp.repository{
   import lo.resources.
   import lo.comp.misc.
   import lo.comp.parseutils.
+  import lo.comp.package.
+  import lo.comp.manifest.
 
   public type repository ::= repo(uri,manifest) | nullRepo.
-
-  type manifest ::= manifest(list[manifestEntry]).
-
-  type manifestEntry ::= manifestEntry(string,list[(version,uri,string)]).
-
-  public type version ::= vers(string) | defaultVersion.
 
   public openRepository:(uri) => repository.
   openRepository(Root) => repo(Root,Manifest) :- 

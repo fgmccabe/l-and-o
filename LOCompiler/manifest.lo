@@ -1,0 +1,11 @@
+lo.comp.manifest{
+  import lo.
+  import lo.resource.
+  import lo.uri.
+  import lo.comp.package.
+
+  public type manifest ::= manifest(list[manifestEntry]).
+
+  type manifestEntry ::= manifestEntry(string,list[(package,uri,string)]).
+  
+}

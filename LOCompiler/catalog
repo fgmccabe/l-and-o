@@ -4,6 +4,7 @@ catalog{
     lo.comp.ast -> "ast.lo".
     lo.comp.base64 -> "base64.lo".
     lo.comp.canon -> "canon.lo".
+    lo.comp.catalog -> "catalog.lo".
     lo.comp.typecheck -> "checker.lo".
     lo.comp.decode -> "decode.lo".
     lo.comp.dependencies -> "dependencies.lo".
