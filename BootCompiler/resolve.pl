@@ -92,6 +92,8 @@ defineCVars(Lc,[Con|Cx],Dict,[NV|CVars],FDict) :-
   implementationName(Con,ImplNm),
   genVar(ImplNm,Lc,NV),
   defineCVars(Lc,Cx,[(ImplNm,NV)|Dict],CVars,FDict).
+defineCVars(Lc,[implementsFace(_,_)|Cx],Dict,CVars,FDict) :-
+  defineCVars(Lc,Cx,Dict,CVars,FDict).
 
 resolveTerm(void,_,void).
 resolveTerm(v(Lc,Nm),_,v(Lc,Nm)).

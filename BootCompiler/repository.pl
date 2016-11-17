@@ -40,7 +40,7 @@ locateVersion(man(Entries),pkg(Pkg,Vers),Act,U,Fn) :-
   is_member(entry(Pkg,Versions),Entries),
   getVersion(Vers,Versions,Act,U,Fn).
 
-getVersion(Vers,V,Vers,U,Fn) :- is_member((pkg(_,Vers),U,Fn),V),!.
+getVersion(Vers,V,pkg(Pkg,Vers),U,Fn) :- is_member((pkg(Pkg,Vers),U,Fn),V),!.
 getVersion(defltVersion,V,Act,U,Fn) :- is_member((Act,U,Fn),V),!.
 
 addPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text,repo(Root,NM)) :-

@@ -6,6 +6,7 @@
 :- use_module(lexer).
 :- use_module(grammar).
 :- use_module(repository).
+:- use_module(manifest).
 :- use_module(misc).
 :- use_module(abstract).
 :- use_module(import).

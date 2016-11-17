@@ -232,8 +232,9 @@ checkVarRules([(var(N),Lc,Stmts)|More],Env,Defs,Dx,Path) :-
   pickupVarType(N,Lc,Env,Tp),
   pickupThisType(Env,ThisType),
   evidence(Tp,ThisType,Q,PT),
-  declareTypeVars(Q,Lc,Env,StmtEnv),
+  declareTypeVars(Q,Lc,Env,SEnv),
   moveConstraints(PT,Cx,ProgramType),
+  declareConstraints(Cx,SEnv,StmtEnv),
   processStmts(Stmts,ProgramType,Rules,[],StmtEnv,Path),
   generalizeStmts(Rules,Env,Cx,Defs,D0),
   checkVarRules(More,Env,D0,Dx,Path).
@@ -254,6 +255,11 @@ declareTypeVars([(thisType,_)|Vars],Lc,Env,Ex) :- !,
 declareTypeVars([(Nm,Tp)|Vars],Lc,Env,Ex) :-
   declareType(Nm,tpDef(Lc,Tp,voidType),Env,E0),
   declareTypeVars(Vars,Lc,E0,Ex).
+
+declareConstraints([],Env,Env).
+declareConstraints([C|L],E,Ex) :-
+  declareConstraint(C,E,E0),
+  declareConstraints(L,E0,Ex).
 
 findType(Nm,_,Env,Tp) :-
   isType(Nm,Env,tpDef(_,T,_)),

@@ -30,43 +30,44 @@ evidence(Tp,ThisType,Q,ProgramType) :-
   frshn(SkTp,Q,ProgramType).
 
 freshn(Tp,[],Tp) :- !.
-freshn(Tp,Binding,FTp) :- frshn(Tp,Binding,FTp),!.
+freshn(Tp,Binding,FTp) :- deRef(Tp,T),frshn(T,Binding,FTp),!.
 
 skolemize(univType(kVar(V),Tp),B,BV,FTp) :- readOnlyTypeVar(V,TV),skolemize(Tp,[(V,TV)|B],BV,FTp).
 skolemize(Tp,B,B,Tp).
 
-rewriteType(Tp,Q,WTp) :-
+rewriteType(T,Q,WTp) :-
+  deRef(T,Tp),
   frshn(Tp,Q,WTp).
 
 frshn(anonType,_,anonType).
 frshn(voidType,_,voidType) :- !.
 frshn(thisType,B,Tp) :- (is_member((thisType,Tp),B),! ; Tp=thisType).
 frshn(kVar(TV),B,Tp) :- (is_member((TV,Tp),B),! ; Tp=kVar(TV)).
-frshn(tVar(V),_,tVar(V)).
+frshn(V,_,V) :- isUnbound(V),!.
 frshn(type(Nm),_,type(Nm)).
 frshn(funType(A,R),B,funType(FA,FR)) :-
   frshnTypes(A,B,FA),
-  frshn(R,B,FR).
+  rewriteType(R,B,FR).
 frshn(grammarType(A,R),B,grammarType(FA,FR)) :-
   frshnTypes(A,B,FA),
-  frshn(R,B,FR).
+  rewriteType(R,B,FR).
 frshn(classType(A,R),B,classType(FA,FR)) :-
   frshnTypes(A,B,FA),
-  frshn(R,B,FR).
+  rewriteType(R,B,FR).
 frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
 frshn(typeExp(O,A),B,typeExp(O,FA)) :- frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
-  frshn(Tp,B0,FTp).
+  rewriteType(Tp,B0,FTp).
 frshn(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
-  frshn(Tp,B,FTp),
+  rewriteType(Tp,B,FTp),
   frshnConstraint(Con,B,FCon).
 frshn(faceType(L),B,faceType(FL)) :-
   frshnFields(L,B,FL).
 frshn(typeRule(A,R),B,typeRule(FA,FR)) :-
-  frshn(A,B,FA),
-  frshn(R,B,FR).
+  rewriteType(A,B,FA),
+  rewriteType(R,B,FR).
 
 frshnConstraint(Con,[],Con) :- !.
 frshnConstraint(conTract(Nm,Args,Deps),B,conTract(Nm,FArgs,FDeps)) :-
@@ -125,11 +126,10 @@ bindContract([_|R],C) :-
   bindContract(R,C).
 
 frshnFields([],_,[]).
-frshnFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, frshn(A,B,FA), frshnFields(L,B,FL).
-frshnFields([A|L],B,[FA|FL]) :- frshn(A,B,FA), frshnFields(L,B,FL).
+frshnFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, deRef(A,DA),frshn(DA,B,FA), frshnFields(L,B,FL).
 
 frshnTypes([],_,[]).
-frshnTypes([A|L],B,[FA|FL]) :- frshn(A,B,FA), frshnTypes(L,B,FL).
+frshnTypes([A|L],B,[FA|FL]) :- deRef(A,DA),frshn(DA,B,FA), frshnTypes(L,B,FL).
 
 freezeType(Tp,B,FrZ) :-
   freeze(Tp,B,FT),
@@ -139,9 +139,9 @@ freeze(voidType,_,voidType) :- !.
 freeze(anonType,_,anonType) :- !.
 freeze(thisType,_,thisType) :- !.
 freeze(kVar(TV),_,kVar(TV)) :- !.
-freeze(tVar(V),B,FzT) :- isBound(tVar(V),Tp), !, freeze(Tp,B,FzT).
-freeze(tVar(V),B,kVar(TV)) :- is_member((TV,VV),B), deRef(VV,VVV), identicalVar(tVar(V),VVV), !.
-freeze(tVar(V),_,tVar(V)) :- !.
+freeze(V,B,FzT) :- isBound(V,Tp), !, freeze(Tp,B,FzT).
+freeze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), identicalVar(tVar(V),VVV), !.
+freeze(V,_,V) :- isUnbound(V),!.
 freeze(type(Nm),_,type(Nm)).
 freeze(funType(A,R),B,funType(FA,FR)) :-
   freezeTypes(A,B,FA),

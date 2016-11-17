@@ -1,7 +1,8 @@
 :- module(dict,[declareType/4,isType/3,
     declareVar/4,isVar/3,
     declareContract/4,getContract/3,
-    declareImplementation/4,getImplementations/3,
+    declareImplementation/4,getImplementations/3,allImplements/3,
+    declareConstraint/3,isConstrained/2,
     processNames/3,processTypes/3,
     pushScope/2,pushFace/4,makeKey/2,stdDict/1]).
 
@@ -16,24 +17,24 @@ isType(Nm,Env,Tp) :-
   makeKey(Id,Key),
   typeInD(Key,Env,Tp).
 
-typeInD(Key,[scope(Types,_,_,_)|_],Tp) :- get_dict(Key,Types,Tp),!.
+typeInD(Key,[scope(Types,_,_,_,_)|_],Tp) :- get_dict(Key,Types,Tp),!.
 typeInD(Key,[_|Env],Tp) :- typeInD(Key,Env,Tp).
 
-declareType(Nm,TpDef,[scope(Types,Nms,Impls,Contracts)|Outer],[scope(Types1,Nms,Impls,Contracts)|Outer]) :-
+declareType(Nm,TpDef,[scope(Types,Nms,Cns,Impls,Contracts)|Outer],[scope(Types1,Nms,Cns,Impls,Contracts)|Outer]) :-
   makeKey(Nm,Key),
   put_dict(Key,Types,TpDef,Types1).
 
-declareVar(Nm,Vr,[scope(Types,Names,Rules,Contracts)|Outer],[scope(Types,Names1,Rules,Contracts)|Outer]) :-
+declareVar(Nm,Vr,[scope(Types,Names,Cns,Impls,Contracts)|Outer],[scope(Types,Names1,Cns,Impls,Contracts)|Outer]) :-
   makeKey(Nm,Key),
   put_dict(Key,Names,Vr,Names1).
 
 isVar(Nm,_,vr(Nm,std,Tp)) :- escapeType(Nm,Tp),!.
 isVar(Nm,Env,Vr) :- makeKey(Nm,Key), isVr(Key,Env,Vr).
 
-isVr(Key,[scope(_,Names,_,_)|_],Vr) :- get_dict(Key,Names,Vr),!.
+isVr(Key,[scope(_,Names,_,_,_)|_],Vr) :- get_dict(Key,Names,Vr),!.
 isVr(Key,[_|Outer],Vr) :- isVr(Key,Outer,Vr).
 
-declareContract(Nm,Con,[scope(Types,Nms,Impls,Contracts)|Outer],[scope(Types,Nms,Impls,Cons)|Outer]) :-
+declareContract(Nm,Con,[scope(Types,Nms,Cns,Impls,Contracts)|Outer],[scope(Types,Nms,Cns,Impls,Cons)|Outer]) :-
   makeKey(Nm,Key),
   put_dict(Key,Contracts,Con,Cons).
 
@@ -43,10 +44,29 @@ getContract(Nm,Env,Con) :-
   makeKey(Id,Key),
   contractInD(Key,Env,Con).
 
-contractInD(Ky,[scope(_,_,_,Cons)|_],Con) :- get_dict(Ky,Cons,Con),!.
+contractInD(Ky,[scope(_,_,_,_,Cons)|_],Con) :- get_dict(Ky,Cons,Con),!.
 contractInD(Key,[_|Env],Con) :- contractInD(Key,Env,Con).
 
-declareImplementation(Con,Impl,[scope(Types,Nms,I,Cons)|Outer],[scope(Types,Nms,I1,Cons)|Outer]) :-
+declareConstraint(Con,[scope(Types,Nms,Cns,Impl,Cons)|Outer],[scope(Types,Nms,[Con|Cns],Impl,Cons)|Outer]).
+
+isConstrained(Con,[scope(_,_,Cns,_,_)|_]) :- is_member(Con,Cns).
+isConstrained(Con,[_|Outer]) :- isConstrained(Con,Outer).
+
+allImplements(T,Env,Face) :-
+  allImplements(T,Env,Env,[],Face).
+
+allImplements(T,[scope(_,_,Cns,_,_)|Outer],Env,SoFar,Face) :-
+  filteImplements(Cns,T,Env,SoFar,I0),
+  allImplements(T,Outer,Env,I0,Face).
+allImplements(_,[],_,Face,Face).
+
+filteImplements([],_,_,F,F).
+filteImplements([implementsFace(V,Fields)|Cns],VV,Env,F,Face) :-
+  deRef(V,VV),
+  concat(Fields,F,F0),
+  filteImplements(Cns,VV,Env,F0,Face).
+
+declareImplementation(Con,Impl,[scope(Types,Nms,Cns,I,Cons)|Outer],[scope(Types,Nms,Cns,I1,Cons)|Outer]) :-
   makeKey(Con,Key),
   (get_dict(Key,I,Impls) -> put_dict(Key,I,[Impl|Impls],I1); put_dict(Key,I,[Impl],I1)).
 
@@ -56,10 +76,10 @@ getImplementations(Nm,Env,Impls) :-
   makeKey(Id,Key),
   implInD(Key,Env,Impls).
 
-implInD(Ky,[scope(_,_,Impls,_)|_],I) :- get_dict(Ky,Impls,I),!.
+implInD(Ky,[scope(_,_,_,Impls,_)|_],I) :- get_dict(Ky,Impls,I),!.
 implInD(Key,[_|Env],Con) :- implInD(Key,Env,Con).
 
-pushScope(Env,[scope(types{},vars{},impls{},contracts{})|Env]).
+pushScope(Env,[scope(types{},vars{},[],impls{},contracts{})|Env]).
 
 pushFace([],_,Env,Env).
 pushFace([(Nm,Tp)|Fields],Lc,Env,ThEnv) :-
@@ -70,7 +90,7 @@ processNames(Dict,P,Result) :-
   processNames(Dict,P,[],Result).
 
 processNames([],_,SoFar,SoFar).
-processNames([scope(_,Names,_,_)|Outer],P,SoFar,Result) :-
+processNames([scope(_,Names,_,_,_)|Outer],P,SoFar,Result) :-
   dict_pairs(Names,_,Pairs),
   procNames(Pairs,P,SoFar,S0),
   processNames(Outer,P,S0,Result).
@@ -84,7 +104,7 @@ processTypes(Dict,P,Result) :-
   processTypes(Dict,P,[],Result).
 
 processTypes([],_,SoFar,SoFar).
-processTypes([scope(_,Names,_,_)|Outer],P,SoFar,Result) :-
+processTypes([scope(_,Names,_,_,_)|Outer],P,SoFar,Result) :-
   dict_pairs(Names,_,Pairs),
   procTypes(Pairs,P,SoFar,S0),
   processTypes(Outer,P,S0,Result).

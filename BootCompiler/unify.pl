@@ -100,7 +100,14 @@ getFace(typeExp(Nm,Args),Env,Face) :- !,
 getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
   constraints(T,C),
   collectImplements(C,Env,[],Face).
+getFace(T,Env,faceType(Face)) :- isKvar(T),!,
+  collectImplementsConstraints(T,Env,Face).
 getFace(faceType(Face),_,faceType(Face)) :- !.
+
+isKvar(V) :- deRef(V,kVar(_)).
+
+collectImplementsConstraints(T,Env,Face) :-
+  allImplements(T,Env,Face).
 
 collectImplements(C,_,Face,Face) :- var(C),!.
 collectImplements([C|_],_,Face,Face) :- var(C),!.
