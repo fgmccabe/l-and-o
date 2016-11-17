@@ -1,5 +1,6 @@
 lo.collection{
   public contract all c,e ~~ folding[c->>e] .. {
-    foldLeft:all x,f ~~ f <~ { apply:(e,x)=>x } |: (c,f,x) => x.
+    foldRight:all x,f ~~ f <~ { apply:(e,x)=>x } |: (f,x,c) => x.
+    foldLeft:all x,f ~~ f <~ { apply:(x,e)=>x } |: (f,x,c) => x.
   }
 }

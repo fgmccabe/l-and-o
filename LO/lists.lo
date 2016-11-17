@@ -1,6 +1,7 @@
 lo.list{
   -- implement standard list functions
   import lo.core.
+  import lo.collection.
 
   public (<>):all t ~~ (list[t],list[t])=>list[t].
   [] <> X => X.
@@ -34,4 +35,12 @@ lo.list{
   length:all t ~~ (list[t]) => integer.
   length([]) => 0.
   length([_,..L]) => length(L)+1.
+
+  public implementation all e ~~ folding[list[e]->>e] .. {
+    foldLeft(f,x,[]) => x.
+    foldLeft(f,x,[e,..l]) => foldLeft(f,f.apply(x,e),l).
+
+    foldRight(f,x,[]) => x.
+    foldRight(f,x,[e,..l]) => f.apply(e,foldRight(f,x,l)).
+  }
 }
