@@ -1,6 +1,6 @@
 :- module(freshen,[freshn/3,freshen/4,freshenConstraint/2,frshnConstraint/3,freshenContract/3,freshenContract/4,
   bindConstraint/1,contractedType/2,rewriteType/3,addThisType/3,
-  evidence/2,evidence/4,contractEvidence/4,freeze/3,freezeType/3]).
+  evidence/2,evidence/4,contractEvidence/4,freezeType/3]).
 
 :- use_module(misc).
 :- use_module(types).
@@ -135,35 +135,38 @@ freezeType(Tp,B,FrZ) :-
   freeze(Tp,B,FT),
   reQuant(B,B,FT,FrZ).
 
-freeze(voidType,_,voidType) :- !.
-freeze(anonType,_,anonType) :- !.
-freeze(thisType,_,thisType) :- !.
-freeze(kVar(TV),_,kVar(TV)) :- !.
-freeze(V,B,FzT) :- isBound(V,Tp), !, freeze(Tp,B,FzT).
-freeze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), identicalVar(tVar(V),VVV), !.
-freeze(V,_,V) :- isUnbound(V),!.
-freeze(type(Nm),_,type(Nm)).
-freeze(funType(A,R),B,funType(FA,FR)) :-
+freeze(T,B,Frzn) :-
+  deRef(T,Tp),
+  frze(Tp,B,Frzn).
+
+frze(voidType,_,voidType) :- !.
+frze(anonType,_,anonType) :- !.
+frze(thisType,_,thisType) :- !.
+frze(kVar(TV),_,kVar(TV)) :- !.
+frze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), identicalVar(tVar(V),VVV), !.
+frze(V,_,V) :- isUnbound(V),!.
+frze(type(Nm),_,type(Nm)).
+frze(funType(A,R),B,funType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
-freeze(grammarType(A,R),B,grammarType(FA,FR)) :-
+frze(grammarType(A,R),B,grammarType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
-freeze(classType(A,R),B,classType(FA,FR)) :-
+frze(classType(A,R),B,classType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
-freeze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
-freeze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
-freeze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
-freeze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
+frze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
+frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
+frze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
+frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
   freeze(Tp,B0,FTp).
-freeze(faceType(L),B,faceType(FL)) :-
+frze(faceType(L),B,faceType(FL)) :-
   freezeFields(L,B,FL).
-freeze(implementsFace(V,L),B,implementsFace(FV,FL)) :-
+frze(implementsFace(V,L),B,implementsFace(FV,FL)) :-
   freezeType(V,B,FV),
   freezeFields(L,B,FL).
-freeze(typeRule(A,R),B,typeRule(FA,FR)) :-
+frze(typeRule(A,R),B,typeRule(FA,FR)) :-
   freeze(A,B,FA),
   freeze(R,B,FR).
 

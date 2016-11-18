@@ -507,10 +507,10 @@ bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
 typeOfTerm(V,_,Env,Env,v(Lc,N)) :-
   isIden(V,Lc,"_"),!,
   genstr("_",N).
-typeOfTerm(V,Tp,Env,Env,Term) :-
+typeOfTerm(V,Tp,Env,Ev,Term) :-
   isIden(V,Lc,N),
   isVar(N,Env,Spec),!,
-  typeOfVar(Lc,N,Tp,Spec,Env,Term).
+  typeOfVar(Lc,N,Tp,Spec,Env,Ev,Term).
 typeOfTerm(V,Tp,Ev,Env,v(Lc,N)) :-
   isIden(V,Lc,N),
   declareVar(N,vr(Lc,N,Tp),Ev,Env).
@@ -635,26 +635,29 @@ fieldInFace(Fields,_,Nm,_,Tp) :-
 fieldInFace(_,Tp,Nm,Lc,anonType) :-
   reportError("field %s not declared in %s",[Nm,Tp],Lc).
 
-typeOfVar(Lc,Nm,Tp,vr(_,_,VT),Env,Exp) :-
+typeOfVar(Lc,Nm,Tp,vr(_,_,VT),Env,Ev,Exp) :-
   pickupThisType(Env,ThisType),
   freshen(VT,ThisType,_,VrTp),
-  manageConstraints(VrTp,[],Lc,v(Lc,Nm),MTp,Exp),
+  manageConstraints(VrTp,[],Lc,v(Lc,Nm),MTp,Exp,Env,Ev),
   checkType(Lc,MTp,Tp,Env).
-typeOfVar(Lc,Nm,Tp,mtd(_,_,MTp),Env,Exp) :-
+typeOfVar(Lc,Nm,Tp,mtd(_,_,MTp),Env,Ev,Exp) :-
   pickupThisType(Env,ThisType),
   freshen(MTp,ThisType,_,VrTp),
-  manageConstraints(VrTp,[],Lc,mtd(Lc,Nm),MtTp,Exp),
+  manageConstraints(VrTp,[],Lc,mtd(Lc,Nm),MtTp,Exp,Env,Ev),
   checkType(Lc,MtTp,Tp,Env).
 
-manageConstraints(constrained(Tp,Con),Cons,Lc,V,MTp,Exp) :- !,
-  manageConstraints(Tp,[Con|Cons],Lc,V,MTp,Exp).
-manageConstraints(Tp,[],_,V,Tp,V) :- !.
-manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons)).
+manageConstraints(constrained(Tp,implementsFace(TV,Fc)),Cons,Lc,V,MTp,Exp,Env,Ev) :- !,
+  declareConstraint(implementsFace(TV,Fc),Env,E0),
+  manageConstraints(Tp,Cons,Lc,V,MTp,Exp,E0,Ev).
+manageConstraints(constrained(Tp,Con),Cons,Lc,V,MTp,Exp,Env,Ev) :- !,
+  manageConstraints(Tp,[Con|Cons],Lc,V,MTp,Exp,Env,Ev).
+manageConstraints(Tp,[],_,V,Tp,V,Env,Env) :- !.
+manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons),Env,Env).
 
-typeOfKnown(T,Tp,Env,Env,Exp) :-
+typeOfKnown(T,Tp,Env,Ev,Exp) :-
   isIden(T,Lc,Nm),
   isVar(Nm,Env,Spec),!,
-  typeOfVar(Lc,Nm,Tp,Spec,Env,Exp).
+  typeOfVar(Lc,Nm,Tp,Spec,Env,Ev,Exp).
 typeOfKnown(T,Tp,Env,Env,v(Lc,Nm)) :-
   isIden(T,Lc,Nm),
   reportError("variable %s not declared, expecting a %s",[Nm,Tp],Lc).
