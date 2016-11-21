@@ -112,7 +112,7 @@ lo.comp.dependencies{
   ruleHead(S) =>  L :-  isBinary(S,"-->",_,L,_).
   ruleHead(S) =>  L :-  isBinary(S,":-",_,L,_).
   ruleHead(S) =>  L :-  isBinary(S,"<=",_,L,_).
-  ruleHead(S) =>  L :-  isBinary(S,"..",_,L,_).
+  ruleHead(S) =>  L :-  isBraceTerm(S,_,L).
   ruleHead(S) =>  S :-  isRoundTerm(S,_,_,_).
 
   headName:(ast)=>string.
@@ -202,7 +202,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
   stmtRefs(S,All,So) =>  refsInHead(L,Al,refsInNT(R,All,So)) :-  isBinary(S,"-->",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(L,Al,refsInTerm(R,All,So)) :-  isBinary(S,"<=",_,L,R).
-  stmtRefs(S,All,So) =>  refsInHead(L,Al,thetaRefs(Els,All,So)) :-  (isBinary(S,"..",_,L,R),isBraceTuple(R,_,Els)).
+  stmtRefs(S,All,So) =>  refsInHead(L,Al,thetaRefs(Els,All,So)) :-  isBraceTerm(S,_,L,Els).
 
   refsInHead:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInHead(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).

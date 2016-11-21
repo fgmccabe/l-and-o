@@ -27,7 +27,7 @@ lo.comp.token{
   public token <~ hasLoc.
 
   public tok:(tok,location) <=> token.
-  tok(Tk,Loc) .. {
+  tok(Tk,Loc) <=> {
     loc = Loc.
   }.
 

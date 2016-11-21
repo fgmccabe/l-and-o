@@ -348,7 +348,7 @@ showClassRule(labelRule(_,_,Hd,Repl,_),O,Ox) :-
   appStr(".\n",O3,Ox).
 showClassRule(classBody(_,_,Hd,Stmts,Others,Types),O,Ox) :-
   showCanonTerm(Hd,O,O1),
-  appStr(" .. {\n",O1,O2),
+  appStr("{\n",O1,O2),
   showTypeDefs(Types,O2,O3),
   showDefs(Stmts,O3,O4),
   showOthers(Others,O4,O5),

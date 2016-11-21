@@ -58,10 +58,10 @@ genNewName(Map,Variant,Args,prg(Nm,Ar)) :-
  *
  * E.g., in
  * pk{
- *  foo(A)..{
+ *  foo(A){
  *   ...
- *    bar(B)..{
- *      X = $anon..{}
+ *    bar(B){
+ *      X = $anon{}
  *   ...
  *    }
  *  }

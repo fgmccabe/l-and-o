@@ -21,7 +21,7 @@
 
 checkProgram(Prog,Repo,prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
   stdDict(Base),
-  isBraceTerm(Prog,Pk,Els),
+  isBraceTerm(Prog,_,Pk,Els),
   packageName(Pk,Pkg),
   pushScope(Base,Env),
   locOfAst(Prog,Lc),
@@ -302,17 +302,17 @@ processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
   typeOfTerm(R,SuperTp,E1,_,Repl),
   generateClassFace(SuperTp,E,SuperFace).
 processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
-  isBinary(St,Lc,"..",L,R),
+  isBraceTerm(St,Lc,L,Els),
   isIden(L,Nm),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,R,E,Stmts,Others,Types,_,ClassPath).
+  checkClassBody(Tp,Lc,Els,E,Stmts,Others,Types,_,ClassPath).
 processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
-  isBinary(St,Lc,"..",L,R),
+  isBraceTerm(St,Lc,L,Els),
   checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
+  checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,_,ClassPath).
 processStmt(St,Tp,Defs,Dx,E,Path) :-
   isBinary(St,Lc,"-->",L,R),
   processGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path).
@@ -346,8 +346,7 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   Hd = apply(v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
-checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
-  isBraceTuple(Body,Lc,Els),
+checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   getTypeFace(ClassTp,Env,Face),
   moveConstraints(Face,_,faceType(Fields)),
   pushScope(Env,Base),

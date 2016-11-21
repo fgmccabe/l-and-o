@@ -323,7 +323,7 @@ findClassBody(Defs,Stmts) :-
   is_member(implBody(_,_,Stmts,_,_),Defs),!.
 
 /* A class body of the form
-lbl(A1,..,Ak)..{
+lbl(A1,..,Ak){
   prog1 :- ...
 }
 is mapped to 

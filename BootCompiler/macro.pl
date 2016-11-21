@@ -95,7 +95,7 @@ algebraicFace(T,SoFar,SoFar) :-
 algebraicFace(T,Face,Face) :-
   isIden(T,_,_),!.
 algebraicFace(T,SoFar,Face) :-
-  isBraceTerm(T,_,Args),
+  isBraceTerm(T,_,_,Args),
   pickupFields(Args,SoFar,Face).
 
 pickupFields([],Face,Face).
@@ -117,10 +117,11 @@ checkSoFar(Lc,Nm,T,[P|L],L) :-
 checkSoFar(Lc,Nm,T,[P|L],[P|LL]) :-
   checkSoFar(Lc,Nm,T,L,LL).
 
-typeRule(Lc,Quants,Constraints,Hd,Body,Rule) :-
+typeRule(Lc,Quants,Constraints,Hd,Body,Stmt) :-
   binary(Lc,"<~",Hd,Body,Rl),
   wrapConstraints(Constraints,Lc,Rl,ConRl),
-  wrapQuants(Quants,Lc,ConRl,Rule).
+  wrapQuants(Quants,Lc,ConRl,Rule),
+  unary(Lc,"type",Rule,Stmt).
 
 wrapQuants([],_,Rule,Rule).
 wrapQuants(Q,Lc,Rl,Rule) :-
@@ -159,8 +160,7 @@ inheritThing(Lc,Hd,Rule) :-
   binary(Lc,"<=",Hd,name(Lc,"thing"),Rule).
 
 bodyRule(Lc,Hd,Els,Body) :-
-  isBraceTuple(Content,Lc,Els),
-  binary(Lc,"..",Hd,Content,Body).
+  braceTerm(Lc,Hd,Els,Body).
 
 thingType(name(Lc,"thing"),Lc).
 

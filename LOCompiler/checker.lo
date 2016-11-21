@@ -173,16 +173,16 @@ lo.comp.typecheck{
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E).
   processStmt(St,Tp,[clBody(Lc,Nm,tpl([]),Stmts,Others,Types),..Defs],Defs,E,Path) :-
-    isBinary(St,"..",Lc,L,R),
+    isBraceTerm(St,Lc,L,Els),
     isIden(L,_,Nm),
     subPath(Path,marker(clss),Nm,ClassPath),
-    checkClassBody(Tp,R,pushScope(E),Stmts,Others,Types,ClassPath).
+    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,ClassPath).
   processStmt(St,classType(AT,Tp),[clBody(Lc,Nm,Arg,Stmts,Others,Types),..Defs],Defs,E,Path) :-
-    isBinary(St,"..",Lc,L,R),
+    isBraceTerm(St,Lc,L,Els),
     splitHead(L,Nm,A),
     typeOfTerm(A,AT,pushScope(E),E1,Arg),
     subPath(Path,marker(clss),Nm,ClassPath),
-    checkClassBody(Tp,R,E1,Stmts,Others,Types,_,ClassPath).
+    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,_,ClassPath).
   processStmt(St,Tp,Defs,Dx,E,Path) :-
     isBinary(St,"-->",Lc,L,R),
     checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path).
@@ -223,9 +223,8 @@ lo.comp.typecheck{
     getTypeFace(T,Env,F),
     freezeType(F,Q,Face),!.
 
-  private checkClassBody:(tipe,ast,list[env],list[canonDef],list[canonOther],list[canonDef],string){}.
-  checkClassBody(ClassTp,Body,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
-    isBraceTuple(Body,Lc,Els),
+  private checkClassBody:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[canonDef],string){}.
+  checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
     getTypeFace(ClassTp,Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
     declareVar("this",vr("this",Lc,ClassTp),pushScope(Env),ThEnv),

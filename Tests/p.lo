@@ -11,7 +11,7 @@ px{
   }.
 
   p:(string) <=> p.
-  p(Nm)..{
+  p(Nm)<=>{
     name = Nm.
   }.
 /*
@@ -25,7 +25,7 @@ px{
 */
 
   s:(string,string) <=> s.
-  s(S,_) .. {
+  s(S,_) <=> {
     studies = S.
     first = name.
   }.

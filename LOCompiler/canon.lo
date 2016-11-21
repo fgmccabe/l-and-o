@@ -129,7 +129,7 @@ lo.comp.canon {
   dispRule(equation(_,L,R,trueCond)) => ssSeq([dispTerm(L),ss("=>"),dispTerm(R)]).
   dispRule(equation(_,L,R,Body)) => ssSeq([dispTerm(L),ss("=>"),dispTerm(R),ss(":-"),dispCond(Body)]).
   dispRule(clRule(_,L,R)) => ssSeq([dispTerm(L),ss("<="),dispTerm(R)]).
-  dispRule(clBody(_,L,B)) => ssSeq([dispTerm(L),ss("..{"),ssSeq(dispDefs(B)),ss("\n}")]).
+  dispRule(clBody(_,L,B)) => ssSeq([dispTerm(L),ss("{"),ssSeq(dispDefs(B)),ss("\n}")]).
   dispRule(grRule(_,L,[],R)) => ssSeq([dispTerm(L),ss("-->"),dispNT(R)]).
   dispRule(grRule(_,L,A,R)) => ssSeq([dispTerm(L),ss(","),ssSeq(dispEls(A)),ss("-->"),dispNT(R)]).
   dispRule(tpRule(_,T)) => disp(T).

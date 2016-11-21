@@ -44,7 +44,7 @@ parse{
 
   testparse:[string]@=harness.
   testparse(_)<=harness.
-  testparse(Text)..{
+  testparse(Text)<=>{
     doPred() :-
 	( tokenize(List) --> "I twenty2 N234Isixty"),
 	id("twenty2") in List,

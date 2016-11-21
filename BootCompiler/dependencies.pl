@@ -149,7 +149,7 @@ headOfRule(St,Hd) :-
 headOfRule(St,Hd) :-
   isBinary(St,"<=",Hd,_).
 headOfRule(St,Hd) :-
-  isBinary(St,"..",Hd,_).
+  isBraceTerm(St,_,Hd,_),!.
 headOfRule(St,Hd) :-
   isBinary(St,"-->",H,_),
   (isBinary(H,",",Hd,_) ; H=Hd),!.
@@ -225,10 +225,10 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectHeadRefs(H,All,R0,R1),
   collectLabelRefs(Exp,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
-  isBinary(St,"..",H,Exp),
+  isBraceTerm(St,_,H,Els),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
   collectHeadRefs(H,All,R0,R1),
-  collectClassRefs(Exp,All,R1,Refs).
+  collectClassRefs(Els,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,":-",H,Exp),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
@@ -241,7 +241,8 @@ collRefs(St,All,_,R0,Refs) :-
   isUnary(St,"implementation",I),
   isBinary(I,"..",L,R),
   collectContractRefs(L,All,R0,R1),
-  collectClassRefs(R,All,R1,Refs).
+  isBraceTuple(R,_,Defs),
+  collectClassRefs(Defs,All,R1,Refs).
 
 collRefs(St,All,Annots,SoFar,Refs) :-
   collectAnnotRefs(St,All,Annots,SoFar,R0),
@@ -263,8 +264,7 @@ collectGrHeadRefs(Hd,All,R0,Refs) :-
 collectGrHeadRefs(Hd,All,R0,Refs) :-
   collectHeadRefs(Hd,All,R0,Refs).
 
-collectClassRefs(Term,All,SoFar,Refs) :-
-  isBraceTuple(Term,_,Defs),
+collectClassRefs(Defs,All,SoFar,Refs) :-
   locallyDefined(Defs,All,Rest),
   collectStmtRefs(Defs,Rest,[],SoFar,Refs).
 
@@ -414,7 +414,8 @@ collectTypeRefs(C,All,SoFar,Refs) :-
   collectTypeRefs(L,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
-  isBraceTerm(T,L,[]), isTuple(L,A),
+  isBraceTerm(T,_,L,[]), 
+  isTuple(L,A),
   collectTypeList(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTuple(T,_,A), 

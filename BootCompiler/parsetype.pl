@@ -45,7 +45,7 @@ parseType(F,Env,B,C0,Cx,classType(AT,RT)) :-
   parseTypes(LA,Env,B,C0,C1,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(C,Env,B,C0,Cx,predType(AT)) :-
-  isBraceTerm(C,L,[]),
+  isBraceTerm(C,_,L,[]),
   isTuple(L,A),!,
   parseTypes(A,Env,B,C0,Cx,AT).
 parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
@@ -128,9 +128,11 @@ parseConstraint(T,Env,B,C0,Cx) :-
   addConstraint(implementsFace(TV,AT),C2,Cx).
 parseConstraint(Sq,Env,B,C0,Cx) :- 
   isSquare(Sq,Lc,N,Args),
-  parseContractName(Lc,N,Env,B,conTract(Op,_ATs,_Dps)),
   parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps),
-  addConstraint(conTract(Op,ArgTps,Deps),C1,Cx).
+  ( parseContractName(Lc,N,Env,B,conTract(Op,_ATs,_Dps)) ->
+      addConstraint(conTract(Op,ArgTps,Deps),C1,Cx) ;
+      reportError("contract %s not declared",[N],Lc),
+      Cx=C1).
 parseConstraint(T,_,B,B,C,C) :-
   locOfAst(T,Lc),
   reportError("invalid type constraint %s",[T],Lc).
@@ -266,12 +268,10 @@ getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
 getFace(faceType(Face),_,faceType(Face)) :- !.
 
 parseTypeTemplate(St,B,Env,Type,Path) :-
-  parseTypeTemplate(St,B,Env,[],Cx,Tp,Path),
+  isUnary(St,"type",L),
+  parseTypeTemplate(L,B,Env,[],Cx,Tp,Path),
   wrapConstraints(Cx,Tp,Type).
 
-parseTypeTemplate(St,B,Env,Type,Path) :-
-  isUnary(St,"type",L),
-  parseTypeTemplate(L,B,Env,Type,Path).
 parseTypeTemplate(St,B,Env,C,C,Type,Path) :-
   isQuantified(St,V,Body),
   parseBound(V,B,BB,Type,Tmplte),

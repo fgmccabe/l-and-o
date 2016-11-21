@@ -11,7 +11,7 @@ lo.comp.location{
   }.
 
   public loc:(integer,integer,integer,integer)<=>location.
-  loc(Line,Off,Col,Len)..{
+  loc(Line,Off,Col,Len)<=>{
     line = Line.
     column = Col.
     from = Off.

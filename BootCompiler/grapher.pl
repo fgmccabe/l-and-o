@@ -70,7 +70,7 @@ getSrcUri(Fl,WD,FUri) :-
   resolveURI(WD,FU,FUri).
 
 scanForImports(Term,Pkg,Imports) :-
-    isBraceTerm(Term,P,Els),
+    isBraceTerm(Term,_,P,Els),
     scanPackageName(P,Pkg),
     scanThetaEnv(Els,Imports),!.
 

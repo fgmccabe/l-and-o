@@ -9,12 +9,12 @@ tree{
   }.
 
   em: tree[_].
-  em..{
+  em <=> {
     leaves() => [].
   }.
 
   nd: all T ~~ (tree[T],T,tree[T])<=>tree[T].
-  nd(L,B,R)..{
+  nd(L,B,R) <=> {
     private label : ()=>T.
     label()=>B.
     leaves() => L.leaves()<>[B]<>R.leaves().

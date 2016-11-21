@@ -15,18 +15,18 @@ lx{
   }
 
   loc : (integer,integer) <=> location.
-  loc(Off,Len) ..{
+  loc(Off,Len) <=> {
     offset = Off.
     len = Len.
   }.
 
   locDisp : display[location].
-  locDisp .. {
+  locDisp <=> {
     display(loc(Off,Len)) => ssSeq([intDisp.display(Off),ss("-"),intDisp.display(Len)]).
   }.
 
   tkState:(list[integer],integer) <=> tokenState.
-  tkState(Chars,Off) .. {
+  tkState(Chars,Off) <=> {
     eof() :- Chars = [].
 
     hdtl(Ch,Next) :- Chars =. [Ch,..Rest],  Next = tkState(Rest,Off+1).
@@ -39,7 +39,7 @@ lx{
   token ::= intTok(integer) | fltTok(float) | lpar | rpar | plus | times.
 
   tokDisp : display[token].
-  tokDisp .. {
+  tokDisp <=> {
     display(intTok(Ix)) => intDisp.display(Ix).
     display(fltTok(Dx)) => fltDisp.display(Dx).
     display(lpar) => ss("(").
@@ -49,7 +49,7 @@ lx{
   }.
 
   pairDisp : all t,u ~~ (display[t],display[u]) <=> display[(t,u)].
-  pairDisp(D1,D2) .. {
+  pairDisp(D1,D2) <=> {
     display((A,B)) => ssSeq([ss("("),D1.display(A),ss(", "),D2.display(B),ss(")")]).
   }.
 

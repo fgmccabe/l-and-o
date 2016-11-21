@@ -1,4 +1,5 @@
 lo.sets {
+  import lo.core.
   import lo.index.
   import lo.collection.
 
@@ -18,8 +19,8 @@ lo.sets {
   }
 
   private type all k ~~ equality[k] |: binApp[k] <~ { apply:(k,(),map[k,()])=>map[k,()] }.
-  private binApp:all k,u ~~ equality[k] |: (map[k,()]) <=> binApp[k];
-  binApp(O) .. {
+  private binApp:all k ~~ equality[k] |: (map[k,()]) <=> binApp[k].
+  binApp(O) {
     apply(k,_,S) => S+{k->()} :- present(O,k,_).
     apply(_,_,S) => S.
   }

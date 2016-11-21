@@ -3,7 +3,7 @@
       isUnary/3,isUnary/4,isBinary/4,isBinary/5,isBinaryTerm/4,
       isTernary/5,ternary/6,
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
-      braceTerm/4,isBrace/3,isBraceTerm/3,isBraceTuple/3,
+      braceTerm/4,isBrace/3,isBraceTerm/4,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,isSquareTerm/4,
       isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
       sameTerm/2]).
@@ -50,11 +50,11 @@ ternary(Lc,Op,L,M,R,app(Lc,name(Lc,Op),tuple(Lc,"()",[L,M,R]))).
 
 nary(Lc,Op,Args,app(Lc,name(Lc,Op),tuple(Lc,"()",Args))).
 
-braceTerm(Lc,Op,Els,app(Lc,name(Lc,Op),tuple(Lc,"{}",Els))).
+braceTerm(Lc,Op,Els,app(Lc,Op,tuple(Lc,"{}",Els))).
 
 isBrace(app(_,name(_,Op),tuple(_,"{}",L)),Op,L).
 
-isBraceTerm(app(_,Op,tuple(_,"{}",A)),Op,A).
+isBraceTerm(app(Lc,Op,tuple(_,"{}",A)),Lc,Op,A).
 
 isBraceTuple(tuple(Lc,"{}",L),Lc,L).
 

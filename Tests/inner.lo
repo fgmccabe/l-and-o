@@ -13,9 +13,9 @@ inEnums{
   }.
 
   outer:better.
-  outer..{
+  outer<=>{
     inner:basic.
-    inner..{
+    inner<=>{
       id = o.
     }.
 

@@ -12,14 +12,14 @@ search {
   all t ~~ tree[t] <~ searchable[t].
 
   empty: tree[_].
-  empty .. {
+  empty{
     labeled(_) :- false.
     left(_) :- false.
     right(_) :- false.
   }
 
   node: all u ~~ (tree[u],u,tree[u]) <=> tree[u].
-  node(Left,Lbl,Right) .. {
+  node(Left,Lbl,Right){
     labeled(Lbl).
     left(Left).
     right(Right).
