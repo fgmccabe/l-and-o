@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="LandO"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\OOlib\;CMake Files\HeaderGenerator\;CMake Files\Engine\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="list_install_components">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 list_install_components"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/strip">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/strip"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/local">
+				<Option working_dir="/Users/fgm/Projects/LandO"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/local"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ooio">
+				<Option output="/Users/fgm/Projects/LandO/OOlib/libooio.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/OOlib"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/OOlib/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ooio/fast">
+				<Option output="/Users/fgm/Projects/LandO/OOlib/libooio.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/OOlib"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/OOlib/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ops">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/ops" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ops/fast">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/ops" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="genesc">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/genesc" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="genesc/fast">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/genesc" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="opcodes">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/opcodes" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="opcodes/fast">
+				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/opcodes" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="lo">
+				<Option output="/Users/fgm/Projects/LandO/Engine/lo" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/Engine"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="lo/fast">
+				<Option output="/Users/fgm/Projects/LandO/Engine/lo" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/fgm/Projects/LandO/Engine"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/../Headers"/>
+					<Add directory="/Users/fgm/Projects/LandO/Engine/../OOlib/Headers"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/args.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/arith.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/boot.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/call.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/char.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/class.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/clock.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/code.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/date.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/debug.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/dict.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/dir.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/disass.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/dynamic.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/encoded.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/envir.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/error.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/escapes.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/eval.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/exec.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/fileio.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/float.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/gc.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/global.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/hash.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/heap.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/lists.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/lockvar.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/main.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/misc.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/netfile.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/process.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/program.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/put.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/rendezvous.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/sha.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/signal.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/stats.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/string.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/suspend.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/verify.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/writef.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/genescapes.c">
+			<Option target="genesc"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/genoperators.c">
+			<Option target="ops"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/opcodes.c">
+			<Option target="opcodes"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/trie.c">
+			<Option target="ops"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/trie.h">
+			<Option target="ops"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/class.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/file.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/files.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/formin.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/formout.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/hashTable.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/hosts.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/io.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/ixTree.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/lists.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/locked.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/managed.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/object.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pair.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/parseuri.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pipe.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pool.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/sockets.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/stringBuffer.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/stringReader.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/strio.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/timer.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/unichar.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/unicode.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/unitable.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/uri.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/utils.c">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\OOlib\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\OOlib\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\HeaderGenerator\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\HeaderGenerator\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Engine\"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Engine\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
