@@ -1,6 +1,6 @@
 :- module(types,[isType/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2, 
       typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
-      dispType/1,showType/3, showTypeRule/3,showConstraint/3,
+      dispType/1,showType/3,showConstraint/3,
       occursIn/2,isUnbound/1,isBound/1, constraints/2, isIdenticalVar/2, 
       bind/2, moveQuants/3,
       moveConstraints/3,moveConstraints/4,setConstraint/2,setConstraints/2, implementationName/2]).
@@ -95,9 +95,6 @@ moveConstraints(Tp,[],Tp).
 moveConstraints(constrained(Tp,Con),C,Cx,Inner) :-
   moveConstraints(Tp,[Con|C],Cx,Inner).
 moveConstraints(Tp,C,C,Tp).
-
-showTypeRule(typeRule(Hd,Bd),O,Ox) :- showType(Hd,O,O1), appStr("<~",O1,O2),showType(Bd,O2,Ox).
-showTypeRule(univType(V,Tp),O,Ox) :- appStr("all ",O,O1), showBound(V,O1,O2), showMoreQuantified(Tp,showTypeRule,O2,Ox).
 
 showType(anonType,O,Ox) :- appStr("_",O,Ox).
 showType(voidType,O,Ox) :- appStr("void",O,Ox).

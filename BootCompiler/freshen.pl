@@ -143,7 +143,7 @@ frze(voidType,_,voidType) :- !.
 frze(anonType,_,anonType) :- !.
 frze(thisType,_,thisType) :- !.
 frze(kVar(TV),_,kVar(TV)) :- !.
-frze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), identicalVar(tVar(V),VVV), !.
+frze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), isIdenticalVar(tVar(V),VVV), !.
 frze(V,_,V) :- isUnbound(V),!.
 frze(type(Nm),_,type(Nm)).
 frze(funType(A,R),B,funType(FA,FR)) :-
@@ -169,6 +169,9 @@ frze(implementsFace(V,L),B,implementsFace(FV,FL)) :-
 frze(typeRule(A,R),B,typeRule(FA,FR)) :-
   freeze(A,B,FA),
   freeze(R,B,FR).
+frze(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
+  freeze(Tp,B,FTp),
+  freezeConstraint(Con,B,FCon).
 
 freezeFields([],_,[]).
 freezeFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, freeze(A,B,FA), freezeFields(L,B,FL).
@@ -188,5 +191,12 @@ reQuant([_|B],BB,T,FT) :- reQuant(B,BB,T,FT).
 freezeConstraints(C,_,T,T) :- var(C),!.
 freezeConstraints([C|_],_,T,T) :- var(C),!.
 freezeConstraints([C|R],BB,T,FT) :-
-  freeze(C,BB,FC),
+  freezeConstraint(C,BB,FC),
   freezeConstraints(R,BB,constrained(T,FC),FT).
+
+freezeConstraint(conTract(Nm,A,D),B,conTract(Nm,FA,FD)) :-
+  freezeTypes(A,B,FA),
+  freezeTypes(D,B,FD).
+freshenConstraint(implementsFace(T,F),B,implementsFace(FT,FF)) :-
+  freeze(T,B,FT),
+  freezeFields(F,B,FF).

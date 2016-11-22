@@ -236,7 +236,7 @@ checkVarRules([(var(N),Lc,Stmts)|More],Env,Defs,Dx,Path) :-
   moveConstraints(PT,Cx,ProgramType),
   declareConstraints(Cx,SEnv,StmtEnv),
   processStmts(Stmts,ProgramType,Rules,[],StmtEnv,Path),
-  generalizeStmts(Rules,Env,Cx,Defs,D0),
+  collectPrograms(Rules,Env,Cx,Defs,D0),
   checkVarRules(More,Env,D0,Dx,Path).
 
 pickupVarType(N,_,Env,Tp) :-
@@ -383,37 +383,37 @@ splitGrHd(Term,Nm,Args,PB) :-
 splitGrHd(Term,Nm,Args,[]) :-
   splitHead(Term,Nm,Args,name(_,"true")).
 
-generalizeStmts([],_,_,Defs,Defs).
-generalizeStmts([Eqn|Stmts],Env,Cx,[function(Lc,Nm,Tp,Cx,[Eqn|Eqns])|Defs],Dx) :-
+collectPrograms([],_,_,Defs,Defs).
+collectPrograms([Eqn|Stmts],Env,Cx,[function(Lc,Nm,Tp,Cx,[Eqn|Eqns])|Defs],Dx) :-
   Eqn = equation(Lc,Nm,_,_,_),
   collectEquations(Stmts,S0,Nm,Eqns),
   pickupVarType(Nm,Lc,Env,Tp),
-  generalizeStmts(S0,Env,Cx,Defs,Dx).
-generalizeStmts([Cl|Stmts],Env,Cx,[predicate(Lc,Nm,Tp,Cx,[Cl|Clses])|Defs],Dx) :-
+  collectPrograms(S0,Env,Cx,Defs,Dx).
+collectPrograms([Cl|Stmts],Env,Cx,[predicate(Lc,Nm,Tp,Cx,[Cl|Clses])|Defs],Dx) :-
   Cl = clause(Lc,Nm,_,_,_),
   collectClauses(Stmts,S0,Nm,Clses),
   pickupVarType(Nm,Lc,Env,Tp),
-  generalizeStmts(S0,Env,Cx,Defs,Dx).
-generalizeStmts([defn(Lc,Nm,Cond,Value)|Stmts],Env,Cx,[defn(Lc,Nm,Cx,Cond,Tp,Value)|Defs],Dx) :-
+  collectPrograms(S0,Env,Cx,Defs,Dx).
+collectPrograms([defn(Lc,Nm,Cond,Value)|Stmts],Env,Cx,[defn(Lc,Nm,Cx,Cond,Tp,Value)|Defs],Dx) :-
   pickupVarType(Nm,Lc,Env,Tp),!,
-  generalizeStmts(Stmts,Env,Cx,Defs,Dx).
-generalizeStmts([Cl|Stmts],Env,Cx,[enum(Lc,Nm,Tp,Cx,[Cl|Rules],Face)|Defs],Dx) :-
+  collectPrograms(Stmts,Env,Cx,Defs,Dx).
+collectPrograms([Cl|Stmts],Env,Cx,[enum(Lc,Nm,Tp,Cx,[Cl|Rules],Face)|Defs],Dx) :-
   isRuleForEnum(Cl,Lc,Nm),!,
   collectEnumRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
   generateClassFace(Tp,Env,Face),
-  generalizeStmts(S0,Env,Cx,Defs,Dx).
-generalizeStmts([Cl|Stmts],Env,Cx,[class(Lc,Nm,Tp,Cx,[Cl|Rules],Face)|Defs],Dx) :-
+  collectPrograms(S0,Env,Cx,Defs,Dx).
+collectPrograms([Cl|Stmts],Env,Cx,[class(Lc,Nm,Tp,Cx,[Cl|Rules],Face)|Defs],Dx) :-
   isRuleForClass(Cl,Lc,Nm),!,
   collectClassRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
   generateClassFace(Tp,Env,Face),
-  generalizeStmts(S0,Env,Cx,Defs,Dx).
-generalizeStmts([Rl|Stmts],Env,Cx,[grammar(Lc,Nm,Tp,Cx,[Rl|Rules])|Defs],Dx) :-
+  collectPrograms(S0,Env,Cx,Defs,Dx).
+collectPrograms([Rl|Stmts],Env,Cx,[grammar(Lc,Nm,Tp,Cx,[Rl|Rules])|Defs],Dx) :-
   isGrammarRule(Rl,Lc,Nm),
   collectGrammarRules(Stmts,S0,Nm,Rules),
   pickupVarType(Nm,Lc,Env,Tp),
-  generalizeStmts(S0,Env,Cx,Defs,Dx).
+  collectPrograms(S0,Env,Cx,Defs,Dx).
 
 collectClauses([],[],_,[]).
 collectClauses([Cl|Stmts],Sx,Nm,[Cl|Ex]) :-

@@ -51,7 +51,7 @@ main(Args) :-
   parseFlags(Args,CW,CWD,Opts,Pkgs),
   openRepo(Opts,Repo),
   locateCatalog(CWD,Cat),!,
-  makeGraph(Repo,Cat,CWD,Pkgs,Groups),
+  makeGraph(Repo,Cat,CWD,Pkgs,Groups),!,
   processGroups(Groups,[],Repo,CWD,Opts).
 
 openR(Args,CWD,Cat,Repo,Groups) :-
@@ -69,13 +69,13 @@ openRepo(_,Repo) :-
 
 processGroups([],_,_,_,_).
 processGroups([G|L],CPkgs,Repo,CWD,Opts) :-
-  (length(G,1) ; reportError("circular dependency in packages %s",G)),
-  processGroup(G,CPkgs,CP0,Repo,R0,CWD,Opts),
+  (length(G,1) -> true ; reportError("circular dependency in packages %s",G)),
+  processGroup(G,CPkgs,CP0,Repo,R0,CWD,Opts),!,
   processGroups(L,CP0,R0,CWD,Opts).
 
 processGroup([],CP,CP,Repo,Repo,_,_).
 processGroup([(P,Imps,Fl)|L],CP,CPx,Repo,Rx,CWD,Opts) :-
-  processPkg(P,Imps,Fl,CP,CP0,Repo,R0,Opts),
+  processPkg(P,Imps,Fl,CP,CP0,Repo,R0,Opts),!,
   processGroup(L,CP0,CPx,R0,Rx,CWD,Opts).
 
 processPkg(P,Imps,_,CP,CP,Repo,Repo,_) :-

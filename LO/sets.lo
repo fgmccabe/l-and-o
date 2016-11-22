@@ -1,6 +1,7 @@
 lo.sets {
   import lo.core.
   import lo.index.
+  import lo.list.
   import lo.collection.
 
   public contract all k,e ~~ setops[k->>e] <~ {
@@ -13,9 +14,12 @@ lo.sets {
 
   public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
 
-  public implementation all e ~~ equality[e] |: setops[set[e]] .. {
+  public implementation all e ~~ equality[e] |: setops[set[e]->>e] .. {
     union(set(M1),set(M2)) => set(M1+M2).
-    intersect(set[M1],set[M2]) => set(foldMap(M1,binApp(M2),{})).
+    intersect(set(M1),set(M2)) => set(foldMap(M1,binApp(M2),{})).
+    difference(set(M1),set(M2)) => set(M1-M2).
+    pick(set(M1),k) :- (k,_) in pairs(M1).
+    empty = set({}).
   }
 
   private type all k ~~ equality[k] |: binApp[k] <~ { apply:(k,(),map[k,()])=>map[k,()] }.

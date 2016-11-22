@@ -750,7 +750,8 @@ genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr)|
   makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L0,List,Fields,Entry,En,Ex0,Exx).
 
 pickAllFieldsFromFace(Tp,Fields) :-
-  moveQuants(Tp,_,faceType(Fields)).
+  moveQuants(Tp,_,QTp),
+  moveConstraints(QTp,_,faceType(Fields)).
 
 makeClassMtdMap([],_,_,_,void,List,List,_,_,_,Ex,Ex).
 makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 

@@ -327,7 +327,7 @@ showDef(typeDef(Lc,Nm,Tp,Rl),O,Ox) :-
   appStr(" @ ",O4,O5),
   showLocation(Lc,O5,O6),
   appStr("\n",O6,O7),
-  showTypeRule(Rl,O7,O8),
+  showType(Rl,O7,O8),
   appStr("\n",O8,Ox).
 showDef(contract(_,_,_,Spec,_),O,Ox) :-
   appStr("contract: ",O,O1),
