@@ -37,8 +37,7 @@ collectDefinition(St,Stmts,Stx,Defs,Dfx,P,Px,A,Ax,I,Ix,O,Ox,_) :-
   collectDefinition(Inner,Stmts,Stx,Defs,Dfx,P,Px,A,Ax,I,Ix,O,Ox,dependencies:export).
 collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   isUnary(St,Lc,"contract",Inner),
-  isBinary(Inner,"..",C,_),
-  contractName(C,Nm),
+  contractName(Inner,Nm),
   call(Export,Nm,P,Px).
 collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   isUnary(St,Lc,"implementation",Inner),
@@ -74,8 +73,7 @@ ruleName(St,Name,Mode) :-
   ruleName(R,Name,Mode).
 ruleName(St,Nm,con) :-
   isUnary(St,"contract",I),
-  isBinary(I,"..",L,_),
-  contractName(L,Nm),!.
+  contractName(I,Nm),!.
 ruleName(St,Nm,impl) :-
   isUnary(St,"implementation",I),
   isBinary(I,"..",L,_),
@@ -96,6 +94,9 @@ contractName(St,Nm) :-
 contractName(St,Nm) :-
   isBinary(St,"|:",_,R),
   contractName(R,Nm).
+contractName(St,Nm) :-
+  isBinary(St,"<~",L,_),
+  contractName(L,Nm).
 contractName(St,con(Nm)) :-
   isSquare(St,Nm,_).
 

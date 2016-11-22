@@ -188,11 +188,10 @@ parseTypeFields([F|L],Env,Bound,C0,Cx,Flds,Fields) :-
 
 parseContract(T,Env,Path,contract(Nm,ConNm,Spec,FullSpec,Face)) :-
   isUnary(T,"contract",TI),
-  isBinary(TI,"..",L,R),
-  isBraceTuple(R,_,TLs),
-  parseContractSpec(L,Q,[],C0,Env,Spc,Nm,ConNm,Path),
-  parseTypeFields(TLs,Env,Q,C0,_,[],F),
-  reQuant(Q,faceType(F),Face),
+  parseContractSpec(TI,F,Q,[],C0,Env,Spc,Nm,ConNm,Path),
+  isBraceTuple(F,_,TLs),
+  parseTypeFields(TLs,Env,Q,C0,_,[],Fc),
+  reQuant(Q,faceType(Fc),Face),
   reQuant(Q,Spc,Spec),
   moveConstraints(SpcC,C0,Spc),
   reQuant(Q,SpcC,FullSpec).
@@ -206,15 +205,18 @@ wrapConstraints([],Tp,Tp).
 wrapConstraints([Con|C],Tp,WTp) :-
   wrapConstraints(C,constrained(Tp,Con),WTp).
 
-parseContractSpec(T,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
+parseContractSpec(T,R,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
   isQuantified(T,V,B),
   parseBound(V,[],Q,_,_),
-  parseContractSpec(B,Q,C0,Cx,Env,Spec,Nm,ConNm,Path).
-parseContractSpec(T,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
+  parseContractSpec(B,R,Q,C0,Cx,Env,Spec,Nm,ConNm,Path).
+parseContractSpec(T,F,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
   isBinary(T,"|:",L,R),
   parseConstraint(L,Env,Q,C0,C1),
-  parseContractSpec(R,Q,C1,Cx,Env,Spec,Nm,ConNm,Path).
-parseContractSpec(T,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path) :-
+  parseContractSpec(R,F,Q,C1,Cx,Env,Spec,Nm,ConNm,Path).
+parseContractSpec(T,F,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
+  isBinary(T,"<~",L,F),
+  parseContractSpec(L,_,Q,C0,Cx,Env,Spec,Nm,ConNm,Path).
+parseContractSpec(T,_,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path) :-
   isSquare(T,_,Nm,A),
   parseContractArgs(A,Env,Q,C0,Cx,ArgTps,Deps),
   marker(conTract,Marker),

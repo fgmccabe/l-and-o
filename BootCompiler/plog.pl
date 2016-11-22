@@ -46,7 +46,7 @@ showContract(contract(LclNm,Nm,_,Con,Mtds),O,Ox) :-
   appStr(Nm,O2,O3),
   appStr(":",O3,O4),
   showConstraint(Con,O4,O5),
-  appStr(" .. ",O5,O6),
+  appStr(" <~ ",O5,O6),
   showType(Mtds,O6,O7),
   appStr(".\n",O7,Ox).
 

@@ -1,7 +1,7 @@
 lo.topsort{
   import lo.
 
-  public contract all e,t ~~ depends[t ->> e] .. {
+  public contract all e,t ~~ depends[t ->> e] <~ {
     defines:(t,e){}.
     references:(t) => list[e].
   }

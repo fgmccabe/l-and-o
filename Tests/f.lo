@@ -2,7 +2,7 @@ f{
   type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   public 
-  contract all t ~~ additive[t] .. {
+  contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
   }

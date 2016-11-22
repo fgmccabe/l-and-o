@@ -2,7 +2,7 @@ lo.coerce{
   import lo.core.
 
   public 
-  contract all s,d ~~ coercion[s,d] .. {
+  contract all s,d ~~ coercion[s,d] <~ {
     _coerce:(s)=>d.
   }
 

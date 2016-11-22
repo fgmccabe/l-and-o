@@ -6,7 +6,7 @@ lo.index{
   import lo.collection.
 
   public
-  contract all m,k,v ~~ /*equality[k] |: */ map[m ->> k,v] .. {
+  contract all m,k,v ~~ /*equality[k] |: */ map[m ->> k,v] <~ {
       present:(m,k,v){}.
       remove:(m,k) => m.
       put:(m,k,v) => m.

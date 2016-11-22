@@ -116,7 +116,7 @@ lo.comp.canon {
   dispDef(vardef(Lc,Nm,Vz,Tp,Exp)) => ssSeq([disp(Vz),ss(" var: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ss(Nm),ss("="),dispTerm(Exp)]).
   dispDef(typedef(Lc,Nm,Vz,Tp,Rules)) => ssSeq([disp(Vz),ss(" type: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
   dispDef(other(C)) => ssSeq([ss("other: "),ss("@"),disp(Lc),ss("\n"),disp(C)]).
-  dispDef(conDef(Lc,Nm,Vz,Con,B)) => ssSeq([disp(Vz),ss(" contract: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),disp(B)]).
+  dispDef(conDef(Lc,Nm,Vz,Con,B)) => ssSeq([disp(Vz),ss(" contract: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
   dispDef(implDef(Lc,Vz,Con,D)) => ssSeq([disp(Vz),ss(" implementation: "),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),ssSeq(dispDefs(D))]).
 
   private dispDefs:(list[canonDef]) => list[ss].

@@ -3,7 +3,7 @@ lo.comp.freshen{
   import lo.comp.misc.
   import lo.comp.types.
 
-  public contract all s ~~ freshen[s] .. {
+  public contract all s ~~ freshen[s] <~ {
     freshen:(s,map[string,tipe]) => s.
   }.
 

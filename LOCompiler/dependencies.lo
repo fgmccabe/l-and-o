@@ -89,7 +89,7 @@ lo.comp.dependencies{
   ruleNameKind:(ast,string,defnKind){}.
   ruleNameKind(S,Nm,con) :-
     isUnary(S,"contract",_,I),
-    isBinary(I,"..",_,L,_),
+    isBinary(I,"<~",_,L,_),
     contractName(L,Nm).
   ruleNameKind(S,Nm,impl) :-
     isUnary(S,"implementation",_,I),
@@ -194,7 +194,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"private",_,I).
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"public",_,I).
   stmtRefs(S,All,So) =>  refsInType(I,All,So) :-  isUnary(S,"type",_,I).
-  stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInType(R,All,So)) :-  (isUnary(S,"contract",_,I), isBinary(I,"..",_,L,R)).
+  stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInType(R,All,So)) :-  (isUnary(S,"contract",_,I), isBinary(I,"<~",_,L,R)).
   stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"..",_,L,R)).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"=>",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=>",_,H,E).

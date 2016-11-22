@@ -1,14 +1,14 @@
 g{
   -- stream contract
   public
-  contract all S,E ~~ stream[S ->> E] .. {
+  contract all S,E ~~ stream[S ->> E] <~ {
     _eof:(S){}.
     _hdtl:(S,E,S){}.
     _cons:(E,S)=>S.
   }
 
   public 
-  contract all t ~~ additive[t] .. {
+  contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
   }

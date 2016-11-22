@@ -1,13 +1,13 @@
 aa{
   public 
-  contract all t ~~ additive[t] .. {
+  contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
     zero : t.
   }
 
   public 
-  contract all t ~~ arith[t] .. {
+  contract all t ~~ arith[t] <~ {
     (*): (t,t)=>t.
     (/): (t,t)=>t.
     (%): (t,t)=>t.

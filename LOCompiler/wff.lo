@@ -28,7 +28,7 @@ lo.comp.wff {
   isContractSpec:(ast,location,list[ast],list[ast],ast,list[ast]){}.
   isContractSpec(St,Lc,Quants,Constraints,Con,Body) :-
     isUnary(St,"contract",Lc,I),
-    isBinary(I,"..",_,L,R),
+    isBinary(I,"<~",_,L,R),
     isBraceTuple(R,_,Body),
     contractSpec(L,Quants,Constraints,Con).
 
@@ -49,7 +49,7 @@ lo.comp.wff {
   packageName:(ast) => string.
   packageName(T) =>  Pkg :-  isIden(T,_,Pkg).
   packageName(T) =>  Pkg :-  isString(T,_,Pkg).
-  packageName(T)  => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
+  packageName(T) => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
 
   public 
   type pkgName ::= pkg(string,string) | defltPkg(string).

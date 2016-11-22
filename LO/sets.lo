@@ -3,7 +3,7 @@ lo.sets {
   import lo.index.
   import lo.collection.
 
-  public contract all k,e ~~ setops[k->>e] .. {
+  public contract all k,e ~~ setops[k->>e] <~ {
     union : (k,k)=>k.
     intersect : (k,k)=>k.
     difference : (k,k)=>k.

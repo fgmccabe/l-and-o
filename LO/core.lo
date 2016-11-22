@@ -4,13 +4,13 @@ lo.core{
   public type thing ::= thing.
 
   public 
-  contract all x ~~ equality[x] .. {
+  contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
     hash:(x)=>integer.
   }
 
   public 
-  contract all x ~~ /*equality[x] |: */ comp[x] .. {
+  contract all x ~~ /*equality[x] |: */ comp[x] <~ {
     (<): (x,x){}.
     (>=): (x,x){}.
   }
@@ -19,14 +19,14 @@ lo.core{
   type all t ~~ option[t] ::= none | some(t).
   
   public 
-  contract all x ~~ additive[x] .. {
+  contract all x ~~ additive[x] <~ {
     (+): (x,x)=>x.
     (-): (x,x)=>x.
     zero: x.
   }
 
   public
-  contract all x ~~ /* additive[x] |: */ arith[x] .. {
+  contract all x ~~ /* additive[x] |: */ arith[x] <~ {
     (*): (x,x)=>x.
     (/): (x,x)=>x.
     (%): (x,x)=>x.
@@ -38,13 +38,13 @@ lo.core{
 
   -- Displayable contract
   public  
-  contract all t ~~ display[t] .. {
+  contract all t ~~ display[t] <~ {
     disp:(t)=>ss.
   }
 
   -- stream contract
   public
-  contract all S,E ~~ stream[S ->> E] .. {
+  contract all S,E ~~ stream[S ->> E] <~ {
     _eof:(S){}.
     _hdtl:(S,E,S){}.
     _cons:(E,S)=>S.

@@ -1,12 +1,12 @@
 q{
   public 
-  contract all x ~~ equality[x] .. {
+  contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
     hash:(x)=>integer.
   }
 
   public 
-  contract all x ~~ equality[x] |: comp[x] .. {
+  contract all x ~~ equality[x] |: comp[x] <~ {
     (<): (x,x){}.
     (>=): (x,x){}.
   }
