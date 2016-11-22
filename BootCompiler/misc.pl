@@ -89,6 +89,7 @@ appStr(Str,O,E) :- string_chars(Str,Chrs), concat(Chrs,E,O).
 appQuoted(Str,Qt,O,E) :- appStr(Qt,O,O1), string_chars(Qt,[Q]),string_chars(Str,Chars), quoteConcat(Q,Chars,O1,O2), appStr(Qt,O2,E).
 
 quoteConcat(_,[],O,O).
+quoteConcat(Qt,['\"'|More],['\\','\"'|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
 quoteConcat(Qt,[Qt|More],['\\',Qt|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
 quoteConcat(Qt,['\\'|More],['\\','\\'|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).
 quoteConcat(Qt,[C|More],[C|Out],Ox) :- quoteConcat(Qt,More,Out,Ox).

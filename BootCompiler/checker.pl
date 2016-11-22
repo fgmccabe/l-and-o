@@ -348,9 +348,10 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
 
 checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
   getTypeFace(ClassTp,Env,Face),
-  moveConstraints(Face,_,faceType(Fields)),
+  moveConstraints(Face,Cx,faceType(Fields)),
   pushScope(Env,Base),
-  declareVar("this",vr("this",Lc,ClassTp),Base,ThEnv),
+  declareConstraints(Cx,Base,BaseEnv),
+  declareVar("this",vr("this",Lc,ClassTp),BaseEnv,ThEnv),
   thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,ThEnv,_OEnv,Defs,Public,_Imports,Others),
   computeExport(Defs,Fields,Public,BodyDefs,Types,[],[]).
 
@@ -950,7 +951,9 @@ pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
 pickTypeTemplate(typeRule(Lhs,_),Lhs).
 
 generateClassFace(Tp,Env,Face) :-
-  freshen(Tp,voidType,Q,Plate),
+  freshen(Tp,voidType,Q,FTp),
+  moveConstraints(FTp,Cx,Plate),
   (Plate = classType(_,T); T=Plate),
   getTypeFace(T,Env,F),
-  freezeType(F,Q,Face),!.
+  moveConstraints(ClTp,Cx,F),
+  freezeType(ClTp,Q,Face),!.
