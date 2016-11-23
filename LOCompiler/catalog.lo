@@ -8,9 +8,8 @@ lo.comp.catalog{
   
   locateCatalog:(uri) => catalog.
   locateCatalog(Uri,Cat) :-
-    resolveURI(Uri,relUri(rel(["catalog"]),noQuery),CatURI),
-    locateResource(CatURI,Chars),
-    parseCatalog(Chars,CatURI,Cat).
+    CatURI = resolveURI(Uri,relUri(localRsrc(relPath(["catalog"])),noQ),
+    parseCatalog(getResource(CatUri),CatURI,Cat).
 
   resolveCatalog(cat(Cat),Nm,Uri) :-
     is_member(entries(Map),Cat),
