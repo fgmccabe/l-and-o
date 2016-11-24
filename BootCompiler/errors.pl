@@ -59,6 +59,9 @@ showTerm(L,O) :-
 showTerm(T,O) :-
   isType(T),!,
   showType(T,O,[]).
+showTerm(C,O) :-
+  isConstraint(C),!,
+  showConstraint(C,O,[]).
 showTerm(T,O) :-
   isCanon(T),!,
   showCanonTerm(T,O,[]).

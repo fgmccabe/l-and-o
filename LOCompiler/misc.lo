@@ -37,11 +37,16 @@ lo.comp.misc{
   prHash:all x,y ~~ equality[x], equality[y] |: (pr[x,y]) => integer.
   prHash(pr(X,Y)) => (37*hash(X))+hash(Y).
 
-  public multiCat:all x ~~ (list[list[x]]) => list[x].
-  multiCat([]) => [].
-  multiCat([E,..L]) => cat(E,L).
+  public replace:all x~~(list[x],x,x) => list[x].
+  replace([],_,r) => [r].
+  replace([e,..l],e,r) => [r,..l].
+  replace([e,..l],t,r) => [e,..replace(l,t,r)] :- e\=t.
 
-  cat:all x ~~ (list[x], list[list[x]]) => list[x].
-  cat([],M) => multiCat(M).
-  cat([E,..L],M) => [E,..cat(L,M)].
+  public interleave:all x~~(list[x],x) => list[x].
+  interleave([],_)=>[].
+  interleave([F,..L],S)=>[F,..mixin(L,S)].
+  
+  private mixin:all x~~(list[x],x)=>list[x].
+  mixin([],_)=>[].
+  mixin([F,..L],S) =>[S,F,..mixin(L,S)].
 }

@@ -1,5 +1,5 @@
 :- module(dict,[declareType/4,isType/3,
-    declareVar/4,isVar/3,
+    declareVar/4,isVar/3,currentVar/3,restoreVar/4,
     declareContract/4,getContract/3,
     declareImplementation/4,getImplementations/3,allImplements/3,
     declareConstraint/3,isConstrained/2,
@@ -33,6 +33,13 @@ isVar(Nm,Env,Vr) :- makeKey(Nm,Key), isVr(Key,Env,Vr).
 
 isVr(Key,[scope(_,Names,_,_,_)|_],Vr) :- get_dict(Key,Names,Vr),!.
 isVr(Key,[_|Outer],Vr) :- isVr(Key,Outer,Vr).
+
+currentVar(Nm,Env,some(Vr)) :- makeKey(Nm,Key), isVr(Key,Env,Vr),!.
+currentVar(_,_,none).
+
+restoreVar(Nm,Env,some(Vr),Ev) :-
+  declareVar(Nm,Vr,Env,Ev).
+restoreVar(_,Env,none,Env).
 
 declareContract(Nm,Con,[scope(Types,Nms,Cns,Impls,Contracts)|Outer],[scope(Types,Nms,Cns,Impls,Cons)|Outer]) :-
   makeKey(Nm,Key),

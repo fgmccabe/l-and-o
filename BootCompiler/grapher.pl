@@ -34,8 +34,8 @@ scanPkg(Pkg,Repo,Cat,CWD,SoFar,Pkgs) :-
     checkPkg(Spec,Repo,Cat,CWD,SrcFn,SoFar,Pkgs) ;
     scanFile(SrcFn,Repo,Cat,CWD,SoFar,Pkgs)).
 scanPkg(Pkg,Repo,Cat,CWD,Pi,Px) :-
-  resolveCatalog(Cat,Pkg,Uri),
-  scanFile(Uri,Repo,Cat,CWD,Pi,Px).
+  ( resolveCatalog(Cat,Pkg,Uri) -> scanFile(Uri,Repo,Cat,CWD,Pi,Px) ;
+    reportError("cannot locate package %s",[Pkg]),Pi=Px).
 
 parsePkgName(P,pkg(Pkg,Version)) :-
   sub_string(P,Before,_,After,"#"),!,

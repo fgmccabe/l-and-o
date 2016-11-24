@@ -11,6 +11,14 @@ lo.list{
   X in [X,.._].
   X in [_,..Y] :- X in Y.
 
+  public multiCat:all x ~~ (list[list[x]]) => list[x].
+  multiCat([]) => [].
+  multiCat([E,..L]) => cat(E,L).
+
+  cat:all x ~~ (list[x], list[list[x]]) => list[x].
+  cat([],M) => multiCat(M).
+  cat([E,..L],M) => [E,..cat(L,M)].
+
   public reverse:all t ~~ (list[t]) => list[t].
   reverse(X) => rev(X,[]).
 
@@ -43,4 +51,5 @@ lo.list{
     foldRight(f,x,[]) => x.
     foldRight(f,x,[e,..l]) => f.apply(e,foldRight(f,x,l)).
   }
+
 }

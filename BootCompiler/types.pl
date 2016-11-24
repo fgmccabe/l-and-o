@@ -1,4 +1,4 @@
-:- module(types,[isType/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2, 
+:- module(types,[isType/1,isConstraint/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2, 
       typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
       dispType/1,showType/3,showConstraint/3,
       occursIn/2,isUnbound/1,isBound/1, constraints/2, isIdenticalVar/2, 

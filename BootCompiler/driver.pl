@@ -84,7 +84,9 @@ processPkg(P,Imps,_,CP,CP,Repo,Repo,_) :-
   reportMsg("skipping package %s",[P]).
 processPkg(P,_,Fl,CP,[P|CP],Repo,Rx,Opts) :-
   reportMsg("compiling package %s",[P]),
-  processFile(Fl,P,Repo,Rx,Opts).
+  processFile(Fl,P,Repo,Rx,Opts),!.
+processPkg(P,_,_,CP,CP,Repo,Repo,_) :-
+  reportError("failed to compile package %s",[P]).
 
 importsOk([],_).
 importsOk([P|I],CP) :-

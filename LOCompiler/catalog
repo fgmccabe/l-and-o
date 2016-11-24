@@ -23,6 +23,7 @@ catalog{
     lo.comp.macro -> "macro.lo".
     lo.comp.misc -> "misc.lo".
     lo.comp.operators -> "operators.lo".
+    lo.comp.package -> "package.lo".
     lo.comp.parseType -> "parsetype.lo".
     lo.comp.parseutils -> "parseutils.lo".
     lo.comp.regexp -> "regexp.lo".

@@ -4,4 +4,16 @@ lo.comp.package{
   public type pkg ::= pkg(string,version).
 
   public type version ::= defltVersion | vers(string).
+
+  public implementation equality[pkg] .. {
+    P1 == P2 :- samePackage(P1,P2).
+    hash(P) => packageHash(P).
+  }
+
+  samePackage:(pkg,pkg){}.
+  samePackage(pkg(P1,V1),pkg(P2,V2)) :- P1=P2, V1=V2.
+
+  packageHash:(pkg)=>integer.
+  packageHash(pkg(P,defltVersion)) => hash(P).
+  packageHash(pkg(P,vers(V))) => hash(P)*47+hash(V).
 }

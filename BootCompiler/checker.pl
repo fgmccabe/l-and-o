@@ -754,8 +754,10 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   checkGrammarType(Lc,Env,StrmTp,ElTp),
   typeOfTerm(S,StrmTp,Env,E0,Strm),
   typeOfTerm(M,StrmTp,E0,E1,Rest),
+  currentVar("stream$X",E1,OV),
   declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
-  checkNonTerminals(L,StrmTp,E2,Ev,NT).
+  checkNonTerminals(L,StrmTp,E2,E3,NT),
+  restoreVar("stream$X",E3,OV,Ev).
 checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
   checkInvokeGrammar(Lc,L,R,Env,Ev,Goal).
@@ -780,13 +782,15 @@ checkCallArgs(Lc,Pred,A,ArgTps,Env,Env,true(Lc)) :-
   reportError("arguments %s of %s not consistent with expected types %s",[A,Pred,tupleType(ArgTps)],Lc).
 
 checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
-  newTypeVar("_S",StrTp),
+  newTypeVar("_S",StrmTp),
   newTypeVar("_E",ElTp),
-  checkGrammarType(Lc,Env,StrTp,ElTp),
-  typeOfTerm(R,StrTp,Env,E1,Strm),
+  checkGrammarType(Lc,Env,StrmTp,ElTp),
+  typeOfTerm(R,StrmTp,Env,E1,Strm),
   binary(Lc,",",L,name(Lc,"eof"),Phrase),
-  declareVar("stream$X",vr("stream$X",Lc,StrTp),E1,E2),
-  checkNonTerminals(Phrase,StrTp,ElTp,E2,Ev,NT).
+  currentVar("stream$X",E1,OV),
+  declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
+  checkNonTerminals(Phrase,StrmTp,ElTp,E2,E3,NT),
+  restoreVar("stream$X",E3,OV,Ev).
 
 checkGrammarType(Lc,Env,Tp,ElTp) :-
   getContract("stream",Env,contract(_,_,Spec,_,_)),

@@ -122,9 +122,11 @@ resolveTerm(apply(Op,Args),Dict,apply(ROp,RArgs)) :-
   resolveTerm(Op,Dict,ROp),
   resolveTerms(Args,Dict,RArgs).
 resolveTerm(over(Lc,T,Cx),Dict,Over) :-
-  resolveContracts(Lc,Cx,Dict,DTerms),
-  overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
-  (NArgs=[] -> Over = OverOp ; Over = apply(OverOp,NArgs)).
+  ( resolveContracts(Lc,Cx,Dict,DTerms) ->
+      overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
+      (NArgs=[] -> Over = OverOp ; Over = apply(OverOp,NArgs)) ;
+      reportError("cannot find implementation for contract %s",[Cx],Lc),
+      Over = T).
 resolveTerm(mtd(Lc,Nm),_,v(Lc,Nm)) :-
   reportError("cannot find implementation for %s",[Nm],Lc).
 
@@ -200,7 +202,7 @@ resolveGr(disj(Lc,L,R),Dict,disj(Lc,RL,RR)) :-
   resolveGr(L,Dict,RL),
   resolveGr(R,Dict,RR).
 resolveGr(conditional(Lc,T,L,R),Dict,conditional(Lc,RT,RL,RR)) :-
-  resolveCond(T,Dict,RT),
+  resolveGr(T,Dict,RT),
   resolveGr(L,Dict,RL),
   resolveGr(R,Dict,RR).
 resolveGr(one(Lc,L),Dict,one(Lc,RL)) :-
@@ -245,7 +247,7 @@ resolveContracts(Lc,[Con|C],Dict,[CV|Vs]) :-
 resolveContract(Lc,C,Dict,Over) :-
   implementationName(C,ImpNm),
   findImplementation(ImpNm,Dict,Impl),!,
-  resolve(Impl,C,ImpNm,Lc,Dict,Over).
+  resolve(Impl,C,ImpNm,Lc,Dict,Over),!.
 resolveContract(Lc,C,_,v(Lc,ImpNm)) :-
   implementationName(C,ImpNm),
   reportError("no implementation known for %s",[C],Lc).
@@ -257,6 +259,8 @@ resolve(I,C,ImpNm,Lc,Dict,Over) :-
   sameContract(CT,C,[]),
   resolveDependents(Cx,Lc,Dict,[],Args),
   formOver(v(Lc,ImpNm),Args,Over).
+resolve(I,C,_,Lc,_,I) :-
+  reportError("cannot resolve contract %s",[C],Lc).
 
 resolveDependents([],_,_,Args,Args).
 resolveDependents([C|L],Lc,Dict,As,Args) :-
