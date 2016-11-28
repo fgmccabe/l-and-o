@@ -33,8 +33,6 @@ lo.comp.catalog{
   defaultBase:(catalog,uri) => catalog.
   defaultBase(cat(Stmts),Fl) => cat(replace(Stmts,base(_),base(Fl))).
 
-
-
   -- Tokenization
 
   private type token ::= catalg

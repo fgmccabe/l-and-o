@@ -125,7 +125,7 @@ resolveTerm(over(Lc,T,Cx),Dict,Over) :-
   ( resolveContracts(Lc,Cx,Dict,DTerms) ->
       overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
       (NArgs=[] -> Over = OverOp ; Over = apply(OverOp,NArgs)) ;
-      reportError("cannot find implementation for contract %s",[Cx],Lc),
+      reportError("cannot find implementation for contracts %s",[Cx],Lc),
       Over = T).
 resolveTerm(mtd(Lc,Nm),_,v(Lc,Nm)) :-
   reportError("cannot find implementation for %s",[Nm],Lc).

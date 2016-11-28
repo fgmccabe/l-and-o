@@ -68,4 +68,7 @@ showTerm(T,O) :-
 showTerm(T,O) :-
   isLocation(T),
   showLocation(T,O,[]).
+showTerm([],[]).
+showTerm([E|_],O) :-
+  showTerm(E,O).
 showTerm(T,O) :- term_string(T,S), !,string_chars(S,O).

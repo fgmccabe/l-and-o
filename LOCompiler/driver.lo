@@ -3,30 +3,29 @@ lo.comp.driver{
   import lo.uri.
   import lo.resources.
 
-  import lo.comp.lexer.
-  import lo.comp.token.
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.grammar.
-
-  tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U)).
-
-  parseFile:(uri) => ast.
-  parseFile(U) => Term :-
-    tokenize(Toks) %% startState(getResource(U)),
-    parse(Term) %% Toks .
-
+  import lo.comp.args.
+  import lo.comp.catalog.
+  import lo.comp.package.
+  
   -- Hint to the run-time:
   main:(list[string]){}.
-  main(Strs) :-
-    B = cwd(),
-    parseArgs(B,Strs).
+  main(Args) :-
+    opts = parseFlags(Args),
+    processPkgs(opts.pkgs,opts).
 
-  parseArgs:(uri,list[string]){}.
-  parseArgs(_,[]).
-  parseArgs(B,[S,..M]) :-
-    Term = parseFile(resolveUri(B,parseUri(S))),
-    _logmsg(formatSS(disp(Term))),
-    parseArgs(B,M).
+  -- Temporary definition
+  processPkgs:(list[pkg],compOption){}.
+  processPkgs([],_).
+  processPkgs([p,..l],o) :-
+    resolveCatalog(o.catalog,p,u),
+    processFile(u,o),
+    processPkgs(l,o).
+
+  processFile:(uri,compOption){}.
+  processFile(u,o) :-
+    Term = parseFile(u),
+    _logmsg(formatSS(disp(Term))).
 }

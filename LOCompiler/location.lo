@@ -11,7 +11,7 @@ lo.comp.location{
   }.
 
   public loc:(integer,integer,integer,integer)<=>location.
-  loc(Line,Off,Col,Len)<=>{
+  loc(Line,Off,Col,Len){
     line = Line.
     column = Col.
     from = Off.
@@ -29,5 +29,5 @@ lo.comp.location{
   locDisp(loc(Ln,Off,Col,Len)) => 
         ssSeq([disp(Ln),ss(":"),disp(Col),ss("("),disp(Len),ss(")")]).
 
-  public hasLoc <~ { loc:location. }.
+  public type hasLoc <~ { loc:location. }.
 }

@@ -10,8 +10,7 @@ lo.comp.repository{
   public type repository ::= repo(uri,manifest) | nullRepo.
 
   public openRepository:(uri) => repository.
-  openRepository(Root) => repo(Root,Manifest) :- 
-      parseManifest(getResource(resolveFile(Root,"manifest")),Manifest).
+  openRepository(Root) => repo(Root,readManifest(resolveUri(Root,parseUri("manifest")))).
   openRepository(Root) => repo(Root,manifest([])).
 
   public locatePackage:(repository,string,version,version,list[integer]){}.
@@ -49,119 +48,4 @@ lo.comp.repository{
     manifestEntry(Pkg,V) in Entries,
     (Vers,_,FN) in V,
     resourcePresent(resolveFile(Root,FN),readMode).
-
-  flushManifest:(uri,manifest){}.
-  flushManifest(Root,M) :-
-    putResource(resolveFile(Root,"manifest"),flatten(disp(M))).
-
-  -- Each end-point directory has a manifest file in it.
-  -- The role of the manifest is to map URIs to files
-
-  readManifest:(uri,manifest){}.
-  readManifest(Path,Manifest) :-
-    parseManifest(getResource(Path),Manifest).
-
-  parseManifest:(list[integer],manifest){}.
-  parseManifest(Chrs,M) :-
-    pManifest(M) %% Chrs.
-
-  -- A manifest looks like:
-  -- packageName : { (version:file[uri])* }
-
-  pManifest:(manifest) --> list[integer].
-  pManifest(manifest(E)) --> manifst(), lbrce(), entries(E), rbrce(), spaces().
-
-  entries:(list[manifestEntry]) --> list[integer].
-  entries([Entry,..More]) --> entry(Entry), entries(More).
-  entries([]) --> [].
-
-  entry:(manifestEntry) --> list[integer].
-  entry(manifestEntry(Package,Versions)) --> package(Package), colon(), lbrce(), versions(Versions), rbrce().
-
-  manifst:()-->list[integer].
-  manifst() --> spaces(), "manifest".
-
-  colon:()-->list[integer].
-  colon() --> spaces(), ":".
-
-  lbrce:()-->list[integer].
-  lbrce() --> spaces(), "{".
-
-  rbrce:()-->list[integer].
-  rbrce() --> spaces(), "}".
-
-  equals:()-->list[integer].
-  equals() --> spaces(), "=".
-
-  spaces:()-->list[integer].
-  spaces() --> " ", spaces().
-  spaces() --> [].
-
-  package:(string) --> list[integer].
-  package(implode(multiCat([Id,..Suf]))) --> spaces(), iden(Id), suffixes(Suf).
-
-  suffixes:(list[list[integer]]) --> list[integer].
-  suffixes([[0c.,..Id],..More]) --> ".", iden(Id), suffixes(More).
-  suffixes([]) --> [].
-
-  fileName:(string) --> list[integer].
-  fileName(implode(multiCat([F,..Rest]))) --> spaces(), fileSeg(F), segments(Rest).
-
-  fileSeg:(list[integer]) --> list[integer].
-  fileSeg([Ch,..Mo]) --> (alpha(Ch) | digit(Ch) | period(Ch))!, fileSeg(Mo).
-  fileSeg([]) --> [].
-
-  segments:(list[list[integer]]) --> list[integer].
-  segments([[0c/,..Seg],..More]) --> "/", fileSeg(Seg), segments(More).
-  segments([]) --> \+ "/".
-
-  period:(integer) --> list[integer].
-  period(0c.) --> ".".
-
-  versions:(list[(version,uri,string)]) --> list[integer].
-  versions([V,..More]) --> version(V), versions(More).
-  versions([]) --> [].
-
-  version:((version,uri,string)) --> list[integer].
-  version((V,U,F)) --> versionName(V), equals(), fileName(F), "[", uriParse(U), "]".
-
-  versionName:(version) --> list[integer].
-  versionName(defaultVersion) --> spaces(), "*".
-  versionName(vers(implode(S))) --> spaces(), fileSeg(S).
-
-  implementation display[manifest] .. {
-    disp(manifest(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
-  }
-
-  showEntries:(list[manifestEntry]) => list[ss].
-  showEntries([]) => [].
-  showEntries([E,..L]) => [showEntry(E),..showEntries(L)].
-
-  showEntry:(manifestEntry) => ss.
-  showEntry(manifestEntry(Pkg,Versions)) => ssSeq([ss("  "),ss(Pkg),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
-
-  showVersions:(list[(version,uri,string)]) => list[ss].
-  showVersions([]) => [].
-  showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
-
-  showVersion:((version,uri,string)) => ss.
-  showVersion((V,U,F)) => ssSeq([ss("    "),showV(V),ss("="),ss(F),ss("["),disp(U),ss("]\n")]).
-
-  showV:(version) => ss.
-  showV(vers(V)) => ss(V).
-  showV(defltVersion) => ss("*").
-
-  addToManifest:(manifest,uri,string,version,string) => manifest.
-  addToManifest(manifest(M),U,Pkg,Version,FileName) => manifest(addEntry(M,U,Pkg,Version,FileName)).
-
-  addEntry:(list[manifestEntry],uri,string,version,string) => list[manifestEntry].
-  addEntry([],U,Pkg,Version,FileName) => [(manifestEntry(Pkg,[(Version,U,FileName)]))].
-  addEntry([manifestEntry(Pkg,Vers),..E],U,Pkg,Version,FileName) => [manifestEntry(Pkg,addVersion(Vers,U,Version,FileName)),..E].
-  addEntry([E,..M],U,Pkg,Version,FileName) => [E,..addEntry(M,U,Pkg,Version,FileName)].
-
-  addVersion:(list[(version,uri,string)],uri,version,string) => list[(version,uri,string)].
-  addVersion([],U,Vers,FileNm) => [(Vers,U,FileNm)].
-  addVersion([(Vers,_,_),..V],U,Vers,FileNm) => [(Vers,U,FileNm),..V] . -- replace version
-  addVersion([V,..M],U,Vers,FileNm) => [V,..addVersion(M,U,Vers,FileNm)].
-
 }

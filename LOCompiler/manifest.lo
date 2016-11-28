@@ -1,11 +1,113 @@
 lo.comp.manifest{
   import lo.
-  import lo.resource.
+  import lo.resources.
   import lo.uri.
   import lo.comp.package.
+  import lo.comp.parseutils.
 
   public type manifest ::= manifest(list[manifestEntry]).
 
-  type manifestEntry ::= manifestEntry(string,list[(package,uri,string)]).
-  
+  -- A manifest entry looks like:
+  -- packageName : { (version:file[uri])* }
+
+  type manifestEntry ::= manifestEntry(string,list[(pkg,uri,string)]).
+
+  -- Tokenization and parsing manifest files
+
+  private type token ::= mAnifest | lbrce | rbrce | eqUals | stAr 
+    | pkgId(string) | utok(list[integer]).
+
+  tokens:(list[token]) --> list[integer].
+  tokens(Toks) --> spaces(), moreToks(Toks).
+
+  moreToks:(list[token]) --> list[integer].
+  moreToks([]) --> eof.
+  moreToks([Tok,..More]) --> token(Tok), tokens(More).
+
+  token:(token) --> list[integer].
+  token(mAnifest) --> "manifest".
+  token(lbrce) --> "{".
+  token(rbrce) --> "}".
+  token(start) --> "*".
+  token(colon) --> ":".
+  token(eqUals) --> "=".
+  token(utok(Seq)) --> "[", stringText(Seq), "]".
+  token(pkgId(Nm)) --> pkgIden(Nm).
+
+  stringText:(list[integer]) --> list[integer].
+  stringText([]) --> [].
+  stringText([C,..More]) --> "\\", quote(C), stringText(More).
+  stringText([C,..More]) --> [C], { C \= 0c] }, stringText(More).
+
+  quote:(integer) --> list[integer].
+  quote(0c\n) --> "n".
+  quote(0c") --> "\"".
+  quote(0c') --> "'".
+  quote(0c\t) --> "t".
+  quote(C) --> [C].
+
+  public readManifest:(uri) => manifest.
+  readManifest(u) => m :- parseManifest(m) %% getResource(u).
+
+  public flushManifest:(uri,manifest){}.
+  flushManifest(Root,M) :-
+    putResource(Root,flatten(disp(M))).
+
+  -- Parsing a manifest from tokens
+  public parseManifest:(manifest) --> list[integer].
+  parseManifest(M) --> tokens(TL), { pManifest(M) %% TL}.
+
+  pManifest:(manifest) --> list[token].
+  pManifest(manifest(E)) --> [mAnifest, lbrce], entries(E), [rbrce].
+
+  entries:(list[manifestEntry]) --> list[token].
+  entries([Entry,..More]) --> entry(Entry), entries(More).
+  entries([]) --> [].
+
+  entry:(manifestEntry) --> list[token].
+  entry(manifestEntry(Pk,Versions)) --> [pkgId(Pk), colon, lbrce], versions(Pk,Versions), [rbrce].
+
+  versions:(string,list[(pkg,uri,string)]) --> list[token].
+  versions(Pk,[V,..More]) --> version(Pk,V), versions(Pk,More).
+  versions(_,[]) --> [].
+
+  version:(string,(pkg,uri,string)) --> list[token].
+  version(P,(pkg(P,V),Uri,F)) --> versionName(V), [equals, pkgId(F), utok(U)], { uriParse(Uri)%%U }.
+
+  versionName:(version) --> list[token].
+  versionName(defaultVersion) --> [stAr].
+  versionName(vers(S)) --> [pkgId(S)].
+
+  -- Displaying a manifest
+  public implementation display[manifest] .. {
+    disp(manifest(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
+  }
+
+  showEntries:(list[manifestEntry]) => list[ss].
+  showEntries([]) => [].
+  showEntries([E,..L]) => [showEntry(E),..showEntries(L)].
+
+  showEntry:(manifestEntry) => ss.
+  showEntry(manifestEntry(Pk,Versions)) => ssSeq([ss("  "),ss(Pk),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
+
+  showVersions:(list[(pkg,uri,string)]) => list[ss].
+  showVersions([]) => [].
+  showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
+
+  showVersion:((pkg,uri,string)) => ss.
+  showVersion((pkg(_,V),U,F)) => ssSeq([ss("    "),disp(V),ss("="),ss(F),ss("["),disp(U),ss("]\n")]).
+
+  -- Simple API to manipulate entries in a mAnifest
+  addToManifest:(manifest,uri,string,version,string) => manifest.
+  addToManifest(manifest(M),U,Pkg,Version,FileName) => manifest(addEntry(M,U,Pkg,Version,FileName)).
+
+  addEntry:(list[manifestEntry],uri,string,version,string) => list[manifestEntry].
+  addEntry([],U,Pkg,Version,FileName) => [(manifestEntry(Pkg,[(pkg(Pkg,Version),U,FileName)]))].
+  addEntry([manifestEntry(Pkg,Vers),..E],U,Pkg,Version,FileName) => [manifestEntry(Pkg,addVersion(Vers,U,pkg(Pkg,Version),FileName)),..E].
+  addEntry([E,..M],U,Pkg,Version,FileName) => [E,..addEntry(M,U,Pkg,Version,FileName)].
+
+  addVersion:(list[(pkg,uri,string)],uri,pkg,string) => list[(pkg,uri,string)].
+  addVersion([],U,Vers,FileNm) => [(Vers,U,FileNm)].
+  addVersion([(Vers,_,_),..V],U,Vers,FileNm) => [(Vers,U,FileNm),..V] . -- replace version
+  addVersion([V,..M],U,Vers,FileNm) => [V,..addVersion(M,U,Vers,FileNm)].
 }

@@ -193,11 +193,15 @@ defineType(N,Lc,_,Env,Env,_) :-
 defineType(N,Lc,St,Env,Ex,Path) :-
   parseTypeTemplate(St,[],Env,Type,Path),
   declareType(N,tpDef(Lc,Type,faceType([])),Env,Ex).
+defineType(_,Lc,St,Env,Env,_) :-
+  reportError("cannot parse type statement %s",[St],Lc).
 
 parseTypeDefs([],Defs,Defs,_,_).
 parseTypeDefs([(tpe(N),Lc,[Stmt])|More],Defs,Dx,TmpEnv,Path) :-
-  parseTypeDefinition(N,Lc,Stmt,Defs,D0,TmpEnv,Path),
+  parseTypeDefinition(N,Lc,Stmt,Defs,D0,TmpEnv,Path),!,
   parseTypeDefs(More,D0,Dx,TmpEnv,Path).
+parseTypeDefs([_|More],Defs,Dx,TmpEnv,Path) :-
+  parseTypeDefs(More,Defs,Dx,TmpEnv,Path).
 
 parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule)|Defs],Defs,Env,Path) :-
   parseTypeRule(St,Env,FaceRule,Path),

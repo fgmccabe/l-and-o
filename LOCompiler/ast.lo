@@ -4,7 +4,7 @@ lo.comp.ast{
   import lo.comp.keywords.
   import lo.comp.operators.
 
-  public ast <~ hasLoc.
+  public type ast <~ hasLoc.
 
   public implementation display[ast] .. {
     disp(T) => showAst(T,2000).

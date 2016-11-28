@@ -1,5 +1,7 @@
 lo.comp.grammar{
   import lo.
+  import lo.uri.
+  import lo.resources.
   import lo.comp.token.
   import lo.comp.operators.
   import lo.comp.location.
@@ -7,6 +9,14 @@ lo.comp.grammar{
   import lo.comp.abstract.
   import lo.comp.lexer.
   import lo.comp.errors.
+
+  private tokenizeFile:(uri) => list[token].
+  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U)).
+
+  public parseFile:(uri) => ast.
+  parseFile(U) => Term :-
+    tokenize(Toks) %% startState(getResource(U)),
+    parse(Term) %% Toks .
 
   type tokMark ::= endBrce | otherMark.
 

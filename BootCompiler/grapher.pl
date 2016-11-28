@@ -10,6 +10,7 @@
 :- use_module(misc).
 :- use_module(abstract).
 :- use_module(import).
+:- use_module(errors).
 :- use_module(catalog).
 
 makeGraph(Repo,Cat,CWD,Fls,Groups) :-

@@ -8,7 +8,7 @@
 locateCatalog(Uri,Cat) :-
   resolveURI(Uri,relUri(rel(["catalog"]),noQuery),CatURI),
   locateResource(CatURI,Chars),
-  parseCatalog(Chars,CatURI,Cat).
+  parseCatalog(Chars,CatURI,Cat),!.
 
 resolveCatalog(cat(Cat),Nm,Uri) :-
   is_member(entries(Map),Cat),
@@ -25,7 +25,7 @@ resolveCatalog(cat(Cat),Nm,Uri) :-
 parseCatalog(Chrs,Uri,Cat) :-
   phrase(tokens(Toks),Chrs),
   phrase(catalog(C),Toks),
-  defaultBase(C,Uri,Cat).
+  defaultBase(C,Uri,Cat),!.
 
 defaultBase(cat(Stmts),Fl,cat(NStmts)) :-
   replace(Stmts,base(_),base(Fl),NStmts).

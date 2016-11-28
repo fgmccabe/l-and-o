@@ -10,6 +10,16 @@ lo.comp.package{
     hash(P) => packageHash(P).
   }
 
+  public implementation display[pkg] .. {
+    disp(pkg(P,defltVersion)) => ss(P).
+    disp(pkg(P,vers(V))) => ssSeq([ss(P),ss("#"),ss(V)]).
+  }
+
+  public implementation display[version] .. {
+    disp(defltVersion) => ss("*").
+    disp(vers(V)) => ss(V).
+  }
+
   samePackage:(pkg,pkg){}.
   samePackage(pkg(P1,V1),pkg(P2,V2)) :- P1=P2, V1=V2.
 

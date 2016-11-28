@@ -2,11 +2,18 @@ lo.comp.parseutils{
   import lo.
 
   public iden:(list[integer]) --> list[integer].
-  iden([F,..Rest]) --> alpha(F), alphaNumStar(Rest).
+  iden([F,..Rest]) --> alpha(F), alphaNumStar(Rest,[]).
 
-  alphaNumStar:(list[integer]) --> list[integer].
-  alphaNumStar([C,..More]) --> alphanum(C), alphaNumStar(More).
-  alphaNumStar([]) --> [], \+ alphanum(_).
+  alphaNumStar:(list[integer],list[integer]) --> list[integer].
+  alphaNumStar([C,..More],End) --> alphanum(C), alphaNumStar(More,End).
+  alphaNumStar(End,End) --> [], \+ alphanum(_).
+
+  public pkgIden:(string) --> list[integer].
+  pkgIden(implode([F,..Rest])) --> alpha(F), alphaNumStar(Rest,R0), restPkgIden(R0).
+
+  private restPkgIden:(list[integer]) --> list[integer].
+  restPkgIden([0c.,..Rest]) --> ".", alphaNumStar(Rest,R0), restPkgIden(R0).
+  restPkgIden([]) --> \+ ".".
 
   public alpha:(integer)-->list[integer].
   alpha(C) --> (lowAlpha(C) | upAlpha(C)).

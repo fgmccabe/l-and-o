@@ -21,6 +21,7 @@ catalog{
     lo.comp.lexer -> "lexer.lo".
     lo.comp.location -> "location.lo".
     lo.comp.macro -> "macro.lo".
+    lo.comp.manifest -> "manifest.lo".
     lo.comp.misc -> "misc.lo".
     lo.comp.operators -> "operators.lo".
     lo.comp.package -> "package.lo".

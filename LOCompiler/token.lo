@@ -24,7 +24,7 @@ lo.comp.token{
   type stringSegment ::= segment(location,string) 
                 | interpolate(location,string,string).
 
-  public token <~ hasLoc.
+  public type token <~ hasLoc.
 
   public tok:(tok,location) <=> token.
   tok(Tk,Loc) {

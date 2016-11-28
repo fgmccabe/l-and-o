@@ -1,51 +1,66 @@
 lo.comp.args {
   import lo.uri.
+  import lo.resources.
   import lo.
-  import lo.comp.repository.
 
-  type compOption ::= debugging | profiling | wd(uri) | repo(uri) | version(string).
+  import lo.comp.catalog.
+  import lo.comp.package.
+  import lo.comp.errors.
 
-  public parseFlags:(list[string]) => (list[compOption],list[string]).  
-  parseFlags(args) => parseFlgs(args,[]).
+  public type compOption <~ {
+    debugging : logical.
+    profiling : logical.
+    wDir : uri.
+    repoDir : uri.
+    version : version.
+    catalog : catalog.
+    pkgs : list[pkg].
+  }
 
-  private parseFlgs:(list[string],list[compOption]) => (list[compOption],list[string]).
-  parseFlgs([],Opts) => (Opts,[]).
-  parseFlgs(["--",..Pkgs],Opts) => (Opts,Pkgs).
-  parseFlgs(["-g",..args],Opts) => parseFlgs(args,)
+  private comp:(logical,logical,uri,catalog,uri,version,list[pkg])<=>compOption.
+  comp(d,p,w,c,r,v,pk){
+    debugging = d.
+    profiling = p.
+    wDir = w.
+    repoDir = r.
+    catalog = c.
+    version = v.
+    pkgs = pk.
+  }
 
+  updateDbg:(compOption,logical) => compOption.
+  updateDbg(comp(_,p,w,c,r,v,pk),d) => comp(d,p,w,c,r,v,pk).
 
-  parseFlags([],CWD,CWD,[],[]).
-parseFlags(['-g'|More],CWD,Cx,[debugging|Opts],Files) :- 
-  parseFlags(More,CWD,Cx,Opts,Files).
-parseFlags(['-p'|More],CWD,Cx,[profiling|Opts],Files) :- 
-  parseFlags(More,CWD,Cx,Opts,Files).
-parseFlags(['-w',W|M],CW,Cx,Opts,Files) :-
-  atom_string(W,WN),
-  parseURI(WN,WU),
-  resolveURI(CW,WU,CWD),
-  parseFlags(M,CWD,Cx,Opts,Files).
-parseFlags(['-r', R|More],CWD,Cx,[repository(Repo)|Opts],Files) :- 
-  atom_string(R,RN),
-  parseURI(RN,RU),
-  resolveURI(CWD,RU,Ruri),
-  openRepository(Ruri,Repo),
-  parseFlags(More,CWD,Cx,Opts,Files).
-parseFlags(['-v', V|More],CWD,Cx,[version(Vers)|Opts],Files) :-
-  atom_string(V,Vers),
-  parseFlags(More,CWD,Cx,Opts,Files).
-parseFlags(['--'|More], CWD,CWD, [], Files) :- stringify(More,Files).
-parseFlags(More, CWD,CWD, [], Files) :- stringify(More,Files).
+  updateProf:(compOption,logical) => compOption.
+  updateProf(comp(d,_,w,c,r,v,pk),p) => comp(d,p,w,c,r,v,pk).
 
-stringify([],[]).
-stringify([Name|More],[Fn|Files]) :- 
-  atom_string(Name,Fn),
-  stringify(More,Files).
+  updateWd:(compOption,uri) => compOption.
+  updateWd(comp(d,p,_,_,r,v,pk),w) => comp(d,p,w,locateCatalog(w),r,v,pk).
 
-main(Args) :- 
-  getCWDUri(CW),
-  parseFlags(Args,CW,CWD,Opts,Pkgs),
-  openRepo(Opts,Repo),
-  locateCatalog(CWD,Cat),!,
-  makeGraph(Repo,Cat,CWD,Pkgs,Groups),
-  processGroups(Groups,[],Repo,CWD,Opts).
+  updateRepoD:(compOption,uri) => compOption.
+  updateRepoD(comp(d,p,w,c,_,v,pk),r) => comp(d,p,w,c,r,v,pk).
+
+  updatePk:(compOption,list[pkg]) => compOption.
+  updatePk(comp(d,p,w,c,r,v,_),pk) => comp(d,p,w,c,r,v,pk).
+
+  updateVers:(compOption,version) => compOption.
+  updateVers(comp(d,p,w,c,r,_,pk),v) => comp(d,p,w,c,r,v,pk).
+
+  public parseFlags:(list[string]) => compOption.  
+  parseFlags(args) => parseFlgs(args,comp(false,false,W,locateCatalog(W),W,defltVersion,[])) :- W=cwd().
+
+  private parseFlgs:(list[string],compOption) => compOption.
+  parseFlgs([],Opts) => Opts.
+  parseFlgs(["--",..Pkgs],Opts) => updatePk(Opts,locatePkgs(Opts,Pkgs)).
+  parseFlgs(["-g",..args],Opts) => parseFlgs(args,updateDbg(Opts,true)).
+  parseFlgs(["-p",..args],Opts) => parseFlgs(args,updateProf(Opts,true)).
+  parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,WD)) :- uriParse(WD) %% explode(W).
+  parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,D)) :- uriParse(D) %% explode(W).
+  parseFlgs(["-v",V,..args],Opts) => parseFlgs(args,updateVers(Opts,vers(V))).
+  parseFlgs([A,..args],Opts) => parseFlgs(args,Opts) :-
+    logMsg("unknown option: $(A)").
+
+  locatePkgs:(compOption,list[string]) => list[pkg].
+  locatePkgs(_,[]) => [].
+  locatePkgs(Opts,[P,..L]) => [pkg(P,Opts.version),..locatePkgs(Opts,L)].
 }
