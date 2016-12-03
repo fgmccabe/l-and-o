@@ -18,20 +18,11 @@ lo.comp.repository{
     findPkg(Repo,Pkg,V,ActV,Text)!.
 
   findPkg:(repository,string,version,version,list[integer]){}.
-  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveFile(Root,Fn))) :-
-    locateVersion(Man,Pkg,V,ActV,Fn).
+  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,Fn))) :-
+    locateVersion(Man,Pkg,V,ActV,Fn,_).
 
   resolveFile:(uri,string) => uri.
   resolveFile(Root,Fl) => resolveUri(Root,parseUri(Fl)).
-
-  locateVersion:(manifest,string,version,version,string){}.
-  locateVersion(manifest(Entries),Pkg,Vers,Act,Fn) :-
-    manifestEntry(Pkg,V) in Entries,
-    getVersion(Vers,Act,V,_,Fn).
-
-  getVersion:(version,version,list[(version,uri,string)],uri,string){}.
-  getVersion(Vers,Vers,V,U,Fn) :- (Vers,U,Fn) in V!.
-  getVersion(defltVersion,Act,V,U,Fn) :- (Act,U,Fn) in V!.
 
   public addPackage:(repository,uri,string,version,list[integer]) => repository.
   addPackage(repo(Root,Man),U,Pkg,Vers,Text) => repo(Root,NM) :-
@@ -44,8 +35,7 @@ lo.comp.repository{
   packageHash(Pkg,vers(V)) => ((37*hash(Pkg))+hash(V)).
 
   public packagePresent:(repository,string,version){}.
-  packagePresent(repo(Root,manifest(Entries)),Pkg,Vers) :-
-    manifestEntry(Pkg,V) in Entries,
-    (Vers,_,FN) in V,
-    resourcePresent(resolveFile(Root,FN),readMode).
+  packagePresent(repo(Root,Man),Pkg,Vers) :-
+    locateVersion(Man,Pkg,defltVersion,Vers,U,_),
+    resourcePresent(resolveUri(Root,U),readMode).
 }

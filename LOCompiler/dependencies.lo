@@ -1,5 +1,7 @@
 lo.comp.dependencies{
   import lo.
+  import lo.topsort.
+
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
@@ -7,7 +9,7 @@ lo.comp.dependencies{
   import lo.comp.keywords.
   import lo.comp.misc.
   import lo.comp.errors.
-  import lo.topsort.
+  import lo.comp.canon.
 
   public
   type defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
@@ -43,30 +45,30 @@ lo.comp.dependencies{
   collectDefinitions:(list[ast],list[defn],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast]){}.
   collectDefinitions([],[],[],[],[],[]).
   collectDefinitions([St,..Stmts],Defs,Pu,An,Im,Ot) :-
-    collectDefn(St,Stmts,S0,Defs,D0,Pu,P0,An,An0,Im,Im0,Ot,Ot0,false),
+    collectDefn(St,Stmts,S0,Defs,D0,Pu,P0,An,An0,Im,Im0,Ot,Ot0,priVate),
     collectDefinitions(S0,D0,P0,An0,Im0,Ot0).
 
   collectDefn:(ast,list[ast],list[ast],list[defn],list[defn],
       list[(string,defnKind)],list[(string,defnKind)],list[(string,ast)],list[(string,ast)],
-      list[ast],list[ast],list[ast],list[ast],logical){}.
+      list[ast],list[ast],list[ast],list[ast],visibility){}.
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St,..I],I,Oth,Oth,_) :-
     isImport(St).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_) :-
     isOther(St).
   collectDefn(St,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_) :-
     isUnary(St,"private",_,Inner),
-    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,_,A,Ax,I,Ix,O,Ox,false).
+    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,_,A,Ax,I,Ix,O,Ox,priVate).
   collectDefn(St,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,_) :-
     isUnary(St,"public",_,Inner),
-    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,true).
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Exp) :-
+    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,pUblic).
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Viz) :-
     isBinary(St,":",_,L,_),
     isIden(L,_,Nm),
-    checkPublic(Exp,Nm,valu,P,Px).
-  collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Exp) :-
+    checkPublic(Viz,Nm,valu,P,Px).
+  collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Viz) :-
     ruleNameKind(St,Nm,K),
     collectDefines(Stmts,Nm,K,Stx,DfSts),
-    checkPublic(Exp,Nm,K,P,Px).
+    checkPublic(Viz,Nm,K,P,Px).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_) :-
     reportError("cannot fathom $(St)",St.loc).
 
@@ -112,7 +114,7 @@ lo.comp.dependencies{
   ruleHead(S) =>  L :-  isBinary(S,"-->",_,L,_).
   ruleHead(S) =>  L :-  isBinary(S,":-",_,L,_).
   ruleHead(S) =>  L :-  isBinary(S,"<=",_,L,_).
-  ruleHead(S) =>  L :-  isBraceTerm(S,_,L).
+  ruleHead(S) =>  L :-  isBraceTerm(S,_,L,_).
   ruleHead(S) =>  S :-  isRoundTerm(S,_,_,_).
 
   headName:(ast)=>string.
@@ -171,9 +173,9 @@ lo.comp.dependencies{
     collectDefines(Stmts,Nm,K,Stx,Def).
   collectDefines(Stmts,_,_,Stmts,[]).
 
-  checkPublic:(logical,string,defnKind,list[(string,defnKind)],list[(string,defnKind)]){}.
-  checkPublic(true,Nm,K,[(Nm,K),..E],E).
-  checkPublic(false,_,_,E,E).
+  checkPublic:(visibility,string,defnKind,list[(string,defnKind)],list[(string,defnKind)]){}.
+  checkPublic(pUblic,Nm,K,[(Nm,K),..E],E).
+  checkPublic(priVate,_,_,E,E).
 
   allRefs:(list[defn]) => list[(string,defnKind)].
   allRefs([]) => [].

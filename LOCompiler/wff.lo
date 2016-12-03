@@ -4,6 +4,7 @@ lo.comp.wff {
   import lo.comp.ast.
   import lo.comp.abstract.
   import lo.comp.errors.
+  import lo.comp.package.
 
   public
   type defnKind ::= tpe | con | impl | valu | clss.
@@ -51,14 +52,12 @@ lo.comp.wff {
   packageName(T) =>  Pkg :-  isString(T,_,Pkg).
   packageName(T) => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
 
-  public 
-  type pkgName ::= pkg(string,string) | defltPkg(string).
 
   public
-  pkgName:(ast) => pkgName.
-  pkgName(T) => pkg(packageName(L),packageVersion(R)) :- 
+  pkgName:(ast) => pkg.
+  pkgName(T) => pkg(packageName(L),vers(packageVersion(R))) :- 
     isBinary(T,"#",_,L,R).
-  pkgName(T) => defltPkg(packageName(T)).
+  pkgName(T) => pkg(packageName(T),defltPackage).
 
   packageVersion:(ast) => string.
   packageVersion(T) =>  Pkg :-  isIden(T,_,Pkg).

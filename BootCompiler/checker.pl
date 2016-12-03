@@ -40,21 +40,10 @@ thetaEnv(Pkg,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   checkGroups(Groups,Fields,Annots,Defs,Env,TheEnv,Pkg),
   checkOthers(Otrs,Others,TheEnv,Pkg).
 
-importDefs(spec(_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
-  declareFields(Exported,Lc,Env,E0),
-  importTypes(Types,Lc,E0,E1),
-  importContracts(Cons,Lc,E1,Ex).
-
-declareFields([],_,Env,Env).
-declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
-  declareVar(Nm,vr(Nm,Lc,Tp),Env,E0),
-  declareFields(More,Lc,E0,Ex).
-
-importTypes([],_,Env,Env).
-importTypes([(Nm,Rule)|More],Lc,Env,Ex) :-
-  pickTypeTemplate(Rule,Type),
-  declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
-  importTypes(More,Lc,E0,Ex).
+processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex) :-
+  findAllImports(Stmts,Lc,Imports),
+  importAll(Imports,Repo,AllImports),
+  importAllDefs(AllImports,Lc,ImportSpecs,Repo,Env,Ex).
 
 findAllImports([],_,[]).
 findAllImports([St|More],Lc,[Spec|Imports]) :-
@@ -71,13 +60,24 @@ findImport(St,Lc,Viz,import(Viz,Pkg)) :-
   isUnary(St,Lc,"import",P),
   pkgName(P,Pkg).
 
-processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex) :-
-  findAllImports(Stmts,Lc,Imports),
-  importAll(Imports,Repo,AllImports),
-  importAllDefs(AllImports,Lc,ImportSpecs,Repo,Env,Ex).
-
 importAll(Imports,Repo,AllImports) :-
   closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
+
+importDefs(spec(_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
+  declareFields(Exported,Lc,Env,E0),
+  importTypes(Types,Lc,E0,E1),
+  importContracts(Cons,Lc,E1,Ex).
+
+declareFields([],_,Env,Env).
+declareFields([(Nm,Tp)|More],Lc,Env,Ex) :-
+  declareVar(Nm,vr(Nm,Lc,Tp),Env,E0),
+  declareFields(More,Lc,E0,Ex).
+
+importTypes([],_,Env,Env).
+importTypes([(Nm,Rule)|More],Lc,Env,Ex) :-
+  pickTypeTemplate(Rule,Type),
+  declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
+  importTypes(More,Lc,E0,Ex).
 
 importAllDefs([],_,[],_,Env,Env).
 importAllDefs([import(Viz,Pkg)|More],Lc,
@@ -760,7 +760,7 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   typeOfTerm(M,StrmTp,E0,E1,Rest),
   currentVar("stream$X",E1,OV),
   declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
-  checkNonTerminals(L,StrmTp,E2,E3,NT),
+  checkNonTerminals(L,StrmTp,ElTp,E2,E3,NT),
   restoreVar("stream$X",E3,OV,Ev).
 checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
@@ -923,7 +923,7 @@ exportDef(enum(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Con
   isPublicVar(Nm,Fields,Public).
 exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule)|Tx],Tx,Cons,Cons,Impl,Impl) :-
   isPublicType(Nm,Public).
-exportDef(defn(_,Nm,_,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+exportDef(defn(_,Nm,_,_,Tp,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).
 exportDef(grammar(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp)|Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
   isPublicVar(Nm,Fields,Public).

@@ -9,6 +9,9 @@ lo.comp.decode{
   public decodeValue:(string) => term.
   decodeValue(Txt) => Term :- decodeTerm(Term) %% explode(Txt).
 
+  public decodeTuple:(string) => list[term].
+  decodeTuple(Txt) => Els :- decodeTerm(tupl(Els)) %% explode(Txt).
+
   private decodeTerm:(term) --> list[integer].
   decodeTerm(anon) --> "a".
   decodeTerm(intgr(Ix)) --> "x", decInt(Ix).
@@ -63,7 +66,7 @@ lo.comp.decode{
   decodeType(typeExp("lo.core*list",[ElTp])) --> "L", decodeType(ElTp).
   decodeType(typeExp(Nm,ArgTypes)) --> "U", decodeName(Nm), typeLen(Ln), decodeTypes(Ln,ArgTypes).
   decodeType(univType(TV,Tp)) --> ":", decodeType(TV), decodeType(Tp).
-  decodeType(constrained(Tp,Con)) --> "|", decodeType(Tp), decodeConstraint(Con).
+  decodeType(constrained(Tp,Con)) --> "|", decodeType(Tp), decConstraint(Con).
   decodeType(faceType(Fields)) --> "I", typeLen(Ln),decodeFields(Ln,Fields).
   decodeType(funType(A,T)) --> "F", decodeType(A), decodeType(T).
   decodeType(grammarType(A,T)) --> "G", decodeType(A), decodeType(T).
@@ -83,13 +86,16 @@ lo.comp.decode{
   decodeFields(0,[]) --> [].
   decodeFields(Ix,[(Nm,T),..L]) --> decodeName(Nm),decodeType(T), decodeFields(Ix-1,L).
 
-  private decodeConstraint:(constraint) --> list[integer].
-  decodeConstraint(conRule([Con,..Cons],C)) --> "|", decodeConstraint(Con), decodeConstraints(Cons), decodeConstraint(C).
-  decodeConstraint(conTract(Nm,Args,Deps)) --> "c", decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
-  decodeConstraint(implementsFace(Tp,Face)) --> "a", decodeType(Tp), decodeType(faceType(Face)).
-  decodeConstraint(univCon(TV,Con)) --> ":", decodeType(TV), decodeConstraint(Con).
+  public decodeConstraint:(string,constraint){}.
+  decodeConstraint(Txt,Con) :- decConstraint(Con) %% explode(Txt).
+
+  private decConstraint:(constraint) --> list[integer].
+  decConstraint(conRule([Con,..Cons],C)) --> "|", decConstraint(Con), decodeConstraints(Cons), decConstraint(C).
+  decConstraint(conTract(Nm,Args,Deps)) --> "c", decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
+  decConstraint(implementsFace(Tp,Face)) --> "a", decodeType(Tp), decodeType(faceType(Face)).
+  decConstraint(univCon(TV,Con)) --> ":", decodeType(TV), decConstraint(Con).
 
   private decodeConstraints:(list[constraint]) --> list[integer].
-  decodeConstraints([Con,..Cons]) --> "|", decodeConstraint(Con), decodeConstraints(Cons).
+  decodeConstraints([Con,..Cons]) --> "|", decConstraint(Con), decodeConstraints(Cons).
   decodeConstraints([]) --> \+"|".
 }

@@ -52,7 +52,7 @@ main(Args) :-
   openRepo(Opts,Repo),
   locateCatalog(CWD,Cat),!,
   makeGraph(Repo,Cat,CWD,Pkgs,Groups),!,
-  processGroups(Groups,[],Repo,CWD,Opts).
+  (processGroups(Groups,[],Repo,CWD,Opts) ; reportMsg("aborting compiling",[])).
 
 openR(Args,CWD,Cat,Repo,Groups) :-
   getCWDUri(CW),
@@ -85,8 +85,6 @@ processPkg(P,Imps,_,CP,CP,Repo,Repo,_) :-
 processPkg(P,_,Fl,CP,[P|CP],Repo,Rx,Opts) :-
   reportMsg("compiling package %s",[P]),
   processFile(Fl,P,Repo,Rx,Opts),!.
-processPkg(P,_,_,CP,CP,Repo,Repo,_) :-
-  reportError("failed to compile package %s",[P]).
 
 importsOk([],_).
 importsOk([P|I],CP) :-

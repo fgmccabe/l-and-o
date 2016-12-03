@@ -52,7 +52,7 @@
   infixOp(".#.",600,600,599).  /* test nth bit */
   infixOp("%%",499,500,499).   /* grammar parse */
   infixOp("^",499,500,499).  /* grammar iterator */
-  infixOp("~",934,935,934).  /* grammar remainder */
+  infixOp("~",489,499,489).  /* grammar remainder */
   infixOp(".",450,450,449).  /* object access */
   infixOp("::",399,400,399).   /* type coercion */
   prefixOp("private",1700,1699).   /* private program */

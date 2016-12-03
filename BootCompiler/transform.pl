@@ -699,7 +699,8 @@ trGoal(unify(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
 trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   dcgBody(NT,G1,G2,StIn,StOut,[StIn,StOut|Q0],Q2,Map,Opts,Ex0,Ex1), % grammar body
-  trExp(Rem,StOut,Q2,Qx,G2,G3,G3,Gx,Q2,Qx,Map,Opts,Ex1,Exx).
+  trExp(Rem,Out,Q2,Qx,G2,G3,G3,G4,Map,Opts,Ex1,Exx),
+  joinStream(Out,StOut,G4,Gx).
 trGoal(phrase(_,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
   dcgBody(NT,G1,Gx,StIn,_,[StIn|Q0],Qx,Map,Opts,Ex0,Exx).

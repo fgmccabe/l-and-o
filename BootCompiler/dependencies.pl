@@ -320,6 +320,16 @@ collectCondRefs(C,A,R0,Refs) :-
   isUnary(C,"\\+",R),
   collectCondRefs(R,A,R0,Refs).
 collectCondRefs(C,A,R0,Refs) :-
+  isBinary(C,"%%",L,R),
+  isBinary(R,"~",St,Re),
+  collectExpRefs(L,A,R0,R1),
+  collectExpRefs(St,A,R1,R2),
+  collectExpRefs(Re,A,R2,Refs).
+collectCondRefs(C,A,R0,Refs) :-
+  isBinary(C,"%%",L,R),
+  collectExpRefs(L,A,R0,R1),
+  collectExpRefs(R,A,R1,Refs).
+collectCondRefs(C,A,R0,Refs) :-
   isTuple(C,[Inner]),
   collectCondRefs(Inner,A,R0,Refs).
 collectCondRefs(C,A,R0,Refs) :-

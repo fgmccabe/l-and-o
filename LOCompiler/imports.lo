@@ -2,107 +2,100 @@ lo.comp.imports{
   import lo.
   import lo.uri.
   import lo.resources.
+  import lo.comp.dict.
   import lo.comp.types.
+  import lo.comp.term.
   import lo.comp.misc.
   import lo.comp.decode.
+  import lo.comp.package.
   import lo.comp.repository.
+  import lo.comp.manifest.
+  import lo.comp.token.
+  import lo.comp.grammar.
+  import lo.comp.ast.
+  import lo.comp.abstract.
+  import lo.comp.canon.
 
-  public pkgSpec ::= pkgSpec(string,version,tipe,list[tipe],list[class],list[contrct],list[implementation],list[(string,version)]).
+  public type pkgSpec ::= pkgSpec(string,version,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conDef],list[implDef],list[(visibility,pkg)]).
 
   importPkg:(string,version,repository,pkgSpec){}.
-  importPkg(Pkg,Vers,Repo,spec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
-    openPackageAsStream(Repo,Pkg,Vers,_,Strm),
-    pickupPieces(Strm,Pkg,[export,types,classes,contracts,implementations],Pieces),
-    close(Strm),
-    processPieces(Pieces,Export,Types,Imports,Classes,Contracts,Impls).
+  importPkg(Pkg,Vers,Repo,pkgSpec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
+    locatePackage(Repo,Pkg,Vers,_,Strm),
+    pickupPieces(tokenCodes(Strm),Export,Types,Imports,Classes,Contracts,Impls)!.
 
-  pickupPieces(_,_,[],[]).
-  pickupPieces(Strm,_,_,[]) :-
-    at_end_of_stream(Strm).
-  pickupPieces(Strm,Pkg,Lookfor,Pieces) :-
-    read(Strm,Term),
-    Term =.. [F|Args],
-    isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More),
-    pickupPieces(Strm,Pkg,Rest,More).
+  pickupPieces:(list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
+          list[(string,string,tipe)],list[conDef],list[implDef]){}.
+  pickupPieces(Toks,Export,Types,Imports,Classes,Contracts,Impls) :-
+    nextTerm(Toks,A,Rest)!,
+    isRoundTerm(A,_,O,Args),
+    isIden(O,_,Nm),
+    pickupTerm(splitOnHash(Nm),Args,Rest,Export,Types,Imports,Classes,Contracts,Impls).
+  pickupPieces(_,_,[],[],[],[],[]).
 
-  isAPiece(F,Args,pkg(Pkg),L,L,[Term|Pieces],Pieces) :-
-    localName(Pkg,"#","import",F),!,
-    Term =..['import'|Args].
-  isAPiece(F,Args,pkg(Pkg),[L|Rest],Rest,[Term|Pieces],Pieces) :-
-    localName(Pkg,"#",L,F),!,
-    Term =..[L|Args].
-  isAPiece(F,Args,Pkg,[L|Lookfor],[L|Rest],Pieces,More) :-
-    isAPiece(F,Args,Pkg,Lookfor,Rest,Pieces,More).
-  isAPiece(_,_,_,[],[],Pieces,Pieces).
+  pickupTerm:(string,list[ast],list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
+          list[(string,string,tipe)],list[conDef],list[implDef]){}.
+  pickupTerm("import",[Vz,Pk,Vr],Rest,Export,Types,[(decodeViz(Vz),pkg(decodePkg(Pk),decodeVers(Vr))),..Imports],Classes,Contracts,Impls) :-
+    pickupPieces(Rest,Export,Types,Imports,Classes,Contracts,Impls).
+  pickupTerm("export",[Strg],Rest,decodeSignature(Sig),Types,Imports,Classes,Contracts,Impls) :-
+    isString(Strg,_,Sig),
+    pickupPieces(Rest,_,Types,Imports,Classes,Contracts,Impls).
+  pickupTerm("classes",[Strg],Rest,Export,Types,Imports,Classes,Contracts,Impls) :-
+    isString(Strg,_,Sig),
+    pickupClasses(decodeTuple(Sig),Classes,Cls),
+    pickupPieces(Rest,Export,Types,Imports,Cls,Contracts,Impls).
+  pickupTerm("types",[Strg],Rest,Export,decodeTypes(Sig),Imports,Classes,Contracts,Impls) :-
+    isString(Strg,_,Sig),
+    pickupPieces(Rest,Export,_,Imports,Cls,Contracts,Impls).
+  pickupTerm("contracts",[Strg],Rest,Export,Types,Imports,Classes,Contracts,Impls) :-
+    isString(Strg,_,Sig),
+    findContracts(decodeTuple(Sig),Contracts,Cs),
+    pickupPieces(Rest,Export,Types,Imports,Classes,Cs,Impls).
+  pickupTerm("implementations",[Strg],Rest,Export,Types,Imports,Classes,Contracts,Impls) :-
+    isString(Strg,_,Sig),
+    pickupImplementations(decodeTuple(Sig),Impls,Is),
+    pickupPieces(Rest,Export,Types,Imports,Cls,Contracts,Is).
 
-  processPieces([],_,_,[],[],[],[]).
-  processPieces([export(Sig)|More],Export,Types,Imports,Classes,Contracts,Impls) :-
-    decodeSignature(Sig,Export),
-    processPieces(More,_,Types,Imports,Classes,Contracts,Impls).
-  processPieces([types(Sig)|More],Export,Types,Imports,Classes,Contracts,Impls) :-
-    decodeSignature(Sig,Types),
-    processPieces(More,Export,_,Imports,Classes,Contracts,Impls).
-  processPieces([import(Viz,Pkg,Version)|More],Export,Types,[Import|Imports],Classes,Contracts,Impls) :-
-    massageImport([Viz,Pkg,Version],Import),
-    processPieces(More,Export,Types,Imports,Classes,Contracts,Impls).
-  processPieces([classes(Enc)|More],Export,Types,Imports,Classes,Contracts,Impls) :-
-    massageClasses(Enc,Classes,Cls),
-    processPieces(More,Export,Types,Imports,Cls,Contracts,Impls).
-  processPieces([contracts(Enc)|More],Export,Types,Imports,Classes,Contracts,Impls) :-
-    processContracts(Enc,Contracts,MoreCons),
-    processPieces(More,Export,Types,Imports,Classes,MoreCons,Impls).
-  processPieces([implementations(Enc)|More],Export,Types,Imports,Classes,Contracts,Impls) :-
-    processImplementations(Enc,Impls,MoreImpls),
-    processPieces(More,Export,Types,Imports,Classes,Contracts,MoreImpls).
+  decodeTypes:(string) => list[(string,tipe)].
+  decodeTypes(Txt) => F :- decodeType(faceType(F)) %% explode(Txt).
 
-  massageClasses(Enc,Classes,Cls) :-
-    decodeValue(Enc,Term),
-    findClasses(Term,Classes,Cls).
+  decodeViz:(ast)=>visibility.
+  decodeViz(P) => pUblic :-
+    isIden(P,_,"public").
+  decodeViz(_) => priVate.
 
-  findClasses(tpl(Entries),Classes,Cls) :-
-    pickupClasses(Entries,Classes,Cls).
+  decodePkg:(ast)=>string.
+  decodePkg(P)=>Pk :-
+    isString(P,_,Pk).
 
+  decodeVers:(ast)=>version.
+  decodeVers(V)=>defltVersion :-
+    isIden(V,_,"*").
+  decodeVers(V)=>vers(VV) :-
+    isString(V,_,VV).
+
+  pickupClasses:(list[term],list[(string,string,tipe)],list[(string,string,tipe)]){}.
   pickupClasses([],Cls,Cls).
-  pickupClasses([tpl([strg(Nm),Cl,Sig])|Rest],[(Nm,Cl,Sig)|More],Cls):-
+  pickupClasses([tupl([strng(Nm),strng(Cl),strng(Sig)]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).
 
-  processContracts(Enc,C,Cx) :-
-    decodeValue(Enc,tpl(Cons)),
-    findContracts(Cons,C,Cx).
-
+  findContracts:(list[term],list[conDef],list[conDef]){}.
   findContracts([],C,C).
-  findContracts([tpl([strg(Nm),strg(CnNm),strg(Sig),strg(FSig)])|M],[contract(Nm,CnNm,Spec,FullSpec,Face)|C],Cx) :-
+  findContracts([tupl([strng(Nm),strng(CnNm),strng(Sig),strng(FSig)]),..M],[conDef(Nm,CnNm,Spec,FullSpec,decodeSignature(FSig)),..C],Cx) :-
     decodeConstraint(Sig,FullSpec),
-    moveQuants(FullSpec,Q,FS),
-    moveConstraints(FS,_,S),
-    moveQuants(Spec,Q,S),
-    decodeSignature(FSig,Face),
+    moveConQuants(FullSpec,Q,FS),
+    moveConConstraints(FS,_,S),
+    moveConQuants(Spec,Q,S),
     findContracts(M,C,Cx).
 
-  processImplementations(Env,Impls,MoreImpls) :-
-    decodeValue(Env,tpl(Els)),
-    pickupImplementations(Els,Impls,MoreImpls).
-
+  pickupImplementations:(list[term],list[implDef],list[implDef]){}.
   pickupImplementations([],I,I).
-  pickupImplementations([tpl([strg(Nm),strg(Sig)])|M],[imp(Nm,Spec)|I],RI) :-
+  pickupImplementations([tupl([strng(Nm),strng(Sig)]),..M],[impl(Nm,Spec),..I],RI) :-
     decodeConstraint(Sig,Spec),
     pickupImplementations(M,I,RI).
 
-  loadPkg(Pkg,Vers,Repo,Code,Imports) :-
-    openPackageAsStream(Repo,Pkg,Vers,_,Strm),
-    loadPieces(Strm,Pkg,Code,Imports),
-    close(Strm).
+  private decodeSignature:(string) => tipe.
+  decodeSignature(S) => T :- decodeType(T) %% explode(S).
 
-  loadPieces(Strm,_,[],[]) :-
-    at_end_of_stream(Strm).
-  loadPieces(Strm,Pkg,Code,Imports) :-
-    read(Strm,Term),
-    Term =.. [F|Args],
-    ( sub_string(F,_,_,0,"#import"), !,
-      massageImport(Args,I),
-      Imports = [I|MoreImports], loadPieces(Strm,Pkg,Code,MoreImports) ;
-      Code = [Term|MoreCode], loadPieces(Strm,Pkg,MoreCode,Imports)).
-
-  massageImport([Viz,Pkg,'*'],import(Viz,pkg(Pkg),defltVersion)).
-  massageImport([Viz,Pkg,Vers],import(Viz,pkg(Pkg),v(Vers))).
+  private splitOnHash:(string) => string.
+  splitOnHash(S) => pathSuffix(S,"#").
 }

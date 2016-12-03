@@ -98,7 +98,7 @@ lo.comp.parseType{
   prsTypeName(_,"this",_,_,C,C,thisType).
   prsTypeName(_,Id,_,{Id->Tp},C,C,Tp).
   prsTypeName(_,Id,Env,_,C,Cx,Type) :- 
-    isType(Id,Env,Tp),
+    isType(Id,Env,_,Tp),
     moveConstraints(freshen(Tp,{}),C0,Type),
     mergeConstraints(C0,C,Cx).
   prsTypeName(Lc,Id,_,_,C,C,anonType) :- 

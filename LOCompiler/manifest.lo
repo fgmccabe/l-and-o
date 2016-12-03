@@ -10,7 +10,7 @@ lo.comp.manifest{
   -- A manifest entry looks like:
   -- packageName : { (version:file[uri])* }
 
-  type manifestEntry ::= manifestEntry(string,list[(pkg,uri,string)]).
+  type manifestEntry ::= manifestEntry(string,list[(version,uri,string)]).
 
   -- Tokenization and parsing manifest files
 
@@ -65,14 +65,14 @@ lo.comp.manifest{
   entries([]) --> [].
 
   entry:(manifestEntry) --> list[token].
-  entry(manifestEntry(Pk,Versions)) --> [pkgId(Pk), colon, lbrce], versions(Pk,Versions), [rbrce].
+  entry(manifestEntry(Pk,Versions)) --> [pkgId(Pk), colon, lbrce], versions(Versions), [rbrce].
 
-  versions:(string,list[(pkg,uri,string)]) --> list[token].
-  versions(Pk,[V,..More]) --> version(Pk,V), versions(Pk,More).
-  versions(_,[]) --> [].
+  versions:(list[(version,uri,string)]) --> list[token].
+  versions([V,..More]) --> version(V), versions(More).
+  versions([]) --> [].
 
-  version:(string,(pkg,uri,string)) --> list[token].
-  version(P,(pkg(P,V),Uri,F)) --> versionName(V), [equals, pkgId(F), utok(U)], { uriParse(Uri)%%U }.
+  version:((version,uri,string)) --> list[token].
+  version((V,Uri,F)) --> versionName(V), [equals, pkgId(F), utok(U)], { uriParse(Uri)%%U }.
 
   versionName:(version) --> list[token].
   versionName(defaultVersion) --> [stAr].
@@ -90,23 +90,33 @@ lo.comp.manifest{
   showEntry:(manifestEntry) => ss.
   showEntry(manifestEntry(Pk,Versions)) => ssSeq([ss("  "),ss(Pk),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
 
-  showVersions:(list[(pkg,uri,string)]) => list[ss].
+  showVersions:(list[(version,uri,string)]) => list[ss].
   showVersions([]) => [].
   showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
 
-  showVersion:((pkg,uri,string)) => ss.
-  showVersion((pkg(_,V),U,F)) => ssSeq([ss("    "),disp(V),ss("="),ss(F),ss("["),disp(U),ss("]\n")]).
+  showVersion:((version,uri,string)) => ss.
+  showVersion((V,U,F)) => ssSeq([ss("    "),disp(V),ss("="),ss(F),ss("["),disp(U),ss("]\n")]).
 
   -- Simple API to manipulate entries in a mAnifest
-  addToManifest:(manifest,uri,string,version,string) => manifest.
+
+  public locateVersion:(manifest,string,version,version,uri,string){}.
+  locateVersion(manifest(Entries),Pkg,Vers,Act,U,Fn) :-
+    manifestEntry(Pkg,V) in Entries,
+    getVersion(Vers,Act,V,U,Fn).
+
+  getVersion:(version,version,list[(version,uri,string)],uri,string){}.
+  getVersion(Vers,Vers,V,U,Fn) :- (Vers,U,Fn) in V!.
+  getVersion(defltVersion,Act,V,U,Fn) :- (Act,U,Fn) in V!.
+
+  public addToManifest:(manifest,uri,string,version,string) => manifest.
   addToManifest(manifest(M),U,Pkg,Version,FileName) => manifest(addEntry(M,U,Pkg,Version,FileName)).
 
   addEntry:(list[manifestEntry],uri,string,version,string) => list[manifestEntry].
-  addEntry([],U,Pkg,Version,FileName) => [(manifestEntry(Pkg,[(pkg(Pkg,Version),U,FileName)]))].
-  addEntry([manifestEntry(Pkg,Vers),..E],U,Pkg,Version,FileName) => [manifestEntry(Pkg,addVersion(Vers,U,pkg(Pkg,Version),FileName)),..E].
+  addEntry([],U,Pkg,Version,FileName) => [(manifestEntry(Pkg,[(Version,U,FileName)]))].
+  addEntry([manifestEntry(Pkg,Vers),..E],U,Pkg,Version,FileName) => [manifestEntry(Pkg,addVersion(Vers,U,Version,FileName)),..E].
   addEntry([E,..M],U,Pkg,Version,FileName) => [E,..addEntry(M,U,Pkg,Version,FileName)].
 
-  addVersion:(list[(pkg,uri,string)],uri,pkg,string) => list[(pkg,uri,string)].
+  addVersion:(list[(version,uri,string)],uri,version,string) => list[(version,uri,string)].
   addVersion([],U,Vers,FileNm) => [(Vers,U,FileNm)].
   addVersion([(Vers,_,_),..V],U,Vers,FileNm) => [(Vers,U,FileNm),..V] . -- replace version
   addVersion([V,..M],U,Vers,FileNm) => [V,..addVersion(M,U,Vers,FileNm)].

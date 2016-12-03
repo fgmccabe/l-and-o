@@ -16,7 +16,7 @@ lo.comp.freshen{
   freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+{Nm->newVar(Nm)}).
   freshenType(T,B) => frshnType(T,B).
 
-  public forEvidence:(tipe,tipe,map[string,tipe],map[string,tipe],tipe){}.
+  public forEvidence:(tipe,map[string,tipe],map[string,tipe],tipe){}.
   forEvidence(Tp,B,Q,freshen(SkTp,Q)) :-
     skolemize(Tp,B,Q,SkTp).
 

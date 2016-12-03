@@ -14,6 +14,7 @@ lo.comp.typecheck{
   import lo.comp.errors.
   import lo.comp.macro.
   import lo.comp.repository.
+  import lo.comp.imports.
 
   public checkProgram:(ast,repository)=>canonProg.
   checkProgram(Prog,Repo) => prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
@@ -28,11 +29,86 @@ lo.comp.typecheck{
       list[canonDef],list[(string,defnKind)],list[(visibility,uri,version)],list[canonDef]){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
     macroRewrite(Els,Stmts),
-    displayAll(Stmts),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs),
     processImportGroup(Imps,Imports,Repo,Base,IBase),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path),
     checkOthers(Otrs,Others,TheEnv,Path).
+
+  findImportedImplementations([import(_,_,_,_,_,_,Impls)|Specs],D,OverDict) :-
+    rfold(Impls,checker:declImpl,D,D1),
+    findImportedImplementations(Specs,D1,OverDict).
+  findImportedImplementations([],D,D).
+
+  processImportGroup:(list[ast],list[importSpec],repository,list[env],list[env]){}.
+  processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex) :-
+    findAllImports(Stmts,Imports),
+    importAll(Imports,Repo,AllImports),
+    importAllDefs(AllImports,ImportSpecs,Repo,Env,Ex).
+
+  findAllImports:(list[ast],list[(location,visibility,pkg)]){}.
+  findAllImports([],[]).
+  findAllImports([St|More],[findImport(St,private)|Imports]) :-
+    findAllImports(More,Imports).
+
+  findImport:(ast,visibility)=>(location,visibility,pkg).
+  findImport(St,_) => findImport(I,priVate) :-
+    isUnary(St,_,"private",I),
+    findImport(I,_,private,Spec).
+  findImport(St,_) => findImport(I,pUblic):-
+    isUnary(St,Lc,"public",I).
+  findImport(St,Viz) => (Lc,Viz,Pkg) :-
+    isUnary(St,Lc,"import",P),
+    pkgName(P,Pkg).
+
+  importAll(Imports,Repo,AllImports) :-
+    closure(Imports,[],checker:notAlreadyImported,checker:importMore(Repo),AllImports).
+
+  importDefs(spec(_,faceType(Exported),faceType(Types),_,Cons,_,_),Lc,Env,Ex) :-
+    importTypes(Types,Lc,declareFields(Exported,Lc,Env),E1),
+    importContracts(Cons,Lc,E1,Ex).
+
+  declareFields:(list[(string,tipe)],location,list[env]) => list[env].
+  declareFields([],_,Env) => Env.
+  declareFields([(Nm,Tp),..More],Lc,Env) =>
+    declareFields(More,Lc,declareVar(Nm,vr(Lc,v(Nm),Tp),Env)).
+
+  importTypes([],_,Env,Env).
+  importTypes([(Nm,Rule),..More],Lc,Env,Ex) :-
+    pickTypeTemplate(Rule,Type),
+    declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
+    importTypes(More,Lc,E0,Ex).
+
+  private type importSpec ::= impSpec(visibility,pkg,tipe,list[tipe],list[(string,tipe)],list[(string,constraint)],list[constraint]).
+
+  importAllDefs:(list[(location,visibility,pkg)],list[importSpec],repository,list[env],list[env]){}.
+  importAllDefs([],[],_,Env,Env).
+  importAllDefs([(Lc,Viz,Pkg),..More],
+        [impSpec(Viz,Pkg,Exported,Types,Classes,Contracts,Impls),..Specs],Repo,Env,Ex) :-
+    importPkg(Pkg,Repo,Spec),
+    Spec = spec(_,Exported,Types,Classes,Contracts,Impls,_),
+    importDefs(Spec,Lc,Env,Ev0),
+    importAllDefs(More,Specs,Repo,Ev0,Ex).
+
+  importContracts([],_,Env,Env).
+  importContracts([C|L],Lc,E,Env) :-
+    C = contract(Nm,_,_,_,_),
+    defineContract(Nm,Lc,C,E,E0),
+    importContracts(L,Lc,E0,Env).
+
+  notAlreadyImported(import(_,Pkg),SoFar) :-
+    \+ is_member(import(_,Pkg),SoFar),!.
+
+  importMore(Repo,import(Viz,Pkg),SoFar,[import(Viz,Pkg)|SoFar],Inp,More) :-
+    importPkg(Pkg,Repo,spec(_,_,_,_,_,_,Imports)),
+    addPublicImports(Imports,Inp,More).
+  importMore(_,import(_,Pkg),SoFar,SoFar,Inp,Inp) :-
+    reportError("could not import package %s",[Pkg]).
+
+  addPublicImports([],Imp,Imp).
+  addPublicImports([import(public,Pkg)|I],Rest,[import(public,Pkg)|Out]) :-
+    addPublicImports(I,Rest,Out).
+  addPublicImports([import(private,_)|I],Rest,Out) :-
+    addPublicImports(I,Rest,Out).
 
   private checkGroups:(list[list[defn]],list[(string,tipe)],list[(string,ast)],list[canonDef],list[env],list[env],string){}.
   checkGroups([],_,_,[],E,E,_).

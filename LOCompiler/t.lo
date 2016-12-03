@@ -1,7 +1,0 @@
--- t{
-  -- import lo.
-
-  -- public spaces:() --> list[integer].
-  spaces() --> space(), spaces().
-  spaces() --> \+ space().
--- }

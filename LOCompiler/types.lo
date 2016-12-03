@@ -130,6 +130,15 @@ lo.comp.types{
     moveQuants(Tp,Q,Tmpl).
   moveQuants(Tp,[],Tp).
 
+  public moveConConstraints:(constraint,list[constraint],constraint){}.
+  moveConConstraints(conRule(Cx,C),Cx,C).
+  moveConConstraints(C,[],C).
+
+  public moveConQuants:(constraint,list[tipe],constraint){}.
+  moveConQuants(univCon(V,C),[V,..Vx],Cx) :-
+    moveConQuants(C,Vx,Cx).
+  moveConQuants(C,[],C).
+
   public
   newVar:(string) => tipe.
   newVar(Nm) => tVar(_,false,_,Nm,_str_gen(Nm)).

@@ -13,10 +13,17 @@ lo.comp.grammar{
   private tokenizeFile:(uri) => list[token].
   tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U)).
 
+  public tokenCodes:(list[integer]) => list[token].
+  tokenCodes(Chars) => Toks :- tokenize(Toks) %% startState(Chars).
+
   public parseFile:(uri) => ast.
   parseFile(U) => Term :-
     tokenize(Toks) %% startState(getResource(U)),
     parse(Term) %% Toks .
+
+  public nextTerm:(list[token],ast,list[token]){}.
+  nextTerm(Toks,Term,Rest) :-
+    parse(Term) %% Toks ~ Rest.
 
   type tokMark ::= endBrce | otherMark.
 
