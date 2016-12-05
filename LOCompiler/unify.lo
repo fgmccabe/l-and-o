@@ -104,8 +104,8 @@ lo.comp.unify{
     moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)).
   faceOfType(T,Env,faceType(collectImplements(T,constraints(T),Env,[]))) :- isUnbound(T).
 
-  collectImplements:(tipe,list[constraint],list[env],list[(string,tipe)]) => list[(string,tipe)].
-  collectImplements(_,C,_,Face) =>  Face :-  var(C) .
+  public collectImplements:(tipe,list[constraint],list[env],list[(string,tipe)]) => list[(string,tipe)].
+  collectImplements(_,C,_,Face) =>  Face :-  var(C).
   collectImplements(V,[implementsFace(T,Els),..C],Env,SoFar) =>
     collectImplements(V,C,Env,mergeFields(Els,Env,SoFar)).
   collectImplements(_,[],_,Face) => Face.

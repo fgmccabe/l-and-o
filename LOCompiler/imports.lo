@@ -18,8 +18,8 @@ lo.comp.imports{
 
   public type pkgSpec ::= pkgSpec(string,version,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conDef],list[implDef],list[(visibility,pkg)]).
 
-  importPkg:(string,version,repository,pkgSpec){}.
-  importPkg(Pkg,Vers,Repo,pkgSpec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
+  importPkg:(pkg,repository,pkgSpec){}.
+  importPkg(pkg(Pkg,Vers),Repo,pkgSpec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports)) :-
     locatePackage(Repo,Pkg,Vers,_,Strm),
     pickupPieces(tokenCodes(Strm),Export,Types,Imports,Classes,Contracts,Impls)!.
 

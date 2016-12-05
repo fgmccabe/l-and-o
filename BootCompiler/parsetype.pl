@@ -267,7 +267,6 @@ getFace(typeExp(Nm,Args),Env,Face) :- !,
 getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
   constraints(T,C),
   collectImplements(C,Env,[],Face).
-getFace(faceType(Face),_,faceType(Face)) :- !.
 
 parseTypeTemplate(St,B,Env,Type,Path) :-
   isUnary(St,"type",L),

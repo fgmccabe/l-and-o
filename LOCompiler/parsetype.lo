@@ -5,9 +5,11 @@ lo.comp.parseType{
   import lo.comp.abstract.
   import lo.comp.wff.
   import lo.comp.dict.
+  import lo.comp.unify.
   import lo.comp.errors.
   import lo.comp.location.
   import lo.comp.freshen.
+  import lo.comp.canon.
 
   public
   parseType:(ast,list[env],tipe){}.
@@ -15,11 +17,34 @@ lo.comp.parseType{
     prsType(T,Env,{},[],Cons,Tp),
     moveConstraints(Type,Cons,Tp).
 
+  public parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string){}.
+  parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path) :-
+    isUnary(St,"type",_,InSt),
+    parseTypeRule(InSt,{},Env,FaceRule,Path),
+    isType(N,Env,Type).
+
+  parseTypeRule:(ast,map[string,tipe],list[env],tipe,string){}.
+  parseTypeRule(St,_,_,Env,Rule,Path) :-
+    isQuantified(St,V,Body),
+    parseTypeBound(V,{},B,Env,Rule,Rl),
+    parseTypeRule(Body,B,Env,Inner,Path),
+    wrapQuants(B,Inner,Rl).
+  parseTypeRule(St,B,Env,Rule,Path) :-
+    isBinary(St,"|:",_,L,R),
+    parseConstraint(L,Env,B,[],Cx),
+    parseTypeRule(R,B,Env,Inner,Path),
+    wrapConstraints(Cx,Inner,Rule).
+  parseTypeRule(St,B,Env,typeRule(Lhs,Rhs),Path) :-
+    isBinary(St,"<~",_,L,R),
+    parseTypeHead(L,B,Env,Lhs,Path),
+    parseType(R,Env,B,C0,Cx,Tp),
+    faceOfType(deRef(Tp),Env,Rhs).
+
   private
   prsType : (ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe){}.
   prsType(T,Env,Q,Cx,Cx,PT) :-
     isQuantified(T,V,BT),
-    prsBound(V,Q,B0,Env,PT,Inner),
+    parseTypeBound(V,Q,B0,Env,PT,Inner),
     prsType(BT,Env,B0,[],C0,BTp),
     moveConstraints(Inner,C0,BTp). -- no constraints migrate out of quantified type
   prsType(T,Env,Q,C,Cx,Type) :-
@@ -104,16 +129,16 @@ lo.comp.parseType{
   prsTypeName(Lc,Id,_,_,C,C,anonType) :- 
     reportError("type $(Id) not declared",Lc).
 
-  prsBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
-  prsBound(P,BV,Bound,Env,QT,Inner) :-
+  public parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
+  parseTypeBound(P,BV,Bound,Env,QT,Inner) :-
     isBinary(P,",",_,L,R),
-    prsBound(L,BV,B0,Env,QT,Q0),
-    prsBound(R,B0,Bound,Env,Q0,Inner).
-  prsBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
+    parseTypeBound(L,BV,B0,Env,QT,Q0),
+    parseTypeBound(R,B0,Bound,Env,Q0,Inner).
+  parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
     B1 = B+{Nm->kVar(Nm)},
     isIden(V,_,Nm).
 
-  parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint]){}.
+  public parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint]){}.
   parseConstraint(T,Env,B,C0,Cx) :-
     isBinary(T,",",_,L,R),
     parseConstraint(L,Env,B,C0,C1),
@@ -156,4 +181,15 @@ lo.comp.parseType{
     prsTypes(deComma(R),Env,B,C1,Cx,Deps).
   parseContractArgs(A,Env,B,C0,Cx,Args,[]) :-
     prsTypes(A,Env,B,C0,Cx,Args).
+
+
+  -- reapply quantifiers to a type to get full form
+  reQuant([],Tp,Tp).
+  reQuant([(Nm,_),..M],Tp,QTp) :-
+    reQuant(M,univType(kVar(Nm),Tp),QTp).
+
+  wrapConstraints:(list[constraint],tipe,tipe){}.
+  wrapConstraints([],Tp,Tp).
+  wrapConstraints([Con,..C],Tp,WTp) :-
+    wrapConstraints(C,constrained(Tp,Con),WTp).
 }
