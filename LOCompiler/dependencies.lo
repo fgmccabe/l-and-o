@@ -42,35 +42,35 @@ lo.comp.dependencies{
     Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)),
     showGroups(Groups).
 
-  collectDefinitions:(list[ast],list[defn],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast]){}.
-  collectDefinitions([],[],[],[],[],[]).
-  collectDefinitions([St,..Stmts],Defs,Pu,An,Im,Ot) :-
-    collectDefn(St,Stmts,S0,Defs,D0,Pu,P0,An,An0,Im,Im0,Ot,Ot0,priVate),
-    collectDefinitions(S0,D0,P0,An0,Im0,Ot0).
+  collectDefinitions:(list[ast],list[defn],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
+  collectDefinitions([],[],[],[],[],[],Rp,Rp).
+  collectDefinitions([St,..Stmts],Defs,Pu,An,Im,Ot,Rp,Rpx) :-
+    collectDefn(St,Stmts,S0,Defs,D0,Pu,P0,An,An0,Im,Im0,Ot,Ot0,priVate,Rp,Rp0),
+    collectDefinitions(S0,D0,P0,An0,Im0,Ot0,Rp0,Rpx).
 
   collectDefn:(ast,list[ast],list[ast],list[defn],list[defn],
       list[(string,defnKind)],list[(string,defnKind)],list[(string,ast)],list[(string,ast)],
-      list[ast],list[ast],list[ast],list[ast],visibility){}.
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St,..I],I,Oth,Oth,_) :-
+      list[ast],list[ast],list[ast],list[ast],visibility,report,report){}.
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St,..I],I,Oth,Oth,_,Rp,Rp) :-
     isImport(St).
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_) :-
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_,Rp,Rp) :-
     isOther(St).
-  collectDefn(St,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_) :-
+  collectDefn(St,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
     isUnary(St,"private",_,Inner),
-    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,_,A,Ax,I,Ix,O,Ox,priVate).
-  collectDefn(St,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,_) :-
+    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,_,A,Ax,I,Ix,O,Ox,priVate,Rp,Rpx).
+  collectDefn(St,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
     isUnary(St,"public",_,Inner),
-    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,pUblic).
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Viz) :-
+    collectDefn(Inner,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,pUblic,Rp,Rpx).
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Viz,Rp,Rp) :-
     isBinary(St,":",_,L,_),
     isIden(L,_,Nm),
     checkPublic(Viz,Nm,valu,P,Px).
-  collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Viz) :-
+  collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Viz,Rp,Rp) :-
     ruleNameKind(St,Nm,K),
     collectDefines(Stmts,Nm,K,Stx,DfSts),
     checkPublic(Viz,Nm,K,P,Px).
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_) :-
-    reportError("cannot fathom $(St)",St.loc).
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
+    Rpx=reportError("cannot fathom $(St)",St.loc,Rp).
 
   isImport:(ast){}.
   isImport(St) :-

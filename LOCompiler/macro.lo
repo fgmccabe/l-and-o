@@ -6,28 +6,28 @@ lo.comp.macro{
   import lo.comp.wff.
   import lo.comp.errors.
 
-  public macroRewrite:(list[ast],list[ast]){}.
-  macroRewrite([],[]).
-  macroRewrite([St,..More],Stmts) :-
+  public macroRewrite:(list[ast],list[ast],report,report){}.
+  macroRewrite([],[],Rp,Rp).
+  macroRewrite([St,..More],Stmts,Rp,Rpx) :-
     isUnary(St,"public",_,Inner),
     isAlgebraicTypeDef(Inner,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,markPublic,Quants,Constraints,Head,Body,Stmts,S0),
-    macroRewrite(More,S0).
-  macroRewrite([St,..More],Stmts) :-
+    convertAlgebraic(Lc,markPublic,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    macroRewrite(More,S0,Rp0,Rpx).
+  macroRewrite([St,..More],Stmts,Rp,Rpx) :-
     isUnary(St,"private",_,Inner),
     isAlgebraicTypeDef(Inner,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,markPrivate,Quants,Constraints,Head,Body,Stmts,S0),
-    macroRewrite(More,S0).
-  macroRewrite([St,..More],Stmts) :-
+    convertAlgebraic(Lc,markPrivate,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    macroRewrite(More,S0,Rp0,Rpx).
+  macroRewrite([St,..More],Stmts,Rp,Rpx) :-
     isAlgebraicTypeDef(St,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,noMark,Quants,Constraints,Head,Body,Stmts,S0),
-    macroRewrite(More,S0).
-  macroRewrite([St,..More],[St,..Stmts]) :-
+    convertAlgebraic(Lc,noMark,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    macroRewrite(More,S0,Rp0,Rpx).
+  macroRewrite([St,..More],[St,..Stmts],Rp,Rpx) :-
     isContractSpec(St,_,Quants,Constraints,Con,Els),
     generateAnnotations(Els,Quants,[Con,..Constraints],Stmts,S0),
-    macroRewrite(More,S0).
-  macroRewrite([St,..More],[St,..Stmts]) :-
-    macroRewrite(More,Stmts).
+    macroRewrite(More,S0,Rp,Rpx).
+  macroRewrite([St,..More],[St,..Stmts],Rp,Rpx) :-
+    macroRewrite(More,Stmts,Rp,Rpx).
 
   private
   type mark ::= markPublic | markPrivate | noMark.
@@ -39,9 +39,9 @@ lo.comp.macro{
 
   -- super simple conversion. Maybe later add support for auto generation of interfaces
 
-  convertAlgebraic:(location,mark,list[ast],list[ast],ast,ast,list[ast],list[ast]){}.
-  convertAlgebraic(Lc,Mark,Quants,Constraints,Head,Body,[TypeRule,..Elements],Tail) :-
-    algebraicFace(Body,[],Els),
+  convertAlgebraic:(location,mark,list[ast],list[ast],ast,ast,list[ast],list[ast],report,report){}.
+  convertAlgebraic(Lc,Mark,Quants,Constraints,Head,Body,[TypeRule,..Elements],Tail,Rp,Rpx) :-
+    algebraicFace(Body,[],Els,Rp,Rpx),
     isBraceTuple(Face,Lc,Els),
     typeRule(Lc,Quants,Constraints,Head,Face,FaceRule),
     mark(Mark,Lc,FaceRule,TypeRule),
@@ -78,38 +78,38 @@ lo.comp.macro{
     genFieldArgs(FldTps,Args,Defs),
     bodyRule(Lc,roundTerm(Lc,Op,Args),Defs,BodyRule).
 
-  algebraicFace:(ast,list[ast],list[ast]){}.
-  algebraicFace(T,SoFar,Face) :-
+  algebraicFace:(ast,list[ast],list[ast],report,report){}.
+  algebraicFace(T,SoFar,Face,Rp,Rpx) :-
     isBinary(T,"|",_,L,R),
-    algebraicFace(L,SoFar,SF),
-    algebraicFace(R,SF,Face).
-  algebraicFace(T,SoFar,SoFar) :-
+    algebraicFace(L,SoFar,SF,Rp,Rp0),
+    algebraicFace(R,SF,Face,Rp0,Rpx).
+  algebraicFace(T,SoFar,SoFar,Rp,Rp) :-
     isRoundTerm(T,_,_,_).
-  algebraicFace(T,Face,Face) :-
+  algebraicFace(T,Face,Face,Rp,Rp) :-
     isIden(T,_,_).
-  algebraicFace(T,SoFar,Face) :-
+  algebraicFace(T,SoFar,Face,Rp,Rpx) :-
     isBraceTerm(T,_,_,Args),
-    pickupFields(Args,SoFar,Face).
+    pickupFields(Args,SoFar,Face,Rp,Rpx).
 
-  pickupFields:(list[ast],list[ast],list[ast]){}.
-  pickupFields([],Face,Face).
-  pickupFields([T,..M],SF,Face) :-
+  pickupFields:(list[ast],list[ast],list[ast],report,report){}.
+  pickupFields([],Face,Face,Rp,Rp).
+  pickupFields([T,..M],SF,Face,Rp,Rpx) :-
     isBinary(T,":",Lc,L,R),
     isIden(L,_,Nm),
-    checkSoFar(Nm,R,SF,SF0),
-    pickupFields(M,[T,..SF0],Face).
-  pickupFields([T,..M],SF,Face) :-
-    reportError("invalid type field: $(T)",T.loc),
-    pickupFields(M,SF,Face).
+    checkSoFar(Nm,R,SF,SF0,Rp,Rp0),
+    pickupFields(M,[T,..SF0],Face,Rp0,Rpx).
+  pickupFields([T,..M],SF,Face,Rp,Rpx) :-
+    Rp0=reportError("invalid type field: $(T)",T.loc,Rp),
+    pickupFields(M,SF,Face,Rp0,Rpx).
 
-  checkSoFar:(string,ast,list[ast],list[ast]){}.
-  checkSoFar(_,_,[],[]).
-  checkSoFar(Nm,T,[P,..L],L) :-
+  checkSoFar:(string,ast,list[ast],list[ast],report,report){}.
+  checkSoFar(_,_,[],[],Rp,Rp).
+  checkSoFar(Nm,T,[P,..L],L,Rp,Rpx) :-
     isBinary(P,":",Lc,NN,RR),
     isIden(NN,_,Nm),
-    (sameTerm(RR,T) | reportError("field $(Nm) : $(T) must be identical to: $(RR)",Lc)).
-  checkSoFar(Nm,T,[P,..L],[P,..LL]) :-
-    checkSoFar(Nm,T,L,LL).
+    (sameTerm(RR,T) ? Rp=Rpx | Rpx=reportError("field $(Nm) : $(T) must be identical to: $(RR)",Lc,Rp)).
+  checkSoFar(Nm,T,[P,..L],[P,..LL],Rp,Rpx) :-
+    checkSoFar(Nm,T,L,LL,Rp,Rpx).
 
   typeRule:(location,list[ast],list[ast],ast,ast,ast){}.
   typeRule(Lc,Quants,Constraints,Hd,Body,Rule) :-

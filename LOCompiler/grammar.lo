@@ -16,51 +16,51 @@ lo.comp.grammar{
   public tokenCodes:(list[integer]) => list[token].
   tokenCodes(Chars) => Toks :- tokenize(Toks) %% startState(Chars).
 
-  public parseFile:(uri) => ast.
-  parseFile(U) => Term :-
+  public parseFile:(uri,report,report) => ast.
+  parseFile(U,Rp,Rpx) => Term :-
     tokenize(Toks) %% startState(getResource(U)),
-    parse(Term) %% Toks .
+    parse(Term,Rp,Rpx) %% Toks .
 
-  public nextTerm:(list[token],ast,list[token]){}.
-  nextTerm(Toks,Term,Rest) :-
-    parse(Term) %% Toks ~ Rest.
+  public nextTerm:(list[token],ast,list[token],report,report){}.
+  nextTerm(Toks,Term,Rest,Rp,Rpx) :-
+    parse(Term,Rp,Rpx) %% Toks ~ Rest.
 
   type tokMark ::= endBrce | otherMark.
 
   public
-  parse:(ast) --> list[token].
-  parse(Term) --> term(2000,Term,Mark)!,
-    checkForTerminator(Mark).
+  parse:(ast,report,report) --> list[token].
+  parse(Term,Rp,Rpx) --> term(2000,Term,Mark,Rp,Rp)!,
+    checkForTerminator(Mark,Rp0,Rpx).
 
   private
-  term:(integer,ast,tokMark) --> list[token].
-  term(Pr,Term,Mark) -->
-    termLeft(Pr,Left,LftPr,LLend),
-    termRight(Pr,Left,Term,LftPr,LLend,Mark).
+  term:(integer,ast,tokMark,report,report) --> list[token].
+  term(Pr,Term,Mark,Rp,Rpx) -->
+    termLeft(Pr,Left,LftPr,LLend,Rp,Rp0),
+    termRight(Pr,Left,Term,LftPr,LLend,Mark,Rp0,Rpx).
 
   private
-  termLeft:(integer,ast,integer,tokMark) --> list[token].
-  termLeft(Pr,Left,OPr,Mark) -->
+  termLeft:(integer,ast,integer,tokMark,report,report) --> list[token].
+  termLeft(Pr,Left,OPr,Mark,Rp,Rpx) -->
     [tok(idTok(Op),Lc)], \+[tok(rpar,_)], { prefixOp(Op,OPr,ORight), OPr=<Pr},
-    term(ORight,Arg,Mark),
+    term(ORight,Arg,Mark,Rp,Rpx),
     Left=unary(Lc.merge(Arg.loc),Op,Arg).
-  termLeft(_,Term,0,Mark) --> term0(Term,Mark).
+  termLeft(_,Term,0,Mark,Rp,Rpx) --> term0(Term,Mark,Rp,Rpx).
 
   private
-  termRight:(integer,ast,ast,integer,tokMark,tokMark) --> list[token].
-  termRight(Pr,Left,Term,LeftPr,_,Mark) -->
+  termRight:(integer,ast,ast,integer,tokMark,tokMark,report,report) --> list[token].
+  termRight(Pr,Left,Term,LeftPr,_,Mark,Rp,Rpx) -->
     legalInfixOp(Op,Pr,LeftPr,InfPr,RightPr),
-    term(RightPr,Right,LMark),
+    term(RightPr,Right,LMark,Rp,Rp0),
     M = binary(Left.loc.merge(Right.loc),Op,Left,Right),
-    termRight(Pr,M,Term,InfPr,LMark,Mark).
-  termRight(Pr,Left,Term,LeftPr,_,Mark) -->
+    termRight(Pr,M,Term,InfPr,LMark,Mark,Rp0,Rpx).
+  termRight(Pr,Left,Term,LeftPr,_,Mark,Rp,Rpx) -->
     [tok(idTok(Op),Lc)],
     { postfixOp(Op,LPr,PostPr),
         PostPr =< Pr,
         LPr >= LeftPr},
     M = unary(Left.loc.merge(Lc),Op,Left),
-    termRight(Pr,M,Term,PostPr,otherMark,Mark).
-  termRight(_,Term,Term,_,Mark,Mark) --> [].
+    termRight(Pr,M,Term,PostPr,otherMark,Mark,Rp,Rpx).
+  termRight(_,Term,Term,_,Mark,Mark,Rp,Rp) --> [].
 
   private
   legalInfixOp:(string,integer,integer,integer,integer) --> list[token].
@@ -85,84 +85,84 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(fltTok(_),_)].
 
   private
-  term0:(ast,tokMark) --> list[token].
-  term0(parseString(Lc,Segments),otherMark) --> [tok(stringTok(Segments),Lc)].
-  term0(intg(Lc,Ix),otherMark) --> [tok(intTok(Ix),Lc)].
-  term0(flot(Lc,Dx),otherMark) --> [tok(fltTok(Dx),Lc)].
-  term0(tupl(Lc,"[]",[]),otherMark) --> 
+  term0:(ast,tokMark,report,report) --> list[token].
+  term0(parseString(Lc,Segments),otherMark,Rp,Rp) --> [tok(stringTok(Segments),Lc)].
+  term0(intg(Lc,Ix),otherMark,Rp,Rp) --> [tok(intTok(Ix),Lc)].
+  term0(flot(Lc,Dx),otherMark,Rp,Rp) --> [tok(fltTok(Dx),Lc)].
+  term0(tupl(Lc,"[]",[]),otherMark,Rp,Rp) --> 
     [tok(lbra,Lc0),tok(rbra,Lc1)]!,
     Lc = Lc0.merge(Lc1).
-  term0(tupl(Lc,"[]",tupleize(Seq)),otherMark) -->
+  term0(tupl(Lc,"[]",tupleize(Seq)),otherMark,Rp,Rpx) -->
     [tok(lbra,Lc0)],
-    term(2000,Seq,_),
-    checkFor(rbra,Lc1,"missing close bracket"),
+    term(2000,Seq,_,Rp,Rp0),
+    checkFor(rbra,Lc1,"missing close bracket",Rp0,Rpx),
     Lc = Lc0.merge(Lc1).
-  term0(tupl(Lc,"{}",[]),endBrce) -->
+  term0(tupl(Lc,"{}",[]),endBrce,Rp,Rp) -->
     [tok(lbrce,Lc0),tok(rbrce,Lc1)],
     Lc = Lc0.merge(Lc1).
-  term0(tupl(Lc,"{}",Seq),endBrce) -->
+  term0(tupl(Lc,"{}",Seq),endBrce,Rp,Rpx) -->
     [tok(lbrce,Lc0)],
-    terms(Seq),
-    checkFor(rbrce,Lc1,"missing close brace"),
+    terms(Seq,Rp,Rp0),
+    checkFor(rbrce,Lc1,"missing close brace",Rp0,Rpx),
     Lc = Lc0.merge(Lc1).
-  term0(unary(Lc,"<||>",A),otherMark) -->
+  term0(unary(Lc,"<||>",A),otherMark,Rp,Rpx) -->
     [tok(lqpar,Lc0)],
-    term(2000,A,_),
-    checkFor(rqpar,Lc1,"missing close quote"),
+    term(2000,A,_,Rp,Rp0),
+    checkFor(rqpar,Lc1,"missing close quote",Rp0,Rpx),
     Lc = Lc0.merge(Lc1).
-  term0(Term,Mark) -->
-    term00(Left,LMark),
-    termArgs(Left,Term,LMark,Mark).
+  term0(Term,Mark,Rp,Rpx) -->
+    term00(Left,LMark,Rp,Rp0),
+    termArgs(Left,Term,LMark,Mark,Rp0,Rpx).
 
   private
-  term00:(ast,tokMark) --> list[token].
-  term00(iden(Lc,Nm),otherMark) --> [tok(idTok(Nm),Lc)].
-  term00(tupl(Lc,"()",[]),otherMark) --> 
+  term00:(ast,tokMark,report,report) --> list[token].
+  term00(iden(Lc,Nm),otherMark,Rp,Rp) --> [tok(idTok(Nm),Lc)].
+  term00(tupl(Lc,"()",[]),otherMark,Rp,Rp) --> 
       [tok(lpar,Lc0),tok(rpar,Lc1)],
       Lc = Lc0.merge(Lc1).
-  term00(tupl(Lc,"()",tupleize(Seq)),otherMark) -->
+  term00(tupl(Lc,"()",tupleize(Seq)),otherMark,Rp,Rpx) -->
       [tok(lpar,Lc0)],
-      term(2000,Seq,_),
-      checkFor(rpar,Lc1,"missing close paren"),
+      term(2000,Seq,_,Rp,Rp0),
+      checkFor(rpar,Lc1,"missing close paren",Rp0,Rpx),
       Lc = Lc0.merge(Lc1).
 
   private
-  termArgs:(ast,ast,tokMark,tokMark) --> list[token].
-  termArgs(Lft,Term,_,Mark) -->
+  termArgs:(ast,ast,tokMark,tokMark,report,report) --> list[token].
+  termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(lpar,Lc0), tok(rpar,Lc1)],
       Lc = Lft.loc.merge(Lc1),
-      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"()",[])),Term,otherMark,Mark).
-  termArgs(Lft,Term,_,Mark) -->
+      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"()",[])),Term,otherMark,Mark,Rp,Rpx).
+  termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(lpar,Lc0)],
-      term(2000,Seq,_),
-      checkFor(rpar,Lc1,"missing close paren"),
+      term(2000,Seq,_,Rp,Rp0),
+      checkFor(rpar,Lc1,"missing close paren",Rp0,Rp1),
       Lc = Lc0.merge(Lc1),
-      termArgs(appl(Lc,Lft,tupl(Lc,"()",tupleize(Seq))),Term,otherMark,Mark).
-  termArgs(Lft,Term,_,Mark) -->
+      termArgs(appl(Lc,Lft,tupl(Lc,"()",tupleize(Seq))),Term,otherMark,Mark,Rp1,Rpx).
+  termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(lbra,Lc0), tok(rbra,Lc1)],
       Lc = Lft.loc.merge(Lc1),
-      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"[]",[])),Term,otherMark,Mark).
-  termArgs(Lft,appl(Lc,Lft,tupl(Lc,"[]",tupleize(Seq))),_,otherMark) -->
+      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"[]",[])),Term,otherMark,Mark,Rp,Rpx).
+  termArgs(Lft,appl(Lc,Lft,tupl(Lc,"[]",tupleize(Seq))),_,otherMark,Rp,Rpx) -->
       [tok(lbra,Lc0)],
-      term(2000,Seq,_),
-      checkFor(rbra,Lc1,"missing close bracket"),
+      term(2000,Seq,_,Rp,Rp0),
+      checkFor(rbra,Lc1,"missing close bracket",Rp0,Rpx),
       Lc = Lc0.merge(Lc1).
-  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",[])),_,endBrce) -->
+  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",[])),_,endBrce,Rp,Rp) -->
       [tok(lbrce,Lc0), tok(rbrce,Lc1)],
       Lc = Lc0.merge(Lc1).
-  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",Els)),_,endBrce) -->
+  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",Els)),_,endBrce,Rp,Rpx) -->
       [tok(lbrce,Lc0)],
-      terms(Els),
-      checkFor(rbrce,Lc1,"missing close brace").
-  termArgs(Lft,Term,_,Mark) -->
+      terms(Els,Rp,Rp0),
+      checkFor(rbrce,Lc1,"missing close brace",Rp0,Rpx).
+  termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(idTok("."),Lc), tok(idTok(Fld),LcF)],
-      termArgs(binary(Lc,".",Lft,iden(LcF,Fld)),Term,otherMark,Mark).
+      termArgs(binary(Lc,".",Lft,iden(LcF,Fld)),Term,otherMark,Mark,Rp,Rpx).
   termArgs(Term,Term,Mark,Mark) --> [].
 
   private
-  terms: (list[ast]) --> list[token].
-  terms([T,..R]) --> parse(T), terms(R).
-  terms([]) --> [].
+  terms: (list[ast],report,report) --> list[token].
+  terms([T,..R],Rp,Rpx) --> parse(T,Rp,Rp0), terms(R,Rp0,Rpx).
+  terms([],Rp,Rp) --> [].
 
   private
   tupleize:(ast)=>list[ast].
@@ -170,42 +170,42 @@ lo.comp.grammar{
   tupleize(T) => [T].
 
   private
-  checkFor:(tok,location,string) --> list[token].
-  checkFor(Tk,Lc,_) --> [tok(Tk,Lc)].
-  checkFor(Tk,Lc,Msg) --> [tok(_,Lc)]+,
-    { reportError(Msg,Lc) }.
+  checkFor:(tok,location,string,report,report) --> list[token].
+  checkFor(Tk,Lc,_,Rp,Rp) --> [tok(Tk,Lc)].
+  checkFor(Tk,Lc,Msg,Rp,Rpx) --> [tok(_,Lc)]+,
+    { Rpx=reportError(Msg,Lc,Rp) }.
 
   private
-  checkForTerminator:(tokMark) --> list[token].
-  checkForTerminator(_) --> [tok(period,_)].
-  checkForTerminator(_) --> eof.
-  checkForTerminator(_) --> [tok(rbrce,_)]+.
-  checkForTerminator(endBrce) --> [].
-  checkForTerminator(_) --> 
+  checkForTerminator:(tokMark,report,report) --> list[token].
+  checkForTerminator(_,Rp,Rp) --> [tok(period,_)].
+  checkForTerminator(_,Rp,Rp) --> eof.
+  checkForTerminator(_,RP,Rp) --> [tok(rbrce,_)]+.
+  checkForTerminator(endBrce,Rp,Rp) --> [].
+  checkForTerminator(_,Rp,Rpx) --> 
     [tok(_,Lc)]+,
-    checkFor(period,Lc,"missing terminator").
+    Rpx=checkFor(period,Lc,"missing terminator",Rp).
 
   private
-  parseString:(location,list[stringSegment]) => ast.
-  parseString(Lc,[]) => strg(Lc,"").
-  parseString(_,[segment(Lc,Str)]) => strg(Lc,Str).
-  parseString(Lc,Segments) =>
-    unary(Lc,"formatSS",unary(Lc,"ssSeq",tupl(Lc,"[]",parseSegments(Segments)))).
+  parseString:(location,list[stringSegment],report,report) => ast.
+  parseString(Lc,[],Rp,Rp) => strg(Lc,"").
+  parseString(_,[segment(Lc,Str)],Rp,Rp) => strg(Lc,Str).
+  parseString(Lc,Segments,Rp,Rpx) =>
+    unary(Lc,"formatSS",unary(Lc,"ssSeq",tupl(Lc,"[]",parseSegments(Segments,Rp,Rpx)))).
 
-  parseSegments:(list[stringSegment]) => list[ast].
-  parseSegments([]) => [].
-  parseSegments([segment(Lc,Str),..More]) =>
-    [unary(Lc,"ss",strg(Lc,Str)),..parseSegments(More)].
-  parseSegments([interpolate(Lc,Exp,Fmt),..More]) =>
-    [interpolateSegment(Lc,Exp,Fmt),..parseSegments(More)].
+  parseSegments:(list[stringSegment],report,report) => list[ast].
+  parseSegments([],Rp,Rp) => [].
+  parseSegments([segment(Lc,Str),..More],Rp,Rpx) =>
+    [unary(Lc,"ss",strg(Lc,Str)),..parseSegments(More,Rp,Rp)].
+  parseSegments([interpolate(Lc,Exp,Fmt),..More],Rp,Rp) =>
+    [interpolateSegment(Lc,Exp,Fmt,Rp,Rp0),..parseSegments(More,Rp0,Rp)].
 
-  interpolateSegment:(location,string,string) => ast.
-  interpolateSegment(Lc,Text,"") =>
+  interpolateSegment:(location,string,string,report,report) => ast.
+  interpolateSegment(Lc,Text,"",Rp,Rpx) =>
       formatDisp(Lc,Arg,iden(Lc,"disp"),tupl(Lc,"()",[])) :-
-    term(2000,Arg,_) %% subTokenize(Lc,Text).
-  interpolateSegment(Lc,Text,Fmt) =>
+    term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
+  interpolateSegment(Lc,Text,Fmt,Rp,Rpx) =>
       formatDisp(Lc,Arg,iden(Lc,"frmt"),tupl(Lc,"()",[strg(Lc,Fmt)])) :-
-    term(2000,Arg,_) %% subTokenize(Lc,Text).
+    term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
 
   private
   formatDisp:(location,ast,ast,ast) => ast.

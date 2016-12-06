@@ -2,15 +2,31 @@ lo.comp.errors{
   import lo.comp.location.
   import lo.
 
+  public type reportMsg ::= errorMsg(location,string) | othMsg(location,string).
+
+  public type report <~ {
+    count:()=>integer.
+    errors:list[errorMsg].
+  }.
+
+  private report: (integer,list[errorMsg]) <=> report.
+  report(Lst){
+    count() => length(Lst).
+    errors = Lst.
+  }
+
+  public reportBase : report.
+  reportBase = report(0,[]).
+
   public
-  reportError:(string,location){}.
-  reportError(Msg,Lc) :-
+  reportError:(string,location,report)=>report.
+  reportError(Msg,Lc,report(L)) => report([errorMsg(Lc,Msg),..L]):-
     _logmsg("Error @ $(Lc)"),
     _logmsg(Msg).
 
   public
-  reportMsg:(string,location){}.
-  reportMsg(Msg,Lc) :-
+  reportMsg:(string,location,report)=>report.
+  reportMsg(Msg,Lc,report(L)) => report([othMsg(Lc,Msg),..L]):-
     _logmsg("Info @ $(Lc)"),
     _logmsg(Msg).
 

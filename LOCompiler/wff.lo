@@ -3,7 +3,6 @@ lo.comp.wff {
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
-  import lo.comp.errors.
   import lo.comp.package.
 
   public
@@ -64,12 +63,6 @@ lo.comp.wff {
   packageVersion(T) =>  Pkg :-  isString(T,_,Pkg).
   packageVersion(T) =>  "$(Ix)" :-  isInteger(T,_,Ix).
   packageVersion(T) =>  packageVersion(L)+"."+packageVersion(R) :-  isBinary(T,".",_,L,R).
-
-  public
-  sameLength:all t ~~ (list[t],list[t],location){}.
-  sameLength(L1,L2,_) :- length(L1) = length(L2).
-  sameLength(L1,_,Lc) :-
-    reportError("expecting $(length(L1)) elements",Lc).
 
   public
   tupleize:(ast,string,ast){}.
