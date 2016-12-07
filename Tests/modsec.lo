@@ -1,0 +1,115 @@
+test.modsec{
+  -- Test of L&O by parsing modsecurity rules.
+
+  import lo.
+  import lo.uri.
+  import lo.resources.
+
+  type modSecRule ::= modSecRule(string,string,option[string]).
+
+  -- Hint to the run-time:
+  main:(list[string]){}.
+  main(Args) :-
+    processFiles(parseArgs(Args),cwd()).
+
+  parseArgs:(list[string]) => list[uri].
+  parseArgs([]) => [].
+  parseArgs([f,..l]) => [parseUri(f),..parseArgs(l)].
+
+  processFiles:(list[uri],uri){}.
+  processFiles([],_).
+  processFiles([u,..l],c) :-
+    procFile(resolveUri(c,u),L),
+    processFiles(l,c).
+
+  procFile:(uri,list[modSecRule]){}.
+  procFile(U,Rls) :-
+    lines(Lns) %% getResource(U),
+    Tks = tokenize(Lns),
+    _logmsg("Tokens are $(Tks :: list[string])").
+
+  implementation coercion[list[secTkn],string] .. {
+    _coerce(L) => formatSS(disp(L)).
+  }
+
+  -- Absorb the \eol markers into a sequence of lines.
+
+  lines:(list[list[integer]]) --> list[integer].
+  lines(Lns) --> line(Ln)!, {glue(Lns,Ln,Rest)}, lines(Rest).
+  lines([]) --> eof.
+
+  line:(list[integer]) --> list[integer].
+  line([]) --> "\n".
+  line([]) --> "#", eol().
+  line(Ln) --> "\\\n", line(Ln).
+  line([C,..L]) --> [C],line(L).
+
+  eol:()-->list[integer].
+  eol() --> "\n".
+  eol() --> [C], { C \= 0c\n}, eol().
+  eol() --> eof.
+
+  private glue:all t ~~ (list[list[t]],list[t],list[list[t]]){}.
+  glue(Text,[],Text).
+  glue([Ln,..Rest],Ln,Rest) :- Ln\=[].
+
+  -- Tokenization of modsecurity source
+
+  private type secTkn ::= secRule | secAction | secDefaultAction | secMarker | secRuleUpdate
+   | idn(list[integer]) | strg(list[integer]).
+
+  implementation display[secTkn] .. {
+    disp(secAction) => ss("SecAction").
+    disp(secRule) => ss("SecRule").
+    disp(secMarker) => ss("SecMarker").
+    disp(secDefaultAction) => ss("SecDefaultAction").
+    disp(secRuleUpdate) => ss("SecRuleUpdate").
+    disp(strg(Seq)) => ssSeq([ss("\""), ss(implode(Seq)), ss("\"")]).
+    disp(idn(Text)) => ssSeq([ss("'"), ss(implode(Text)), ss("'")]).
+  }
+
+  tokenize:(list[list[integer]]) => list[list[secTkn]].
+  tokenize([]) => [].
+  tokenize([l,..ll]) => [tks,..tokenize(ll)] :- tokens(tks) %% l.
+
+  tokens:(list[secTkn]) --> list[integer].
+  tokens(Toks) --> spaces(), moreToks(Toks).
+
+  spaces:()-->list[integer].
+  spaces() --> space(), spaces().
+  spaces() --> \+ space().
+
+  space:()-->list[integer].
+  space() --> ([0c ] | [0c\t])!.
+
+  moreToks:(list[secTkn]) --> list[integer].
+  moreToks([]) --> eof.
+  moreToks([Tok,..More]) --> token(Tok), tokens(More).
+
+  token:(secTkn) --> list[integer].
+  token(secRule) --> "SecRule".
+  token(secAction) --> "SecAction".
+  token(secMarker) --> "SecMarker".
+  token(strg(Seq)) --> "\"", stringText(Seq), "\"".
+  token(idn(Text)) --> iden(Text).
+
+  iden:(list[integer]) --> list[integer].
+  iden([]) --> eof.
+  iden([]) --> " "+.
+  iden([C,..L]) --> [C], iden(L).
+
+
+  stringText:(list[integer]) --> list[integer].
+  stringText([]) --> [].
+  stringText(T) --> "\\\n", stringText(T).
+  stringText([C,..More]) --> "\\", quote(C), stringText(More).
+  stringText([C,..More]) --> [C], { C \= 0c" }, stringText(More).
+
+  quote:(integer) --> list[integer].
+  quote(0c\n) --> "n".
+  quote(0c") --> "\"".
+  quote(0c') --> "'".
+  quote(0c\t) --> "t".
+  quote(C) --> [C].
+
+}

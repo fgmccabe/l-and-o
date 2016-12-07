@@ -11,14 +11,14 @@ lo.comp.grammar{
   import lo.comp.errors.
 
   private tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U)).
+  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U),getUriPath(uri)).
 
-  public tokenCodes:(list[integer]) => list[token].
-  tokenCodes(Chars) => Toks :- tokenize(Toks) %% startState(Chars).
+  public tokenCodes:(list[integer],string) => list[token].
+  tokenCodes(Chars,Pth) => Toks :- tokenize(Toks) %% startState(Chars,Pth).
 
   public parseFile:(uri,report,report) => ast.
   parseFile(U,Rp,Rpx) => Term :-
-    tokenize(Toks) %% startState(getResource(U)),
+    tokenize(Toks) %% startState(getResource(U),getUriPath(U)),
     parse(Term,Rp,Rpx) %% Toks .
 
   public nextTerm:(list[token],ast,list[token],report,report){}.
@@ -86,7 +86,7 @@ lo.comp.grammar{
 
   private
   term0:(ast,tokMark,report,report) --> list[token].
-  term0(parseString(Lc,Segments),otherMark,Rp,Rp) --> [tok(stringTok(Segments),Lc)].
+  term0(parseString(Lc,Segments,Rp,Rpx),otherMark,Rp,Rpx) --> [tok(stringTok(Segments),Lc)].
   term0(intg(Lc,Ix),otherMark,Rp,Rp) --> [tok(intTok(Ix),Lc)].
   term0(flot(Lc,Dx),otherMark,Rp,Rp) --> [tok(fltTok(Dx),Lc)].
   term0(tupl(Lc,"[]",[]),otherMark,Rp,Rp) --> 
@@ -157,7 +157,7 @@ lo.comp.grammar{
   termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(idTok("."),Lc), tok(idTok(Fld),LcF)],
       termArgs(binary(Lc,".",Lft,iden(LcF,Fld)),Term,otherMark,Mark,Rp,Rpx).
-  termArgs(Term,Term,Mark,Mark) --> [].
+  termArgs(Term,Term,Mark,Mark,Rp,Rp) --> [].
 
   private
   terms: (list[ast],report,report) --> list[token].
@@ -173,7 +173,7 @@ lo.comp.grammar{
   checkFor:(tok,location,string,report,report) --> list[token].
   checkFor(Tk,Lc,_,Rp,Rp) --> [tok(Tk,Lc)].
   checkFor(Tk,Lc,Msg,Rp,Rpx) --> [tok(_,Lc)]+,
-    { Rpx=reportError(Msg,Lc,Rp) }.
+    { reportError(Msg,Lc,Rp,Rpx) }.
 
   private
   checkForTerminator:(tokMark,report,report) --> list[token].
@@ -183,7 +183,7 @@ lo.comp.grammar{
   checkForTerminator(endBrce,Rp,Rp) --> [].
   checkForTerminator(_,Rp,Rpx) --> 
     [tok(_,Lc)]+,
-    Rpx=checkFor(period,Lc,"missing terminator",Rp).
+    checkFor(period,Lc,"missing terminator",Rp,Rpx).
 
   private
   parseString:(location,list[stringSegment],report,report) => ast.

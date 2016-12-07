@@ -74,4 +74,75 @@ lo.comp.freshen{
   frshnConstraints:(list[constraint],map[string,tipe]) => list[constraint].
   frshnConstraints([],_) => [].
   frshnConstraints([C,..R],B) => [frshnConstraint(C,B),..frshnConstraints(R,B)].
+
+  public freezeType:(tipe,map[string,tipe],tipe){}.
+  freezeType(Tp,B,FrZ) :-
+    freeze(Tp,B,FT),
+    reQuant(pairs(B),B,FT,FrZ).
+
+  private freeze:(tipe,map[string,tipe],tipe){}.
+  freeze(T,B,Frzn) :-
+    frze(deRef(T),B,Frzn)!.
+
+  private frze:(tipe,map[string,tipe],tipe){}.
+  frze(voidType,_,voidType).
+  frze(anonType,_,anonType).
+  frze(thisType,_,thisType).
+  frze(kVar(TV),_,kVar(TV)).
+  frze(V,B,kVar(TV)) :- isUnbound(V), present(B,TV,VV), isIdenticalVar(V,deRef(VV)).
+  frze(V,_,V) :- isUnbound(V).
+  frze(tipe(Nm),_,tipe(Nm)).
+  frze(funType(A,R),B,funType(FA,FR)) :-
+    freeze(A,B,FA),
+    freeze(R,B,FR).
+  frze(grammarType(A,R),B,grammarType(FA,FR)) :-
+    freeze(A,B,FA),
+    freeze(R,B,FR).
+  frze(classType(A,R),B,classType(FA,FR)) :-
+    freeze(A,B,FA),
+    freeze(R,B,FR).
+  frze(predType(A),B,predType(FA)) :- freeze(A,B,FA).
+  frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
+  frze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
+  frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
+    freeze(Tp,remove(B,V),FTp).
+  frze(faceType(L),B,faceType(FL)) :-
+    freezeFields(L,B,FL).
+  frze(typeRule(A,R),B,typeRule(FA,FR)) :-
+    freeze(A,B,FA),
+    freeze(R,B,FR).
+  frze(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
+    freeze(Tp,B,FTp),
+    freezeConstraint(Con,B,FCon).
+
+  freezeFields:(list[(string,tipe)],map[string,tipe],list[(string,tipe)]){}.
+  freezeFields([],_,[]).
+  freezeFields([(Nm,A),..L],B,[(Nm,FA),..FL]) :- freeze(A,B,FA), freezeFields(L,B,FL).
+
+  freezeTypes:(list[tipe],map[string,tipe],list[tipe]){}.
+  freezeTypes([],_,[]).
+  freezeTypes([A,..L],B,[FA,..FL]) :- freeze(A,B,FA), freezeTypes(L,B,FL).
+
+  reQuant:(list[(string,tipe)],map[string,tipe],tipe,tipe){}.
+  reQuant([],_,T,T).
+  reQuant([(_,Tp),..R],BB,T,FZT) :- 
+    V = deRef(Tp), isUnbound(V),
+    freezeConstraints(constraints(V),BB,T,FT)!,
+    reQuant(R,BB,FT,FZT).
+  reQuant([_,..B],BB,T,FT) :- reQuant(B,BB,T,FT).
+
+  freezeConstraints:(list[constraint],map[string,tipe],tipe,tipe){}.
+  freezeConstraints(C,_,T,T) :- var(C)!.
+  freezeConstraints([C,.._],_,T,T) :- var(C)!.
+  freezeConstraints([C,..R],BB,T,FT) :-
+    freezeConstraint(C,BB,FC),
+    freezeConstraints(R,BB,constrained(T,FC),FT).
+
+  freezeConstraint:(constraint,map[string,tipe],constraint){}.
+  freezeConstraint(conTract(Nm,A,D),B,conTract(Nm,FA,FD)) :-
+    freezeTypes(A,B,FA),
+    freezeTypes(D,B,FD).
+  freezeConstraint(implementsFace(T,F),B,implementsFace(FT,FF)) :-
+    freeze(T,B,FT),
+    freezeFields(F,B,FF).
 }

@@ -434,9 +434,10 @@ implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-               
   merge([idnt(Nm)],Q,Qx).
 
 trPtnCallOp(Nm,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
+  isEscape(Nm),!,
+  genVar("X",X),
   concat(Args,[X],XArgs),
-  merge([X],Q,Qx),
-  isEscape(Nm),!.
+  merge([X],Q,Qx).
 trPtnCallOp(Nm,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   lookupFunName(Map,Nm,Reslt),
   genVar("X",X),

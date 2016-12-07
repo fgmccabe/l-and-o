@@ -6,21 +6,21 @@ lo.comp.errors{
 
   public type report <~ {
     count:()=>integer.
-    errors:list[errorMsg].
+    errors:list[reportMsg].
   }.
 
-  private report: (integer,list[errorMsg]) <=> report.
+  private report: (list[reportMsg]) <=> report.
   report(Lst){
     count() => length(Lst).
     errors = Lst.
   }
 
   public reportBase : report.
-  reportBase = report(0,[]).
+  reportBase = report([]).
 
   public
-  reportError:(string,location,report)=>report.
-  reportError(Msg,Lc,report(L)) => report([errorMsg(Lc,Msg),..L]):-
+  reportError:(string,location,report,report){}.
+  reportError(Msg,Lc,report(L),report([errorMsg(Lc,Msg),..L])):-
     _logmsg("Error @ $(Lc)"),
     _logmsg(Msg).
 

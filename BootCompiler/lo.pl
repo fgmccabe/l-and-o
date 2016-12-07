@@ -33,16 +33,14 @@ main(Args) :-
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
   openRepo(Opts,Repo),
-  parsePkgName(Entry,Pkg,Vers),
-  processPackage(Pkg,Vers,Repo,[],Loaded,[],_),
+  parsePkgName(Entry,Pkg),
+  processPackage(Pkg,Repo,[],_Loaded,[],_),
   lookForMain(Pkg,LOArgs).
 
-processPackage(Pkg,'*',Repo,Loaded,Ldx,PrIn,PrOut) :-
-  processPackage(Pkg,defltVersion,Repo,Loaded,Ldx,PrIn,PrOut).
-processPackage(Pkg,Vers,Repo,Loaded,Ldx,PrIn,PrOut) :-
-  loadPkg(Pkg,Vers,Repo,Code,Imports),
+processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
+  loadPkg(Pkg,Repo,Code,Imports),
   assertAll(Code,PrIn,Pr0),
-  processImports(Imports,[(Pkg,Vers)|Loaded],Ldx,Repo,Pr0,PrOut),
+  processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),
   initPkg(Pkg).
 
 initPkg(pkg(Pkg)) :-
@@ -52,7 +50,7 @@ initPkg(pkg(Pkg)) :-
   call(ICall).
 initPkg(_).
 
-lookForMain(pkg(Top),Args) :-
+lookForMain(pkg(Top,_),Args) :-
   localName(Top,"@","main",M),
   atom_string(Main,M),
   current_predicate(Main/1),!,
@@ -77,20 +75,20 @@ predOf(T,P/A) :-
   compound_name_arity(T,P,A).
 
 processImports([],Ld,Ld,_,Pr,Pr).
-processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
-  is_member((Pkg,LdVers),Loaded),
+processImports([import(_,pkg(Pkg,Vers))|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
+  is_member(pkg(Pkg,LdVers),Loaded),
   (LdVers \= Vers -> 
       runTimeMsg("not permitted to load multiple versions of same package: %s@%s, %s already loaded",[Pkg,Vers,LdVers]);true),
   processImports(Imports,Loaded,Ldx,Repo,Pr,Prx).
-processImports([import(_,Pkg,Vers)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
-  processPackage(Pkg,Vers,Repo,Loaded,LdI,Pr,Pr0),
+processImports([import(_,Pkg)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
+  processPackage(Pkg,Repo,Loaded,LdI,Pr,Pr0),
   processImports(Imports,LdI,Ldx,Repo,Pr0,Prx).
 
-parsePkgName(P,pkg(Pkg),v(Version)) :-
+parsePkgName(P,pkg(Pkg,v(Version))) :-
   sub_string(P,Before,_,After,"#"),!,
   sub_string(P,0,Before,_,Pkg),
   sub_string(P,_,After,0,Version).
-parsePkgName(P,pkg(P),defltVersion).
+parsePkgName(P,pkg(P,defltVersion)).
 
 getCWDUri(WD) :-
   working_directory(C,C),

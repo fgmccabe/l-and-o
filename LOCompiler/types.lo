@@ -113,6 +113,7 @@ lo.comp.types{
   public
   constraints:(tipe)=>list[constraint].
   constraints(tVar(_,_,Con,_,_)) => Con.
+  constraints(_) => [].
 
   private
   collectConstraints:(tipe,list[constraint]) => list[constraint].

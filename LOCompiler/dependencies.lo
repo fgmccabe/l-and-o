@@ -36,9 +36,9 @@ lo.comp.dependencies{
   }
 
   public
-  dependencies:(list[ast],list[list[defn]],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast]){}.
-  dependencies(Els,Groups,Public,Annots,Imports,Other) :-
-    collectDefinitions(Els,Dfs,Public,Annots,Imports,Other),
+  dependencies:(list[ast],list[list[defn]],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
+  dependencies(Els,Groups,Public,Annots,Imports,Other,Rp,Rpx) :-
+    collectDefinitions(Els,Dfs,Public,Annots,Imports,Other,Rp,Rpx),
     Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)),
     showGroups(Groups).
 
@@ -70,7 +70,7 @@ lo.comp.dependencies{
     collectDefines(Stmts,Nm,K,Stx,DfSts),
     checkPublic(Viz,Nm,K,P,Px).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
-    Rpx=reportError("cannot fathom $(St)",St.loc,Rp).
+    reportError("cannot fathom $(St)",St.loc,Rp,Rpx).
 
   isImport:(ast){}.
   isImport(St) :-

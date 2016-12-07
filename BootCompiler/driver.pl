@@ -47,6 +47,7 @@ stringify([Name|More],[Fn|Files]) :-
   stringify(More,Files).
 
 main(Args) :- 
+  startCount,
   getCWDUri(CW),
   parseFlags(Args,CW,CWD,Opts,Pkgs),
   openRepo(Opts,Repo),
@@ -98,10 +99,8 @@ processFile(SrcUri,Pkg,Repo,Rx,Opts) :-
   noErrors,
   checkProgram(Term,Repo,Prog),!,
   noErrors,
-  displayCanon(Prog),
   transformProg(Prog,Opts,Rules),!,
   noErrors,
-  displayPlRules(Rules),
   genRules(Rules,Text),
   addPackage(Repo,SrcUri,Pkg,Text,Rx).
 

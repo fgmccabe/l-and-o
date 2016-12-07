@@ -7,31 +7,31 @@ lo.comp.lexer{
   -- Define the lexer for the L&O syntax
 
   public type tokenState <~ {
-    currentLocation:((integer,integer,integer)){}
+    currentLocation:((integer,integer,integer,string)){}
   }.
 
   public
-  startState:(list[integer])=>tokenState.
-  startState(Src) => tkState(Src,1,0,1).
+  startState:(list[integer],string)=>tokenState.
+  startState(Src,Pth) => tkState(Src,1,0,1,Pth).
 
-  tkState:(list[integer],integer,integer,integer) <=> tokenState.
-  tkState(Chars,Line,Off,Col){
-    currentLocation((Line,Off,Col)).
+  tkState:(list[integer],integer,integer,integer,string) <=> tokenState.
+  tkState(Chars,Line,Off,Col,Pth){
+    currentLocation((Line,Off,Col,Pth)).
   }.
 
   public implementation stream[tokenState ->> integer] .. {
-    _eof(tkState([],_,_,_)).
+    _eof(tkState([],_,_,_,_)).
 
-    _hdtl(tkState([0c\n,..Rest],Line,Off,Col),0c\n,tkState(Rest,Line+1,Off+1,1)).
-    _hdtl(tkState([Ch,..Rest],Line,Off,Col),Ch,tkState(Rest,Line,Off+1,Col+1)) :- \+ Ch = 0c\n.
+    _hdtl(tkState([0c\n,..Rest],Line,Off,Col,Pth),0c\n,tkState(Rest,Line+1,Off+1,1,Pth)).
+    _hdtl(tkState([Ch,..Rest],Line,Off,Col,Pth),Ch,tkState(Rest,Line,Off+1,Col+1,Pth)) :- \+ Ch = 0c\n.
 
-    _cons(Ch,tkState(Chars,Line,Off,Col)) => tkState([Ch,..Chars],Line,Off-1,Col-1).
+    _cons(Ch,tkState(Chars,Line,Off,Col,Pth)) => tkState([Ch,..Chars],Line,Off-1,Col-1,Pth).
   }
 
   private
-  makeLocation:((integer,integer,integer),(integer,integer,integer)) => location.
-  makeLocation((StartLine,StartOff,StartCol),(_,EndOff,_)) => 
-      loc(StartLine,StartOff,StartCol,EndOff-StartOff).
+  makeLocation:((integer,integer,integer,string),(integer,integer,integer,string)) => location.
+  makeLocation((StartLine,StartOff,StartCol,Pth),(_,EndOff,_,_)) => 
+      loc(StartLine,StartOff,StartCol,EndOff-StartOff,Pth).
 
   public
   tokenize:(list[token]) --> tokenState.
@@ -52,8 +52,8 @@ lo.comp.lexer{
 
   public
   subTokenize:(location,string) => list[token].
-  subTokenize(loc(Ln,Off,Col,_),Text) => Toks :-
-    tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col).
+  subTokenize(loc(Ln,Off,Col,_,Pth),Text) => Toks :-
+    tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col,Pth).
 
   nxtTok:(tok) --> tokenState.
   nxtTok(intTok(Ch)) --> "0c", charRef(Ch).

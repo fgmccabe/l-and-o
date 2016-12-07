@@ -2,6 +2,7 @@ lo.list{
   -- implement standard list functions
   import lo.core.
   import lo.collection.
+  import lo.coerce.
 
   public (<>):all t ~~ (list[t],list[t])=>list[t].
   [] <> X => X.
@@ -51,5 +52,13 @@ lo.list{
     foldRight(f,x,[]) => x.
     foldRight(f,x,[e,..l]) => f.apply(e,foldRight(f,x,l)).
   }
+
+  public implementation all e,f ~~ coercion[e,f] |: coercion[list[e],list[f]] .. {
+    _coerce(Sx) => coerceList(Sx).
+  }
+
+  coerceList:all e,f ~~ coercion[e,f] |: (list[e]) => list[f].
+  coerceList([]) => [].
+  coerceList([e,..l]) => [_coerce(e),..coerceList(l)].
 
 }

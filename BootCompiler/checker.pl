@@ -33,7 +33,6 @@ checkProgram(Prog,Repo,prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Im
 
 thetaEnv(Pkg,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others) :-
   macroRewrite(Els,Stmts),
-  displayAll(Stmts),
   dependencies(Stmts,Groups,Public,Annots,Imps,Otrs),
   processImportGroup(Imps,Imports,Repo,Base,IBase),
   pushFace(Fields,Lc,IBase,Env),

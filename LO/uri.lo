@@ -27,7 +27,7 @@ lo.uri {
   absoluteUri(Scheme,Hier,Query) --> scheme(Scheme), ":", hierPart(Hier,Query).
 
   scheme:(string) --> list[integer].
-  scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+.
+  scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+. 
 
   grabScheme:(list[integer]) --> list[integer].
   grabScheme([C,..S]) --> alpha(C), alphaStar(S).

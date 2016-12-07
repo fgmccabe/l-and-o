@@ -1,4 +1,4 @@
-:- module(import, [importPkg/3,loadPkg/5]).
+:- module(import, [importPkg/3,loadPkg/4]).
 
 % This is specific to the Prolog translation of L&O code
  
@@ -88,8 +88,8 @@ pickupImplementations([tpl([strg(Nm),strg(Sig)])|M],[imp(Nm,Spec)|I],RI) :-
   decodeConstraint(Sig,Spec),
   pickupImplementations(M,I,RI).
 
-loadPkg(Pkg,Vers,Repo,Code,Imports) :-
-  openPackageAsStream(Repo,Pkg,Vers,_,Strm),
+loadPkg(Pkg,Repo,Code,Imports) :-
+  openPackageAsStream(Repo,Pkg,_,_,Strm),
   loadPieces(Strm,Pkg,Code,Imports),
   close(Strm).
 

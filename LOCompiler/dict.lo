@@ -34,8 +34,11 @@ lo.comp.dict{
 
   public
   declareTypeExists:(string,option[location],tipe,list[env]) => list[env].
-  declareTypeExists(Nm,Lc,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) => 
-      [scope(Types+{Nm->tpDef(Lc,Tp,voidType)},Names,Cons,Contracts,Imps),..E].
+  declareTypeExists(Nm,Lc,Tp,Env) => declareType(Nm,tpDef(Lc,Tp,voidType),Env).
+
+  public declareType:(string,typeDef,list[env]) => list[env].
+  declareType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) =>
+      [scope(Types+{Nm->Tp},Names,Cons,Contracts,Imps),..E].
 
   private standardType:(string,tipe,list[env]) => list[env].
   standardType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) => 

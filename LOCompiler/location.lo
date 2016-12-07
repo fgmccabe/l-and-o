@@ -8,16 +8,18 @@ lo.comp.location{
     column:integer.
     from:integer.
     length:integer.
+    path:string.
   }.
 
-  public loc:(integer,integer,integer,integer)<=>location.
-  loc(Line,Off,Col,Len){
+  public loc:(integer,integer,integer,integer,string)<=>location.
+  loc(Line,Off,Col,Len,Pth){
     line = Line.
     column = Col.
     from = Off.
     length = Len.
+    path = Pth.
 
-    merge(loc(_,_,C,L)) => loc(Line,Off,Col,C-Col+L).
+    merge(loc(_,_,C,L,_)) => loc(Line,Off,Col,C-Col+L,Pth).
   }.
 
   public
@@ -26,8 +28,8 @@ lo.comp.location{
   }
 
   locDisp:(location)=>ss.
-  locDisp(loc(Ln,Off,Col,Len)) => 
-        ssSeq([disp(Ln),ss(":"),disp(Col),ss("("),disp(Len),ss(")")]).
+  locDisp(loc(Ln,Off,Col,Len,Pth)) => 
+        ssSeq([ss(Pth),ss(":"),disp(Ln),ss("/"),disp(Col),ss("("),disp(Len),ss(")")]).
 
   public type hasLoc <~ { loc:location. }.
 }

@@ -1,3 +1,6 @@
 catalog{
-  default is "../LO/catalog".
+  content{
+    test.modsec -> "modsec.lo".
+  }
+  default: "../LO/catalog".
 }
