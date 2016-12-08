@@ -1,0 +1,134 @@
+lo.json{
+  import lo.
+
+  public type json ::=
+    jTrue | jFalse | jNull |
+    jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) | 
+    jNum(float).
+
+  public implementation display[json] .. {
+    disp(j) => dispJson(j).
+  }
+
+  private dispJson:(json) => ss.
+  dispJson(jTrue) => ss("true").
+  dispJson(jFalse) => ss("false").
+  dispJson(jNull) => ss("null").
+  dispJson(jTxt(T)) => disp(T).
+  dispJson(jNum(D)) => disp(D).
+  dispJson(jColl(M)) => ssSeq([ss("{"),ssSeq(dispColl(pairs(M),"")),ss("}")]).
+  dispJson(jSeq(L)) => ssSeq([sc(0c[),ssSeq(dispSeq(L,"")),sc(0c])]).
+
+  dispColl:(list[(string,json)],string) => list[ss].
+  dispColl([],_) => [].
+  dispColl([(f,e),..l],s) => [ss(s),disp(f),ss(":"),dispJson(e),..dispColl(l,",")].
+
+  dispSeq:(list[json],string) => list[ss].
+  dispSeq([],_) => [].
+  dispSeq([e,..l],s) => [ss(s),dispJson(e),..dispSeq(l,",")].
+
+  public parseJson:all s ~~ stream[s->>integer] |: (json) --> s.
+  parseJson(J) --> skipBlanks(), jP(J).
+    
+  private skipBlanks:all s ~~ stream[s->>integer] |: () --> s.
+  skipBlanks() --> [0c ],skipBlanks().
+  skipBlanks() --> [0c\t],skipBlanks().
+  skipBlanks() --> [0c\n],skipBlanks().
+  skipBlanks() --> [0c\r],skipBlanks().
+  skipBlanks() --> [].
+
+  private jP:all s ~~ stream[s->>integer] |: (json) --> s.
+  jP(jTrue) --> "true".
+  jP(jFalse) --> "false".
+  jP(jNull) --> "null".
+  jP(jNum(-N)) --> "-", readNumber(N).
+  jP(jNum(N)) --> readNumber(N).
+  jP(jTxt(implode(S))) --> "\"", parseStr(S), "\"".
+  jP(jSeq(L)) --> "[", skipBlanks(), parseSeq(L), "]".
+  jP(jColl(M)) --> "{", skipBlanks(), parseColl({},M), "}".
+
+  private parseStr:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
+  parseStr([]) --> "\""+.
+  parseStr([H,..l]) --> "\\u",readHex(0,H,4), parseStr(l).
+  parseStr([0c\b,..l]) --> "\\b", parseStr(l).
+  parseStr([0c\f,..l]) --> "\\f", parseStr(l).
+  parseStr([0c\n,..l]) --> "\\n", parseStr(l).
+  parseStr([0c\r,..l]) --> "\\r", parseStr(l).
+  parseStr([0c\t,..l]) --> "\\t", parseStr(l).
+  parseStr([X,..l]) --> "\\", [X], parseStr(l).
+  parseStr([C,..l]) --> [C], parseStr(l).
+
+  readHex:all s ~~ stream[s->>integer] |: (integer,integer,integer) --> s.
+  readHex(SoFar,Int,Cnt) --> {Cnt>0}, hexDigit(D), readHex(SoFar*10+D,Int,Cnt-1).
+  readHex(SoFar,SoFar,_) --> [].
+
+  readNumber:all s ~~ stream[s->>integer] |: (float) --> s.
+  readNumber(Flt) --> readNatural(0,First), readMoreNumber(Flt,First).
+
+  readDecimal:all s ~~ stream[s->>integer] |: (integer) --> s.
+  readDecimal(In) --> [0c-], readNatural(0,Pl), In = 0-Pl.
+  readDecimal(In) --> readNatural(0,In).
+
+  readNatural:all s ~~ stream[s->>integer] |: (integer,integer) --> s.
+  readNatural(SoFar,Int) --> digit(D), readNatural(SoFar*10+D,Int).
+  readNatural(SoFar,SoFar) --> \+digit(_).
+
+  readMoreNumber:all s ~~ stream[s->>integer] |: (float,integer) --> s.
+  readMoreNumber(Fp,Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr), 
+      exponent(_int2flt(Decimal)+Fr,Fp).
+  readMoreNumber(Ix::float,Ix) --> [].
+
+  fraction:all s ~~ stream[s->>integer] |: (float,float,float) --> s.
+  fraction(Scale,SoFar,Result) --> digit(D), fraction(Scale*0.1,SoFar+_int2flt(D)*Scale,Result).
+  fraction(_,Fract,Fract) --> [].
+
+  exponent:all s ~~ stream[s->>integer] |: (float,float) --> s.
+  exponent(SoFar,Fp) --> ([0ce] | [0cE]), readDecimal(Exp), Fp = SoFar*_pwr(10.0,_int2flt(Exp)).
+  exponent(Fp,Fp) --> [].
+
+  digit:all s ~~ stream[s->>integer] |: (integer) --> s.
+  digit(0) --> [0c0].
+  digit(1) --> [0c1].
+  digit(2) --> [0c2].
+  digit(3) --> [0c3].
+  digit(4) --> [0c4].
+  digit(5) --> [0c5].
+  digit(6) --> [0c6].
+  digit(7) --> [0c7].
+  digit(8) --> [0c8].
+  digit(9) --> [0c9].
+
+  hexDigit:all s ~~ stream[s->>integer] |: (integer) --> s.
+  hexDigit(X) --> digit(X).
+  hexDigit(10) --> [0ca].
+  hexDigit(11) --> [0cb].
+  hexDigit(12) --> [0cc].
+  hexDigit(13) --> [0cd].
+  hexDigit(14) --> [0ce].
+  hexDigit(15) --> [0cf].
+  hexDigit(10) --> [0cA].
+  hexDigit(11) --> [0cB].
+  hexDigit(12) --> [0cC].
+  hexDigit(13) --> [0cD].
+  hexDigit(14) --> [0cE].
+  hexDigit(15) --> [0cF].
+
+  private parseSeq:all s ~~ stream[s->>integer] |: (list[json]) --> s.
+  parseSeq([]) --> "]"+.
+  parseSeq([e,..l]) --> jP(e), skipBlanks(), moreSeq(l).
+
+  private moreSeq:all s ~~ stream[s->>integer] |: (list[json]) --> s.
+  moreSeq([]) --> "]"+.
+  moreSeq([e,..l]) --> ",", skipBlanks(), jP(e), skipBlanks(), moreSeq(l).
+  
+  private parseColl:all s ~~ stream[s->>integer] |: (map[string,json],map[string,json]) --> s.
+  parseColl(m,m) --> "}"+.
+  parseColl(m,c) --> parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+{f->v},c).
+
+  private parseMoreColl:all s ~~ stream[s->>integer] |: (map[string,json],map[string,json]) --> s.
+  parseMoreColl(m,m) --> "}"+.
+  parseMoreColl(m,c) --> ",",skipBlanks(), parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+{f->v},c).
+
+  private parseField:all s ~~ stream[s->>integer] |: (string) --> s.
+  parseField(implode(S)) --> "\"", parseStr(S), "\"".
+}

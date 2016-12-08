@@ -34,7 +34,7 @@ lo.core{
   }
 
   -- Structured string. This is only part of the type ..
-  public type ss ::= ss(string) | ssSeq(list[ss]).
+  public type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
 
   -- Displayable contract
   public  
@@ -160,8 +160,20 @@ lo.core{
 
   public
   implementation display[string] .. {
-    disp(X) => ss(X).
+    disp(X) => displayString(X).
   }
+
+  public displayString:(string) => ss.
+  displayString(S) => ssSeq([sc(0c\"),ssSeq(quoteStr(explode(S))),sc(0c\")]).
+
+  private quoteStr:(list[integer]) => list[ss].
+  quoteStr([])=>[].
+  quoteStr([c,..l]) => qtChr(c,quoteStr(l)).
+
+  private qtChr:(integer,list[ss]) => list[ss].
+  qtChr(0c",l) => [sc(0c\\),sc(0c"),..l].
+  qtChr(0c\\,l) => [sc(0c\\),sc(0c\\),..l].
+  qtChr(c,l) => [sc(c),..l].
 
   -- Not strictly necessary, but makes for better symmetry.
   public

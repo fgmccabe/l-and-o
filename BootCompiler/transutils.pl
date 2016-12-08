@@ -40,10 +40,9 @@ trPrg(Nm,Args,prg(Name,Arity)) :-
   string_concat(Nm,"%",N1),
   string_concat(N1,Sz,Name).
 
-genNewName(Map,Variant,Args,prg(Nm,Ar)) :-
+genNewName(Map,Variant,Ar,prg(Nm,Ar)) :-
   layerName(Map,Prefix),
   genstr(Variant,V),
-  length(Args,Ar),
   localName(Prefix,"@",V,Nm).
 
 /*

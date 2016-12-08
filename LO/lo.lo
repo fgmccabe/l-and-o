@@ -13,6 +13,7 @@ lo{
   flttn : (ss,list[integer]) => list[integer].
   flttn(ss(S),Rest) => explode(S)<>Rest.
   flttn(ssSeq(L),Rest) => flttnList(L,Rest).
+  flttn(sc(C),Rest) => [C,..Rest].
 
   flttnList:(list[ss],list[integer]) => list[integer].
   flttnList([],Rest) => Rest.

@@ -4,6 +4,7 @@ test.modsec{
   import lo.
   import lo.uri.
   import lo.resources.
+  import lo.json.
 
   type modSecRule ::= modSecRule(string,string,option[string]).
 
@@ -26,11 +27,31 @@ test.modsec{
   procFile(U,Rls) :-
     lines(Lns) %% getResource(U),
     Tks = tokenize(Lns),
-    _logmsg("Tokens are $(Tks :: list[string])").
+    Rls = secRules(Tks),
+    _logmsg("Rules are $(Rls)").
 
-  implementation coercion[list[secTkn],string] .. {
-    _coerce(L) => formatSS(disp(L)).
+  implementation display[modSecRule] .. {
+    disp(modSecRule(Tgt,Ptn,some(A))) => ssSeq([ss("SecRule:"),ss(Tgt),ss(" "),ss(Ptn),ss("-->"),displayString(A)]). 
+    disp(modSecRule(Tgt,Ptn,none)) => ssSeq([ss("SecRule:"),ss(Tgt),ss(" "),ss(Ptn),ss("!")]). 
   }
+
+  secRules:(list[list[secTkn]]) => list[modSecRule].
+  secRules([]) => [].
+  secRules([Ln,..L]) => [Rl,..secRules(L)] :- rule(Rl) %% Ln.
+
+  -- Parse a line as a mod security rule
+  rule:(modSecRule) --> list[secTkn].
+  rule(modSecRule(Tgt,Ptn,Action)) --> [secRule], target(Tgt), pattern(Ptn), action(Action).
+
+  target:(string) --> list[secTkn].
+  target(T) --> [idn(S)], { T=implode(S)}.
+
+  pattern:(string) --> list[secTkn].
+  pattern(P) --> [strg(S)], { P = implode(S)}.
+
+  action:(option[string]) --> list[secTkn].
+  action(some(A)) --> [strg(S)], {A = implode(S)}.
+  action(none) --> [].
 
   -- Absorb the \eol markers into a sequence of lines.
 

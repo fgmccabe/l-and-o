@@ -226,5 +226,3 @@ lo.comp.lexer{
   blockComment() --> [0c*, 0c/].
   blockComment() --> [_], blockComment().
 }
-
-
