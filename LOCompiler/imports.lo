@@ -17,15 +17,13 @@ lo.comp.imports{
   import lo.comp.abstract.
   import lo.comp.canon.
 
-  public type pkgSpec ::= pkgSpec(string,version,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conDef],list[implDef],list[(visibility,pkg)]).
-
   public importPkg:(pkg,repository,pkgSpec,report,report){}.
   importPkg(pkg(Pkg,Vers),Repo,pkgSpec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports),Rp,Rpx) :-
     locatePackage(Repo,Pkg,Vers,_,Strm),
     pickupPieces(tokenCodes(Strm,Pkg),Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx)!.
 
   pickupPieces:(list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
-          list[(string,string,tipe)],list[conDef],list[implDef],report,report){}.
+          list[(string,string,tipe)],list[conDef],list[implDf],report,report){}.
   pickupPieces(Toks,Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx) :-
     nextTerm(Toks,A,Rest,Rp,Rp0)!,
     isRoundTerm(A,_,O,Args),
@@ -34,7 +32,7 @@ lo.comp.imports{
   pickupPieces(_,_,[],[],[],[],[],Rp,Rp).
 
   pickupTerm:(string,list[ast],list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
-          list[(string,string,tipe)],list[conDef],list[implDef],report,report){}.
+          list[(string,string,tipe)],list[conDef],list[implDf],report,report){}.
   pickupTerm("import",[Vz,Pk,Vr],Rest,Export,Types,[(decodeViz(Vz),pkg(decodePkg(Pk),decodeVers(Vr))),..Imports],Classes,Contracts,Impls,Rp,Rpx) :-
     pickupPieces(Rest,Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx).
   pickupTerm("export",[Strg],Rest,decodeSignature(Sig),Types,Imports,Classes,Contracts,Impls,Rp,Rpx) :-
@@ -88,9 +86,9 @@ lo.comp.imports{
     moveConQuants(Spec,Q,S),
     findContracts(M,C,Cx).
 
-  pickupImplementations:(list[term],list[implDef],list[implDef]){}.
+  pickupImplementations:(list[term],list[implDf],list[implDf]){}.
   pickupImplementations([],I,I).
-  pickupImplementations([tupl([strng(Nm),strng(Sig)]),..M],[impl(Nm,Spec),..I],RI) :-
+  pickupImplementations([tupl([strng(Nm),strng(Sig)]),..M],[implDf(Nm,Spec),..I],RI) :-
     decodeConstraint(Sig,Spec),
     pickupImplementations(M,I,RI).
 

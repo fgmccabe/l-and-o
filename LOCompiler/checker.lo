@@ -29,7 +29,7 @@ lo.comp.typecheck{
     computeExport(ODefs,[],Public,Exports,Types,Contracts,Impls).
 
   private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
-      list[canonDef],list[(string,defnKind)],list[(visibility,uri,version)],list[canonDef],report,report){}.
+      list[canonDef],list[(string,defnKind)],list[pkgSpec],list[canonDef],report,report){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
@@ -121,7 +121,7 @@ lo.comp.typecheck{
   checkGroup(Grp,[defn(_,con,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
     contractGroup(Grp,Defs,Dx,Env,Ex,Path,Rp,Rpx).
   checkGroup(Grp,[defn(_,impl,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
-    implementationGroup(Grp,Defs,Dx,Env,Ex,Path).
+    implementationGroup(Grp,Defs,Dx,Env,Ex,Path,Rp,Rpx).
 
   -- This is very elaborate - to support mutual recursion amoung types.
 
@@ -297,6 +297,36 @@ lo.comp.typecheck{
     moveConstraints(Face,_,faceType(Fields)),
     thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(Lc,v("this"),ClassTp),pushScope(Env)),_OEnv,Defs,Public,_Imports,Others,Rp,Rpx),
     computeExport(Defs,Fields,Public,BodyDefs,Types,[],[]).
+
+
+  private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
+  implementationGroup([defn(INm,impl,_,_,[Stmt])],[Impl,..Defs],Defs,Env,E,Path,Rp,Rpx) :-
+    isUnary(Stmt,"implementation",Lc,I),
+    isBinary(I,"..",_,Sq,Body),
+    isBraceTuple(Body,_,Els),
+    parseContractConstraint(Sq,Env,Nm,Spec,Rp,Rp0),
+    isContract(Nm,Env,conDef(_,CNm,_,FullSpec,ConFace)),
+    -- We have to unify the implemented contract and the contract (spec)ification
+    moveQuants(FullSpec,_,Qcon),
+    moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
+    moveQuants(Spec,_,ASpec),
+    moveConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
+    sameLength(OArgs,AArgs,Lc),
+    sameLength(ODeps,ADeps,Lc),
+    -- match up the type variables of the original contract with the actual implemented contract
+    bindAT(OArgs,AArgs,[],AQ),
+    bindAT(ODeps,ADeps,AQ,QQ),
+    rewriteConstraints(OC,QQ,[],OCx), -- OCx will become additional contract requirements
+    moveQuants(ConFace,_,Face),
+    rewriteType(Face,QQ,faceType(Fields)),
+    pushScope(Env,ThEnv),
+    thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others,Rp0,Rpx),
+    computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
+    implementationName(conTract(CNm,AArgs,ADeps),ImplName),
+    Impl = implDf(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,BodyDefs,Types,Others),
+    declareImplementation(Nm,Impl,Env,Ex),!.
+  implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
+    reportError("could not check implementation statement $(Stmt)",Lc,Rp,Rpx).
 
   private checkCond:(ast,list[env],list[env],canonCond,report,report){}.
   checkCond(Term,Env,Env,trueCond,Rp,Rp) :-
@@ -780,13 +810,13 @@ lo.comp.typecheck{
     isPublicVar(Nm,Fields,Public).
   exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).
-  exportDef(varDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(varDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(grammDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con,..Cons],Cons,Impl,Impl) :-
     isPublicContract(Con,Public).
-  exportDef(implDef(_,INm,ImplName,_,Spec,_,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[imp(ImplName,Spec)|Ix],Ix) :-
+  exportDef(implDef(_,INm,ImplName,_,Spec,_,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[implDf(ImplName,Spec)|Ix],Ix) :-
     isPublicImplementation(INm,Public)!.
   exportDef(_,_,_,Ex,Ex,Tps,Tps,Cons,Cons,Impls,Impls).
 
@@ -808,7 +838,7 @@ lo.comp.typecheck{
   isPublicImplementation(Nm,Public) :-
     (Nm,impl) in Public.
 
-  findImportedImplementations:(list[pkgSpec],list[implDef],list[implDef]){}.
+  findImportedImplementations:(list[pkgSpec],list[implDf],list[implDf]){}.
   findImportedImplementations([pkgSpec(_,_,_,_,_,_,Impls,_),Specs],Impls<>D1,OverDict) :-
     findImportedImplementations(Specs,D1,OverDict).
   findImportedImplementations([],D,D).

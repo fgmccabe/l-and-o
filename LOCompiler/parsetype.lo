@@ -177,6 +177,38 @@ lo.comp.parseType{
   parseContractArgs(A,Env,B,C0,Cx,Args,[],Rp,Rpx) :-
     prsTypes(A,Env,B,C0,Cx,Args,Rp,Rpx).
 
+  public parseContractConstraint:(ast,list[env],string,constraint,report,report){}.
+  parseContractConstraint(T,Env,N,Con,Rp,Rpx) :-
+    parseContractCon(T,Env,{},[],Cons,N,Tp,Rp,Rpx)!,
+    wrapConstraints(Cons,Tp,Con).
+ 
+  private parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
+  parseContractCon(Tp,Env,B,C,C,N,PT,Rp,Rpx) :-
+    isQuantified(Tp,V,BT),
+    parseConBound(V,B,B0,PT,Inner),
+    parseContractCon(BT,Env,B0,[],C0,N,BTp,Rp,Rpx),
+    wrapConstraints(C0,BTp,Inner).
+  parseContractCon(Tp,Env,B,C0,Cx,N,Cn,Rp,Rpx) :-
+    isBinary(Tp,"|:",L,R),
+    parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
+    parseContractCon(R,Env,B,C1,Cx,N,Cn,Rp0,Rpx).
+  parseContractCon(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,Deps),Rp,Rpx) :-
+    isSquareTerm(Sq,Lc,N,Args),
+    parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,Deps,Rp,Rp0),
+    ( parseContractName(Lc,N,Env,Q,conTract(Op,ATs,Dps,Rp0,Rpx)) ->
+        sameType(tupleType(ATs),tupleType(ArgTps),Env),
+        sameType(tupleType(Dps),tupleType(Deps),Env)
+      | reportError("contract $(N) not declared",Lc,Rp0,Rpx), Op = N).
+
+  public parseConBound:(ast,map[string,tipe],map[string,tipe],list[env],constraint,constraint){}.
+  parseConBound(P,BV,Bound,Env,QT,Inner) :-
+    isBinary(P,",",_,L,R),
+    parseConBound(L,BV,B0,Env,QT,Q0),
+    parseConBound(R,B0,Bound,Env,Q0,Inner).
+  parseConBound(V,B,B1,Env,univCon(kVar(Nm),Inner),Inner) :-
+    B1 = B+{Nm->kVar(Nm)},
+    isIden(V,_,Nm).
+
   public parseTypeTemplate:(ast,list[env],tipe,string,report,report){}.
   parseTypeTemplate(St,Env,Type,Path,Rp,Rpx) :-
     isUnary(St,"type",_,L),
