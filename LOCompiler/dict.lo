@@ -9,7 +9,7 @@ lo.comp.dict{
   type vr ::= vr(location,canonTerm,tipe).
 
   public
-  type env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,conDef],map[string,map[string,implDf]]).
+  type env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,contDf],map[string,map[string,implDf]]).
 
   public
   type typeDef ::= tpDef(option[location],tipe,tipe).
@@ -82,19 +82,19 @@ lo.comp.dict{
     definedConstraint(Cx,E).
 
   public
-  declareContract:(string,conDef,list[env]) => list[env].
+  declareContract:(string,contDf,list[env]) => list[env].
   declareContract(Nm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,Cons,Contracts+{Nm->Con},Imps),..E].
 
-  conInD:(string,list[env],conDef){}.
+  conInD:(string,list[env],contDf){}.
   conInD(Nm,[scope(_,_,_,{Nm->Dec},_),.._],Dec).
   conInD(Nm,[_,..Env],Con) :- conInD(Nm,Env,Con).
 
   public
-  getContract:(string,list[env],conDef){}.
+  getContract:(string,list[env],contDf){}.
   getContract(Nm,Env,Def) :-  conInD(Nm,Env,Def).
 
   public
-  isContract:(string,list[env],conDef){}.
+  isContract:(string,list[env],contDf){}.
   isContract(Nm,Env,Def) :- conInD(Nm,Env,Def)!.
 
   public

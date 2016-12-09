@@ -577,12 +577,10 @@ typeOfTerm(tuple(Lc,"()",A),Tp,Env,Ev,tuple(Lc,Els)) :-
   genTpVars(A,ArgTps),
   checkType(Lc,tupleType(ArgTps),Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Els).
-typeOfTerm(Term,Tp,Env,Ev,dict(Lc,Entries)) :-
+typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isBraceTuple(Term,Lc,Els),!,
-  findType("map",Lc,Env,MapTp),
-  MapTp = typeExp(_,[KyTp,ElTp]),
-  checkType(Lc,MapTp,Tp,Env),
-  typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries).
+  macroMapEntries(Lc,Els,Trm),
+  typeOfTerm(Trm,Tp,Env,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isUnary(Term,Lc,"-",Arg), % handle unary minus
   binary(Lc,"-",name(Lc,"zero"),Arg,Sub),
@@ -622,16 +620,14 @@ recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld)) :-
   freshen(FTp,AT,_,Tp), % the record is this to the right of dot.
   checkType(Lc,Tp,ET,Env).
 
-typeMapEntries([],_,_,Env,Env,[]).
-typeMapEntries([En|Els],KyTp,ElTp,Env,Ev,[(Ky,Vl)|Entries]) :-
-  isBinary(En,"->",Lhs,Rhs),
-  typeOfTerm(Lhs,KyTp,Env,E0,Ky),
-  typeOfTerm(Rhs,ElTp,E0,E1,Vl),
-  typeMapEntries(Els,KyTp,ElTp,E1,Ev,Entries).
-typeMapEntries([En|Els],KyTp,ElTp,Env,Ev,Entries) :-
-  locOfAst(En,Lc),
-  reportError("invalid entry '%s' in map",[En],Lc),
-  typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries).
+macroMapEntries(Lc,[],name(Lc,"_empty")).
+macroMapEntries(_,[E|L],T) :-
+  isBinary(E,Lc,"->",Ky,Vl),!,
+  macroMapEntries(Lc,L,Tr),
+  roundTerm(Lc,"_put",[Tr,Ky,Vl],T).
+macroMapEntries(Lc,[E|L],T) :-
+  reportError("invalid entry in map %s",[E],Lc),
+  macroMapEntries(Lc,L,T).
 
 fieldInFace(Fields,_,Nm,_,Tp) :-
   is_member((Nm,Tp),Fields),!.

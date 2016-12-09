@@ -9,9 +9,10 @@ lo.index{
   contract all m,k,v ~~ /*equality[k] |: */ map[m ->> k,v] <~ {
       present:(m,k,v){}.
       remove:(m,k) => m.
-      put:(m,k,v) => m.
+      _put:(m,k,v) => m.
       keys:(m) => list[k].
       pairs:(m) => list[(k,v)].
+      _empty:m.
     }.
 
   public
@@ -24,9 +25,10 @@ lo.index{
   implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] .. {
     present(M,K,V) :- lookIn(hash(K),M,K,V).
     remove(M,K) => rmve(hash(K),K,M).
-    put(M,K,V) => insrt(K,V,M).
+    _put(M,K,V) => insrt(K,V,M).
     keys(M) => keyMap(M,[]).
     pairs(M) => mapPairs(M,[]).
+    _empty = trEmpty.
   }
 
   public

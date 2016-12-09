@@ -16,7 +16,7 @@ lo.json{
   dispJson(jNull) => ss("null").
   dispJson(jTxt(T)) => disp(T).
   dispJson(jNum(D)) => disp(D).
-  dispJson(jColl(M)) => ssSeq([ss("{"),ssSeq(dispColl(pairs(M),"")),ss("}")]).
+  dispJson(jColl(M)) => ssSeq([sc(0c{),ssSeq(dispColl(pairs(M),"")),sc(0c})]).
   dispJson(jSeq(L)) => ssSeq([sc(0c[),ssSeq(dispSeq(L,"")),sc(0c])]).
 
   dispColl:(list[(string,json)],string) => list[ss].

@@ -165,7 +165,7 @@ lo.comp.parseType{
 
   parseContractName:(location,string,list[env],constraint,report,report){}.
   parseContractName(_,Id,Env,freshen(Spec,{}),Rp,Rp) :-
-    isContract(Id,Env,conDef(_,_,Spec,_,_)).
+    isContract(Id,Env,contDf(_,_,Spec,_,_)).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
     reportError("contract $(Id) not declared",Lc,Rp,Rpx).
 

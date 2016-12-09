@@ -18,12 +18,12 @@ lo.comp.imports{
   import lo.comp.canon.
 
   public importPkg:(pkg,repository,pkgSpec,report,report){}.
-  importPkg(pkg(Pkg,Vers),Repo,pkgSpec(Pkg,Vers,Export,Types,Classes,Contracts,Impls,Imports),Rp,Rpx) :-
+  importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Classes,Contracts,Impls,Imports),Rp,Rpx) :-
     locatePackage(Repo,Pkg,Vers,_,Strm),
     pickupPieces(tokenCodes(Strm,Pkg),Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx)!.
 
   pickupPieces:(list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
-          list[(string,string,tipe)],list[conDef],list[implDf],report,report){}.
+          list[(string,string,tipe)],list[contDf],list[implDf],report,report){}.
   pickupPieces(Toks,Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx) :-
     nextTerm(Toks,A,Rest,Rp,Rp0)!,
     isRoundTerm(A,_,O,Args),
@@ -32,7 +32,7 @@ lo.comp.imports{
   pickupPieces(_,_,[],[],[],[],[],Rp,Rp).
 
   pickupTerm:(string,list[ast],list[token],tipe,list[(string,tipe)],list[(visibility,pkg)],
-          list[(string,string,tipe)],list[conDef],list[implDf],report,report){}.
+          list[(string,string,tipe)],list[contDf],list[implDf],report,report){}.
   pickupTerm("import",[Vz,Pk,Vr],Rest,Export,Types,[(decodeViz(Vz),pkg(decodePkg(Pk),decodeVers(Vr))),..Imports],Classes,Contracts,Impls,Rp,Rpx) :-
     pickupPieces(Rest,Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx).
   pickupTerm("export",[Strg],Rest,decodeSignature(Sig),Types,Imports,Classes,Contracts,Impls,Rp,Rpx) :-
@@ -77,9 +77,9 @@ lo.comp.imports{
   pickupClasses([tupl([strng(Nm),strng(Cl),strng(Sig)]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).
 
-  findContracts:(list[term],list[conDef],list[conDef]){}.
+  findContracts:(list[term],list[contDf],list[contDf]){}.
   findContracts([],C,C).
-  findContracts([tupl([strng(Nm),strng(CnNm),strng(Sig),strng(FSig)]),..M],[conDef(Nm,CnNm,Spec,FullSpec,decodeSignature(FSig)),..C],Cx) :-
+  findContracts([tupl([strng(Nm),strng(CnNm),strng(Sig),strng(FSig)]),..M],[contDf(Nm,CnNm,Spec,FullSpec,decodeSignature(FSig)),..C],Cx) :-
     decodeConstraint(Sig,FullSpec),
     moveConQuants(FullSpec,Q,FS),
     moveConConstraints(FS,_,S),

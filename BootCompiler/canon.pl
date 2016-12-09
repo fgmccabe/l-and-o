@@ -14,7 +14,6 @@ isCanon(stringLit(_)).
 isCanon(apply(_,_)).
 isCanon(call(_,_,_)).
 isCanon(dot(_,_)).
-isCanon(dict(_,_)).
 isCanon(pkgRef(_,_,_)).
 isCanon(enum(_,_)).
 isCanon(record(_,_,_,_)).
@@ -93,10 +92,6 @@ showCanonTerm(tuple(_,Els),O,Ox) :-
   appStr("(",O,O1),
   showTerms(Els,O1,O2),
   appStr(")",O2,Ox).
-showCanonTerm(dict(_,Els),O,Ox) :-
-  appStr("{",O,O1),
-  showEntries(Els,O1,O2),
-  appStr("}",O2,Ox).
 showCanonTerm(true(_),O,Ox) :-
   appStr("true",O,Ox).
 showCanonTerm(false(_),O,Ox) :-

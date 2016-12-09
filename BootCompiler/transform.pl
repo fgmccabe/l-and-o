@@ -395,9 +395,6 @@ trPtn(dot(Rc,Fld),Exp,Q,Qx,Pre,Px,Post,Post,Map,Opts,Ex,Exx) :-
   trDotExp(Rc,C,X,Exp,Q,Qx,Pre,Pi,Pi,Px,Map,Opts,Ex,Exx).
 trPtn(tuple(_,Ptns),tpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx) :-
   trPtns(Ptns,P,[],Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx).
-trPtn(dict(_,A),Xi,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
-  genVar("Xi",Xi),
-  trEntryPtrns(A,Xi,[Xi|Q],Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trPtn(apply(v(_,Nm),A),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0),
   trPtnCallOp(Nm,Args,Ptn,Q0,Qx,APre,AP0,APost,APs0,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx).
@@ -492,8 +489,6 @@ trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
   implementPkgRefExp(Reslt,Lc,Pkg,Rf,Xi,Exp,Q,Qx,Post,Pstx).
 trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,TA,[],Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
-trExp(dict(_,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
-  trMapEntries(A,enum('lo.index#trEmpty'),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(apply(Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,Args,[],Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0),
   genVar("X",X),

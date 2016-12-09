@@ -66,7 +66,7 @@ lo.comp.typecheck{
 
   importMore:(repository,(location,visibility,pkg),list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[(location,visibility,pkg)],report,report){}.
   importMore(Repo,(Lc,Viz,Pkg),SoFar,[(Lc,Viz,Pkg),..SoFar],Inp,More,Rp,Rpx) :-
-    importPkg(Pkg,Repo,pkgSpec(_,_,_,_,_,_,_,Imports),Rp,Rpx),
+    importPkg(Pkg,Repo,pkgSpec(_,_,_,_,_,_,Imports),Rp,Rpx),
     addPublicImports(Imports,Lc,Inp,More).
   importMore(_,(Lc,_,Pkg),SoFar,SoFar,Inp,Inp,Rp,Rpx) :-
     reportError("could not import package $(Pkg)",Lc,Rp,Rpx).
@@ -85,7 +85,7 @@ lo.comp.typecheck{
     importAllDefs(More,Specs,Repo,Ev0,Ex).
 
   importDefs:(pkgSpec,location,list[env],list[env]){}.
-  importDefs(pkgSpec(_,_,faceType(Exported),Types,_,Cons,_,_),Lc,Env,Ex) :-
+  importDefs(pkgSpec(_,faceType(Exported),Types,_,Cons,_,_),Lc,Env,Ex) :-
     importContracts(Cons,importTypes(Types,Lc,declareFields(Exported,Lc,Env)),Ex).
 
   declareFields:(list[(string,tipe)],location,list[env]) => list[env].
@@ -101,10 +101,10 @@ lo.comp.typecheck{
   pickTypeTemplate(univType(B,Tp)) => univType(B,pickTypeTemplate(Tp)).
   pickTypeTemplate(typeRule(Lhs,_)) => Lhs.
 
-  importContracts:(list[conDef],list[env],list[env]){}.
+  importContracts:(list[contDf],list[env],list[env]){}.
   importContracts([],Env,Env).
   importContracts([C,..L],E,Env) :-
-    C = conDef(Nm,_,_,_,_),
+    C = contDf(Nm,_,_,_,_),
     importContracts(L,declareContract(Nm,C,E),Env).
 
   private checkGroups:(list[list[defn]],list[(string,tipe)],list[(string,ast)],list[canonDef],list[env],list[env],string,report,report){}.
@@ -305,7 +305,7 @@ lo.comp.typecheck{
     isBinary(I,"..",_,Sq,Body),
     isBraceTuple(Body,_,Els),
     parseContractConstraint(Sq,Env,Nm,Spec,Rp,Rp0),
-    isContract(Nm,Env,conDef(_,CNm,_,FullSpec,ConFace)),
+    isContract(Nm,Env,contDf(_,CNm,_,FullSpec,ConFace)),
     -- We have to unify the implemented contract and the contract (spec)ification
     moveQuants(FullSpec,_,Qcon),
     moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
@@ -464,12 +464,9 @@ lo.comp.typecheck{
     ArgTps = genTpVars(A),
     checkType(Lc,tupleType(ArgTps),Tp,Env,Rp,Rp0),
     typeOfTerms(A,ArgTps,Env,Ev,Lc,Els,Rp0,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,dct(Entries),Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
-    MapTp = findType("map",Lc,Env,Rp,Rp0),
-    MapTp = typeExp(_,[KyTp,ElTp]),
-    checkType(Lc,MapTp,Tp,Env,Rp0,Rp1),
-    typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries,Rp1,Rpx).
+    typeOfTerm(macroMapEntries(Lc,Els,Rp,Rp0),Tp,Env,Ev,Exp,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isUnary(Term,"-",Lc,Arg),         -- handle unary minus
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
@@ -527,6 +524,13 @@ lo.comp.typecheck{
     fieldInFace(Fields,AT,Fld,Lc,FTp,Rp0,Rp1)!,
     Tp = freshen(FTp,{}), -- the record is this to the right of dot.
     checkType(Lc,Tp,ET,Env,Rp1,Rpx).
+
+  macroMapEntries:(location,list[ast],report,report) => ast.
+  macroMapEntries(Lc,[],Rp,Rp) => iden(Lc,"_empty").
+  macroMapEntries(_,[E,..L],Rp,Rpx) => roundTerm(Lc,name("_put"),[macroMapEntries(Lc,L,Rp,Rpx),Ky,Vl]) :-
+    isBinary(E,Lc,"->",Ky,Vl).
+  macroMapEntries(Lc,[E,..L],Rp,Rpx) => macroMapEntries(Lc,L) :-
+    reportError("invalid entry in map $(E)",E.loc,Rp,Rpx).
 
   fieldInFace:(list[(string,tipe)],tipe,string,location,tipe,report,report){}.
   fieldInFace(Fields,_,Nm,_,Tp,Rp,Rp) :-
@@ -745,24 +749,13 @@ lo.comp.typecheck{
   typeOfCall(Lc,Fun,_,Ftp,_,Env,Env,Fun,Rp,Rpx) :-
     reportError("$(Fun) : $(Ftp) is not a function",Lc,Rp,Rpx).
 
-  private typeMapEntries:(list[ast],tipe,tipe,list[env],list[env],list[(canonTerm,canonTerm)],report,report){}.
-  typeMapEntries([],_,_,Env,Env,[],Rp,Rp).
-  typeMapEntries([En,..Els],KyTp,ElTp,Env,Ev,[(Ky,Vl),..Entries],Rp,Rpx) :-
-    isBinary(En,"->",_,Lhs,Rhs),
-    typeOfTerm(Lhs,KyTp,Env,E0,Ky,Rp,Rp0),
-    typeOfTerm(Rhs,ElTp,E0,E1,Vl,Rp0,Rp1),
-    typeMapEntries(Els,KyTp,ElTp,E1,Ev,Entries,Rp1,Rpx).
-  typeMapEntries([En,..Els],KyTp,ElTp,Env,Ev,Entries,Rp,Rpx) :-
-    reportError("invalid entry '$(En)' in map",En.loc,Rp,Rp0),
-    typeMapEntries(Els,KyTp,ElTp,Env,Ev,Entries,Rp0,Rpx).
-
   private checkType:(location,tipe,tipe,list[env],report,report){}.
   checkType(Lc,Actual,Expected,Env,Rp,Rpx) :-
     ( sameType(Actual,Expected,Env) ? Rp=Rpx | reportError("$(Actual) not consistent with $(Expected)",Lc,Rp,Rpx)).
 
   private checkGrammarType:(location,list[env],tipe,tipe,report,report){}.
   checkGrammarType(Lc,Env,Tp,ElTp,Rp,Rpx) :-
-    isContract("stream",Env,conDef(_,_,Spec,_,_)),
+    isContract("stream",Env,contDf(_,_,Spec,_,_)),
     freshen(Spec,pickupThisType(Env)) = conTract(_,[Arg],[Dep]),
     checkType(Lc,Arg,Tp,Env,Rp,Rp0),
     checkType(Lc,Dep,ElTp,Env,Rp0,Rpx).
@@ -839,7 +832,7 @@ lo.comp.typecheck{
     (Nm,impl) in Public.
 
   findImportedImplementations:(list[pkgSpec],list[implDf],list[implDf]){}.
-  findImportedImplementations([pkgSpec(_,_,_,_,_,_,Impls,_),Specs],Impls<>D1,OverDict) :-
+  findImportedImplementations([pkgSpec(_,_,_,_,_,Impls,_),Specs],Impls<>D1,OverDict) :-
     findImportedImplementations(Specs,D1,OverDict).
   findImportedImplementations([],D,D).
 }
