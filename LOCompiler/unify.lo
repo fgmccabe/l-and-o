@@ -77,7 +77,7 @@ lo.comp.unify{
 
   checkForImpl:(constraint,list[env]){}.
   checkForImpl(Con,Env) :-
-    isImplemented(Con,Env,implDf(_,ITp)),
+    isImplemented(Con,Env,implEntry(_,ITp)),
     sameContract(freshen(ITp,{}),Con,Env).
 
   sameContract:(constraint,constraint,list[env]){}.

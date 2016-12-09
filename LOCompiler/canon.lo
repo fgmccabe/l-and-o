@@ -6,14 +6,14 @@ lo.comp.canon {
 
   public type visibility ::= priVate | pUblic.
 
-  public type contDf ::= contDf(string,string,constraint,constraint,tipe).
+  public type conEntry ::= conEntry(string,string,constraint,constraint,tipe).
 
-  public type implDf ::= implDf(string,constraint).
+  public type implEntry ::= implEntry(string,constraint).
 
-  public type pkgSpec ::= pkgSpec(pkg,tipe,list[(string,tipe)],list[(string,string,tipe)],list[contDf],list[implDf],list[(visibility,pkg)]).
+  public type pkgSpec ::= pkgSpec(pkg,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry],list[(visibility,pkg)]).
 
   public type
-  canonPkg ::= canonPkg(pkg,list[pkgSpec],list[canonDef],list[canonOther],list[constraint],list[constraint]).
+  canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
 
   public type
   canonDef ::= funDef(location,string,tipe,list[canonRule])
@@ -25,7 +25,7 @@ lo.comp.canon {
            |   otherDef(location,canonOther)
            |   typeDef(location,string,tipe,tipe)
            |   cnDefn(location,string,constraint,tipe)
-           |   implDef(location,constraint,list[canonDef]).
+           |   implDef(location,string,string,constraint,list[canonDef],list[canonOther]).
 
   public type canonOther ::= integrity(location,canonCond)
            | expShow(location,canonTerm).
@@ -82,6 +82,13 @@ lo.comp.canon {
     disp(P) => dispPkg(P)
   }
 
+  public implementation display[pkgSpec] .. {
+    disp(PSpec) => dispPkgSpec(PSpec).
+  }
+
+  private dispPkgSpec:(pkgSpec)=>ss.
+  dispPkgSpec(pkgSpec(Pk,_,_,_,_,_,_)) => disp(Pk).
+
   public implementation display[canonDef] .. {
     disp(C) => dispDef(C)
   }
@@ -113,7 +120,7 @@ lo.comp.canon {
   }
 
   private dispPkg:(canonPkg) => ss.
-  dispPkg(canonPkg(Lc,Pkg,Imps,Defs,Others,Cons,Impls)) => ssSeq([ss("package: "),disp(Pkg),ss("\n"),ssSeq(dispDefs(Defs))]).
+  dispPkg(canonPkg(Pkg,Imps,Defs,Others)) => ssSeq([ss("package: "),disp(Pkg),ss("\n"),ssSeq(dispDefs(Defs))]).
 
   private dispDef:(canonDef) => ss.
   dispDef(funDef(Lc,Nm,Tp,Rules)) => ssSeq([ss(" function: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
@@ -125,7 +132,7 @@ lo.comp.canon {
   dispDef(typeDef(Lc,Nm,Tp,TpDef)) => ssSeq([ss(" type: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(TpDef)]).
   dispDef(otherDef(Lc,C)) => ssSeq([ss("other: "),ss("@"),disp(Lc),ss("\n"),disp(C)]).
   dispDef(cnDefn(Lc,Nm,Con,B)) => ssSeq([ss(" contract: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
-  dispDef(implDef(Lc,Con,D)) => ssSeq([ss(" implementation: "),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),ssSeq(dispDefs(D))]).
+  dispDef(implDef(Lc,_,_,Con,D,O)) => ssSeq([ss(" implementation: "),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),ssSeq(dispDefs(D))]).
 
   private dispDefs:(list[canonDef]) => list[ss].
   dispDefs([]) => [].

@@ -165,7 +165,7 @@ lo.comp.parseType{
 
   parseContractName:(location,string,list[env],constraint,report,report){}.
   parseContractName(_,Id,Env,freshen(Spec,{}),Rp,Rp) :-
-    isContract(Id,Env,contDf(_,_,Spec,_,_)).
+    isContract(Id,Env,conEntry(_,_,Spec,_,_)).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
     reportError("contract $(Id) not declared",Lc,Rp,Rpx).
 
@@ -180,22 +180,23 @@ lo.comp.parseType{
   public parseContractConstraint:(ast,list[env],string,constraint,report,report){}.
   parseContractConstraint(T,Env,N,Con,Rp,Rpx) :-
     parseContractCon(T,Env,{},[],Cons,N,Tp,Rp,Rpx)!,
-    wrapConstraints(Cons,Tp,Con).
+    wrapConConstraints(Cons,Tp,Con).
  
   private parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
   parseContractCon(Tp,Env,B,C,C,N,PT,Rp,Rpx) :-
     isQuantified(Tp,V,BT),
-    parseConBound(V,B,B0,PT,Inner),
+    parseConBound(V,B,B0,Env,PT,Inner),
     parseContractCon(BT,Env,B0,[],C0,N,BTp,Rp,Rpx),
-    wrapConstraints(C0,BTp,Inner).
+    wrapConConstraints(C0,BTp,Inner).
   parseContractCon(Tp,Env,B,C0,Cx,N,Cn,Rp,Rpx) :-
-    isBinary(Tp,"|:",L,R),
+    isBinary(Tp,"|:",_,L,R),
     parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
     parseContractCon(R,Env,B,C1,Cx,N,Cn,Rp0,Rpx).
   parseContractCon(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,Deps),Rp,Rpx) :-
-    isSquareTerm(Sq,Lc,N,Args),
+    isSquareTerm(Sq,Lc,Nm,Args),
+    isIden(Nm,_,N),
     parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,Deps,Rp,Rp0),
-    ( parseContractName(Lc,N,Env,Q,conTract(Op,ATs,Dps,Rp0,Rpx)) ->
+    ( parseContractName(Lc,N,Env,conTract(Op,ATs,Dps),Rp0,Rpx) ?
         sameType(tupleType(ATs),tupleType(ArgTps),Env),
         sameType(tupleType(Dps),tupleType(Deps),Env)
       | reportError("contract $(N) not declared",Lc,Rp0,Rpx), Op = N).
@@ -255,4 +256,8 @@ lo.comp.parseType{
   wrapConstraints([],Tp,Tp).
   wrapConstraints([Con,..C],Tp,WTp) :-
     wrapConstraints(C,constrained(Tp,Con),WTp).
+
+  public wrapConConstraints:(list[constraint],constraint,constraint){}.
+  wrapConConstraints([],C,C).
+  wrapConConstraints(Cx,C,conRule(Cx,C)).
 }

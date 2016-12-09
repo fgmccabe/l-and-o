@@ -51,7 +51,6 @@ lo.comp.wff {
   packageName(T) =>  Pkg :-  isString(T,_,Pkg).
   packageName(T) => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).
 
-
   public
   pkgName:(ast) => pkg.
   pkgName(T) => pkg(packageName(L),vers(packageVersion(R))) :- 
