@@ -45,7 +45,7 @@ lo.json{
   jP(jNum(N)) --> readNumber(N).
   jP(jTxt(implode(S))) --> "\"", parseStr(S), "\"".
   jP(jSeq(L)) --> "[", skipBlanks(), parseSeq(L), "]".
-  jP(jColl(M)) --> "{", skipBlanks(), parseColl({},M), "}".
+  jP(jColl(M)) --> "{", skipBlanks(), parseColl([||],M), "}".
 
   private parseStr:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   parseStr([]) --> "\""+.
@@ -123,11 +123,11 @@ lo.json{
   
   private parseColl:all s ~~ stream[s->>integer] |: (map[string,json],map[string,json]) --> s.
   parseColl(m,m) --> "}"+.
-  parseColl(m,c) --> parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+{f->v},c).
+  parseColl(m,c) --> parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+[|f->v|],c).
 
   private parseMoreColl:all s ~~ stream[s->>integer] |: (map[string,json],map[string,json]) --> s.
   parseMoreColl(m,m) --> "}"+.
-  parseMoreColl(m,c) --> ",",skipBlanks(), parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+{f->v},c).
+  parseMoreColl(m,c) --> ",",skipBlanks(), parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m+[|f->v|],c).
 
   private parseField:all s ~~ stream[s->>integer] |: (string) --> s.
   parseField(implode(S)) --> "\"", parseStr(S), "\"".

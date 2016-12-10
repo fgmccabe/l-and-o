@@ -60,6 +60,8 @@ lo.comp.lexer{
   nxtTok(Num) --> digit(_)+, readNumber(Num).
   nxtTok(lpar) --> [0c(].
   nxtTok(rpar) --> [0c)].
+  nxtTok(lqbra) --> "[|".
+  nxtTok(rqbra) --> "|]".
   nxtTok(lbra) --> [0c[].
   nxtTok(rbra) --> [0c]].
   nxtTok(lbrce) --> [0c{].

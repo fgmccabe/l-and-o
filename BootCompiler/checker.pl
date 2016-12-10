@@ -578,6 +578,10 @@ typeOfTerm(tuple(Lc,"()",A),Tp,Env,Ev,tuple(Lc,Els)) :-
   checkType(Lc,tupleType(ArgTps),Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Els).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+  isMapTuple(Term,Lc,Els),!,
+  macroMapEntries(Lc,Els,Trm),
+  typeOfTerm(Trm,Tp,Env,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isBraceTuple(Term,Lc,Els),!,
   macroMapEntries(Lc,Els,Trm),
   typeOfTerm(Trm,Tp,Env,Ev,Exp).
@@ -755,7 +759,7 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   typeOfTerm(M,StrmTp,E0,E1,Rest),
   currentVar("stream$X",E1,OV),
   declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
-  checkNonTerminals(L,StrmTp,ElTp,E2,E3,NT),
+  checkNonTerminal(L,StrmTp,ElTp,E2,E3,NT),
   restoreVar("stream$X",E3,OV,Ev).
 checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
@@ -788,7 +792,7 @@ checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
   binary(Lc,",",L,name(Lc,"eof"),Phrase),
   currentVar("stream$X",E1,OV),
   declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
-  checkNonTerminals(Phrase,StrmTp,ElTp,E2,E3,NT),
+  checkNonTerminal(Phrase,StrmTp,ElTp,E2,E3,NT),
   restoreVar("stream$X",E3,OV,Ev).
 
 checkGrammarType(Lc,Env,Tp,ElTp) :-
@@ -810,79 +814,86 @@ processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|De
   declareVar("stream$X",vr("stream$X",Lc,Tp),E0,E1),
   newTypeVar("_E",ElTp),
   typeOfTerms(A,AT,E1,E2,Lc,Args),!,
-  checkNonTerminals(R,Tp,ElTp,E2,E3,Body),
+  checkNonTerminal(R,Tp,ElTp,E2,E3,Body),
   checkTerminals(P,"_cons",PB,ElTp,E3,_).
 
-checkNonTerminals(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
+checkNonTerminal(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
   checkTerminals(Els,"_hdtl",Terms,ElTp,E,Env).
-checkNonTerminals(string(Lc,Text),_,ElTp,Env,Env,terminals(Lc,Terms)) :- !,
+checkNonTerminal(string(Lc,Text),_,ElTp,Env,Env,terminals(Lc,Terms)) :- !,
   explodeStringLit(Lc,Text,IntLits),
   checkTerminals(IntLits,"_hdtl",Terms,ElTp,Env,_).  % strings are exploded into code points
-checkNonTerminals(tuple(_,"()",[NT]),Tp,ElTp,Env,Ex,GrNT) :-
-  checkNonTerminals(NT,Tp,ElTp,Env,Ex,GrNT).
-checkNonTerminals(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-
+checkNonTerminal(tuple(Lc,"()",NT),Tp,ElTp,Env,Ex,GrNT) :-
+  checkNonTerminals(NT,Lc,Tp,ElTp,Env,Ex,GrNT).
+checkNonTerminal(Term,Tp,ElTp,Env,Ex,conj(Lc,Lhs,Rhs)) :-
   isBinary(Term,Lc,",",L,R), !,
-  checkNonTerminals(L,Tp,ElTp,Env,E1,Lhs),
-  checkNonTerminals(R,Tp,ElTp,E1,Ex,Rhs).
-checkNonTerminals(Term,Tp,ElTp,Env,Ex,conditional(Lc,Test,Either,Or)) :-
+  checkNonTerminal(L,Tp,ElTp,Env,E1,Lhs),
+  checkNonTerminal(R,Tp,ElTp,E1,Ex,Rhs).
+checkNonTerminal(Term,Tp,ElTp,Env,Ex,conditional(Lc,Test,Either,Or)) :-
   isBinary(Term,Lc,"|",L,R),
   isBinary(L,"?",T,Th),!,
-  checkNonTerminals(T,Tp,ElTp,Env,E0,Test),
-  checkNonTerminals(Th,Tp,ElTp,E0,E1,Either),
-  checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
-checkNonTerminals(Term,Tp,ElTp,Env,Ex,disj(Lc,Either,Or)) :-
+  checkNonTerminal(T,Tp,ElTp,Env,E0,Test),
+  checkNonTerminal(Th,Tp,ElTp,E0,E1,Either),
+  checkNonTerminal(R,Tp,ElTp,E1,Ex,Or).
+checkNonTerminal(Term,Tp,ElTp,Env,Ex,disj(Lc,Either,Or)) :-
   isBinary(Term,Lc,"|",L,R),!,
-  checkNonTerminals(L,Tp,ElTp,Env,E1,Either),
-  checkNonTerminals(R,Tp,ElTp,E1,Ex,Or).
-checkNonTerminals(Term,Tp,ElTp,Env,Ex,one(Lc,Test)) :-
+  checkNonTerminal(L,Tp,ElTp,Env,E1,Either),
+  checkNonTerminal(R,Tp,ElTp,E1,Ex,Or).
+checkNonTerminal(Term,Tp,ElTp,Env,Ex,one(Lc,Test)) :-
   isUnary(Term,Lc,"!",N),!,
-  checkNonTerminals(N,Tp,ElTp,Env,Ex,Test).
-checkNonTerminals(Term,Tp,ElTp,Env,Env,neg(Lc,Test)) :-
+  checkNonTerminal(N,Tp,ElTp,Env,Ex,Test).
+checkNonTerminal(Term,Tp,ElTp,Env,Env,neg(Lc,Test)) :-
   isUnary(Term,Lc,"\\+",N),!,
-  checkNonTerminals(N,Tp,ElTp,Env,_,Test).
-checkNonTerminals(Term,Tp,ElTp,Env,Env,ahead(Lc,Test)) :-
+  checkNonTerminal(N,Tp,ElTp,Env,_,Test).
+checkNonTerminal(Term,Tp,ElTp,Env,Env,ahead(Lc,Test)) :-
   isUnary(Term,Lc,"+",N),!,
-  checkNonTerminals(N,Tp,ElTp,Env,_,Test).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,unify(Lc,Lhs,Rhs))) :-
+  checkNonTerminal(N,Tp,ElTp,Env,_,Test).
+checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,unify(Lc,Lhs,Rhs))) :-
   isBinary(Term,Lc,"=",L,R),!,
   newTypeVar("_#",TV),
   typeOfTerm(L,TV,Env,E0,Lhs),
   typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,neg(Lc,unify(Lc,Lhs,Rhs)))) :-
+checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,neg(Lc,unify(Lc,Lhs,Rhs)))) :-
   isBinary(Term,Lc,"\\=",L,R),!,
   newTypeVar("_#",TV),
   typeOfTerm(L,TV,Env,E0,Lhs),
   typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,match(Lc,Lhs,Rhs))) :-
+checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,match(Lc,Lhs,Rhs))) :-
   isBinary(Term,Lc,".=",L,R),!,
   newTypeVar("_#",TV),
   typeOfTerm(L,TV,Env,E0,Lhs),
   typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminals(Term,_,_,Env,Ev,goal(Lc,match(Lc,Rhs,Lhs))) :-
+checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,match(Lc,Rhs,Lhs))) :-
   isBinary(Term,Lc,"=.",L,R),!,
   newTypeVar("_#",TV),
   typeOfTerm(L,TV,Env,E0,Lhs),
   typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminals(Term,Tp,_,Env,Ev,dip(Lc,v(Lc,NV),Cond)) :-
+checkNonTerminal(Term,Tp,_,Env,Ev,dip(Lc,v(Lc,NV),Cond)) :-
   isUnary(Term,Lc,"@",Test),
   isRoundTerm(Test,Op,Args),
   genstr("_",NV),
   declareVar(NV,vr(NV,Lc,Tp),Env,E0),
   binary(Lc,".",name(Lc,NV),Op,NOp),
   checkCond(app(Lc,NOp,tuple(Lc,"()",Args)),E0,Ev,Cond).
-checkNonTerminals(Term,Tp,_,Env,Ev,NT) :-
+checkNonTerminal(Term,Tp,_,Env,Ev,NT) :-
   isRoundTerm(Term,Lc,F,A),
   newTypeVar("_G",GrTp),
   typeOfKnown(F,GrTp,Env,E0,Pred),
   deRef(GrTp,GrType),
   checkGrCall(Lc,Pred,A,Tp,GrType,NT,E0,Ev).
-checkNonTerminals(Term,_,_,Env,Env,eof(Lc,Op)) :-
+checkNonTerminal(Term,_,_,Env,Env,eof(Lc,Op)) :-
   isIden(Term,Lc,"eof"),
   unary(Lc,"_eof",name(Lc,"stream$X"),EO),
   checkCond(EO,Env,_,call(_,Op,_)).
-checkNonTerminals(Term,_,_,Env,Ex,goal(Lc,Cond)) :-
+checkNonTerminal(Term,_,_,Env,Ex,goal(Lc,Cond)) :-
   isBraceTuple(Term,Lc,Els),
   checkConds(Els,Env,Ex,Cond).
+
+checkNonTerminals([],Lc,_,_,Env,Env,terminals(Lc,[])).
+checkNonTerminals([N],_,Tp,ElTp,Env,Ev,NT) :- checkNonTerminal(N,Tp,ElTp,Env,Ev,NT).
+checkNonTerminals([N|L],Lc,Tp,ElTp,Env,Ev,conj(Lc,Lhs,Rhs)) :-
+  checkNonTerminal(N,Tp,ElTp,Env,E0,Lhs),
+  locOfAst(N,LLc),
+  checkNonTerminals(L,LLc,Tp,ElTp,E0,Ev,Rhs).
 
 explodeStringLit(Lc,Str,Terms) :-
   string_codes(Str,Codes),

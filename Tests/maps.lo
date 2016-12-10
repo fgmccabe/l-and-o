@@ -28,7 +28,7 @@ maps{
   show allPairs+otherPairs.
 
   checkMap:(string,map[string,pair[integer,integer]]) => option[pair[integer,integer]].
-  checkMap(Ky,{Ky->Vl}) => some(Vl).
+  checkMap(Ky,Mp) => some(Vl) :- present(Mp,Ky,Vl).
   checkMap(_,_) => none.
 
   assert checkMap("A",allPairs) = some(pair(1,2)).

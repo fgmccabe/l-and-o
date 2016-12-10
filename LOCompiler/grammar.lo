@@ -80,6 +80,7 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(lbra,_)].
   followsInfix(_) --> [tok(lbrce,_)].
   followsInfix(_) --> [tok(lqpar,_)].
+  followsInfix(_) --> [tok(lqbra,_)].
   followsInfix(_) --> [tok(stringTok(_),_)].
   followsInfix(_) --> [tok(intTok(_),_)].
   followsInfix(_) --> [tok(fltTok(_),_)].
@@ -96,6 +97,14 @@ lo.comp.grammar{
     [tok(lbra,Lc0)],
     term(2000,Seq,_,Rp,Rp0),
     checkFor(rbra,Lc1,"missing close bracket",Rp0,Rpx),
+    Lc = Lc0.merge(Lc1).
+  term0(tupl(Lc,"[||]",[]),otherMark,Rp,Rp) --> 
+    [tok(lqbra,Lc0),tok(rqbra,Lc1)]!,
+    Lc = Lc0.merge(Lc1).
+  term0(tupl(Lc,"[||]",tupleize(Seq)),otherMark,Rp,Rpx) -->
+    [tok(lqbra,Lc0)],
+    term(2000,Seq,_,Rp,Rp0),
+    checkFor(rqbra,Lc1,"missing close bracket",Rp0,Rpx),
     Lc = Lc0.merge(Lc1).
   term0(tupl(Lc,"{}",[]),endBrce,Rp,Rp) -->
     [tok(lbrce,Lc0),tok(rbrce,Lc1)],

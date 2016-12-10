@@ -194,5 +194,5 @@ lo.comp.types{
   bindAT([],_,Q) => Q.
   bindAT(_,[],Q) => Q.
   bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
-  bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q+{V->Tp}).
+  bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q+[|V->Tp|]).
 }

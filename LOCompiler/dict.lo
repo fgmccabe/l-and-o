@@ -32,11 +32,11 @@ lo.comp.dict{
 
   public declareType:(string,typeDef,list[env]) => list[env].
   declareType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) =>
-      [scope(Types+{Nm->Tp},Names,Cons,Contracts,Imps),..E].
+      [scope(Types+[|Nm->Tp|],Names,Cons,Contracts,Imps),..E].
 
   private standardType:(string,tipe,list[env]) => list[env].
   standardType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) => 
-      [scope(Types+{Nm->tpDef(none,Tp,typeRule(Tp,faceType([])))},Names,Cons,Contracts,Imps),..E].
+      [scope(Types+[|Nm->tpDef(none,Tp,typeRule(Tp,faceType([])))|],Names,Cons,Contracts,Imps),..E].
 
   private
   localTypeName:(string) => string.
@@ -44,7 +44,7 @@ lo.comp.dict{
 
   private
   typeInD:(string,list[env],typeDef){}.
-  typeInD(Key,[scope({Key->Def},_,_,_,_),.._],Dec).
+  typeInD(Key,[scope(Defs,_,_,_,_),.._],Def) :- present(Defs,Key,Def).
   typeInD(Key,[_,..Env],Def) :- typeInD(Key,Env,Def).
 
   public
@@ -54,7 +54,7 @@ lo.comp.dict{
 
   private
   varInD:(string,list[env],vr){}.
-  varInD(Nm,[scope(_,{Nm->D},_,_,_),.._],D).
+  varInD(Nm,[scope(_,Vars,_,_,_),.._],D) :- present(Vars,Nm,D).
   varInD(Nm,[_,..E],D) :- varInD(Nm,E,D).
 
   public
@@ -63,14 +63,14 @@ lo.comp.dict{
 
   public
   declareVar:(string,vr,list[env]) => list[env].
-  declareVar(Nm,V,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms+{Nm->V},Cons,Contracts,Imps),..E].
+  declareVar(Nm,V,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms+[|Nm->V|],Cons,Contracts,Imps),..E].
 
   public
   topVars:(list[env]) => map[string,vr].
   topVars([scope(_,Vars,_,_,_),.._]) => Vars.
 
   public pushScope:(list[env]) => list[env].
-  pushScope(E) => [scope({},{},[],{},{}),..E].
+  pushScope(E) => [scope([||],[||],[],[||],[||]),..E].
 
   public declareConstraint:(constraint,list[env]) => list[env].
   declareConstraint(C,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,[C,..Cons],Contracts,Imps),..E].
@@ -83,10 +83,10 @@ lo.comp.dict{
 
   public
   declareContract:(string,conEntry,list[env]) => list[env].
-  declareContract(Nm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,Cons,Contracts+{Nm->Con},Imps),..E].
+  declareContract(Nm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,Cons,Contracts+[|Nm->Con|],Imps),..E].
 
   conInD:(string,list[env],conEntry){}.
-  conInD(Nm,[scope(_,_,_,{Nm->Dec},_),.._],Dec).
+  conInD(Nm,[scope(_,_,_,Cons,_),.._],Dec) :- present(Cons,Nm,Dec).
   conInD(Nm,[_,..Env],Con) :- conInD(Nm,Env,Con).
 
   public
@@ -99,11 +99,11 @@ lo.comp.dict{
 
   public
   declareImplementation:(string,string,implEntry,list[env]) => list[env].
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+{Nm->I+{ImplNm->Con}}),..E] :-  present(Imps,Nm,I) .
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+{Nm->{ImplNm->Con}}),..E].
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+[|Nm->I+[|ImplNm->Con|]|]),..E] :-  present(Imps,Nm,I) .
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+[|Nm->[|ImplNm->Con|]|]),..E].
 
   impInD:(string,list[env],map[string,implEntry]){}.
-  impInD(Nm,[scope(_,_,_,_,{Nm->Dec}),.._],Dec).
+  impInD(Nm,[scope(_,_,_,_,Impls),.._],Dec) :- present(Impls,Nm,Dec).
   impInD(Nm,[_,..Env],Con) :- impInD(Nm,Env,Con).
 
   public isImplemented:(constraint,list[env],implEntry){}.

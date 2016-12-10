@@ -19,7 +19,6 @@ lo.comp.operators{
   infixOp("<=>",1199,1200,1199).	 /* class constructor type */
   infixOp("=>",1199,1200,1199).	 /* function arrow */
   infixOp("-->",1199,1200,1199).	 /* grammar rule */
-  infixOp("->",1199,1200,1199).	 /* map entry */
   infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
@@ -28,6 +27,7 @@ lo.comp.operators{
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=",949,950,949).	 /* class rule arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
+  infixOp("->",899,900,899).	 /* map entry */
   infixOp("=",899,900,899).	 /* unifies predicate */
   infixOp("==",899,900,899).	 /* equality predicate */
   infixOp("\\=",899,900,899).	 /* not unifyable */
@@ -156,6 +156,7 @@ lo.comp.operators{
   follows("",0c!,"!").
   follows("!",0c=,"!=").
   follows("",0c#,"#").
+  follows("",0c$,"$").
 
   public final:(string){}.
   final("%").	 /* modulo */
@@ -215,4 +216,5 @@ lo.comp.operators{
   final("!").	 /* one solution operator */
   final("!=").	 /* not equal */
   final("#").	 /* package separator */
+  final("$").	 /* built-in escapes */
 }.

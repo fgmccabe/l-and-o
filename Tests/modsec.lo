@@ -32,9 +32,25 @@ test.modsec{
     Rls = secRules(Tks),
     _logmsg("Rules are $(Rls::list[json])").
 
+  extractMeta:(modSecRule) => {id:string. target:list[string]. category:string}.
+  
+
   implementation display[modSecRule] .. {
-    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),disp(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]). 
+    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),dispTgt(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]). 
   }
+
+  implementation display[msAct] .. {
+    disp(single(S)) => ss(S).
+    disp(id(S)) => ssSeq([ss("id:'"),ss(S),sc(0c')]).
+    disp(tag(S)) => ssSeq([ss("tag:'"),ss(S),sc(0c')]).
+    disp(other(V,A)) => ssSeq([ss(V),ss(":'"),ss(A),ss("'")]).
+  }
+
+  private dispTgt:(list[string]) => ss.
+  dispTgt(T) => disp(T).
+
+  private dispActions:(list[msAct]) => ss.
+  dispActions(A) => disp(A).
 
   implementation coercion[modSecRule,json] .. {
     _coerce(modSecRule(Tgt,Ptn,[])) =>  jColl({"SecRule" -> jColl({"target" -> jSeq(jStrings(Tgt)). "pattern"->jTxt(Ptn)})}).
@@ -46,7 +62,7 @@ test.modsec{
   jActions([S,..L]) => [S::json,..jActions(L)].
 
   implementation coercion[msAct,json] .. {
-    _coerce(single(A)) => jTxt(A).
+    _coerce(single(A)) => jColl({"verb"->jTxt(A)}).
     _coerce(id(I)) => jColl({"id" -> jTxt(I)}).
     _coerce(tag(T)) => jColl({"tag"->jTxt(T)}).
     _coerce(other(V,A)) => jColl({"verb"->jTxt(V). "arg"->jTxt(A)}).
@@ -65,39 +81,55 @@ test.modsec{
   rule(modSecRule(Tgt,Ptn,Action)) --> [secRule], target(Tgt), pattern(Ptn), actions(Action).
 
   target:(list[string]) --> list[secTkn].
-  target(T) --> [idn(S)], { idenSeq(T) %% S}.
+  target(T) --> [idn(S)], { tgtSeq(T) %% S}.
 
-  idenSeq:(list[string]) --> list[integer].
-  idenSeq([]) --> eof.
-  idenSeq([implode(I),..L]) --> frag(I,0c|), moreIdens(L).
+  tgtSeq:(list[string]) --> list[integer].
+  tgtSeq([]) --> eof.
+  tgtSeq([implode(I),..L]) --> frag(I,0c|), moreTgts(L).
 
-  moreIdens:(list[string]) --> list[integer].
-  moreIdens([]) --> eof.
-  moreIdens(L) --> "|", idenSeq(L).
+  moreTgts:(list[string]) --> list[integer].
+  moreTgts([]) --> eof.
+  moreTgts(L) --> "|", tgtSeq(L).
 
   pattern:(string) --> list[secTkn].
   pattern(P) --> [strg(S)], {P = implode(S)}.
 
-  actions:(list[string]) --> list[secTkn].
-  actions(A) --> [strg(S)], {spaces(), actionSeq(A) %% S}.
+  actions:(list[msAct]) --> list[secTkn].
+  actions(A) --> [strg(S)], { (spaces(), actionSeq(A)) %% S}.
   actions([]) --> eof.
 
-  actionSeq:(list[string]) --> list[integer].
+  actionSeq:(list[msAct]) --> list[integer].
   actionSeq([]) --> eof.
-  actionSeq([implode(I),..L]) --> action(I), spaces(), moreActions(L).
+  actionSeq([I,..L]) --> action(I), spaces(), moreActions(L).
 
-  moreActions:(list[string]) --> list[integer].
+  moreActions:(list[msAct]) --> list[integer].
   moreActions([]) --> eof.
   moreActions(L) --> ",", spaces(), actionSeq(L).
 
   action:(msAct) --> list[integer].
   action(id(I)) --> "id:", spaces(), arg(I).
   action(tag(T)) --> "tag:", spaces(), arg(T).
-  action(other(implode(V),A)) --> frag(V,0c:), ":", spaces(), arg(A).
+  action(other(implode(V),A)) --> iden(V), spaces(), ":", spaces(), arg(A).
   action(single(implode(A))) --> iden(A).
 
   arg:(string) --> list[integer].
-  arg(implode(A)) --> "'", frag(A,0c').
+  arg(implode(A)) --> "'", frag(A,0c')!, "'".
+  arg(implode(A)) --> frag(A,0c,).
+
+  iden:(list[integer]) --> list[integer].
+  iden([C,..L]) --> idStart(C), moreIden(L).
+
+  idStart:(integer) --> list[integer].
+  idStart(0c_) --> [0c_].
+  idStart(Ch) --> [Ch] , {_isLetterChar(Ch)}.
+
+  moreIden:(list[integer]) --> list[integer].
+  moreIden([C,..L]) --> alphaNum(C), moreIden(L).
+  moreIden([]) --> [].
+
+  alphaNum:(integer) --> list[integer].
+  alphaNum(Ch) --> idStart(Ch).
+  alphaNum(Ch) --> [Ch] , {_isNdChar(Ch) }!.
 
   -- Absorb the \eol markers into a sequence of lines.
 
@@ -158,7 +190,7 @@ test.modsec{
   token(secAction) --> "SecAction".
   token(secMarker) --> "SecMarker".
   token(strg(Seq)) --> "\"", stringText(Seq), "\"".
-  token(idn(Text)) --> iden(Text).
+  token(idn(Text)) --> frag(Text,0c ).
 
   iden:(list[integer]) --> list[integer].
   iden(L) --> frag(L,0c ).

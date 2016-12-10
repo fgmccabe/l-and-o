@@ -14,7 +14,7 @@ patterns:
 
 - comment: Operators, quite a few of these ..
   name: keyword.control
-  match: (~~|::=|\||\?|<=>|<=|=>|:--|:-|-->|->>|->|,|,\.\.|<~|::|=|\\=|\.\.|\%\%|\^|\~|\.|#|@|:|!)
+  match: (~~|::=|\||\?|<=>|<=|=>|:--|:-|-->|->>|->|,|,\.\.|<~|::|=|\\=|\.\.|\%\%|\^|\~|\.|#|@|:|!|\[\||\|\]|\[|\])
 
 - comment: Operators, quite a few of these ..
   name: keyword.operator
