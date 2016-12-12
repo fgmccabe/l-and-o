@@ -309,13 +309,13 @@ processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,
   isIden(L,Nm),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,Lc,Els,E,Stmts,Others,Types,_,ClassPath).
+  checkClassBody(Tp,Lc,Els,E,Stmts,Others,Types,ClassPath).
 processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBraceTerm(St,Lc,L,Els),
   checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,_,ClassPath).
+  checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath).
 processStmt(St,Tp,Defs,Dx,E,Path) :-
   isBinary(St,Lc,"-->",L,R),
   processGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path).
@@ -349,14 +349,14 @@ checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
   Hd = apply(v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
 
-checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,BodyDefs,ClassPath) :-
+checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath) :-
   getTypeFace(ClassTp,Env,Face),
   moveConstraints(Face,Cx,faceType(Fields)),
   pushScope(Env,Base),
   declareConstraints(Cx,Base,BaseEnv),
   declareVar("this",vr("this",Lc,ClassTp),BaseEnv,ThEnv),
   thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,ThEnv,_OEnv,Defs,Public,_Imports,Others),
-  computeExport(Defs,Fields,Public,BodyDefs,Types,[],[]).
+  computeExport(Defs,Fields,Public,_,Types,[],[]).
 
 splitHead(tuple(_,"()",[A]),Nm,Args,Cond) :-!,
   splitHd(A,Nm,Args,Cond).
@@ -565,6 +565,10 @@ typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-
   typeOfTerm(Th,Tp,E0,E1,Then),
   typeOfTerm(El,Tp,E1,Ev,Else).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
+  isMapTuple(Term,Tp,Lc,Els),!,
+  macroMapEntries(Lc,Els,Trm),
+  typeOfTerm(Trm,Tp,Env,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTuple(Term,Lc,Els), !,
   findType("list",Lc,Env,ListTp),
   ListTp = typeExp(_,[ElTp]),
@@ -577,14 +581,6 @@ typeOfTerm(tuple(Lc,"()",A),Tp,Env,Ev,tuple(Lc,Els)) :-
   genTpVars(A,ArgTps),
   checkType(Lc,tupleType(ArgTps),Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Els).
-typeOfTerm(Term,Tp,Env,Ev,Exp) :-
-  isMapTuple(Term,Lc,Els),!,
-  macroMapEntries(Lc,Els,Trm),
-  typeOfTerm(Trm,Tp,Env,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Ev,Exp) :-
-  isBraceTuple(Term,Lc,Els),!,
-  macroMapEntries(Lc,Els,Trm),
-  typeOfTerm(Trm,Tp,Env,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isUnary(Term,Lc,"-",Arg), % handle unary minus
   binary(Lc,"-",name(Lc,"zero"),Arg,Sub),
@@ -609,6 +605,9 @@ typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
 typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
+
+isMapTuple(T,_,Lc,Els) :-
+  isBraceTuple(T,Lc,Els).
 
 genTpVars([],[]).
 genTpVars([_|I],[Tp|More]) :-

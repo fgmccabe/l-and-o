@@ -110,8 +110,6 @@ nxTok(St,NxSt,lpar(Lc)) :- lookingAt(St,NxSt,['('],Lc).
 nxTok(St,NxSt,rpar(Lc)) :- lookingAt(St,NxSt,[')'],Lc).
 nxTok(St,NxSt,lbra(Lc)) :- lookingAt(St,NxSt,['['],Lc).
 nxTok(St,NxSt,rbra(Lc)) :- lookingAt(St,NxSt,[']'],Lc).
-nxTok(St,NxSt,lqbra(Lc)) :- lookingAt(St,NxSt,['[','|'],Lc).
-nxTok(St,NxSt,rqket(Lc)) :- lookingAt(St,NxSt,['|',']'],Lc).
 nxTok(St,NxSt,lbrce(Lc)) :- lookingAt(St,NxSt,['{'],Lc).
 nxTok(St,NxSt,rbrce(Lc)) :- lookingAt(St,NxSt,['}'],Lc).
 nxTok(St,NxSt,lqpar(Lc)) :- lookingAt(St,NxSt,['<','|'],Lc).

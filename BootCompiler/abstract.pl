@@ -58,8 +58,6 @@ isBraceTerm(app(Lc,Op,tuple(_,"{}",A)),Lc,Op,A).
 
 isBraceTuple(tuple(Lc,"{}",L),Lc,L).
 
-isMapTuple(tuple(Lc,"[||]",Lc,L),Lc,L).
-
 squareTerm(Lc,Op,Els,app(Lc,name(Lc,Op),tuple(Lc,"[]",Els))).
 
 isSquare(app(_,name(_,Op),tuple(_,"[]",L)),Op,L).

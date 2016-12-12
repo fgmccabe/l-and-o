@@ -12,6 +12,11 @@ lo.list{
   X in [X,.._].
   X in [_,..Y] :- X in Y.
 
+  public merge:all t ~~ (list[t],list[t]) => list[t].
+  merge([],X) => X.
+  merge([e,..l],x) => merge(l,x) :- e in x.
+  merge([e,..l],x) => [e,..merge(l,x)].
+
   public multiCat:all x ~~ (list[list[x]]) => list[x].
   multiCat([]) => [].
   multiCat([E,..L]) => cat(E,L).

@@ -71,12 +71,8 @@ lo.comp.abstract{
   braceTuple(Lc,Els) => tupl(Lc,"{}",Els).
 
   public
-  isMapTuple:(ast,location,list[ast]){}.
-  isMapTuple(tupl(Lc,"[||]",A),Lc,A).
-
-  public
   mapTuple:(location,list[ast]) => ast.
-  mapTuple(Lc,Els) => tupl(Lc,"[||]",Els).
+  mapTuple(Lc,Els) => tupl(Lc,"{}",Els).
 
   public
   isRoundTerm:(ast,location,ast,list[ast]){}.

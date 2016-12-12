@@ -79,7 +79,7 @@ lo.comp.imports{
 
   findContracts:(list[term],list[conEntry],list[conEntry]){}.
   findContracts([],C,C).
-  findContracts([tupl([strng(Nm),strng(CnNm),strng(Sig),strng(FSig)]),..M],[conEntry(Nm,CnNm,Spec,FullSpec,decodeSignature(FSig)),..C],Cx) :-
+  findContracts([tupl([strng(Nm),strng(Sig),strng(FSig)]),..M],[conEntry(Nm,Spec,decodeSignature(FSig)),..C],Cx) :-
     decodeConstraint(Sig,FullSpec),
     moveConQuants(FullSpec,Q,FS),
     moveConConstraints(FS,_,S),

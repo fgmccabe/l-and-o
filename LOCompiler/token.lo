@@ -11,8 +11,6 @@ lo.comp.token{
        |  rbrce
        |  lqpar
        |  rqpar
-       |  lqbra
-       |  rqbra
        |  idTok(string)
        |  idQTok(string)
        |  intTok(integer)
@@ -53,8 +51,6 @@ lo.comp.token{
   tokDisp(rbrce) => ss("}").
   tokDisp(lqpar) => ss("<|").
   tokDisp(rqpar) => ss("|>").
-  tokDisp(lqbra) => ss("[|").
-  tokDisp(rqbra) => ss("|]").
   tokDisp(idTok(Nm)) => ss(Nm).
   tokDisp(idQTok(Nm)) => ssSeq([ss("'"),ss(Nm),ss("'")]).
   tokDisp(intTok(Ix)) => disp(Ix).

@@ -12,8 +12,8 @@ lo.comp.freshen{
     freshen(T,M) => freshenType(T,M).
   }
 
-  freshenType:(tipe,map[string,tipe]) => tipe.
-  freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+[|Nm->newVar(Nm)|]).
+  public freshenType:(tipe,map[string,tipe]) => tipe.
+  freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+{Nm->newVar(Nm)}).
   freshenType(T,B) => frshnType(T,B).
 
   public forEvidence:(tipe,map[string,tipe],map[string,tipe],tipe){}.
@@ -22,7 +22,7 @@ lo.comp.freshen{
 
   private skolemize:(tipe,map[string,tipe],map[string,tipe],tipe){}.
   skolemize(univType(kVar(V),Tp),B,BV,FTp) :- 
-    skolemize(Tp,B+[|V->skolem(V)|],BV,FTp).
+    skolemize(Tp,B+{V->skolem(V)},BV,FTp).
   skolemize(Tp,B,B,Tp).
 
   frshnType:(tipe,map[string,tipe]) => tipe.
@@ -41,7 +41,7 @@ lo.comp.freshen{
   frshnType(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
   frshnType(tupleType(A),B) => tupleType(frshnTypes(A,B)).
   frshnType(faceType(F),B) => faceType(frshnFields(F,B)).
-  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B-[|Nm->_|])).
+  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B-{Nm->_})).
   frshnType(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
   frshnType(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
 
@@ -61,14 +61,14 @@ lo.comp.freshen{
   }
 
   freshenConstraint:(constraint,map[string,tipe]) => constraint.
-  freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B+[|Nm->newVar(Nm)|]).
+  freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B+{Nm->newVar(Nm)}).
   freshenConstraint(C,B) => frshnConstraint(C,B).
 
   frshnConstraint:(constraint,map[string,tipe]) => constraint.
   frshnConstraint(conTract(Nm,Args,Deps),B) => conTract(Nm,frshnTypes(Args,B),frshnTypes(Deps,B)).
   frshnConstraint(implementsFace(Tp,Els),B) => implementsFace(frshnType(Tp,B),frshnFields(Els,B)).
   frshnConstraint(conRule(Args,C),B) => conRule(frshnConstraints(Args,B),frshnConstraint(C,B)).
-  frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B-[|Nm->_|]).
+  frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B-{Nm->_}).
 
   private
   frshnConstraints:(list[constraint],map[string,tipe]) => list[constraint].

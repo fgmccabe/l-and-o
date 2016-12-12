@@ -37,8 +37,7 @@ lo.core{
   public type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
 
   -- Displayable contract
-  public  
-  contract all t ~~ display[t] <~ {
+  public contract all t ~~ display[t] <~ {
     disp:(t)=>ss.
   }
 
@@ -52,23 +51,20 @@ lo.core{
 
   -- implement standard contracts for integers
 
-  public
-  implementation additive[integer] .. {
+  public implementation additive[integer] .. {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
     zero = 0.
   }
 
-  public
-  implementation arith[integer] .. {
+  public implementation arith[integer] .. {
     X*Y => _int_times(X,Y).
     X/Y => _int_div(X,Y).
     X%Y => _int_mod(X,Y).
     one = 1.
   }
 
-  public
-  implementation equality[integer] .. {
+  public implementation equality[integer] .. {
     X == X.
     hash(X) => X.
   }
@@ -85,16 +81,14 @@ lo.core{
   }
 
   -- implement standard contracts for floats
-  public
-  implementation additive[float] .. {
+  public implementation additive[float] .. {
     X+Y => _flt_plus(X,Y).
     X-Y => _flt_minus(X,Y).
 
     zero = 0.0.
   }
 
-  public
-  implementation arith[float] .. {
+  public implementation arith[float] .. {
     X*Y => _flt_times(X,Y).
     X/Y => _flt_div(X,Y).
     X%Y => _flt_mod(X,Y).
@@ -102,14 +96,12 @@ lo.core{
     one = 1.0.
   }
 
-  public 
-  implementation equality[float] .. {
+  public implementation equality[float] .. {
     X == X.
     hash(X) => _flt_hash(X).
   }
 
-  public 
-  implementation comp[float] .. {
+  public implementation comp[float] .. {
     X<Y :- _flt_lt(X,Y).
     X>=Y :- _flt_ge(X,Y).
   }
@@ -132,34 +124,29 @@ lo.core{
   max(X,Y)  => X:- X>Y.
   max(_,Y) => Y.
 
-  public
-  implementation display[float] .. {
+  public implementation display[float] .. {
     disp(X) => ss(_flt2str(this,0,8,true,false)).
   }
 
   -- and strings ...
-  public
-  implementation additive[string] .. {
+  public implementation additive[string] .. {
     X+Y => _str_concat(X,Y).
     X-Y => "".
 
     zero = "".
   }
 
-  public
-  implementation equality[string] .. {
+  public implementation equality[string] .. {
     X == X.
     hash(X) => _str_hash(X).
   }
 
-  public
-  implementation comp[string] .. {
+  public implementation comp[string] .. {
     X<Y :- _str_lt(X,Y).
     X>=Y :- _str_ge(X,Y).
   }
 
-  public
-  implementation display[string] .. {
+  public implementation display[string] .. {
     disp(X) => displayString(X).
   }
 
@@ -219,4 +206,13 @@ lo.core{
   listDisp(X,_) => [ss(",.."),disp(X),ss("]")] :- var(X).
   listDisp([],_) => [ss("]")].
   listDisp([E,..L],Sep) => [ss(Sep),disp(E),..listDisp(L,",")].
+
+  -- display optional values
+  public implementation all x ~~ display[x] |: display[option[x]] .. {
+    disp(O) => dispOptional(O).
+  }
+
+  private dispOptional:all x ~~ display[x] |: (option[x]) => ss.
+  dispOptional(none) => ss("none").
+  dispOptional(some(X)) => ssSeq([ss("some("),disp(X),ss(")")]).
 }

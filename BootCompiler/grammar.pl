@@ -58,7 +58,6 @@ legalNextRight([lpar(_)|_],_).
 legalNextRight([lbra(_)|_],_).
 legalNextRight([lbrce(_)|_],_).
 legalNextRight([lqpar(_)|_],_).
-legalNextRight([lqbra(_)|_],_).
 legalNextRight([stringTok(_,_)|_],_).
 legalNextRight([integerTok(_,_)|_],_).
 legalNextRight([floatTok(_,_)|_],_).
@@ -98,13 +97,6 @@ term00([lbra(Lcx)|Tks],T,Toks,rbra) :-
   checkToken(Tks2,Toks,rbra(Lcy),Lcy,"mising close bracket, got %s, left bracket at %s",[Lcx]), 
   mergeLoc(Lcx,Lcy,Lc), 
   tupleize(Seq,Lc,"[]",T).
-term00([lqbra(Lc0),rqkey(Lc2)|Toks],tuple(Lc,"[||]",[]),Toks,rqket) :-
-  mergeLoc(Lc0,Lc2,Lc).
-term00([lqbra(Lcx)|Tks],T,Toks,rqket) :-
-  term(Tks,2000,Seq,Tks2,_),
-  checkToken(Tks2,Toks,rqket(Lcy),Lcy,"missing close bracket, got %s, left bracket at %s",[Lcx]),
-  mergeLoc(Lcx,Lcy,Lc),
-  tupleize(Seq,Lc,"[||]",T).
 
 termArgs([],T,T,[],Lst,Lst).
 termArgs([lpar(_),rpar(Lcy)|Tks],Op,T,Toks,_,Lst) :- 

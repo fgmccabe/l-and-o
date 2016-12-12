@@ -34,6 +34,7 @@ catalog{
     lo.comp.types -> "types.lo".
     lo.comp.unify -> "unify.lo".
     lo.comp.wff -> "wff.lo".
+    t -> "t.lo".
   }
   default: "../LO/catalog".
 }

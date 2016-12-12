@@ -11,8 +11,8 @@ dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   collectDefinitions(Els,Dfs,Public,Annots,Imports,Other),
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
-  topsort(Defs,Groups).
-  %showGroups(Groups).
+  topsort(Defs,Groups),
+  showGroups(Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,I,Other) :-
   collectDefinition(St,Stmts,S0,Defs,D0,P,P0,A,A0,I,I0,Other,O0,dependencies:nop),

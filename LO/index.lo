@@ -71,7 +71,7 @@ lo.index{
   mergeTree(T1,T2) => mergeNodes(T1,T2).
 
   mergeLeafs:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
-  mergeLeafs(trLeaf(H,L1),trLeaf(H,L2)) => trLeaf(H,merge(L1,L2)).
+  mergeLeafs(trLeaf(H,L1),trLeaf(H,L2)) => trLeaf(H,mergePairs(L1,L2)).
   mergeLeafs(T1,T2) =>
       (nthBit(H1,CML) ? trNode(CM,CML,T2,T1) | trNode(CM,CML,T1,T2)) :-
       T1 = trLeaf(H1,L1),
@@ -79,10 +79,10 @@ lo.index{
       CML = commonMaskLen(H1,H2,HashLen),
       CM = commonMask(H1,CML).
 
-  merge: all k,v ~~ equality[k] |: (list[(k,v)],list[(k,v)])=>list[(k,v)].
-  merge([],L) => L.
-  merge([(K,V),..L1],L) => merge(L1,L) :- isMember((K,_),L).
-  merge([E,..L],L1) => [E,..merge(L,L1)].
+  private mergePairs: all k,v ~~ equality[k] |: (list[(k,v)],list[(k,v)])=>list[(k,v)].
+  mergePairs([],L) => L.
+  mergePairs([(K,V),..L1],L) => mergePairs(L1,L) :- isMember((K,_),L).
+  mergePairs([E,..L],L1) => [E,..mergePairs(L,L1)].
 
   mergeNodes:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
   mergeNodes(T1,T2) => mergeLeafs(T1,T2) :- T1=trLeaf(_,_), T2=trLeaf(_,_).

@@ -113,8 +113,8 @@ resolveTerm(conditional(Lc,Cond,Then,Else),Dict,conditional(Lc,RCond,RThen,RElse
   resolveTerm(Then,Dict,RThen),
   resolveTerm(Else,Dict,RElse).
 resolveTerm(apply(over(Lc,T,Cx),Args),Dict,apply(OverOp,NArgs)) :-
-  resolveTerms(Args,Dict,RArgs),
   resolveContracts(Lc,Cx,Dict,DTerms),
+  resolveTerms(Args,Dict,RArgs),
   overloadRef(Lc,T,DTerms,RArgs,OverOp,NArgs).
 resolveTerm(apply(Op,Args),Dict,apply(ROp,RArgs)) :-
   resolveTerm(Op,Dict,ROp),

@@ -2,11 +2,12 @@ lo.comp.wff {
   import lo.
   import lo.comp.location.
   import lo.comp.ast.
+  import lo.comp.errors.
   import lo.comp.abstract.
   import lo.comp.package.
 
   public
-  type defnKind ::= tpe | con | impl | valu | clss.
+  type defnKind ::= tpe | con | impl | valu | clss | imp.
 
   public isAlgebraicTypeDef:(ast,location,list[ast],list[ast],ast,ast){}.
   isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
@@ -74,4 +75,9 @@ lo.comp.wff {
   marker(valu)=>"@".
   marker(clss)=>"#".
   marker(con)=>"$".
+
+  public sameLength:all e~~(list[e],list[e],location,report,report){}.
+  sameLength(L1,L2,_,Rp,Rp) :- length(L1)=length(L2).
+  sameLength(L1,_,Lc,Rp,Rpx) :-
+    reportError("expecting $(length(L1)) elements",Lc,Rp,Rpx).
 }

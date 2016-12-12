@@ -82,7 +82,7 @@ lo.comp.catalog{
   catStmts([]) --> [].
 
   catStmt:(catEntry) --> list[token].
-  catStmt(catEntries(Contents)) --> [content, lbrce], contents[||],Contents), [rbrce].
+  catStmt(catEntries(Contents)) --> [content, lbrce], contents({},Contents), [rbrce].
   catStmt(base(BaseUri)) --> [bAse, colon, strg(Base)], { parseableUri(Base,BaseUri) }, [term].
   catStmt(version(V)) --> [verson, colon], versn(V), [term].
   catStmt(default(CatUri)) --> [deflt, colon, strg(U)], { uriParse(CatUri)%%U }, [term].

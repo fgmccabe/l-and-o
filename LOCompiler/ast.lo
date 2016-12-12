@@ -87,6 +87,5 @@ lo.comp.ast{
   tupleBrackets:(string,string,string,integer,string){}.
   tupleBrackets("()","(",")",2000,", ").
   tupleBrackets("[]","[","]",1000,", ").
-  tupleBrackets("[||]","[|","|]",1000,", ").
   tupleBrackets("{}","{","}",2000,".\n").
 }

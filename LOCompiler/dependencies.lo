@@ -51,8 +51,11 @@ lo.comp.dependencies{
   collectDefn:(ast,list[ast],list[ast],list[defn],list[defn],
       list[(string,defnKind)],list[(string,defnKind)],list[(string,ast)],list[(string,ast)],
       list[ast],list[ast],list[ast],list[ast],visibility,report,report){}.
+  collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,A,A,[St,..I],I,Oth,Oth,Viz,Rp,Rp) :-
+    isImport(St,Nm),
+    checkPublic(Viz,Nm,imp,P,Px).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St,..I],I,Oth,Oth,_,Rp,Rp) :-
-    isImport(St).
+    isImport(St,Pkg).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_,Rp,Rp) :-
     isOther(St).
   collectDefn(St,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
@@ -72,15 +75,9 @@ lo.comp.dependencies{
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
     reportError("cannot fathom $(St)",St.loc,Rp,Rpx).
 
-  isImport:(ast){}.
-  isImport(St) :-
-    isUnary(St,"private",_,I),
-    isImport(I).
-  isImport(St) :-
-    isUnary(St,"public",_,I),
-    isImport(I).
-  isImport(St) :-
-    isUnary(St,"import",_,_).
+  isImport:(ast,string){}.
+  isImport(St,packageName(P)) :-
+    isUnary(St,"import",_,P).
 
   isOther:(ast){}.
   isOther(St) :-

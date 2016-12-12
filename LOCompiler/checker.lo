@@ -14,12 +14,13 @@ lo.comp.typecheck{
   import lo.comp.errors.
   import lo.comp.macro.
   import lo.comp.package.
+  import lo.comp.misc.
   import lo.uri.
   import lo.comp.repository.
   import lo.comp.imports.
 
   public checkProgram:(ast,version,repository)=>canonPkg.
-  checkProgram(Prog,V,Repo) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Classes,Contracts,Impls,computeImports(Imports)),Imports,ODefs,OOthers) :-
+  checkProgram(Prog,V,Repo) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Classes,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,reportBase,Rp0),
@@ -27,6 +28,10 @@ lo.comp.typecheck{
     overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
     overloadOthers(Others,ODict,OOthers,Rp1,Rpx),
     computeExport(ODefs,[],Public,Exports,Types,Contracts,Impls).
+
+  private computeImports:(list[(string,defnKind)],list[pkgSpec]) => list[(visibility,pkg)].
+  computeImports(_,[])=>[].
+  computeImports(Pub,[pkgSpec(pkg(Pk,V),_,_,_,_,_,_),..Pkgs]) => [(exportViz(Pk,imp,Pub),pkg(Pk,V)),..computeImports(Pub,Pkgs)].
 
   private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
       list[canonDef],list[(string,defnKind)],list[pkgSpec],list[canonOther],report,report){}.
@@ -52,8 +57,7 @@ lo.comp.typecheck{
     checkCond(C,Env,_,Cond,Rp,Rpx).
   checkOther(St,[expShow(Lc,Show),..More],More,Env,Rp,Rpx) :-
     isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
-    findType("string",Lc,Env,StringTp),
-    typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),StringTp,Env,_,Show,Rp,Rpx).
+    typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
   processImportGroup:(list[ast],list[pkgSpec],repository,list[env],list[env],report,report){}.
   processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex,Rp,Rpx) :-
@@ -122,7 +126,7 @@ lo.comp.typecheck{
   importContracts:(list[conEntry],list[env],list[env]){}.
   importContracts([],Env,Env).
   importContracts([C,..L],E,Env) :-
-    C = conEntry(Nm,_,_,_,_),
+    C = conEntry(Nm,_,_),
     importContracts(L,declareContract(Nm,C,E),Env).
 
   private checkGroups:(list[list[defn]],list[(string,tipe)],list[(string,ast)],list[canonDef],list[env],list[env],string,report,report){}.
@@ -134,7 +138,7 @@ lo.comp.typecheck{
   private checkGroup:(list[defn],list[defn],list[(string,tipe)],list[(string,ast)],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
   checkGroup(Grp,[defn(_,tpe,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
     typeGroup(Grp,Defs,Dx,Env,Ex,Path,Rp,Rpx).
-  checkGroup(Grp,[defn(_,var,_,_,_),.._],Fields,Annots,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
+  checkGroup(Grp,[defn(_,valu,_,_,_),.._],Fields,Annots,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
     varGroup(Grp,Fields,Annots,Defs,Dx,Env,Ex,Path,Rp,Rpx).
   checkGroup(Grp,[defn(_,con,_,_,_),.._],_,_,Defs,Dx,Env,Ex,Path,Rp,Rpx) :-
     contractGroup(Grp,Defs,Dx,Env,Ex,Path,Rp,Rpx).
@@ -175,12 +179,34 @@ lo.comp.typecheck{
   parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string,report,report){}.
   parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
     isUnary(St,"type",_,InSt),
-    parseTypeRule(InSt[||],Env,FaceRule,Path,Rp,Rpx).
+    parseTypeRule(InSt,{},Env,FaceRule,Path,Rp,Rpx).
 
   private declareTypes:(list[canonDef],list[canonDef],list[canonDef],list[env],list[env]){}.
   declareTypes([],Defs,Defs,Env,Env).
   declareTypes([typeDef(Lc,N,Type,FaceRule),..More],[typeDef(Lc,N,Type,FaceRule),..Defs],Dx,Env,Ex) :-
     declareTypes(More,Defs,Dx,declareType(N,tpDef(some(Lc),Type,FaceRule),Env),Ex).
+
+  private contractGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
+  contractGroup([defn(N,con,Lc,_,[ConStmt]),.._],[Contract,..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
+    parseContract(ConStmt,Env,Path,Contract,Rp,Rpx),
+    defineContract(N,Lc,Contract,Env,Ex).
+
+  private defineContract:(string,location,canonDef,list[env],list[env]){}.
+  defineContract(N,Lc,cnDefn(_,Nm,Spec,Face),E0,Ex) :-
+    declareMethods(Spec,Face,Lc,declareContract(N,conEntry(Nm,Spec,Face),E0),Ex).
+
+  private declareMethods:(constraint,tipe,location,list[env],list[env]){}.
+  declareMethods(Spec,MtdsTp,Lc,Env,Ev) :-
+    moveConQuants(Spec,Q,Con),
+    moveQuants(MtdsTp,_,faceType(Methods)),
+    formMethods(Methods,Lc,Q,Con,Env,Ev).
+
+  private formMethods:(list[(string,tipe)],location,list[tipe],constraint,list[env],list[env]){}.
+  formMethods([],_,_,_,Env,Env).
+  formMethods([(Nm,Tp),..M],Lc,Q,Con,Env,Ev) :-
+    moveQuants(Tp,FQ,QTp),
+    moveQuants(MTp,merge(FQ,Q),constrained(QTp,Con)),
+    formMethods(M,Lc,Q,Con,declareVar(Nm,vr(Lc,mtd(Lc,Nm),MTp),Env),Ev).
 
   -- handle program definitions
   private varGroup:(list[defn],list[(string,tipe)],list[(string,ast)],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
@@ -260,14 +286,12 @@ lo.comp.typecheck{
   processStmt(St,Tp,[clBody(Lc,Nm,tpl([]),Stmts,Others,Types),..Defs],Defs,E,Path,Rp,Rpx) :-
     isBraceTerm(St,Lc,L,Els),
     isIden(L,_,Nm),
-    subPath(Path,marker(clss),Nm,ClassPath),
-    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,ClassPath,Rp,Rpx).
+    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,subPath(Path,marker(clss),Nm),Rp,Rpx).
   processStmt(St,classType(AT,Tp),[clBody(Lc,Nm,Arg,Stmts,Others,Types),..Defs],Defs,E,Path,Rp,Rpx) :-
     isBraceTerm(St,Lc,L,Els),
     splitHead(L,Nm,A),
     typeOfTerm(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
-    subPath(Path,marker(clss),Nm,ClassPath),
-    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath,Rp0,Rpx).
+    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,subPath(Path,marker(clss),Nm),Rp0,Rpx).
   processStmt(St,Tp,Defs,Dx,E,Path,Rp,Rpx) :-
     isBinary(St,"-->",Lc,L,R),
     checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path,Rp,Rpx).
@@ -293,6 +317,25 @@ lo.comp.typecheck{
     checkCond(C,pushScope(E),E1,Cond,Rp,Rp0),
     typeOfTerm(R,Tp,E1,_,Value,Rp0,Rpx).
 
+  private checkGrammarRule:(location,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
+  checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,_,Rp,Rpx) :-
+    splitGrHead(L,Nm,A,P),
+    ElTp=newVar("_E"),
+    typeOfTerm(A,AT,declareVar("stream\$X",vr(Lc,v("stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
+    checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
+    checkTerminals(P,"_cons",PB,ElTp,E3,_,Rp1,Rpx).
+
+  private splitGrHead:(ast,string,ast,list[ast]){}.
+  splitGrHead(Term,Nm,Args,Hed) :-
+    isBinary(Term,",",_,L,R),
+    isSquareTuple(R,_,Hed),
+    splitHead(L,Nm,Args).
+  splitGrHead(Term,Nm,Args,Hed) :-
+    isRoundTuple(Term,_,[T]),
+    splitGrHead(T,Nm,Args,Hed).
+  splitGrHead(Term,Nm,Args,[]) :-
+    splitHead(Term,Nm,Args).
+
   private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
   checkClassRule(Lc,H,G,R,classType(AT,_),[clRule(Lc,Nm,Arg,Repl,Cond,SuperFace),..Defs],Defs,E,Rp,Rpx) :-
     splitHead(H,Nm,A),
@@ -304,18 +347,17 @@ lo.comp.typecheck{
 
   private generateClassFace:(tipe,list[env],tipe){}.
   generateClassFace(Tp,Env,Face) :-
-    forEvidence(Tp[||],Q,Plate),
+    forEvidence(Tp,{},Q,Plate),
     (Plate = classType(_,T) | T=Plate),
     faceOfType(deRef(T),Env,F),
     freezeType(F,Q,Face).
 
-  private checkClassBody:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[canonDef],string,report,report){}.
+  private checkClassBody:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[(string,tipe)],string,report,report){}.
   checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath,Rp,Rpx) :-
     faceOfType(deRef(ClassTp),Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
     thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(Lc,v("this"),ClassTp),pushScope(Env)),_OEnv,Defs,Public,_Imports,Others,Rp,Rpx),
-    computeExport(Defs,Fields,Public,BodyDefs,Types,[],[]).
-
+    computeExport(Defs,Fields,Public,_,Types,[],[]).
 
   private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
   implementationGroup([defn(INm,impl,_,_,[Stmt])],[Impl,..Defs],Defs,Env,E,Path,Rp,Rpx) :-
@@ -323,26 +365,24 @@ lo.comp.typecheck{
     isBinary(I,"..",_,Sq,Body),
     isBraceTuple(Body,_,Els),
     parseContractConstraint(Sq,Env,Nm,Spec,Rp,Rp0),
-    isContract(Nm,Env,conEntry(_,CNm,_,FullSpec,ConFace)),
+    isContract(Nm,Env,conEntry(CNm,FullSpec,ConFace)),
     -- We have to unify the implemented contract and the contract (spec)ification
-    moveQuants(FullSpec,_,Qcon),
+    moveConQuants(FullSpec,_,Qcon),
     moveConConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
     moveConQuants(Spec,_,ASpec),
     moveConConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
-    sameLength(OArgs,AArgs,Lc),
-    sameLength(ODeps,ADeps,Lc),
+    sameLength(OArgs,AArgs,Lc,Rp0,Rp1),
+    sameLength(ODeps,ADeps,Lc,Rp1,Rp2),
     -- match up the type variables of the original contract with the actual implemented contract
-    bindAT(OArgs,AArgs,[],AQ),
-    bindAT(ODeps,ADeps,AQ,QQ),
+    QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,{})),
     rewriteConstraints(OC,QQ,[],OCx), -- OCx will become additional contract requirements
     moveQuants(ConFace,_,Face),
-    rewriteType(Face,QQ,faceType(Fields)),
-    pushScope(Env,ThEnv),
-    thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others,Rp0,Rpx),
-    computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
-    implementationName(conTract(CNm,AArgs,ADeps),ImplName),
-    Impl = implDef(Lc,INm,ImplName,Spec,BodyDefs,Others),
-    declareImplementation(Nm,ImplName,implEntry(Nm,ImplName,Spec),Env,Ex).
+    deRef(freshenType(Face,QQ))=faceType(Fields),
+    thetaEnv(Path,nullRepo,Lc,Els,Fields,pushScope(Env),_,ThDefs,Public,_,Others,Rp0,Rpx),
+    computeExport(ThDefs,Fields,Public,_,Types,[],[]),
+    implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
+    Impl = implDef(Lc,INm,ImplName,Spec,ThDefs,Others),
+    Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement $(Stmt)",Lc,Rp,Rpx).
 
@@ -483,9 +523,6 @@ lo.comp.typecheck{
     checkType(Lc,tupleType(ArgTps),Tp,Env,Rp,Rp0),
     typeOfTerms(A,ArgTps,Env,Ev,Lc,Els,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
-    isMapTuple(Term,Lc,Els),
-    typeOfTerm(macroMapEntries(Lc,Els,Rp,Rp0),Tp,Env,Ev,Exp,Rp0,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     typeOfTerm(macroMapEntries(Lc,Els,Rp,Rp0),Tp,Env,Ev,Exp,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
@@ -543,7 +580,7 @@ lo.comp.typecheck{
     faceOfType(deRef(AT),Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
     fieldInFace(Fields,AT,Fld,Lc,FTp,Rp0,Rp1)!,
-    Tp = freshen(FTp[||]), -- the record is this to the right of dot.
+    Tp = freshen(FTp,{}), -- the record is this to the right of dot.
     checkType(Lc,Tp,ET,Env,Rp1,Rpx).
 
   macroMapEntries:(location,list[ast],report,report) => ast.
@@ -632,7 +669,7 @@ lo.comp.typecheck{
     checkConds(Els,Env,Ex,Cond,Rp,Rpx).
 
   private checkNonTerminals:(list[ast],tipe,tipe,list[env],list[env],canonNT,report,report){}.
-  checkNonTerminals([],_,_,Env,Env,grConj(trueCond),Rp,Rp).
+  checkNonTerminals([],_,_,Env,Env,grTest(trueCond),Rp,Rp).
   checkNonTerminals([N,..Els],Tp,ElTp,Env,Ev,grConj(Lhs,Rhs),Rp,Rpx) :-
     checkNonTerminal(N,Tp,ElTp,Env,E0,Lhs,Rp,Rp0),
     checkNonTerminals(Els,Tp,ElTp,E0,Ex,Rhs,Rp0,Rpx).
@@ -651,20 +688,20 @@ lo.comp.typecheck{
     isVar(Nm,Env,vr(_,_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([Cl,..Stmts],Env,Cx,[relDef(Lc,Nm,Tp,Cx,[Cl,..Clses]),..Defs],Dx) :-
-    Cl = clause(Lc,Nm,_,_,_),
+    Cl = clause(Lc,Nm,_,_),
     collectClauses(Stmts,S0,Nm,Clses),
     isVar(Nm,Env,vr(_,_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
-  collectPrograms([vrDef(Lc,Nm,Value,Cond),..Stmts],Env,Cx,[varDef(Lc,Nm,Tp,Value,Cond),..Defs],Dx) :-
+  collectPrograms([vrDef(Lc,Nm,Value,Cond),..Stmts],Env,Cx,[varDef(Lc,Nm,Tp,Cx,Value,Cond),..Defs],Dx) :-
     isVar(Nm,Env,vr(_,_,Tp)),
     collectPrograms(Stmts,Env,Cx,Defs,Dx).
-  collectPrograms([Cl,..Stmts],Env,Cx,[enumDef(Lc,Nm,Tp,Cx,[Cl,..Rules],Face),..Defs],Dx) :-
+  collectPrograms([Cl,..Stmts],Env,Cx,[enumDef(Lc,Nm,Tp,Cx,[Cl,..Rules]),..Defs],Dx) :-
     isRuleForEnum(Cl,Lc,Nm),
     collectEnumRules(Stmts,S0,Nm,Rules),
     isVar(Nm,Env,vr(_,_,Tp)),
     generateClassFace(Tp,Env,Face),
     collectPrograms(S0,Env,Cx,Defs,Dx).
-  collectPrograms([Cl,..Stmts],Env,Cx,[classDef(Lc,Nm,Tp,Cx,[Cl,..Rules],Face),..Defs],Dx) :-
+  collectPrograms([Cl,..Stmts],Env,Cx,[classDef(Lc,Nm,Tp,Cx,[Cl,..Rules]),..Defs],Dx) :-
     isRuleForClass(Cl,Lc,Nm),
     collectClassRules(Stmts,S0,Nm,Rules),
     isVar(Nm,Env,vr(_,_,Tp)),
@@ -679,7 +716,7 @@ lo.comp.typecheck{
   collectClauses:(list[canonRule],list[canonRule],string,list[canonRule]){}.
   collectClauses([],[],_,[]).
   collectClauses([Cl,..Stmts],Sx,Nm,[Cl,..Ex]) :-
-    Cl = clause(_,Nm,_,_,_),
+    Cl = clause(_,Nm,_,_),
     collectMoreClauses(Stmts,Sx,Nm,Ex).
 
   collectMoreClauses:(list[canonRule],list[canonRule],string,list[canonRule]){}.
@@ -782,7 +819,7 @@ lo.comp.typecheck{
 
   private checkGrammarType:(location,list[env],tipe,tipe,report,report){}.
   checkGrammarType(Lc,Env,Tp,ElTp,Rp,Rpx) :-
-    isContract("stream",Env,conEntry(_,_,Spec,_,_)),
+    isContract("stream",Env,conEntry(_,Spec,_)),
     freshen(Spec,pickupThisType(Env)) = conTract(_,[Arg],[Dep]),
     checkType(Lc,Arg,Tp,Env,Rp,Rp0),
     checkType(Lc,Dep,ElTp,Env,Rp0,Rpx).
@@ -806,10 +843,10 @@ lo.comp.typecheck{
 
   private pushFace:(list[(string,tipe)],location,list[env]) => list[env].
   pushFace([],_,E) => E.
-  pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(N),T))).
+  pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(N),T),E)).
 
   computeExport:(list[canonDef],list[(string,tipe)],list[(string,defnKind)],
-                  list[(string,tipe)],list[canonDef],list[canonDef],list[canonDef]){}.
+                  list[(string,tipe)],list[(string,tipe)],list[conEntry],list[implEntry]){}.
   computeExport([],_,_,[],[],[],[]).
   computeExport([Def,..Defs],Fields,Public,Exports,Types,Contracts,Impls) :-
     exportDef(Def,Fields,Public,Exports,Ex,Types,Tx,Contracts,Cx,Impls,Ix)!,
@@ -818,27 +855,31 @@ lo.comp.typecheck{
   exportDef:(canonDef,list[(string,tipe)],list[(string,defnKind)],
           list[(string,tipe)],list[(string,tipe)],
           list[(string,tipe)],list[(string,tipe)],
-          list[canonDef],list[canonDef],
-          list[canonDef],list[canonDef]){}.
-  exportDef(funDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+          list[conEntry],list[conEntry],
+          list[implEntry],list[implEntry]){}.
+  exportDef(funDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(relDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(relDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(classDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(classDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(enumDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(enumDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).
   exportDef(varDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(grammDef(_,Nm,Tp,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(grammDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(Con,_,Public,Ex,Ex,Types,Types,[Con,..Cons],Cons,Impl,Impl) :-
-    isPublicContract(Con,Public).
-  exportDef(implDef(_,INm,ImplName,_,Spec,_,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[implDf(ImplName,Spec),..Ix],Ix) :-
+  exportDef(cnDefn(_,Nm,Spec,Tp),_,Public,Ex,Ex,Types,Types,[conEntry(Nm,Spec,Tp),..Cons],Cons,Impl,Impl) :-
+    (Nm,con) in Public.
+  exportDef(implDef(_,INm,ImplName,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Cons,Cons,[implEntry(ImplName,Spec),..Ix],Ix) :-
     isPublicImplementation(INm,Public)!.
   exportDef(_,_,_,Ex,Ex,Tps,Tps,Cons,Cons,Impls,Impls).
+
+  exportViz:(string,defnKind,list[(string,defnKind)]) => visibility.
+  exportViz(Nm,K,P) => pUblic :- (Nm,K) in P.
+  exportViz(_,_,_) => priVate.
 
   isPublicVar:(string,list[(string,tipe)],list[(string,defnKind)]){}.
   isPublicVar(Nm,_,Public) :-
@@ -850,16 +891,12 @@ lo.comp.typecheck{
   isPublicType(Nm,Public) :-
     (Nm,tpe) in Public.
 
-  isPublicContract:(canonDef,list[(string,defnKind)]){}.
-  isPublicContract(cnDefn(_,Nm,_,_),Public) :-
-    (Nm,con) in Public.
-
   isPublicImplementation:(string,list[(string,defnKind)]){}.
   isPublicImplementation(Nm,Public) :-
     (Nm,impl) in Public.
 
   findImportedImplementations:(list[pkgSpec],list[implEntry],list[implEntry]){}.
-  findImportedImplementations([pkgSpec(_,_,_,_,_,Impls,_),Specs],Impls<>D1,OverDict) :-
+  findImportedImplementations([pkgSpec(_,_,_,_,_,Impls,_),..Specs],Impls<>D1,OverDict) :-
     findImportedImplementations(Specs,D1,OverDict).
   findImportedImplementations([],D,D).
 }
