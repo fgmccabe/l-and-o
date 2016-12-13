@@ -178,6 +178,15 @@ lo.index{
   mapPairs(trLeaf(_,Lf),L) => Lf<>L.
   mapPairs(trNode(_,_,Lf,Rg),L) => mapPairs(Rg,mapPairs(Lf,L)).
 
+  public mapMap:all f,k,v,w ~~ f <~ { apply:(v)=>w } |: (map[k,v],f) => map[k,w].
+  mapMap(trEmpty,_) => trEmpty.
+  mapMap(trLeaf(Hsh,L),F) => trLeaf(Hsh,mapLeaves(L,F)).
+  mapMap(trNode(Hsh,Ln,L,R),F) => trNode(Hsh,Ln,mapMap(L,F),mapMap(R,F)).
+
+  private mapLeaves:all f,k,v,w ~~ f <~ { apply:(v)=>w } |: (list[(k,v)],f) => list[(k,w)].
+  mapLeaves([],_) => [].
+  mapLeaves([(k,v),..l],f) => [(k,f.apply(v)),..mapLeaves(l,f)].
+
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] .. {
     disp(Tree) => ssSeq([ss("{"),displayElements(Tree),ss("}")]).
@@ -207,4 +216,20 @@ lo.index{
 
   nthBit:(integer,integer){}.
   nthBit(X,N) :- _nthb(X,63-N).
+
+  public implementation all k,v ~~ equality[k] |: stream[map[k,v] ->> (k,v)] .. {
+    _eof(trEmpty).
+    _cons((K,V),M) => insrt(K,V,M).
+    _hdtl(M,(K,V),R) :- (var(R) ? pckEl(M,K,V,R)! | M = insrt(K,V,R)).
+  }
+
+  pckEl:all k,v ~~ equality[k] |: (map[k,v],k,v,map[k,v]){}.
+  pckEl(trLeaf(_,[(k,v)]),k,v,trEmpty).
+  pckEl(trLeaf(Msk,Lvs),k,v,trLeaf(Msk,RLvs)) :- length(Lvs)>1, dropEntry(Lvs,(k,v),RLvs).
+  pckEl(trNode(Msk,Len,L,R),k,v,trNode(Msk,Len,L1,R)) :- pckEl(L,k,v,L1).
+  pckEl(trNode(Msk,Len,L,R),k,v,trNode(Msk,Len,L,R1)) :- pckEl(R,k,v,R1).
+
+  private dropEntry:all e~~(list[e],e,list[e]){}.
+  dropEntry([e,..l],e,l).
+  dropEntry([f,..l],e,[f,..m]) :- dropEntry(l,e,m).
 }

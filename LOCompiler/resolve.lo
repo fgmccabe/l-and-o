@@ -98,11 +98,11 @@ lo.comp.resolve{
       condExp(Lc,resolveCond(Cond,Dict,Rp,Rp0),resolveTerm(Then,Dict,Rp0,Rp1),resolveTerm(Else,Dict,Rp1,Rpx)).
   resolveTerm(apply(Lc,over(T,Cx),tpl(Args)),Dict,Rp,Rpx) => apply(Lc,OverOp,tpl(NArgs)) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
-    overloadRef(Lc,T,DTerms,RArgs,OverOp,resolveTerms(Args,Dict,Rp0,Rpx)).
+    overloadRef(T,DTerms,RArgs,OverOp,resolveTerms(Args,Dict,Rp0,Rpx)).
   resolveTerm(apply(Op,Args),Dict,Rp,Rpx) => apply(resolveTerm(Op,Dict,Rp,RP0),resolveTerms(Args,Dict,Rp0,Rpx)).
   resolveTerm(over(Lc,T,Cx),Dict,Rp,Rpx) => Over :-
     ( resolveContracts(Lc,Cx,Dict,DTerms) ->
-        overloadRef(Lc,T,DTerms,[],OverOp,NArgs),
+        overloadRef(T,DTerms,[],OverOp,NArgs),
         (NArgs=[] ? Over = OverOp | Over = apply(OverOp,NArgs)),
         Rp=Rpx ;
         reportError("cannot find implementation for contracts $(Cx)",Lc,Rp,Rpx),
@@ -128,7 +128,7 @@ lo.comp.resolve{
       phraseCond(Lc,resolveGr(T,Dict,Rp,Rp0),resolveTerm(S,Dict,Rp0,Rp1),resolveTerm(R,Dict,Rp1,Rpx)).
   resolveCond(callCond(Lc,over(T,Cx),tpl(Args)),Dict,Rp,Rpx) => CallCond(Lc,OverOp,tpl(NArgs)) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
-    overloadRef(Lc,T,DTerms,RArgs,OverOp,resolveTerms(Args,Dict,Rp0,Rpx)).
+    overloadRef(T,DTerms,RArgs,OverOp,resolveTerms(Args,Dict,Rp0,Rpx)).
   resolveCond(callCond(Lc,P,A),Dict,Rp,Rpx) => callCond(Lc,resolveTerm(P,Dict,Rp,Rp0),resolveTerm(A,Dict,Rp0,Rpx)).
 
 
@@ -144,7 +144,7 @@ lo.comp.resolve{
   resolveGr(grCall(Lc,T,C),Dict,Rp,Rpx)) => grDip(resolveTerm(T,Dict,Rp,Rp0),resolveCond(C,Dict,Rp0,Rpx)).
   resolveGr(call(Lc0,over(Lc,T,Cx),tpl(Args)),Dict,Rp,Rpx) => grCall(Lc0,OverOp,tpl(NArgs)) :-
     DTerms = resolveContracts(Lc,Cx,Dict,Rp,Rp0),
-    overloadRef(Lc,T,DTerms,RArgs,OverOp,NArgs,Rp0,Rp1),
+    overloadRef(T,DTerms,RArgs,OverOp,NArgs,Rp0,Rp1),
     RArgs = resolveTerms(Args,Dict,Rp1,Rpx).
   resolveGr(grCall(Lc,Op,Args),Dict,Rp,Rpx) => grCall(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(Args,Dict,Rp,Rpx)).
 
@@ -152,22 +152,24 @@ lo.comp.resolve{
   resolveTerminals([],_,Rp,Rp) => [].
   resolveTerminals([(Lc,Op,T),..L],Dict,Rp,Rpx) => [(Lc,Op,resolveTerm(T,Dict,Rp,Rp0)),..resolveTerminals(L,Dict,Rp0,Rpx)].
 
+  overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
+  overloadRef(mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
+  overloadRef(v(Lc,Nm),DT,RArgs,v(Lc,Nm),DT<>RArgs).
 
-  overloadRef(_,mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
-  overloadRef(_,v(Lc,Nm),DT,RArgs,v(Lc,Nm),Args) :- concat(DT,RArgs,Args).
+  resolveContracts:(location,list[constraint],list[(string,canonTerm)],list[canonTerm],report,report){}.
+  resolveContracts(_,[],_,[],Rp,Rp).
+  resolveContracts(Lc,[Con,..C],Dict,[CV,..Vs],Rp,Rpx) :-
+    resolveContract(Lc,Con,Dict,CV,Rp,Rp0),
+    resolveContracts(Lc,C,Dict,Vs,Rp0,Rpx).
 
-  resolveContracts(_,[],_,[]).
-  resolveContracts(Lc,[Con|C],Dict,[CV|Vs]) :-
-    resolveContract(Lc,Con,Dict,CV),
-    resolveContracts(Lc,C,Dict,Vs).
-
-  resolveContract(Lc,C,Dict,Over) :-
-    implementationName(C,ImpNm),
-    findImplementation(ImpNm,Dict,Impl),!,
-    resolve(Impl,C,ImpNm,Lc,Dict,Over),!.
-  resolveContract(Lc,C,_,v(Lc,ImpNm)) :-
-    implementationName(C,ImpNm),
-    reportError("no implementation known for %s",[C],Lc).
+  resolveContract:(location,constraint,list[(string,canonTerm)],canonTerm,report,report){}.
+  resolveContract(Lc,C,Dict,Over,Rp,Rpx) :-
+    ImpNm = implementationName(C),
+    findImplementation(ImpNm,Dict,Impl),
+    resolve(Impl,C,ImpNm,Lc,Dict,Over,Rp,Rpx).
+  resolveContract(Lc,C,_,v(ImpNm),Rp,Rpx) :-
+    ImpNm = implementationName(C),
+    reportError("no implementation known for $(C)",Lc,Rp,Rpx).
 
   resolve(v(Lc,Nm),_,_,_,_,v(Lc,Nm)) :-!.
   resolve(I,C,ImpNm,Lc,Dict,Over) :-

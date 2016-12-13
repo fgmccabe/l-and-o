@@ -32,8 +32,48 @@ test.modsec{
     Rls = secRules(Tks),
     _logmsg("Rules are $(Rls::list[json])").
 
-  extractMeta:(modSecRule) => {id:string. target:list[string]. category:string}.
-  
+
+  type meta <~ {tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta.}.
+
+  private meta:(map[string,list[string]],map[string,list[string]]) <=> meta.
+  meta(Tgts,Tags) {
+    tgts = Tgts.
+    tags = Tags.
+    addRule(Rl) => meta(merge(Tgts,M.target,M.id),merge(Tags,M.tags,M.id)) :- M = extractMetaFromRule(Rl).
+
+    private merge:(map[string,list[string]],list[string],string) => map[string,list[string]].
+    merge(M,[],_) => M.
+    merge(M,[e,..l],i) => merge(M+{e->[i,..ids]},l,i) :- present(M,i,ids).
+  }
+
+  implementation coercion[meta,json] .. {
+    _coerce(M) => meta2json(M).
+  }
+
+  private meta2json:(meta)=>json.
+  meta2json(meta(Tgts,Tags)) => jColl({"targets" -> jColl(Tags::map[string,json])}).
+
+  tags2json:(map[string,list[string]]) => map[string,json].
+  tags2json(M) => mapMap(M,lst).
+
+  lst:{ apply:(list[string]) => json.
+    apply(L) => jSeq(L::list[json]).
+  }
+
+  extractMetaFromRule:(modSecRule) => {id:string. target:list[string]. tags:list[string]}.
+  extractMetaFromRule(modSecRule(Tgt,Pth,Acts)) => metaAnal(Id,Tgt,findTags(Acts,[])) :-
+    id(Id) in Acts.
+
+  private metaAnal:(string,list[string],list[string]) <=> {id:string. target:list[string]. tags:list[string]}.
+  metaAnal(Id,Tgt,Tags){
+    id = Id.
+    target = Tgt.
+    tags = Tags.
+  }
+
+  findTags:(list[msAct],list[string]) => list[string].
+  findTags([],Tgs) => Tgs.
+  findTags([tag(T),..l],Tgs) => findTags(l,[T,..Tgs]).
 
   implementation display[modSecRule] .. {
     disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),dispTgt(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]). 

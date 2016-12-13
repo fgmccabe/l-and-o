@@ -65,5 +65,4 @@ lo.list{
   coerceList:all e,f ~~ coercion[e,f] |: (list[e]) => list[f].
   coerceList([]) => [].
   coerceList([e,..l]) => [_coerce(e),..coerceList(l)].
-
 }

@@ -131,4 +131,25 @@ lo.json{
 
   private parseField:all s ~~ stream[s->>integer] |: (string) --> s.
   parseField(implode(S)) --> "\"", parseStr(S), "\"".
+
+  -- Some helpful coercions 
+  public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] .. {
+    _coerce(M) => mapJson(M).
+  }
+
+  private mapJson:all v ~~ coercion[v,json] |: (map[string,v])=>json.
+  mapJson(M) => jColl(mapMap(M,entryCoerce)).
+
+  private entryCoerce:{ apply:all v ~~ coercion[v,json] |: (v)=>json }.
+  entryCoerce{
+    apply(e) => e::json.
+  }
+
+  public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] .. {
+    _coerce(L) => jSeq(cList(L)).
+  }
+
+  private cList:all v ~~ coercion[v,json] |: (list[v]) => list[json].
+  cList([]) => [].
+  cList([e,..l]) => [e::json,..cList(l)].
 }

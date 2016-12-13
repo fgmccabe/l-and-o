@@ -677,6 +677,13 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
   locOfAst(A,Lc),
   typeOfTerms(As,ElTypes,E0,Ev,Lc,Els).
 
+% Analyse a list term to try to disambiguate maps from lists.
+
+checkListTerm(Lc,Els,Tp,Env,Ev,Exp) :-
+  (isMapSequence(Els) ; isMapType(Tp)) ->
+    checkMapTerm(Lc,Els,Tp,Env,Ev,Exp) ;
+  
+
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,Env,Ev,Exp).
 typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-
