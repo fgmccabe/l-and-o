@@ -34,11 +34,11 @@ exit(X) :- halt(X).
 
 '_unify'(X,Y) :- unify_with_occurs_check(X,Y).
 
-'_int_plus'(X,Y,Z) :- Z is X+Y.
-'_int_minus'(X,Y,Z) :- Z is X-Y.
-'_int_times'(X,Y,Z) :- Z is X*Y.
-'_int_div'(X,Y,Z) :- Z is div(X,Y).
-'_int_mod'(X,Y,Z) :- Z is X mod Y.
+'_int_plus'(X,Y,Z) :- Z is (X+Y) mod 9223372036854775808.
+'_int_minus'(X,Y,Z) :- Z is (X-Y) mod 9223372036854775808.
+'_int_times'(X,Y,Z) :- Z is (X*Y) mod 9223372036854775808.
+'_int_div'(X,Y,Z) :- Z is div(X,Y) mod 9223372036854775808.
+'_int_mod'(X,Y,Z) :- Z is (X mod Y) mod 9223372036854775808.
 
 '_flt_plus'(X,Y,Z) :- Z is X+Y.
 '_flt_minus'(X,Y,Z) :- Z is X-Y.
@@ -154,8 +154,9 @@ writeCodes(Str,[Code|More]) :-
     working_directory(C,C),
     string_concat("file:",C,U).
 
-'_str_hash'(S,H) :-
-    stringHash(0,S,H).
+'_str_hash'(S,HH) :-
+    stringHash(0,S,H),
+    HH is H mod 9223372036854775808.
 
 stringHash(H,Str,Hx) :-
   string_codes(Str,Codes),

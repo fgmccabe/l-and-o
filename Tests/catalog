@@ -1,6 +1,7 @@
 catalog{
   content{
     test.modsec -> "modsec.lo".
+    test.maps -> "maps.lo".
   }
   default: "../LO/catalog".
 }

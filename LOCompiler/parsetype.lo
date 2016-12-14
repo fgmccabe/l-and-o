@@ -15,13 +15,13 @@ lo.comp.parseType{
   public
   parseType:(ast,list[env],tipe,report,report){}.
   parseType(T,Env,Type,Rp,Rpx) :-
-    prsType(T,Env,{},[],Cons,Tp,Rp,Rpx),
+    prsType(T,Env,[],[],Cons,Tp,Rp,Rpx),
     moveConstraints(Type,Cons,Tp).
 
   public parseTypeRule:(ast,map[string,tipe],list[env],tipe,string,report,report){}.
   parseTypeRule(St,_,Env,Rule,Path,Rp,Rpx) :-
     isQuantified(St,V,Body),
-    parseTypeBound(V,{},B,Env,Rule,Rl),
+    parseTypeBound(V,[],B,Env,Rule,Rl),
     parseTypeRule(Body,B,Env,Inner,Path,Rp,Rpx),
     reQuant(pairs(B),Inner,Rl).
   parseTypeRule(St,B,Env,Rule,Path,Rp,Rpx) :-
@@ -115,7 +115,7 @@ lo.comp.parseType{
   prsTypeName(_,Id,_,B,C,C,Tp,Rp,Rp) :- present(B,Id,Tp).
   prsTypeName(_,Id,Env,_,C,Cx,Type,Rp,Rp) :- 
     isType(Id,Env,_,Tp),
-    moveConstraints(freshen(Tp,{}),C0,Type),
+    moveConstraints(freshen(Tp,[]),C0,Type),
     mergeConstraints(C0,C,Cx).
   prsTypeName(Lc,Id,_,_,C,C,anonType,Rp,Rpx) :- 
     reportError("type $(Id) not declared",Lc,Rp,Rpx).
@@ -126,13 +126,13 @@ lo.comp.parseType{
     parseTypeBound(L,BV,B0,Env,QT,Q0),
     parseTypeBound(R,B0,Bound,Env,Q0,Inner).
   parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
-    B1 = B+{Nm->kVar(Nm)},
+    B1 = B+[Nm->kVar(Nm)],
     isIden(V,_,Nm).
 
   public parseContract:(ast,list[env],string,canonDef,report,report){}.
   parseContract(T,Env,Path,cnDefn(Lc,Nm,Spec,Face),Rp,Rpx) :-
     isUnary(T,"contract",Lc,TI),
-    parseContractSpec(TI,F,{},Q,[],C0,Env,Spc,Nm,Path,Rp,Rp0),
+    parseContractSpec(TI,F,[],Q,[],C0,Env,Spc,Nm,Path,Rp,Rp0),
     isBraceTuple(F,_,TLs),
     prsTypeFields(TLs,Env,Q,C0,_,Fc,Rp0,Rp1),
     PQ = pairs(Q),
@@ -191,7 +191,7 @@ lo.comp.parseType{
   addConstraint(Con,C0,[Con,..C0]) :- \+Con in C0.
 
   parseContractName:(location,string,list[env],constraint,report,report){}.
-  parseContractName(_,Id,Env,freshen(Spec,{}),Rp,Rp) :-
+  parseContractName(_,Id,Env,freshen(Spec,[]),Rp,Rp) :-
     isContract(Id,Env,conEntry(_,Spec,_)).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
     reportError("contract $(Id) not declared",Lc,Rp,Rpx).
@@ -206,7 +206,7 @@ lo.comp.parseType{
 
   public parseContractConstraint:(ast,list[env],string,constraint,report,report){}.
   parseContractConstraint(T,Env,N,Con,Rp,Rpx) :-
-    parseContractCon(T,Env,{},[],Cons,N,Tp,Rp,Rpx)!,
+    parseContractCon(T,Env,[],[],Cons,N,Tp,Rp,Rpx)!,
     wrapConConstraints(Cons,Tp,Con).
  
   private parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
@@ -234,13 +234,13 @@ lo.comp.parseType{
     parseConBound(L,BV,B0,Env,QT,Q0),
     parseConBound(R,B0,Bound,Env,Q0,Inner).
   parseConBound(V,B,B1,Env,univCon(kVar(Nm),Inner),Inner) :-
-    B1 = B+{Nm->kVar(Nm)},
+    B1 = B+[Nm->kVar(Nm)],
     isIden(V,_,Nm).
 
   public parseTypeTemplate:(ast,list[env],tipe,string,report,report){}.
   parseTypeTemplate(St,Env,Type,Path,Rp,Rpx) :-
     isUnary(St,"type",_,L),
-    parseTpTemplate(L,{},Env,[],Cx,Tp,Path,Rp,Rpx),
+    parseTpTemplate(L,[],Env,[],Cx,Tp,Path,Rp,Rpx),
     wrapConstraints(Cx,Tp,Type).
 
   parseTpTemplate:(ast,map[string,tipe],list[env],list[constraint],list[constraint],tipe,string,report,report){}.

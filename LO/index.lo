@@ -21,8 +21,7 @@ lo.index{
     | trLeaf(integer,list[(k,v)])
     | trNode(integer,integer,map[k,v],map[k,v]).
 
-  public
-  implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] .. {
+  public implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] .. {
     present(M,K,V) :- lookIn(hash(K),M,K,V).
     remove(M,K) => rmve(hash(K),K,M).
     _put(M,K,V) => insrt(K,V,M).
@@ -30,6 +29,23 @@ lo.index{
     pairs(M) => mapPairs(M,[]).
     _empty = trEmpty.
   }
+
+  public implementation all k,v ~~ equality[k], equality[v] |: equality[map[k,v]] .. {
+    M1 == M2 :- sameMaps(M1,M2).
+    hash(M) => mapHash(M,0).
+  }
+
+  sameMaps:all k,v ~~ equality[k], equality[v] |: (map[k,v],map[k,v]){}.
+  sameMaps(M1,M2) :- pairs(M1) = pairs(M2).
+
+  mapHash:all k,v ~~ equality[k], equality[v] |: (map[k,v],integer) => integer.
+  mapHash(trEmpty,H) => H.
+  mapHash(trLeaf(_,L),H) => leafHash(L,M).
+  mapHash(trNode(_,_,L,R),H) => mapHash(R,mapHash(L,H)).
+
+  leafHash:all k,v ~~ equality[k], equality[v] |: (list[(k,v)],integer) => integer.
+  leafHash([],H) => H.
+  leafHash([(k,v),..l],H) => leafHash(l,(h*37+hash(k))*37+hash(v)).
 
   public
   implementation all k,v ~~ equality[k] |: additive[map[k,v]] .. {
@@ -189,7 +205,7 @@ lo.index{
 
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] .. {
-    disp(Tree) => ssSeq([ss("{"),displayElements(Tree),ss("}")]).
+    disp(Tree) => ssSeq([ss("["),displayElements(Tree),ss("]")]).
   }
 
   displayElements:all k,v ~~ display[k], display[v] |: (map[k,v]) => ss.
@@ -199,7 +215,7 @@ lo.index{
 
   displayLeaves:all k,v ~~ display[k], display[v] |: (list[(k,v)]) => list[ss].
   displayLeaves([]) => [].
-  displayLeaves([(K,V),..More]) => [disp(K),ss("->"),disp(V),ss(". "),..displayLeaves(More)].
+  displayLeaves([(K,V),..More]) => [disp(K),ss("->"),disp(V),ss(", "),..displayLeaves(More)].
 
   HashLen:integer.
   HashLen = 64.

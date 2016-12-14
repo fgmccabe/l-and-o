@@ -1,7 +1,7 @@
-maps{
+test.maps{
   import lo.
 
-  all u,v ~~ pair[u,v] ::= pair(u,v).
+  type all u,v ~~ pair[u,v] ::= pair(u,v).
 
   implementation
   all u,v ~~ display[u], display[v] |: display[pair[u,v]] .. {
@@ -13,13 +13,13 @@ maps{
   dispPair(pair(A,B)) => ssSeq([ss("("),disp(A),ss(", "),disp(B),ss(")")]).
 
   myPairs:map[string,integer].
-  myPairs = {"A"->1. "B"->2. "C"->3. }
+  myPairs = ["A"->1, "B"->2, "C"->3].
 
   allPairs:map[string,pair[integer,integer]].
-  allPairs = {"A"->pair(1,2). "B"->pair(3,4). }
+  allPairs = ["A"->pair(1,2), "B"->pair(3,4) ].
 
   otherPairs:map[string,pair[integer,integer]].
-  otherPairs = {"C"->pair(5,6). "B"->pair(7,8)}.
+  otherPairs = ["C"->pair(5,6), "B"->pair(7,8)].
 
   show myPairs.
   show allPairs.
@@ -33,5 +33,7 @@ maps{
 
   assert checkMap("A",allPairs) = some(pair(1,2)).
 
-  assert otherPairs["B"] = some(pair(7,8)).
+  assert otherPairs["B"] = pair(7,8).
+
+  assert ["A"->1] \== ["B"->2].
 }

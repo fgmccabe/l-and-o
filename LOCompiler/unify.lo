@@ -78,7 +78,7 @@ lo.comp.unify{
   checkForImpl:(constraint,list[env]){}.
   checkForImpl(Con,Env) :-
     isImplemented(Con,Env,implEntry(_,ITp)),
-    sameContract(freshen(ITp,{}),Con,Env).
+    sameContract(freshen(ITp,[]),Con,Env).
 
   sameContract:(constraint,constraint,list[env]){}.
   sameContract(conTract(Nm,A1,D1),conTract(Nm,A2,D2),Env) :-
@@ -99,7 +99,7 @@ lo.comp.unify{
     typeInDict(Nm,Env,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(_,F)).
-  faceOfType(typeExp(Nm,Args),Env,freshen(F,bindAT(AT,Args,{}))) :-
+  faceOfType(typeExp(Nm,Args),Env,freshen(F,bindAT(AT,Args,[]))) :-
     typeInDict(Nm,Env,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)).

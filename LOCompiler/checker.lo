@@ -179,7 +179,7 @@ lo.comp.typecheck{
   parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string,report,report){}.
   parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
     isUnary(St,"type",_,InSt),
-    parseTypeRule(InSt,{},Env,FaceRule,Path,Rp,Rpx).
+    parseTypeRule(InSt,[],Env,FaceRule,Path,Rp,Rpx).
 
   private declareTypes:(list[canonDef],list[canonDef],list[canonDef],list[env],list[env]){}.
   declareTypes([],Defs,Defs,Env,Env).
@@ -347,7 +347,7 @@ lo.comp.typecheck{
 
   private generateClassFace:(tipe,list[env],tipe){}.
   generateClassFace(Tp,Env,Face) :-
-    forEvidence(Tp,{},Q,Plate),
+    forEvidence(Tp,[],Q,Plate),
     (Plate = classType(_,T) | T=Plate),
     faceOfType(deRef(T),Env,F),
     freezeType(F,Q,Face).
@@ -374,14 +374,14 @@ lo.comp.typecheck{
     sameLength(OArgs,AArgs,Lc,Rp0,Rp1),
     sameLength(ODeps,ADeps,Lc,Rp1,Rp2),
     -- match up the type variables of the original contract with the actual implemented contract
-    QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,{})),
+    QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,[])),
     rewriteConstraints(OC,QQ,[],OCx), -- OCx will become additional contract requirements
     moveQuants(ConFace,_,Face),
     deRef(freshenType(Face,QQ))=faceType(Fields),
     thetaEnv(Path,nullRepo,Lc,Els,Fields,pushScope(Env),_,ThDefs,Public,_,Others,Rp0,Rpx),
     computeExport(ThDefs,Fields,Public,_,Types,[],[]),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
-    Impl = implDef(Lc,INm,ImplName,Spec,ThDefs,Others),
+    Impl = implDef(Lc,INm,ImplName,Spec,AC,ThDefs,Others),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement $(Stmt)",Lc,Rp,Rpx).
@@ -452,7 +452,7 @@ lo.comp.typecheck{
     knownType(F,PrTp,Env,E0,Pred,Rp,Rp0),
     ( deRef(PrTp) = predType(ArgTp) ?
       typeOfTerm(A,ArgTp,E0,Ev,Arg,Rp0,Rpx),
-      Call = goal(Lc,Pred,Arg) |
+      Call = callCond(Lc,Pred,Arg) |
       reportError("$(Pred)|=$(PrTp) not a predicate",Lc,Rp0,Rpx),
       Call = trueCond).
   checkCond(Term,Env,Env,trueCond,Rp,Rpx) :-
@@ -511,9 +511,7 @@ lo.comp.typecheck{
     typeOfTerm(El,Tp,E1,Ev,Else,Rp1,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isSquareTuple(Term,Lc,Els),
-    typeExp(_,[ElTp]) = findType("list",Lc,Env,Rp,Rp0),
-    checkType(Lc,ListTp,Tp,Env,Rp0,Rp1),
-    typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp,Rp1,Rpx).
+    checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(tupl(_,"()",[Inner]),Tp,Env,Ev,Exp,Rp,Rpx) :-  -- a unary round tuple might just be parenthetic expression
     \+ isRoundTuple(Inner,_,_),
     typeOfTerm(Inner,Tp,Env,Ev,Exp,Rp,Rpx).
@@ -522,9 +520,6 @@ lo.comp.typecheck{
     ArgTps = genTpVars(A),
     checkType(Lc,tupleType(ArgTps),Tp,Env,Rp,Rp0),
     typeOfTerms(A,ArgTps,Env,Ev,Lc,Els,Rp0,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
-    isBraceTuple(Term,Lc,Els),
-    typeOfTerm(macroMapEntries(Lc,Els,Rp,Rp0),Tp,Env,Ev,Exp,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isUnary(Term,"-",Lc,Arg),         -- handle unary minus
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
@@ -537,7 +532,7 @@ lo.comp.typecheck{
     checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
     typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
     typeOfTerm(Rhs,ResTp,E1,E2,Res,Rp1,Rpx),
-    Exp = lambda(equation(Lc,_str_gen(""),Arg,Res,trueCond)). -- Have to sort out free variables at some point
+    Exp = lambda(equation(Lc,_str_gen("L"),Arg,Res,trueCond)). -- Have to sort out free variables at some point
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),
@@ -559,6 +554,40 @@ lo.comp.typecheck{
     typeOfTerm(A,ElTp,Env,E0,Term,Rp,Rp0),
     typeOfTerms(As,ElTypes,E0,Ev,A.loc,Els,Rp0,Rpx).
 
+  -- Analyse a list term to try to disambiguate maps from lists.
+
+  private checkSquareTuple:(location,list[ast],tipe,list[env],list[env],canonTerm,report,report){}.
+  checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx) :-
+    ((isMapSequence(Els) | isMapType(Tp,Lc,Env,Rp,Rp0)) ?
+      checkType(Lc,findType("map",Lc,Env,Rp0,Rp1),Tp,Env,Rp1,Rp2),
+      typeOfTerm(macroMapEntries(Lc,Els,Rp2,Rp3),Tp,Env,Ev,Exp,Rp3,Rpx)|
+    (isListSequence(Els) | isListType(Tp,Lc,Env,Rp,Rp0)) ?
+      ListTp = findType("list",Lc,Env,Rp0,Rp1),
+      ListTp = typeExp(_,[ElTp]),
+      checkType(Lc,ListTp,Tp,Env,Rp1,Rp2),
+      typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp,Rp2,Rpx)|
+    checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx)).
+
+  private isMapSequence:(list[ast]){}.
+  isMapSequence(Els) :-
+    E in Els,
+    isBinary(E,"->",_,_,_).
+
+  private isMapType:(tipe,location,list[env],report,report){}.
+  isMapType(Tp,Lc,Env,Rp,Rpx) :-
+    typeExp(MpOp,_) = findType("map",Lc,Env,Rp,Rpx),
+    typeExp(MpOp,_) = deRef(Tp).
+ 
+  -- Looks for ,.. at end, and no -> in the elements
+  private isListSequence:(list[ast]){}.
+  isListSequence([E,.._]) :-
+    \+ isBinary(E,"->",_,_,_).
+
+  private isListType:(tipe,location,list[env],report,report){}.
+  isListType(Tp,Lc,Env,Rp,Rpx) :-
+    typeExp(MpOp,_) = findType("list",Lc,Env,Rp,Rpx),
+    typeExp(MpOp,_) = deRef(Tp).
+
   private typeOfListTerm:(list[ast],location,tipe,tipe,list[env],list[env],canonTerm,report,report){}.
   typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp,Rp,Rpx) :-
     typeOfTerm(iden(Lc,"[]"),ListTp,Env,Ev,Exp,Rp,Rpx).
@@ -573,15 +602,17 @@ lo.comp.typecheck{
     typeOfTerm(El,ElTp,E0,E1,Hd,Rp0,Rp1),
     typeOfListTerm(More,Lc,ElTp,ListTp,E1,Ev,Tl,Rp1,Rpx).
 
-  recordAccessExp:(location,ast,string,tipe,list[env],list[env],canonTerm,report,report){}.
-  recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld),Rp,Rpx) :-
-    AT = newVar("_R"),
-    knownType(Rc,AT,Env,Ev,Rec,Rp,Rp0),
-    faceOfType(deRef(AT),Env,Face),
-    moveConstraints(Face,_,faceType(Fields)),
-    fieldInFace(Fields,AT,Fld,Lc,FTp,Rp0,Rp1)!,
-    Tp = freshen(FTp,{}), -- the record is this to the right of dot.
-    checkType(Lc,Tp,ET,Env,Rp1,Rpx).
+  private checkSequenceTerm:(location,list[ast],tipe,list[env],list[env],canonTerm,report,report){}.
+  checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx) :-
+    Seq = genIden(Lc),
+    macroSequenceTerm(Els,Lc,Seq,Tsts),
+    typeOfTerm(binary(Lc,"@@",Seq,roundTuple(Lc,Tsts)),Tp,Env,Ev,Exp,Rp,Rpx).
+
+  private macroSequenceTerm:(list[ast],location,ast,list[ast]){}.
+  macroSequenceTerm([],Lc,V,[unary(Lc,"_eof",V)]).
+  macroSequenceTerm([E,..L],_,V,[ternary(E.loc,"_hdtl",V,E,NX),..M]) :-
+    NX = genIden(Lc),
+    macroSequenceTerm(L,Lc,NX,M).
 
   macroMapEntries:(location,list[ast],report,report) => ast.
   macroMapEntries(Lc,[],Rp,Rp) => iden(Lc,"_empty").
@@ -589,6 +620,16 @@ lo.comp.typecheck{
     isBinary(E,"->",Lc,Ky,Vl).
   macroMapEntries(Lc,[E,..L],Rp,Rpx) => macroMapEntries(Lc,L,Rp0,Rpx) :-
     reportError("invalid entry in map $(E)",E.loc,Rp,Rp0).
+
+  recordAccessExp:(location,ast,string,tipe,list[env],list[env],canonTerm,report,report){}.
+  recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld),Rp,Rpx) :-
+    AT = newVar("_R"),
+    knownType(Rc,AT,Env,Ev,Rec,Rp,Rp0),
+    faceOfType(deRef(AT),Env,Face),
+    moveConstraints(Face,_,faceType(Fields)),
+    fieldInFace(Fields,AT,Fld,Lc,FTp,Rp0,Rp1)!,
+    Tp = freshen(FTp,[]), -- the record is this to the right of dot.
+    checkType(Lc,Tp,ET,Env,Rp1,Rpx).
 
   fieldInFace:(list[(string,tipe)],tipe,string,location,tipe,report,report){}.
   fieldInFace(Fields,_,Nm,_,Tp,Rp,Rp) :-
@@ -825,7 +866,7 @@ lo.comp.typecheck{
     checkType(Lc,Dep,ElTp,Env,Rp0,Rpx).
 
   private pickupThisType:(list[env]) => map[string,tipe].
-  pickupThisType(Env) => { "this" -> ThisType} :- isVar("this",Env,vr(_,_,ThisType)).
+  pickupThisType(Env) => [ "this" -> ThisType] :- isVar("this",Env,vr(_,_,ThisType)).
   pickupThisType(_) => {}.
 
   private findType:(string,location,list[env],report,report) => tipe.
@@ -867,7 +908,7 @@ lo.comp.typecheck{
     isPublicVar(Nm,Fields,Public).
   exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).
-  exportDef(varDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
+  exportDef(varDef(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(grammDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).

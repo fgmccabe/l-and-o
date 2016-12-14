@@ -14,6 +14,9 @@ lo.comp.abstract{
   public isIden:(ast,location,string){}.
   isIden(iden(Lc,Nm),Lc,Nm).
 
+  public genIden:(location)=>ast.
+  genIden(Lc) => iden(Lc,_str_gen("N")).
+
   public isString:(ast,location,string){}.
   isString(strg(Lc,St),Lc,St).
 
@@ -33,6 +36,12 @@ lo.comp.abstract{
   public
   unary:(location,string,ast) => ast.
   unary(Lc,Op,A) => appl(Lc,iden(Lc,Op),tupl(Lc,"()",[A])).
+
+  public isTernary:(ast,string,location,ast,ast,ast){}.
+  isTernary(appl(Lc,iden(_,Nm),tupl(_,"()",[L,M,R])),Nm,Lc,L,M,R).
+
+  public ternary:(location,string,ast,ast,ast)=>ast.
+  ternary(Lc,Nm,L,M,R) => appl(Lc,iden(Lc,Nm),tupl(Lc,"()",[L,M,R])).
 
   public
   isSquareTerm:(ast,location,ast,list[ast]){}.
@@ -57,6 +66,9 @@ lo.comp.abstract{
   public
   isRoundTuple:(ast,location,list[ast]){}.
   isRoundTuple(tupl(Lc,"()",A),Lc,A).
+
+  public roundTuple:(location,list[ast]) => ast.
+  roundTuple(Lc,Els) => tupl(Lc,"()",Els).
 
   public
   isSquareTuple:(ast,location,list[ast]){}.

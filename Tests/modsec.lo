@@ -6,32 +6,40 @@ test.modsec{
   import lo.resources.
   import lo.json.
 
-  type modSecRule ::= modSecRule(list[string],string,list[msAct]).
+  type modSecRule ::= modSecRule(list[string],string,list[msAct]) | modSecMarker(string).
 
   type msAct ::= single(string) | id(string) | tag(string) | other(string,string).
 
   -- Hint to the run-time:
   main:(list[string]){}.
   main(Args) :-
-    processFiles(parseArgs(Args),cwd()).
+    processFiles(parseArgs(Args),cwd(),meta([],[]),M),
+    _logmsg("Analysis is $(M::json)").
 
   parseArgs:(list[string]) => list[uri].
   parseArgs([]) => [].
   parseArgs([f,..l]) => [parseUri(f),..parseArgs(l)].
 
-  processFiles:(list[uri],uri){}.
-  processFiles([],_).
-  processFiles([u,..l],c) :-
-    procFile(resolveUri(c,u),L),
-    processFiles(l,c).
+  processFiles:(list[uri],uri,meta,meta){}.
+  processFiles([],_,M,M).
+  processFiles([u,..l],c,M,Mx) :-
+    procFile(resolveUri(c,u),L,M,M0),
+    processFiles(l,c,M0,Mx).
 
-  procFile:(uri,list[modSecRule]){}.
-  procFile(U,Rls) :-
-    lines(Lns) %% getResource(U),
+  procFile:(uri,list[modSecRule],meta,meta){}.
+  procFile(U,Rls,M,Mx) :-
+    (lines(Lns) %% getResource(U))!,
+    -- _logmsg("Lines are $(Lns::list[string])"),
     Tks = tokenize(Lns),
+    _logmsg("Tokens are $(Tks)"),
     Rls = secRules(Tks),
-    _logmsg("Rules are $(Rls::list[json])").
+    _logmsg("Rules are $(Rls::list[json])"),
+    analyseRules(Rls,M,Mx).
 
+  private analyseRules:(list[modSecRule],meta,meta){}.
+  analyseRules([],M,M).
+  analyseRules([Rl,..l],M,Mx) :-
+    analyseRules(l,M.addRule(Rl),Mx).
 
   type meta <~ {tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta.}.
 
@@ -39,11 +47,13 @@ test.modsec{
   meta(Tgts,Tags) {
     tgts = Tgts.
     tags = Tags.
-    addRule(Rl) => meta(merge(Tgts,M.target,M.id),merge(Tags,M.tags,M.id)) :- M = extractMetaFromRule(Rl).
+    addRule(Rl) => meta(merge(Tgts,M.target,M.id),merge(Tags,M.tags,M.id)) :- extractMetaFromRule(Rl,M).
+    addRule(_) => this.
 
     private merge:(map[string,list[string]],list[string],string) => map[string,list[string]].
     merge(M,[],_) => M.
-    merge(M,[e,..l],i) => merge(M+{e->[i,..ids]},l,i) :- present(M,i,ids).
+    merge(M,[e,..l],i) => merge(M+[e->[i,..ids]],l,i) :- present(M,e,ids).
+    merge(M,[e,..l],i) => merge(M+[e->[i]],l,i).
   }
 
   implementation coercion[meta,json] .. {
@@ -51,17 +61,22 @@ test.modsec{
   }
 
   private meta2json:(meta)=>json.
-  meta2json(meta(Tgts,Tags)) => jColl({"targets" -> jColl(Tags::map[string,json])}).
+  meta2json(meta(Tgts,Tags)) => jColl(["targets" -> jColl(tags2json(Tgts)), "tags"->jColl(tags2json(Tags))]).
 
   tags2json:(map[string,list[string]]) => map[string,json].
   tags2json(M) => mapMap(M,lst).
 
-  lst:{ apply:(list[string]) => json.
-    apply(L) => jSeq(L::list[json]).
+  lst:{ apply:(list[string]) => json }.
+  lst{ 
+    apply(L) => jSeq(listify(L)).
+
+    private listify:(list[string]) => list[json].
+    listify([])=>[].
+    listify([s,..l]) => [jTxt(s),..listify(l)].
   }
 
-  extractMetaFromRule:(modSecRule) => {id:string. target:list[string]. tags:list[string]}.
-  extractMetaFromRule(modSecRule(Tgt,Pth,Acts)) => metaAnal(Id,Tgt,findTags(Acts,[])) :-
+  extractMetaFromRule:(modSecRule,{id:string. target:list[string]. tags:list[string]}){}.
+  extractMetaFromRule(modSecRule(Tgt,Pth,Acts),metaAnal(Id,Tgt,findTags(Acts,[]))) :-
     id(Id) in Acts.
 
   private metaAnal:(string,list[string],list[string]) <=> {id:string. target:list[string]. tags:list[string]}.
@@ -74,9 +89,11 @@ test.modsec{
   findTags:(list[msAct],list[string]) => list[string].
   findTags([],Tgs) => Tgs.
   findTags([tag(T),..l],Tgs) => findTags(l,[T,..Tgs]).
+  findTags([_,..l],Tgs) => findTags(l,Tgs).
 
   implementation display[modSecRule] .. {
-    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),dispTgt(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]). 
+    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),dispTgt(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]).
+    disp(modSecMarker(Id)) => ssSeq([ss("SecMarker:"),ss(Id)]).
   }
 
   implementation display[msAct] .. {
@@ -93,8 +110,9 @@ test.modsec{
   dispActions(A) => disp(A).
 
   implementation coercion[modSecRule,json] .. {
-    _coerce(modSecRule(Tgt,Ptn,[])) =>  jColl({"SecRule" -> jColl({"target" -> jSeq(jStrings(Tgt)). "pattern"->jTxt(Ptn)})}).
-    _coerce(modSecRule(Tgt,Ptn,Action)) => jColl({"SecRule" -> jColl({"target" -> jSeq(jStrings(Tgt)). "pattern"->jTxt(Ptn). "action"->jSeq(jActions(Action))})}).
+    _coerce(modSecRule(Tgt,Ptn,[])) =>  jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgt)), "pattern"->jTxt(Ptn)])]).
+    _coerce(modSecRule(Tgt,Ptn,Action)) => jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgt)), "pattern"->jTxt(Ptn), "action"->jSeq(jActions(Action))])]).
+    _coerce(modSecMarker(Id)) => jColl(["SecMarker" -> jTxt(Id)]).
   }
 
   jActions:(list[msAct]) => list[json].
@@ -102,10 +120,10 @@ test.modsec{
   jActions([S,..L]) => [S::json,..jActions(L)].
 
   implementation coercion[msAct,json] .. {
-    _coerce(single(A)) => jColl({"verb"->jTxt(A)}).
-    _coerce(id(I)) => jColl({"id" -> jTxt(I)}).
-    _coerce(tag(T)) => jColl({"tag"->jTxt(T)}).
-    _coerce(other(V,A)) => jColl({"verb"->jTxt(V). "arg"->jTxt(A)}).
+    _coerce(single(A)) => jColl(["verb"->jTxt(A)]).
+    _coerce(id(I)) => jColl(["id" -> jTxt(I)]).
+    _coerce(tag(T)) => jColl(["tag"->jTxt(T)]).
+    _coerce(other(V,A)) => jColl(["verb"->jTxt(V), "arg"->jTxt(A)]).
   }
 
   jStrings:(list[string]) => list[json].
@@ -119,13 +137,14 @@ test.modsec{
   -- Parse a line as a mod security rule
   rule:(modSecRule) --> list[secTkn].
   rule(modSecRule(Tgt,Ptn,Action)) --> [secRule], target(Tgt), pattern(Ptn), actions(Action).
+  rule(modSecMarker(implode(Id))) --> [secMarker], [idn(Id)].
 
   target:(list[string]) --> list[secTkn].
   target(T) --> [idn(S)], { tgtSeq(T) %% S}.
 
   tgtSeq:(list[string]) --> list[integer].
   tgtSeq([]) --> eof.
-  tgtSeq([implode(I),..L]) --> frag(I,0c|), moreTgts(L).
+  tgtSeq([implode(I),..L]) --> frag(I,[],0c|), moreTgts(L).
 
   moreTgts:(list[string]) --> list[integer].
   moreTgts([]) --> eof.
@@ -136,6 +155,7 @@ test.modsec{
 
   actions:(list[msAct]) --> list[secTkn].
   actions(A) --> [strg(S)], { (spaces(), actionSeq(A)) %% S}.
+  actions([A]) --> [idn(S)], {action(A) %% S}.
   actions([]) --> eof.
 
   actionSeq:(list[msAct]) --> list[integer].
@@ -153,8 +173,8 @@ test.modsec{
   action(single(implode(A))) --> iden(A).
 
   arg:(string) --> list[integer].
-  arg(implode(A)) --> "'", frag(A,0c')!, "'".
-  arg(implode(A)) --> frag(A,0c,).
+  arg(implode(A)) --> "'", frag(A,[],0c')!, "'".
+  arg(implode(A)) --> frag(A,[],0c,).
 
   iden:(list[integer]) --> list[integer].
   iden([C,..L]) --> idStart(C), moreIden(L).
@@ -174,23 +194,22 @@ test.modsec{
   -- Absorb the \eol markers into a sequence of lines.
 
   lines:(list[list[integer]]) --> list[integer].
-  lines(Lns) --> line(Ln)!, {glue(Lns,Ln,Rest)}, lines(Rest).
   lines([]) --> eof.
+  lines(Lns) --> line(Ln)!, {glue(Lns,Ln,Rest)}, lines(Rest).
 
   line:(list[integer]) --> list[integer].
   line([]) --> "\n".
-  line([]) --> "#", eol().
   line(Ln) --> "\\\n", line(Ln).
   line([C,..L]) --> [C],line(L).
+  line([]) --> eof.
 
-  eol:()-->list[integer].
-  eol() --> "\n".
-  eol() --> [C], { C \= 0c\n}, eol().
-  eol() --> eof.
+  private glue:(list[list[integer]],list[integer],list[list[integer]]){}.
+  glue(Text,Ln,Text) :- blankLine(Ln)!.
+  glue([Ln,..Rest],Ln,Rest) :- \+blankLine(Ln).
 
-  private glue:all t ~~ (list[list[t]],list[t],list[list[t]]){}.
-  glue(Text,[],Text).
-  glue([Ln,..Rest],Ln,Rest) :- Ln\=[].
+  private blankLine:(list[integer]){}.
+  blankLine([]).
+  blankLine(L) :- spaces() %% L.
 
   -- Tokenization of modsecurity source
 
@@ -220,37 +239,36 @@ test.modsec{
 
   space:()-->list[integer].
   space() --> ([0c ] | [0c\t])!.
+  space() --> "#", eol().
+
+  eol:()-->list[integer].
+  eol() --> "\n".
+  eol() --> [C], { C \= 0c\n}, eol().
+  eol() --> eof.
 
   moreToks:(list[secTkn]) --> list[integer].
   moreToks([]) --> eof.
   moreToks([Tok,..More]) --> token(Tok), tokens(More).
 
   token:(secTkn) --> list[integer].
-  token(secRule) --> "SecRule".
-  token(secAction) --> "SecAction".
-  token(secMarker) --> "SecMarker".
+  token(secRule) --> ("SecRule"|"secrule"|"Secrule"|"SECRULE")!.
+  token(secAction) --> ("SecAction"|"Secaction"|"secaction"|"SECACTION")!.
+  token(secMarker) --> ("SecMarker"|"Secmarker"|"secmarker"|"SECMARKER")!.
   token(strg(Seq)) --> "\"", stringText(Seq), "\"".
-  token(idn(Text)) --> frag(Text,0c ).
+  token(idn(Text)) --> frag(Text,[],0c ).
 
   iden:(list[integer]) --> list[integer].
-  iden(L) --> frag(L,0c ).
+  iden(L) --> frag(L,[],0c ).
 
-  frag:(list[integer],integer) --> list[integer].
-  frag([],_) --> eof.
-  frag([],Dl) --> [Dl]+.
-  frag([C,..L],Dl) --> [C], frag(L,Dl).
+  frag:(list[integer],list[integer],integer) --> list[integer].
+  frag(L,L,_) --> eof.
+  frag(L,X,Dl) --> [0c\\,0c\\], frag(L,X,Dl).
+  frag([0c\\,..L],X,Dl) --> [0c\\], frag(L,X,Dl).
+  frag(L,L,Dl) --> [Dl]+.
+  frag([C,..L],X,Dl) --> [C], frag(L,X,Dl).
 
   stringText:(list[integer]) --> list[integer].
-  stringText([]) --> [].
-  stringText(T) --> "\\\n", stringText(T).
-  stringText([C,..More]) --> "\\", quote(C), stringText(More).
+  stringText([C,..More]) --> "\\", [C], stringText(More).
   stringText([C,..More]) --> [C], { C \= 0c" }, stringText(More).
-
-  quote:(integer) --> list[integer].
-  quote(0c\n) --> "n".
-  quote(0c") --> "\"".
-  quote(0c') --> "'".
-  quote(0c\t) --> "t".
-  quote(C) --> [C].
-
+  stringText([]) --> "\""+.
 }

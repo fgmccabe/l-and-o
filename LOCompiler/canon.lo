@@ -8,7 +8,17 @@ lo.comp.canon {
 
   public type conEntry ::= conEntry(string,constraint,tipe).
 
-  public type implEntry ::= implEntry(string,constraint).
+  public type implEntry <~ { name:string}.
+
+  public implEntry:(string,constraint) <=> implEntry.
+  implEntry(Nm,C){
+    name = Nm.
+  }
+
+  public implVar:(string,canonTerm) <=> implEntry.
+  implVar(Nm,T){
+    name = Nm.
+  }
 
   public type pkgSpec ::= pkgSpec(pkg,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry],list[(visibility,pkg)]).
 

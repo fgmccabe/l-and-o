@@ -169,8 +169,11 @@ genGoal(match(L,R),O,Ox) :-
   genTerm(L,O,O1),
   appStr(" = ",O1,O2),
   genTerm(R,O2,Ox).
-genGoal(raise(_),O,Ox) :-
-  appStr("abort",O,Ox).
+genGoal(raise(T),O,Ox) :-
+  appStr("raise_exception",O,O0),
+  appStr("(",O0,O1),
+  genTerm(T,O1,O2),
+  appStr(")",O2,Ox).
 
 genTerm(prg(Nm,_),O,Ox) :-
   appQuoted(Nm,'''',O,Ox).

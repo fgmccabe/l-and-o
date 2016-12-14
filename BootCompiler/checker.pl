@@ -565,15 +565,8 @@ typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-
   typeOfTerm(Th,Tp,E0,E1,Then),
   typeOfTerm(El,Tp,E1,Ev,Else).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
-  isMapTuple(Term,Tp,Lc,Els),!,
-  macroMapEntries(Lc,Els,Trm),
-  typeOfTerm(Trm,Tp,Env,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTuple(Term,Lc,Els), !,
-  findType("list",Lc,Env,ListTp),
-  ListTp = typeExp(_,[ElTp]),
-  checkType(Lc,ListTp,Tp,Env),
-  typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp).
+  checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp).
 typeOfTerm(tuple(_,"()",[Inner]),Tp,Env,Ev,Exp) :-
   \+ isTuple(Inner,_), !,
   typeOfTerm(Inner,Tp,Env,Ev,Exp).
@@ -605,9 +598,6 @@ typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
 typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
-
-isMapTuple(T,_,Lc,Els) :-
-  isBraceTuple(T,Lc,Els).
 
 genTpVars([],[]).
 genTpVars([_|I],[Tp|More]) :-
@@ -679,11 +669,33 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
 
 % Analyse a list term to try to disambiguate maps from lists.
 
-checkListTerm(Lc,Els,Tp,Env,Ev,Exp) :-
-  (isMapSequence(Els) ; isMapType(Tp)) ->
-    checkMapTerm(Lc,Els,Tp,Env,Ev,Exp) ;
-  
+checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp) :-
+  (isMapSequence(Els) ; isMapType(Tp,Lc,Env)) ->
+    macroMapEntries(Lc,Els,Trm),
+    findType("map",Lc,Env,MapTp),
+    checkType(Lc,MapTp,Tp,Env),
+    typeOfTerm(Trm,Tp,Env,Ev,Exp);
+  (isListSequence(Els) ; isListType(Tp,Lc,Env)) ->
+    findType("list",Lc,Env,ListTp),
+    ListTp = typeExp(_,[ElTp]),
+    checkType(Lc,ListTp,Tp,Env),
+    typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp);
+  checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp).
 
+isMapSequence([E|_]) :-
+  isBinary(E,_,"->",_,_).
+
+isMapType(Tp,Lc,Env) :-
+  findType("map",Lc,Env,typeExp(MpOp,_)),
+  deRef(Tp,typeExp(MpOp,_)).
+
+isListSequence([E|_]) :-
+  \+isBinary(E,_,"->",_,_).
+
+isListType(Tp,Lc,Env) :-
+  findType("list",Lc,Env,typeExp(MpOp,_)),
+  deRef(Tp,typeExp(MpOp,_)).
+  
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,Env,Ev,Exp).
 typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-
@@ -698,6 +710,21 @@ typeOfListTerm([El|More],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-
   typeOfKnown(name(Lc,",.."),LiTp,Env,E0,Op),
   typeOfTerm(El,ElTp,E0,E1,Hd),
   typeOfListTerm(More,Lc,ElTp,ListTp,E1,Ev,Tl).
+
+checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp) :-
+  genIden(Lc,Seq),
+  macroSequenceTerm(Els,Lc,Seq,Tsts),
+  isTuple(Cond,Lc,Tsts),
+  binary(Lc,"@@",Seq,Cond,Term),
+  typeOfTerm(Term,Tp,Env,Ev,Exp).
+
+macroSequenceTerm([],Lc,V,[Last]) :-
+  unary(Lc,"_eof",V,Last).
+macroSequenceTerm([E|L],_,V,[F|M]) :-
+  locOfAst(E,Lc),
+  genIden(Lc,NX),
+  ternary(Lc,"_hdtl",V,E,NX,F),
+  macroSequenceTerm(L,Lc,NX,M).
 
 checkType(_,Actual,Expected,Env) :-
   sameType(Actual,Expected,Env).

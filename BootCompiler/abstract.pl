@@ -5,10 +5,11 @@
       roundTerm/4,isRound/3,isRoundTerm/3,isRoundTerm/4,isTuple/2,isTuple/3,
       braceTerm/4,isBrace/3,isBraceTerm/4,isBraceTuple/3,
       squareTerm/4,isSquare/3,isSquare/4,isSquareTuple/3,isSquareTuple/2,isSquareTerm/3,isSquareTerm/4,
-      isName/2,isIden/1,isIden/2,isIden/3,isString/2,isInteger/2,
+      isName/2,isIden/1,isIden/2,isIden/3,genIden/2,isString/2,isInteger/2,
       sameTerm/2]).
 :- use_module(operators).
 :- use_module(keywords).
+:- use_module(misc).
 
 apply(Lc,Op,Args,app(Lc,Op,Args)).
 
@@ -81,6 +82,9 @@ isIden(tuple(_,"()",[name(_,Nm)]),Nm).
 
 isIden(name(Lc,Nm),Lc,Nm).
 isIden(tuple(Lc,"()",[name(_,Nm)]),Lc,Nm).
+
+genIden(Lc,name(Lc,Id)) :-
+  genstr("N",Id).
 
 isString(string(_,St),St).
 

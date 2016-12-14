@@ -3,11 +3,13 @@ lo.core{
 
   public type thing ::= thing.
 
-  public 
-  contract all x ~~ equality[x] <~ {
+  public contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
     hash:(x)=>integer.
   }
+
+  public (\==):all x ~~ equality[x] |: (x,x){}.
+  x \== y :- \+ x==y.
 
   public 
   contract all x ~~ /*equality[x] |: */ comp[x] <~ {
