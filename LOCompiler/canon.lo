@@ -30,12 +30,11 @@ lo.comp.canon {
            |   relDef(location,string,tipe,list[constraint],list[canonRule])
            |   grammDef(location,string,tipe,list[constraint],list[canonRule])
            |   classDef(location,string,tipe,list[constraint],list[canonRule])
-           |   enumDef(location,string,tipe,list[constraint],list[canonRule])
            |   varDef(location,string,tipe,list[constraint],canonTerm,canonCond)
            |   otherDef(location,canonOther)
            |   typeDef(location,string,tipe,tipe)
            |   cnDefn(location,string,constraint,tipe)
-           |   implDef(location,string,string,constraint,list[constraint],list[canonDef],list[canonOther]).
+           |   implDef(location,string,string,constraint,list[constraint],canonTerm,canonTerm).
 
   public type canonOther ::= integrity(location,canonCond)
            | expShow(location,canonTerm).
@@ -45,7 +44,6 @@ lo.comp.canon {
              | equation(location,string,canonTerm,canonTerm,canonCond)
              | vrDef(location,string,canonTerm,canonCond)
              | clRule(location,string,canonTerm,canonTerm,canonCond,tipe)
-             | clBody(location,string,canonTerm,list[canonDef],list[canonOther],list[(string,tipe)])
              | grRule(location,string,canonTerm,canonNT,canonNT)
              | tpRule(location,tipe).
 
@@ -59,8 +57,9 @@ lo.comp.canon {
             | whre(canonTerm,canonCond)
             | condExp(canonCond,canonTerm,canonTerm)
             | lambda(canonRule)
+            | theta(list[canonDef],list[canonOther])
             | dot(canonTerm,string)
-            | over(canonTerm,list[constraint])
+            | over(location,canonTerm,list[constraint])
             | mtd(location,string).
 
   public type
@@ -125,8 +124,7 @@ lo.comp.canon {
   }
 
   public implementation display[canonOther] .. {
-    disp(integrity(_,C)) => dispCond(C).
-    disp(expShow(_,E)) => dispTerm(E).
+    disp(O) => dispOther(O).
   }
 
   private dispPkg:(canonPkg) => ss.
@@ -137,13 +135,12 @@ lo.comp.canon {
   dispDef(relDef(Lc,Nm,Tp,Cx,Rules)) => ssSeq([ss(" relDef: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
   dispDef(grammDef(Lc,Nm,Tp,Cx,Rules)) => ssSeq([ss(" grammDef: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
   dispDef(classDef(Lc,Nm,Tp,Cx,Rules)) => ssSeq([ss(" class: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
-  dispDef(enumDef(Lc,Nm,Tp,Cx,Rules)) => ssSeq([ss(" enum: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ssSeq(dispRules(Rules))]).
   dispDef(varDef(Lc,Nm,Tp,Cx,Exp,trueCond)) => ssSeq([ss(" var: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ss(Nm),ss("="),dispTerm(Exp)]).
   dispDef(varDef(Lc,Nm,Tp,Cx,Exp,C)) => ssSeq([ss(" var: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),ss(Nm),ss("="),dispTerm(Exp),ss(":-"),dispCond(C)]).
   dispDef(typeDef(Lc,Nm,Tp,TpDef)) => ssSeq([ss(" type: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(TpDef)]).
   dispDef(otherDef(Lc,C)) => ssSeq([ss("other: "),ss("@"),disp(Lc),ss("\n"),disp(C)]).
   dispDef(cnDefn(Lc,Nm,Con,B)) => ssSeq([ss(" contract: "),ss(Nm),ss("@"),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
-  dispDef(implDef(Lc,_,_,Con,_,D,O)) => ssSeq([ss(" implementation: "),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),ssSeq(dispDefs(D))]).
+  dispDef(implDef(Lc,_,_,Con,_,_,T)) => ssSeq([ss(" implementation: "),ss("@"),disp(Lc),ss("\n"),disp(Con),ss(".."),dispTerm(T)]).
 
   private dispDefs:(list[canonDef]) => list[ss].
   dispDefs([]) => [].
@@ -156,7 +153,6 @@ lo.comp.canon {
   dispRule(equation(_,_,L,R,Body)) => ssSeq([dispTerm(L),ss("=>"),dispTerm(R),ss(":-"),dispCond(Body)]).
   dispRule(clRule(_,_,L,R,trueCond,_)) => ssSeq([dispTerm(L),ss("<="),dispTerm(R)]).
   dispRule(clRule(_,_,L,R,C,_)) => ssSeq([dispTerm(L),ss("<="),dispTerm(R),ss(":-"),dispCond(C)]).
-  dispRule(clBody(_,_,L,B,_,_)) => ssSeq([dispTerm(L),ss("{"),ssSeq(dispDefs(B)),ss("\n}")]).
   dispRule(grRule(_,_,L,grTerms([]),R)) => ssSeq([dispTerm(L),ss("-->"),dispNT(R)]).
   dispRule(grRule(_,_,L,A,R)) => ssSeq([dispTerm(L),ss(","),dispNT(A),ss("-->"),dispNT(R)]).
   dispRule(tpRule(_,T)) => disp(T).
@@ -164,6 +160,15 @@ lo.comp.canon {
   private dispRules:(list[canonRule]) => list[ss].
   dispRules([]) => [].
   dispRules([Rl,..L]) => [dispRule(Rl),..dispRules(L)].
+
+  private dispOther:(canonOther) => ss.
+  dispOther(integrity(Lc,C)) => ssSeq([ss(" assert@ "),disp(Lc),ss("\n"),dispCond(C)]).
+  dispOther(expShow(Lc,E)) => ssSeq([ss(" show@ "),disp(Lc),ss("\n"),dispTerm(E)]).
+
+
+  private dispOthers:(list[canonOther]) => list[ss].
+  dispOthers([]) => [].
+  dispOthers([Rl,..L]) => [dispOther(Rl),..dispOthers(L)].
 
   private showVars:(list[string]) => list[ss].
   showVars([]) => [].
@@ -184,9 +189,10 @@ lo.comp.canon {
   dispTerm(whre(T,C)) => ssSeq([dispTerm(T),ss("@@"),dispCond(C)]).
   dispTerm(condExp(T,E,F)) => ssSeq([ss("("),dispCond(T),ss("?"),dispTerm(E),ss("|"),dispTerm(F),ss(")")]).
   dispTerm(dot(R,F)) => ssSeq([dispTerm(R),ss("."),ss(F)]).
-  dispTerm(over(T,C)) => ssSeq([disp(C),ss("|:"),dispTerm(T)]).
+  dispTerm(over(_,T,C)) => ssSeq([disp(C),ss("|:"),dispTerm(T)]).
   dispTerm(mtd(_,M)) => ss(M).
   dispTerm(lambda(R)) => ssSeq([ss("<"),dispRule(R),ss(">")]).
+  dispTerm(theta(D,O)) => ssSeq([ss("{"),ssSeq(dispDefs(D)),ssSeq(dispOthers(O)),ss("}")]).
 
   private dispEls:(list[canonTerm]) => list[ss].
   dispEls([]) => [].

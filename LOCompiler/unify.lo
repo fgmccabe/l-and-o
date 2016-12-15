@@ -80,7 +80,7 @@ lo.comp.unify{
     isImplemented(Con,Env,implEntry(_,ITp)),
     sameContract(freshen(ITp,[]),Con,Env).
 
-  sameContract:(constraint,constraint,list[env]){}.
+  public sameContract:(constraint,constraint,list[env]){}.
   sameContract(conTract(Nm,A1,D1),conTract(Nm,A2,D2),Env) :-
     smList(A1,A2,Env),
     smList(D1,D2,Env).

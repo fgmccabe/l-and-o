@@ -18,6 +18,7 @@ lo.comp.typecheck{
   import lo.uri.
   import lo.comp.repository.
   import lo.comp.imports.
+  import lo.comp.resolve.
 
   public checkProgram:(ast,version,repository)=>canonPkg.
   checkProgram(Prog,V,Repo) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Classes,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
@@ -26,7 +27,7 @@ lo.comp.typecheck{
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,reportBase,Rp0),
     findImportedImplementations(Imports,[],OverDict),
     overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
-    overloadOthers(Others,ODict,OOthers,Rp1,Rpx),
+    OOthers = overloadOthers(Others,ODict,Rp1,Rpx),
     computeExport(ODefs,[],Public,Exports,Types,Contracts,Impls).
 
   private computeImports:(list[(string,defnKind)],list[pkgSpec]) => list[(visibility,pkg)].
@@ -283,11 +284,11 @@ lo.comp.typecheck{
   processStmt(St,ProgramType,Defs,Defx,E,_,Rp,Rpx) :-
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Rp,Rpx).
-  processStmt(St,Tp,[clBody(Lc,Nm,tpl([]),Stmts,Others,Types),..Defs],Defs,E,Path,Rp,Rpx) :-
+  processStmt(St,Tp,[clRule(Lc,Nm,tpl([]),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
     isBraceTerm(St,Lc,L,Els),
     isIden(L,_,Nm),
     checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,subPath(Path,marker(clss),Nm),Rp,Rpx).
-  processStmt(St,classType(AT,Tp),[clBody(Lc,Nm,Arg,Stmts,Others,Types),..Defs],Defs,E,Path,Rp,Rpx) :-
+  processStmt(St,classType(AT,Tp),[clRule(Lc,Nm,Arg,theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
     isBraceTerm(St,Lc,L,Els),
     splitHead(L,Nm,A),
     typeOfTerm(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
@@ -377,11 +378,9 @@ lo.comp.typecheck{
     QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,[])),
     rewriteConstraints(OC,QQ,[],OCx), -- OCx will become additional contract requirements
     moveQuants(ConFace,_,Face),
-    deRef(freshenType(Face,QQ))=faceType(Fields),
-    thetaEnv(Path,nullRepo,Lc,Els,Fields,pushScope(Env),_,ThDefs,Public,_,Others,Rp0,Rpx),
-    computeExport(ThDefs,Fields,Public,_,Types,[],[]),
+    checkClassBody(freshenType(Face,QQ),Lc,Els,Env,Defs,Others,Types,Path,Rp0,Rpx),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
-    Impl = implDef(Lc,INm,ImplName,Spec,AC,ThDefs,Others),
+    Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others)),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement $(Stmt)",Lc,Rp,Rpx).
@@ -541,6 +540,9 @@ lo.comp.typecheck{
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isSquareTerm(Term,Lc,F,[A]),
     typeOfTerm(binary(Lc,"find",F,A),Tp,Env,Ev,Exp,Rp,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others),Rp,Rpx) :-
+    isBraceTuple(Term,Lc,Els),
+    checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,_str_gen("theta"),Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,v(_str_gen("_")),Rp,Rpx) :-
     reportError("illegal expression: $(Term), expecting a $(Tp)",Term.loc,Rp,Rpx).
 
@@ -736,12 +738,6 @@ lo.comp.typecheck{
   collectPrograms([vrDef(Lc,Nm,Value,Cond),..Stmts],Env,Cx,[varDef(Lc,Nm,Tp,Cx,Value,Cond),..Defs],Dx) :-
     isVar(Nm,Env,vr(_,_,Tp)),
     collectPrograms(Stmts,Env,Cx,Defs,Dx).
-  collectPrograms([Cl,..Stmts],Env,Cx,[enumDef(Lc,Nm,Tp,Cx,[Cl,..Rules]),..Defs],Dx) :-
-    isRuleForEnum(Cl,Lc,Nm),
-    collectEnumRules(Stmts,S0,Nm,Rules),
-    isVar(Nm,Env,vr(_,_,Tp)),
-    generateClassFace(Tp,Env,Face),
-    collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([Cl,..Stmts],Env,Cx,[classDef(Lc,Nm,Tp,Cx,[Cl,..Rules]),..Defs],Dx) :-
     isRuleForClass(Cl,Lc,Nm),
     collectClassRules(Stmts,S0,Nm,Rules),
@@ -799,20 +795,6 @@ lo.comp.typecheck{
 
   isRuleForClass:(canonRule,location,string){}.
   isRuleForClass(clRule(Lc,Nm,_,_,_,_),Lc,Nm).
-  isRuleForClass(clBody(Lc,Nm,_,_,_,_),Lc,Nm).
-
-  collectEnumRules:(list[canonRule],list[canonRule],string,list[canonRule]){}.
-  collectEnumRules([Cl,..Stmts],Sx,Nm,[Cl,..Ex]) :-
-    isRuleForEnum(Cl,_,Nm),
-    collectEnumRules(Stmts,Sx,Nm,Ex).
-  collectEnumRules([Rl,..Stmts],[Rl,..Sx],Nm,Eqns) :-
-    \+isRuleForEnum(Rl,_,Nm),
-    collectEnumRules(Stmts,Sx,Nm,Eqns).
-  collectEnumRules([],[],_,[]).
-
-  isRuleForEnum:(canonRule,location,string){}.
-  isRuleForEnum(clRule(Lc,Nm,apply(_,v(_),tpl([])),_,_,_),Lc,Nm).
-  isRuleForEnum(clBody(Lc,Nm,apply(_,v(_),tpl([])),_,_,_),Lc,Nm).
 
   private explodeStringLit:(location,string) => list[ast].
   explodeStringLit(Lc,Str) => makeIntList(explode(Str),Lc).
@@ -826,14 +808,14 @@ lo.comp.typecheck{
 
   private typeOfVar:(location,vr,tipe,list[env],canonTerm,report,report){}.
   typeOfVar(Lc,vr(VLc,VNm,VT),Tp,Env,Term,Rp,Rpx) :-
-    manageConstraints(freshen(VT,pickupThisType(Env)),[],VNm,MTp,Term),
+    manageConstraints(freshen(VT,pickupThisType(Env)),[],Lc,VNm,MTp,Term),
     checkType(Lc,MTp,Tp,Env,Rp,Rpx).
 
-  private manageConstraints:(tipe,list[constraint],canonTerm,tipe,canonTerm){}.
-  manageConstraints(constrained(T,C),Cons,V,MTp,Exp) :-
-    manageConstraints(T,[C,..Cons],V,MTp,Exp).
-  manageConstraints(Tp,[],V,Tp,V).
-  manageConstraints(Tp,Cons,V,Tp,over(V,Cons)).
+  private manageConstraints:(tipe,list[constraint],location,canonTerm,tipe,canonTerm){}.
+  manageConstraints(constrained(T,C),Cons,Lc,V,MTp,Exp) :-
+    manageConstraints(T,[C,..Cons],Lc,V,MTp,Exp).
+  manageConstraints(Tp,[],_,V,Tp,V).
+  manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons)).
 
   private knownType:(ast,tipe,list[env],list[env],canonTerm,report,report){}.
   knownType(V,Tp,Env,Env,Term,Rp,Rpx) :-
@@ -867,7 +849,7 @@ lo.comp.typecheck{
 
   private pickupThisType:(list[env]) => map[string,tipe].
   pickupThisType(Env) => [ "this" -> ThisType] :- isVar("this",Env,vr(_,_,ThisType)).
-  pickupThisType(_) => {}.
+  pickupThisType(_) => [].
 
   private findType:(string,location,list[env],report,report) => tipe.
   findType(Nm,_,Env,Rp,Rp) => freshen(T,pickupThisType(Env)) :-
@@ -903,8 +885,6 @@ lo.comp.typecheck{
   exportDef(relDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(classDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
-    isPublicVar(Nm,Fields,Public).
-  exportDef(enumDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).
