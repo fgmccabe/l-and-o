@@ -30,31 +30,16 @@ lo.comp.resolve{
       overloadImplementation(Lc,INm,ImplName,Spec,Cx,ThDefs,Others,Dict,Rp,Rpx).
 
   private overloadFunction:(location,string,tipe,list[constraint],list[canonRule],list[implEntry],report,report)=>canonDef.
-  overloadFunction(Lc,Nm,Tp,[],Eqns,Dict,Rp,Rpx) => funDef(Lc,Nm,Tp,[],REqns)) :-
-    overloadEquations(Eqns,Dict,[],REqns,Rp,Rpx).
-  overloadFunction(Lc,Nm,Tp,Cx,Eqns,Dict,Rp,Rpx) => funDef(Lc,Nm,Tp,[],REqns)) :-
-    defineCVars(Lc,Cx,Dict,CVars,FDict),
-    overloadEquations(Eqns,FDict,CVars,REqns,Rp,Rpx).
-
-  overloadEquations:(list[canonRule],list[implEntry],list[canonTerm],report,report) => list[canonRule].
-  overloadEquations([],_,_,Rp,Rp) => [].
-  overloadEquations([equation(Lc,Nm,Args,Rep,Cond),..L],Dc,Ex,Rp,Rpx) =>
-    [equation(Lc,Nm,RArgs,resolveTerm(Rep,Dc,Rp0,Rp1),resolveCond(Cond,Dc,Rp1,Rp2)),..overloadEquations(L,Dc,Ex,Rp2,Rpx)] :-
-    addExtra(Ex,resolveTerm(Args,Dc,Rp,Rp0),RArgs).
-
-  private overloadPredicate:(location,string,tipe,list[constraint],list[canonRule],list[implEntry],report,report)=>canonDef.
-  overloadPredicate(Lc,Nm,Tp,[],Cls,Dict,Rp,Rpx) => predicate(Lc,Nm,Tp,[],RCls)) :-
-    overloadClauses(Cls,Dict,[],RCls,Rp,Rpx).
-  overloadPredicate(Lc,Nm,Tp,Cx,Cls,Dict,Rp,Rpx) => predicate(Lc,Nm,Tp,[],overloadClauses(Cls,FDict,CVars,Rp,Rpx))) :-
+  overloadFunction(Lc,Nm,Tp,[],Eqns,Dict,Rp,Rpx) => funDef(Lc,Nm,Tp,[],overloadRules(Eqns,Dict,[],Rp,Rpx))).
+  overloadFunction(Lc,Nm,Tp,Cx,Eqns,Dict,Rp,Rpx) => funDef(Lc,Nm,Tp,[],overloadRules(Eqns,FDict,CVars,Rp,Rpx))) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict).
 
-  overloadClauses:(list[canonRule],list[implEntry],list[canonTerm],report,report) => list[canonRule].
-  overloadClauses([],_,_,Rp,Rp) => [].
-  overloadClauses([clause(Lc,Nm,Args,Cond),..L],Dc,Ex,Rp,Rpx) =>
-    [clause(Lc,Nm,RArgs,resolveCond(Cond,Dc,Rp10,Rp1)),..overloadClauses(L,Dc,Ex,Rp1,Rpx)] :-
-    addExtra(Ex,resolveTerm(Args,Dc,Rp,Rp0),RArgs).
+  private overloadPredicate:(location,string,tipe,list[constraint],list[canonRule],list[implEntry],report,report)=>canonDef.
+  overloadPredicate(Lc,Nm,Tp,[],Cls,Dict,Rp,Rpx) => predicate(Lc,Nm,Tp,[],overloadRules(Cls,Dict,[],Rp,Rpx))).
+  overloadPredicate(Lc,Nm,Tp,Cx,Cls,Dict,Rp,Rpx) => predicate(Lc,Nm,Tp,[],overloadRules(Cls,FDict,CVars,Rp,Rpx))) :-
+    defineCVars(Lc,Cx,Dict,CVars,FDict).
 
-  overloadDefn:(location,string,tipe,list[constraint],canonTerm,canonCond,list[implEntry],report,report) => canonDef.
+  private overloadDefn:(location,string,tipe,list[constraint],canonTerm,canonCond,list[implEntry],report,report) => canonDef.
   overloadDefn(Lc,Nm,Tp,[],Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],RExp,RCond)) :-
     RCond = resolveCond(Cond,Dict,Rp,Rp0),
     RExp = resolveTerm(Exp,Dict,Rp0,Rpx).
@@ -63,15 +48,9 @@ lo.comp.resolve{
     RExp = resolveTerm(Exp,FDict,RExp).
 
   overloadGrammar:(location,string,tipe,list[constraint],list[canonRule],list[implEntry],report,report) => canonDef.
-  overloadGrammar(Lc,Nm,Tp,[],Rules,Dict,Rp,Rpx) => grammDef(Lc,Nm,Tp,[],overloadGrRules(Rules,Dict,[],Rp,Rpx)).
-  overloadGrammar(Lc,Nm,Tp,Cx,Rules,Dict,Rp,Rpx) => grammDef(Lc,Nm,Tp,[],overloadGrRules(Rules,FDict,CVars,Rp,Rpx)) :-
+  overloadGrammar(Lc,Nm,Tp,[],Rules,Dict,Rp,Rpx) => grammDef(Lc,Nm,Tp,[],overloadRules(Rules,Dict,[],Rp,Rpx)).
+  overloadGrammar(Lc,Nm,Tp,Cx,Rules,Dict,Rp,Rpx) => grammDef(Lc,Nm,Tp,[],overloadRules(Rules,FDict,CVars,Rp,Rpx)) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict).
-
-  overloadGrRules:(list[canonRule],list[implEntry],list[canonTerm],report,report) => list[canonRule].
-  overloadGrRules([],_,_,Rp,Rp) => [].
-  overloadGrRules([grRule(Lc,Nm,Args,Hed,Body),..Rls],Dct,Ex,Rp,Rpx) =>
-      [grRule(Lc,Nm,RArgs,resolveGr(Hed,Dct,Rp0,Rp1),resolveGr(Body,Dct,Rp1,Rp2)),..overloadGrRules(Rls,Dct,Ex,Rp2,Rpx)] :-
-    addExtra(Ex,resolveTerm(Args,Dc,Rp,Rp0),RArgs).
 
   defineCVars:(location,list[constraint],list[implEntry],list[canonTerm],list[implEntry]){}.
   defineCVars(_,[],Dict,[],Dict).
@@ -82,11 +61,23 @@ lo.comp.resolve{
   defineCVars(Lc,[implementsFace(_,_),..Cx],Dict,CVars,FDict) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict).
 
-  addExtra:(list[canonTerm],canonTerm,canonTerm){}.
-  addExtra([],T,T).
-  addExtra(Ex,tpl(A),tpl(Ex<>A)).
+  private overloadRules:(list[canonRule],list[implEntry],list[canonTerm],report,report) => list[canonRule].
+  overloadRules([],_,_,Rp,Rp) => [].
+  overloadRules([Rl,..L],Dict,Ex,Rp,Rpx) => [overloadRule(Rl,Dict,Ex,Rp,Rp0),..overloadRules(L,Dict,Ex,Rp0,Rpx)].
 
-  resolveTerm:(canonTerm,list[implEntry],report,report) => canonTerm.
+  private overloadRule:(canonRule,list[implEntry],list[canonTerm],report,report) => canonRule.
+  overloadRule(equation(Lc,Nm,Args,Rep,Cond),Dict,Ex,Rp,Rpx) => 
+      equation(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveTerm(Rep,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx)).
+  overloadRule(clause(Lc,Nm,Args,Cond),Dict,Ex,Rp,Rpx) => 
+      clause(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveCond(Cond,Dict,Rp0,Rpx)).
+  overloadRule(grRule(Lc,Nm,Args,Hed,Body),Dict,Ex,Rp,Rpx) =>
+      grRule(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveGr(Hed,Dict,Rp0,Rp1),resolveGr(Body,Dict,Rp1,Rp2)).
+
+  addExtra:(list[canonTerm],canonTerm) => canonTerm.
+  addExtra([],T) => T.
+  addExtra(Ex,tpl(A)) => tpl(Ex<>A).
+  
+  private resolveTerm:(canonTerm,list[implEntry],report,report) => canonTerm.
   resolveTerm(v(Nm),_,Rp,Rp) => v(Nm).
   resolveTerm(int(Ix),_,Rp,Rp) => int(Ix).
   resolveTerm(flt(Dx),_,Rp,Rp) => flt(Dx).
@@ -108,7 +99,8 @@ lo.comp.resolve{
         reportError("cannot find implementation for contracts $(Cx)",Lc,Rp,Rpx),
         Over = T).
   resolveTerm(mtd(Lc,Nm),_,Rp,Rpx) => v(Nm):-
-    reportError("cannot find implementation for $(Nm)",Lc,Rp,Rpx).
+    reportError("cannot find implementation for naked method $(Nm)",Lc,Rp,Rpx).
+  resolveTerm(lambda(Rl),Dict,Rp,Rpx) => lambda(overloadRule(Rl,Dict,Rp,Rpx)).
 
   resolveTerms:(list[canonTerm],list[implEntry],report,report) => list[canonTerm].
   resolveTerms([],_,Rp,Rp) => Rp.
@@ -153,7 +145,7 @@ lo.comp.resolve{
 
   overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
   overloadRef(mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
-  overloadRef(v(Lc,Nm),DT,RArgs,v(Lc,Nm),DT<>RArgs).
+  overloadRef(v(Nm),DT,RArgs,v(Nm),DT<>RArgs).
 
   resolveContracts:(location,list[constraint],list[implEntry],list[canonTerm],report,report){}.
   resolveContracts(_,[],_,[],Rp,Rp).
@@ -163,11 +155,9 @@ lo.comp.resolve{
 
   resolveContract:(location,constraint,list[implEntry],canonTerm,report,report){}.
   resolveContract(Lc,C,Dict,Over,Rp,Rpx) :-
-    ImpNm = implementationName(C),
-    findImplementation(ImpNm,Dict,Impl)!,
+    findImplementation(implementationName(C),Dict,Impl)!,
     resolve(Impl,C,Lc,Dict,Over,Rp,Rpx)!.
-  resolveContract(Lc,C,_,v(ImpNm),Rp,Rpx) :-
-    ImpNm = implementationName(C),
+  resolveContract(Lc,C,_,v(implementationName(C)),Rp,Rpx) :-
     reportError("no implementation known for $(C)",Lc,Rp,Rpx).
 
   resolve:(implEntry,constraint,location,list[implEntry],canonTerm,report,report){}.
@@ -204,12 +194,13 @@ lo.comp.resolve{
   findImplementation(ImplName,[I,.._],I) :- I.name=ImplName.
   findImplementation(ImplName,[_,..D],Spec) :- findImplementation(ImplName,D,Spec).
 
-  overloadImplementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,Face,Types,Others,Dict,
-      impl(Lc,INm,ImplName,Arity,Spec,OCx,implBody(Lc,Hd,RThDefs,ROthers,Types),InhRules,faceType(Face))) :-
+  overloadImplementation:(location,string,string,constraint,list[constraint],list[canonDef],list[canonOther],list[implEntry],report,report) => canonDef.
+  overloadImplementation(Lc,INm,ImplName,Spec,Cx,ThDefs,Face,Types,Others,Dict,Rp,Rpx) => 
+      implDef(Lc,INm,ImplName,Arity,Spec,Cx,implBody(Lc,Hd,RThDefs,ROthers,Types),InhRules,faceType(Face)) :-
     defineCVars(Lc,AC,Dict,CVars,FDict),
     overload(ThDefs,FDict,FODict,RThDefs),
     overloadOthers(Others,FODict,ROthers),
-    resolveDependents(OCx,Lc,FODict,[],Inherits),
+    resolveDependents(Cx,Lc,FODict,[],Inherits),
     length(CVars,Arity),
     (CVars=[] -> Hd = enum(Lc,ImplName) ; Hd = apply(v(Lc,ImplName),CVars)),
     inheritImplementations(Inherits,Hd,InhRules).
@@ -245,9 +236,8 @@ lo.comp.resolve{
     overloadOthers(Others,Dict,OOthers).
 
   resolveHead(Hd,[],Hd).
-  resolveHead(enum(Lc,Nm),CVars,apply(v(Lc,Nm),CVars)).
-  resolveHead(apply(v(Lc,Nm),Args),CVars,apply(v(Lc,Nm),OArgs)) :-
-    concat(CVars,Args,OArgs).
+  resolveHead(enum(Lc,Nm),CVars,apply(v(Nm),CVars)).
+  resolveHead(apply(Op,Args),CVars,apply(Op,CVars<>Args)).
 
   overloadClassRules([],_,_,[]).
   overloadClassRules([Rl|L],V,D,[ORl|M]) :-

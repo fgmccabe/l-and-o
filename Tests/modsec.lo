@@ -8,6 +8,8 @@ test.modsec{
 
   type modSecRule ::= modSecRule(list[string],string,list[msAct]) | modSecMarker(string).
 
+  type msTgt ::= headers | header(string) | args | arg(string) | local(string) | pattern(string).
+
   type msAct ::= single(string) | id(string) | tag(string) | other(string,string).
 
   -- Hint to the run-time:
