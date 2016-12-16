@@ -10,7 +10,9 @@ lo.comp.repository{
   public type repository ::= repo(uri,manifest) | nullRepo.
 
   public openRepository:(uri) => repository.
-  openRepository(Root) => repo(Root,readManifest(resolveUri(Root,parseUri("manifest")))).
+  openRepository(Root) => repo(Root,readManifest(RepoUri)) :-
+    RepoUri = resolveUri(Root,parseUri("manifest")),
+    resourcePresent(RepoUri,readMode).
   openRepository(Root) => repo(Root,manifest([])).
 
   public locatePackage:(repository,string,version,version,list[integer]){}.

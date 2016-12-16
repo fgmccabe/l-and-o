@@ -9,23 +9,29 @@ lo.comp.driver{
   import lo.comp.args.
   import lo.comp.catalog.
   import lo.comp.package.
+  import lo.comp.typecheck.
+  import lo.comp.repository.
+  import lo.comp.errors.
   
   -- Hint to the run-time:
   main:(list[string]){}.
   main(Args) :-
     opts = parseFlags(Args),
-    processPkgs(opts.pkgs,opts).
+    processPkgs(opts.pkgs,locateCatalog(opts.wDir),opts).
 
   -- Temporary definition
-  processPkgs:(list[pkg],compOption){}.
-  processPkgs([],_).
-  processPkgs([p,..l],o) :-
-    resolveCatalog(o.catalog,p,u),
+  processPkgs:(list[pkg],catalog,compOption){}.
+  processPkgs([],_,_).
+  processPkgs([p,..l],c,o) :-
+    resolveCatalog(c,p,u),
     processFile(u,o),
-    processPkgs(l,o).
+    processPkgs(l,c,o).
 
   processFile:(uri,compOption){}.
   processFile(u,o) :-
-    Term = parseFile(u),
-    _logmsg(formatSS(disp(Term))).
+    Term = parseFile(u,reportBase,Er0),
+    _logmsg(formatSS(disp(Term))),
+    Repo = openRepository(o.repoDir),
+    Prg = checkProgram(Term,o.version,Repo,Er0,ER),
+    _logmsg("Error report: $(ER)").
 }

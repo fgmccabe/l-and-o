@@ -20,11 +20,11 @@ lo.comp.typecheck{
   import lo.comp.imports.
   import lo.comp.resolve.
 
-  public checkProgram:(ast,version,repository)=>canonPkg.
-  checkProgram(Prog,V,Repo) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Classes,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
+  public checkProgram:(ast,version,repository,report,report)=>canonPkg.
+  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Classes,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
-    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,reportBase,Rp0),
+    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,Rp,Rp0),
     findImportedImplementations(Imports,[],OverDict),
     overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
     OOthers = overloadOthers(Others,ODict,Rp1,Rpx),

@@ -52,7 +52,7 @@ lo.comp.ast{
   showAst(iden(_,Nm),_) => ss(Nm).
   showAst(intg(_,Ix),_) => disp(Ix).
   showAst(flot(_,Dx),_) => disp(Dx).
-  showAst(strg(_,Sx),_) => ss(Sx).
+  showAst(strg(_,Sx),_) => disp(Sx).
   showAst(tupl(_,Nm,Els),_) => 
       ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]) :- 
     tupleBrackets(Nm,Lft,Rgt,Pr,Sep).

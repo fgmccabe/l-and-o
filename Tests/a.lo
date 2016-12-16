@@ -1,4 +1,4 @@
-a{
+test.a{
   import lo.
 
   a:all t ~~ (list[t],list[t])=>list[t].

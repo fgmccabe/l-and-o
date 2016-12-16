@@ -16,7 +16,7 @@
                     '_display'/2,
                     '_str_lt'/2, '_str_ge'/2,
                     '_int_lt'/2, '_int_ge'/2,
-                    '_str_gen'/2,
+                    '_str_gen'/2,'_str_concat'/3,
                     listify/2,
                     '_readFileContents'/2,
                     '_writeFileContents'/2,
@@ -26,9 +26,9 @@
                     '_str_hash'/2,
                     '_band'/3,'_bor'/3,'_bxor'/3,
                     '_blsr'/3,'_basr'/3,'_blsl'/3,
-                    '_nthb'/2
+                    '_nthb'/2,
+                    '_file_access'/2,'_file_size'/2,'_file_modified'/2
                     ]).
-
 
 exit(X) :- halt(X).
 
@@ -131,6 +131,9 @@ codeGe([C|L],[C|M]) :-
   gensym(Prefix,A),
   atom_string(A,Str).
 
+'_str_concat'(A,B,C) :-
+  string_concat(A,B,C).  
+
 '_readFileContents'(Fl,Chars) :-
   open(Fl,read,Stream),
   read_until_eof(Stream,Codes),
@@ -177,3 +180,14 @@ hashCodes([C|More],H0,Hx) :-
 '_blsr'(X,Y,Z) :- Z is (X>>Y)/\(1<<(64-Y)-1).
 '_nthb'(X,Y) :- 1 is getbit(X,Y).
 
+% File access primitives
+
+'_file_access'(S,M) :- exists_file(S), access(S,M),!.
+
+access(S,1) :- access_file(S,read).
+access(S,2) :- access_file(S,write).
+access(S,4) :- access_file(S,execute).
+
+'_file_size'(F,S) :- size_file(F,S).
+
+'_file_modified'(F,S) :- time_file(F,S).

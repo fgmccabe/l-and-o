@@ -193,11 +193,12 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
   escape(_ls,True,False,"F1SLT2S"fileType"","report on contents of a directory")
   */
 
-  escape(_file_mode,True,False,"F1Si","report modes of a file")
+  // escape(_file_mode,True,False,"P2Si","report modes of a file")
   escape(_file_access,True,False,"P2Si","check access on a file")
-  escape(_file_type,True,False,"F1Si","report on the type of a file")
+  // escape(_file_type,True,False,"F1Si","report on the type of a file")
   escape(_file_size,True,False,"F1Si","report on the size of a file")
-  escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
+  escape(_file_modified,True,False,"F1Sf","report on when a file was last modified")
+  //escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
   /*
 
 // Timing and delaying

@@ -13,6 +13,13 @@ lo.comp.errors{
     msgs = Lst.
   }.
 
+  public implementation display[report] .. {
+    disp(R) => showReport(R).
+  }
+
+  private showReport:(report) => ss.
+  showReport(M) => ssSeq([disp(countErrors(M)),ss(" errors, "),disp(countWarnings(M)),ss(" warnings\n")]).
+
   public countErrors:(report) => integer.
   countErrors(report(L)) => cntErrors(L,0).
 
@@ -20,6 +27,14 @@ lo.comp.errors{
   cntErrors([],C) => C.
   cntErrors([errorMsg(_,_),..L],C) => cntErrors(L,C+1).
   cntErrors([_,..L],C) => cntErrors(L,C).
+
+  public countWarnings:(report) => integer.
+  countWarnings(report(L)) => cntWarninngs(L,0).
+
+  private cntWarninngs:(list[reportMsg],integer) => integer.
+  cntWarninngs([],C) => C.
+  cntWarninngs([warnMsg(_,_),..L],C) => cntWarninngs(L,C+1).
+  cntWarninngs([_,..L],C) => cntWarninngs(L,C).
   
   public reportBase : report.
   reportBase = report([]).

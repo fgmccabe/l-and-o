@@ -3,7 +3,6 @@ lo.comp.args {
   import lo.resources.
   import lo.
 
-  import lo.comp.catalog.
   import lo.comp.package.
   import lo.comp.errors.
 
@@ -13,49 +12,47 @@ lo.comp.args {
     wDir : uri.
     repoDir : uri.
     version : version.
-    catalog : catalog.
     pkgs : list[pkg].
   }
 
-  private comp:(logical,logical,uri,catalog,uri,version,list[pkg])<=>compOption.
-  comp(d,p,w,c,r,v,pk){
+  private comp:(logical,logical,uri,uri,version,list[pkg])<=>compOption.
+  comp(d,p,w,r,v,pk){
     debugging = d.
     profiling = p.
     wDir = w.
     repoDir = r.
-    catalog = c.
     version = v.
     pkgs = pk.
   }
 
   updateDbg:(compOption,logical) => compOption.
-  updateDbg(comp(_,p,w,c,r,v,pk),d) => comp(d,p,w,c,r,v,pk).
+  updateDbg(comp(_,p,w,r,v,pk),d) => comp(d,p,w,r,v,pk).
 
   updateProf:(compOption,logical) => compOption.
-  updateProf(comp(d,_,w,c,r,v,pk),p) => comp(d,p,w,c,r,v,pk).
+  updateProf(comp(d,_,w,r,v,pk),p) => comp(d,p,w,r,v,pk).
 
   updateWd:(compOption,uri) => compOption.
-  updateWd(comp(d,p,_,_,r,v,pk),w) => comp(d,p,w,locateCatalog(w),r,v,pk).
+  updateWd(comp(d,p,_,r,v,pk),w) => comp(d,p,w,r,v,pk).
 
   updateRepoD:(compOption,uri) => compOption.
-  updateRepoD(comp(d,p,w,c,_,v,pk),r) => comp(d,p,w,c,r,v,pk).
+  updateRepoD(comp(d,p,w,_,v,pk),r) => comp(d,p,w,r,v,pk).
 
   updatePk:(compOption,list[pkg]) => compOption.
-  updatePk(comp(d,p,w,c,r,v,_),pk) => comp(d,p,w,c,r,v,pk).
+  updatePk(comp(d,p,w,r,v,_),pk) => comp(d,p,w,r,v,pk).
 
   updateVers:(compOption,version) => compOption.
-  updateVers(comp(d,p,w,c,r,_,pk),v) => comp(d,p,w,c,r,v,pk).
+  updateVers(comp(d,p,w,r,_,pk),v) => comp(d,p,w,r,v,pk).
 
   public parseFlags:(list[string]) => compOption.  
-  parseFlags(args) => parseFlgs(args,comp(false,false,W,locateCatalog(W),W,defltVersion,[])) :- W=cwd().
+  parseFlags(args) => parseFlgs(args,comp(false,false,W,W,defltVersion,[])) :- W=cwd().
 
   private parseFlgs:(list[string],compOption) => compOption.
   parseFlgs([],Opts) => Opts.
   parseFlgs(["--",..Pkgs],Opts) => updatePk(Opts,locatePkgs(Opts,Pkgs)).
   parseFlgs(["-g",..args],Opts) => parseFlgs(args,updateDbg(Opts,true)).
   parseFlgs(["-p",..args],Opts) => parseFlgs(args,updateProf(Opts,true)).
-  parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,WD)) :- uriParse(WD) %% explode(W).
-  parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,D)) :- uriParse(D) %% explode(W).
+  parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,resolveUri(Opts.wDir,WD))) :- uriParse(WD) %% explode(W).
+  parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,resolveUri(Opts.wDir,D))) :- uriParse(D) %% explode(W).
   parseFlgs(["-v",V,..args],Opts) => parseFlgs(args,updateVers(Opts,vers(V))).
   parseFlgs([A,..args],Opts) => parseFlgs(args,Opts) :-
     logMsg("unknown option: $(A)").

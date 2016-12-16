@@ -6,21 +6,21 @@ lo.comp.catalog{
   import lo.comp.package.
   import lo.comp.parseutils.
 
-  public type catalog ::= cat(list[catEntry]).
+  public type catalog ::= catalog(list[catEntry]).
 
   private type catEntry ::= catEntries(map[pkg,uri]) | default(uri) | version(version) | base(uri).
   
   public locateCatalog:(uri) => catalog.
   locateCatalog(Uri) => Cat :-
     CatURI = resolveUri(Uri,relUri(localRsrc(relPath(["catalog"])),noQ)),
-    parseCatalog(getResource(CatUri),CatURI,Cat).
+    parseCatalog(getResource(CatURI),CatURI,Cat).
 
   public resolveCatalog:(catalog,pkg,uri){}.
-  resolveCatalog(cat(Cat),Nm,resolveUri(Base,U)) :-
+  resolveCatalog(catalog(Cat),Nm,resolveUri(Base,U)) :-
     catEntries(Map) in Cat,
     base(Base) in Cat,
     present(Map,Nm,U).
-  resolveCatalog(cat(Cat),Nm,Uri) :-
+  resolveCatalog(catalog(Cat),Nm,Uri) :-
     default(Deflt) in Cat,
     base(Base) in Cat,
     resolveCatalog(locateCatalog(resolveUri(Base,Deflt)),Nm,Uri).
@@ -28,10 +28,10 @@ lo.comp.catalog{
   parseCatalog:(list[integer],uri,catalog){}.
   parseCatalog(Chrs,Uri,defaultBase(C,Uri)) :-
     tokens(Toks) %% Chrs,
-    catalog(C) %% Toks.
+    parseCat(C) %% Toks.
 
   defaultBase:(catalog,uri) => catalog.
-  defaultBase(cat(Stmts),Fl) => cat(replace(Stmts,base(_),base(Fl))).
+  defaultBase(catalog(Stmts),Fl) => catalog(replace(Stmts,base(_),base(Fl))).
 
   -- Tokenization
 
@@ -73,8 +73,8 @@ lo.comp.catalog{
   quote(0c\t) --> "t".
   quote(C) --> [C].
 
-  private catalog:(catalog) --> list[token].
-  catalog(cat(Stmts)) -->
+  private parseCat:(catalog) --> list[token].
+  parseCat(catalog(Stmts)) -->
     [catalg, lbrce], catStmts(Stmts), [rbrce].
 
   private catStmts:(list[catEntry]) --> list[token].
@@ -95,7 +95,7 @@ lo.comp.catalog{
   contents(C,C) --> [].
  
   entry:(map[pkg,uri],map[pkg,uri]) --> list[token].
-  entry(C,put(C,Key,Uri)) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U}.
+  entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C+[Key->Uri]}.
 
   package:(pkg) --> list[token].
   package(pkg(stringify([Id,..Suf],[0c.]),V)) --> [idn(Id)], suffixes(Suf), versn(V).
