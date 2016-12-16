@@ -27,7 +27,7 @@
                     '_band'/3,'_bor'/3,'_bxor'/3,
                     '_blsr'/3,'_basr'/3,'_blsl'/3,
                     '_nthb'/2,
-                    '_file_access'/2,'_file_size'/2,'_file_modified'/2
+                    '_file_access'/2,'_file_size'/2,'_file_modified'/2,'_ls'/2
                     ]).
 
 exit(X) :- halt(X).
@@ -191,3 +191,8 @@ access(S,4) :- access_file(S,execute).
 '_file_size'(F,S) :- size_file(F,S).
 
 '_file_modified'(F,S) :- time_file(F,S).
+
+'_ls'(D,L) :- expand_file_name(D,LL), stringify(LL,L).
+
+stringify([],'lo.core#[]').
+stringify([E|L],'lo.core#,..'(S,LL)) :- atom_string(E,S), stringify(L,LL).

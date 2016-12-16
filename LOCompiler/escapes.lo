@@ -46,6 +46,7 @@ lo.comp.escapes{
   escapeType("_getCwd") => funType(tupleType([]),tipe("lo.core*string")).
   escapeType("_display") => predType(tupleType([tupleType([tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")])).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_ls") => funType(tupleType([tipe("lo.core*string")]),typeExp("lo.core*list",[tipe("lo.core*string")])).
   escapeType("_file_access") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
@@ -137,6 +138,7 @@ lo.comp.escapes{
   isEscape("_getCwd").
   isEscape("_display").
   isEscape("_logmsg").
+  isEscape("_ls").
   isEscape("_file_access").
   isEscape("_file_size").
   isEscape("_file_modified").

@@ -192,7 +192,7 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
   escape(_chmod,True,False,"p2Si","change mode of a file or directory")
   escape(_ls,True,False,"F1SLT2S"fileType"","report on contents of a directory")
   */
-
+  escape(_ls,True,False,"F1SLS","return a list of files in a directory")
   // escape(_file_mode,True,False,"P2Si","report modes of a file")
   escape(_file_access,True,False,"P2Si","check access on a file")
   // escape(_file_type,True,False,"F1Si","report on the type of a file")

@@ -42,6 +42,7 @@ escapeType("_writeFileContents",predType([type("lo.core*string"),typeExp("lo.cor
 escapeType("_getCwd",funType([],type("lo.core*string"))).
 escapeType("_display",predType([tupleType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")]),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
+escapeType("_ls",funType([type("lo.core*string")],typeExp("lo.core*list",[type("lo.core*string")]))).
 escapeType("_file_access",predType([type("lo.core*string"),type("lo.core*integer")])).
 escapeType("_file_size",funType([type("lo.core*string")],type("lo.core*integer"))).
 escapeType("_file_modified",funType([type("lo.core*string")],type("lo.core*float"))).
@@ -131,6 +132,7 @@ isEscape("_writeFileContents").
 isEscape("_getCwd").
 isEscape("_display").
 isEscape("_logmsg").
+isEscape("_ls").
 isEscape("_file_access").
 isEscape("_file_size").
 isEscape("_file_modified").
