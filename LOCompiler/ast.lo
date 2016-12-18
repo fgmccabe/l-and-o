@@ -68,6 +68,10 @@ lo.comp.ast{
   showAst(appl(_,Op,Args),_) =>
     ssSeq([showAst(Op,0), showAst(Args,0)]).
 
+  private dumpAst:(ast){}.
+  dumpAst(A) :-
+    _logmsg("$(A)").
+
   private
   showEls:(list[ast],integer,string,string) => list[ss].
   showEls([],_,_,_) => [].

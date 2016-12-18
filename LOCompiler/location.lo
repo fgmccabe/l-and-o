@@ -19,7 +19,7 @@ lo.comp.location{
     length = Len.
     path = Pth.
 
-    merge(loc(_,_,C,L,_)) => loc(Line,Off,Col,C-Col+L,Pth).
+    merge(loc(_,OO,C,L,_)) => loc(Line,Off,Col,OO-Off+L,Pth).
   }.
 
   public

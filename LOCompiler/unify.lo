@@ -78,7 +78,8 @@ lo.comp.unify{
   checkForImpl:(constraint,list[env]){}.
   checkForImpl(Con,Env) :-
     isImplemented(Con,Env,implEntry(_,ITp)),
-    sameContract(freshen(ITp,[]),Con,Env).
+    (_,OCon) = freshen(ITp,[]),
+    sameContract(OCon,Con,Env).
 
   public sameContract:(constraint,constraint,list[env]){}.
   sameContract(conTract(Nm,A1,D1),conTract(Nm,A2,D2),Env) :-
@@ -99,17 +100,21 @@ lo.comp.unify{
     typeInDict(Nm,Env,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(_,F)).
-  faceOfType(typeExp(Nm,Args),Env,freshen(F,bindAT(AT,Args,[]))) :-
+  faceOfType(typeExp(Nm,Args),Env,Face) :-
     typeInDict(Nm,Env,FR),
     moveQuants(FR,_,FQR),
-    moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)).
-  faceOfType(T,Env,faceType(collectImplements(T,constraints(T),Env,[]))) :- isUnbound(T).
+    moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
+    (_,Face) = freshen(F,bindAT(AT,Args,[])).
+  faceOfType(T,Env,faceType(allImpCons(Env,Env,T,[]))) :- isTypeVar(T).
 
-  public collectImplements:(tipe,list[constraint],list[env],list[(string,tipe)]) => list[(string,tipe)].
-  collectImplements(_,C,_,Face) =>  Face :-  var(C).
-  collectImplements(V,[implementsFace(T,Els),..C],Env,SoFar) =>
-    collectImplements(V,C,Env,mergeFields(Els,Env,SoFar)).
-  collectImplements(_,[],_,Face) => Face.
+  private allImpCons:(list[env],list[env],tipe,list[(string,tipe)]) => list[(string,tipe)].
+  allImpCons([],_,_,So) => So.
+  allImpCons([scope(_,_,Cons,_,_),..E],Env,Tp,So) => allImpCons(E,Env,Tp,mergeCons(Cons,Env,Tp,So)).
+
+  private mergeCons:(list[constraint],list[env],tipe,list[(string,tipe)]) => list[(string,tipe)].
+  mergeCons([],_,_,So) => So.
+  mergeCons([implementsFace(V,F),..C],Env,Tp,So) => mergeCons(C,Env,Tp,mergeFields(F,Env,So)) :- isIdenticalType(V,Tp).
+  mergeCons([_,..C],Env,Tp,So) => mergeCons(C,Env,Tp,So).
 
   mergeFields:(list[(string,tipe)],list[env],list[(string,tipe)]) => list[(string,tipe)].
   mergeFields([],_,SoFar) => SoFar.

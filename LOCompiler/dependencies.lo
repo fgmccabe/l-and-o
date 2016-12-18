@@ -25,7 +25,11 @@ lo.comp.dependencies{
 
   private
   dispDefn:(defn)=>ss.
-  dispDefn(defn(Nm,K,Lc,Refs,Stmts)) => ssSeq([ss(Nm),ss(":"),disp(K)]).
+  dispDefn(defn(Nm,K,Lc,Refs,Stmts)) => ssSeq([ss(Nm),ss(":"),disp(K),..showRefs(Refs,"->")]).
+
+  private showRefs:(list[(string,defnKind)],string) => list[ss].
+  showRefs([],_) => [].
+  showRefs([(Nm,K),..R],Sep) => [ss(Sep),ss(Nm),ss(":"),disp(K),..showRefs(R,",")].
 
   implementation display[defnKind].. {
     disp(tpe) => ss("type").
@@ -54,8 +58,6 @@ lo.comp.dependencies{
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,Px,A,A,[St,..I],I,Oth,Oth,Viz,Rp,Rp) :-
     isImport(St,Nm),
     checkPublic(Viz,Nm,imp,P,Px).
-  collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,[St,..I],I,Oth,Oth,_,Rp,Rp) :-
-    isImport(St,Pkg).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_,Rp,Rp) :-
     isOther(St).
   collectDefn(St,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
@@ -69,7 +71,7 @@ lo.comp.dependencies{
     isIden(L,_,Nm),
     checkPublic(Viz,Nm,valu,P,Px).
   collectDefn(St,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Viz,Rp,Rp) :-
-    ruleNameKind(St,Nm,K),
+    ruleNameKind(St,K,Nm),
     collectDefines(Stmts,Nm,K,Stx,DfSts),
     checkPublic(Viz,Nm,K,P,Px).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
@@ -85,38 +87,34 @@ lo.comp.dependencies{
   isOther(St) :-
     isUnary(St,"show",_,_).
 
-  ruleNameKind:(ast,string,defnKind){}.
-  ruleNameKind(S,Nm,con) :-
+  ruleNameKind:(ast,defnKind,string){}.
+  ruleNameKind(S,con,Nm) :-
     isUnary(S,"contract",_,I),
-    isBinary(I,"<~",_,L,_),
-    contractName(L,Nm).
-  ruleNameKind(S,Nm,impl) :-
+    contractName(I,Nm).
+  ruleNameKind(S,impl,Nm) :-
     isUnary(S,"implementation",_,I),
     isBinary(I,"..",_,L,_),
     implementationName(L,Nm).
-  ruleNameKind(S,Nm,tpe) :-
+  ruleNameKind(S,tpe,Nm) :-
     isUnary(S,"type",_,I),
-    typeRuleName(L,Nm).
-  ruleNameKind(S,ruleName(S),valu).
+    typeRuleName(I,Nm).
+  ruleNameKind(S,K,Nm) :- isUnary(S,"public",_,I), ruleNameKind(I,K,Nm).
+  ruleNameKind(S,K,Nm) :- isUnary(S,"private",_,I), ruleNameKind(I,K,Nm).
+  ruleNameKind(S,valu,Nm) :- ruleHead(S,H)!, Nm = headName(H).
 
-  ruleName:(ast)=>string.
-  ruleName(S) =>  ruleName(I) :-  isQuantified(S,_,I).
-  ruleName(S) =>  ruleName(R) :-  isConstrained(S,_,R).
-  ruleName(S) => headName(ruleHead(S)).
-
-  ruleHead:(ast)=>ast.
-  ruleHead(S) =>  L :-  isBinary(S,"=",_,L,_).
-  ruleHead(S) =>  L :-  isBinary(S,"=>",_,L,_).
-  ruleHead(S) =>  LL :-  (isBinary(S,"-->",_,L,_), isBinary(L,",",_,LL,_)) .
-  ruleHead(S) =>  L :-  isBinary(S,"-->",_,L,_).
-  ruleHead(S) =>  L :-  isBinary(S,":-",_,L,_).
-  ruleHead(S) =>  L :-  isBinary(S,"<=",_,L,_).
-  ruleHead(S) =>  L :-  isBraceTerm(S,_,L,_).
-  ruleHead(S) =>  S :-  isRoundTerm(S,_,_,_).
+  ruleHead:(ast,ast){}.
+  ruleHead(S,L) :- isBinary(S,"=",_,L,_).
+  ruleHead(S,L) :- isBinary(S,"=>",_,L,_).
+  ruleHead(S,L) :- isBinary(S,"-->",_,LL,_), isBinary(LL,",",_,L,_).
+  ruleHead(S,L) :- isBinary(S,"-->",_,L,_).
+  ruleHead(S,L) :- isBinary(S,":-",_,L,_).
+  ruleHead(S,L) :- isBinary(S,"<=",_,L,_).
+  ruleHead(S,L) :- isBraceTerm(S,_,L,_).
+  ruleHead(S,S) :- isRoundTerm(S,_,_,_).
 
   headName:(ast)=>string.
   headName(H) =>  headName(L) :-  isBinary(H,"@@",_,L,_).
-  headName(H) =>  Nm :-  (isRoundTerm(H,_,N,_), isIden(N,_,Nm)).
+  headName(H) =>  Nm :-  isRoundTerm(H,_,O,_), isIden(O,_,Nm).
   headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
   headName(H) =>  "()$(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
@@ -129,6 +127,9 @@ lo.comp.dependencies{
     isConstrained(S,_,R),
     contractName(R,Nm).
   contractName(S,Nm) :-
+    isBinary(S,"<~",_,L,_),
+    contractName(L,Nm).
+  contractName(S,Nm) :-
     isSquareTerm(S,_,Op,_), isIden(Op,_,Nm).
 
   typeRuleName:(ast,string){}.
@@ -140,7 +141,7 @@ lo.comp.dependencies{
     typeRuleName(I,Nm).
   typeRuleName(S,Nm) :-
     isBinary(S,"<~",_,L,_),
-    isSquareTerm(L,_,Op,_), isIden(Op,_,Nm).
+    (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
 
   implementationName:(ast,string){}.
   implementationName(S,Nm) :-
@@ -157,7 +158,7 @@ lo.comp.dependencies{
   surfaceNames([T,.._],Sep) => surfaceNames(deComma(T),Sep) :-
     isBinary(T,"->>",_,L,_).
   surfaceNames([],_)=>[].
-  surfaceNames([T,..Els],Sep) => [surfaceName(T),ss(Sep),..surfaceNames(Els,Sep)].
+  surfaceNames([T,..Els],Sep) => [ss(Sep),surfaceName(T),..surfaceNames(Els,Sep)].
 
   surfaceName:(ast)=>ss.
   surfaceName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
@@ -166,7 +167,7 @@ lo.comp.dependencies{
   collectDefines:(list[ast],string,defnKind,list[ast],list[ast]){}.
   collectDefines([],_,_,[],[]).
   collectDefines([St,..Stmts],Nm,K,Stx,[St,..Def]) :-
-    ruleNameKind(St,Nm,K),
+    ruleNameKind(St,K,Nm),
     collectDefines(Stmts,Nm,K,Stx,Def).
   collectDefines(Stmts,_,_,Stmts,[]).
 
@@ -181,9 +182,9 @@ lo.comp.dependencies{
   collectThetaRefs:(list[defn],list[(string,defnKind)],list[(string,ast)]) => list[defn].
   collectThetaRefs([],_,_) => [].
   collectThetaRefs([defn(N,K,Lc,_,S),..L],All,Annots) =>
-    [defn(N,K,Lc,thetaRefs(S,All,refsInType(A,All,[])),S),..collectThetaRefs(L,All,Ann)] :- (N,A) in Annots.
+    [defn(N,K,Lc,thetaRefs(S,All,refsInScope([A],All,[])),S),..collectThetaRefs(L,All,Annots)] :- (N,A) in Annots.
   collectThetaRefs([defn(N,K,Lc,_,S),..L],All,Annots)  =>
-    [defn(N,K,Lc,thetaRefs(S,All,[]),S),..collectThetaRefs(L,All,Ann)].
+    [defn(N,K,Lc,thetaRefs(S,All,[]),S),..collectThetaRefs(L,All,Annots)].
 
   thetaRefs:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   thetaRefs([],_,So)=>So.
@@ -193,23 +194,28 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"private",_,I).
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"public",_,I).
   stmtRefs(S,All,So) =>  refsInType(I,All,So) :-  isUnary(S,"type",_,I).
-  stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInType(R,All,So)) :-  (isUnary(S,"contract",_,I), isBinary(I,"<~",_,L,R)).
+  stmtRefs(S,All,So) =>  refsInContract(I,All,So) :-  isUnary(S,"contract",_,I).
   stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"..",_,L,R)).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"=>",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=>",_,H,E).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,":-",_,L,R).
   stmtRefs(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
-  stmtRefs(S,All,So) =>  refsInHead(L,Al,refsInNT(R,All,So)) :-  isBinary(S,"-->",_,L,R).
-  stmtRefs(S,All,So) =>  refsInHead(L,Al,refsInTerm(R,All,So)) :-  isBinary(S,"<=",_,L,R).
-  stmtRefs(S,All,So) =>  refsInHead(L,Al,thetaRefs(Els,All,So)) :-  isBraceTerm(S,_,L,Els).
+  stmtRefs(S,All,So) =>  refsInHead(L,All,refsInNT(R,All,So)) :-  isBinary(S,"-->",_,L,R).
+  stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"<=",_,L,R).
+  stmtRefs(S,All,So) =>  refsInHead(L,All,thetaRefs(Els,All,So)) :-  isBraceTerm(S,_,L,Els).
+  stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isBinary(S,"=",_,L,R).
+  stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isUnary(S,"show",_,R).
+  stmtRefs(S,All,So) =>  refsInCond(R,All,So) :-  isUnary(S,"assert",_,R).
 
   refsInHead:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInHead(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).
   refsInHead(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
+  refsInHead(S,All,So) => So :- isIden(S,_,_).
 
   refsInType:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).
   refsInType(T,All,So) =>  refsInTypes(Args,All,refsInType(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
+  refsInType(T,All,So) => refsInTypes(Args,All,So) :- isBraceTerm(T,_,A,[]), isRoundTuple(A,_,Args).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"=>",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R).
@@ -217,7 +223,7 @@ lo.comp.dependencies{
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"->>",_,L,R).
   refsInType(T,All,So) =>  refsInTypes(L,All,So) :-  isRoundTuple(T,_,L).
   refsInType(T,All,So) =>  refsInConstraint(L,All,refsInType(R,All,So)) :-  isBinary(T,"|:",_,L,R).
-  refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"<~",_,L,R). -- type rule
+  refsInType(T,All,So) =>  refsInType(R,All,So) :-  isBinary(T,"<~",_,_,R). -- type rule
   refsInType(T,All,So) =>  refsInType(I,All,So) :-  isQuantified(T,_,I).
   refsInType(T,All,So) =>  refsInScope(E,All,So) :-  isBraceTuple(T,_,E).
 
@@ -228,6 +234,10 @@ lo.comp.dependencies{
   refsInScope:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInScope([],_,So) => So.
   refsInScope([E,..L],All,So) =>  refsInScope(L,All,refsInType(T,All,So)) :-  isBinary(E,":",_,_,T).
+
+  refsInContract:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
+  refsInContract(C,All,So) => refsInContract(I,All,So) :- isQuantified(C,_,I).
+  refsInContract(C,All,So) => refsInType(R,All,So) :- isBinary(C,"<~",_,L,R).
 
   refsInConstraint:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInConstraint(T,All,So) =>  (((Nm,con) in All, \+ (Nm,con) in So) ? [(Nm,con),..So] | So) :-  isIden(T,_,Nm).
@@ -274,28 +284,30 @@ lo.comp.dependencies{
   refsInTerm(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isIden(T,_,Nm).
   refsInTerm(T,_,So) =>  So :-  isScalar(T).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,":",_,L,R).
+  refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,"::",_,L,R).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
   refsInTerm(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
-  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
+  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).
-  refsInTerm(T,All,So) =>  refsInMapEntries(Els,All,So) :-  isBraceTuple(T,_,Els).
+  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,",..",_,L,R).
+  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"->",_,L,R).
+  refsInTerm(T,All,So) =>  thetaRefs(Els,All,So) :-  isBraceTuple(T,_,Els).
+  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"=>",_,L,R).
+  refsInTerm(T,All,So) =>  refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,":-",_,L,R).
+  refsInTerm(T,All,So) =>  refsInNT(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"-->",_,L,R).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
+  refsInTerm(T,All,So) => So. -- ignore errors for now
 
   refsInTerms:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTerms([],_,So) => So.
   refsInTerms([T,..L],All,So) => refsInTerms(L,All,refsInTerm(T,All,So)).
 
-  refsInMapEntries:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInMapEntries([],_,So) => So.
-  refsInMapEntries([T,..L],All,So) =>  refsInMapEntries(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"->",_,_,R).
-
   showGroups:(list[list[defn]]){}.
   showGroups([]).
   showGroups([G,..L]) :-
-    logMsg("Group"),
-    logMsg(formatSS(disp(G))),
+    logMsg("Group: $(G)"),
     showGroups(L).
 }

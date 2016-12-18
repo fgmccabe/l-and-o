@@ -2,6 +2,7 @@
     isContractSpec/6,packageName/2,pkgName/2,sameLength/3,deComma/2,tupleize/4]).
 :-use_module(abstract).
 :-use_module(misc).
+:-use_module(errors).
 
 isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
   isUnary(Stmt,Lc,"type",Term),

@@ -35,6 +35,13 @@ lo.comp.parseType{
     prsType(R,Env,B,C0,Cx,Tp,Rp0,Rpx),
     faceOfType(deRef(Tp),Env,Rhs).
 
+  private prsArgType:(ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
+  prsArgType(T,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
+    isRoundTuple(T,_,A),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp,Rpx).
+  prsArgType(T,Env,Q,C,Cx,AT,Rp,Rpx) :-
+    prsType(T,Env,Q,C,Cx,AT,Rp,Rpx).
+
   private prsType:(ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
   prsType(T,Env,Q,Cx,Cx,PT,Rp,Rpx) :-
     isQuantified(T,V,BT),
@@ -51,20 +58,20 @@ lo.comp.parseType{
   prsType(Sq,Env,Q,C,Cx,Type,Rp,Rpx) :-
     isSquareTerm(Sq,Lc,Op,Args), 
     isIden(Op,_,Nm),
-    prsTypeName(Lc,N,Env,Q,C,C0,TpCon,Rp,Rp0),
+    prsTypeName(Lc,Nm,Env,Q,C,C0,TpCon,Rp,Rp0),
     prsTypes(Args,Env,Q,C0,Cx,ArgTps,Rp0,Rp1),
     applyTypeExp(TpCon,ArgTps,Lc,Type,Rp1,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
   prsType(F,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",_,L,R),
-    prsType(L,Env,Q,C,C1,AT,Rp,Rp0),
+    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
     prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
   prsType(F,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
     isBinary(F,"-->",_,L,R),
-    prsType(L,Env,Q,C,C1,AT,Rp,Rp0),
+    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
     prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
   prsType(F,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
     isBinary(F,"<=>",_,L,R),
-    prsType(L,Env,Q,C,C1,AT,Rp,Rp0),
+    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
     prsType(R,Env,Q,C1,Cx,RT,RP,Rp0).
   prsType(T,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,_,L,[]),
@@ -98,7 +105,7 @@ lo.comp.parseType{
     prsTypes(R,Env,Q,C0,Cx,M,Rp0,Rpx).
 
   private prsTypeFields:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[(string,tipe)],report,report){}.
-  prsTypeFields([],_,_,B,B,[],Rp,Rp).
+  prsTypeFields([],_,_,Cx,Cx,[],Rp,Rp).
   prsTypeFields([A,..AT],Env,Q,C,Cx,[(Fld,FldTp),..ArgTypes],Rp,Rp) :-
     isBinary(A,":",_,L,R),
     isIden(L,_,Fld),
@@ -115,7 +122,8 @@ lo.comp.parseType{
   prsTypeName(_,Id,_,B,C,C,Tp,Rp,Rp) :- present(B,Id,Tp).
   prsTypeName(_,Id,Env,_,C,Cx,Type,Rp,Rp) :- 
     isType(Id,Env,_,Tp),
-    moveConstraints(freshen(Tp,[]),C0,Type),
+    (_,FT) = freshen(Tp,[]),
+    moveConstraints(FT,C0,Type),
     mergeConstraints(C0,C,Cx).
   prsTypeName(Lc,Id,_,_,C,C,anonType,Rp,Rpx) :- 
     reportError("type $(Id) not declared",Lc,Rp,Rpx).
@@ -126,15 +134,15 @@ lo.comp.parseType{
     parseTypeBound(L,BV,B0,Env,QT,Q0),
     parseTypeBound(R,B0,Bound,Env,Q0,Inner).
   parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
-    B1 = B+[Nm->kVar(Nm)],
-    isIden(V,_,Nm).
+    isIden(V,_,Nm),
+    B1 = B+[Nm->kVar(Nm)].
 
   public parseContract:(ast,list[env],string,canonDef,report,report){}.
-  parseContract(T,Env,Path,cnDefn(Lc,Nm,Spec,Face),Rp,Rpx) :-
-    isUnary(T,"contract",Lc,TI),
+  parseContract(T,Env,Path,cnDefn(T.loc,Nm,Spec,Face),Rp,Rpx) :-
+    isUnary(T,"contract",_,TI),
     parseContractSpec(TI,F,[],Q,[],C0,Env,Spc,Nm,Path,Rp,Rp0),
     isBraceTuple(F,_,TLs),
-    prsTypeFields(TLs,Env,Q,C0,_,Fc,Rp0,Rp1),
+    prsTypeFields(TLs,Env,Q,C0,_,Fc,Rp0,Rpx),
     PQ = pairs(Q),
     reQuant(PQ,faceType(Fc),Face),
     reConQuant(PQ,Spc,Spec),
@@ -148,35 +156,36 @@ lo.comp.parseType{
     parseContractSpec(B,R,Q0,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx).
   parseContractSpec(T,F,Q,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
     isBinary(T,"|:",_,L,R),
-    parseConstraint(L,Env,Q,C0,C1,Rp,Rp0),
+    reportError("constrained contract $(T) not supported",Lc,Rp,Rp0),
     parseContractSpec(R,F,Q,Qx,C1,Cx,Env,Spec,Nm,Path,Rp0,Rpx).
-  parseContractSpec(T,F,Q,Qx,C,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
+  parseContractSpec(T,F,Q,Q,C,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
     isBinary(T,"<~",Lc,L,F),
-    reportWarn("implements constraint $(F) not supported for contracts",Lc,Rp,Rp0),
-    parseContractSpec(L,_,Q,Qx,C,Cx,Env,Spec,Nm,Path,Rp0,Rpx).
-  parseContractSpec(T,_,Q,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,Path,Rp,Rpx) :-
+    parseContractHead(L,Q,C,Cx,Env,Spec,Nm,Path,Rp,Rpx).
+
+  private parseContractHead:(ast,map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,report,report){}.
+  parseContractHead(T,Q,C,Cx,Env,conTract(ConNm,ArgTps,Deps),ConNm,Path,Rp,Rpx) :-
     isSquareTerm(T,Lc,Op,A),
     isIden(Op,_,Nm),
-    parseContractArgs(A,Env,Q,C0,Cx,ArgTps,Deps,Rp,Rpx),
-    ConNm = subPath(Path,marker(con),Nm).
+    ConNm = subPath(Path,marker(con),Nm),
+    parseContractArgs(A,Env,Q,C,Cx,ArgTps,Deps,Rp,Rpx).
 
   public parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint],report,report){}.
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,",",_,L,R),
     parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
-    parseConstraint(R,Env,B,C1,Cx,RP0,Rpx).
+    parseConstraint(R,Env,B,C1,Cx,Rp0,Rpx).
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,"<~",_,L,R),
-    prsType(L,Env,B,C0,C1,TV,RP,Rp0),
+    prsType(L,Env,B,C0,C1,TV,Rp,Rp0),
     isBraceTuple(R,_,E),
-    prsTypeFields(E,Env,B,C1,C2,AT,Rp0,Rpx).
+    prsTypeFields(E,Env,B,C1,C2,AT,Rp0,Rpx),
     addConstraint(implementsFace(TV,AT),C2,Cx).
   parseConstraint(Sq,Env,B,C0,Cx,Rp,Rpx) :- 
     isSquareTerm(Sq,Lc,Op,Args),
-    isIden(Op,_,Nm),
-    parseContractName(Lc,N,Env,conTract(Nm,_ATs,_Dps),Rp,Rp0),
+    isIden(Op,Lc0,Nm),
+    parseContractName(Lc0,Nm,Env,conTract(ConNm,_ATs,_Dps),Rp,Rp0),
     parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps,Rp0,Rpx),
-    addConstraint(conTract(Nm,ArgTps,Deps),C1,Cx).
+    addConstraint(conTract(ConNm,ArgTps,Deps),C1,Cx).
   parseConstraint(T,_,B,C,C,Rp,Rpx) :-
     reportError("invalid type constraint $(T)",T.loc,Rp,Rpx).
 
@@ -191,8 +200,9 @@ lo.comp.parseType{
   addConstraint(Con,C0,[Con,..C0]) :- \+Con in C0.
 
   parseContractName:(location,string,list[env],constraint,report,report){}.
-  parseContractName(_,Id,Env,freshen(Spec,[]),Rp,Rp) :-
-    isContract(Id,Env,conEntry(_,Spec,_)).
+  parseContractName(_,Id,Env,Con,Rp,Rp) :-
+    isContract(Id,Env,conEntry(_,Spec,_)),
+    (_,Con) = freshen(Spec,[]).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
     reportError("contract $(Id) not declared",Lc,Rp,Rpx).
 
@@ -233,8 +243,7 @@ lo.comp.parseType{
     isBinary(P,",",_,L,R),
     parseConBound(L,BV,B0,Env,QT,Q0),
     parseConBound(R,B0,Bound,Env,Q0,Inner).
-  parseConBound(V,B,B1,Env,univCon(kVar(Nm),Inner),Inner) :-
-    B1 = B+[Nm->kVar(Nm)],
+  parseConBound(V,B,B+[Nm->kVar(Nm)],Env,univCon(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm).
 
   public parseTypeTemplate:(ast,list[env],tipe,string,report,report){}.
@@ -290,7 +299,8 @@ lo.comp.parseType{
   public rewriteConstraints:(list[constraint],map[string,tipe],list[constraint],list[constraint]){}.
   rewriteConstraints([],_,Cx,Cx).
   rewriteConstraints([Con,..Cons],Q,C0,Cx) :-
-    addConstraint(freshen(Con,Q),C0,C1),
+    (_,FCon) = freshen(Con,Q),
+    addConstraint(FCon,C0,C1),
     rewriteConstraints(Cons,Q,C1,Cx).
 
     -- reapply quantifiers to a constraint to get full form

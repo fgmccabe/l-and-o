@@ -45,7 +45,7 @@ lo.comp.abstract{
 
   public
   isSquareTerm:(ast,location,ast,list[ast]){}.
-  isSquareTerm(appl(Lc,Op,tupl(_,"[]",A)),Lc,Nm,A).
+  isSquareTerm(appl(Lc,Op,tupl(_,"[]",A)),Lc,Op,A).
 
   public
   squareTerm:(location,ast,list[ast]) => ast.

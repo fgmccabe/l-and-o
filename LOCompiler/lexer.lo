@@ -1,10 +1,19 @@
 lo.comp.lexer{
   import lo.
+  import lo.uri.
+  import lo.resources.
+
   import lo.comp.location.
   import lo.comp.token.
   import lo.comp.operators.
 
   -- Define the lexer for the L&O syntax
+
+  public tokenizeFile:(uri) => list[token].
+  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U),getUriPath(U)).
+
+  public tokenCodes:(list[integer],string) => list[token].
+  tokenCodes(Chars,Pth) => Toks :- tokenize(Toks) %% startState(Chars,Pth).
 
   public type tokenState <~ {
     currentLocation:((integer,integer,integer,string)){}
@@ -68,7 +77,6 @@ lo.comp.lexer{
   nxtTok(rqpar) --> [0c|, 0c>].
   nxtTok(period) --> [0c.], whiteSpace().
   nxtTok(regTok(Rg)) --> "`", regExp(Chars), "`", { Rg = implode(Chars) }.
-  nxtTok(terminal) --> eof.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
   nxtTok(idQTok(Id)) --> [0c'], readQuoted(Q), [0c'], { Id = implode(Q)}.
   nxtTok(stringTok(Text)) --> [0c"], readStringSegments(Text), [0c"].
@@ -79,8 +87,8 @@ lo.comp.lexer{
   followGraph(Op,Op) --> { final(Op)}.
 
   readQuoted : (list[integer]) --> tokenState.
-  readQuoted([C,..R]) --> charRef(C), readQuoted(R).
   readQuoted([]) --> [0c']+.
+  readQuoted([C,..R]) --> charRef(C), C\=0c', readQuoted(R).
 
   public readIden : (list[integer]) --> tokenState.
   readIden([C,..R]) --> alphaNum(C), readIden(R).

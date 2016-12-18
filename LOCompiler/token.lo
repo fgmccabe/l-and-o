@@ -17,8 +17,7 @@ lo.comp.token{
        |  fltTok(float)
        |  stringTok(list[stringSegment])
        |  regTok(string)
-       |  period
-       |  terminal.
+       |  period.
 
   public 
   type stringSegment ::= segment(location,string) 
@@ -58,7 +57,6 @@ lo.comp.token{
   tokDisp(stringTok(Sx)) => disp(Sx).
   tokDisp(regTok(Rg)) => ssSeq([ss("`"),ss(Rg),ss("`")]).
   tokDisp(period) => ss(". ").
-  tokDisp(terminal) => ss("<term>").
 
   private
   implementation display[stringSegment] .. {

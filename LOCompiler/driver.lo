@@ -7,6 +7,7 @@ lo.comp.driver{
   import lo.comp.ast.
   import lo.comp.grammar.
   import lo.comp.args.
+  import lo.comp.canon.
   import lo.comp.catalog.
   import lo.comp.package.
   import lo.comp.typecheck.
@@ -30,8 +31,10 @@ lo.comp.driver{
   processFile:(uri,compOption){}.
   processFile(u,o) :-
     Term = parseFile(u,reportBase,Er0),
+    -- _logmsg("Error report after parsing: $(Er0)"),
     _logmsg(formatSS(disp(Term))),
     Repo = openRepository(o.repoDir),
     Prg = checkProgram(Term,o.version,Repo,Er0,ER),
+    _logmsg("Checked program: $(Prg)"),
     _logmsg("Error report: $(ER)").
 }

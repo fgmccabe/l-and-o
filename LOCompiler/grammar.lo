@@ -10,16 +10,9 @@ lo.comp.grammar{
   import lo.comp.lexer.
   import lo.comp.errors.
 
-  private tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U),getUriPath(uri)).
-
-  public tokenCodes:(list[integer],string) => list[token].
-  tokenCodes(Chars,Pth) => Toks :- tokenize(Toks) %% startState(Chars,Pth).
-
   public parseFile:(uri,report,report) => ast.
   parseFile(U,Rp,Rpx) => Term :-
-    tokenize(Toks) %% startState(getResource(U),getUriPath(U)),
-    parse(Term,Rp,Rpx) %% Toks .
+    parse(Term,Rp,Rpx) %% tokenizeFile(U).
 
   public nextTerm:(list[token],ast,list[token],report,report){}.
   nextTerm(Toks,Term,Rest,Rp,Rpx) :-
@@ -29,7 +22,7 @@ lo.comp.grammar{
 
   public
   parse:(ast,report,report) --> list[token].
-  parse(Term,Rp,Rpx) --> term(2000,Term,Mark,Rp,Rp)!,
+  parse(Term,Rp,Rpx) --> term(2000,Term,Mark,Rp,Rp0)!,
     checkForTerminator(Mark,Rp0,Rpx).
 
   private
@@ -81,6 +74,7 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(lbrce,_)].
   followsInfix(_) --> [tok(lqpar,_)].
   followsInfix(_) --> [tok(stringTok(_),_)].
+  followsInfix(_) --> [tok(idQTok(_),_)].
   followsInfix(_) --> [tok(intTok(_),_)].
   followsInfix(_) --> [tok(fltTok(_),_)].
 
@@ -117,6 +111,7 @@ lo.comp.grammar{
   private
   term00:(ast,tokMark,report,report) --> list[token].
   term00(iden(Lc,Nm),otherMark,Rp,Rp) --> [tok(idTok(Nm),Lc)].
+  term00(iden(Lc,Nm),otherMark,Rp,Rp) --> [tok(idQTok(Nm),Lc)].
   term00(tupl(Lc,"()",[]),otherMark,Rp,Rp) --> 
       [tok(lpar,Lc0),tok(rpar,Lc1)],
       Lc = Lc0.merge(Lc1).
@@ -179,7 +174,7 @@ lo.comp.grammar{
   checkForTerminator:(tokMark,report,report) --> list[token].
   checkForTerminator(_,Rp,Rp) --> [tok(period,_)].
   checkForTerminator(_,Rp,Rp) --> eof.
-  checkForTerminator(_,RP,Rp) --> [tok(rbrce,_)]+.
+  checkForTerminator(_,Rp,Rp) --> [tok(rbrce,_)]+.
   checkForTerminator(endBrce,Rp,Rp) --> [].
   checkForTerminator(_,Rp,Rpx) --> 
     [tok(_,Lc)]+,

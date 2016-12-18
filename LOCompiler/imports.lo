@@ -2,6 +2,7 @@ lo.comp.imports{
   import lo.
   import lo.uri.
   import lo.resources.
+
   import lo.comp.dict.
   import lo.comp.types.
   import lo.comp.term.
@@ -12,6 +13,7 @@ lo.comp.imports{
   import lo.comp.manifest.
   import lo.comp.errors.
   import lo.comp.token.
+  import lo.comp.lexer.
   import lo.comp.grammar.
   import lo.comp.ast.
   import lo.comp.abstract.
@@ -26,8 +28,7 @@ lo.comp.imports{
           list[(string,string,tipe)],list[conEntry],list[implEntry],report,report){}.
   pickupPieces(Toks,Export,Types,Imports,Classes,Contracts,Impls,Rp,Rpx) :-
     nextTerm(Toks,A,Rest,Rp,Rp0)!,
-    isRoundTerm(A,_,O,Args),
-    isIden(O,_,Nm),
+    isRoundTerm(A,_,Op,Args), isIden(Op,_,Nm),
     pickupTerm(splitOnHash(Nm),Args,Rest,Export,Types,Imports,Classes,Contracts,Impls,Rp0,Rpx).
   pickupPieces(_,_,[],[],[],[],[],Rp,Rp).
 

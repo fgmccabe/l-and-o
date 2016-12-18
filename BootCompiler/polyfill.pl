@@ -2,6 +2,7 @@
                     '_flt_plus'/3,'_flt_minus'/3,'_flt_times'/3,'_flt_div'/3,'_flt_mod'/3,
                     '_int_abs'/2,'_flt_abs'/2,
                     explode/2, implode/2,
+                    '_str_find'/4, '_sub_str'/4, '_str_split'/4, '_str_concat'/3, '_str_gen'/2,'_str_len'/2,
                     '_unify'/2,
                     '_isCcChar'/1,'_isCfChar'/1,'_isCnChar'/1,'_isCoChar'/1,'_isCsChar'/1,
                     '_isLlChar'/1,'_isLmChar'/1,'_isLoChar'/1,'_isLtChar'/1,'_isLuChar'/1,
@@ -16,7 +17,6 @@
                     '_display'/2,
                     '_str_lt'/2, '_str_ge'/2,
                     '_int_lt'/2, '_int_ge'/2,
-                    '_str_gen'/2,'_str_concat'/3,
                     listify/2,
                     '_readFileContents'/2,
                     '_writeFileContents'/2,
@@ -34,11 +34,11 @@ exit(X) :- halt(X).
 
 '_unify'(X,Y) :- unify_with_occurs_check(X,Y).
 
-'_int_plus'(X,Y,Z) :- Z is (X+Y) mod 9223372036854775808.
-'_int_minus'(X,Y,Z) :- Z is (X-Y) mod 9223372036854775808.
-'_int_times'(X,Y,Z) :- Z is (X*Y) mod 9223372036854775808.
-'_int_div'(X,Y,Z) :- Z is div(X,Y) mod 9223372036854775808.
-'_int_mod'(X,Y,Z) :- Z is (X mod Y) mod 9223372036854775808.
+'_int_plus'(X,Y,Z) :- Z is (X+Y).
+'_int_minus'(X,Y,Z) :- Z is (X-Y).
+'_int_times'(X,Y,Z) :- Z is (X*Y).
+'_int_div'(X,Y,Z) :- Z is div(X,Y).
+'_int_mod'(X,Y,Z) :- Z is (X mod Y).
 
 '_flt_plus'(X,Y,Z) :- Z is X+Y.
 '_flt_minus'(X,Y,Z) :- Z is X-Y.
@@ -131,8 +131,21 @@ codeGe([C|L],[C|M]) :-
   gensym(Prefix,A),
   atom_string(A,Str).
 
+'_str_len'(S,L) :-
+  string_length(S,L).
+
 '_str_concat'(A,B,C) :-
-  string_concat(A,B,C).  
+  string_concat(A,B,C).
+
+'_str_find'(Src,Tgt,From,Px) :-
+  sub_string(Src,Px,_,_,Tgt), Px>=From,!.
+
+'_sub_str'(Src,Frm,Len,Sub) :-
+  sub_string(Src,Frm,Len,_,Sub).
+
+'_str_split'(Src,Px,Front,Back) :-
+  sub_string(Src,0,Px,_,Front),
+  sub_string(Src,Px,_,0,Back).
 
 '_readFileContents'(Fl,Chars) :-
   open(Fl,read,Stream),

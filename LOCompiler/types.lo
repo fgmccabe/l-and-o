@@ -91,11 +91,11 @@ lo.comp.types{
 
   dispTypeFields:(list[(string,tipe)]) => list[ss].
   dispTypeFields([]) => [].
-  dispTypeFields([(K,T),..M]) => [ss(K),ss("->"),dispType(T),..showMoreTypeFields(M)].
+  dispTypeFields([(K,T),..M]) => [ss(K),ss(":"),dispType(T),..showMoreTypeFields(M)].
 
   showMoreTypeFields:(list[(string,tipe)]) => list[ss].
   showMoreTypeFields([]) => [].
-  showMoreTypeFields([(K,T),..M]) => [ss(". "),ss(K),ss("->"),dispType(T),..showMoreTypeFields(M)].
+  showMoreTypeFields([(K,T),..M]) => [ss(". "),ss(K),ss(":"),dispType(T),..showMoreTypeFields(M)].
 
   public
   deRef:(tipe)=>tipe.
@@ -106,9 +106,16 @@ lo.comp.types{
   isUnbound:(tipe){}.
   isUnbound(T) :- deRef(T) = tVar(Curr,_,_,_,_), var(Curr).
 
+  public isTypeVar:(tipe){}.
+  isTypeVar(T) :- D=deRef(T), (D=tVar(_,_,_,_,_) | D=kVar(_)).
+
   public
   isIdenticalVar:(tipe,tipe){}.
   isIdenticalVar(tVar(_,_,_,_,Id),tVar(_,_,_,_,Id)).
+
+  public isIdenticalType:(tipe,tipe){}.
+  isIdenticalType(kVar(V),kVar(V)).
+  isIdenticalType(T1,T2) :- isIdenticalVar(T1,T2).
 
   public
   constraints:(tipe)=>list[constraint].
@@ -143,10 +150,6 @@ lo.comp.types{
   public
   newVar:(string) => tipe.
   newVar(Nm) => tVar(_,false,_,Nm,_str_gen(Nm)).
-
-  public
-  skolem:(string) => tipe.
-  skolem(Nm) => tVar(_,true,_,Nm,_str_gen(Nm)).
 
   public
   bind:(tipe,tipe){}.

@@ -13,7 +13,7 @@ lo.comp.wff {
   isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
     isUnary(Stmt,"type",Lc,Term),
     getQuantifiers(Term,Quants,Inner),
-    isConstrained(Inner,Constraints,TpStmt),
+    getConstraints(Inner,Constraints,TpStmt),
     isBinary(TpStmt,"::=",_,Head,Body).
 
   public isQuantified:(ast,ast,ast){}.
@@ -44,7 +44,11 @@ lo.comp.wff {
   public isConstrained:(ast,list[ast],ast){}.
   isConstrained(T,deComma(L),R) :-
     isBinary(T,"|:",_,L,R).
-  isConstrained(T,[],T).
+
+  private getConstraints:(ast,list[ast],ast){}.
+  getConstraints(T,deComma(L),R) :-
+    isBinary(T,"|:",_,L,R).
+  getConstraints(T,[],T).
 
   public
   packageName:(ast) => string.

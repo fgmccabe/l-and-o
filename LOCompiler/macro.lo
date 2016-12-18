@@ -69,7 +69,7 @@ lo.comp.macro{
     wrapQuants(Quants,Lc,CTp,QTp),
     mark(Mark,Lc,binary(Lc,":",Op,QTp),TpRule),
     genAnonArgs(ArgTypes,Args),       /* Construct con(_,..,_) <= thing */
-    bodyRule(Lc,roundTerm(Lc,Nm,Args),[],BodyRule).
+    bodyRule(Lc,roundTerm(Lc,Op,Args),[],BodyRule).
   convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
     isBraceTerm(Con,_,Op,FldTps),
     wrapConstraints(Constraints,Lc,binary(Lc,"<=>",braceTuple(Lc,FldTps),Tp),CTp),
@@ -112,7 +112,7 @@ lo.comp.macro{
     checkSoFar(Nm,T,L,LL,Rp,Rpx).
 
   typeRule:(location,list[ast],list[ast],ast,ast,ast){}.
-  typeRule(Lc,Quants,Constraints,Hd,Body,Rule) :-
+  typeRule(Lc,Quants,Constraints,Hd,Body,unary(Lc,"type",Rule)) :-
     wrapConstraints(Constraints,Lc,binary(Lc,"<~",Hd,Body),ConRl),
     wrapQuants(Quants,Lc,ConRl,Rule).
 

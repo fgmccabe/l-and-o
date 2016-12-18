@@ -47,6 +47,8 @@ lo.comp.keywords{
   keyword("type").
   keyword("implementation").
   keyword("void").
+  keyword("assert").
+  keyword("show").
   keyword("#").
 
   public isRuleKeyword:(string){}.

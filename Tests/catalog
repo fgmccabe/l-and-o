@@ -3,6 +3,7 @@ catalog{
     test.a -> "a.lo".
     test.modsec -> "modsec.lo".
     test.maps -> "maps.lo".
+    test.l -> "l.lo".
   }
   default: "../LO/catalog".
 }

@@ -4,26 +4,30 @@ lo.comp.freshen{
   import lo.comp.types.
 
   public contract all s ~~ freshen[s] <~ {
-    freshen:(s,map[string,tipe]) => s.
+    freshen:(s,map[string,tipe]) => (map[string,tipe],s).
+    skolemize:(s,map[string,tipe]) =>(map[string,tipe],s).
   }.
 
-  public
-  implementation freshen[tipe] .. {
+  public implementation freshen[tipe] .. {
     freshen(T,M) => freshenType(T,M).
+    skolemize(T,M) => skolemizeType(T,M).
   }
 
-  public freshenType:(tipe,map[string,tipe]) => tipe.
+  private freshenType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
   freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+[Nm->newVar(Nm)]).
-  freshenType(T,B) => frshnType(T,B).
+  freshenType(T,B) => (B,frshnType(T,B)).
 
-  public forEvidence:(tipe,map[string,tipe],map[string,tipe],tipe){}.
-  forEvidence(Tp,B,Q,freshen(SkTp,Q)) :-
-    skolemize(Tp,B,Q,SkTp).
+  private skolemizeType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
+  skolemizeType(univType(kVar(Nm),T),B) => skolemizeType(T,B+[Nm->skolem(Nm)]).
+  skolemizeType(T,B) => (B,frshnType(T,B)).
 
-  private skolemize:(tipe,map[string,tipe],map[string,tipe],tipe){}.
-  skolemize(univType(kVar(V),Tp),B,BV,FTp) :- 
-    skolemize(Tp,B+[V->skolem(V)],BV,FTp).
-  skolemize(Tp,B,B,Tp).
+  private skolem:(string) => tipe.
+  skolem(Nm) => kVar(_str_gen(Nm)).
+
+  public implementation freshen[constraint] .. {
+    freshen(C,B) => freshenConstraint(C,B).
+    skolemize(C,B) => skolemizeConstraint(C,B).
+  }
 
   frshnType:(tipe,map[string,tipe]) => tipe.
   frshnType(anonType,_) => anonType.
@@ -55,14 +59,13 @@ lo.comp.freshen{
   frshnFields([],_) => [].
   frshnFields([(F,E),..R],B) => [(F,frshnType(E,B)),..frshnFields(R,B)].
 
-  public
-  implementation freshen[constraint] .. {
-    freshen(C,B) => freshenConstraint(C,B).
-  }
-
-  freshenConstraint:(constraint,map[string,tipe]) => constraint.
+  private freshenConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
   freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B+[Nm->newVar(Nm)]).
-  freshenConstraint(C,B) => frshnConstraint(C,B).
+  freshenConstraint(C,B) => (B,frshnConstraint(C,B)).
+
+  private skolemizeConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
+  skolemizeConstraint(univCon(kVar(Nm),T),B) => skolemizeConstraint(T,B+[Nm->skolem(Nm)]).
+  skolemizeConstraint(T,B) => (B,frshnConstraint(T,B)).
 
   frshnConstraint:(constraint,map[string,tipe]) => constraint.
   frshnConstraint(conTract(Nm,Args,Deps),B) => conTract(Nm,frshnTypes(Args,B),frshnTypes(Deps,B)).
