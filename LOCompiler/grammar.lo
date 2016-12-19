@@ -84,7 +84,7 @@ lo.comp.grammar{
   term0(intg(Lc,Ix),otherMark,Rp,Rp) --> [tok(intTok(Ix),Lc)].
   term0(flot(Lc,Dx),otherMark,Rp,Rp) --> [tok(fltTok(Dx),Lc)].
   term0(tupl(Lc,"[]",[]),otherMark,Rp,Rp) --> 
-    [tok(lbra,Lc0),tok(rbra,Lc1)]!,
+    [tok(lbra,Lc0),tok(rbra,Lc1)],
     Lc = Lc0.merge(Lc1).
   term0(tupl(Lc,"[]",tupleize(Seq)),otherMark,Rp,Rpx) -->
     [tok(lbra,Lc0)],

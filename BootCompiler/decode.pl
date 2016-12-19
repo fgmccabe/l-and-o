@@ -69,10 +69,10 @@ decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeName(Nm), decodeTypes(ArgTypes
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
-decodeType(funType(A,T)) --> ['F'], decodeTypes(A), decodeType(T).
-decodeType(grammarType(A,T)) --> ['G'], decodeTypes(A), decodeType(T).
-decodeType(predType(A)) --> ['P'], decodeTypes(A).
-decodeType(classType(A,T)) --> ['C'], decodeTypes(A), decodeType(T).
+decodeType(funType(A,T)) --> ['F'], decodeType(tupleType(A)), decodeType(T).
+decodeType(grammarType(A,T)) --> ['G'], decodeType(tupleType(A)), decodeType(T).
+decodeType(predType(A)) --> ['P'], decodeType(tupleType(A)).
+decodeType(classType(A,T)) --> ['C'], decodeType(tupleType(A)), decodeType(T).
 decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).
 decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
 

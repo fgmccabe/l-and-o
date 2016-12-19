@@ -109,7 +109,7 @@ lo.comp.lexer{
 
   readStringSegments:(list[stringSegment]) --> tokenState.
   readStringSegments([]) --> [0c"]+.
-  readStringSegments([Seg,..Segs]) --> [0c$],
+  readStringSegments([Seg,..Segs]) --> [0c$], [0c(]+,
     interpolation(Seg),
     readStringSegments(Segs).
   readStringSegments([segment(Lc,Seg),..Segs]) -->
@@ -122,7 +122,7 @@ lo.comp.lexer{
 
   readStr:(list[integer]) --> tokenState.
   readStr([]) --> [0c"]+.
-  readStr([]) --> [0c$]+.
+  readStr([]) --> [0c$,0c(]+.
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
   interpolation:(stringSegment) --> tokenState.

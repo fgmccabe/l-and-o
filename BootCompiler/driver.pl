@@ -93,11 +93,12 @@ importsOk([P|I],CP) :-
   importsOk(I,CP).
 
 processFile(SrcUri,Pkg,Repo,Rx,Opts) :-
+  packageVersion(Opts,Vers),
   startCount,
   locateResource(SrcUri,Src),
   parseFile(Src,Term),!,
   noErrors,
-  checkProgram(Term,Repo,Prog),!,
+  checkProgram(Term,Vers,Repo,Prog),!,
   noErrors,
   transformProg(Prog,Opts,Rules),!,
   noErrors,

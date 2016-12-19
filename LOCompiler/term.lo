@@ -9,8 +9,26 @@ lo.comp.term {
                    | strng(string)
                    | strct(string,integer)
                    | prg(string,integer)
-                   | tupl(list[term])
+                   | tuple(list[term])
                    | cons(term,list[term])
                    | code(tipe,list[integer],list[term]).
 
+  public implementation display[term] .. {
+    disp(T) => dispTerm(T).
+  }
+
+  private dispTerm:(term) => ss.
+  dispTerm(anon) => ss("_").
+  dispTerm(intgr(Ix)) => disp(Ix).
+  dispTerm(flot(Dx)) => disp(Dx).
+  dispTerm(enum(Nm)) => ss(Nm).
+  dispTerm(strng(Sx)) => disp(Sx).
+  dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
+  dispTerm(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
+  dispTerm(tuple(Els)) => ssSeq([ss("("),..dispEls("",Els)]).
+  dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",Args)]).
+
+  private dispEls:(string,list[term]) => list[ss].
+  dispEls(_,[]) => [ss(")")].
+  dispEls(Sep,[e,..l]) => [ss(Sep),dispTerm(e),..dispEls(", ",l)].
 }

@@ -7,81 +7,51 @@
 :- use_module(uri).
 
 genRules(export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls),Text) :-
-  genImports(Imports,Pkg,Chrs,O1),
-  genFieldTypes(Fields,Pkg,O1,O2),
-  genTypes(Types,Pkg,O2,O3),
-  genClasses(Classes,Pkg,O3,O4),
-  genContracts(Contracts,Pkg,O4,O5),
-  genImpls(Impls,Pkg,O5,O6),
-  genPlRules(Rules,O6,[]),
+  genPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,Chrs,O1),
+  genPlRules(Rules,O1,[]),
   string_chars(Text,Chrs).
 
-genImports([],_,O,O).
-genImports([I|More],Pkg,O,Ox) :-
-  genImport(I,Pkg,O,O1),
-  genImports(More,Pkg,O1,Ox).
-
-genImport(import(Viz,pkg(PkgImp,Vers),_,_,_,_,_),Pkg,O,Ox) :-
-  localName(Pkg,"#","import",Imp),
-  appQuoted(Imp,"'",O,O1),
+genPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,O,Ox) :-
+  constructPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,Term),
+  appQuoted("#pkg",'''',O,O1),
   appStr("(",O1,O2),
-  genViz(Viz,O2,O3),
-  appStr(",",O3,O4),
-  appQuoted(PkgImp,"""",O4,O6),
-  appStr(",",O6,O7),
-  genVer(Vers,O7,O8),
-  appStr(").\n",O8,Ox).
+  encodeTerm(Term,TChrs,[]),
+  appQuoted(TChrs,'"',O2,O3),
+  appStr(").\n",O3,Ox).
 
-genVer(defltVersion,O,Ox) :-
-  appStr("'*'",O,Ox).
-genVer(v(V),O,Ox) :-
-  appQuoted(V,"""",O,Ox).
+constructPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,
+    tpl([PkgNm,tpl(Imps),FTps,TTps,tpl(ClsSigs),tpl(ConSigs),tpl(ImplSigs)])) :-
+  encPkg(Pkg,PkgNm),
+  encImports(Imports,Imps),
+  encTypes(Fields,FTps),
+  encTypes(Types,TTps),
+  formatClassStructures(Classes,ClsSigs),
+  formatContracts(Contracts,ConSigs),
+  formatImpls(Impls,ImplSigs).
 
-genViz(private,O,Ox) :-
-  appStr("private",O,Ox).
-genViz(public,O,Ox) :-
-  appStr("public",O,Ox).
+encPkg(pkg(Nm,Vers),cons(enum("pkg"),[strg(Nm),V])) :-
+  encVer(Vers,V).
 
-genFieldTypes(Fields,Pkg,O,Ox) :-
-  localName(Pkg,"#","export",Ex),
-  appQuoted(Ex,"'",O,O0),
-  appStr("(""",O0,O1),
-  encodeType(faceType(Fields),O1,O2),
-  appStr(""").\n",O2,Ox).
+encVer(defltVersion,enum("*")).
+encVer(v(V),strg(V)).
 
-genTypes(Fields,Pkg,O,Ox) :-
-  localName(Pkg,"#","types",Ex),
-  appQuoted(Ex,"'",O,O0),
-  appStr("(""",O0,O1),
-  encodeType(faceType(Fields),O1,O2),
-  appStr(""").\n",O2,Ox).
+encImports([],[]).
+encImports([I|M],[IP|L]) :-
+  encImport(I,IP),
+  encImports(M,L).
 
+encImport(import(Viz,Pkg,_,_,_,_,_),cons(enum("import"),[enum(Viz),Enc])) :-
+  encPkg(Pkg,Enc).
 
-genClasses(Classes,Pkg,O,Ox) :-
-  localName(Pkg,"#","classes",C),
-  appQuoted(C,"'",O,O0),
-  appStr("(",O0,O1),
-  formatClassStructures(Classes,Struct),
-  encodeTerm(tpl(Struct),B,[]),
-  string_codes(Txt,B),
-  appQuoted(Txt,"\"",O1,O2),
-  appStr(").\n",O2,Ox).
+encTypes(Fields,strg(Sig)) :-
+  encodeType(faceType(Fields),Chars,[]),
+  string_chars(Sig,Chars).
 
 formatClassStructures([],[]).
 formatClassStructures([(Nm,Access,Tp)|M],[tpl([strg(Nm),Access,strg(EncType)])|R]) :-
   encodeType(Tp,Chars,[]),
   string_chars(EncType,Chars),
   formatClassStructures(M,R).
-
-genContracts(Contracts,Pkg,O,Ox) :-
-  localName(Pkg,"#","contracts",C),
-  appQuoted(C,"'",O,O0),
-  appStr("(",O0,O1),
-  formatContracts(Contracts,Struct),
-  encodeTerm(tpl(Struct),B,[]),
-  string_codes(Txt,B),
-  appQuoted(Txt,"\"",O1,O2),
-  appStr(").\n",O2,Ox).
 
 formatContracts([],[]).
 formatContracts([contract(Nm,CnNm,_,FullSpec,Face)|M],[tpl([strg(Nm),strg(CnNm),strg(CSig),strg(FSig)])|R]) :-
@@ -90,16 +60,6 @@ formatContracts([contract(Nm,CnNm,_,FullSpec,Face)|M],[tpl([strg(Nm),strg(CnNm),
   encodeType(Face,FChars,[]),
   string_chars(FSig,FChars),
   formatContracts(M,R).
-
-genImpls(Impls,Pkg,O,Ox) :-
-  localName(Pkg,"#","implementations",C),
-  appQuoted(C,"'",O,O0),
-  appStr("(",O0,O1),
-  formatImpls(Impls,Struct),
-  encodeTerm(tpl(Struct),B,[]),
-  string_codes(Txt,B),
-  appQuoted(Txt,"\"",O1,O2),
-  appStr(").\n",O2,Ox).
   
 formatImpls([],[]).
 formatImpls([imp(Nm,Spec)|M],[tpl([strg(Nm),strg(Sig)])|R]) :-
@@ -184,7 +144,7 @@ genTerm(intgr(Ix),O,Ox) :-
 genTerm(float(Dx),O,Ox) :-
   appFlt(Dx,O,Ox).
 genTerm(strg(Str),O,Ox) :-
-  appQuoted(Str,"""",O,Ox).
+  appQuoted(Str,'"',O,Ox).
 genTerm(anon,O,Ox) :-
   appStr("_",O,Ox).
 genTerm(enum(Nm),O,Ox) :-

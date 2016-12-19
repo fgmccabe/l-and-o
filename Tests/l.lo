@@ -1,5 +1,6 @@
 test.l{
-  public type thing <~ {}.
+  import lo.
+/*  public type thing <~ {}.
 
   public contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
@@ -11,8 +12,10 @@ test.l{
     hash(X) => X.
   }
 
+
   private (\==):all x ~~ equality[x] |: (x,x){}.
   x \== y :- \+ x==y.
+    */
 
   assert 3==3.
 

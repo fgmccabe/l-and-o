@@ -4,6 +4,7 @@ lo.comp.typecheck{
   import lo.comp.ast.
   import lo.comp.abstract.
   import lo.comp.wff.
+  import lo.comp.keywords.
   import lo.comp.canon.
   import lo.comp.types.
   import lo.comp.parseType.
@@ -40,7 +41,7 @@ lo.comp.typecheck{
     macroRewrite(Els,Stmts,Rp,Rp0),
     _logmsg("After rewrite: $(Stmts)"),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
-    processImportGroup(Imps,Imports,Repo,Base,IBase,Rp1,Rp2),
+    processImportGroup(Imps,Imports,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
     checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
 
@@ -61,15 +62,15 @@ lo.comp.typecheck{
     isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
     typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
-  processImportGroup:(list[ast],list[pkgSpec],repository,list[env],list[env],report,report){}.
-  processImportGroup(Stmts,ImportSpecs,Repo,Env,Ex,Rp,Rpx) :-
+  processImportGroup:(list[ast],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
+  processImportGroup(Stmts,ImportSpecs,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
-    importAll(Imports,Repo,[],AllImports,Rp,Rpx),
-    importAllDefs(AllImports,ImportSpecs,Repo,Env,Ex).
+    importAll(Imports,Repo,[],AllImports,ImportSpecs,Rp,Rpx),
+    importAllDefs(ImportSpecs,Lc,Repo,Env,Ex).
 
   findAllImports:(list[ast],list[(location,visibility,pkg)]){}.
   findAllImports([],[]).
-  findAllImports([St,..More],[findImport(St,private),..Imports]) :-
+  findAllImports([St,..More],[findImport(St,priVate),..Imports]) :-
     findAllImports(More,Imports).
 
   findImport:(ast,visibility)=>(location,visibility,pkg).
@@ -80,33 +81,39 @@ lo.comp.typecheck{
   findImport(St,Viz) => (Lc,Viz,pkgName(P)) :-
     isUnary(St,"import",Lc,P).
 
-  importAll:(list[(location,visibility,pkg)],repository,list[(location,visibility,pkg)],list[(location,visibility,pkg)],report,report){}.
-  importAll([],Repo,AllImports,AllImports,Rp,Rp).
-  importAll([P,..L],Repo,SoFar,All,Rp,Rpx) :-
-    (P in SoFar ?
-      importAll(L,Repo,SoFar,All,Rp,Rpx) |
-      importMore(Repo,P,SoFar,SoF,L,Lx,Rp,Rp0),
-      importAll(Lc,Repo,SoF,All,Rp0,Rpx)).
+  importAll:(list[(location,visibility,pkg)],repository,list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],report,report){}.
+  importAll([],_,AllImports,AllImports,[],Rp,Rp).
+  importAll([P,..L],Repo,SoFar,All,ImportSpecs,Rp,Rpx) :-
+    (alreadyImported(P,SoFar) ?
+      importAll(L,Repo,SoFar,All,ImportSpecs,Rp,Rpx) |
+      importOne(Repo,P,SoFar,SoF,ImportSpecs,MoreSpecs,Rp,Rp0),
+      importAll(L,Repo,SoF,All,MoreSpecs,Rp0,Rpx)).
 
-  importMore:(repository,(location,visibility,pkg),list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[(location,visibility,pkg)],report,report){}.
-  importMore(Repo,(Lc,Viz,Pkg),SoFar,[(Lc,Viz,Pkg),..SoFar],Inp,More,Rp,Rpx) :-
-    importPkg(Pkg,Repo,pkgSpec(_,_,_,_,_,_,Imports),Rp,Rpx),
-    addPublicImports(Imports,Lc,Inp,More).
-  importMore(_,(Lc,_,Pkg),SoFar,SoFar,Inp,Inp,Rp,Rpx) :-
+  alreadyImported:((location,visibility,pkg),list[(location,visibility,pkg)]){}.
+  alreadyImported((_,_,Pk),SoFar) :-
+    (_,_,Pk) in SoFar.
+
+  importOne:(repository,(location,visibility,pkg),list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],list[pkgSpec],report,report){}.
+  importOne(Repo,(Lc,Viz,Pkg),SoFar,All,[Spec,..More],Rest,Rp,Rpx) :-
+    importPkg(Pkg,Repo,Specs,Rp,Rp0),
+    Spec = pkgSpec(_,_,_,_,_,_,Imports),
+    addPublicImports(Imports,Lc,Referenced),
+    importAll(Referenced,Repo,[(Lc,Viz,Pkg),..SoFar],All,More,Rest,Rp0,Rpx).
+  importOne(_,(Lc,_,Pkg),SoFar,SoFar,Specs,Specs,Rp,Rpx) :-
     reportError("could not import package $(Pkg)",Lc,Rp,Rpx).
 
-  addPublicImports:(list[(visibility,pkg)],location,list[(location,visibility,pkg)],list[(location,visibility,pkg)]){}.
-  addPublicImports([],_,Imp,Imp).
-  addPublicImports([(pUblic,Pkg),..I],Lc,Rest,[(Lc,pUblic,Pkg),..Out]) :-
-    addPublicImports(I,Lc,Rest,Out).
-  addPublicImports([(priVate,_),..I],Lc,Rest,Out) :-
-    addPublicImports(I,Lc,Rest,Out).
+  addPublicImports:(list[(visibility,pkg)],location,list[(location,visibility,pkg)]){}.
+  addPublicImports([],_,[]).
+  addPublicImports([(pUblic,Pkg),..I],Lc,[(Lc,pUblic,Pkg),..Rest]) :-
+    addPublicImports(I,Lc,Rest).
+  addPublicImports([(priVate,_),..I],Lc,Rest) :-
+    addPublicImports(I,Lc,Rest).
 
-  importAllDefs:(list[(location,visibility,pkg)],list[pkgSpec],repository,list[env],list[env]){}.
-  importAllDefs([],[],_,Env,Env).
-  importAllDefs([(Lc,Viz,Pkg),..More], [Spec,..Specs],Repo,Env,Ex) :-
+  importAllDefs:(list[pkgSpec],location,epository,list[env],list[env]){}.
+  importAllDefs([],_,_,Env,Env).
+  importAllDefs([Spec,..Specs],Lc,Repo,Env,Ex) :-
     importDefs(Spec,Lc,Env,Ev0),
-    importAllDefs(More,Specs,Repo,Ev0,Ex).
+    importAllDefs(Specs,Lc,Repo,Ev0,Ex).
 
   importDefs:(pkgSpec,location,list[env],list[env]){}.
   importDefs(pkgSpec(_,faceType(Exported),Types,_,Cons,_,_),Lc,Env,Ex) :-
@@ -487,7 +494,10 @@ lo.comp.typecheck{
   typeOfTerm(V,_,Env,Env,v(_str_gen("_")),Rp,Rp) :- isIden(V,_,"_").
   typeOfTerm(V,Tp,Env,Ev,Term,Rp,Rpx) :-
     isIden(V,Lc,Nm),
-    ( isVar(Nm,Env,Spec) ?
+    ( isKeyword(Nm) ?
+      reportError("unexpected keyword: $(Nm)",Lc,Rp,Rpx),
+      Term = v(_str_gen("_")) |
+      isVar(Nm,Env,Spec) ?
       typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
       Ev = declareVar(Nm,vr(Lc,v(Nm),Tp),Env), Term=v(Nm), Rp=Rpx).
   typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :- 

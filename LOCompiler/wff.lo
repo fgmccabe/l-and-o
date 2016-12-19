@@ -60,7 +60,7 @@ lo.comp.wff {
   pkgName:(ast) => pkg.
   pkgName(T) => pkg(packageName(L),vers(packageVersion(R))) :- 
     isBinary(T,"#",_,L,R).
-  pkgName(T) => pkg(packageName(T),defltPackage).
+  pkgName(T) => pkg(packageName(T),defltVersion).
 
   packageVersion:(ast) => string.
   packageVersion(T) =>  Pkg :-  isIden(T,_,Pkg).

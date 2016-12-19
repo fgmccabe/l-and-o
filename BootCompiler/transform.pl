@@ -9,8 +9,8 @@
 :- use_module(escapes).
 :- use_module(location).
 
-transformProg(prog(Pkg,Imports,Defs,Others,Fields,Types,Contracts,Impls),
-    Opts,export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
+transformProg(prog(pkg(Pkg,Vers),Imports,Defs,Others,Fields,Types,Contracts,Impls),
+    Opts,export(pkg(Pkg,Vers),Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
   makePkgMap(Pkg,Defs,Types,Imports,Classes,Map),
   pushOpt(Opts,pkgName(Pkg),POpts),
   transformModuleDefs(Defs,Pkg,Map,POpts,R1,Rx,Rx,[]),
@@ -695,7 +695,7 @@ trGoal(unify(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :- !,
   trExp(R,Rx,Q0,Qx,G1,G2,G2,G3,Map,Opts,Ex0,Exx).
 trGoal(phrase(_,NT,Strm,Rem),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Strm,StIn,Q,Q0,G,G0,G0,G1,Map,Opts,Ex,Ex0),
-  dcgBody(NT,G1,G2,StIn,StOut,[StIn,StOut|Q0],Q2,Map,Opts,Ex0,Ex1), % grammar body
+  dcgBody(NT,G1,G2,StIn,StOut,[StIn|Q0],Q2,Map,Opts,Ex0,Ex1), % grammar body
   trExp(Rem,Out,Q2,Qx,G2,G3,G3,G4,Map,Opts,Ex1,Exx),
   joinStream(Out,StOut,G4,Gx).
 trGoal(phrase(_,NT,Strm),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-

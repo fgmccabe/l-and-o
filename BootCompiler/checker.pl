@@ -1,4 +1,4 @@
-:- module(checker,[checkProgram/3]).
+:- module(checker,[checkProgram/4]).
 
 :- use_module(abstract).
 :- use_module(wff).
@@ -19,7 +19,7 @@
 
 :- use_module(display).
 
-checkProgram(Prog,Repo,prog(Pkg,Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
+checkProgram(Prog,Vers,Repo,prog(pkg(Pkg,Vers),Imports,ODefs,OOthers,Exports,Types,Contracts,Impls)) :-
   stdDict(Base),
   isBraceTerm(Prog,_,Pk,Els),
   packageName(Pk,Pkg),

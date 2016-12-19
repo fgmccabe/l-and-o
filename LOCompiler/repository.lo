@@ -20,7 +20,11 @@ lo.comp.repository{
     findPkg(Repo,Pkg,V,ActV,Text)!.
 
   findPkg:(repository,string,version,version,list[integer]){}.
-  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,Fn))) :-
+  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveFile(Root,Fn))) :-
+    locateVersion(Man,Pkg,V,ActV,_,Fn).
+
+  public pkgSrcUri:(repository,string,version,version,uri){}.
+  pkgSrcUri(repo(Root,Man),Pkg,V,ActV,resolveUri(Root,Fn)) :-
     locateVersion(Man,Pkg,V,ActV,Fn,_).
 
   resolveFile:(uri,string) => uri.
@@ -38,6 +42,6 @@ lo.comp.repository{
 
   public packagePresent:(repository,string,version){}.
   packagePresent(repo(Root,Man),Pkg,Vers) :-
-    locateVersion(Man,Pkg,defltVersion,Vers,U,_),
-    resourcePresent(resolveUri(Root,U),readMode).
+    locateVersion(Man,Pkg,defltVersion,Vers,_,U),
+    resourcePresent(resolveFile(Root,U),readMode).
 }

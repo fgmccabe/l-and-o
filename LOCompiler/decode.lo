@@ -10,7 +10,7 @@ lo.comp.decode{
   decodeValue(Txt) => Term :- decodeTerm(Term) %% explode(Txt).
 
   public decodeTuple:(string) => list[term].
-  decodeTuple(Txt) => Els :- decodeTerm(tupl(Els)) %% explode(Txt).
+  decodeTuple(Txt) => Els :- decodeTerm(tuple(Els)) %% explode(Txt).
 
   private decodeTerm:(term) --> list[integer].
   decodeTerm(anon) --> "a".
@@ -20,8 +20,9 @@ lo.comp.decode{
   decodeTerm(strng(Sx)) --> "s", decodeText(Chrs), { Sx = implode(Chrs)}.
   decodeTerm(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
   decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
-  decodeTerm(tupl(Els)) --> "u", decInt(Len), decTerms(Len,Els).
-  decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tupl(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
+  decodeTerm(tuple(Els)) --> "u", decInt(Len), decTerms(Len,Els).
+  decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
+  decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tuple(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].

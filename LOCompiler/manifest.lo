@@ -75,7 +75,7 @@ lo.comp.manifest{
   version((V,Uri,F)) --> versionName(V), [equals, pkgId(F), utok(U)], { uriParse(Uri)%%U }.
 
   versionName:(version) --> list[token].
-  versionName(defaultVersion) --> [stAr].
+  versionName(defltVersion) --> [stAr].
   versionName(vers(S)) --> [pkgId(S)].
 
   -- Displaying a manifest

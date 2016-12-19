@@ -16,9 +16,9 @@ lo.comp.encode{
   encTerm(strng(Sx),L) => [0cs,..encodeText(Sx,L)].
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
-  encTerm(tupl(Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))].
+  encTerm(tuple(Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))].
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
-  encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(tupl(Lits),encodeChars(encode64(Code),0c',L)))].
+  encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(tuple(Lits),encodeChars(encode64(Code),0c',L)))].
 
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.

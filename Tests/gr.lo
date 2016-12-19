@@ -1,0 +1,14 @@
+test.gr{
+  import lo.
+
+  foo:(integer) --> list[integer].
+  foo(0) --> "0".
+
+  public nxtInt:(list[integer],integer,list[integer]){}.
+  nxtInt(Toks,Ix,Rest) :-
+    foo(Ix) %% Toks ~ Rest.
+
+  public isInt:(list[integer],integer){}.
+  isInt(Toks,Ix) :-
+    foo(Ix) %% Toks.
+}
