@@ -26,7 +26,7 @@ lo.comp.resolve{
   overloadDef(T,_,Rp,Rp) => T :-
     T = typeDef(_,_,_,_).
   overloadDef(C,_,Rp,Rp) => C :-
-    C = cnDefn(_,_,_,_).
+    C = cnDefn(_,_,_).
   overloadDef(implDef(Lc,INm,ImplName,Spec,Cx,Hd,Th),Dict,Rp,Rpx) => 
       overloadImplementation(Lc,INm,ImplName,Spec,Cx,Hd,Th,Dict,Rp,Rpx).
 

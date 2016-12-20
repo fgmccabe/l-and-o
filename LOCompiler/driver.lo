@@ -36,5 +36,5 @@ lo.comp.driver{
     Repo = openRepository(o.repoDir),
     Prg = checkProgram(Term,o.version,Repo,Er0,ER),
     _logmsg("Checked program: $(Prg)"),
-    _logmsg("Error report: $(ER)").
+    _logmsg("$(ER)").
 }

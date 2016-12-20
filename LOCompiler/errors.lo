@@ -18,7 +18,20 @@ lo.comp.errors{
   }
 
   private showReport:(report) => ss.
-  showReport(M) => ssSeq([disp(countErrors(M)),ss(" errors, "),disp(countWarnings(M)),ss(" warnings\n")]).
+  showReport(M) => ssSeq([ssSeq(showMsgs(M.msgs)),disp(countErrors(M)),ss(" errors, "),disp(countWarnings(M)),ss(" warnings\n")]).
+
+  implementation display[reportMsg] .. {
+    disp(M) => showErrorMsg(M).
+  }
+
+  showMsgs:(list[reportMsg]) => list[ss].
+  showMsgs([]) => [].
+  showMsgs([E,..L]) => [showErrorMsg(E),..showMsgs(L)].
+
+  showErrorMsg:(reportMsg) => ss.
+  showErrorMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showErrorMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showErrorMsg(othMsg(Lc,M)) => ssSeq([ss("Info @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
 
   public countErrors:(report) => integer.
   countErrors(report(L)) => cntErrors(L,0).

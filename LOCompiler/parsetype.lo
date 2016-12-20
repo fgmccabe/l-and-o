@@ -137,8 +137,8 @@ lo.comp.parseType{
     isIden(V,_,Nm),
     B1 = B+[Nm->kVar(Nm)].
 
-  public parseContract:(ast,list[env],string,canonDef,report,report){}.
-  parseContract(T,Env,Path,cnDefn(T.loc,Nm,Spec,Face),Rp,Rpx) :-
+  public parseContract:(ast,list[env],string,conEntry,report,report){}.
+  parseContract(T,Env,Path,conEntry(Nm,Spec,Face),Rp,Rpx) :-
     isUnary(T,"contract",_,TI),
     parseContractSpec(TI,F,[],Q,[],C0,Env,Spc,Nm,Path,Rp,Rp0),
     isBraceTuple(F,_,TLs),

@@ -33,7 +33,7 @@ lo.comp.canon {
            |   varDef(location,string,tipe,list[constraint],canonTerm,canonCond)
            |   otherDef(location,canonOther)
            |   typeDef(location,string,tipe,tipe)
-           |   cnDefn(location,string,constraint,tipe)
+           |   cnDefn(location,string,conEntry)
            |   implDef(location,string,string,constraint,list[constraint],canonTerm,canonTerm).
 
   public type canonOther ::= integrity(location,canonCond)
@@ -139,7 +139,7 @@ lo.comp.canon {
   dispDef(varDef(Lc,Nm,Tp,Cx,Exp,C)) => ssSeq([ss(" var @ "),disp(Lc),ss("\n"),ss(Nm),ss(":"),disp(Tp),ss("\n"),ss(Nm),ss("="),dispTerm(Exp),ss(":-"),dispCond(C)]).
   dispDef(typeDef(Lc,Nm,Tp,TpDef)) => ssSeq([ss(" type @ "),disp(Lc),ss("\n"),disp(TpDef)]).
   dispDef(otherDef(Lc,C)) => ssSeq([ss("other @" ),disp(Lc),ss("\n"),disp(C)]).
-  dispDef(cnDefn(Lc,Nm,Con,B)) => ssSeq([ss(" contract: @ "),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
+  dispDef(cnDefn(Lc,_,conEntry(Nm,Con,B))) => ssSeq([ss(" contract: @ "),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
   dispDef(implDef(Lc,_,ImplNm,Con,_,_,T)) => ssSeq([ss(" implementation: "),ss(ImplNm),ss(" @ "),disp(Lc),ss("\n"),disp(Con),ss(".."),dispTerm(T)]).
 
   private dispDefs:(list[canonDef]) => list[ss].

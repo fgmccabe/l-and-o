@@ -95,7 +95,7 @@ lo.comp.typecheck{
 
   importOne:(repository,(location,visibility,pkg),list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],list[pkgSpec],report,report){}.
   importOne(Repo,(Lc,Viz,Pkg),SoFar,All,[Spec,..More],Rest,Rp,Rpx) :-
-    importPkg(Pkg,Repo,Specs,Rp,Rp0),
+    importPkg(Pkg,Repo,Spec,Rp,Rp0),
     Spec = pkgSpec(_,_,_,_,_,_,Imports),
     addPublicImports(Imports,Lc,Referenced),
     importAll(Referenced,Repo,[(Lc,Viz,Pkg),..SoFar],All,More,Rest,Rp0,Rpx).
@@ -117,7 +117,7 @@ lo.comp.typecheck{
 
   importDefs:(pkgSpec,location,list[env],list[env]){}.
   importDefs(pkgSpec(_,faceType(Exported),Types,_,Cons,_,_),Lc,Env,Ex) :-
-    importContracts(Cons,importTypes(Types,Lc,declareFields(Exported,Lc,Env)),Ex).
+    Ex = importContracts(Cons,Lc,importTypes(Types,Lc,declareFields(Exported,Lc,Env))).
 
   declareFields:(list[(string,tipe)],location,list[env]) => list[env].
   declareFields([],_,Env) => Env.
@@ -132,11 +132,11 @@ lo.comp.typecheck{
   pickTypeTemplate(univType(B,Tp)) => univType(B,pickTypeTemplate(Tp)).
   pickTypeTemplate(typeRule(Lhs,_)) => Lhs.
 
-  importContracts:(list[conEntry],list[env],list[env]){}.
-  importContracts([],Env,Env).
-  importContracts([C,..L],E,Env) :-
+  importContracts:(list[conEntry],location,list[env])=>list[env].
+  importContracts([],_,Env)=>Env.
+  importContracts([C,..L],Lc,E)=>importContracts(L,Lc,E1) :-
     C = conEntry(Nm,_,_),
-    importContracts(L,declareContract(Nm,C,E),Env).
+    defineContract(Nm,Lc,C,E,E1).
 
   private checkGroups:(list[list[defn]],list[(string,tipe)],list[(string,ast)],list[canonDef],list[env],list[env],string,report,report){}.
   checkGroups([],_,_,[],E,E,_,Rp,Rp).
@@ -197,12 +197,12 @@ lo.comp.typecheck{
     declareTypes(More,Defs,Dx,declareType(N,tpDef(some(Lc),Type,FaceRule),Env),Ex).
 
   private contractGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
-  contractGroup([defn(N,con,Lc,_,[ConStmt]),.._],[Contract,..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
+  contractGroup([defn(N,con,Lc,_,[ConStmt]),.._],[cnDefn(Lc,N,Contract),..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
     parseContract(ConStmt,Env,Path,Contract,Rp,Rpx),
     defineContract(N,Lc,Contract,Env,Ex).
 
-  private defineContract:(string,location,canonDef,list[env],list[env]){}.
-  defineContract(N,Lc,cnDefn(_,Nm,Spec,Face),E0,Ex) :-
+  private defineContract:(string,location,conEntry,list[env],list[env]){}.
+  defineContract(N,Lc,conEntry(Nm,Spec,Face),E0,Ex) :-
     declareMethods(Spec,Face,Lc,declareContract(N,conEntry(Nm,Spec,Face),E0),Ex).
 
   private declareMethods:(constraint,tipe,location,list[env],list[env]){}.
@@ -923,7 +923,7 @@ lo.comp.typecheck{
     isPublicVar(Nm,Fields,Public).
   exportDef(grammDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Classes,Classes,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(cnDefn(_,Nm,Spec,Tp),_,Public,Ex,Ex,Types,Types,Classes,Classes,[conEntry(Nm,Spec,Tp),..Cons],Cons,Impl,Impl) :-
+  exportDef(cnDefn(_,Nm,Contract),_,Public,Ex,Ex,Types,Types,Classes,Classes,[Contract,..Cons],Cons,Impl,Impl) :-
     (Nm,con) in Public.
   exportDef(implDef(_,INm,ImplName,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Classes,Classes,Cons,Cons,[implEntry(ImplName,Spec),..Ix],Ix) :-
     isPublicImplementation(INm,Public)!.
@@ -948,7 +948,7 @@ lo.comp.typecheck{
     (Nm,impl) in Public.
 
   findImportedImplementations:(list[pkgSpec],list[implEntry],list[implEntry]){}.
-  findImportedImplementations([pkgSpec(_,_,_,_,_,Impls,_),..Specs],Impls<>D1,OverDict) :-
-    findImportedImplementations(Specs,D1,OverDict).
+  findImportedImplementations([pkgSpec(_,_,_,_,_,Impls,_),..Specs],D0,D1) :-
+    findImportedImplementations(Specs,Impls<>D0,D1).
   findImportedImplementations([],D,D).
 }
