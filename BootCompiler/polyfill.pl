@@ -17,6 +17,7 @@
                     '_display'/2,
                     '_str_lt'/2, '_str_ge'/2,
                     '_int_lt'/2, '_int_ge'/2,
+                    '_flt_lt'/2,'_flt_ge'/2,
                     listify/2,
                     '_readFileContents'/2,
                     '_writeFileContents'/2,
@@ -98,6 +99,9 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 
 '_int_lt'(X,Y) :- X<Y.
 '_int_ge'(X,Y) :- X >= Y.
+
+'_flt_lt'(X,Y) :- X<Y.
+'_flt_ge'(X,Y) :- X>=Y.
 
 '_display'((Ln,Col,Sz),Term) :-
   writef("@%t:%t(%t) - %w\n",[Ln,Col,Sz,Term]).

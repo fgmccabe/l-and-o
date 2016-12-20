@@ -40,4 +40,8 @@ lo.resources{
     _coerce(writeMode) => 2.
     _coerce(executeMode) => 4.
   }
+
+  public newerFile:(uri,uri){}.
+  newerFile(U1,U2) :-
+    _file_modified(getUriPath(U1)) > _file_modified(getUriPath(U2)).
 }
