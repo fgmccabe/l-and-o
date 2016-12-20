@@ -103,7 +103,7 @@ lo.comp.resolve{
   resolveTerm(apply(Lc,over(_,T,Cx),tpl(Args)),Dict,Rp,Rpx) => apply(Lc,OverOp,tpl(RArgs)) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
     overloadRef(T,DTerms,resolveTerms(Args,Dict,Rp0,Rpx),OverOp,RArgs).
-  resolveTerm(apply(Lc,Op,Args),Dict,Rp,Rpx) => apply(Lc,resolveTerm(Op,Dict,Rp,RP0),resolveTerm(Args,Dict,Rp0,Rpx)).
+  resolveTerm(apply(Lc,Op,Args),Dict,Rp,Rpx) => apply(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(Args,Dict,Rp0,Rpx)).
   resolveTerm(over(Lc,T,Cx),Dict,Rp,Rpx) => Over :-
     ( resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0) ?
         overloadRef(T,DTerms,[],OverOp,NArgs),

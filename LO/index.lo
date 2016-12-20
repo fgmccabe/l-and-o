@@ -6,16 +6,6 @@ lo.index{
   import lo.collection.
 
   public
-  contract all m,k,v ~~ /*equality[k] |: */ map[m ->> k,v] <~ {
-      present:(m,k,v){}.
-      remove:(m,k) => m.
-      _put:(m,k,v) => m.
-      keys:(m) => list[k].
-      pairs:(m) => list[(k,v)].
-      _empty:m.
-    }.
-
-  public
   type all k,v ~~ /* equality[k] |: */map[k,v] ::= 
       trEmpty
     | trLeaf(integer,list[(k,v)])

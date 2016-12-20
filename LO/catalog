@@ -12,5 +12,6 @@ catalog{
     lo.sets -> "sets.lo".
     lo.collection -> "collection.lo".
     lo.json -> "json.lo".
+    lo.trie -> "trie.lo".
   }
 }

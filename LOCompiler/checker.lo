@@ -65,7 +65,7 @@ lo.comp.typecheck{
   processImportGroup:(list[ast],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
   processImportGroup(Stmts,ImportSpecs,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
-    importAll(Imports,Repo,[],AllImports,ImportSpecs,Rp,Rpx),
+    importAll(Imports,Repo,[],AllImports,ImportSpecs,[],Rp,Rpx),
     importAllDefs(ImportSpecs,Lc,Repo,Env,Ex).
 
   findAllImports:(list[ast],list[(location,visibility,pkg)]){}.
@@ -81,13 +81,13 @@ lo.comp.typecheck{
   findImport(St,Viz) => (Lc,Viz,pkgName(P)) :-
     isUnary(St,"import",Lc,P).
 
-  importAll:(list[(location,visibility,pkg)],repository,list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],report,report){}.
-  importAll([],_,AllImports,AllImports,[],Rp,Rp).
-  importAll([P,..L],Repo,SoFar,All,ImportSpecs,Rp,Rpx) :-
+  importAll:(list[(location,visibility,pkg)],repository,list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],list[pkgSpec],report,report){}.
+  importAll([],_,AllImports,AllImports,Specs,Specs,Rp,Rp).
+  importAll([P,..L],Repo,SoFar,All,ImportSpecs,RestSpecs,Rp,Rpx) :-
     (alreadyImported(P,SoFar) ?
-      importAll(L,Repo,SoFar,All,ImportSpecs,Rp,Rpx) |
+      importAll(L,Repo,SoFar,All,ImportSpecs,RestSpecs,Rp,Rpx) |
       importOne(Repo,P,SoFar,SoF,ImportSpecs,MoreSpecs,Rp,Rp0),
-      importAll(L,Repo,SoF,All,MoreSpecs,Rp0,Rpx)).
+      importAll(L,Repo,SoF,All,MoreSpecs,RestSpecs,Rp0,Rpx)).
 
   alreadyImported:((location,visibility,pkg),list[(location,visibility,pkg)]){}.
   alreadyImported((_,_,Pk),SoFar) :-
@@ -109,7 +109,7 @@ lo.comp.typecheck{
   addPublicImports([(priVate,_),..I],Lc,Rest) :-
     addPublicImports(I,Lc,Rest).
 
-  importAllDefs:(list[pkgSpec],location,epository,list[env],list[env]){}.
+  importAllDefs:(list[pkgSpec],location,repository,list[env],list[env]){}.
   importAllDefs([],_,_,Env,Env).
   importAllDefs([Spec,..Specs],Lc,Repo,Env,Ex) :-
     importDefs(Spec,Lc,Env,Ev0),

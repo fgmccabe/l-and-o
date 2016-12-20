@@ -1,6 +1,19 @@
 lo.collection{
+  import lo.core.
+
   public contract all c,e ~~ folding[c->>e] <~ {
     foldRight:all x,f ~~ f <~ { apply:(e,x)=>x } |: (f,x,c) => x.
     foldLeft:all x,f ~~ f <~ { apply:(x,e)=>x } |: (f,x,c) => x.
   }
+
+  public contract all m,k,v ~~ map[m ->> k,v] <~ {
+    present:(m,k,v){}.
+    remove:(m,k) => m.
+    _put:(m,k,v) => m.
+    keys:(m) => list[k].
+    pairs:(m) => list[(k,v)].
+    _empty:m.
+  }.
+
+
 }

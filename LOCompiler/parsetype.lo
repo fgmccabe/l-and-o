@@ -72,7 +72,7 @@ lo.comp.parseType{
   prsType(F,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
     isBinary(F,"<=>",_,L,R),
     prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
-    prsType(R,Env,Q,C1,Cx,RT,RP,Rp0).
+    prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
   prsType(T,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,_,L,[]),
     prsType(L,Env,Q,C,Cx,AT,Rp,Rpx).

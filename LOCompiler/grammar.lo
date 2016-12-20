@@ -25,8 +25,7 @@ lo.comp.grammar{
   parse(Term,Rp,Rpx) --> term(2000,Term,Mark,Rp,Rp0)!,
     checkForTerminator(Mark,Rp0,Rpx).
 
-  private
-  term:(integer,ast,tokMark,report,report) --> list[token].
+  public term:(integer,ast,tokMark,report,report) --> list[token].
   term(Pr,Term,Mark,Rp,Rpx) -->
     termLeft(Pr,Left,LftPr,LLend,Rp,Rp0),
     termRight(Pr,Left,Term,LftPr,LLend,Mark,Rp0,Rpx).
