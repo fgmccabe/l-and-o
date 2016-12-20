@@ -15,6 +15,9 @@ lo.comp.lexer{
   public tokenCodes:(list[integer],string) => list[token].
   tokenCodes(Chars,Pth) => Toks :- tokenize(Toks) %% startState(Chars,Pth).
 
+  public getNTokens:(list[integer],string,integer) => list[token].
+  getNTokens(Chars,Pth,Count) => Toks :- (skipSpaces(), allTokens(Toks,Count)) %% startState(Chars,Pth) ~ _.
+
   public type tokenState <~ {
     currentLocation:((integer,integer,integer,string)){}
   }.
@@ -46,18 +49,19 @@ lo.comp.lexer{
   tokenize:(list[token]) --> tokenState.
   tokenize(AllTokens) -->
     skipSpaces(),
-    allTokens(AllTokens).
+    allTokens(AllTokens,-1).
 
   private
-  allTokens : (list[token]) --> tokenState.
-  allTokens([]) --> eof.
-  allTokens([tok(Tk,Lc),..More]) -->
+  allTokens : (list[token],integer) --> tokenState.
+  allTokens([],0) --> [].
+  allTokens([],_) --> eof.
+  allTokens([tok(Tk,Lc),..More],Cx) -->
     @currentLocation(Start),
     nxtTok(Tk)!,
     @currentLocation(End),
     Lc = makeLocation(Start,End),
     skipSpaces(),
-    allTokens(More).
+    allTokens(More,Cx-1).
 
   public
   subTokenize:(location,string) => list[token].

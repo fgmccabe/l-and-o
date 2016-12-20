@@ -22,7 +22,7 @@ lo.comp.imports{
   public importPkg:(pkg,repository,pkgSpec,report,report){}.
   importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Classes,Contracts,Impls,Imports),Rp,Rpx) :-
     locatePackage(Repo,Pkg,Vers,_,Strm),
-    nextTerm(tokenCodes(Strm,Pkg),A,_,Rp,Rp0)!,
+    nextTerm(getNTokens(Strm,Pkg,5),A,_,Rp,Rp0)!,
     pickupPkgSpec(A,Imports,Export,Types,Classes,Contracts,Impls,Rp0,Rpx)!.
 
   pickupPkgSpec:(ast,list[(visibility,pkg)],tipe,list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry],report,report){}.
