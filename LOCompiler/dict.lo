@@ -15,6 +15,27 @@ lo.comp.dict{
   public
   type typeDef ::= tpDef(location,tipe,tipe).
 
+  public implementation display[env] .. {
+    disp(E) => showEnv(E).
+  }
+
+  private showEnv:(env) => ss.
+  showEnv(scope(Tps,Vars,Constraints,Contracts,Implementations)) => ssSeq([ss("scope types: "),disp(Tps),ss("\nvars: "),disp(Vars)]).
+
+  implementation display[typeDef] .. {
+    disp(D) => showTpDef(D).
+  }
+
+  private showTpDef:(typeDef)=>ss.
+  showTpDef(tpDef(Lc,Tp,Face)) => ssSeq([ss("type @"),disp(Lc),ss("\n"),disp(Tp),ss("\nTp"),disp(Tp),ss("\n face "),disp(Face),ss("\n")]).
+
+  public implementation display[vr] .. {
+    disp(D) => showVr(D).
+  }
+
+  private showVr:(vr)=>ss.
+  showVr(vr(Lc,T,Tp)) => ssSeq([disp(T),ss(" |= "),disp(Tp),ss(" @ "),disp(Lc),ss("\n")]).
+
   public
   typeInDict:(string,list[env],tipe){}.
   typeInDict(Nm,Env,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(_,_,Tp))!.
@@ -72,7 +93,7 @@ lo.comp.dict{
   topVars([scope(_,Vars,_,_,_),.._]) => Vars.
 
   public pushScope:(list[env]) => list[env].
-  pushScope(E) => [scope([],[],[],[],[]),..E].
+  pushScope(E) => [scope([],[],[],[],[]),..E] :- _logmsg("push new scope on $(E)").
 
   public declareConstraint:(constraint,list[env]) => list[env].
   declareConstraint(C,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,[C,..Cons],Contracts,Imps),..E].

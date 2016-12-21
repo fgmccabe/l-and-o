@@ -644,7 +644,7 @@ manageConstraints(constrained(Tp,implementsFace(TV,Fc)),Cons,Lc,V,MTp,Exp,Env,Ev
 manageConstraints(constrained(Tp,Con),Cons,Lc,V,MTp,Exp,Env,Ev) :- !,
   manageConstraints(Tp,[Con|Cons],Lc,V,MTp,Exp,Env,Ev).
 manageConstraints(Tp,[],_,V,Tp,V,Env,Env) :- !.
-manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons),Env,Env).
+manageConstraints(Tp,RCons,Lc,V,Tp,over(Lc,V,Cons),Env,Env) :- reverse(RCons,Cons).
 
 typeOfKnown(T,Tp,Env,Ev,Exp) :-
   isIden(T,Lc,Nm),

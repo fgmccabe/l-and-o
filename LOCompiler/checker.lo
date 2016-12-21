@@ -591,11 +591,11 @@ lo.comp.typecheck{
 
   private checkSquareTuple:(location,list[ast],tipe,list[env],list[env],canonTerm,report,report){}.
   checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx) :-
-    ((isMapSequence(Els) | isMapType(Tp,Lc,Env,Rp,Rp0)) ?
-      checkType(Lc,findType("map",Lc,Env,Rp0,Rp1),Tp,Env,Rp1,Rp2),
+    ((isMapSequence(Els) | isMapType(Tp,Lc,Env)) ?
+      checkType(Lc,findType("map",Lc,Env,Rp,Rp1),Tp,Env,Rp1,Rp2),
       typeOfTerm(macroMapEntries(Lc,Els,Rp2,Rp3),Tp,Env,Ev,Exp,Rp3,Rpx)|
-    (isListSequence(Els) | isListType(Tp,Lc,Env,Rp,Rp0)) ?
-      ListTp = findType("list",Lc,Env,Rp0,Rp1),
+    (isListSequence(Els) | isListType(Tp,Lc,Env)) ?
+      ListTp = findType("list",Lc,Env,Rp,Rp1),
       ListTp = typeExp(_,[ElTp]),
       checkType(Lc,ListTp,Tp,Env,Rp1,Rp2),
       typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp,Rp2,Rpx)|
@@ -606,9 +606,10 @@ lo.comp.typecheck{
     E in Els,
     isBinary(E,"->",_,_,_).
 
-  private isMapType:(tipe,location,list[env],report,report){}.
-  isMapType(Tp,Lc,Env,Rp,Rpx) :-
-    typeExp(MpOp,_) = findType("map",Lc,Env,Rp,Rpx),
+  private isMapType:(tipe,location,list[env]){}.
+  isMapType(Tp,Lc,Env) :-
+    isType("map",Env,_,T),
+    moveQuants(T,_,typeExp(MpOp,_)),
     typeExp(MpOp,_) = deRef(Tp).
  
   -- Looks for ,.. at end, and no -> in the elements
@@ -616,9 +617,10 @@ lo.comp.typecheck{
   isListSequence([E,.._]) :-
     \+ isBinary(E,"->",_,_,_).
 
-  private isListType:(tipe,location,list[env],report,report){}.
-  isListType(Tp,Lc,Env,Rp,Rpx) :-
-    typeExp(MpOp,_) = findType("list",Lc,Env,Rp,Rpx),
+  private isListType:(tipe,location,list[env]){}.
+  isListType(Tp,Lc,Env) :-
+    isType("map",Env,_,T),
+    moveQuants(T,_,typeExp(MpOp,_)),
     typeExp(MpOp,_) = deRef(Tp).
 
   private typeOfListTerm:(list[ast],location,tipe,tipe,list[env],list[env],canonTerm,report,report){}.
@@ -847,7 +849,7 @@ lo.comp.typecheck{
   manageConstraints(constrained(T,C),Cons,Lc,V,MTp,Exp) :-
     manageConstraints(T,[C,..Cons],Lc,V,MTp,Exp).
   manageConstraints(Tp,[],_,V,Tp,V).
-  manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,Cons)).
+  manageConstraints(Tp,Cons,Lc,V,Tp,over(Lc,V,reverse(Cons))).
 
   private knownType:(ast,tipe,list[env],list[env],canonTerm,report,report){}.
   knownType(V,Tp,Env,Env,Term,Rp,Rpx) :-

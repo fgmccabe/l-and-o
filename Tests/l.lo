@@ -1,20 +1,11 @@
 test.l{
-  import lo.
+  import lo.core.
 
+  -- stream contract
   public
-  implementation all x ~~ equality[x] |: equality[list[x]] .. {
-    L1 == L2 :- listEq(L1,L2).
-    hash(L) => listHash(L).
+  implementation all x ~~ stream[list[x] ->> x] .. {
+    _eof([]).
+    _hdtl([E,..L],E,L).
+    _cons(E,L) => [E,..L].
   }
-
-  
-  private
-  listEq:all x ~~ equality[x] |: (list[x],list[x]){}.
-  listEq([],[]).
-  listEq([E1,..L1],[E2,..L2]) :- E1==E2, listEq(L1,L2).
-
-  private
-  listHash:all x ~~ equality[x] |: (list[x])=>integer.
-  listHash([]) => 0.
-  listHash([E,..L]) => hash(E)*37+listHash(L).
 }
