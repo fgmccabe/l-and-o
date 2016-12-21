@@ -32,7 +32,7 @@ lo.comp.driver{
   processFile(u,o) :-
     Term = parseFile(u,reportBase,Er0),
     -- _logmsg("Error report after parsing: $(Er0)"),
-    _logmsg(formatSS(disp(Term))),
+    -- _logmsg(formatSS(disp(Term))),
     Repo = openRepository(o.repoDir),
     Prg = checkProgram(Term,o.version,Repo,Er0,ER),
     _logmsg("Checked program: $(Prg)"),

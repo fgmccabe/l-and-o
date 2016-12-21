@@ -138,7 +138,7 @@ lo.comp.canon {
   dispDef(varDef(Lc,Nm,Tp,Cx,Exp,trueCond)) => ssSeq([ss(" var @ "),disp(Lc),ss("\n"),ss(Nm),ss(":"),disp(Tp),ss("\n"),ss(Nm),ss("="),dispTerm(Exp)]).
   dispDef(varDef(Lc,Nm,Tp,Cx,Exp,C)) => ssSeq([ss(" var @ "),disp(Lc),ss("\n"),ss(Nm),ss(":"),disp(Tp),ss("\n"),ss(Nm),ss("="),dispTerm(Exp),ss(":-"),dispCond(C)]).
   dispDef(typeDef(Lc,Nm,Tp,TpDef)) => ssSeq([ss(" type @ "),disp(Lc),ss("\n"),disp(TpDef)]).
-  dispDef(otherDef(Lc,C)) => ssSeq([ss("other @" ),disp(Lc),ss("\n"),disp(C)]).
+  dispDef(otherDef(Lc,C)) => ssSeq([ss("other @" ),disp(Lc),ss("\n"),disp(C),ss("\n")]).
   dispDef(cnDefn(Lc,_,conEntry(Nm,Con,B))) => ssSeq([ss(" contract: @ "),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
   dispDef(implDef(Lc,_,ImplNm,Con,_,_,T)) => ssSeq([ss(" implementation: "),ss(ImplNm),ss(" @ "),disp(Lc),ss("\n"),disp(Con),ss(".."),dispTerm(T)]).
 
@@ -162,8 +162,8 @@ lo.comp.canon {
   dispRules([Rl,..L]) => [dispRule(Rl),..dispRules(L)].
 
   private dispOther:(canonOther) => ss.
-  dispOther(integrity(Lc,C)) => ssSeq([ss(" assert@ "),disp(Lc),ss("\n"),dispCond(C)]).
-  dispOther(expShow(Lc,E)) => ssSeq([ss(" show@ "),disp(Lc),ss("\n"),dispTerm(E)]).
+  dispOther(integrity(Lc,C)) => ssSeq([ss(" assert@ "),disp(Lc),ss("\n"),dispCond(C),ss("\n")]).
+  dispOther(expShow(Lc,E)) => ssSeq([ss(" show@ "),disp(Lc),ss("\n"),dispTerm(E),ss("\n")]).
 
 
   private dispOthers:(list[canonOther]) => list[ss].

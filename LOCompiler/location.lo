@@ -4,21 +4,15 @@ lo.comp.location{
   public 
   type location <~ {
     merge:(location)=>location.
-    line:integer.
-    column:integer.
-    from:integer.
-    length:integer.
-    path:string.
   }.
+
+  public std:location.
+  std{
+    merge(Lc) => Lc.
+  }
 
   public loc:(integer,integer,integer,integer,string)<=>location.
   loc(Line,Off,Col,Len,Pth){
-    line = Line.
-    column = Col.
-    from = Off.
-    length = Len.
-    path = Pth.
-
     merge(loc(_,OO,C,L,_)) => loc(Line,Off,Col,OO-Off+L,Pth).
   }.
 
@@ -28,6 +22,7 @@ lo.comp.location{
   }
 
   locDisp:(location)=>ss.
+  locDisp(std) => ss("<standard>").
   locDisp(loc(Ln,Off,Col,Len,Pth)) => 
         ssSeq([ss(Pth),ss(":"),disp(Ln),ss("/"),disp(Col),ss("("),disp(Len),ss(")")]).
 

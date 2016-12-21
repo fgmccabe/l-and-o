@@ -3,6 +3,7 @@ lo.comp.dict{
   import lo.comp.types.
   import lo.comp.misc.
   import lo.comp.canon.
+  import lo.comp.escapes.
   import lo.
 
   public
@@ -12,13 +13,13 @@ lo.comp.dict{
   type env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,conEntry],map[string,map[string,implEntry]]).
 
   public
-  type typeDef ::= tpDef(option[location],tipe,tipe).
+  type typeDef ::= tpDef(location,tipe,tipe).
 
   public
   typeInDict:(string,list[env],tipe){}.
   typeInDict(Nm,Env,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(_,_,Tp))!.
 
-  public isType:(string,list[env],option[location],tipe){}.
+  public isType:(string,list[env],location,tipe){}.
   isType(Nm,Env,Lc,Tp) :- typeInD(localTypeName(Nm),Env,tpDef(Lc,Tp,_))!.
 
   private
@@ -27,7 +28,7 @@ lo.comp.dict{
   tpInDict(_,_) => none.
 
   public
-  declareTypeExists:(string,option[location],tipe,list[env]) => list[env].
+  declareTypeExists:(string,location,tipe,list[env]) => list[env].
   declareTypeExists(Nm,Lc,Tp,Env) => declareType(Nm,tpDef(Lc,Tp,voidType),Env).
 
   public declareType:(string,typeDef,list[env]) => list[env].
@@ -36,7 +37,7 @@ lo.comp.dict{
 
   private standardType:(string,tipe,list[env]) => list[env].
   standardType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) => 
-      [scope(Types+[Nm->tpDef(none,Tp,typeRule(Tp,faceType([])))],Names,Cons,Contracts,Imps),..E].
+      [scope(Types+[Nm->tpDef(std,Tp,typeRule(Tp,faceType([])))],Names,Cons,Contracts,Imps),..E].
 
   private
   localTypeName:(string) => string.
@@ -59,6 +60,7 @@ lo.comp.dict{
 
   public
   isVar:(string,list[env],vr){}.
+  isVar(Nm,_,vr(std,v(Nm),escapeType(Nm))) :- isEscape(Nm).
   isVar(Nm,Env,Def) :- varInD(Nm,Env,Def)!.
 
   public
@@ -99,8 +101,8 @@ lo.comp.dict{
 
   public
   declareImplementation:(string,string,implEntry,list[env]) => list[env].
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+[Nm->I+[ImplNm->Con]]),..E] :-  present(Imps,Nm,I) .
-  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tp,Nms,Cons,Contracts,Imps+[Nm->[ImplNm->Con]]),..E].
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,Cons,Contracts,Imps+[Nm->I+[ImplNm->Con]]),..E] :-  present(Imps,Nm,I) .
+  declareImplementation(Nm,ImplNm,Con,[scope(Tps,Nms,Cons,Contracts,Imps),..E]) => [scope(Tps,Nms,Cons,Contracts,Imps+[Nm->[ImplNm->Con]]),..E].
 
   impInD:(string,list[env],map[string,implEntry]){}.
   impInD(Nm,[scope(_,_,_,_,Impls),.._],Dec) :- present(Impls,Nm,Dec).

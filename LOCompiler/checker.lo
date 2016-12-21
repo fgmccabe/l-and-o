@@ -39,11 +39,12 @@ lo.comp.typecheck{
       list[canonDef],list[(string,defnKind)],list[pkgSpec],list[canonOther],report,report){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
-    _logmsg("After rewrite: $(Stmts)"),
+    -- _logmsg("After rewrite: $(Stmts)"),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
     processImportGroup(Imps,Imports,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
-    checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
+    checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx),
+    _logmsg("Checked defs: $(Defs)").
 
   private checkOthers:(list[ast],list[canonOther],list[env],string,report,report){}.
   checkOthers([],[],_,_,Rp,Rp).
@@ -126,7 +127,7 @@ lo.comp.typecheck{
 
   importTypes:(list[(string,tipe)],location,list[env]) => list[env].
   importTypes([],_,Env)=>Env.
-  importTypes([(Nm,Rule),..More],Lc,Env) => importTypes(More,Lc,declareType(Nm,tpDef(some(Lc),pickTypeTemplate(Rule),Rule),Env)).
+  importTypes([(Nm,Rule),..More],Lc,Env) => importTypes(More,Lc,declareType(Nm,tpDef(Lc,pickTypeTemplate(Rule),Rule),Env)).
 
   pickTypeTemplate:(tipe)=>tipe.
   pickTypeTemplate(univType(B,Tp)) => univType(B,pickTypeTemplate(Tp)).
@@ -177,7 +178,7 @@ lo.comp.typecheck{
         reportError("type $(N) already defined at $(OLc)",Lc,Rp,Rpx),
         Ex = Env |
         parseTypeTemplate(St,Env,Type,Path,Rp,Rpx),
-        Ex = declareType(N,tpDef(some(Lc),Type,faceType([])),Env)).
+        Ex = declareType(N,tpDef(Lc,Type,faceType([])),Env)).
 
   private parseTypeDefs:(list[defn],list[canonDef],list[canonDef],list[env],string,report,report){}.
   parseTypeDefs([],Defs,Defs,_,_,Rp,Rp).
@@ -194,7 +195,7 @@ lo.comp.typecheck{
   private declareTypes:(list[canonDef],list[canonDef],list[canonDef],list[env],list[env]){}.
   declareTypes([],Defs,Defs,Env,Env).
   declareTypes([typeDef(Lc,N,Type,FaceRule),..More],[typeDef(Lc,N,Type,FaceRule),..Defs],Dx,Env,Ex) :-
-    declareTypes(More,Defs,Dx,declareType(N,tpDef(some(Lc),Type,FaceRule),Env),Ex).
+    declareTypes(More,Defs,Dx,declareType(N,tpDef(Lc,Type,FaceRule),Env),Ex).
 
   private contractGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
   contractGroup([defn(N,con,Lc,_,[ConStmt]),.._],[cnDefn(Lc,N,Contract),..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
@@ -241,6 +242,7 @@ lo.comp.typecheck{
   private checkVarRules:(list[defn],list[env],list[canonDef],list[canonDef],string,report,report){}.
   checkVarRules([],_,Defs,Defs,_,Rp,Rp).
   checkVarRules([defn(N,valu,Lc,_,Stmts),..More],Env,Defs,Dx,Path,Rp,Rpx) :-
+    _logmsg("checking var rules $(Stmts)"),
     (Q,PT) = skolemize(pickupVarType(N,Lc,Env,Rp,Rp0),pickupThisType(Env)),
     declareTypeVars(pairs(Q),Lc,Env,SEnv),
     moveConstraints(PT,Cx,ProgramType),
@@ -260,7 +262,7 @@ lo.comp.typecheck{
   declareTypeVars([("this",_),..Vars],Lc,Env,Ex) :- 
     declareTypeVars(Vars,Lc,Env,Ex).
   declareTypeVars([(Nm,Tp),..Vars],Lc,Env,Ex) :-
-    declareTypeVars(Vars,Lc,declareTypeExists(Nm,some(Lc),Tp,Env),Ex).
+    declareTypeVars(Vars,Lc,declareTypeExists(Nm,Lc,Tp,Env),Ex).
 
   private declareConstraints:(list[constraint],list[env],list[env]){}.
   declareConstraints([],Env,Env).
@@ -393,7 +395,8 @@ lo.comp.typecheck{
     sameLength(ODeps,ADeps,Lc,Rp1,Rp2),
     -- match up the type variables of the original contract with the actual implemented contract
     QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,[])),
-    (_,Face) = freshen(ConFace,QQ),
+    moveQuants(ConFace,_,CFace),
+    (_,Face) = freshen(CFace,QQ),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
     checkClassBody(Face,Lc,Els,Env,ThDefs,Others,Types,ImplName,Rp0,Rpx),
     Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others)),
@@ -502,7 +505,7 @@ lo.comp.typecheck{
       Ev = declareVar(Nm,vr(Lc,v(Nm),Tp),Env), Term=v(Nm), Rp=Rpx).
   typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :- 
     checkType(Lc,findType("integer",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
-  typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Ix),Rp,Rpx) :- 
+  typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Dx),Rp,Rpx) :- 
     checkType(Lc,findType("float",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
   typeOfTerm(strg(Lc,Sx),Tp,Env,Env,str(Sx),Rp,Rpx) :- 
     checkType(Lc,findType("string",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).

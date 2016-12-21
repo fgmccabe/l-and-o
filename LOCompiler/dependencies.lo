@@ -107,7 +107,7 @@ lo.comp.dependencies{
   ruleHead(S,L) :- isBinary(S,"=>",_,L,_).
   ruleHead(S,L) :- isBinary(S,"-->",_,LL,_), isBinary(LL,",",_,L,_).
   ruleHead(S,L) :- isBinary(S,"-->",_,L,_).
-  ruleHead(S,L) :- isBinary(S,":-",_,L,_).
+  ruleHead(S,L) :- isBinary(S,":-",_,LL,_), ruleHead(LL,L).
   ruleHead(S,L) :- isBinary(S,"<=",_,L,_).
   ruleHead(S,L) :- isBraceTerm(S,_,L,_).
   ruleHead(S,S) :- isRoundTerm(S,_,_,_).
@@ -155,7 +155,7 @@ lo.comp.dependencies{
     isIden(Op,_,Nm).
 
   surfaceNames:(list[ast],string) => list[ss].
-  surfaceNames([T,.._],Sep) => surfaceNames(deComma(T),Sep) :-
+  surfaceNames([T,.._],Sep) => surfaceNames(deComma(L),Sep) :-
     isBinary(T,"->>",_,L,_).
   surfaceNames([],_)=>[].
   surfaceNames([T,..Els],Sep) => [ss(Sep),surfaceName(T),..surfaceNames(Els,Sep)].
