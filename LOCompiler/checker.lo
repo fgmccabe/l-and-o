@@ -364,6 +364,7 @@ lo.comp.typecheck{
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     typeOfTerm(R,SuperTp,E2,_,Repl,Rp1,Rpx),
     XNm = subPath(Pth,marker(clss),Nm),
+    faceOfType(SuperTp,Env,SuperFace).
     generateClassFace(SuperTp,E1,SuperFace).
 
   private generateClassFace:(tipe,list[env],tipe){}.
@@ -775,7 +776,6 @@ lo.comp.typecheck{
     isRuleForClass(Cl,Lc,Nm,XNm),
     collectClassRules(Stmts,S0,Nm,Rules),
     isVar(Nm,Env,vr(_,_,Tp)),
-    generateClassFace(Tp,Env,Face),
     collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([Rl,..Stmts],Env,Cx,[grammDef(Lc,Nm,Tp,Cx,[Rl,..Rules]),..Defs],Dx) :-
     isGrammarRule(Rl,Lc,Nm),

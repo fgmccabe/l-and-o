@@ -19,23 +19,53 @@ lo.comp.driver{
   main:(list[string]){}.
   main(Args) :-
     opts = parseFlags(Args),
-    processPkgs(opts.pkgs,locateCatalog(opts.wDir),opts).
+    processArgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)).
 
-  -- Temporary definition
-  processPkgs:(list[pkg],catalog,compOption){}.
-  processPkgs([],_,_).
-  processPkgs([p,..l],c,o) :-
-    resolveCatalog(c,p,u),
-    processFile(u,o),
-    processPkgs(l,c,o).
+  processArgs:(list[pkg],repository,catalog){}.
+  processArgs(Pkgs,Repo,Cat) :-
+    processGroups(makeGraph(Pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,[],Rp0,Rpx)!,
+    _logmsg("$(Rpx)").
 
-  processFile:(uri,compOption){}.
-  processFile(u,o) :-
-    Term = parseFile(u,reportBase,Er0),
-    -- _logmsg("Error report after parsing: $(Er0)"),
-    -- _logmsg(formatSS(disp(Term))),
-    Repo = openRepository(o.repoDir),
-    Prg = checkProgram(Term,o.version,Repo,Er0,ER),
+  processGroups:(list[list[(pkg,list[pkg])]],repository,catalog,list[pkg],report,report){}.
+  processGroups(_,_,_,_,Rp,Rpx) :-
+    countErrors(Rp)>0,
+    reportMsg("aborting compilation",std,Rp,Rpx).
+  processGroups([],_,_,_,Rp,Rp).
+  processGroups([Gp,..L],Repo,Cat,CP,Rp,Rpx) :-
+    (length(Gp)>1 ?
+      reportError("circular dependency in packages $(projectPkgs(Gp))",std,Rp,Rpx) |
+      processGroup(Gp,Repo,Repo0,Cat,CP,CP0,Rp,Rp0),
+      processGroups(L,Repo0,Cat,CP0,Rp0,Rpx)).
+
+  private projectPkgs:(list[(pkg,list[pkg])]) => list[pkg].
+  projectPkgs([]) => [].
+  projectPkgs([(Pkg,_),..L]) => [Pkg,..projectPkgs(L)].
+
+  processGroup:(list[(pkg,list[pkg])],repository,repository,catalog,list[pkg],list[pkg],report,report){}.
+  processGroup([],Repo,Repo,_,CP,CP,Rp,Rp).
+  processGroup([(P,Imps),..L],Repo,RepoX,Cat,CP,CPx,Rp,Rpx) :-
+    processPkg(P,Imps,Repo,Repo0,Cat,CP,CP0,Rp,Rp0)!,
+    processGroup(L,Repo0,RepoX,Cat,CP0,CPx,Rp0,Rpx).
+
+  processPkg:(pkg,list[pkg],repository,repository,catalog,list[pkg],list[pkg],report,report){}.
+  processPkg(P,Imps,Repo,Repo,_,CP,CP,Rp,Rpx) :-
+    importsOk(Imps,CP),
+    packagePresent(Repo,P),
+    reportMsg("skipping package $(P)",std,Rp,Rpx).
+  processPkg(P,_,Repo,RepoX,Cat,CP,[P,..CP],Rp,Rpx) :-
+    reportMsg("compiling package $(P)",std,Rp,Rp0),
+    compilePkg(P,Repo,RepoX,Cat,Rp0,Rpx)!.
+
+  importsOk:(list[pkg],list[pkg]){}.
+  importsOk([],_).
+  importsOk([P,..L],CP) :- \+ P in CP, importsOk(L,CP).
+
+  compilePkg:(pkg,repository,repository,catalog,report,report){}.
+  compilePkg(pkg(P,V),Repo,Repo,Cat,Rp,Rpx) :-
+    resolveCatalog(Cat,pkg(P,V),U),
+    Term = parseFile(U,Rp,Rp0),
+    Prg = checkProgram(Term,V,Repo,Rp0,Rpx),
     _logmsg("Checked program: $(Prg)"),
-    _logmsg("$(ER)").
+    _logmsg("$(Rpx)").
+
 }

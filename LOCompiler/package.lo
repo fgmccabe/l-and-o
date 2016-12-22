@@ -20,6 +20,11 @@ lo.comp.package{
     disp(vers(V)) => ss(V).
   }
 
+  public implementation coercion[pkg,string] .. {
+    _coerce(pkg(P,defltVersion)) => P.
+    _coerce(pkg(P,vers(V))) => P+"#"+V.
+  }
+
   samePackage:(pkg,pkg){}.
   samePackage(pkg(P1,V1),pkg(P2,V2)) :- P1=P2, V1=V2.
 

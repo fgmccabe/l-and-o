@@ -29,8 +29,11 @@ lo.comp.errors{
   showMsgs([E,..L]) => [showErrorMsg(E),..showMsgs(L)].
 
   showErrorMsg:(reportMsg) => ss.
+  showErrorMsg(errorMsg(std,M)) => ssSeq([ss("Error "),ss(M),ss("\n")]).
   showErrorMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showErrorMsg(warnMsg(std,M)) => ssSeq([ss("Warning "),ss(M),ss("\n")]).
   showErrorMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showErrorMsg(othMsg(std,M)) => ssSeq([ss(M),ss("\n")]).
   showErrorMsg(othMsg(Lc,M)) => ssSeq([ss("Info @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
 
   public countErrors:(report) => integer.
@@ -55,20 +58,17 @@ lo.comp.errors{
   public
   reportError:(string,location,report,report){}.
   reportError(Msg,Lc,report(L),report([errorMsg(Lc,Msg),..L])):-
-    _logmsg("Error @ $(Lc)"),
-    _logmsg(Msg).
+    _logmsg("$(errorMsg(Lc,Msg))").
 
   public
   reportWarn:(string,location,report,report){}.
   reportWarn(Msg,Lc,report(L),report([warnMsg(Lc,Msg),..L])):-
-    _logmsg("Warning @ $(Lc)"),
-    _logmsg(Msg).
+    _logmsg("$(warnMsg(Lc,Msg))").
 
   public
-  reportMsg:(string,location,report)=>report.
-  reportMsg(Msg,Lc,report(L)) => report([othMsg(Lc,Msg),..L]):-
-    _logmsg("Info @ $(Lc)"),
-    _logmsg(Msg).
+  reportMsg:(string,location,report,report){}.
+  reportMsg(Msg,Lc,report(L),report([othMsg(Lc,Msg),..L])):-
+    _logmsg("$(othMsg(Lc,Msg))").
 
   public
   logMsg:(string){}.

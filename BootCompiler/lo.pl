@@ -35,7 +35,7 @@ main(Args) :-
   openRepo(Opts,Repo),
   parsePkgName(Entry,Pkg),
   processPackage(Pkg,Repo,[],_Loaded,[],_),
-  lookForMain(Pkg,LOArgs).
+  lookForMain(Pkg,LOArgs),!.
 
 processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
   loadPkg(Pkg,Repo,Code,Imports),
