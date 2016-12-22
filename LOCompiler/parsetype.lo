@@ -48,10 +48,11 @@ lo.comp.parseType{
     parseTypeBound(V,Q,B0,Env,PT,Inner),
     prsType(BT,Env,B0,[],C0,BTp,Rp,Rpx),
     moveConstraints(Inner,C0,BTp). -- no constraints migrate out of quantified type
-  prsType(T,Env,Q,C,Cx,Type,Rp,Rpx) :-
+  prsType(T,Env,Q,C,C,Type,Rp,Rpx) :-
     isBinary(T,"|:",_,L,R),
-    parseConstraint(L,Env,Q,C,C0,Rp,Rp0),
-    prsType(R,Env,Q,C0,Cx,Type,Rp0,Rpx). -- This has the effect of pulling all constraints to the outside
+    parseConstraint(L,Env,Q,[],C0,Rp,Rp0),
+    prsType(R,Env,Q,[],_,Inner,Rp0,Rpx),
+    moveConstraints(Type,C0,Inner).
   prsType(T,Env,Q,C,Cx,Tp,Rp,Rpx) :-
     isIden(T,Lc,Nm),
     prsTypeName(Lc,Nm,Env,Q,C,Cx,Tp,Rp,Rpx).
@@ -75,7 +76,7 @@ lo.comp.parseType{
     prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
   prsType(T,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,_,L,[]),
-    prsType(L,Env,Q,C,Cx,AT,Rp,Rpx).
+    prsArgType(L,Env,Q,C,Cx,AT,Rp,Rpx).
   prsType(T,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
     isRoundTuple(T,_,[A]), 
     isRoundTuple(A,_,Inner),
@@ -172,8 +173,8 @@ lo.comp.parseType{
   public parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint],report,report){}.
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,",",_,L,R),
-    parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
-    parseConstraint(R,Env,B,C1,Cx,Rp0,Rpx).
+    parseConstraint(R,Env,B,C0,C1,Rp,Rp0),
+    parseConstraint(L,Env,B,C1,Cx,Rp0,Rpx).
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,"<~",_,L,R),
     prsType(L,Env,B,C0,C1,TV,Rp,Rp0),

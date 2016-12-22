@@ -255,15 +255,15 @@ resolve(I,C,ImpNm,Lc,Dict,Over) :-
   freshenContract(I,_,Con),
   moveConstraints(Con,Cx,CT),
   sameContract(CT,C,[]),
-  resolveDependents(Cx,Lc,Dict,[],Args),
+  resolveDependents(Cx,Lc,Dict,Args,[]),
   formOver(v(Lc,ImpNm),Args,Over).
 resolve(I,C,_,Lc,_,I) :-
   reportError("cannot resolve contract %s",[C],Lc).
 
 resolveDependents([],_,_,Args,Args).
-resolveDependents([C|L],Lc,Dict,As,Args) :-
+resolveDependents([C|L],Lc,Dict,[A|As],Args) :-
   resolveContract(Lc,C,Dict,A),
-  resolveDependents(L,Lc,Dict,[A|As],Args).
+  resolveDependents(L,Lc,Dict,As,Args).
 
 formOver(V,[],V).
 formOver(V,Args,apply(V,Args)).
