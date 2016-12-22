@@ -13,6 +13,7 @@ lo.comp.driver{
   import lo.comp.typecheck.
   import lo.comp.repository.
   import lo.comp.errors.
+  import lo.comp.grapher.
   
   -- Hint to the run-time:
   main:(list[string]){}.

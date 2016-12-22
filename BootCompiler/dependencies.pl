@@ -132,6 +132,10 @@ surfaceName(N,Nm) :-
   isIden(N,Nm).
 surfaceName(N,Nm) :-
   isSquare(N,Nm,_).
+surfaceName(T,Nm) :-
+  isTuple(T,_,A),
+  length(A,Ar),
+  swritef(Nm,"()%d",[Ar]).
 
 collectDefines([St|Stmts],Kind,OSt,Nm,[St|Defn]) :-
   ruleName(St,Nm,Kind),

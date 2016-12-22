@@ -201,3 +201,6 @@ surfaceNames([T|L],Sep,S0,Sx) :-
 surfaceName(type(Nm),Nm).
 surfaceName(typeExp(Nm,_),Nm).
 surfaceName(kVar(Nm),Nm).
+surfaceName(tupleType(Els),Nm) :-
+  length(Els,Ar),
+  swritef(Nm,"()%d",[Ar]).

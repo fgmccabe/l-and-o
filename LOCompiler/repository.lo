@@ -20,12 +20,12 @@ lo.comp.repository{
     findPkg(Repo,Pkg,V,ActV,Text)!.
 
   findPkg:(repository,string,version,version,list[integer]){}.
-  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveFile(Root,Fn))) :-
-    locateVersion(Man,Pkg,V,ActV,_,Fn).
+  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,U))) :-
+    locateVersion(Man,Pkg,V,ActV,_,U).
 
   public pkgSrcUri:(repository,string,version,version,uri){}.
-  pkgSrcUri(repo(Root,Man),Pkg,V,ActV,resolveUri(Root,Fn)) :-
-    locateVersion(Man,Pkg,V,ActV,Fn,_).
+  pkgSrcUri(repo(Root,Man),Pkg,V,ActV,resolveUri(Root,U)) :-
+    locateVersion(Man,Pkg,V,ActV,U,_).
 
   public resolveFile:(uri,string) => uri.
   resolveFile(Root,Fl) => resolveUri(Root,parseUri(Fl)).
@@ -40,12 +40,12 @@ lo.comp.repository{
   packageHash(Pkg,defltVersion) => hash(Pkg).
   packageHash(Pkg,vers(V)) => ((37*hash(Pkg))+hash(V)).
 
-  public packagePresent:(repository,string,version){}.
-  packagePresent(repo(Root,Man),Pkg,Vers,SrcWhen,CodeWhen) :-
-    locateVersion(Man,Pkg,defltVersion,Vers,S,U),
-    CodeFile = resolveFile(Root,U),
-    SrcFile = resolveFile(Root,S),
+  public packagePresent:(repository,pkg){}.
+  packagePresent(repo(Root,Man),pkg(Pkg,Vers)) :-
+    locateVersion(Man,Pkg,Vers,_,S,U),
+    CodeFile = resolveUri(Root,U),
+    SrcFile = resolveUri(Root,S),
     resourcePresent(CodeFile,readMode),
-    (resourcePresent(SrcFile) ?
+    (resourcePresent(SrcFile,readMode) ?
         newerFile(CodeFile,SrcFile) | true).
 }

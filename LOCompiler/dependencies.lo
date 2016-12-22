@@ -153,6 +153,8 @@ lo.comp.dependencies{
   implementationName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
     isSquareTerm(S,_,Op,A),
     isIden(Op,_,Nm).
+  implementationName(T,"()$(length(A))") :-
+    isRoundTuple(T,_,A).
 
   surfaceNames:(list[ast],string) => list[ss].
   surfaceNames([T,.._],Sep) => surfaceNames(deComma(L),Sep) :-

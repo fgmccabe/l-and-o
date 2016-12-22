@@ -1,7 +1,7 @@
 lo.comp.grapher{
   import lo.
   import lo.uri.
-  import lo.reosurces.
+  import lo.resources.
   import lo.topsort.
 
   import lo.comp.grammar.
@@ -16,39 +16,26 @@ lo.comp.grapher{
   import lo.comp.imports.
   import lo.comp.misc.
 
+  makeGraph:(list[pkg],repository,catalog,report,report) => list[list[(pkg,list[pkg])]].
+  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => graphPkgs(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
 
+  private implementation depends[(pkg,list[pkg])->>pkg] .. {
+    defines((Pk,_),Pk).
+    references((Pk,I)) => I.
+  }
 
+  private graphPkgs:(list[(pkg,list[pkg])]) => list[list[(pkg,list[pkg])]].
+  graphPkgs(Pkgs) => topsort(Pkgs).
 
-  makeGraph(Repo,Cat,CWD,Fls,Groups) :-
-    scanPkgs(Fls,Repo,Cat,CWD,[],Pkgs),
-    graphPkgs(Pkgs,Groups).
-
-  graphPkgs(Pkgs,Groups) :-
-    topsort(Pkgs,Groups).
-
-  scanPkgs([],_,_,_,Pkgs,Pkgs).
-  scanPkgs([P|L],Repo,Cat,CWD,SoFar,Pkgs) :-
-    parsePkgName(P,Pkg),
-    scanPkg(Pkg,Repo,Cat,CWD,SoFar,P1),
-    scanPkgs(L,Repo,Cat,CWD,P1,Pkgs).
-
-
-  parsePkgName(P,pkg(Pkg,Version)) :-
-    sub_string(P,Before,_,After,"#"),!,
-    sub_string(P,0,Before,_,Pkg),
-    sub_string(P,_,After,0,Version).
-  parsePkgName(P,pkg(P,defltVersion)).
-
-  scanImports([],_,_,_,Pkgs,Pkgs).
-  scanImports([Pkg|Imports],Repo,Cat,CWD,SoFar,Pkgs) :-
-    scanPkg(Pkg,Repo,Cat,CWD,SoFar,Pkg1),
-    scanImports(Imports,Repo,Cat,CWD,Pkg1,Pkgs).
+  scanPkgs:(list[pkg],repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
+  scanPkgs([],_,_,SoFar,Rp,Rp) => SoFar.
+  scanPkgs([Pkg,..Imports],Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imports,Repo,Cat,scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rp0),Rp0,Rpx).
 
   scanPkg:(pkg,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   scanPkg(Pkg,_,_,SoFar,Rp,Rp) => SoFar :-
     (Pkg,_) in SoFar.
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => checkPkg(Spec,Repo,Cat,SoFar,Rp0,Rpx) :-
-    pkgOk(Pkg,Repo),
+    packagePresent(Repo,Pkg),
     importPkg(Pkg,Repo,Spec,Rp,Rp0).
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanFile(SrcUri,Repo,Cat,SoFar,Rp,Rpx) :-
     resolveCatalog(Cat,Pkg,SrcUri).
@@ -56,19 +43,20 @@ lo.comp.grapher{
     reportError("cannot locate package $(Pkg)",std,Rp,Rpx).
 
   checkPkg:(pkgSpec,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
-  checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Pkgs,Rp,Rpx) => scanImports(Pkg,projectOutPkgs(Imports),Repo,Cat,SoFar,Rp,Rpx).
+  checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imported,Repo,Cat,[(Pkg,Imported),..SoFar],Rp,Rpx) :-
+    Imported = projectOutPkgs(Imports).
  
-  private projectOutPkgs:(list[(vizibility,pkg)]) => list[pkg].
+  private projectOutPkgs:(list[(visibility,pkg)]) => list[pkg].
   projectOutPkgs([]) => [].
   projectOutPkgs([(_,Pkg),..L]) => [Pkg,..projectOutPkgs(L)].
 
   scanFile:(uri,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])]. 
-  scanFile(Fl,Repo,Cat,SoFar,Pkgs,Rp,Rpx) => scanImports(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Pkgs,Rp0,Rpx) :-
+  scanFile(Fl,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp0,Rpx) :-
     Term = parseFile(Fl,Rp,Rp0),
     scanTerm(Term,Pkg,Imps).
 
   scanTerm:(ast,pkg,list[pkg]){}.
-  scanTerm(T,scanPkgName(P),scanTheta(Th)) :-
+  scanTerm(T,scanPkgName(P,defltVersion),scanTheta(Th,[])) :-
     isBraceTerm(T,_,P,Th).
 
   scanTheta:(list[ast],list[pkg]) => list[pkg].
@@ -77,21 +65,15 @@ lo.comp.grapher{
 
   scanStmt:(ast,list[pkg]) => list[pkg].
   scanStmt(St,Imp) => scanStmt(El,Imp) :-
-    isUnary(St,"public",El).
+    isUnary(St,"public",_,El).
   scanStmt(St,Imp) => scanStmt(El,Imp) :-
-    isUnary(St,"private",El).
+    isUnary(St,"private",_,El).
   scanStmt(St,Imps) => [scanPkgName(P,defltVersion),..Imps] :-
     isUnary(St,"import",_,P).
   scanStmt(St,Imps) => Imps.
 
   scanPkgName:(ast,version) => pkg.
-  scanPkgName(T,_) => pkg("$(P)","$(V)") :-
+  scanPkgName(T,_) => pkg("$(P)",vers("$(V)")) :-
     isBinary(T,"#",_,P,V).
   scanPkgName(T,V) => pkg("$(T)",V).
-
-  pkgOk:(pkg,repository){}.
-  pkgOk(Pkg,Repo) :-
-    packagePresent(Repo,Pkg,_,_,SrcWhen,CodeWhen),
-    CodeWhen>SrcWhen.
-
 }
