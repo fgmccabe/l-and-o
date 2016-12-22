@@ -1,8 +1,10 @@
 lo.comp.term {
   import lo.
   import lo.comp.types.
+  import lo.comp.package.
 
   public type term ::= anon
+                   | varble(string)
                    | intgr(integer)
                    | flot(float)
                    | enum(string)
@@ -13,12 +15,19 @@ lo.comp.term {
                    | cons(term,list[term])
                    | code(tipe,list[integer],list[term]).
 
+  public type clause ::= clause(list[string],pred,list[pred]).
+
+  public type pred ::= pred(term,list[term]) | cut.
+
+  public type program ::= program(pkg,list[clause]).
+
   public implementation display[term] .. {
     disp(T) => dispTerm(T).
   }
 
   private dispTerm:(term) => ss.
   dispTerm(anon) => ss("_").
+  dispTerm(varble(Nm)) => ssSeq([ss(Nm),ss("?")]).
   dispTerm(intgr(Ix)) => disp(Ix).
   dispTerm(flot(Dx)) => disp(Dx).
   dispTerm(enum(Nm)) => ss(Nm).

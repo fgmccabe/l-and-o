@@ -33,6 +33,7 @@ catalog{
     lo.comp.repository -> "repository.lo".
     lo.comp.term -> "term.lo".
     lo.comp.token -> "token.lo".
+    lo.comp.transform -> "transform.lo".
     lo.comp.types -> "types.lo".
     lo.comp.unify -> "unify.lo".
     lo.comp.wff -> "wff.lo".

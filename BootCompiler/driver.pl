@@ -53,7 +53,7 @@ main(Args) :-
   openRepo(Opts,Repo),
   locateCatalog(CWD,Cat),!,
   makeGraph(Repo,Cat,CWD,Pkgs,Groups),!,
-  (processGroups(Groups,[],Repo,CWD,Opts) ; reportMsg("aborting compiling",[])).
+  (processGroups(Groups,[],Repo,CWD,Opts) ; reportMsg("aborting compiling",[])),!.
 
 openR(Args,CWD,Cat,Repo,Groups) :-
   getCWDUri(CW),
