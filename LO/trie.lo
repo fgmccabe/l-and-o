@@ -18,5 +18,15 @@ lo.trie{
     get([]) => Vl.
     get([k,..l]) => sub.get(l) :- present(Entries,k,(sub:trie[k,v])).
   }
+
+  /*private showTrie: all k,v ~~ display[k], display[v] |: (trie[k,v],integer) => ss.
+  showTrie(trie(some(Vl),Entries),Sp) => ssSeq([spaces(Sp),disp(Vl),ss("\n"),..showEntries(pairs(Entries),Sp+2)]).
+  showTrie(trie(none,Entries),Sp) => ssSeq(showEntries(pairs(Entries))).
+
+  private showEntries: all k,v ~~ display[k], display[v] |: (list[(k,trie[k,v])],integer) => list[ss].
+  showEntries([],_) => [].
+  showEntries([(k,M)],Sp) => [spaces(Sp),]
+*/
+
   
 }

@@ -43,8 +43,8 @@ lo.comp.dependencies{
   dependencies:(list[ast],list[list[defn]],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
   dependencies(Els,Groups,Public,Annots,Imports,Other,Rp,Rpx) :-
     collectDefinitions(Els,Dfs,Public,Annots,Imports,Other,Rp,Rpx),
-    Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)),
-    showGroups(Groups).
+    Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)).
+    -- showGroups(Groups).
 
   collectDefinitions:(list[ast],list[defn],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
   collectDefinitions([],[],[],[],[],[],Rp,Rp).

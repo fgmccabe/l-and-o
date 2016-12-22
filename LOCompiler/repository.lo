@@ -27,7 +27,7 @@ lo.comp.repository{
   pkgSrcUri(repo(Root,Man),Pkg,V,ActV,resolveUri(Root,Fn)) :-
     locateVersion(Man,Pkg,V,ActV,Fn,_).
 
-  resolveFile:(uri,string) => uri.
+  public resolveFile:(uri,string) => uri.
   resolveFile(Root,Fl) => resolveUri(Root,parseUri(Fl)).
 
   public addPackage:(repository,uri,string,version,list[integer]) => repository.
@@ -41,7 +41,11 @@ lo.comp.repository{
   packageHash(Pkg,vers(V)) => ((37*hash(Pkg))+hash(V)).
 
   public packagePresent:(repository,string,version){}.
-  packagePresent(repo(Root,Man),Pkg,Vers) :-
-    locateVersion(Man,Pkg,defltVersion,Vers,_,U),
-    resourcePresent(resolveFile(Root,U),readMode).
+  packagePresent(repo(Root,Man),Pkg,Vers,SrcWhen,CodeWhen) :-
+    locateVersion(Man,Pkg,defltVersion,Vers,S,U),
+    CodeFile = resolveFile(Root,U),
+    SrcFile = resolveFile(Root,S),
+    resourcePresent(CodeFile,readMode),
+    (resourcePresent(SrcFile) ?
+        newerFile(CodeFile,SrcFile) | true).
 }

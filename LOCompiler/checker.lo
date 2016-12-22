@@ -43,8 +43,8 @@ lo.comp.typecheck{
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
     processImportGroup(Imps,Imports,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
-    checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx),
-    _logmsg("Checked defs: $(Defs)").
+    checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
+    -- _logmsg("Checked defs: $(Defs)").
 
   private checkOthers:(list[ast],list[canonOther],list[env],string,report,report){}.
   checkOthers([],[],_,_,Rp,Rp).
@@ -242,7 +242,7 @@ lo.comp.typecheck{
   private checkVarRules:(list[defn],list[env],list[canonDef],list[canonDef],string,report,report){}.
   checkVarRules([],_,Defs,Defs,_,Rp,Rp).
   checkVarRules([defn(N,valu,Lc,_,Stmts),..More],Env,Defs,Dx,Path,Rp,Rpx) :-
-    _logmsg("checking var rules $(Stmts)"),
+    -- _logmsg("checking var rules $(Stmts)"),
     (Q,PT) = skolemize(pickupVarType(N,Lc,Env,Rp,Rp0),pickupThisType(Env)),
     declareTypeVars(pairs(Q),Lc,Env,SEnv),
     moveConstraints(PT,Cx,ProgramType),

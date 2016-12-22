@@ -1,11 +1,10 @@
-Introduction
-============
+# Introduction
 
 The requirements for secure computing in a public arena (such as the Internet) are significantly different to those in the typical laboratory workbench. Applications that routinely interface with other systems via the Internet need to adopt a much more defensive approach to inter-working. This is particularly true in the case of systems where agents may be making real committments on behalf of their owners. L&O is a logic programming language, designed from scratch to be functional in such an environment.
 
 At the level of programming language design, security is less a matter of encryption and public key infrastructure than a matter of transparency and integrity: the program will do what it transparently says it will, and only that. Such transparency comes from a well designed language with clear semantics.
 
-##### Software engineering
+## Software engineering
 
 All significant programs evolve over time – even L&O programs. Supporting this evolution in the context of large scale systems is a primary reason for addressing software engineering. Having a language that is oriented towards intelligent systems does not eliminate or replace the requirements for managing complex systems. The reason is simple: a large program is a large program no matter what the underlying technical aspects are. In fact, a knowledge engineering system are often inherently complex and matters of scale can be exposed quite quickly.
 
@@ -13,20 +12,20 @@ The design of L&O is guided by a strong desire to gain the benefits of modern so
 
 L&O is a multi-paradigm language – there are specialized notations for functions, action rules and grammar rules, as well as predicates. In many cases a programmer knows full well whether their program is intended to be fully relational or is actually a function. By giving different notations for these cases it allows programmers to signal their intentions more clearly than if all kinds of program have to be expressed in the single formalism of a logic clause.
 
-##### Object orientation
+## Object orientation
 
 L&O’s *object orderness* is fundamental to L&O’s approach to software engineering. To support the evolution of programs it is important to be able to modify a large program in a way that has manageable and predictable consequences. This is aided by having a clean separation between interfaces and implementations. For example, to be able to change the implementation of an aspect of a program without changing all the *references* to the program is a basic benefit of object ordered programming. Similarly, any change to a program system (whether code or data) should not require changes to unaffected parts of the system. For example, merely *adding* a new function to a module should not require modifying programs that use existing features of the module – again, we use module here loosely to include data structures and program code. Both of these are important benefits of object ordered programming
 
 > We use the term *object ordered programming* to avoid some of the specifics of common object oriented languages – the key feature of object ordered programming is the encapsulation of code and data that permits the *hiding* of the implementation of a concept from the parts of the application that wish to merely *use* the concept. Features such as inheritance are important but secondary compared to the core concepts of encapsulation and hiding.
->
+> 
 > As an example of the importance of interfaces, consider the Prolog term[^1] – which is Prolog’s basic means for structuring dynamic data. The term is very flexible and simple; however, viewed as a data structuring technique, it mixes implementation of data structures with access to data in an unfortunate way. For example, the `tree` term:
->
+> 
 > `tree(`*`left`*`,`*`label`*`,`*`right`*`)`
->
+> 
 > may be used to denote a binary tree structure. Should it become necessary to adjust this term – perhaps to include a weight element – then *all* references to the `tree` term will need to change, including existing uses which have no interest in the new weight feature. On average there will an order of magnitude more references that *use* the concept of `tree` than references which *define* the essence of `tree`.
->
+> 
 > If we encapsulate the `tree` concept in an object, and use an interface contract to access the tree, then we should be able to add weights to our tree without upsetting existing uses of the tree.
->
+> 
 > It is, of course, possible, in principle, to write Prolog programs in a way that mitigates this problem. However, it is difficult and the Prolog language does not make it easy.
 
 L&O has some features that distinguish it from some OO languages such as Java\tm. L&O’s object notation is based on Logic and Objects (@fgm:92) with some significant simplifications and modifications to incorporate types.
@@ -65,4 +64,4 @@ Overall, the intention behind the design of L&O is to make programs more transpa
 
 This manual is intended to represent both a reference to a particular L&O implementation and as a specification of the language itself. In the future, these functions may be separated into distinct documents.
 
-[^1]: Really the Prolog term is a first order logic term of course.
+[^1]:	Really the Prolog term is a first order logic term of course.

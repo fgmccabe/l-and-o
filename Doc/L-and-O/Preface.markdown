@@ -1,5 +1,4 @@
-Preface
-=======
+# Preface
 
 Since the widespread adoption of the Internet the world has changed irrevocably for computer systems – no longer can applications be built in a stand-alone fashion, working in private. Even though there are countless private sub-domains protected by firewalls, the Internet is an inherently public environment and software should be expected to operate in the open, as it were. This brings enormous opportunities to use the interconnectedness between applications to enhance their power and effectiveness.
 
@@ -11,13 +10,13 @@ In addition, potential buyers of this airline ticket agent may need persuading t
 
 Whatever the risks, the reality is that applications will routinely interconnect with others’ applications in ways that are not easily foreseen by their designers. It is our task, as software developers, to make this experience as safe and painless as possible. L&O is a Logic Programming based language designed from scratch to enable the development of safe, effective and secure applications that routinely interact with other applications on the Internet.
 
-##### Software Engineering
+## Software Engineering
 
 Developing any kind of software is a complex task, made more difficult by the possibilities and risks offered by the Internet. Such complexity is not removed simply by adopting logic as the foundation of one’s languages. Integration, reliability, security, modularization, evolvability, versioning, safety are all qualities that are important for software systems that are independent of the underlying technology. For knowledge intensive applications the list continues – we also require flexibility, explainability, awareness of context. The design of L&O is guided by a strong desire to gain the benefits of modern software engineering best practice as well as that of knowledge engineering.
 
 L&O is a *multi-paradigm* language – it has a strong foundation in object oriented programming, functional programming and procedural programming as well as logic programming. In addition, it is a multi-threaded language with communication capabilities. This is a powerful combination aiming to solve the hard issues of complex software development.
 
-##### Object orientation
+## Object orientation
 
 L&O’s *object orderedness* is fundamental to L&O’s approach to software engineering. To support the evolution of programs it is important to be able to modify a large program in a way that has manageable and predictable consequences. This is aided by having a clean separation between interfaces and implementations of components of the program. Being able to change the implementation of a component without changing all the *references* to the program is a basic benefit of object ordered programming.
 
@@ -27,7 +26,7 @@ Similarly, any change to a component (whether code or data) should not require c
 
 As an example of the importance of interfaces, consider representing binary trees using **Prolog** terms – which is **Prolog**’s basic means for structuring dynamic data. For example, we might use a `tree` term:
 
-    tree(empty,"A",tree(empty,"B",tree(empty,"C",empty)))
+	tree(empty,"A",tree(empty,"B",tree(empty,"C",empty)))
 
 to denote a basic binary tree structure containing the strings `"A"`, `"B"` and `"C"`.
 
@@ -43,9 +42,9 @@ However, should it become necessary to adjust our tree representation – perhap
 
 In L&O we can write the `find` program in a way that does not depend on the shape of the `tree` term:
 
-    find(A,T) :- T.hasLabel(A).
-    find(A,T) :- A<T.label(), find(A,T.left()).
-    find(A,T) :- A>T.label(), find(A,T.right()).
+	find(A,T) :- T.hasLabel(A).
+	find(A,T) :- A<T.label(), find(A,T.left()).
+	find(A,T) :- A>T.label(), find(A,T.right()).
 
 L&O’s labeled theory notation makes it straightforward to encapsulate the `tree` concept in an object, and to use an interface contract to access the tree. As a result, we should be able to add weights to our tree without upsetting existing uses of the tree – in particular, the `find` program does not need to be modified.\note{It may need to be re-compiled however.}
 
@@ -53,17 +52,17 @@ For an OO language, such a capability is not novel, but traditionally, logic pro
 
 L&O has some features that distinguish it from some OO languages such as Java\tm. L&O’s object notation is based on Logic and Objects (@fgm:92) with some significant simplifications and modifications to incorporate types and *interface*s.
 
-#### Ontologies
+## Ontologies
 
 Since L&O is a Logic Programming language, it makes sense to ask how suitable it is for developing Ontologies. 
 
-##### Static types
+## Static types
 
 L&O is a strongly statically typed programming language. The purpose of using a static type system is to enhance programmers’ confidence in the correctness of the program – it cannot replace a formal proof of correctness.
 
 For example, the L&O version of `find` above really needs a *type annotation* before it is complete:
 
-    find: all u,t <~ searchable[u] ~~ (u,t){}.
+	find: all u,t <~ searchable[u] ~~ (u,t){}.
 
 where we both give an explicit (quantified) type and require that the entity being search is `searchable`.
 
@@ -73,11 +72,11 @@ Having a static typed language can be quite constrictive compared to the untyped
 
 In addition to being statically typed, the reader might have noticed that the `find` program we introduced above had a *type annotation*. We believe that explicitly annotating program types is an effective compromise between declaring the type of *every* variable and declaring none of them.
 
-##### Meta-order and object-order
+## Meta-order and object-order
 
 Unlike **Prolog**, L&O does not permit data to be directly interpreted as code. The standard **Prolog** approach of using the same language for meta-level names of programs and programs themselves – which in turn allows program text to be manipulated like other data – has a number of technical problems; especially when considering distributed and secure applications. However, as we shall see, L&O’s object oriented features allow us to emulate the important uses of Prolog’s meta-level features. Moreover, in L&O we can do this in a type safe way.
 
-##### Threads and distribution
+## Threads and distribution
 
 L&O is a multi-tasking programming language. It is possible to spawn off computations as separate threads or tasks.
 
@@ -114,7 +113,7 @@ We use a `typewriter` font whenever we are quoting either a specific element of 
 
 [Appendix Install][Install] discusses the process involved in installing the L&O system. Please note that this process is quite likely to evolve; however, the location:
 
-    git@github.com:fmccabe/l-and-o.git
+	git@github.com:fmccabe/l-and-o.git
 
 will remain as a good source to get the L&O system.
 

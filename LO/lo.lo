@@ -6,6 +6,7 @@ lo{
   public import lo.bits.
   public import lo.collection.
   public import lo.sets.
+  public import lo.trie.
 
   public flatten : (ss) => list[integer].
   flatten(D) => flttn(D,[]).

@@ -15,6 +15,7 @@ catalog{
     lo.comp.errors -> "errors.lo".
     lo.comp.escapes -> "escapes.lo".
     lo.comp.freshen -> "freshen.lo".
+    lo.comp.grapher -> "grapher.lo".
     lo.comp.grammar -> "grammar.lo".
     lo.comp.imports -> "imports.lo".
     lo.comp.keywords -> "keywords.lo".
