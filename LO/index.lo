@@ -13,7 +13,7 @@ lo.index{
 
   public implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] .. {
     present(M,K,V) :- lookIn(hash(K),M,K,V).
-    remove(M,K) => rmve(hash(K),K,M).
+    _remove(M,K) => rmve(hash(K),K,M).
     _put(M,K,V) => insrt(K,V,M).
     keys(M) => keyMap(M,[]).
     pairs(M) => mapPairs(M,[]).

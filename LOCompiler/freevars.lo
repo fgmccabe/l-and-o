@@ -1,0 +1,79 @@
+lo.comp.freevars{
+  import lo.
+  import canon.
+
+   public type
+  canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
+
+  public type
+  canonDef ::= funDef(location,string,tipe,list[constraint],list[canonRule])
+           |   relDef(location,string,tipe,list[constraint],list[canonRule])
+           |   grammDef(location,string,tipe,list[constraint],list[canonRule])
+           |   classDef(location,string,string,tipe,list[constraint],list[canonRule])
+           |   varDef(location,string,tipe,list[constraint],canonTerm,canonCond)
+           |   otherDef(location,canonOther)
+           |   typeDef(location,string,tipe,tipe)
+           |   cnDefn(location,string,conEntry)
+           |   implDef(location,string,string,constraint,list[constraint],canonTerm,canonTerm).
+
+  public type canonOther ::= integrity(location,canonCond)
+           | expShow(location,canonTerm).
+
+  public type
+  canonRule ::= clause(location,string,canonTerm,canonCond)
+             | equation(location,string,canonTerm,canonTerm,canonCond)
+             | vrDef(location,string,canonTerm,canonCond)
+             | clRule(location,string,string,canonTerm,canonTerm,canonCond,tipe)
+             | grRule(location,string,canonTerm,canonNT,canonNT)
+             | tpRule(location,tipe).
+
+
+
+  public type
+  canonCond ::= trueCond
+            | falseCond
+            | conjCond(canonCond,canonCond)
+            | disjCond(canonCond,canonCond)
+            | condCond(canonCond,canonCond,canonCond)
+            | unifyCond(canonTerm,canonTerm)
+            | oneCond(canonCond)
+            | negCond(canonCond)
+            | forallCond(canonCond,canonCond)
+            | callCond(location,canonTerm,canonTerm)
+            | isTrue(canonTerm)
+            | phraseCond(location,canonNT,canonTerm,canonTerm).
+
+  public type
+  canonNT ::= grTerms(list[(location,string,canonTerm)])
+          | grCall(location,canonTerm,canonTerm)
+          | grTest(canonCond)
+          | grOne(canonNT)
+          | grNeg(canonNT)
+          | grAhed(canonNT)
+          | grDisj(canonNT,canonNT)
+          | grConj(canonNT,canonNT)
+          | grCond(canonNT,canonNT,canonNT)
+          | grDip(canonTerm,canonCond).
+
+
+  findVarsInTerm:(canonTerm,map[string,integer]) => map[string,integer].
+  findVarsInTerm(v(Nm),SoFar) => SoFar[with Nm->Count+1] :- present(SoFar,Nm,Count).
+
+
+
+    public type 
+  canonTerm ::= v(string)
+            | int(integer)
+            | flt(float)
+            | str(string)
+            | apply(location,canonTerm,canonTerm)
+            | tpl(list[canonTerm])
+            | whre(canonTerm,canonCond)
+            | condExp(canonCond,canonTerm,canonTerm)
+            | lambda(canonRule)
+            | theta(list[canonDef],list[canonOther])
+            | dot(canonTerm,string)
+            | over(location,canonTerm,list[constraint])
+            | mtd(location,string).
+  
+}

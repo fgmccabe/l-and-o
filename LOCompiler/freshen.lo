@@ -108,7 +108,7 @@ lo.comp.freshen{
   frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
   frze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
   frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
-    freeze(Tp,remove(B,V),FTp).
+    freeze(Tp,_remove(B,V),FTp).
   frze(faceType(L),B,faceType(FL)) :-
     freezeFields(L,B,FL).
   frze(typeRule(A,R),B,typeRule(FA,FR)) :-

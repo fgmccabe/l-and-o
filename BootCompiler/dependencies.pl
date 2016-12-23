@@ -364,12 +364,26 @@ collectExpRefs(app(_,Op,Args),All,R,Refs) :-
 collectExpRefs(T,All,R,Refs) :-
   isBraceTuple(T,_,Els),
   collectExpListRefs(Els,All,R,Refs).
+collectExpRefs(T,All,R,Refs) :-
+  isSquareTerm(T,Op,A),
+  collectExpRefs(Op,All,R,R0),
+  collectIndexRefs(A,All,R0,Refs).
 collectExpRefs(_,_,Refs,Refs).
 
 collectExpListRefs([],_,Refs,Refs).
 collectExpListRefs([E|L],A,R0,Refs) :-
   collectExpRefs(E,A,R0,R1),
   collectExpListRefs(L,A,R1,Refs).
+
+collectIndexRefs([A],All,R,Refs) :-
+  isBinary(A,_,"->",Ky,Vl),!,
+  collectExpRefs(Ky,All,R,R0),
+  collectExpRefs(Vl,All,R0,Refs).
+collectIndexRefs([A],All,R,Refs) :-
+  isUnary(A,_,"\\+",Ky),!,
+  collectExpRefs(Ky,All,R,Refs).
+collectIndexRefs(A,All,R,Refs) :-
+  collectExpListRefs(A,All,R,Refs).
 
 collectPtnListRefs([],_,Refs,Refs).
 collectPtnListRefs([E|L],A,R0,Refs) :-

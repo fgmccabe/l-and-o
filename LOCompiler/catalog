@@ -14,6 +14,7 @@ catalog{
     lo.comp.encode -> "encode.lo".
     lo.comp.errors -> "errors.lo".
     lo.comp.escapes -> "escapes.lo".
+    lo.comp.freevars -> "freevars.lo".
     lo.comp.freshen -> "freshen.lo".
     lo.comp.grapher -> "grapher.lo".
     lo.comp.grammar -> "grammar.lo".

@@ -70,8 +70,7 @@
   prefixOp("-",300,299).	 /* arithmetic negation */
   postfixOp(". ",1899,1900).	 /* statement terminator */
   postfixOp(";",1149,1150).	 /* action terminator */
-  postfixOp("+",759,760).	 /* input mode */
-  postfixOp("-",759,760).	 /* output mode */
+  postfixOp("+",759,760).	 /* lookahead in grammar rule */
   postfixOp("!",904,905).	 /* one solution operator */
 
   /* Define isOperator */  isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
@@ -147,16 +146,15 @@
   follows('','!','!').
   follows('!','=','!=').
   follows('','#','#').
-  follows('','$','$').
   final('%',"%").	 /* modulo */
   final('%%',"%%").	 /* grammar parse */
   final('*',"*").	 /* multiplication */
   final('**',"**").	 /* exponentiation */
   final('*>',"*>").	 /* all solutions */
-  final('+',"+").	 /* input mode */
+  final('+',"+").	 /* lookahead in grammar rule */
   final(',',",").	 /* tupling, conjunction */
   final(',..',",..").	 /* list cons */
-  final('-',"-").	 /* output mode */
+  final('-',"-").	 /* arithmetic negation */
   final('-->',"-->").	 /* grammar rule */
   final('->',"->").	 /* map entry */
   final('->>',"->>").	 /* dependent type marker */
@@ -205,4 +203,3 @@
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */
   final('#',"#").	 /* package separator */
-  final('$',"$").	 /* built-in escapes */

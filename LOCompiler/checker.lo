@@ -571,7 +571,7 @@ lo.comp.typecheck{
     typeOfCall(Lc,Fun,A,deRef(FnTp),Tp,E0,Ev,Exp,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isSquareTerm(Term,Lc,F,[A]),
-    typeOfTerm(binary(Lc,"find",F,A),Tp,Env,Ev,Exp,Rp,Rpx).
+    typeOfIndex(Lc,F,A,Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others),Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,_str_gen("theta"),Rp,Rpx).
@@ -587,6 +587,16 @@ lo.comp.typecheck{
   typeOfTerms([A,..As],[ElTp,..ElTypes],Env,Ev,_,[Term,..Els],Rp,Rpx) :-
     typeOfTerm(A,ElTp,Env,E0,Term,Rp,Rp0),
     typeOfTerms(As,ElTypes,E0,Ev,A.loc,Els,Rp0,Rpx).
+
+  typeOfIndex:(location,ast,ast,tipe,list[env],list[env],canonTerm,report,report){}.
+  typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
+    isBinary(Arg,"->",_,Ky,Vl),
+    typeOfTerm(ternary(Lc,"_put",Mp,Ky,Vl),Tp,Env,Ev,Exp,Rp,Rpx).
+  typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
+    isUnary(Arg,"\\+",_,Ky),
+    typeOfTerm(binary(Lc,"_remove",Mp,Ky),Tp,Env,Ev,Exp,RP,Rpx).
+  typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
+    typeOfTerm(binary(Lc,"find",Mp,Arg),Tp,Env,Ev,Exp,Rp,Rpx).
 
   -- Analyse a list term to try to disambiguate maps from lists.
 

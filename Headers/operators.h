@@ -87,7 +87,6 @@ prefixOp("-",300,299,"arithmetic negation")
 
 postfixOp(". ",1899,1900,"statement terminator")
 postfixOp(";",1149,1150,"action terminator")
-postfixOp("+",759,760,"input mode")
-postfixOp("-",759,760,"output mode")
+postfixOp("+",759,760,"lookahead in grammar rule")
 lastPostOp
 postfixOp("!",904,905,"one solution operator")

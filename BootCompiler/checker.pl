@@ -585,9 +585,8 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   deRef(FnTp,FTp),
   typeOfCall(Lc,Fun,A,FTp,Tp,E0,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
-  isSquareTerm(Term,Lc,F,[A]),
-  binary(Lc,"find",F,A,Ix),
-  typeOfTerm(Ix,Tp,Env,Ev,Exp).
+  isSquareTerm(Term,Lc,F,[A]),!,
+  typeOfIndex(Lc,F,A,Tp,Env,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),
   reportError("illegal expression: %s, expecting a %s",[Term,Tp],Lc).
@@ -598,6 +597,18 @@ typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
 typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
+
+typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp) :-
+  isBinary(Arg,"->",Ky,Vl),!,
+  ternary(Lc,"_put",Mp,Ky,Vl,Term),
+  typeOfTerm(Term,Tp,Env,Ev,Exp).
+typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp) :-
+  isUnary(Arg,"\\+",Ky),!,
+  binary(Lc,"_remove",Mp,Ky,Term),
+  typeOfTerm(Term,Tp,Env,Ev,Exp).
+typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp) :-
+  binary(Lc,"find",Mp,Arg,Term),
+  typeOfTerm(Term,Tp,Env,Ev,Exp).
 
 genTpVars([],[]).
 genTpVars([_|I],[Tp|More]) :-

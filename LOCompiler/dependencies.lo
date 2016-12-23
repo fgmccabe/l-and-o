@@ -291,7 +291,7 @@ lo.comp.dependencies{
   refsInTerm(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
   refsInTerm(T,All,So) =>  refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
   refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
-  refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
+  refsInTerm(T,All,So) =>  refsInIndex(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).
   refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(iden(Lc,",.."),All,refsInTerm(iden(Lc,"[]"),All,So))) :-  isSquareTuple(T,Lc,Args).
   refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,",..",_,L,R).
@@ -306,6 +306,11 @@ lo.comp.dependencies{
   refsInTerms:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTerms([],_,So) => So.
   refsInTerms([T,..L],All,So) => refsInTerms(L,All,refsInTerm(T,All,So)).
+
+  refsInIndex:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
+  refsInIndex([A],All,So) => refsInTerm(Vl,All,refsInTerm(Ky,All,So)) :- isBinary(A,"->",_,Ky,Vl).
+  refsInIndex([A],All,So) => refsInTerm(Ky,All,So) :- isUnary(A,"\\+",_,Ky).
+  refsInIndex(A,All,So) => refsInTerms(A,All,So).
 
   showGroups:(list[list[defn]]){}.
   showGroups([]).
