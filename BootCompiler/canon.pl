@@ -24,6 +24,7 @@ isCanon(conj(_,_)).
 isCanon(disj(_,_)).
 isCanon(conditional(_,_,_)).
 isCanon(unify(_,_,_)).
+isCanon(isTrue(_,_)).
 isCanon(match(_,_,_)).
 isCanon(one(_)).
 isCanon(neg(_)).
@@ -130,6 +131,9 @@ showCanonTerm(unify(_,L,R),O,Ox) :-
   showCanonTerm(L,O,O1),
   appStr(" = ",O1,O2),
   showCanonTerm(R,O2,Ox).
+showCanonTerm(isTrue(_,E),O,Ox) :-
+  appStr("istrue ",O,O1),
+  showCanonTerm(E,O1,Ox).
 showCanonTerm(match(_,L,R),O,Ox) :-
   showCanonTerm(L,O,O1),
   appStr(" .= ",O1,O2),

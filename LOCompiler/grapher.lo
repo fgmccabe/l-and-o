@@ -41,7 +41,7 @@ lo.comp.grapher{
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanFile(SrcUri,Repo,Cat,SoFar,Rp,Rpx) :-
     resolveCatalog(Cat,Pkg,SrcUri).
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => SoFar :-
-    reportError("cannot locate package $(Pkg)",std,Rp,Rpx).
+    reportError("cannot locate package \(Pkg)",std,Rp,Rpx).
 
   checkPkg:(pkgSpec,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imported,Repo,Cat,[(Pkg,Imported),..SoFar],Rp,Rpx) :-
@@ -74,7 +74,7 @@ lo.comp.grapher{
   scanStmt(St,Imps) => Imps.
 
   scanPkgName:(ast,version) => pkg.
-  scanPkgName(T,_) => pkg(packageName(P),vers("$(V)")) :-
+  scanPkgName(T,_) => pkg(packageName(P),vers("\(V)")) :-
     isBinary(T,"#",_,P,V).
   scanPkgName(T,V) => pkg(packageName(T),V).
 }

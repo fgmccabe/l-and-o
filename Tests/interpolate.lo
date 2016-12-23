@@ -1,4 +1,4 @@
 foo{
-  X = "main $(squeeze :- jim)$(ag[a].i{(). } )n".
+  X = "main \(squeeze :- jim)\(ag[a].i{(). } )n".
   1+2*3.
 }.

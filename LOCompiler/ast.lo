@@ -70,7 +70,7 @@ lo.comp.ast{
 
   private dumpAst:(ast){}.
   dumpAst(A) :-
-    _logmsg("$(A)").
+    _logmsg("\(A)").
 
   private
   showEls:(list[ast],integer,string,string) => list[ss].

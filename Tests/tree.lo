@@ -53,9 +53,9 @@ tree{
         T2 .= T1.insert(II(2)).
 
         /*
-        stdout.outLine("T0=$(T0.show())"),
-        stdout.outLine("T1=$(T1.show())"),
-        stdout.outLine("T2=$(T2.show())").
+        stdout.outLine("T0=\(T0.show())"),
+        stdout.outLine("T1=\(T1.show())"),
+        stdout.outLine("T2=\(T2.show())").
         */
   }.
         

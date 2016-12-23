@@ -39,12 +39,12 @@ lo.comp.typecheck{
       list[canonDef],list[(string,defnKind)],list[pkgSpec],list[canonOther],report,report){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
-    -- _logmsg("After rewrite: $(Stmts)"),
+    -- _logmsg("After rewrite: \(Stmts)"),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
     processImportGroup(Imps,Imports,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
     checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
-    -- _logmsg("Checked defs: $(Defs)").
+    -- _logmsg("Checked defs: \(Defs)").
 
   private checkOthers:(list[ast],list[canonOther],list[env],string,report,report){}.
   checkOthers([],[],_,_,Rp,Rp).
@@ -52,7 +52,7 @@ lo.comp.typecheck{
     checkOther(St,Ass,More,Env,Rp,Rp0)!,
     checkOthers(Stmts,More,Env,Path,Rp0,Rpx).
   checkOthers([St,..Stmts],Ass,Env,Path,Rp,Rpx) :-
-    reportError("cannot understand statement: $(St)",St.loc,Rp,Rp0),
+    reportError("cannot understand statement: \(St)",St.loc,Rp,Rp0),
     checkOthers(Stmts,Ass,Env,Path,Rp0,Rpx).
 
   private checkOther:(ast,list[canonOther],list[canonOther],list[env],report,report){}.
@@ -101,7 +101,7 @@ lo.comp.typecheck{
     addPublicImports(Imports,Lc,Referenced),
     importAll(Referenced,Repo,[(Lc,Viz,Pkg),..SoFar],All,More,Rest,Rp0,Rpx).
   importOne(_,(Lc,_,Pkg),SoFar,SoFar,Specs,Specs,Rp,Rpx) :-
-    reportError("could not import package $(Pkg)",Lc,Rp,Rpx).
+    reportError("could not import package \(Pkg)",Lc,Rp,Rpx).
 
   addPublicImports:(list[(visibility,pkg)],location,list[(location,visibility,pkg)]){}.
   addPublicImports([],_,[]).
@@ -169,13 +169,13 @@ lo.comp.typecheck{
     defineType(N,Lc,Stmt,Env,E0,Path,Rp,Rp0),
     defineTypes(More,E0,Ex,Path,Rp0,Rpx).
   defineTypes([defn(N,tpe,Lc,_,[_,.._]),..More],Env,Ex,Path,Rp,Rpx) :-
-    reportError("multiple type definition statements for $(N)",Lc,Rp,Rp0),
+    reportError("multiple type definition statements for \(N)",Lc,Rp,Rp0),
     defineTypes(More,Env,Ex,Path,Rp0,Rpx).
 
   private defineType:(string,location,ast,list[env],list[env],string,report,report){}.
   defineType(N,Lc,St,Env,Ex,Path,Rp,Rpx) :-
     ( isType(N,Env,OLc,_) ?
-        reportError("type $(N) already defined at $(OLc)",Lc,Rp,Rpx),
+        reportError("type \(N) already defined at \(OLc)",Lc,Rp,Rpx),
         Ex = Env |
         parseTypeTemplate(St,Env,Type,Path,Rp,Rpx),
         Ex = declareType(N,tpDef(Lc,Type,faceType([])),Env)).
@@ -236,13 +236,13 @@ lo.comp.typecheck{
     ((N,Tp) in Fields)!,
     parseAnnotations(More,Fields,Annots,declareVar(N,vr(Lc,v(N),Tp),Env),Ex,Path,Rp,Rpx).
   parseAnnotations([defn(N,valu,Lc,_,_),..More],Fields,Annots,Env,Ex,Path,Rp,Rpx) :-
-    reportError("no type annotation for variable $(N)",Lc,Rp,Rp0),
+    reportError("no type annotation for variable \(N)",Lc,Rp,Rp0),
     parseAnnotations(More,Fields,Annots,Env,Ex,Path,Rp0,Rpx).
 
   private checkVarRules:(list[defn],list[env],list[canonDef],list[canonDef],string,report,report){}.
   checkVarRules([],_,Defs,Defs,_,Rp,Rp).
   checkVarRules([defn(N,valu,Lc,_,Stmts),..More],Env,Defs,Dx,Path,Rp,Rpx) :-
-    -- _logmsg("checking var rules $(Stmts)"),
+    -- _logmsg("checking var rules \(Stmts)"),
     (Q,PT) = skolemize(pickupVarType(N,Lc,Env,Rp,Rp0),pickupThisType(Env)),
     declareTypeVars(pairs(Q),Lc,Env,SEnv),
     moveConstraints(PT,Cx,ProgramType),
@@ -255,7 +255,7 @@ lo.comp.typecheck{
   pickupVarType(N,_,Env,Rp,Rp)=>Tp :-
     isVar(N,Env,vr(_,_,Tp)).
   pickupVarType(N,Lc,_,Rp,Rpx) => newVar("_") :- 
-    reportError("$(N) not declared",Lc,Rp,Rpx).
+    reportError("\(N) not declared",Lc,Rp,Rpx).
 
   private declareTypeVars:(list[(string,tipe)],location,list[env],list[env]){}.
   declareTypeVars([],_,Env,Env).
@@ -316,7 +316,7 @@ lo.comp.typecheck{
     isBinary(St,"-->",Lc,L,R),
     checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path,Rp,Rpx).
   processStmt(St,Tp,Defs,Defs,_,_,Rp,Rpx) :-
-    reportError("Statement $(St) not consistent with expected type $(Tp)",St.loc,Rp,Rpx).
+    reportError("Statement \(St) not consistent with expected type \(Tp)",St.loc,Rp,Rpx).
 
   private splitHead:(ast,location,string,ast){}.
   splitHead(T,Lc,Nm,A) :- isRound(T,Lc,N,A), isIden(N,_,Nm).
@@ -329,7 +329,7 @@ lo.comp.typecheck{
     checkCond(G,E0,E1,Cond,Rp0,Rp1),
     typeOfTerm(R,RT,E1,_,Exp,Rp1,Rpx).
   checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_,Rp,Rpx) :-
-    reportError("equation not consistent with expected type: $(ProgramType)",Lc,Rp,Rpx).
+    reportError("equation not consistent with expected type: \(ProgramType)",Lc,Rp,Rpx).
 
   private checkDefn:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}
   checkDefn(Lc,L,C,R,Tp,[vrDef(Lc,Nm,Value,Cond),..Dx],Dx,E,Rp,Rpx) :-
@@ -403,7 +403,7 @@ lo.comp.typecheck{
     Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others)),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
-    reportError("could not check implementation statement $(Stmt)",Lc,Rp,Rpx).
+    reportError("could not check implementation statement \(Stmt)",Lc,Rp,Rpx).
 
   private checkCond:(ast,list[env],list[env],canonCond,report,report){}.
   checkCond(Term,Env,Env,trueCond,Rp,Rp) :-
@@ -472,10 +472,10 @@ lo.comp.typecheck{
     ( deRef(PrTp) = predType(ArgTp) ?
       typeOfArg(A,ArgTp,E0,Ev,Arg,Rp0,Rpx),
       Call = callCond(Lc,Pred,Arg) |
-      reportError("$(Pred)|=$(PrTp) not a predicate",Lc,Rp0,Rpx),
+      reportError("\(Pred)|=\(PrTp) not a predicate",Lc,Rp0,Rpx),
       Call = trueCond).
-  checkCond(Term,Env,Env,trueCond,Rp,Rpx) :-
-    reportError("cannot understand condition $(Term)",Term.loc,Rp,Rpx).
+  checkCond(Term,Env,Ev,isTrue(Exp),Rp,Rpx) :-
+    knownType(Term,findType("logical",Lc,Env,Rp,Rp0),Env,Ev,Exp,Rp0,Rpx).
 
   private checkConds:(list[ast],list[env],list[env],canonCond,report,report){}.
   checkConds([],Env,Env,trueCond,Rp,Rp).
@@ -499,7 +499,7 @@ lo.comp.typecheck{
   typeOfTerm(V,Tp,Env,Ev,Term,Rp,Rpx) :-
     isIden(V,Lc,Nm),
     ( isKeyword(Nm) ?
-      reportError("unexpected keyword: $(Nm)",Lc,Rp,Rpx),
+      reportError("unexpected keyword: \(Nm)",Lc,Rp,Rpx),
       Term = v(_str_gen("_")) |
       isVar(Nm,Env,Spec) ?
       typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
@@ -515,7 +515,7 @@ lo.comp.typecheck{
     ( parseType(R,Env,RT,Rp,Rp0) ?
         checkType(Lc,RT,Tp,Env,Rp0,Rp1),
         typeOfTerm(L,RT,Env,Ev,Exp,Rp1,Rpx) |
-        reportError("cannot parse type $(R)",Lc,Rp0,Rp1),
+        reportError("cannot parse type \(R)",Lc,Rp0,Rp1),
         typeOfTerm(L,Tp,Env,Ev,Exp,Rp1,Rpx)).  
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBinary(Term,"::",Lc,L,R),
@@ -576,14 +576,14 @@ lo.comp.typecheck{
     isBraceTuple(Term,Lc,Els),
     checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,_str_gen("theta"),Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,v(_str_gen("_")),Rp,Rpx) :-
-    reportError("illegal expression: $(Term), expecting a $(Tp)",Term.loc,Rp,Rpx).
+    reportError("illegal expression: \(Term), expecting a \(Tp)",Term.loc,Rp,Rpx).
 
   typeOfTerms:(list[ast],list[tipe],list[env],list[env],location,list[canonTerm],report,report){}.
   typeOfTerms([],[],Env,Env,_,[],Rp,Rp).
   typeOfTerms([],[T,.._],Env,Env,Lc,[],Rp,Rpx) :-
-    reportError("insufficient arguments, expecting a $(T)",Lc,Rp,Rpx).
+    reportError("insufficient arguments, expecting a \(T)",Lc,Rp,Rpx).
   typeOfTerms([A,.._],[],Env,Env,_,[],Rp,Rpx) :-
-    reportError("too many arguments: $(A)",A.loc,Rp,Rpx).
+    reportError("too many arguments: \(A)",A.loc,Rp,Rpx).
   typeOfTerms([A,..As],[ElTp,..ElTypes],Env,Ev,_,[Term,..Els],Rp,Rpx) :-
     typeOfTerm(A,ElTp,Env,E0,Term,Rp,Rp0),
     typeOfTerms(As,ElTypes,E0,Ev,A.loc,Els,Rp0,Rpx).
@@ -655,7 +655,7 @@ lo.comp.typecheck{
   macroMapEntries(_,[E,..L],Rp,Rpx) => roundTerm(Lc,iden(Lc,"_put"),[macroMapEntries(Lc,L,Rp,Rpx),Ky,Vl]) :-
     isBinary(E,"->",Lc,Ky,Vl).
   macroMapEntries(Lc,[E,..L],Rp,Rpx) => macroMapEntries(Lc,L,Rp0,Rpx) :-
-    reportError("invalid entry in map $(E)",E.loc,Rp,Rp0).
+    reportError("invalid entry in map \(E)",E.loc,Rp,Rp0).
 
   recordAccessExp:(location,ast,string,tipe,list[env],list[env],canonTerm,report,report){}.
   recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld),Rp,Rpx) :-
@@ -671,7 +671,7 @@ lo.comp.typecheck{
   fieldInFace(Fields,_,Nm,_,Tp,Rp,Rp) :-
     (Nm,Tp) in Fields!.
   fieldInFace(_,Tp,Nm,Lc,anonType,Rp,Rpx) :-
-    reportError("field $(Nm) not declared in $(Tp)",Lc,Rp,Rpx).
+    reportError("field \(Nm) not declared in \(Tp)",Lc,Rp,Rpx).
 
   private genTpVars:(list[ast])=>list[tipe].
   genTpVars([])=>[].
@@ -733,9 +733,9 @@ lo.comp.typecheck{
       ( checkType(Lc,StrmTp,Tp,Env,Rp0,Rp1) ?
         typeOfTerm(A,ArgTp,E0,Ev,Arg,Rp1,Rpx),
         NT = grCall(Lc,Op,Arg) |
-        reportError("type of $(Op) : $(GrTp) not consistent with stream type $(Tp)",Lc,Rp0,Rpx),
+        reportError("type of \(Op) : \(GrTp) not consistent with stream type \(Tp)",Lc,Rp0,Rpx),
         NT = grTerms([]), Ev = E0) |
-      reportError("$(F) : $(GrTp) not a grammar",Lc,Rp0,Rpx),
+      reportError("\(F) : \(GrTp) not a grammar",Lc,Rp0,Rpx),
       NT = grTerms([]),
       Ev = Env).
   checkNonTerminal(Term,_,_,Env,Env,grTest(EOF),Rp,Rpx) :-
@@ -856,7 +856,7 @@ lo.comp.typecheck{
     ( isIden(V,Lc,Nm) ?
       ( isVar(Nm,Env,Spec) ?
         typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
-        reportError("variable $(V) not declared",Lc,Rp,Rpx),
+        reportError("variable \(V) not declared",Lc,Rp,Rpx),
         Term=v(Nm)) |
       typeOfTerm(V,Tp,Env,Ex,Term,Rp,Rpx)).
 
@@ -868,11 +868,11 @@ lo.comp.typecheck{
     checkType(Lc,ResTp,Tp,Env,Rp,Rp0),
     typeOfArg(A,ArgTp,Env,Ev,Args,Rp0,Rpx).
   typeOfCall(Lc,Fun,_,Ftp,_,Env,Env,Fun,Rp,Rpx) :-
-    reportError("$(Fun) : $(Ftp) is not a function",Lc,Rp,Rpx).
+    reportError("\(Fun) : \(Ftp) is not a function",Lc,Rp,Rpx).
 
   private checkType:(location,tipe,tipe,list[env],report,report){}.
   checkType(Lc,Actual,Expected,Env,Rp,Rpx) :-
-    ( sameType(Actual,Expected,Env) ? Rp=Rpx | reportError("$(Actual) not consistent with $(Expected)",Lc,Rp,Rpx)).
+    ( sameType(Actual,Expected,Env) ? Rp=Rpx | reportError("\(Actual) not consistent with \(Expected)",Lc,Rp,Rpx)).
 
   private checkGrammarType:(location,list[env],tipe,tipe,report,report){}.
   checkGrammarType(Lc,Env,Tp,ElTp,Rp,Rpx) :-
@@ -890,7 +890,7 @@ lo.comp.typecheck{
     isType(Nm,Env,_,T),
     (_,FTp) = freshen(T,pickupThisType(Env)).
   findType(Nm,Lc,_,Rp,Rpx) => anonType :-
-    reportError("type $(Nm) not known",Lc,Rp,Rpx).
+    reportError("type \(Nm) not known",Lc,Rp,Rpx).
 
   private mkTypes:(integer) => list[tipe].
   mkTypes(0) => [].

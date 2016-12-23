@@ -73,6 +73,7 @@ lo.comp.canon {
             | negCond(canonCond)
             | forallCond(canonCond,canonCond)
             | callCond(location,canonTerm,canonTerm)
+            | isTrue(canonTerm)
             | phraseCond(location,canonNT,canonTerm,canonTerm).
 
   public type
@@ -208,6 +209,7 @@ lo.comp.canon {
   dispCond(unifyCond(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
   dispCond(oneCond(A)) => ssSeq([ss("("),dispCond(A),ss(")!")]).
   dispCond(negCond(A)) => ssSeq([ss("\\+("),dispCond(A),ss(")")]).
+  dispCond(isTrue(A)) => ssSeq([ss("is true ("),dispTerm(A),ss(")")]).
   dispCond(forallCond(A,B)) => ssSeq([ss("("),dispCond(A),ss("*>"),dispCond(B),ss(")")]).
 
   private dispNT:(canonNT) => ss.

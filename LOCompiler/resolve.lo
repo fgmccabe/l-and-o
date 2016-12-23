@@ -109,10 +109,10 @@ lo.comp.resolve{
         overloadRef(T,DTerms,[],OverOp,NArgs),
         (NArgs=[] ? Over = OverOp | Over = apply(Lc,OverOp,tpl(NArgs))),
         Rp0=Rpx |
-        reportError("cannot find implementation for contracts $(Cx)",Lc,Rp0,Rpx),
+        reportError("cannot find implementation for contracts \(Cx)",Lc,Rp0,Rpx),
         Over = T).
   resolveTerm(mtd(Lc,Nm),_,Rp,Rpx) => v(Nm):-
-    reportError("cannot find implementation for naked method $(Nm)",Lc,Rp,Rpx).
+    reportError("cannot find implementation for naked method \(Nm)",Lc,Rp,Rpx).
   resolveTerm(lambda(Rl),Dict,Rp,Rpx) => lambda(overloadRule(Rl,Dict,[],Rp,Rpx)).
   resolveTerm(theta(D,O),Dict,Rp,Rpx) => theta(overloadDefs(D,Dict,Rp,Rp0),overloadOthers(O,Dict,Rp0,Rpx)).
 
@@ -174,7 +174,7 @@ lo.comp.resolve{
     resolve(Impl,C,Lc,Dict,Over,Rp,Rpx)!.
   resolveContract(Lc,implementsFace(_,_),Dict,Vs,Vs,Rp,Rp).
   resolveContract(Lc,C,_,Vs,Vs,Rp,Rpx) :-
-    reportError("no implementation known for $(C)",Lc,Rp,Rpx).
+    reportError("no implementation known for \(C)",Lc,Rp,Rpx).
 
   resolve:(implEntry,constraint,location,list[implEntry],canonTerm,report,report){}.
   resolve(implVar(_,v(Nm)),_,_,_,v(Nm),Rp,Rp).
@@ -184,7 +184,7 @@ lo.comp.resolve{
     sameContract(CT,C,[]),
     resolveDependents(Cx,Lc,Dict,[],Args,Rp,Rpx).
   resolve(I,C,Lc,_,v(_str_gen("void")),Rp,Rpx) :-
-    reportError("cannot resolve contract $(C)",Lc,Rp,Rpx).
+    reportError("cannot resolve contract \(C)",Lc,Rp,Rpx).
 
   resolveDependents:(list[constraint],location,list[implEntry],list[canonTerm],list[canonTerm],report,report){}.
   resolveDependents([],_,_,Args,Args,Rp,Rp).

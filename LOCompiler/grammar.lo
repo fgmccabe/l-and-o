@@ -189,22 +189,13 @@ lo.comp.grammar{
   parseSegments:(list[stringSegment],report,report) => list[ast].
   parseSegments([],Rp,Rp) => [].
   parseSegments([segment(Lc,Str),..More],Rp,Rpx) =>
-    [unary(Lc,"ss",strg(Lc,Str)),..parseSegments(More,Rp,Rp)].
-  parseSegments([interpolate(Lc,Exp,Fmt),..More],Rp,Rp) =>
-    [interpolateSegment(Lc,Exp,Fmt,Rp,Rp0),..parseSegments(More,Rp0,Rp)].
+    [unary(Lc,"ss",strg(Lc,Str)),..parseSegments(More,Rp,Rpx)].
+  parseSegments([interpolate(Lc,Exp,Fmt),..More],Rp,Rpx) =>
+    [interpolateSegment(Lc,Exp,Fmt,Rp,Rp0),..parseSegments(More,Rp0,Rpx)].
 
   interpolateSegment:(location,string,string,report,report) => ast.
-  interpolateSegment(Lc,Text,"",Rp,Rpx) =>
-      formatDisp(Lc,Arg,iden(Lc,"disp"),tupl(Lc,"()",[])) :-
+  interpolateSegment(Lc,Text,"",Rp,Rpx) => unary(Lc,"disp",Arg) :-
     term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
-  interpolateSegment(Lc,Text,Fmt,Rp,Rpx) =>
-      formatDisp(Lc,Arg,iden(Lc,"frmt"),tupl(Lc,"()",[strg(Lc,Fmt)])) :-
+  interpolateSegment(Lc,Text,Fmt,Rp,Rpx) => binary(Lc,"frmt",Arg,strg(Lc,Fmt)) :-
     term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
-
-  private
-  formatDisp:(location,ast,ast,ast) => ast.
-  formatDisp(Lc,tupl(_,"()",[Term]),Verb,Extra) => 
-    appl(Lc,binary(Lc,".",Term,Verb),Extra).
-  formatDisp(Lc,Term,Verb,Extra) =>
-    appl(Lc,binary(Lc,".",Term,Verb),Extra).
  }

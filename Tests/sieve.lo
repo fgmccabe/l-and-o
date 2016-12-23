@@ -15,5 +15,5 @@ sieve{
   iota(Mx,Cu) => [] :-  Mx<Cu.
   iota(Mx,Cu) => [Cu,..iota(Mx,Cu+2)].
 
-  show "Sieve up to 1000 is $(sieve(iota(1000,3)))".
+  show "Sieve up to 1000 is \(sieve(iota(1000,3)))".
 }

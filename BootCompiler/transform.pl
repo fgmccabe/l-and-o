@@ -708,6 +708,9 @@ trGoal(call(Lc,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
   trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
   trGoalCall(Pred,AG,G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+trGoal(isTrue(Lc,E),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
+  lineDebug(Lc,G1,[isTru(Exp)|Gx],Opts),
+  trExp(E,Exp,Q,Qx,G,G0,G0,G1,Map,Opts,Ex,Exx).
 
 trLocation(loc(Ln,Col,_,Sz),tpl([intgr(Ln),intgr(Col),intgr(Sz)]),G,G,Q,Q,_,_,Ex,Ex).
 

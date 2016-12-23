@@ -10,7 +10,7 @@ hedHedChar(tokenState([_,Ch|_],_,_,_),Ch).
 
 hedHedHedChar(tokenState([_,_,Ch|_],_,_,_),Ch).
 
-initSt(Txt,tokenState(Txt,1,0,1)).
+initSt(Txt,tokenState(Txt,1,1,1)).
 initSt(Chars,LineNo,Column,Base,tokenState(Chars,LineNo,Column,Base)).
 isTerminal(tokenState([],_,_,_)).
 
@@ -170,22 +170,26 @@ readString(St,NxSt,stringTok(Str,Lc)) :- readMoreString(St,St2,Str), makeLoc(St,
 
 readMoreString(St,St,[]) :- hedChar(St,'"').
 readMoreString(St,NxSt,[Seg|Segments]) :- 
-      nextSt(St,St1,'$'),
-      \+ hedChar(St1,'"'),
+      nextSt(St,St1,'\\'),
+      hedChar(St1,'('),!,
       interpolation(St1,St2,Seg),
       readMoreString(St2,NxSt,Segments).
-readMoreString(St,NxSt,[segment(Seg,Lc)|Segments]) :-
-      readStr(St,St1,Chars),
+readMoreString(St,NxSt,Segments) :-
+      readStr(St,St1,Chars),!,
       string_chars(Seg,Chars),
       makeLoc(St,St1,Lc),
-      readMoreString(St1,NxSt,Segments).
+      appendSegment(Seg,Lc,Segments,More),
+      readMoreString(St1,NxSt,More).
+
+appendSegment("",_,Segments,Segments).
+appendSegment(Seg,Lc,[segment(Seg,Lc)|More],More) :-
+  \+Seg="".
 
 readStr(St,St,[]) :- hedChar(St,'"'). /* Terminated by end of string */
-readStr(St,St,[]) :- hedChar(St,'$'), \+hedHedChar(St,'"'). /* or an interpolation marker */
+readStr(St,St,[]) :- hedChar(St,'\\'), hedHedChar(St,'('). /* or an interpolation marker */
 readStr(St,St1,[]) :- nextSt(St,St1,'\n'), !,
   makeLoc(St,St1,Lc),
   reportError("new line found in string",[],Lc).
-
 readStr(St,NxSt,[Ch|Seg]) :- charRef(St,St1,Ch), readStr(St1,NxSt,Seg).
 
 interpolation(St,NxSt,interpolate(Text,Fmt,Lc)) :-

@@ -126,6 +126,9 @@ showGoal(match(L,R),O,Ox) :-
   showTerm(L,O,O1),
   appStr(" .= ",O1,O2),
   showTerm(R,O2,Ox).
+showGoal(isTrue(_,R),O,Ox) :-
+  appStr("istrue ",O,O2),
+  showTerm(R,O2,Ox).
 showGoal(raise(T),O,Ox) :-
   appStr("raise ",O,O2),
   showTerm(T,O2,Ox).

@@ -99,7 +99,7 @@ lo.comp.macro{
     checkSoFar(Nm,R,SF,SF0,Rp,Rp0),
     pickupFields(M,[T,..SF0],Face,Rp0,Rpx).
   pickupFields([T,..M],SF,Face,Rp,Rpx) :-
-    reportError("invalid type field: $(T)",T.loc,Rp,Rp0),
+    reportError("invalid type field: \(T)",T.loc,Rp,Rp0),
     pickupFields(M,SF,Face,Rp0,Rpx).
 
   checkSoFar:(string,ast,list[ast],list[ast],report,report){}.
@@ -107,7 +107,7 @@ lo.comp.macro{
   checkSoFar(Nm,T,[P,..L],L,Rp,Rpx) :-
     isBinary(P,":",Lc,NN,RR),
     isIden(NN,_,Nm),
-    (sameTerm(RR,T) ? Rp=Rpx | reportError("field $(Nm) : $(T) must be identical to: $(RR)",Lc,Rp,Rpx)).
+    (sameTerm(RR,T) ? Rp=Rpx | reportError("field \(Nm) : \(T) must be identical to: \(RR)",Lc,Rp,Rpx)).
   checkSoFar(Nm,T,[P,..L],[P,..LL],Rp,Rpx) :-
     checkSoFar(Nm,T,L,LL,Rp,Rpx).
 

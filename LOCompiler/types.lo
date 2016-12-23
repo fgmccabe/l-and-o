@@ -192,7 +192,7 @@ lo.comp.types{
   surfaceName(tipe(Nm)) => Nm.
   surfaceName(typeExp(Nm,_)) =>Nm.
   surfaceName(kVar(Nm)) => Nm.
-  surfaceName(tupleType(Els)) => "()$(length(Els))".
+  surfaceName(tupleType(Els)) => "()\(length(Els))".
 
   public bindAT:(list[tipe],list[tipe],map[string,tipe]) => map[string,tipe].
   bindAT([],_,Q) => Q.

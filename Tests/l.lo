@@ -1,13 +1,8 @@
 test.l{
-  import lo.core.
+  import lo.
 
-  type all x,y ~~ p[x,y] ::= p(x,y).
+  show "5 = \(2+3)".
 
- public
-  implementation all k,v ~~ display[k], display[v] |: display[p[k,v]] .. {
-    disp(P) => dispPair(P).
-  }
-
-  private dispPair:all x,y ~~ display[x], display[y] |: (p[x,y]) => ss.
-  dispPair(p(x,y)) => ssSeq([ss("["),disp(x),ss(","),disp(y),ss("]")]).
+  f:string.
+  f = ":".
 }

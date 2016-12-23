@@ -803,9 +803,10 @@ checkCond(Term,Env,Ev,Call) :-
   typeOfKnown(F,PrTp,Env,E0,Pred),
   deRef(PrTp,PredTp),
   checkCondCall(Lc,Pred,A,PredTp,Call,E0,Ev).
-checkCond(Term,Env,Env,true(Lc)) :-
+checkCond(Term,Env,Ev,isTrue(Lc,Exp)) :-
   locOfAst(Term,Lc),
-  reportError("cannot understand condition %s",[Term],Lc).
+  findType("logical",Lc,Env,LogicalTp),
+  typeOfKnown(Term,LogicalTp,Env,Ev,Exp).
 
 checkCondCall(Lc,Pred,A,predType(ArgTps),Call,Env,Ev) :-
   checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,Call).

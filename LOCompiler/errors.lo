@@ -39,6 +39,9 @@ lo.comp.errors{
   public countErrors:(report) => integer.
   countErrors(report(L)) => cntErrors(L,0).
 
+  public errorFree:(report){}.
+  errorFree(R) :- countErrors(R) == 0.
+
   private cntErrors:(list[reportMsg],integer) => integer.
   cntErrors([],C) => C.
   cntErrors([errorMsg(_,_),..L],C) => cntErrors(L,C+1).
@@ -58,17 +61,17 @@ lo.comp.errors{
   public
   reportError:(string,location,report,report){}.
   reportError(Msg,Lc,report(L),report([errorMsg(Lc,Msg),..L])):-
-    _logmsg("$(errorMsg(Lc,Msg))").
+    _logmsg("\(errorMsg(Lc,Msg))").
 
   public
   reportWarn:(string,location,report,report){}.
   reportWarn(Msg,Lc,report(L),report([warnMsg(Lc,Msg),..L])):-
-    _logmsg("$(warnMsg(Lc,Msg))").
+    _logmsg("\(warnMsg(Lc,Msg))").
 
   public
   reportMsg:(string,location,report,report){}.
   reportMsg(Msg,Lc,report(L),report([othMsg(Lc,Msg),..L])):-
-    _logmsg("$(othMsg(Lc,Msg))").
+    _logmsg("\(othMsg(Lc,Msg))").
 
   public
   logMsg:(string){}.

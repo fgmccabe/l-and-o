@@ -29,7 +29,6 @@ lo.comp.keywords{
   keyword("::=").
   keyword("<=").
   keyword("<~").
-  keyword("\$").
   keyword("*>").
   keyword("\\+").
   keyword("\\=").

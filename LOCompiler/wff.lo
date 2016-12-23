@@ -65,7 +65,7 @@ lo.comp.wff {
   packageVersion:(ast) => string.
   packageVersion(T) =>  Pkg :-  isIden(T,_,Pkg).
   packageVersion(T) =>  Pkg :-  isString(T,_,Pkg).
-  packageVersion(T) =>  "$(Ix)" :-  isInteger(T,_,Ix).
+  packageVersion(T) =>  "\(Ix)" :-  isInteger(T,_,Ix).
   packageVersion(T) =>  packageVersion(L)+"."+packageVersion(R) :-  isBinary(T,".",_,L,R).
 
   public
@@ -83,5 +83,5 @@ lo.comp.wff {
   public sameLength:all e~~(list[e],list[e],location,report,report){}.
   sameLength(L1,L2,_,Rp,Rp) :- length(L1)=length(L2).
   sameLength(L1,_,Lc,Rp,Rpx) :-
-    reportError("expecting $(length(L1)) elements",Lc,Rp,Rpx).
+    reportError("expecting \(length(L1)) elements",Lc,Rp,Rpx).
 }

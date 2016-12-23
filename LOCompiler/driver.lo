@@ -19,12 +19,15 @@ lo.comp.driver{
   main:(list[string]){}.
   main(Args) :-
     opts = parseFlags(Args),
-    processArgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)).
+    (opts.dependency ? 
+      processArgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)) |
+      compilePkgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir),reportBase,Rp),
+      _logmsg("\(Rp)")).
 
   processArgs:(list[pkg],repository,catalog){}.
   processArgs(Pkgs,Repo,Cat) :-
     processGroups(makeGraph(Pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,[],Rp0,Rpx)!,
-    _logmsg("$(Rpx)").
+    _logmsg("\(Rpx)").
 
   processGroups:(list[list[(pkg,list[pkg])]],repository,catalog,list[pkg],report,report){}.
   processGroups(_,_,_,_,Rp,Rpx) :-
@@ -33,7 +36,7 @@ lo.comp.driver{
   processGroups([],_,_,_,Rp,Rp).
   processGroups([Gp,..L],Repo,Cat,CP,Rp,Rpx) :-
     (length(Gp)>1 ?
-      reportError("circular dependency in packages $(projectPkgs(Gp))",std,Rp,Rpx) |
+      reportError("circular dependency in packages \(projectPkgs(Gp))",std,Rp,Rpx) |
       processGroup(Gp,Repo,Repo0,Cat,CP,CP0,Rp,Rp0),
       processGroups(L,Repo0,Cat,CP0,Rp0,Rpx)).
 
@@ -51,9 +54,9 @@ lo.comp.driver{
   processPkg(P,Imps,Repo,Repo,_,CP,CP,Rp,Rpx) :-
     importsOk(Imps,CP),
     packagePresent(Repo,P),
-    reportMsg("skipping package $(P)",std,Rp,Rpx).
+    reportMsg("skipping package \(P)",std,Rp,Rpx).
   processPkg(P,_,Repo,RepoX,Cat,CP,[P,..CP],Rp,Rpx) :-
-    reportMsg("compiling package $(P)",std,Rp,Rp0),
+    reportMsg("compiling package \(P)",std,Rp,Rp0),
     compilePkg(P,Repo,RepoX,Cat,Rp0,Rpx)!.
 
   importsOk:(list[pkg],list[pkg]){}.
@@ -62,10 +65,18 @@ lo.comp.driver{
 
   compilePkg:(pkg,repository,repository,catalog,report,report){}.
   compilePkg(pkg(P,V),Repo,Repo,Cat,Rp,Rpx) :-
-    resolveCatalog(Cat,pkg(P,V),U),
-    Term = parseFile(U,Rp,Rp0),
-    Prg = checkProgram(Term,V,Repo,Rp0,Rpx),
-    _logmsg("Checked program: $(Prg)"),
-    _logmsg("$(Rpx)").
+    (resolveCatalog(Cat,pkg(P,V),U) ?
+      Term = parseFile(U,Rp,Rp0),
+      Prg = checkProgram(Term,V,Repo,Rp0,Rpx),
+      _logmsg("Checked program: \(Prg)"),
+      _logmsg("\(Rpx)") |
+      reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx)).
 
+  compilePkgs:(list[pkg],repository,catalog,report,report){}.
+  compilePkgs([],_,_,Rp,Rp).
+  compilePkgs([Pk,..L],Repo,Cat,Rp,Rpx) :-
+    errorFree(Rp),
+    compilePkg(Pk,Repo,Repo0,Cat,Rp,Rp0),
+    compilePkgs(L,Repo0,Cat,Rp0,Rpx).
+  compilePkgs(_,_,_,Rp,Rp) :- \+ errorFree(Rp).
 }

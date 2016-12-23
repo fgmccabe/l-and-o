@@ -91,13 +91,13 @@ lo.comp.parseType{
     isBraceTuple(T,_,L),
     prsTypeFields(L,Env,Q,C,Cx,AT,Rp,Rpx).
   prsType(T,_,_,Cx,Cx,anonType,Rp,Rpx) :-
-    reportError("cannot understand type $(T)",T.loc,Rp,Rpx).
+    reportError("cannot understand type \(T)",T.loc,Rp,Rpx).
 
   private applyTypeExp:(tipe,list[tipe],location,tipe,report,report){}.
   applyTypeExp(typeExp(Op,A),Args,_,typeExp(Op,Args),Rp,Rp) :-
     length(A) = length(Args).
   applyTypeExp(T,Args,Lc,voidType,Rp,Rpx) :-
-    reportError("cannot apply type exp $(T) to $(Args)",Lc,Rp,Rpx).
+    reportError("cannot apply type exp \(T) to \(Args)",Lc,Rp,Rpx).
 
   private prsTypes:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],report,report){}.
   prsTypes([],_,_,C,C,[],Rp,Rp).
@@ -113,7 +113,7 @@ lo.comp.parseType{
     prsType(R,Env,Q,C,C0,FldTp,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C0,Cx,ArgTypes,Rp0,Rpx).
   prsTypeFields([A,..AT],Env,Q,C,Cx,ArgTypes,Rp,Rpx) :-
-    reportError("$(A) is not a valid field designator",A.loc,Rp,Rp0),
+    reportError("\(A) is not a valid field designator",A.loc,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C,Cx,ArgTypes,Rp0,Rpx).
 
   prsTypeName:(location,string,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
@@ -127,7 +127,7 @@ lo.comp.parseType{
     moveConstraints(FT,C0,Type),
     mergeConstraints(C0,C,Cx).
   prsTypeName(Lc,Id,_,_,C,C,anonType,Rp,Rpx) :- 
-    reportError("type $(Id) not declared",Lc,Rp,Rpx).
+    reportError("type \(Id) not declared",Lc,Rp,Rpx).
 
   public parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
   parseTypeBound(P,BV,Bound,Env,QT,Inner) :-
@@ -157,7 +157,7 @@ lo.comp.parseType{
     parseContractSpec(B,R,Q0,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx).
   parseContractSpec(T,F,Q,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
     isBinary(T,"|:",_,L,R),
-    reportError("constrained contract $(T) not supported",Lc,Rp,Rp0),
+    reportError("constrained contract \(T) not supported",Lc,Rp,Rp0),
     parseContractSpec(R,F,Q,Qx,C1,Cx,Env,Spec,Nm,Path,Rp0,Rpx).
   parseContractSpec(T,F,Q,Q,C,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
     isBinary(T,"<~",Lc,L,F),
@@ -188,7 +188,7 @@ lo.comp.parseType{
     parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps,Rp0,Rpx),
     addConstraint(conTract(ConNm,ArgTps,Deps),C1,Cx).
   parseConstraint(T,_,B,C,C,Rp,Rpx) :-
-    reportError("invalid type constraint $(T)",T.loc,Rp,Rpx).
+    reportError("invalid type constraint \(T)",T.loc,Rp,Rpx).
 
   mergeConstraints:(list[constraint],list[constraint],list[constraint]){}.
   mergeConstraints([],C,C).
@@ -205,7 +205,7 @@ lo.comp.parseType{
     isContract(Id,Env,conEntry(_,Spec,_)),
     (_,Con) = freshen(Spec,[]).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
-    reportError("contract $(Id) not declared",Lc,Rp,Rpx).
+    reportError("contract \(Id) not declared",Lc,Rp,Rpx).
 
   parseContractArgs:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],list[tipe],report,report){}.
   parseContractArgs([A],Env,B,C0,Cx,Args,Deps,Rp,Rpx) :-
@@ -237,7 +237,7 @@ lo.comp.parseType{
     ( parseContractName(Lc,N,Env,conTract(Op,ATs,Dps),Rp0,Rpx) ?
         sameType(tupleType(ATs),tupleType(ArgTps),Env),
         sameType(tupleType(Dps),tupleType(Deps),Env)
-      | reportError("contract $(N) not declared",Lc,Rp0,Rpx), Op = N).
+      | reportError("contract \(N) not declared",Lc,Rp0,Rpx), Op = N).
 
   public parseConBound:(ast,map[string,tipe],map[string,tipe],list[env],constraint,constraint){}.
   parseConBound(P,BV,Bound,Env,QT,Inner) :-
@@ -279,7 +279,7 @@ lo.comp.parseType{
   parseHeadArgs([],_,[],Rp,Rp).
   parseHeadArgs([H,..L],B,[V,..Args],Rp,Rpx) :-
     isIden(H,Lc,Nm),
-    (present(B,Nm,V) ? Rp=Rpx | reportError("type argument $(H) not quantified ",Lc,Rp,Rp0)),
+    (present(B,Nm,V) ? Rp=Rpx | reportError("type argument \(H) not quantified ",Lc,Rp,Rp0)),
     parseHeadArgs(L,B,Args,Rp0,Rpx).
 
   -- reapply quantifiers to a type to get full form

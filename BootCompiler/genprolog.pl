@@ -129,6 +129,10 @@ genGoal(match(L,R),O,Ox) :-
   genTerm(L,O,O1),
   appStr(" = ",O1,O2),
   genTerm(R,O2,Ox).
+genGoal(isTru(E),O,Ox) :-
+  appStr("'lo.core@true'(",O,O1),
+  genTerm(E,O1,O2),
+  appStr(")",O2,Ox).
 genGoal(raise(T),O,Ox) :-
   appStr("raise_exception",O,O0),
   appStr("(",O0,O1),

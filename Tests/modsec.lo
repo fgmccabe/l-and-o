@@ -16,7 +16,7 @@ test.modsec{
   main:(list[string]){}.
   main(Args) :-
     processFiles(parseArgs(Args),cwd(),meta([],[]),M),
-    _logmsg("Analysis is $(M::json)").
+    _logmsg("Analysis is \(M::json)").
 
   parseArgs:(list[string]) => list[uri].
   parseArgs([]) => [].
@@ -31,11 +31,11 @@ test.modsec{
   procFile:(uri,list[modSecRule],meta,meta){}.
   procFile(U,Rls,M,Mx) :-
     (lines(Lns) %% getResource(U))!,
-    -- _logmsg("Lines are $(Lns::list[string])"),
+    -- _logmsg("Lines are \(Lns::list[string])"),
     Tks = tokenize(Lns),
-    _logmsg("Tokens are $(Tks)"),
+    _logmsg("Tokens are \(Tks)"),
     Rls = secRules(Tks),
-    _logmsg("Rules are $(Rls::list[json])"),
+    _logmsg("Rules are \(Rls::list[json])"),
     analyseRules(Rls,M,Mx).
 
   private analyseRules:(list[modSecRule],meta,meta){}.

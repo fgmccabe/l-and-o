@@ -75,7 +75,7 @@ lo.comp.dependencies{
     collectDefines(Stmts,Nm,K,Stx,DfSts),
     checkPublic(Viz,Nm,K,P,Px).
   collectDefn(St,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
-    reportError("cannot fathom $(St)",St.loc,Rp,Rpx).
+    reportError("cannot fathom \(St)",St.loc,Rp,Rpx).
 
   isImport:(ast,string){}.
   isImport(St,packageName(P)) :-
@@ -117,7 +117,7 @@ lo.comp.dependencies{
   headName(H) =>  Nm :-  isRoundTerm(H,_,O,_), isIden(O,_,Nm).
   headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
-  headName(H) =>  "()$(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
+  headName(H) =>  "()\(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
 
   contractName:(ast,string){}.
   contractName(S,Nm) :-
@@ -153,7 +153,7 @@ lo.comp.dependencies{
   implementationName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
     isSquareTerm(S,_,Op,A),
     isIden(Op,_,Nm).
-  implementationName(T,"()$(length(A))") :-
+  implementationName(T,"()\(length(A))") :-
     isRoundTuple(T,_,A).
 
   surfaceNames:(list[ast],string) => list[ss].
@@ -310,6 +310,6 @@ lo.comp.dependencies{
   showGroups:(list[list[defn]]){}.
   showGroups([]).
   showGroups([G,..L]) :-
-    logMsg("Group: $(G)"),
+    logMsg("Group: \(G)"),
     showGroups(L).
 }

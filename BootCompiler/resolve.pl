@@ -188,6 +188,8 @@ resolveCond(over(Lc,T,Cx),Dict,Over) :-
 resolveCond(call(Lc,P,Args),Dict,call(Lc,RP,RArgs)) :-
   resolveTerm(P,Dict,RP),
   resolveTerms(Args,Dict,RArgs).
+resolveCond(isTrue(Lc,E),Dict,isTrue(Lc,RE)) :-
+  resolveTerm(E,Dict,RE).
 
 resolveGr(terminals(Lc,Terms),Dict,terminals(Lc,RTerms)) :-
   resolveTerminals(Terms,Dict,RTerms).

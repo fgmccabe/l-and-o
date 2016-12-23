@@ -6,15 +6,16 @@ This chapter is concerned with the lower three of these abstractions: characters
 
 ### Unicode characters
 
-L&O uses the Unicode character encoding system @unicode:30. More specifically, the L&O run-time uses Unicode characters internally to represent symbols and the L&O compiler and run-time engine interpret streams of UTF-8 bytes and UTF-16 words as Unicode. Identifiers in L&O programs as well as data processed by L&O programs are assumed to be Unicode based.
+L&O uses the Unicode character encoding system @unicode:30. More specifically, the L&O run-time uses Unicode characters internally to represent symbols and the L&O compiler and run-time engine interpret streams of UTF-8 bytes as Unicode. Identifiers in L&O programs as well as data processed by L&O programs are assumed to be Unicode based.
 
 A L&O language processor should assume that the input is encoded in UTF-8.
 
 However, all of the the characters used within the language definition of L&O – such as the built-in operators and syntactic features – are contained within the ASCII subset of the Unicode character set. Thus, L&O can be used in an ASCII-based environment.
+Note that L&O does _not_ have a specific character type. This is for two key reasons: the complexities of Unicode representation make having a special character type problematic[^1], and, furthermore, in practice, `string` values outnumber character values in typical programs.
 
 #### Character Categories
 
-The Unicode consortium has identified a number of character categories[^1]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
+The Unicode consortium has identified a number of character categories[^2]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
 
 L&O uses these character categories to classify characters for the the purposes of discriminating identifiers and number values occurring in the program source text. The purpose of this is to permit non-English programmers to use non-English identifiers in the text of the program.
 
@@ -840,4 +841,6 @@ is
 
 Moreover, abstract parse trees only represent one intermediate kind of structure in a typical L&O compiler. However, by the time that the above equation is compiled, it will have been reduced to just a few instructions.
 
-[^1]:	A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.
+[^1]:	In particular, converting between `string`s and their character representation is not invertible in general.
+
+[^2]:	A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.

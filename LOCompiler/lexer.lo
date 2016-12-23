@@ -113,12 +113,12 @@ lo.comp.lexer{
 
   readStringSegments:(list[stringSegment]) --> tokenState.
   readStringSegments([]) --> [0c"]+.
-  readStringSegments([Seg,..Segs]) --> [0c$], [0c(]+,
+  readStringSegments([Seg,..Segs]) --> [0c\\], [0c(]+,
     interpolation(Seg),
     readStringSegments(Segs).
   readStringSegments([segment(Lc,Seg),..Segs]) -->
     @currentLocation(Start), -- read the current location from the token state
-    readStr(Chars),
+    readStr(Chars)!,
     @currentLocation(End),
     { Seg = implode(Chars),
       Lc = makeLocation(Start,End)},
@@ -126,24 +126,25 @@ lo.comp.lexer{
 
   readStr:(list[integer]) --> tokenState.
   readStr([]) --> [0c"]+.
-  readStr([]) --> [0c$,0c(]+.
+  readStr([]) --> [0c\\,0c(]+.
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
   interpolation:(stringSegment) --> tokenState.
   interpolation(interpolate(Lc,implode(Text),implode(Format))) --> 
     @currentLocation(Start),
     countBrackets(Text,[]),
-    readFormat(Format),
+    ([0c:],readFormat(Format) | Format=[]),
     @currentLocation(End),
     Lc = makeLocation(Start,End).
 
   countBrackets:(list[integer],list[integer]) --> tokenState.
-  countBrackets([],[]) --> [].
+  countBrackets([],[]) --> [C]+, {\+ C in [0c(,0c[, 0c{]}.
   countBrackets([Ch,..More],[Ch,..Stack]) --> [Ch], countBrackets(More,Stack).
   countBrackets([0c(,..More],Stack) --> [0c(], countBrackets(More,[0c),..Stack]).
   countBrackets([0c[,..More],Stack) --> [0c[], countBrackets(More,[0c],..Stack]).
   countBrackets([0c{,..More],Stack) --> [0c{], countBrackets(More,[0c},..Stack]).
   countBrackets([0c",..More],Stack) --> [0c"], Stack \= [], countBrackets(More,[0c",..Stack]).
+  countBrackets([],[]) --> [0c"]+.
   countBrackets([Ch,..More],Stack) --> [Ch], countBrackets(More,Stack).
 
   readFormat:(list[integer]) --> tokenState.

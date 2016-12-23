@@ -13,38 +13,43 @@ lo.comp.args {
     repoDir : uri.
     version : version.
     pkgs : list[pkg].
+    dependency : logical.
   }
 
-  private comp:(logical,logical,uri,uri,version,list[pkg])<=>compOption.
-  comp(d,p,w,r,v,pk){
+  private comp:(logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
+  comp(d,p,w,r,v,pk,dp){
     debugging = d.
     profiling = p.
     wDir = w.
     repoDir = r.
     version = v.
     pkgs = pk.
+    dependency = dp.
   }
 
   updateDbg:(compOption,logical) => compOption.
-  updateDbg(comp(_,p,w,r,v,pk),d) => comp(d,p,w,r,v,pk).
+  updateDbg(comp(_,p,w,r,v,pk,dp),d) => comp(d,p,w,r,v,pk,dp).
 
   updateProf:(compOption,logical) => compOption.
-  updateProf(comp(d,_,w,r,v,pk),p) => comp(d,p,w,r,v,pk).
+  updateProf(comp(d,_,w,r,v,pk,dp),p) => comp(d,p,w,r,v,pk,dp).
 
   updateWd:(compOption,uri) => compOption.
-  updateWd(comp(d,p,_,r,v,pk),w) => comp(d,p,w,r,v,pk).
+  updateWd(comp(d,p,_,r,v,pk,dp),w) => comp(d,p,w,r,v,pk,dp).
 
   updateRepoD:(compOption,uri) => compOption.
-  updateRepoD(comp(d,p,w,_,v,pk),r) => comp(d,p,w,r,v,pk).
+  updateRepoD(comp(d,p,w,_,v,pk,dp),r) => comp(d,p,w,r,v,pk,dp).
 
   updatePk:(compOption,list[pkg]) => compOption.
-  updatePk(comp(d,p,w,r,v,_),pk) => comp(d,p,w,r,v,pk).
+  updatePk(comp(d,p,w,r,v,_,dp),pk) => comp(d,p,w,r,v,pk,dp).
 
   updateVers:(compOption,version) => compOption.
-  updateVers(comp(d,p,w,r,_,pk),v) => comp(d,p,w,r,v,pk).
+  updateVers(comp(d,p,w,r,_,pk,dp),v) => comp(d,p,w,r,v,pk,dp).
+
+  updateDep:(compOption,logical) => compOption.
+  updateDep(comp(d,p,w,r,v,pk,_),dp) => comp(d,p,w,r,v,pk,dp).
 
   public parseFlags:(list[string]) => compOption.  
-  parseFlags(args) => parseFlgs(args,comp(false,false,W,W,defltVersion,[])) :- W=cwd().
+  parseFlags(args) => parseFlgs(args,comp(false,false,W,W,defltVersion,[],true)) :- W=cwd().
 
   private parseFlgs:(list[string],compOption) => compOption.
   parseFlgs([],Opts) => Opts.
@@ -54,8 +59,10 @@ lo.comp.args {
   parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,resolveUri(Opts.wDir,WD))) :- uriParse(WD) %% explode(W).
   parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,resolveUri(Opts.wDir,D))) :- uriParse(D) %% explode(W).
   parseFlgs(["-v",V,..args],Opts) => parseFlgs(args,updateVers(Opts,vers(V))).
+  parseFlgs(["-nd",..args],Opts) => parseFlgs(args,updateDep(Opts,false)).
+
   parseFlgs([A,..args],Opts) => parseFlgs(args,Opts) :-
-    logMsg("unknown option: $(A)").
+    logMsg("unknown option: \(A)").
 
   locatePkgs:(compOption,list[string]) => list[pkg].
   locatePkgs(_,[]) => [].

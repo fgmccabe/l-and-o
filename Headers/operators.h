@@ -91,5 +91,3 @@ postfixOp("+",759,760,"input mode")
 postfixOp("-",759,760,"output mode")
 lastPostOp
 postfixOp("!",904,905,"one solution operator")
-
-token("$","built-in escapes")
