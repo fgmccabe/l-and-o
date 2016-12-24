@@ -594,7 +594,7 @@ lo.comp.typecheck{
     typeOfTerm(ternary(Lc,"_put",Mp,Ky,Vl),Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isUnary(Arg,"\\+",_,Ky),
-    typeOfTerm(binary(Lc,"_remove",Mp,Ky),Tp,Env,Ev,Exp,RP,Rpx).
+    typeOfTerm(binary(Lc,"_remove",Mp,Ky),Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
     typeOfTerm(binary(Lc,"find",Mp,Arg),Tp,Env,Ev,Exp,Rp,Rpx).
 

@@ -2,6 +2,7 @@ catalog{
   content{
     test.a -> "a.lo".
     test.modsec -> "modsec.lo".
+    test.mapp -> "mapp.lo".
     test.maps -> "maps.lo".
     test.l -> "l.lo".
     test.gr -> "gr.lo".

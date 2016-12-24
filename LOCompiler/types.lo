@@ -23,7 +23,7 @@ lo.comp.types{
   public
   type constraint ::= conTract(string,list[tipe],list[tipe])
         |  implementsFace(tipe,list[(string,tipe)])
-        |  conRule(list[constraint],constraint)
+        |  conCon(constraint,constraint)
         |  univCon(tipe,constraint).
 
   public
@@ -68,14 +68,12 @@ lo.comp.types{
   showConstraint(conTract(Nm,Args,[])) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("]")]).
   showConstraint(conTract(Nm,Args,Deps)) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("->>"),ssSeq(dispTypeEls(Deps)),ss("]")]).
   showConstraint(implementsFace(Tp,Els)) => ssSeq([dispType(Tp),ss("<~"),dispType(faceType(Els))]).
-  showConstraint(conRule([],Con)) => showConstraint(Con).
-  showConstraint(conRule([C,..Cons],Con)) => ssSeq([showConstraint(C),..showMoreCons(Cons,Con)]).
+  showConstraint(conCon(Con,Extra)) => ssSeq([ssSeq(showMoreCons(Extra)),ss("|:"),showConstraint(Con)]).
   showConstraint(univCon(V,Con)) => ssSeq([ss("all "),dispType(V),..showMoreConQ(Con)]).
 
   -- This code is ugly. But, we dont have lambdas or higher-order programs at the moment.
-  showMoreCons:(list[constraint],constraint) => list[ss].
-  showMoreCons([],Con) => [ss("|:"),showConstraint(Con)].
-  showMoreCons([C,..Cons],Con) => [ss(", "),showConstraint(C),..showMoreCons(Cons,Con)].
+  showMoreCons:(constraint) => list[ss].
+  showMoreCons(conCon(A,B)) => [showConstraint(B),ss(", "),..showMoreCons(A)].
 
   showMoreConQ:(constraint) => list[ss].
   showMoreConQ(univCon(V,Con)) => [ss(", "),dispType(V),..showMoreConQ(Con)].
@@ -139,7 +137,8 @@ lo.comp.types{
   moveQuants(Tp,[],Tp).
 
   public moveConConstraints:(constraint,list[constraint],constraint){}.
-  moveConConstraints(conRule(Cx,C),Cx,C).
+  moveConConstraints(conCon(A,B),[B,..M],I) :-
+    moveConConstraints(A,M,I).
   moveConConstraints(C,[],C).
 
   public moveConQuants:(constraint,list[tipe],constraint){}.
@@ -198,5 +197,5 @@ lo.comp.types{
   bindAT([],_,Q) => Q.
   bindAT(_,[],Q) => Q.
   bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
-  bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q+[V->Tp]).
+  bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q[V->Tp]).
 }

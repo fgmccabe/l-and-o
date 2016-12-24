@@ -1,13 +1,13 @@
 lo.comp.transform{
-  
-:- use_module(canon).
-:- use_module(transutils).
-:- use_module(errors).
-:- use_module(types).
-:- use_module(debug).
-:- use_module(misc).
-:- use_module(escapes).
-:- use_module(location).
+  import lo.
+  import lo.comp.canon.
+
+
+
+  /*
+   * Transform a function into one with extra arguments: the closure structure it references
+   */
+
 
   transformProg(prog(pkg(Pkg,Vers),Imports,Defs,Others,Fields,Types,Contracts,Impls),
       Opts,export(pkg(Pkg,Vers),Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-

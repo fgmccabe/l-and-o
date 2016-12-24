@@ -91,12 +91,8 @@ lo.comp.decode{
   decodeConstraint(Txt,Con) :- decConstraint(Con) %% explode(Txt).
 
   private decConstraint:(constraint) --> list[integer].
-  decConstraint(conRule([Con,..Cons],C)) --> "|", decConstraint(Con), decodeConstraints(Cons), decConstraint(C).
+  decConstraint(conCon(Con,Extra)) --> "|", decConstraint(Con), decConstraint(Extra).
   decConstraint(conTract(Nm,Args,Deps)) --> "c", decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
   decConstraint(implementsFace(Tp,Face)) --> "a", decodeType(Tp), decodeType(faceType(Face)).
   decConstraint(univCon(TV,Con)) --> ":", decodeType(TV), decConstraint(Con).
-
-  private decodeConstraints:(list[constraint]) --> list[integer].
-  decodeConstraints([Con,..Cons]) --> "|", decConstraint(Con), decodeConstraints(Cons).
-  decodeConstraints([]) --> \+"|".
 }

@@ -1,8 +1,21 @@
 test.l{
   import lo.
+  import test.mapp.
 
-  show "5 = \(2+3)".
+  inc1:(integer) => integer.
+  inc1(X) => X+1.
 
-  f:string.
-  f = ":".
+  assert mapp([1,2,3],inc1) == [2,3,4].
+
+  banjo:(integer)<=>{inc:(integer)=>integer}.
+  banjo(X){
+    inc(Y)=>X+Y.
+    private fred:integer.
+    fred = X.
+  }
+
+  inc:(integer)=>integer.
+  inc = banjo(3).inc.
+
+  show mapp([1,2,3],inc).
 }

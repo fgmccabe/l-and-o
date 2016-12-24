@@ -94,6 +94,5 @@ lo.comp.encode{
   encConstraint(univCon(V,C),L) => [0c:,..encType(V,encConstraint(C,L))].
   encConstraint(conTract(Nm,Args,Deps),L) => [0cc,..encodeText(Nm,encTypes(Args,encTypes(Deps,L)))].
   encConstraint(implementsFace(Tp,Flds),L) => [0ca,..encType(Tp,encFieldTypes(Flds,L))].
-  encConstraint(conRule([],C),L) => encConstraint(C,L).
-  encConstraint(conRule([Cs,..M],C),L) => [0c|,..encConstraint(Cs,encConstraint(conRule(M,C),L))].
+  encConstraint(conCon(C,E),L) => [0c|,..encConstraint(C,encConstraint(E,L))].
 }

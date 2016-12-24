@@ -182,13 +182,13 @@ lo.comp.resolve{
     (_,ImpCon) = freshen(IC,[]),
     moveConConstraints(ImpCon,Cx,CT),
     sameContract(CT,C,[]),
-    resolveDependents(Cx,Lc,Dict,[],Args,Rp,Rpx).
+    resolveDependents(Cx,Lc,Dict,Args,[],Rp,Rpx).
   resolve(I,C,Lc,_,v(_str_gen("void")),Rp,Rpx) :-
     reportError("cannot resolve contract \(C)",Lc,Rp,Rpx).
 
   resolveDependents:(list[constraint],location,list[implEntry],list[canonTerm],list[canonTerm],report,report){}.
   resolveDependents([],_,_,Args,Args,Rp,Rp).
-  resolveDependents([C,..L],Lc,Dict,As,Args,Rp,Rpx) :-
+  resolveDependents([C,..L],Lc,Dict,A,Args,Rp,Rpx) :-
     resolveContract(Lc,C,Dict,A,As,Rp,Rp0),
     resolveDependents(L,Lc,Dict,As,Args,Rp0,Rpx).
 

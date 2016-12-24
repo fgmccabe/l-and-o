@@ -54,8 +54,8 @@ test.modsec{
 
     private merge:(map[string,list[string]],list[string],string) => map[string,list[string]].
     merge(M,[],_) => M.
-    merge(M,[e,..l],i) => merge(M+[e->[i,..ids]],l,i) :- present(M,e,ids).
-    merge(M,[e,..l],i) => merge(M+[e->[i]],l,i).
+    merge(M,[e,..l],i) => merge(M[e->[i,..ids]],l,i) :- present(M,e,ids).
+    merge(M,[e,..l],i) => merge(M[e->[i]],l,i).
   }
 
   implementation coercion[meta,json] .. {

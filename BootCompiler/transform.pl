@@ -22,8 +22,8 @@ transformModuleDefs([Def|Defs],Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformMdlDef(Def,Pkg,Map,Opts,Rules,R0,Ex,Ex1),
   transformModuleDefs(Defs,Pkg,Map,Opts,R0,Rx,Ex1,Exx).
 
-transformMdlDef(function(Lc,Nm,Tp,Cx,Eqns),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
-  transformFunction(Pkg,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),_,Rules,Rx,Ex,Exx).
+transformMdlDef(function(Lc,Nm,Tp,Cx,Eqns),_,Map,Opts,Rules,Rx,Ex,Exx) :-
+  transformFunction(Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),_,_,Rules,Rx,Ex,Exx).
 transformMdlDef(grammar(Lc,Nm,Tp,Cx,Rls),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformGrammar(Pkg,Map,Opts,grammar(Lc,Nm,Tp,Cx,Rls),_,Rules,Rx,Ex,Exx).
 transformMdlDef(predicate(Lc,Nm,Tp,Cx,Clses),Pkg,Map,Opts,Rules,Rx,Ex,Exx) :-
@@ -42,14 +42,13 @@ transformMdlDef(contract(_,_,_,_,_),_,_,_,Rules,Rules,Ex,Ex).
 transformMdlDef(impl(Lc,_,ImplName,_,_,_,Body,_,Face),_,Map,Opts,Rules,Rx,Ex,Exx) :-
   transformImplementation(Lc,ImplName,Body,Face,Map,Opts,Rules,Rx,Ex,Exx).
 
-transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,[],Eqns),LclFun,Rules,Rx,Ex,Exx) :-
-  localName(Prefix,"@",Nm,LclName),
-  typeArity(Tp,Ar),
-  Arity is Ar+1,
-  LclFun = prg(LclName,Arity),
+transformFunction(Map,Opts,function(Lc,Nm,Tp,[],Eqns),LclFun,Access,Rules,Rx,Ex,Exx) :-
+  lookupFunName(Map,Nm,Reslt),
+  mapName(Reslt,LclFun,Access),
   pushOpt(Opts,inProg(Nm),FOpts),
-  transformEquations(Map,FOpts,LclFun,Eqns,1,_,Rules,R0,Ex,Exx),
-  failSafeEquation(Map,FOpts,Lc,LclFun,Tp,R0,Rx).
+  transformEquations(Map,FOpts,LclFun,Eqns,1,_,Rules,R0,Ex,Ex0),
+  failSafeEquation(Map,FOpts,Lc,LclFun,Tp,R0,Rx),
+  accessEquation(Map,Access,LclFun,Ex0,Exx).
 
 transformEquations(_,_,_,[],No,No,Rules,Rules,Ex,Ex).
 transformEquations(Map,Opts,LclFun,[Eqn|Defs],No,Nx,Rules,Rx,Ex,Exx) :-
@@ -76,6 +75,15 @@ failSafeEquation(Map,Opts,Lc,LclFun,Tp,[clse([],LclFun,Anons,G)|Rest],Rest) :-
   Arity is Ar+1+EA,
   genAnons(Arity,Anons),
   genRaise(Opts,Lc,LclFun,G,[]).
+
+accessEquation(Map,strct(AccNm,Ar),Prg,[clse(Q,prg(AccNm,3),[Cons,LblVr,ThVr],Body)|Rest],Rest) :-
+  genVars(Ar,Args),
+  trCons("_call",Ar,First),
+  Cons = cons(First,Args),
+  genVar("This",ThVr),
+  genVar("Lbl",LblVr),
+  extraVars(Map,Extra),
+  (Extra=[] -> Body=[call(Prg,Args)]; concat(Args,Extra,LA),Body=[unify(LblVr,cons(strct(AccNm,Ar),Extra)),call(Prg,LA)], merge(Extra,Args,Q)).
 
 genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
   lcLine(Lc,Lno),
@@ -338,8 +346,9 @@ transformClassDefs(Outer,Map,Opts,[Def|Defs],Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformClassDefs(Outer,Map,Opts,Defs,R0,Rx,En0,Enx,Ex1,Exx).
 
 transformClassDef(Prefix,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),Rules,Rx,Entry,Enx,Ex,Exx) :-
-  transformFunction(Prefix,Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),LclFun,Rules,Rx,Ex,Exx),
-  entryClause(Nm,Prefix,LclFun,Entry,Enx).
+  transformFunction(Map,Opts,function(Lc,Nm,Tp,Cx,Eqns),LclFun,Access,Rules,Rx,Ex,Exx),
+  entryClause(Nm,Prefix,LclFun,Entry,En0),
+  classLambdaAccess(Prefix,Nm,Access,En0,Enx).
 transformClassDef(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),Rules,Rx,Entry,Enx,Ex,Exx) :-
   transformPredicate(Prefix,Map,Opts,predicate(Lc,Nm,Tp,Cx,Clses),LclPred,Rules,Rx,Ex,Exx),
   entryClause(Nm,Prefix,LclPred,Entry,Enx).
@@ -361,6 +370,12 @@ entryClause(Name,Prefix,EntryPrg,[clse(Q,prg(Prefix,3),
   genVar("Lbl",LblVr),
   concat(Args,[LblVr,ThVr],Q),
   trCons(Name,Arity,Con).
+
+classLambdaAccess(Prefix,Nm,strct(AccessName,_),[clse([LblVr,ThVr],prg(Prefix,3),[LamCons,LblVr,ThVr],[])|Rx],Rx) :-
+  genVar("This",ThVr),
+  genVar("Lbl",LblVr),
+  trCons(Nm,1,LambdaStrct),
+  LamCons = cons(LambdaStrct,[cons(strct(AccessName,2),[LblVr,ThVr])]).
 
 transformImplementation(Lc,ImplName,Def,Face,Map,Opts,Rules,Rx,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,ImplName,_,LclName,Rules,R0),
@@ -435,10 +450,10 @@ trPtnCallOp(Nm,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex)
   genVar("X",X),
   implementPtnCall(Reslt,Nm,X,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
 
-implementPtnCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
+implementPtnCall(localFun(Fn,_,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
   concat(Args,[X,LblVr,ThVr],XArgs),
   merge([X,LblVr,ThVr],Q,Qx).
-implementPtnCall(moduleFun(_,Fn),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
+implementPtnCall(moduleFun(_,Fn,_),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx).
 implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,
@@ -544,9 +559,9 @@ trExpCallOp(v(_,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tai
   concat(Args,[X],XArgs),
   merge([X],Q,Qx),
   isEscape(Nm),!.
-trExpCallOp(v(_,Nm),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
+trExpCallOp(v(Lc,Nm),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
-  implementFunCall(Reslt,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx).
+  implementFunCall(Reslt,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
 trExpCallOp(dot(Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Q1),
@@ -556,7 +571,7 @@ trExpCallOp(dot(Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,
 trExpCallOp(pkgRef(_,Pkg,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fun,XArgs)|Tailx],Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx),
-  lookupPkgRef(Map,Pkg,Nm,moduleFun(_,Fun)).
+  lookupPkgRef(Map,Pkg,Nm,moduleFun(_,Fun,_)).
 
 trExpCallDot(v(_,Nm),Rec,C,X,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
@@ -571,26 +586,28 @@ implementDotFunCall(_,Rec,C,X,X,Q,Qx,Pre,APx,Tail,[ocall(C,Rc,Rc)|Tailx],Pre,Px,
   trExp(Rec,Rc,Q,Q0,APx,Rx,Rx,Px,Map,Opts,Ex,Exx),
   merge([X],Q0,Qx).
 
-implementFunCall(localFun(Fn,LblVr,ThVr),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
+implementFunCall(localFun(Fn,_,LblVr,ThVr),_,_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   concat(Args,[X,LblVr,ThVr],XArgs),
   merge([X,LblVr,ThVr],Q,Qx).
-implementFunCall(moduleFun(_,Fn),_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx) :-
+implementFunCall(moduleFun(_,Fn,_),_,_,X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fn,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx).
-implementFunCall(inheritField(Super,LblVr,ThVr),Nm,X,Args,X,Q,Qx,Pre,Px,Tail,
-      [call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx):-
+implementFunCall(inheritField(Super,LblVr,ThVr),_,Nm,X,Args,X,Q,Qx,Pre,Px,Tail,
+      [call(Super,[cons(Op,XArgs),LblVr,ThVr])|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex):-
   concat(Args,[X],XArgs),
   trCons(Nm,XArgs,Op),
   merge([X,LblVr,ThVr],Q,Qx).
-implementFunCall(moduleClass(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
-implementFunCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementFunCall(moduleClass(_,Mdl,_),_,_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex).
+implementFunCall(localClass(_,Mdl,_,LbVr,ThVr),_,_,_,Args,cons(Mdl,XArgs),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   concat(Args,[LbVr,ThVr],XArgs),
   merge([LbVr,ThVr],Q,Qx).
-implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,
-      cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx) :-
+implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,_,Args,
+      cons(strct(Mdl,Ar),Args),Q,Qx,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   merge([LbVr,ThVr],Q,Qx),
   length(Args,Ar).
-implementFunCall(moduleImpl(_,Mdl,_),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
+implementFunCall(moduleImpl(_,Mdl,_),_,_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex).
+implementFunCall(notInMap,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
+  trExpCallOp(dot(v(Lc,Nm),"_call"),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
 
 implementVarExp(localVar(Vn,LblVr,ThVr),_,_,X,X,Q,Qx,[call(Vn,[X,LblVr,ThVr])|Pre],Pre,Tail,Tail) :-
   merge([X,LblVr,ThVr],Q,Qx).
@@ -610,6 +627,7 @@ implementVarExp(inherit(Nm,_,LbVr,ThVr),_,_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,Qx
   merge([LbVr,ThVr],Q,Qx).
 implementVarExp(notInMap,_,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Tail,Tail) :-
   merge([idnt(Nm)],Q,Qx).
+implementVarExp(moduleFun(_,_,Acc),_,_,_,Acc,Q,Q,Pre,Pre,Tail,Tail).
 implementVarExp(_Other,Lc,Nm,_,idnt(Nm),Q,Q,Pre,Pre,Tail,Tail) :-
   reportError("cannot handle %s in expression",[Nm],Lc).
 
@@ -837,9 +855,12 @@ collectMtds([Entry|Defs],OuterNm,LbVr,ThVr,List,Lx,Fields) :-
   collectMtd(Entry,OuterNm,LbVr,ThVr,List,L0),
   collectMtds(Defs,OuterNm,LbVr,ThVr,L0,Lx,Fields).
 
-collectMtd(function(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localFun(prg(LclName,Arity),Lbl,ThV))|List]) :-
+collectMtd(function(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,
+      [(Nm,localFun(prg(LclName,Arity),strct(AccessName,ArA),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),
+  localName(OuterNm,"%",Nm,AccessName),
   typeArity(Tp,Ar),
+  ArA is Ar+1,
   Arity is Ar+3.
 collectMtd(predicate(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,[(Nm,localRel(prg(LclName,Arity),Lbl,ThV))|List]) :-
   localName(OuterNm,"@",Nm,LclName),

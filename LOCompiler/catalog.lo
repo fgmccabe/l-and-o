@@ -95,7 +95,7 @@ lo.comp.catalog{
   contents(C,C) --> [].
  
   entry:(map[pkg,uri],map[pkg,uri]) --> list[token].
-  entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C+[Key->Uri]}.
+  entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C[Key->Uri]}.
 
   package:(pkg) --> list[token].
   package(pkg(stringify([Id,..Suf],[0c.]),V)) --> [idn(Id)], suffixes(Suf), versn(V).

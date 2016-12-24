@@ -587,6 +587,14 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTerm(Term,Lc,F,[A]),!,
   typeOfIndex(Lc,F,A,Tp,Env,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Ev,lambda(equation(Lc,"",Args,true(Lc),Exp))) :-
+  isBinary(Term,Lc,"=>",H,R),
+  isTuple(H,_,A),
+  genTpVars(A,AT),
+  RT = newTypeVar("_E"),
+  checkType(Lc,funType(AT,RT),Tp,Env,E0),
+  typeOfTerms(A,AT,E0,E1,Lc,Args),
+  typeOfTerm(R,RT,E1,Ev,Exp).
 typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),
   reportError("illegal expression: %s, expecting a %s",[Term,Tp],Lc).

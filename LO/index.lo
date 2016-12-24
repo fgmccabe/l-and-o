@@ -43,7 +43,7 @@ lo.index{
     M1-M2 => subtractTree(M1,M2).
   }
 
-  public find:all m,k,v ~~ equality[k], map[m->>k,v] |: (m,k) => v.
+  public find:all m,k,v ~~ equality[k] |: (map[k,v],k) => v.
   find(M,K) => V :- present(M,K,V).
 
   public foldMap:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (map[k,v],f,u) => u.
@@ -195,17 +195,17 @@ lo.index{
 
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] .. {
-    disp(Tree) => ssSeq([ss("["),displayElements(Tree),ss("]")]).
+    disp(Tree) => ssSeq([ss("["),displayElements(Tree,"",_),ss("]")]).
   }
 
-  displayElements:all k,v ~~ display[k], display[v] |: (map[k,v]) => ss.
-  displayElements(trEmpty) => ssSeq([]).
-  displayElements(trLeaf(_,Lvs)) => ssSeq(displayLeaves(Lvs)).
-  displayElements(trNode(_,_,Lft,Rgt)) => ssSeq([displayElements(Lft),displayElements(Rgt)]).
+  displayElements:all k,v ~~ display[k], display[v] |: (map[k,v],string,string) => ss.
+  displayElements(trEmpty,Sep,Sep) => ssSeq([]).
+  displayElements(trLeaf(_,Lvs),Sep,Spx) => ssSeq(displayLeaves(Lvs,Sep,Spx)).
+  displayElements(trNode(_,_,Lft,Rgt),Sep,Spx) => ssSeq([displayElements(Lft,Sep,Sp0),displayElements(Rgt,Sp0,Spx)]).
 
-  displayLeaves:all k,v ~~ display[k], display[v] |: (list[(k,v)]) => list[ss].
-  displayLeaves([]) => [].
-  displayLeaves([(K,V),..More]) => [disp(K),ss("->"),disp(V),ss(", "),..displayLeaves(More)].
+  displayLeaves:all k,v ~~ display[k], display[v] |: (list[(k,v)],string,string) => list[ss].
+  displayLeaves([],Sep,Sep) => [].
+  displayLeaves([(K,V),..More],Sep,Spx) => [ss(Sep),disp(K),ss("->"),disp(V),..displayLeaves(More,", ",Spx)].
 
   HashLen:integer.
   HashLen = 64.

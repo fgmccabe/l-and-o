@@ -1,6 +1,6 @@
 :- module(transUtils,[trCons/3,className/3,labelAccess/5,extraVars/2,thisVar/2,
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
-          makePkgMap/6,
+          makePkgMap/6,mapName/3,
           genNewName/4,genVar/2,
           pushOpt/3, isOption/2,layerName/2,
           trCons/3,trPrg/3,typeTrArity/2,
@@ -78,10 +78,11 @@ stdMap([lyr(std,Defs,'',void,void,void)]) :-
   stdDict(Dict),
   processNames(Dict,transUtils:stdMapEntry,Defs).
 
-stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleFun("",prg(LclName,Arity)))|SoFar]) :-
+stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleFun("",prg(LclName,Arity),strct(AccessName,Arity)))|SoFar]) :-
   isFunctionType(Tp,Ar),!,
   Arity is Ar+1,
-  localName("","@",Nm,LclName).
+  localName("","@",Nm,LclName),
+  localName("","%",Nm,AccessName).
 stdMapEntry(_,vr(Nm,Tp),SoFar,[(Nm,moduleRel("",prg(LclName,Arity)))|SoFar]) :-
   isPredType(Tp,Arity),!,
   localName("","@",Nm,LclName).
@@ -110,10 +111,11 @@ makeModuleMap(Pkg,[Def|Rest],Map,Mx,Classes) :-
   makeModuleMap(Pkg,Rest,M0,Mx,Clx).
 makeModuleMap(_,[],Map,Map,[]).
 
-makeMdlEntry(Pkg,function(_,Nm,Tp,_,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
+makeMdlEntry(Pkg,function(_,Nm,Tp,_,_),[(Nm,moduleFun(Pkg,prg(LclName,Arity),strct(AccessName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
-  Arity is Ar+1.
+  Arity is Ar+1,
+  localName(Pkg,"%",Nm,AccessName).
 makeMdlEntry(Pkg,grammar(_,Nm,Tp,_,_),[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   typeArity(Tp,Ar),
@@ -165,10 +167,11 @@ contractArity(_,0).
 contractStruct(0,Nm,enum(Nm)).
 contractStruct(Ar,Nm,strct(Nm,Ar)).
 
-makeImportEntry(funType(A,_),_,Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
+makeImportEntry(funType(A,_),_,Pkg,Nm,[(Nm,moduleFun(Pkg,prg(LclName,Arity),strct(AccessName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   length(A,Ar),
-  Arity is Ar+1.
+  Arity is Ar+1,
+  localName(Pkg,"%",Nm,AccessName).
 makeImportEntry(grammarType(A,_),_,Pkg,Nm,[(Nm,moduleRel(Pkg,prg(LclName,Arity)))|Mx],Mx) :-
   localName(Pkg,"@",Nm,LclName),
   length(A,Ar),
@@ -210,6 +213,8 @@ anyDef(inherit(_,_,_,_)).
 anyDef(inheritField(_,_,_)).
 anyDef(moduleContract(_,_,_)).
 anyDef(moduleImpl(_,_,_)).
+anyDef(moduleFun(_,_,_)).
+anyDef(localFun(_,_,_,_)).
 
 lookupRelName(Map,Nm,V) :-
   lookup(Map,Nm,relDef,V).
@@ -222,8 +227,8 @@ relDef(inheritField(_,_,_)).
 lookupFunName(Map,Nm,V) :-
   lookup(Map,Nm,funDef,V).
 
-funDef(localFun(_,_,_)).
-funDef(moduleFun(_,_)).
+funDef(localFun(_,_,_,_)).
+funDef(moduleFun(_,_,_)).
 funDef(inherit(_,_,_,_)).
 funDef(inheritField(_,_,_)).
 funDef(localClass(_,_,_,_,_)).
@@ -254,10 +259,13 @@ lookupPackageRef(Map,Pkg,Nm,V) :-
   lookup(Map,Nm,pkgRef(Pkg),V).
 
 pkgRef(Pkg,moduleClass(Pkg,_,_)).
-pkgRef(Pkg,moduleFun(Pkg,_)).
+pkgRef(Pkg,moduleFun(Pkg,_,_)).
 pkgRef(Pkg,moduleRel(Pkg,_)).
 pkgRef(Pkg,moduleVar(Pkg,_)).
 pkgRef(Pkg,moduleType(Pkg,_)).
+
+mapName(moduleFun(_,Prog,Access),Prog,Access).
+mapName(localFun(Prog,Access,_,_),Prog,Access).
 
 extraVars([lyr(_,_,_,_,void,void)|_],[]) :- !.
 extraVars([lyr(_,_,_,_,LbVr,ThVr)|_],[LbVr,ThVr]).

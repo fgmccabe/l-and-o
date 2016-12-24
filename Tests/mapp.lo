@@ -1,0 +1,7 @@
+test.mapp{
+  import lo.
+
+  public mapp:all e,f ~~ (list[e],((e)=>f))=>list[f].
+  mapp([],_) => [].
+  mapp([e,..l],f) => [f(e),..mapp(l,f)].
+}

@@ -14,11 +14,11 @@ lo.comp.freshen{
   }
 
   private freshenType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
-  freshenType(univType(kVar(Nm),T),B) => freshenType(T,B+[Nm->newVar(Nm)]).
+  freshenType(univType(kVar(Nm),T),B) => freshenType(T,B[Nm->newVar(Nm)]).
   freshenType(T,B) => (B,frshnType(T,B)).
 
   private skolemizeType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
-  skolemizeType(univType(kVar(Nm),T),B) => skolemizeType(T,B+[Nm->skolem(Nm)]).
+  skolemizeType(univType(kVar(Nm),T),B) => skolemizeType(T,B[Nm->skolem(Nm)]).
   skolemizeType(T,B) => (B,frshnType(T,B)).
 
   private skolem:(string) => tipe.
@@ -45,7 +45,7 @@ lo.comp.freshen{
   frshnType(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
   frshnType(tupleType(A),B) => tupleType(frshnTypes(A,B)).
   frshnType(faceType(F),B) => faceType(frshnFields(F,B)).
-  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B-[Nm->_])).
+  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B[\+Nm])).
   frshnType(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
   frshnType(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
 
@@ -60,23 +60,18 @@ lo.comp.freshen{
   frshnFields([(F,E),..R],B) => [(F,frshnType(E,B)),..frshnFields(R,B)].
 
   private freshenConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
-  freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B+[Nm->newVar(Nm)]).
+  freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B[Nm->newVar(Nm)]).
   freshenConstraint(C,B) => (B,frshnConstraint(C,B)).
 
   private skolemizeConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
-  skolemizeConstraint(univCon(kVar(Nm),T),B) => skolemizeConstraint(T,B+[Nm->skolem(Nm)]).
+  skolemizeConstraint(univCon(kVar(Nm),T),B) => skolemizeConstraint(T,B[Nm->skolem(Nm)]).
   skolemizeConstraint(T,B) => (B,frshnConstraint(T,B)).
 
   frshnConstraint:(constraint,map[string,tipe]) => constraint.
   frshnConstraint(conTract(Nm,Args,Deps),B) => conTract(Nm,frshnTypes(Args,B),frshnTypes(Deps,B)).
   frshnConstraint(implementsFace(Tp,Els),B) => implementsFace(frshnType(Tp,B),frshnFields(Els,B)).
-  frshnConstraint(conRule(Args,C),B) => conRule(frshnConstraints(Args,B),frshnConstraint(C,B)).
-  frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B-[Nm->_]).
-
-  private
-  frshnConstraints:(list[constraint],map[string,tipe]) => list[constraint].
-  frshnConstraints([],_) => [].
-  frshnConstraints([C,..R],B) => [frshnConstraint(C,B),..frshnConstraints(R,B)].
+  frshnConstraint(conCon(Con,Ext),B) => conCon(frshnConstraint(Con,B),frshnConstraint(Ext,B)).
+  frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B[\+Nm]).
 
   public freezeType:(tipe,map[string,tipe],tipe){}.
   freezeType(Tp,B,FrZ) :-

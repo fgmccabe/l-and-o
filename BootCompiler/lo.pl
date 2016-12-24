@@ -43,7 +43,7 @@ processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
   processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),
   initPkg(Pkg).
 
-initPkg(pkg(Pkg)) :-
+initPkg(pkg(Pkg,_)) :-
   localName(Pkg,"@","init",Init),
   atom_string(ICall,Init),
   current_predicate(ICall/0),!,

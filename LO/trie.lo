@@ -9,7 +9,7 @@ lo.trie{
   private trie: all k,v ~~ equality[k] |: (option[v],map[k,trie[k,v]]) <=> trie[k,v].
   trie(Vl,Entries){
     put([],V) => trie(some(V),Entries).
-    put([k,..l],V) => trie(Vl,Entries+[k->find(Entries,k).put(l,v)]).
+    put([k,..l],V) => trie(Vl,Entries[k->find(Entries,k).put(l,v)]).
 
     private find:(map[k,trie[k,v]],k)=>trie[k,v].
     find(M,K) => T :- present(M,K,T).
