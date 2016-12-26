@@ -27,10 +27,10 @@ decodeValue(Txt,Val) :-
 decodeTerm(anon) --> ['a'].
 decodeTerm(intgr(Ix)) --> ['x'], decInt(Ix).
 decodeTerm(float(Dx)) --> ['d'], decFloat(Dx).
-decodeTerm(enum(Nm)) --> ['e'], decodeName(Nm).
-decodeTerm(strg(Txt)) --> ['s'], decodeText(Chrs), { string_chars(Txt,Chrs)}.
-decodeTerm(strct(Nm,Ar)) --> ['o'], decInt(Ar), decodeName(Nm).
-decodeTerm(prg(Nm,Ar)) --> ['p'], decInt(Ar), decodeName(Nm).
+decodeTerm(enum(Nm)) --> ['e'], decodeText(Nm).
+decodeTerm(strg(Txt)) --> ['s'], decodeText(Txt).
+decodeTerm(strct(Nm,Ar)) --> ['o'], decInt(Ar), decodeText(Nm).
+decodeTerm(prg(Nm,Ar)) --> ['p'], decInt(Ar), decodeText(Nm).
 decodeTerm(tpl(Els)) --> ['u'], decInt(Len), decTerms(Len,Els).
 decodeTerm(cons(Con,Els)) --> ['n'], decInt(Len), decodeTerm(Con), decTerms(Len,Els).
 decodeTerm(code(Tp,Bytes,Lits)) --> ['#'],
@@ -45,7 +45,7 @@ decTerms(Count,[D|M]) --> { Count>0}, decodeTerm(D), { C is Count-1}, decTerms(C
 decInt(Ix) --> ['-'], digits(0,N), Ix is -N.
 decInt(Ix) --> digits(0,Ix).
 
-decodeText(Chrs) --> [C], collectQuoted(C,Chrs).
+decodeText(Txt) --> [C], collectQuoted(C,Chrs),{ string_chars(Txt,Chrs)}.
 
 collectQuoted(C,[]) --> [C].
 collectQuoted(C,[Ch|M]) --> ['\\', Ch], collectQuoted(C,M).
@@ -62,10 +62,10 @@ decodeType(type("lo.core*integer")) --> ['i'].
 decodeType(type("lo.core*float")) --> ['f'].
 decodeType(type("lo.core*string")) --> ['S'].
 decodeType(type("lo.core*logical")) --> ['l'].
-decodeType(kVar(Nm)) --> ['k'], decodeName(Nm).
-decodeType(type(Nm)) --> ['t'], decodeName(Nm).
+decodeType(kVar(Nm)) --> ['k'], decodeText(Nm).
+decodeType(type(Nm)) --> ['t'], decodeText(Nm).
 decodeType(typeExp("lo.core*list",[ElTp])) --> ['L'], decodeType(ElTp).
-decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeName(Nm), decodeTypes(ArgTypes).
+decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeText(Nm), decodeTypes(ArgTypes).
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
@@ -83,18 +83,15 @@ decodeTypes(Ln,[A|More]) --> { Ln > 0 }, decodeType(A), {L1 is Ln-1}, decodeType
 decodeTypes(Types) --> typeLen(Len), decodeTypes(Len,Types).
 
 decodeFields(0,[]) --> [].
-decodeFields(Ln,[(Nm,Tp)|More]) --> { Ln > 0 }, decodeName(Nm), decodeType(Tp), {L1 is Ln-1}, decodeFields(L1,More).
+decodeFields(Ln,[(Nm,Tp)|More]) --> { Ln > 0 }, decodeText(Nm), decodeType(Tp), {L1 is Ln-1}, decodeFields(L1,More).
 decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
-
-decodeName(Str) --> [C], collectUntil(C,Text), { string_chars(Str,Text)}.
-
 
 decodeConstraint(S,Con) :-
   string_chars(S,Chrs),
   phrase(decodeConstraint(Con),Chrs).
 
 decodeConstraint(constrained(Con,Extra)) --> ['|'], decodeConstraint(Con), decodeConstraint(Extra).
-decodeConstraint(conTract(Nm,Args,Deps)) --> ['c'], decodeName(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
+decodeConstraint(conTract(Nm,Args,Deps)) --> ['c'], decodeText(Nm), decodeType(tupleType(Args)), decodeType(tupleType(Deps)).
 decodeConstraint(implementsFace(Tp,Face)) --> ['a'], decodeType(Tp), decodeType(faceType(Face)).
 decodeConstraint(univType(TV,Con)) --> [':'], decodeType(TV), decodeConstraint(Con).
 

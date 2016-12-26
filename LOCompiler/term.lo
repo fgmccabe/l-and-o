@@ -9,16 +9,16 @@ lo.comp.term {
                    | intgr(integer)
                    | flot(float)
                    | enum(string)
+                   | strct(string,integer)
+                   | prg(string,integer)
                    | strng(string)
                    | tuple(list[term])
-                   | cons(prgRef,list[term])
+                   | cons(term,list[term])
                    | code(tipe,list[integer],list[term]).
-
-  public type prgRef ::= strct(string,integer) | prg(string,integer).
 
   public type clause ::= clause(list[term],pred,list[pred]).
 
-  public type pred ::= pred(prgRef,list[term]) | unfy(term,term) | ocall(term,term,term) | cut.
+  public type pred ::= pred(term,list[term]) | unfy(term,term) | ocall(term,term,term) | cut.
 
   public type program ::= program(pkg,list[clause]).
 
@@ -32,6 +32,8 @@ lo.comp.term {
   dispTerm(intgr(Ix)) => disp(Ix).
   dispTerm(flot(Dx)) => disp(Dx).
   dispTerm(enum(Nm)) => ss(Nm).
+  dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
+  dispTerm(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(strng(Sx)) => disp(Sx).
   dispTerm(tuple(Els)) => ssSeq([ss("("),..dispEls("",Els)]).
   dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",Args)]).
@@ -46,17 +48,9 @@ lo.comp.term {
 
   private displayPred:(pred) => ss.
   displayPred(cut) => ss("!").
-  displayPred(pred(Op,Args)) => ssSeq([displayCdRef(Op),ss("("),..dispEls("",Args)]).
+  displayPred(pred(Op,Args)) => ssSeq([dispTerm(Op),ss("("),..dispEls("",Args)]).
   displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("/"),dispTerm(Th),ss("."),dispTerm(Rc)]).
   displayPred(unfy(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
-
-  public implementation display[prgRef] .. {
-    disp(P) => displayCdRef(P).
-  }
-  
-  private displayCdRef:(prgRef)=>ss.
-  displayCdRef(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
-  displayCdRef(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
 
   public genVr:(string) => term.
   genVr(Nm) => varbl(_str_gen(Nm)).

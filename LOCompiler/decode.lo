@@ -18,13 +18,11 @@ lo.comp.decode{
   decodeTerm(flot(Dx)) --> "d", decFloat(Dx).
   decodeTerm(enum(Nm)) --> "e", decodeName(Nm).
   decodeTerm(strng(Sx)) --> "s", decodeText(Chrs), { Sx = implode(Chrs)}.
+  decodeTerm(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
+  decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
   decodeTerm(tuple(Els)) --> "u", decInt(Len), decTerms(Len,Els).
-  decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodePrgRef(Op), decTerms(Len,Args).
+  decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
   decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tuple(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
-
-  private decodePrgRef:(prgRef) --> list[integer].
-  decodePrgRef(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
-  decodePrgRef(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].

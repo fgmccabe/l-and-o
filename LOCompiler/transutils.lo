@@ -18,32 +18,32 @@ lo.comp.transutils {
   public pushOpt:(trOption,trOptions) => trOptions.
   pushOpt(O,trOptions(L)) => trOptions([O,..L]).
 
-  public trCons:(string,integer) => prgRef.
+  public trCons:(string,integer) => term.
   trCons(Nm,Ar) => strct(Nm+"%\(Ar)",Ar).
 
-  public type lyr ::= lyr(string,list[(string,progDef)],prgRef,term,term).
+  public type lyr ::= lyr(string,list[(string,progDef)],term,term,term).
 
-  public type progDef ::= moduleFun(string,prgRef,prgRef)
-            | moduleRel(string,prgRef,prgRef)
-            | moduleVar(string,prgRef)
-            | moduleClass(string,prgRef,prgRef)
+  public type progDef ::= moduleFun(string,term,term)
+            | moduleRel(string,term,term)
+            | moduleVar(string,term)
+            | moduleClass(string,term,term)
             | notInMap.
 
   stdMap:()=>list[lyr].
   stdMap() => [lyr("",[],anon,anon,aonon)].
 
-  public makePkgMap:(pkg,list[canonDef],list[pkgSpec]) => (list[lyr],list[(string,prgRef,tipe)]).
+  public makePkgMap:(pkg,list[canonDef],list[pkgSpec]) => (list[lyr],list[(string,term,tipe)]).
   makePkgMap(pkg(Pkg,_),Defs,Imports) => (Classes,[lyr(Pkg,DfList,anon,anon,anon),..stdMap()]) :-
     makeModuleMap(Pkg,Defs,DfList,Rest,Classes),
     makeImportsMap(Imports,Rest,[]).
 
-  makeModuleMap:(string,list[canonDef],list[lyr],list[lyr],list[(string,prgRef,tipe)]){}.
+  makeModuleMap:(string,list[canonDef],list[lyr],list[lyr],list[(string,term,tipe)]){}.
   makeModuleMap(Pkg,[Def,..Rest],Map,Mx,Classes) :-
     makeMdlEntry(Pkg,Def,Map,M0,Classes,Clx),
     makeModuleMap(Pkg,Rest,M0,Mx,Clx).
   makeModuleMap(_,[],Map,Map,[]).
 
-  makeMdlEntry:(string,canonDef,list[(string,progDef)],list[(string,progDef)],list[(string,prgRef,tipe)],list[(string,prgRef,tipe)]){}.
+  makeMdlEntry:(string,canonDef,list[(string,progDef)],list[(string,progDef)],list[(string,term,tipe)],list[(string,term,tipe)]){}.
   makeMdlEntry(Pkg,funDef(_,Nm,Tp,_,_),
       [(Nm,moduleFun(Pkg,prg(localName(Pkg,"@",Nm),Arity),strct(localName(Pkg,"%",Nm),Arity))),..Mx],Mx,Clx,Clx) :-
     Arity = typeArity(Tp)+1.
@@ -97,7 +97,7 @@ lo.comp.transutils {
   contractArity(conCOn(Con,_),Ar) :- contractArity(Con,A), Ar is A+1.
   contractArity(_,0).
 
-  contractStruct:(integer,string,prgRef){}.
+  contractStruct:(integer,string,term){}.
   contractStruct(0,Nm,enum(Nm)).
   contractStruct(Ar,Nm,strct(Nm,Ar)).
 

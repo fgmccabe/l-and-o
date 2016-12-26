@@ -24,7 +24,7 @@ test.l{
 
   banjo:(integer)<=>{incr:(integer)=>integer}.
   banjo(X){
-    incr(Y)=>X+Y.
+    incr(Y)=>fred+Y.
     private fred:integer.
     fred = X.
   }
@@ -38,6 +38,6 @@ test.l{
 
   private positive:(integer){}.
   positive(N) :- N>0.
-  
+
   show filter([1,-2,3],positive).
 }

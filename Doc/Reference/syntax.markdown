@@ -56,8 +56,7 @@ The character categories used by L&O are:
 [Character Categories][categories]
 
 
-Tokens
----- 
+## Tokens
 
 It is required that the input of a L&O language processor is first partitioned into contiguous sequences of characters called *tokens*. There are several different kinds of tokens; corresponding to the identifiers, symbols, character literals, string literals and punctuation marks necessary to correctly parse a L&O program.
 

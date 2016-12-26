@@ -7,12 +7,12 @@
 encodeTerm(anon,['a'|O],O).
 encodeTerm(intgr(Ix),['x'|O],Ox) :- encodeInt(Ix,O,Ox).
 encodeTerm(float(Dx),['d'|O],Ox) :- encodeFloat(Dx,O,Ox).
-encodeTerm(enum(Nm),['e'|O],Ox) :- encodeName(Nm,O,Ox).
+encodeTerm(enum(Nm),['e'|O],Ox) :- encodeText(Nm,O,Ox).
 encodeTerm(strg(St),['s'|O],Ox) :- encodeText(St,O,Ox).
 encodeTerm(strct(Nm,Arity),['o'|O],Ox) :- 
   encodeInt(Arity,O,O1),
-  encodeName(Nm,O1,Ox).
-encodeTerm(prg(Nm,Arity),['p'|O],Ox) :- encodeInt(Arity,O,O1), encodeName(Nm,O1,Ox).
+  encodeText(Nm,O1,Ox).
+encodeTerm(prg(Nm,Arity),['p'|O],Ox) :- encodeInt(Arity,O,O1), encodeText(Nm,O1,Ox).
 encodeTerm(tpl(Els),['u'|O],Ox) :- length(Els,Ln), encodeInt(Ln,O,O1), encodeTerms(Els,O1,Ox).
 encodeTerm(cons(Con,Els),['n'|O],Ox) :- 
   length(Els,Ln), 
@@ -42,9 +42,9 @@ encodeType(type("lo.core*logical"),['l'|O],O).
 encodeType(type("lo.core*integer"),['i'|O],O).
 encodeType(type("lo.core*float"),['f'|O],O).
 encodeType(type("lo.core*string"),['S'|O],O).
-encodeType(kVar(Nm),['k'|O],Ox) :- encodeName(Nm,O,Ox).
-encodeType(type(Nm),['t'|O],Ox) :- encodeName(Nm,O,Ox).
-encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeName(Nm,O,O1), encodeTypes(Args,O1,Ox).
+encodeType(kVar(Nm),['k'|O],Ox) :- encodeText(Nm,O,Ox).
+encodeType(type(Nm),['t'|O],Ox) :- encodeText(Nm,O,Ox).
+encodeType(typeExp(Nm,Args),['U'|O],Ox) :- encodeText(Nm,O,O1), encodeTypes(Args,O1,Ox).
 encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeType(tupleType(Args),O,O1), encodeType(Tp,O1,Ox).
 encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeType(tupleType(Args),O,O1), encodeType(Tp,O1,Ox).
 encodeType(predType(Args),['P'|O],Ox) :- encodeType(tupleType(Args),O,Ox).
@@ -54,8 +54,6 @@ encodeType(faceType(Fields),['I'|O],Ox) :- encodeFieldTypes(Fields,O,Ox).
 encodeType(univType(B,Tp),[':'|O],Ox) :- encodeType(B,O,O1),encodeType(Tp,O1,Ox).
 encodeType(constrained(Tp,Con),['|'|O],Ox) :- encodeType(Tp,O,O1),encodeConstraint(Con,O1,Ox).
 encodeType(typeRule(L,R),['Y'|O],Ox) :- encodeType(L,O,O1), encodeType(R,O1,Ox).
-
-encodeName(Nm,O,Ox) :- string_chars(Nm,Chrs), findDelim(Chrs,Delim), encodeChars(Chrs,Delim,O,Ox).
 
 findDelim(Chrs,Delim) :-
   is_member(Delim,['''','"', '|', '/', '%']),
@@ -94,7 +92,7 @@ encodeTps([Tp|More],O,Ox) :- encodeType(Tp,O,O1), encodeTps(More,O1,Ox).
 encodeFieldTypes(Fields,O,Ox) :- length(Fields,L), encodeInt(L,O,O1),encodeFieldTps(Fields,O1,Ox).
 
 encodeFieldTps([],O,O).
-encodeFieldTps([(Nm,Tp)|More],O,Ox) :- encodeName(Nm,O,O1),encodeType(Tp,O1,O2), encodeFieldTps(More,O2,Ox).
+encodeFieldTps([(Nm,Tp)|More],O,Ox) :- encodeText(Nm,O,O1),encodeType(Tp,O1,O2), encodeFieldTps(More,O2,Ox).
 
 encodeConstraint(univType(V,C),[':'|O],Ox) :- 
   encodeType(V,O,O1),
@@ -103,7 +101,7 @@ encodeConstraint(constrained(Con,Extra),['|'|O],Ox) :-
   encodeConstraint(Con,O,O1),
   encodeConstraint(Extra,O1,Ox).
 encodeConstraint(conTract(Nm,Args,Deps),['c'|O],Ox) :- 
-  encodeName(Nm,O,O1),
+  encodeText(Nm,O,O1),
   encodeType(tupleType(Args),O1,O2),
   encodeType(tupleType(Deps),O2,Ox).
 encodeConstraint(implementsFace(Tp,Face),['a'|O],Ox) :-
