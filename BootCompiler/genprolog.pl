@@ -29,7 +29,7 @@ constructPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,
   formatContracts(Contracts,ConSigs),
   formatImpls(Impls,ImplSigs).
 
-encPkg(pkg(Nm,Vers),cons(enum("pkg"),[strg(Nm),V])) :-
+encPkg(pkg(Nm,Vers),cons(strct("pkg",2),[strg(Nm),V])) :-
   encVer(Vers,V).
 
 encVer(defltVersion,enum("*")).
@@ -40,7 +40,7 @@ encImports([I|M],[IP|L]) :-
   encImport(I,IP),
   encImports(M,L).
 
-encImport(import(Viz,Pkg,_,_,_,_,_),cons(enum("import"),[enum(Viz),Enc])) :-
+encImport(import(Viz,Pkg,_,_,_,_,_),cons(strct("import",2),[enum(Viz),Enc])) :-
   encPkg(Pkg,Enc).
 
 encTypes(Fields,strg(Sig)) :-

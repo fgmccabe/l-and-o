@@ -129,7 +129,7 @@ transformDefn(Map,Opts,Lc,Nm,Cond,Value,
   length([_|Extra],Arity),
   breakDebug(Nm,G3,G4,ClOpts).                         % generate break point debugging
 
-transformGrammar(Map,Opts,grammar(_,_,_,[],Rls),LclFun,Rules,Rx,Ex,Exx) :-
+transformGrammar(Map,Opts,grammar(_,Nm,_,[],Rls),LclFun,Rules,Rx,Ex,Exx) :-
   lookupRelName(Map,Nm,Reslt),
   programAccess(Reslt,LclFun,_,_,Arity),
   extraVars(Map,Extra),

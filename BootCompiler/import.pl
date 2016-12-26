@@ -26,14 +26,14 @@ pickupPkgSpec('#pkg'(Enc),Pkg,Imports,Export,Types,Classes,Contracts,Implementat
   pickupContracts(ConSigs,Contracts),
   pickupImplementations(ImplSigs,Implementations,[]).
 
-pickupPkg(cons(enum("pkg"),[strg(Nm),V]),pkg(Nm,Vers)) :-
+pickupPkg(cons(strct("pkg",2),[strg(Nm),V]),pkg(Nm,Vers)) :-
   pickupVersion(V,Vers).
 
 pickupVersion(enum("*"),defltVersion).
 pickupVersion(strg(V),v(V)).
 
 pickupImports([],[]).
-pickupImports([cons(enum("import"),[V,P])|L],[import(Viz,Pkg)|M]) :-
+pickupImports([cons(strct("import",2),[V,P])|L],[import(Viz,Pkg)|M]) :-
   pickupViz(V,Viz),
   pickupPkg(P,Pkg),
   pickupImports(L,M).

@@ -55,7 +55,7 @@ lo.comp.imports{
 
   pickupClasses:(list[term],list[(string,string,tipe)],list[(string,string,tipe)]){}.
   pickupClasses([],Cls,Cls).
-  pickupClasses([tuple([strng(Nm),strng(Cl),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
+  pickupClasses([tuple([strng(Nm),strct(Cl,_),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).
   pickupClasses([tuple([strng(Nm),enum(Cl),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).

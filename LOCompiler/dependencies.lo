@@ -208,6 +208,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isBinary(S,"=",_,L,R).
   stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isUnary(S,"show",_,R).
   stmtRefs(S,All,So) =>  refsInCond(R,All,So) :-  isUnary(S,"assert",_,R).
+  stmtRefs(S,All,So) => refsInType(I,All,So) :- isBinary(S,":",_,_,I).
 
   refsInHead:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInHead(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).
