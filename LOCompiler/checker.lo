@@ -554,7 +554,7 @@ lo.comp.typecheck{
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isUnary(Term,"-",Lc,Arg),         -- handle unary minus
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isBinary(Term,"=>",Lc,Lhs,Rhs),
     isRoundTuple(Lhs,_,A),
     ArgTp = tupleType(mkTypes(length(A))),
@@ -564,6 +564,14 @@ lo.comp.typecheck{
     typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
     typeOfTerm(Rhs,ResTp,E1,E2,Res,Rp1,Rpx),
     Exp = lambda(equation(Lc,_str_gen("L"),Arg,Res,trueCond)). -- Have to sort out free variables at some point
+  typeOfTerm(Term,Tp,Env,Ev,lambda(clause(Lc,_str_gen("R"),Arg,Cond)),Rp,Rpx) :-
+    isBinary(Term,":-",Lc,Lhs,Rhs),
+    isRoundTuple(Lhs,_,A),
+    ArgTp = tupleType(mkTypes(length(A))),
+    FunTp = predType(ArgTp),
+    checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
+    typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
+    checkCond(Rhs,E1,_,Cond,Rp1,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),

@@ -16,6 +16,9 @@ lo.comp.misc{
     splitString(Path,Marker,_,_).
   subPath(Path,Marker,Suffix) => Path+Marker+Suffix.
 
+  public starts_with:(string,string){}.
+  starts_with(S,T) :- _sub_str(S,0,size(T)) == T.
+
   public type all x,y ~~ pr[x,y] ::= pr(x,y).
 
   public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] .. {

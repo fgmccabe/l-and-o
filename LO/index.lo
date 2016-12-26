@@ -37,6 +37,16 @@ lo.index{
   leafHash([],H) => H.
   leafHash([(k,v),..l],H) => leafHash(l,(h*37+hash(k))*37+hash(v)).
 
+  public implementation all k,v ~~ sizeable[map[k,v]] .. {
+    size(M) => countEls(M,0).
+    isEmpty(trEmpty).
+  }
+
+  countEls:all k,v ~~ (map[k,v],integer) => integer.
+  countEls(trEmpty,C) => C.
+  countEls(trLeaf(_,L),C) => C+length(L).
+  countEls(trNode(_,_,L,R),C) => countEls(R,countEls(L,C)).
+
   public
   implementation all k,v ~~ equality[k] |: additive[map[k,v]] .. {
     M1+M2 => mergeTree(M1,M2).

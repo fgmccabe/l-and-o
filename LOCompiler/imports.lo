@@ -37,7 +37,7 @@ lo.comp.imports{
 
   decodeImports:(list[term]) => list[(visibility,pkg)].
   decodeImports([]) => [].
-  decodeImports([cons(enum("import"),[Vz,Pk]),..Is]) => [(decodeViz(Vz),decodePkg(Pk)),..decodeImports(Is)].
+  decodeImports([cons(strct("import",2),[Vz,Pk]),..Is]) => [(decodeViz(Vz),decodePkg(Pk)),..decodeImports(Is)].
 
   decodeTypes:(string) => list[(string,tipe)].
   decodeTypes(Txt) => F :- decodeType(faceType(F)) %% explode(Txt).
@@ -47,7 +47,7 @@ lo.comp.imports{
   decodeViz(enum("private")) => priVate.
 
   decodePkg:(term)=>pkg.
-  decodePkg(cons(enum("pkg"),[strng(Pk),V]))=> pkg(Pk,decodeVers(V)).
+  decodePkg(cons(strct("pkg",2),[strng(Pk),V]))=> pkg(Pk,decodeVers(V)).
 
   decodeVers:(term)=>version.
   decodeVers(enum("*"))=>defltVersion.
@@ -55,7 +55,7 @@ lo.comp.imports{
 
   pickupClasses:(list[term],list[(string,string,tipe)],list[(string,string,tipe)]){}.
   pickupClasses([],Cls,Cls).
-  pickupClasses([tuple([strng(Nm),strct(Cl,_),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
+  pickupClasses([tuple([strng(Nm),strng(Cl),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).
   pickupClasses([tuple([strng(Nm),enum(Cl),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
     pickupClasses(Rest,More,Cls).

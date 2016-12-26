@@ -6,6 +6,10 @@ lo.collection{
     foldLeft:all x,f ~~ f <~ { apply:(x,e)=>x } |: (f,x,c) => x.
   }
 
+  public contract all c,e ~~ filter[c->>e] <~ {
+    filter:(c,(e){}) => c.
+  }
+
   public contract all m,k,v ~~ map[m ->> k,v] <~ {
     present:(m,k,v){}.
     _remove:(m,k) => m.
@@ -14,6 +18,4 @@ lo.collection{
     pairs:(m) => list[(k,v)].
     _empty:m.
   }.
-
-
 }

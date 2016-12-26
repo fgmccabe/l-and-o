@@ -26,5 +26,21 @@ lo.comp.location{
   locDisp(loc(Ln,Off,Col,Len,Pth)) => 
         ssSeq([ss(Pth),ss(":"),disp(Ln),ss("/"),disp(Col),ss("("),disp(Len),ss(")")]).
 
+  public lineOf:(location) => integer.
+  lineOf(loc(Line,Off,Col,Len,Pth)) => Line.
+
+  public columnOf:(location) => integer.
+  columnOf(loc(Line,Off,Col,Len,Pth)) => Col.
+
+  public widthOf:(location) => integer.
+  widthOf(loc(Line,Off,Col,Len,Pth)) => Len.
+
+  public implementation sizeable[location] .. {
+    size(loc(_,_,_,Len,_)) => Len.
+    size(std) => 0.
+
+    isEmpty(std).
+  }
+
   public type hasLoc <~ { loc:location. }.
 }

@@ -40,7 +40,7 @@ main(Args) :-
 processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
   loadPkg(Pkg,Repo,Code,Imports),
   assertAll(Code,PrIn,Pr0),
-  processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),
+  processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),!,
   initPkg(Pkg).
 
 initPkg(pkg(Pkg,_)) :-

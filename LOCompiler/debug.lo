@@ -1,0 +1,47 @@
+lo.comp.debug{
+  import lo.
+  import lo.comp.location.
+  import lo.comp.term.
+  import lo.comp.transutils.
+  import lo.comp.misc.
+
+  -- Generate code that interfaces with a debugger
+  -- are we debugging?
+  public debugPreamble:(string,list[term],list[term],list[pred],list[pred],trOptions,trOptions){}.
+  debugPreamble(Nm,Q,[DgVr,FrVr,..Q],[pred(prg("go.debug@current",1),[DgVr]),..Gx],Gx,Opts,pushOpt(dbgVars(Nm,DgVr,FrVr),Opts)) :-
+    isOption(debugging,Opts),
+    DgVr = genVr("__D"),
+    FrVr = genVr("__F").
+  debugPreamble(_,Q,Q,P,P,Opts,Opts).
+
+  public frameDebug:(string,integer,list[term],list[pred],list[pred],trOptions){}.
+  frameDebug(Nm,QNo,Q,G,Gx,Opts) :-
+    isOption(dbgVars(Nm,DgVr,FrVr),Opts),
+    G=[unfy(FrVr,constructFrameList(Q)),
+        ocall(cons(trCons("frame",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..Gx].
+  frameDebug(_,_,_,F,F,_).
+
+  public deframeDebug:(string,integer,list[pred],list[pred],trOptions){}.
+  deframeDebug(Nm,QNo,FB,FBx,Opts) :-
+    isOption(dbgVars(Nm,DgVr,FrVr),Opts),
+    FB=[ocall(cons(trCons("deframe",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..FBx].
+  deframeDebug(_,_,F,F,_).
+
+  constructFrameList:(list[term]) => term.
+  constructFrameList([]) =>enum("lo.list#[]").
+  constructFrameList([varbl(V),..Vars]) => constructFrameList(Vars)  :-
+    starts_with(V,"_").
+  constructFrameList([varbl(V),..Vars]) => 
+        cons(strct("lo.list#,..",2),[tuple([strng(V),varbl(V)]),constructFrameList(Vars)]).
+
+  public breakDebug:(string,list[pred],list[pred],trOptions){}.
+  breakDebug(Nm,[ocall(cons(trCons("break",1),[strng(Nm)]),DgVr,DgVr),..BG],BG,Opts) :-
+    isOption(dbgVars(Nm,DgVr,_),Opts).
+  breakDebug(_,G,G,_).
+
+  public lineDebug:(location,list[pred],list[pred],trOptions){}.
+  lineDebug(Lc,[ocall(cons(trCons("line",4),[strng(PkgName),intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(size(Lc))]),DgVr,DgVr),..P],P,Opts) :-
+    isOption(dbgVars(_,DgVr,_),Opts),
+    isOption(pkgName(PkgName),Opts).
+  lineDebug(_,P,P,_).
+}

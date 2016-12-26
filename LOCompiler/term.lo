@@ -1,23 +1,24 @@
 lo.comp.term {
   import lo.
-  import lo.comp.types.
+
   import lo.comp.package.
+  import lo.comp.types.
 
   public type term ::= anon
-                   | varble(string)
+                   | varbl(string)
                    | intgr(integer)
                    | flot(float)
                    | enum(string)
                    | strng(string)
-                   | strct(string,integer)
-                   | prg(string,integer)
                    | tuple(list[term])
-                   | cons(term,list[term])
+                   | cons(prgRef,list[term])
                    | code(tipe,list[integer],list[term]).
 
-  public type clause ::= clause(list[string],pred,list[pred]).
+  public type prgRef ::= strct(string,integer) | prg(string,integer).
 
-  public type pred ::= pred(term,list[term]) | cut.
+  public type clause ::= clause(list[term],pred,list[pred]).
+
+  public type pred ::= pred(prgRef,list[term]) | unfy(term,term) | ocall(term,term,term) | cut.
 
   public type program ::= program(pkg,list[clause]).
 
@@ -27,17 +28,36 @@ lo.comp.term {
 
   private dispTerm:(term) => ss.
   dispTerm(anon) => ss("_").
-  dispTerm(varble(Nm)) => ssSeq([ss(Nm),ss("?")]).
+  dispTerm(varbl(Nm)) => ssSeq([ss(Nm),ss("?")]).
   dispTerm(intgr(Ix)) => disp(Ix).
   dispTerm(flot(Dx)) => disp(Dx).
   dispTerm(enum(Nm)) => ss(Nm).
   dispTerm(strng(Sx)) => disp(Sx).
-  dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
-  dispTerm(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(tuple(Els)) => ssSeq([ss("("),..dispEls("",Els)]).
   dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",Args)]).
 
   private dispEls:(string,list[term]) => list[ss].
   dispEls(_,[]) => [ss(")")].
   dispEls(Sep,[e,..l]) => [ss(Sep),dispTerm(e),..dispEls(", ",l)].
+
+  public implementation display[pred] .. {
+    disp(P) => displayPred(P).
+  }
+
+  private displayPred:(pred) => ss.
+  displayPred(cut) => ss("!").
+  displayPred(pred(Op,Args)) => ssSeq([displayCdRef(Op),ss("("),..dispEls("",Args)]).
+  displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("/"),dispTerm(Th),ss("."),dispTerm(Rc)]).
+  displayPred(unfy(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
+
+  public implementation display[prgRef] .. {
+    disp(P) => displayCdRef(P).
+  }
+  
+  private displayCdRef:(prgRef)=>ss.
+  displayCdRef(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
+  displayCdRef(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
+
+  public genVr:(string) => term.
+  genVr(Nm) => varbl(_str_gen(Nm)).
 }

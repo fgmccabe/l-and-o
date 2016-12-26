@@ -595,6 +595,13 @@ typeOfTerm(Term,Tp,Env,Ev,lambda(equation(Lc,"",Args,true(Lc),Exp))) :-
   checkType(Lc,funType(AT,RT),Tp,Env,E0),
   typeOfTerms(A,AT,E0,E1,Lc,Args),
   typeOfTerm(R,RT,E1,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Ev,lambda(clause(Lc,"",Args,true(Lc),Body))) :-
+  isBinary(Term,Lc,":-",H,R),
+  isTuple(H,_,A),
+  genTpVars(A,AT),
+  checkType(Lc,predType(AT),Tp,Env,E0),
+  typeOfTerms(A,AT,E0,E1,Lc,Args),
+  checkCond(R,E1,Ev,Body).
 typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),
   reportError("illegal expression: %s, expecting a %s",[Term,Tp],Lc).

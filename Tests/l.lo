@@ -1,5 +1,20 @@
 test.l{
   import lo.
+/*
+  public implementation additive[integer] .. {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+    zero = 0.
+  }
+
+  fact:(integer) => integer.
+  fact(X) => _int_plus(X,X).
+
+  ff:(integer)=>integer.
+  ff=fact.
+
+  assert ff(3)=fact(3).
+*/
   import test.mapp.
 
   inc1:(integer) => integer.
@@ -7,15 +22,22 @@ test.l{
 
   assert mapp([1,2,3],inc1) == [2,3,4].
 
-  banjo:(integer)<=>{inc:(integer)=>integer}.
+  banjo:(integer)<=>{incr:(integer)=>integer}.
   banjo(X){
-    inc(Y)=>X+Y.
+    incr(Y)=>X+Y.
     private fred:integer.
     fred = X.
   }
 
   inc:(integer)=>integer.
-  inc = banjo(3).inc.
+  inc = banjo(3).incr.
 
   show mapp([1,2,3],inc).
+
+  assert mapp([1,2,3],banjo(1).incr) == [2,3,4].
+
+  private positive:(integer){}.
+  positive(N) :- N>0.
+  
+  show filter([1,-2,3],positive).
 }

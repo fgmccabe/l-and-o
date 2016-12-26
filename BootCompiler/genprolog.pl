@@ -152,9 +152,7 @@ genTerm(strg(Str),O,Ox) :-
 genTerm(anon,O,Ox) :-
   appStr("_",O,Ox).
 genTerm(enum(Nm),O,Ox) :-
-  appStr("'",O,O1),
-  appStr(Nm,O1,O2),
-  appStr("'",O2,Ox).
+  appQuoted(Nm,'''',O,Ox).
 genTerm(idnt(Nm),O,Ox) :-
   appStr("X",O,O0),
   genVar(Nm,O0,Ox).
@@ -186,9 +184,7 @@ isLetter('_').
 isLetter(Ch) :- char_type(Ch,alnum).
 
 genQuoted(Str,O,Ox) :-
-  appStr("'",O,O1),
-  appStr(Str,O1,O2),
-  appStr("'",O2,Ox).
+  appQuoted(Str,'''',O,Ox).
 
 genTerms([],O,O).
 genTerms([T|Rest],O,Ox) :-

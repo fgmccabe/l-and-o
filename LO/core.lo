@@ -35,6 +35,11 @@ lo.core{
     one:x.
   }
 
+  public contract all c ~~ sizeable[c] <~ {
+    size:(c) => integer.
+    isEmpty:(c){}.
+  }
+
   -- Structured string. This is only part of the type ..
   public type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
 
@@ -163,6 +168,11 @@ lo.core{
   qtChr(0c",l) => [sc(0c\\),sc(0c"),..l].
   qtChr(0c\\,l) => [sc(0c\\),sc(0c\\),..l].
   qtChr(c,l) => [sc(c),..l].
+
+  public implementation sizeable[string] .. {
+    size(S) => _str_len(S).
+    isEmpty("").
+  }
 
   -- Not strictly necessary, but makes for better symmetry.
   public

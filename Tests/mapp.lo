@@ -4,4 +4,13 @@ test.mapp{
   public mapp:all e,f ~~ (list[e],((e)=>f))=>list[f].
   mapp([],_) => [].
   mapp([e,..l],f) => [f(e),..mapp(l,f)].
+
+  public implementation all e ~~ filter[list[e]->>e] .. {
+    filter(L,P) => filterList(L,P).
+  }
+
+  filterList:all e ~~ (list[e],(e){})=>list[e].
+  filterList([],_) => [].
+  filterList([e,..l],p) => [e,..filterList(l,p)] :- p(e).
+  filterList([_,..l],p) => filterList(l,p).
 }

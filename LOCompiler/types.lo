@@ -198,4 +198,19 @@ lo.comp.types{
   bindAT(_,[],Q) => Q.
   bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
   bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q[V->Tp]).
+
+  public typeArity:(tipe) => integer.
+  typeArity(funType(E,_)) => typeArity(E).
+  typeArity(predType(E)) => typeArity(E).
+  typeArity(grammarType(E,_)) => typeArity(E).
+  typeArity(classType(E,_)) => typeArity(E).
+  typeArity(univType(_,T)) => typeArity(T).
+  typeArity(constrained(T,_)) => typeArity(T).
+  typeArity(tupleType(L)) => length(L).
+  typeArity(faceType(F)) => length(F).
+  
+  
+  
+  
+  
 }

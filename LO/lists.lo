@@ -50,6 +50,11 @@ lo.list{
   length([]) => 0.
   length([_,..L]) => length(L)+1.
 
+  public implementation all c ~~ sizeable[list[c]] .. {
+    size(L) => length(L).
+    isEmpty([]).
+  }
+
   public implementation all e ~~ folding[list[e]->>e] .. {
     foldLeft(f,x,[]) => x.
     foldLeft(f,x,[e,..l]) => foldLeft(f,f.apply(x,e),l).
