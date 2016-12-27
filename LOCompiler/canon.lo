@@ -20,7 +20,7 @@ lo.comp.canon {
     name = Nm.
   }
 
-  public type pkgSpec ::= pkgSpec(pkg,tipe,list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry],list[(visibility,pkg)]).
+  public type pkgSpec ::= pkgSpec(pkg,tipe,list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
 
   public type
   canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).

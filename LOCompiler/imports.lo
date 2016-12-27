@@ -20,18 +20,18 @@ lo.comp.imports{
   import lo.comp.canon.
 
   public importPkg:(pkg,repository,pkgSpec,report,report){}.
-  importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Classes,Contracts,Impls,Imports),Rp,Rpx) :-
+  importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Enums,Contracts,Impls,Imports),Rp,Rpx) :-
     locatePackage(Repo,Pkg,Vers,_,Strm),
     parse(A,Rp,Rp0) %% getNTokens(Strm,Pkg,5)!,
-    pickupPkgSpec(A,Imports,Export,Types,Classes,Contracts,Impls,Rp0,Rpx)!.
+    pickupPkgSpec(A,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
-  pickupPkgSpec:(ast,list[(visibility,pkg)],tipe,list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry],report,report){}.
-  pickupPkgSpec(Term,decodeImports(Is),decodeSignature(Ex),Types,Classes,Contracts,Impls,Rp,Rp) :-
+  pickupPkgSpec:(ast,list[(visibility,pkg)],tipe,list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
+  pickupPkgSpec(Term,decodeImports(Is),decodeSignature(Ex),Types,Enums,Contracts,Impls,Rp,Rp) :-
     isUnary(Term,"#pkg",_,E),
     isString(E,_,Enc),
     tuple([P,tuple(Is),Ex,Tp,tuple(C),tuple(Co),tuple(Im)]) = decodeValue(Enc),
     faceType(Types) = decodeSignature(Tp),
-    pickupClasses(C,Classes,[]),
+    pickupEnums(C,Enums,[]),
     findContracts(Co,Contracts,[]),
     pickupImplementations(Im,Impls,[]).
 
@@ -53,12 +53,10 @@ lo.comp.imports{
   decodeVers(enum("*"))=>defltVersion.
   decodeVers(strng(V)) => vers(V).
 
-  pickupClasses:(list[term],list[(string,string,tipe)],list[(string,string,tipe)]){}.
-  pickupClasses([],Cls,Cls).
-  pickupClasses([tuple([strng(Nm),strct(Cl,_),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
-    pickupClasses(Rest,More,Cls).
-  pickupClasses([tuple([strng(Nm),enum(Cl),Sig]),..Rest],[(Nm,Cl,decodeSignature(Sig)),..More],Cls):-
-    pickupClasses(Rest,More,Cls).
+  pickupEnums:(list[term],list[string],list[string]){}.
+  pickupEnums([],Cls,Cls).
+  pickupEnums([strng(Nm),..Rest],[Nm,..More],Cls):-
+    pickupEnums(Rest,More,Cls).
 
   findContracts:(list[term],list[conEntry],list[conEntry]){}.
   findContracts([],C,C).

@@ -2,7 +2,6 @@ lo.comp.transutils {
   import lo.
 
   import lo.comp.location.
-  -- import lo.comp.escapes.
   import lo.comp.canon.
   import lo.comp.imports.
   import lo.comp.term.
@@ -21,63 +20,58 @@ lo.comp.transutils {
   public trCons:(string,integer) => term.
   trCons(Nm,Ar) => strct(Nm+"%\(Ar)",Ar).
 
-  public type lyr ::= lyr(string,list[(string,progDef)],term,term,term).
+  public type lyr ::= lyr(string,list[(string,mapEntry)],term,term,term).
 
-  public type progDef ::= moduleFun(string,term,term)
-            | moduleRel(string,term,term)
-            | moduleVar(string,term)
-            | moduleClass(string,term,term)
+  public type mapEntry ::= moduleFun(string,string,string,integer)
+            | moduleRel(string,string,string,string,integer)
+            | moduleVar(string,string,string)
+            | moduleClass(string,string,integer)
+            | moduleImpl(string,term)
+            | localFun(string,string,string,integer,term,term)
+            | localRel(string,string,string,integer,term,term)
+            | localCar(string,string,term,term)
+            | localClass(string,string,string,integer,term,term)
             | notInMap.
 
   stdMap:()=>list[lyr].
-  stdMap() => [lyr("",[],anon,anon,aonon)].
+  stdMap() => [lyr("",[],anon,anon,anon)].
 
   public makePkgMap:(pkg,list[canonDef],list[pkgSpec]) => (list[lyr],list[(string,term,tipe)]).
   makePkgMap(pkg(Pkg,_),Defs,Imports) => (Classes,[lyr(Pkg,DfList,anon,anon,anon),..stdMap()]) :-
     makeModuleMap(Pkg,Defs,DfList,Rest,Classes),
     makeImportsMap(Imports,Rest,[]).
 
-  makeModuleMap:(string,list[canonDef],list[lyr],list[lyr],list[(string,term,tipe)]){}.
+  makeModuleMap:(string,list[canonDef],list[lyr],list[lyr],list[(string,string,tipe)]){}.
   makeModuleMap(Pkg,[Def,..Rest],Map,Mx,Classes) :-
     makeMdlEntry(Pkg,Def,Map,M0,Classes,Clx),
     makeModuleMap(Pkg,Rest,M0,Mx,Clx).
   makeModuleMap(_,[],Map,Map,[]).
 
-  makeMdlEntry:(string,canonDef,list[(string,progDef)],list[(string,progDef)],list[(string,term,tipe)],list[(string,term,tipe)]){}.
+  makeMdlEntry:(string,canonDef,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,string,tipe)],list[(string,string,tipe)]){}.
   makeMdlEntry(Pkg,funDef(_,Nm,Tp,_,_),
-      [(Nm,moduleFun(Pkg,prg(localName(Pkg,"@",Nm),Arity),strct(localName(Pkg,"%",Nm),Arity))),..Mx],Mx,Clx,Clx) :-
-    Arity = typeArity(Tp)+1.
+      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,grammDef(_,Nm,Tp,_,_),
-      [(Nm,moduleRel(Pkg,prg(localName(Pkg,"@",Nm),Arity),strct(localName(Pkg,"%",Nm),Arity))),..Mx],Mx,Clx,Clx) :-
-    Arity = typeArity(Tp)+2.
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,relDef(_,Nm,Tp,_,_),
-      [(Nm,moduleRel(Pkg,prg(localName(Pkg,"@",Nm),Arity),strct(localName(Pkg,"%",Nm),Arity))),..Mx],Mx,Clx,Clx) :-
-    Arity = typeArity(Tp).
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,varDef(_,Nm,_,_,_,_),
-      [(Nm,moduleVar(Pkg,prg(localName(Pkg,"@",Nm),1))),..Mx],Mx,Clx,Clx).
+      [(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm)))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,classDef(_,Nm,Tp,_,_,_),
-      [(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3)))|Mx],Mx,[(Nm,enum(LclName),Tp),..Clx],Clx) :-
-    typeArity(Tp)=0,
-    LclName = localName(Pkg,"#",Nm),
-    AccessName = localName(Pkg,"@",Nm).
-  makeMdlEntry(Pkg,classDef(_,Nm,Tp,_,_,_),
-      [(Nm,moduleClass(prg(localName(Pkg,"@",Nm),1),Template,prg(LclName,3))),..Mx],Mx,[(Nm,Template,Tp),..Clx],Clx) :-
-    LclName = localName(Pkg,"#",Nm),
-    Template = strct(LclName,typeArity(Tp)).
+      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(Tp,0))),..Mx],Mx,[(Nm,localName(Pkg,"#",Nm),Tp),..Clx],Clx).
   makeMdlEntry(Pkg,_,Mx,Mx,Clx,Clx).
   
-  makeImportsMap:(list[pkgSpec],list[(string,progDef)],list[(string,progDef)]){}.
+  makeImportsMap:(list[pkgSpec],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   makeImportsMap([Import,..Rest],Map,Mx) :-
     makeImportMap(Import,Map,M0),
     makeImportsMap(Rest,M0,Mx).
   makeImportsMap([],Map,Map).
 
-  makeImportMap:(pkgSpec,list[(string,progDef)],list[(string,progDef)]){}.
+  makeImportMap:(pkgSpec,list[(string,mapEntry)],list[(string,mapEntry)]){}.
   makeImportMap(pkgSpec(pkg(Pkg,_),faceType(Fields),_,Classes,_,Impls,_),Map,Mx) :-
     importFields(Pkg,Classes,Fields,Map,M0),
     importImplementations(Impls,M0,Mx).
 
-  importFields:(string,list[(string,string,tipe)],list[(string,tipe)],list[(string,progDef)],list[(string,progDef)]){}.
+  importFields:(string,list[(string,string,tipe)],list[(string,tipe)],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   importFields(_,_,[],Map,Map).
   importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
     moveQuants(Tp,_,QTp),
@@ -85,7 +79,7 @@ lo.comp.transutils {
     makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
     importFields(Pkg,Classes,Fields,M0,Mx).
 
-  importImplementations:(list[implEntry],list[(string,progDef)],list[(string,progDef)]){}.
+  importImplementations:(list[implEntry],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   importImplementations([],Map,Map).
   importImplementations([implEntry(Nm,Con),..L],[(Nm,moduleImpl(prg(Nm,1),Struct,prg(Nm,3))),..M],Mx) :-
     contractArity(Con,Ar),
@@ -101,16 +95,13 @@ lo.comp.transutils {
   contractStruct(0,Nm,enum(Nm)).
   contractStruct(Ar,Nm,strct(Nm,Ar)).
 
-  makeImportEntry:(tipe,list[(string,string,tipe)],string,list[(string,progDef)],list[(string,progDef)]){}.
+  makeImportEntry:(tipe,list[(string,string,tipe)],string,list[(string,mapEntry)],list[(string,mapEntry)]){}.
   makeImportEntry(funType(A,_),_,Pkg,Nm,
-      [(Nm,moduleFun(Pkg,prg(localName(Pkg,"@",Nm),Arity),strct(localName(Pkg,"%",Nm),Arity))),..Mx],Mx) :-
-    Arity = typeArity(A)+1.
+      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,1))),..Mx],Mx).
   makeImportEntry(grammarType(A,_),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,prg(localName(Pkg,"@",Nm),Arity)),strct(localName(Pkg,"%",Nm),Arity)),..Mx],Mx) :-
-    Arity = typeArity(A)+2.
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,2))),..Mx],Mx).
   makeImportEntry(predType(A),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,prg(localName(Pkg,"@",Nm),Arity)),strct(localName(Pkg,"%",Nm),Arity)),..Mx],Mx) :-
-    Arity = typeArity(A).
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
   makeImportEntry(classType(A,_),_,Pkg,Nm,
       [(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(AccessName,3))),..Mx],Mx) :-
     AccessName = localName(Pkg,"@",Nm),
@@ -120,14 +111,14 @@ lo.comp.transutils {
     (Nm,LclName,AccessName) in Classes.
   makeImportEntry(_,_,Pkg,Nm,[(Nm,moduleVar(Pkg,prg(localName(Pkg,"@",Nm),1))),..Mx],Mx).
 
-  public lookup:(list[lyr],string,(string,progDef){},progDef){}.
+  public lookup:(list[lyr],string,(string,mapEntry){},mapEntry){}.
   lookup([],_,_,notInMap).
   lookup([lyr(_Prefix,Defns,_Lc,_Lbl,_LbVr,_ThVr),.._],Nm,Filter,Reslt) :-
     filteredSearch(Defns,Filter,Nm,Reslt)!.
   lookup([_,..Layers],Nm,Filter,Reslt) :-
     lookup(Layers,Nm,Filter,Reslt).
 
-  private filteredSearch:(list[(string,progDef)],(string,progDef){},string,progDef){}.
+  private filteredSearch:(list[(string,mapEntry)],(string,mapEntry){},string,mapEntry){}.
   filteredSearch(Defns,Filter,Nm,Defn) :-
     (Nm,Defn) in Defns,
     call(Filter,Defn),!.
@@ -210,36 +201,39 @@ lo.comp.transutils {
 
   isOption(Opt,Opts) :- is_member(Opt,Opts),!.
 
-  layerName([lyr(Nm,_,_,_,_,_)|_],Nm).
+  public layerName:(list[lyr])=>string.
+  layerName([lyr(Nm,_,_,_,_,_),.._]) => Nm.
 
-  genVar(Prefix,idnt(V)) :-
-    genstr(Prefix,V).
+  public genVar:(string)=>term.
+  genVar(Prefix) => idnt(_str_gen(Prefix)).
 
-  genAnons(0,[]).
-  genAnons(K,[anon|Rest]) :-
-    K>0,
-    K1 is K-1,
-    genAnons(K1,Rest).
+  public genAnons:(integer) => list[term].
+  genAnons(0) => [].
+  genAnons(K) => [anon,..genAnons(K-1)] :-
+    K>0.
 
-  genVars(0,[]).
-  genVars(K,[V|Rest]) :-
-    K>0,
-    K1 is K-1,
-    genVar("V",V),
-    genVars(K1,Rest).
-
-  typeTrArity(Tp,Ar) :-
-    isFunctionType(Tp,A),
-    Ar is A+1.
-  typeTrArity(Tp,Ar) :-
-    isPredType(Tp,Ar).
-  typeTrArity(Tp,Ar) :-
-    isClassType(Tp,A),
-    Ar is A+1.
-  typeTrArity(_,1).
+  public genVars:(integer) => list[term].
+  genVars(0) => [].
+  genVars(K) => [genVar("V"),..genVars(K-1)] :-
+    K>0.
 
   public localName:(string,string,string) => string.
   localName(_,Glue,Nm) => Nm :- 
     _str_find(Nm,Glue,_,_).
   localName(Pkg,Glue,Nm) => Pkg+Glue+Nm.
+
+  public effectiveArity:(tipe,integer) => integer.
+  effectiveArity(Tp,Extra) => tpArity(Tp)+Extra.
+
+  private tpArity:(tipe) => integer.
+  tpArity(funType(E,_)) => tpArity(E)+1.
+  tpArity(predType(E)) => tpArity(E).
+  tpArity(grammarType(E,_)) => tpArity(E)+2.
+  tpArity(classType(E,_)) => tpArity(E).
+  tpArity(univType(_,T)) => tpArity(T).
+  tpArity(constrained(T,_)) => tpArity(T).
+  tpArity(tupleType(L)) => tpArity(L).
+  tpArity(faceType(F)) => tpArity(F).
+  
+  
 }

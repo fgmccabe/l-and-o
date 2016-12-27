@@ -76,17 +76,17 @@ genNewName(Map,Variant,Ar,prg(Nm,Ar)) :-
 
 stdMap([lyr(std,[],'',void,void,void)]).
 
-makePkgMap(Pkg,Defs,Types,Imports,Classes,Map) :-
+makePkgMap(Pkg,Defs,Types,Imports,Enums,Map) :-
   stdMap(StdMap),
-  makeModuleMap(Pkg,Defs,DfList,Rest,Classes),
+  makeModuleMap(Pkg,Defs,DfList,Rest,Enums),
   makeImportsMap(Imports,Rest,R0),
   makeTypesMap(Pkg,Types,R0,[]),
   pushMap(Pkg,DfList,StdMap,Map).
 
 pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void)|Std]).
 
-makeModuleMap(Pkg,[Def|Rest],Map,Mx,Classes) :-
-  makeMdlEntry(Pkg,Def,Map,M0,Classes,Clx),
+makeModuleMap(Pkg,[Def|Rest],Map,Mx,Enums) :-
+  makeMdlEntry(Pkg,Def,Map,M0,Enums,Clx),
   makeModuleMap(Pkg,Rest,M0,Mx,Clx).
 makeModuleMap(_,[],Map,Map,[]).
 
@@ -110,11 +110,11 @@ makeMdlEntry(Pkg,predicate(_,Nm,Tp,_,_),[(Nm,moduleRel(Pkg,LclName,AccessName,Cl
 makeMdlEntry(Pkg,defn(_,Nm,_,_,_,_),[(Nm,moduleVar(Pkg,LclName,AccessName))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,LclName),
   localName(Pkg,"%",Nm,AccessName).
-makeMdlEntry(Pkg,class(_,Nm,Tp,_,_,_),[(Nm,moduleClass(LclName,AccessName,Ar))|Mx],Mx,[(Nm,strct(AccessName,Ar),Tp)|Clx],Clx) :-
+makeMdlEntry(Pkg,class(_,Nm,Tp,_,_,_),[(Nm,moduleClass(LclName,AccessName,Ar))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"@",Nm,AccessName),
   localName(Pkg,"#",Nm,LclName),
   typeArity(Tp,Ar).
-makeMdlEntry(Pkg,enum(_,Nm,Tp,_,_,_),[(Nm,moduleClass(LclName,AccessName,0))|Mx],Mx,[(Nm,enum(AccessName),Tp)|Clx],Clx) :-
+makeMdlEntry(Pkg,enum(_,Nm,_,_,_,_),[(Nm,moduleClass(LclName,AccessName,0))|Mx],Mx,[Nm|Clx],Clx) :-
   localName(Pkg,"#",Nm,LclName),
   localName(Pkg,"@",Nm,AccessName).
 makeMdlEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
@@ -128,16 +128,16 @@ makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportsMap(Rest,M0,Mx).
 makeImportsMap([],Map,Map).
 
-makeImportMap(import(_,pkg(Pkg,_),faceType(Fields),_,Classes,_,Impls),Map,Mx) :-
-  importFields(Pkg,Classes,Fields,Map,M0),
+makeImportMap(import(_,pkg(Pkg,_),faceType(Fields),_,Enums,_,Impls),Map,Mx) :-
+  importFields(Pkg,Enums,Fields,Map,M0),
   importImplementations(Impls,M0,Mx).
 
 importFields(_,_,[],Map,Map).
-importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
+importFields(Pkg,Enums,[(Nm,Tp)|Fields],Map,Mx) :-
   moveQuants(Tp,_,QTp),
   moveConstraints(QTp,_,Template),
-  makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
-  importFields(Pkg,Classes,Fields,M0,Mx).
+  makeImportEntry(Template,Enums,Pkg,Nm,Map,M0),
+  importFields(Pkg,Enums,Fields,M0,Mx).
 
 importImplementations([],Map,Map).
 importImplementations([imp(Nm,Con)|L],[(Nm,moduleImpl(Nm,Struct))|M],Mx) :-
@@ -169,8 +169,8 @@ makeImportEntry(predType(A),_,Pkg,Nm,[(Nm,moduleRel(Pkg,LclName,AccessName,Closu
   localName(Pkg,"%",Nm,AccessName),
   localName(Pkg,"^",Nm,ClosureName),
   length(A,Arity).
-makeImportEntry(_,Classes,Pkg,Nm,[(Nm,moduleClass(LclName,AccessName,0))|Mx],Mx) :-
-  is_member((Nm,enum(_),_),Classes),
+makeImportEntry(_,Enums,Pkg,Nm,[(Nm,moduleClass(LclName,AccessName,0))|Mx],Mx) :-
+  is_member(Nm,Enums),!,
   localName(Pkg,"@",Nm,AccessName),
   localName(Pkg,"#",Nm,LclName).
 makeImportEntry(classType(A,_),_,Pkg,Nm,[(Nm,moduleClass(LclName,AccessName,Ar))|Mx],Mx) :-

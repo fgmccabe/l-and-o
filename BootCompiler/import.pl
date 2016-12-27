@@ -45,8 +45,7 @@ pickupFace(strg(Sig),Type) :-
   decodeSignature(Sig,Type).
 
 pickupClasses([],Cls,Cls).
-pickupClasses([tpl([strg(Nm),Cl,strg(Sig)])|Rest],[(Nm,Cl,Tp)|More],Cls):-
-  decodeSignature(Sig,Tp),
+pickupClasses([strg(Nm)|Rest],[Nm|More],Cls):-
   pickupClasses(Rest,More,Cls).
 
 processContracts(Enc,C,Cx) :-

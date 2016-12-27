@@ -6,26 +6,26 @@
 :- use_module(encode).
 :- use_module(uri).
 
-genRules(export(Pkg,Imports,Fields,Types,Classes,Rules,Contracts,Impls),Text) :-
-  genPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,Chrs,O1),
+genRules(export(Pkg,Imports,Fields,Types,Enums,Rules,Contracts,Impls),Text) :-
+  genPkgSig(Pkg,Imports,Fields,Types,Enums,Contracts,Impls,Chrs,O1),
   genPlRules(Rules,O1,[]),
   string_chars(Text,Chrs).
 
-genPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,O,Ox) :-
-  constructPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,Term),
+genPkgSig(Pkg,Imports,Fields,Types,Enums,Contracts,Impls,O,Ox) :-
+  constructPkgSig(Pkg,Imports,Fields,Types,Enums,Contracts,Impls,Term),
   appQuoted("#pkg",'''',O,O1),
   appStr("(",O1,O2),
   encodeTerm(Term,TChrs,[]),
   appQuoted(TChrs,'"',O2,O3),
   appStr(").\n",O3,Ox).
 
-constructPkgSig(Pkg,Imports,Fields,Types,Classes,Contracts,Impls,
+constructPkgSig(Pkg,Imports,Fields,Types,Enums,Contracts,Impls,
     tpl([PkgNm,tpl(Imps),FTps,TTps,tpl(ClsSigs),tpl(ConSigs),tpl(ImplSigs)])) :-
   encPkg(Pkg,PkgNm),
   encImports(Imports,Imps),
   encTypes(Fields,FTps),
   encTypes(Types,TTps),
-  formatClassStructures(Classes,ClsSigs),
+  formatEnums(Enums,ClsSigs),
   formatContracts(Contracts,ConSigs),
   formatImpls(Impls,ImplSigs).
 
@@ -47,11 +47,9 @@ encTypes(Fields,strg(Sig)) :-
   encodeType(faceType(Fields),Chars,[]),
   string_chars(Sig,Chars).
 
-formatClassStructures([],[]).
-formatClassStructures([(Nm,Access,Tp)|M],[tpl([strg(Nm),Access,strg(EncType)])|R]) :-
-  encodeType(Tp,Chars,[]),
-  string_chars(EncType,Chars),
-  formatClassStructures(M,R).
+formatEnums([],[]).
+formatEnums([Nm|M],[strg(Nm)|R]) :-
+  formatEnums(M,R).
 
 formatContracts([],[]).
 formatContracts([contract(Nm,CnNm,_,FullSpec,Face)|M],[tpl([strg(Nm),strg(CnNm),strg(CSig),strg(FSig)])|R]) :-

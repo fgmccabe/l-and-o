@@ -11,11 +11,11 @@ L&O uses the Unicode character encoding system @unicode:30. More specifically, t
 A L&O language processor should assume that the input is encoded in UTF-8.
 
 However, all of the the characters used within the language definition of L&O – such as the built-in operators and syntactic features – are contained within the ASCII subset of the Unicode character set. Thus, L&O can be used in an ASCII-based environment.
-Note that L&O does _not_ have a specific character type. This is for two key reasons: the complexities of Unicode representation make having a special character type problematic[^1], and, furthermore, in practice, `string` values outnumber character values in typical programs.
+Note that L&O does _not_ have a specific character type. This is for two key reasons: the complexities of Unicode representation make having a special character type problematic[^In particular, converting between \`string\`s and their character representation is not invertible in general.], and, furthermore, in practice, `string` values outnumber character values in typical programs.
 
 #### Character Categories
 
-The Unicode consortium has identified a number of character categories[^2]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
+The Unicode consortium has identified a number of character categories[^A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.]. A character category distinguishes the typical role of a character – numeric digit, punctuation mark, regular text – in a language independent way.
 
 L&O uses these character categories to classify characters for the the purposes of discriminating identifiers and number values occurring in the program source text. The purpose of this is to permit non-English programmers to use non-English identifiers in the text of the program.
 
@@ -66,14 +66,14 @@ In the productions for the tokenizer listed below we assume that, in an actual t
 
 The tokenizer rules depend on the `tok` type defined below:
 
-	  tok ::= lpar | rpar | lbra | rbra  -- Punctuation
-	     |  lbrce | rbrce | lqpar | rqpar
-	     |  idTok(string)                -- Identifier
-	     |  intTok(integer)              -- Integer literal
-	     |  fltTok(float)                -- Floating point literal
-	     |  stringTok(list[stringSegment])  -- String literals
-	     |  period                       -- statement terminator
-	     |  terminal.                    -- End of file            
+	tok ::= lpar | rpar | lbra | rbra  -- Punctuation
+	|  lbrce | rbrce | lqpar | rqpar
+	|  idTok(string)                -- Identifier
+	|  intTok(integer)              -- Integer literal
+	|  fltTok(float)                -- Floating point literal
+	|  stringTok(list[stringSegment])  -- String literals
+	|  period                       -- statement terminator
+	|  terminal.                    -- End of file
 
 This type definition defines the legal kinds of tokens that can be expected; and also forms the basis of the stream processed at the next higher level in the L&O language specification: namely the syntactic grammar.
 
@@ -108,7 +108,7 @@ Tokens in a L&O source text may separated by zero or more *comments* and/or whit
 
 #### White Space
 
-White space is defined to be any character in the unicode categories `Zs`, `Zl` and `Zp`. This is captured in the grammar rules:[^ Note that the grammar uses \`integer\` values to represent Unicode Code Points.]
+White space is defined to be any character in the unicode categories `Zs`, `Zl` and `Zp`. This is captured in the grammar rules:[^1]
 
 	whiteSpace:() --> tokenState.
 	whiteSpace() --> [C] :: (_isZsChar(X) | _isZlChar(X) | _isZpChar(X)).
@@ -840,6 +840,4 @@ is
 
 Moreover, abstract parse trees only represent one intermediate kind of structure in a typical L&O compiler. However, by the time that the above equation is compiled, it will have been reduced to just a few instructions.
 
-[^1]:	In particular, converting between `string`s and their character representation is not invertible in general.
-
-[^2]:	A classification of characters introduced by the Unicode consortium to abstract common roles of character glyphs.
+[^1]:	Note that the grammar uses `integer` values to represent Unicode Code Points.

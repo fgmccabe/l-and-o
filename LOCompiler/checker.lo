@@ -22,14 +22,14 @@ lo.comp.typecheck{
   import lo.comp.resolve.
 
   public checkProgram:(ast,version,repository,report,report)=>canonPkg.
-  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Classes,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
+  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),faceType(Exports),Types,Enums,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,Rp,Rp0),
     findImportedImplementations(Imports,[],OverDict),
     overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
     OOthers = overloadOthers(Others,ODict,Rp1,Rpx),
-    computeExport(ODefs,[],Public,Exports,Types,Classes,Contracts,Impls).
+    computeExport(ODefs,[],Public,Exports,Types,Enums,Contracts,Impls).
 
   private computeImports:(list[(string,defnKind)],list[pkgSpec]) => list[(visibility,pkg)].
   computeImports(_,[])=>[].
@@ -922,35 +922,35 @@ lo.comp.typecheck{
   pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(N),T),E)).
 
   computeExport:(list[canonDef],list[(string,tipe)],list[(string,defnKind)],
-                  list[(string,tipe)],list[(string,tipe)],list[(string,string,tipe)],list[conEntry],list[implEntry]){}.
+                  list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry]){}.
   computeExport([],_,_,[],[],[],[],[]).
-  computeExport([Def,..Defs],Fields,Public,Exports,Types,Classes,Contracts,Impls) :-
-    exportDef(Def,Fields,Public,Exports,Ex,Types,Tx,Classes,Clx,Contracts,Cx,Impls,Ix)!,
+  computeExport([Def,..Defs],Fields,Public,Exports,Types,Enums,Contracts,Impls) :-
+    exportDef(Def,Fields,Public,Exports,Ex,Types,Tx,Enums,Clx,Contracts,Cx,Impls,Ix)!,
     computeExport(Defs,Fields,Public,Ex,Tx,Clx,Cx,Ix).
 
   exportDef:(canonDef,list[(string,tipe)],list[(string,defnKind)],
           list[(string,tipe)],list[(string,tipe)],
           list[(string,tipe)],list[(string,tipe)],
-          list[(string,string,tipe)],list[(string,string,tipe)],
+          list[string],list[string],
           list[conEntry],list[conEntry],
           list[implEntry],list[implEntry]){}.
-  exportDef(funDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Classes,Classes,Cons,Cons,Impl,Impl) :-
+  exportDef(funDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(relDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Classes,Classes,Cons,Cons,Impl,Impl) :-
+  exportDef(relDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(classDef(_,Nm,XNm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,[(Nm,XNm,Tp),..Clx],Clx,Cons,Cons,Impl,Impl) :-
+  exportDef(classDef(_,Nm,XNm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,[Nm,..Clx],Clx,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Classes,Classes,Cons,Cons,Impl,Impl) :-
+  exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).
-  exportDef(varDef(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Classes,Classes,Cons,Cons,Impl,Impl) :-
+  exportDef(varDef(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(grammDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Classes,Classes,Cons,Cons,Impl,Impl) :-
+  exportDef(grammDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(cnDefn(_,Nm,Contract),_,Public,Ex,Ex,Types,Types,Classes,Classes,[Contract,..Cons],Cons,Impl,Impl) :-
+  exportDef(cnDefn(_,Nm,Contract),_,Public,Ex,Ex,Types,Types,Enums,Enums,[Contract,..Cons],Cons,Impl,Impl) :-
     (Nm,con) in Public.
-  exportDef(implDef(_,INm,ImplName,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Classes,Classes,Cons,Cons,[implEntry(ImplName,Spec),..Ix],Ix) :-
+  exportDef(implDef(_,INm,ImplName,Spec,_,_,_),_,Public,Ex,Ex,Tps,Tps,Enums,Enums,Cons,Cons,[implEntry(ImplName,Spec),..Ix],Ix) :-
     isPublicImplementation(INm,Public)!.
-  exportDef(_,_,_,Ex,Ex,Tps,Tps,Classes,Classes,Cons,Cons,Impls,Impls).
+  exportDef(_,_,_,Ex,Ex,Tps,Tps,Enums,Enums,Cons,Cons,Impls,Impls).
 
   exportViz:(string,defnKind,list[(string,defnKind)]) => visibility.
   exportViz(Nm,K,P) => pUblic :- (Nm,K) in P.

@@ -208,9 +208,4 @@ lo.comp.types{
   typeArity(constrained(T,_)) => typeArity(T).
   typeArity(tupleType(L)) => length(L).
   typeArity(faceType(F)) => length(F).
-  
-  
-  
-  
-  
 }
