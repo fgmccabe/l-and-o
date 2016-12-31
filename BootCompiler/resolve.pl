@@ -100,7 +100,6 @@ resolveTerm(v(Lc,Nm),_,v(Lc,Nm)).
 resolveTerm(intLit(Ix),_,intLit(Ix)).
 resolveTerm(floatLit(Ix),_,floatLit(Ix)).
 resolveTerm(stringLit(Sx),_,stringLit(Sx)).
-resolveTerm(pkgRef(Lc,Pkg,Rf),_,pkgRef(Lc,Pkg,Rf)).
 resolveTerm(dot(Rc,Fld),Dict,dot(RRc,Fld)) :- resolveTerm(Rc,Dict,RRc).
 resolveTerm(enum(Lc,Rf),_,enum(Lc,Rf)).
 resolveTerm(tuple(Lc,Args),Dict,tuple(Lc,RArgs)) :-

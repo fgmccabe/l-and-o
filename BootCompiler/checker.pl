@@ -551,13 +551,6 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isBinary(Term,Lc,".",L,F), !,
   isIden(F,Fld),
   recordAccessExp(Lc,L,Fld,Tp,Env,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Env,pkgRef(Lc,Pkg,Fld)) :-
-  isBinary(Term,Lc,"#",L,F), !,
-  isIden(F,FLc,Fld),
-  pkgName(L,Pkg),
-  isExported(Pkg,Fld,ExTp),
-  freshen(ExTp,voidType,_,FlTp), % replace with package type
-  checkType(FLc,FlTp,Tp,Env).
 typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-
   isBinary(Term,Lc,"|",L,El),
   isBinary(L,"?",Tst,Th), !,

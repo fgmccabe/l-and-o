@@ -16,6 +16,7 @@ catalog{
     lo.comp.escapes -> "escapes.lo".
     lo.comp.freevars -> "freevars.lo".
     lo.comp.freshen -> "freshen.lo".
+    lo.comp.genprolog -> "genprolog.lo".
     lo.comp.grammar -> "grammar.lo".
     lo.comp.grapher -> "grapher.lo".
     lo.comp.imports -> "imports.lo".
@@ -39,7 +40,6 @@ catalog{
     lo.comp.typecheck -> "checker.lo".
     lo.comp.types -> "types.lo".
     lo.comp.unify -> "unify.lo".
-    lo.comp.wff -> "wff.lo".
   }
   default: "../LO/catalog".
 }

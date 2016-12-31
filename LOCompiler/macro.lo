@@ -3,7 +3,6 @@ lo.comp.macro{
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
-  import lo.comp.wff.
   import lo.comp.errors.
 
   public macroRewrite:(list[ast],list[ast],report,report){}.

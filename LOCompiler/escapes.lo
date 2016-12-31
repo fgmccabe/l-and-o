@@ -96,6 +96,7 @@ lo.comp.escapes{
   escapeType("_sub_str") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")).
   escapeType("_str_split") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_str_concat") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_str_start") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
 
   public isEscape:(string){}.
   isEscape("exit").
@@ -188,5 +189,6 @@ lo.comp.escapes{
   isEscape("_sub_str").
   isEscape("_str_split").
   isEscape("_str_concat").
+  isEscape("_str_start").
 
 }.

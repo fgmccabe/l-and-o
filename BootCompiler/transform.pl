@@ -424,10 +424,6 @@ trPtn(enum(Lc,Nm),A,Q,Qx,Pre,Prx,Post,Pstx,Map,Opts,Ex,Ex) :- !,
 trPtn(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtn(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trPtn(pkgRef(Lc,Pkg,Rf),Ptn,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :- !,
-  lookupPkgRef(Map,Pkg,Rf,Reslt),
-  genVar("Xi",Xi),
-  implementPkgRefPtn(Reslt,Lc,Pkg,Rf,Xi,Ptn,Q,Qx,Post,Pstx).
 trPtn(dot(Rc,Fld),Exp,Q,Qx,Pre,Px,Post,Post,Map,Opts,Ex,Exx) :-
   genVar("XV",X),
   trCons(Fld,[X],S),
@@ -498,11 +494,6 @@ implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,Args,
   length(Args,Ar).
 implementPtnCall(moduleImpl(_,Mdl),_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx).
 
-implementPkgRefPtn(moduleVar(_,Vn,_),_,_,_,Xi,Xi,Q,[Xi|Q],[call(prg(Vn,1),[Xi])|Tail],Tail).
-implementPkgRefPtn(moduleClass(Enum,_,0),_,_,_,_,enum(Enum),Q,Q,Tail,Tail).
-implementPkgRefPtn(_,Lc,Pkg,Rf,_,idnt("_"),Q,Q,Post,Post) :-
-  reportError("illegal access to %s#%s",[Pkg,Rf],Lc).
-
 trEntryPtrns([],_,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex).
 trEntryPtrns([(Ky,Vl)|R],Xi,Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx):-
   trExp(Ky,KyExp,Q,Q0,Pre,Pre0,Post,Pst0,Map,Opts,Ex,Ex0),
@@ -524,10 +515,6 @@ trExp(v(Lc,Nm),Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Ex) :-
 trExp(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(floatLit(Ix),float(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trExp(stringLit(Ix),strg(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
-trExp(pkgRef(Lc,Pkg,Rf),Exp,Q,Qx,Pre,Pre,Post,Pstx,Map,_,Ex,Ex) :-
-  lookupPkgRef(Map,Pkg,Rf,Reslt),
-  genVar("Xi",Xi),
-  implementPkgRefExp(Reslt,Lc,Pkg,Rf,Xi,Exp,Q,Qx,Post,Pstx).
 trExp(tuple(_,A),tpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
   trExps(A,TA,[],Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx).
 trExp(apply(Op,A),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx) :-
@@ -618,10 +605,6 @@ trExpCallOp(dot(Rec,Fld),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,
   trCons(Fld,XArgs,Op),
   C = cons(Op,XArgs),
   trExpCallDot(Rec,Rec,C,X,Exp,Q1,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
-trExpCallOp(pkgRef(_,Pkg,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[call(Fun,XArgs)|Tailx],Pre,Px,Tail,Tailx,Map,_,Ex,Ex) :-
-  concat(Args,[X],XArgs),
-  merge([X],Q,Qx),
-  lookupPkgRef(Map,Pkg,Nm,moduleFun(_,Fun,_)).
 
 trExpCallDot(v(_,Nm),Rec,C,X,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
@@ -660,12 +643,6 @@ implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,_,Args,
 implementFunCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex).
 implementFunCall(notInMap,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   trExpCallOp(dot(v(Lc,Nm),"_call"),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
-
-implementPkgRefExp(moduleVar(_,Vn,_),_,_,_,Xi,Q,[Xi|Q],[call(Vn,[Xi])|Pre],Pre,Post,Post).
-implementPkgRefExp(moduleClass(Enum,_,0),_,_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post).
-
-implementPkgRefExp(_,Lc,Pkg,Ref,_,Q,Q,Post,Post) :-
-  reportError("illegal access to %s#%s",[Pkg,Ref],Lc).
 
 trGoal(true(_),Goals,Goals,Q,Q,_,_,Ex,Ex) :-!.
 trGoal(false(_),[fail|Rest],Rest,Q,Q,_,_,Ex,Ex) :- !.
@@ -760,8 +737,6 @@ trGoalCall(v(Lc,Nm),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
 trGoalCall(dot(Rec,Pred),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trCons(Pred,Args,Op),
   trGoalDot(Rec,cons(Op,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx).
-trGoalCall(pkgRef(_,Pkg,Rf),Args,[call(prg(Rel,Ar),Args)|Gx],Gx,Q,Q,Map,_,Ex,Ex) :-
-  lookupPkgRef(Map,Pkg,Rf,moduleRel(_,Rel,_,_,Ar)).
 
 implementGoalCall(localRel(Fn,_,_,_,LblVr,ThVr),_,_,Args,[call(Fn,XArgs)|Tail],Tail,Q,Qx,_,_,Ex,Ex) :-
   concat(Args,[LblVr,ThVr],XArgs),

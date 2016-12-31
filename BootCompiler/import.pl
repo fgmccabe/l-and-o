@@ -48,10 +48,6 @@ pickupClasses([],Cls,Cls).
 pickupClasses([strg(Nm)|Rest],[Nm|More],Cls):-
   pickupClasses(Rest,More,Cls).
 
-processContracts(Enc,C,Cx) :-
-  decodeValue(Enc,tpl(Cons)),
-  findContracts(Cons,C,Cx).
-
 pickupContracts(C,Cons) :-
   findContracts(C,Cons,[]).
 

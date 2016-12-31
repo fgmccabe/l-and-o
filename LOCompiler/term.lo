@@ -16,11 +16,36 @@ lo.comp.term {
                    | cons(term,list[term])
                    | code(tipe,list[integer],list[term]).
 
-  public type clause ::= clause(list[term],pred,list[pred]).
+  public type clse ::= clse(list[term],term,list[term],list[pred]).
 
-  public type pred ::= pred(term,list[term]) | unfy(term,term) | ocall(term,term,term) | cut.
+  public type pred ::= call(term,list[term])
+                    | ecall(string,list[term])
+                    | unfy(term,term)
+                    | ocall(term,term,term)
+                    | neck
+                    | fail
+                    | raise(term).
 
-  public type program ::= program(pkg,list[clause]).
+  public type prProg ::= prProg(pkgSpec,list[clse]).
+
+  public implementation display[prProg] .. {
+    disp(Prog) => dispProg(Prog).
+  }
+
+  private dispProg:(prProg)=>ss.
+  dispProg(prProg(_,Rules)) => ssSeq([ss("compiled rules\n"),..dispRules(Rules)]).
+
+  private dispRules:(list[clse]) => list[ss].
+  dispRules([]) => [].
+  dispRules([Cl,..Rls]) => [disp(Cl),..dispRules(Rls)].
+
+  public implementation display[clse] .. {
+    disp(Cl) => dispClause(Cl).
+  }
+
+  private dispClause:(clse) => ss.
+  dispClause(clse([],Hd,Args,Body)) => ssSeq([disp(Hd),disp(Args),ss(":-"),ssSeq(dispPreds("","\n    ",Body)),ss(".\n")]).
+  dispClause(clse(Q,Hd,Args,Body)) => ssSeq([ss("all "),ssSeq(dispEls(""," ~~\n",Q)),disp(Hd),disp(Args),ss(":-"),ssSeq(dispPreds("","\n    ",Body)),ss(".\n")]).
 
   public implementation display[term] .. {
     disp(T) => dispTerm(T).
@@ -35,22 +60,29 @@ lo.comp.term {
   dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
   dispTerm(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(strng(Sx)) => disp(Sx).
-  dispTerm(tuple(Els)) => ssSeq([ss("("),..dispEls("",Els)]).
-  dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",Args)]).
+  dispTerm(tuple(Els)) => ssSeq([ss("("),..dispEls("",")",Els)]).
+  dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",")",Args)]).
 
-  private dispEls:(string,list[term]) => list[ss].
-  dispEls(_,[]) => [ss(")")].
-  dispEls(Sep,[e,..l]) => [ss(Sep),dispTerm(e),..dispEls(", ",l)].
+  private dispEls:(string,string,list[term]) => list[ss].
+  dispEls(_,Tail,[]) => [ss(Tail)].
+  dispEls(Sep,Tail,[e,..l]) => [ss(Sep),dispTerm(e),..dispEls(", ",Tail,l)].
 
   public implementation display[pred] .. {
     disp(P) => displayPred(P).
   }
 
   private displayPred:(pred) => ss.
-  displayPred(cut) => ss("!").
-  displayPred(pred(Op,Args)) => ssSeq([dispTerm(Op),ss("("),..dispEls("",Args)]).
+  displayPred(neck) => ss("!").
+  displayPred(call(Op,Args)) => ssSeq([dispTerm(Op),ss("("),..dispEls("",")",Args)]).
+  displayPred(ecall(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",")",Args)]).
   displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("/"),dispTerm(Th),ss("."),dispTerm(Rc)]).
   displayPred(unfy(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
+  displayPred(fail) => ss("fail").
+  displayPred(raise(T)) => ssSeq([ss("raise "),disp(T)]).
+
+  private dispPreds:(string,string,list[pred]) => list[ss].
+  dispPreds(_,_,[]) => [].
+  dispPreds(Sep,Alt,[C,..L]) => [ss(Sep),displayPred(C),..dispPreds(Alt,Alt,L)].
 
   public genVr:(string) => term.
   genVr(Nm) => varbl(_str_gen(Nm)).

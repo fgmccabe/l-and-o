@@ -81,7 +81,7 @@ lo.comp.dict{
 
   public
   isVar:(string,list[env],vr){}.
-  isVar(Nm,_,vr(std,v(Nm),escapeType(Nm))) :- isEscape(Nm).
+  isVar(Nm,_,vr(std,v(std,Nm),escapeType(Nm))) :- isEscape(Nm).
   isVar(Nm,Env,Def) :- varInD(Nm,Env,Def)!.
 
   public

@@ -52,4 +52,9 @@ lo.comp.misc{
   private mixin:all x~~(list[x],x)=>list[x].
   mixin([],_)=>[].
   mixin([F,..L],S) =>[S,F,..mixin(L,S)].
+
+  public collect:all x ~~ (list[x],(x){},list[x],list[x]){}.
+  collect([],_,[],[]).
+  collect([e,..l],p,[e,..m],o) :- p(e), collect(l,p,m,o).
+  collect([e,..l],p,m,[e,..o]) :- \+ p(e), collect(l,p,m,o).
 }

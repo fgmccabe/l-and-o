@@ -92,6 +92,7 @@ escapeType("_str_find",predType([type("lo.core*string"),type("lo.core*string"),t
 escapeType("_sub_str",funType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*integer")],type("lo.core*string"))).
 escapeType("_str_split",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_concat",funType([type("lo.core*string"),type("lo.core*string")],type("lo.core*string"))).
+escapeType("_str_start",predType([type("lo.core*string"),type("lo.core*string")])).
 isEscape("exit").
 isEscape("_command_line").
 isEscape("_command_opts").
@@ -182,3 +183,4 @@ isEscape("_str_find").
 isEscape("_sub_str").
 isEscape("_str_split").
 isEscape("_str_concat").
+isEscape("_str_start").

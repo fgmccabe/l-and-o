@@ -85,8 +85,8 @@ lo.comp.freevars{
   findVarsInRule(tpRule(_,_),SoFar) => SoFar.
 
   findVarsInTerm:(canonTerm,map[string,integer]) => map[string,integer].
-  findVarsInTerm(v(Nm),SoFar) => SoFar[Nm->Count+1] :- present(SoFar,Nm,Count).
-  findVarsInTerm(v(Nm),SoFar) => SoFar[Nm->1].
+  findVarsInTerm(v(_,Nm),SoFar) => SoFar[Nm->Count+1] :- present(SoFar,Nm,Count).
+  findVarsInTerm(v(_,Nm),SoFar) => SoFar[Nm->1].
   findVarsInTerm(int(_),SoFar) => SoFar.
   findVarsInTerm(flt(_),SoFar) => SoFar.
   findVarsInTerm(str(_),SoFar) => SoFar.
@@ -111,7 +111,7 @@ lo.comp.freevars{
   findVarsInCond(disjCond(L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,SoFar)).
   findVarsInCond(forallCond(L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,SoFar)).
   findVarsInCond(condCond(T,L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,findVarsInCond(T,SoFar))).
-  findVarsInCond(unifyCond(L,R),SoFar) => findVarsInTerm(R,findVarsInTerm(L,SoFar)).
+  findVarsInCond(unifyCond(_,L,R),SoFar) => findVarsInTerm(R,findVarsInTerm(L,SoFar)).
   findVarsInCond(isTrue(E),SoFar) => findVarsInTerm(E,SoFar).
   findVarsInCond(oneCond(R),SoFar) => findVarsInCond(R,SoFar).
   findVarsInCond(negCond(R),SoFar) => findVarsInCond(R,SoFar).

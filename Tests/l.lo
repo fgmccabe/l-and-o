@@ -1,32 +1,50 @@
 test.l{
   import lo.
-/*
+
+  /*
   public implementation additive[integer] .. {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
     zero = 0.
   }
+  */
+
+  public implementation all x ~~ additive[x] |: additive[option[x]] ..{
+    X+Y => optAdd(X,Y).
+    X-Y => optMinus(X,Y).
+    zero = none.
+  }
+
+  optAdd:all x ~~ additive[x] |: (option[x],option[x]) => option[x].
+  optAdd(none,XA) => XA.
+  optAdd(AX,none) => AX.
+  optAdd(some(AX),some(AY)) => some(AX+AY).
+
+  optMinus:all x ~~ additive[x] |: (option[x],option[x]) => option[x].
+  optMinus(none,X) => X.
+  optMinus(X,none) => X.
+  optMinus(some(X),some(Y)) => some(X-Y).
 
   fact:(integer) => integer.
-  fact(X) => _int_plus(X,X).
+  fact(XF) => _int_plus(XF,XF).
 
   ff:(integer)=>integer.
   ff=fact.
 
   assert ff(3)=fact(3).
-*/
+
   import test.mapp.
 
   inc1:(integer) => integer.
-  inc1(X) => X+1.
+  inc1(XI) => XI+1.
 
   assert mapp([1,2,3],inc1) == [2,3,4].
 
   banjo:(integer)<=>{incr:(integer)=>integer}.
-  banjo(X){
+  banjo(XB){
     incr(Y)=>fred+Y.
     private fred:integer.
-    fred = X.
+    fred = XB.
   }
 
   inc:(integer)=>integer.

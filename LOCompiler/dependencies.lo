@@ -5,11 +5,10 @@ lo.comp.dependencies{
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
-  import lo.comp.wff.
   import lo.comp.keywords.
   import lo.comp.misc.
   import lo.comp.errors.
-  import lo.comp.canon.
+  import lo.comp.package.
 
   public
   type defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
@@ -94,7 +93,7 @@ lo.comp.dependencies{
   ruleNameKind(S,impl,Nm) :-
     isUnary(S,"implementation",_,I),
     isBinary(I,"..",_,L,_),
-    implementationName(L,Nm).
+    astImplName(L,Nm).
   ruleNameKind(S,tpe,Nm) :-
     isUnary(S,"type",_,I),
     typeRuleName(I,Nm).
@@ -143,17 +142,17 @@ lo.comp.dependencies{
     isBinary(S,"<~",_,L,_),
     (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
 
-  implementationName:(ast,string){}.
-  implementationName(S,Nm) :-
+  astImplName:(ast,string){}.
+  astImplName(S,Nm) :-
     isQuantified(S,_,I),
-    implementationName(I,Nm).
-  implementationName(S,Nm) :-
+    astImplName(I,Nm).
+  astImplName(S,Nm) :-
     isConstrained(S,_,I),
-    implementationName(I,Nm).
-  implementationName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
+    astImplName(I,Nm).
+  astImplName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
     isSquareTerm(S,_,Op,A),
     isIden(Op,_,Nm).
-  implementationName(T,"()\(length(A))") :-
+  astImplName(T,"()\(length(A))") :-
     isRoundTuple(T,_,A).
 
   surfaceNames:(list[ast],string) => list[ss].

@@ -3,7 +3,6 @@ lo.comp.parseType{
   import lo.comp.types.
   import lo.comp.ast.
   import lo.comp.abstract.
-  import lo.comp.wff.
   import lo.comp.dict.
   import lo.comp.unify.
   import lo.comp.errors.
@@ -139,9 +138,9 @@ lo.comp.parseType{
     B1 = B[Nm->kVar(Nm)].
 
   public parseContract:(ast,list[env],string,conEntry,report,report){}.
-  parseContract(T,Env,Path,conEntry(Nm,Spec,Face),Rp,Rpx) :-
+  parseContract(T,Env,Path,conEntry(Nm,ConNm,Spec,Face),Rp,Rpx) :-
     isUnary(T,"contract",_,TI),
-    parseContractSpec(TI,F,[],Q,[],C0,Env,Spc,Nm,Path,Rp,Rp0),
+    parseContractSpec(TI,F,[],Q,[],C0,Env,Spc,Nm,ConNm,Path,Rp,Rp0),
     isBraceTuple(F,_,TLs),
     prsTypeFields(TLs,Env,Q,C0,_,Fc,Rp0,Rpx),
     PQ = pairs(Q),
@@ -150,21 +149,21 @@ lo.comp.parseType{
     wrapConConstraints(C0,Spc,SpcC),
     reConQuant(PQ,SpcC,FullSpec).
 
-  private parseContractSpec:(ast,ast,map[string,tipe],map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,report,report){}.
-  parseContractSpec(T,R,Q,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
+  private parseContractSpec:(ast,ast,map[string,tipe],map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,string,report,report){}.
+  parseContractSpec(T,R,Q,Qx,C0,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx) :-
     isQuantified(T,V,B),
     parseConBound(V,Q,Q0,Env,_,_),
-    parseContractSpec(B,R,Q0,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx).
-  parseContractSpec(T,F,Q,Qx,C0,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
+    parseContractSpec(B,R,Q0,Qx,C0,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx).
+  parseContractSpec(T,F,Q,Qx,C0,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx) :-
     isBinary(T,"|:",_,L,R),
     reportError("constrained contract \(T) not supported",Lc,Rp,Rp0),
-    parseContractSpec(R,F,Q,Qx,C1,Cx,Env,Spec,Nm,Path,Rp0,Rpx).
-  parseContractSpec(T,F,Q,Q,C,Cx,Env,Spec,Nm,Path,Rp,Rpx) :-
+    parseContractSpec(R,F,Q,Qx,C1,Cx,Env,Spec,Nm,ConNm,Path,Rp0,Rpx).
+  parseContractSpec(T,F,Q,Q,C,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx) :-
     isBinary(T,"<~",Lc,L,F),
-    parseContractHead(L,Q,C,Cx,Env,Spec,Nm,Path,Rp,Rpx).
+    parseContractHead(L,Q,C,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx).
 
-  private parseContractHead:(ast,map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,report,report){}.
-  parseContractHead(T,Q,C,Cx,Env,conTract(ConNm,ArgTps,Deps),ConNm,Path,Rp,Rpx) :-
+  private parseContractHead:(ast,map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,string,report,report){}.
+  parseContractHead(T,Q,C,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path,Rp,Rpx) :-
     isSquareTerm(T,Lc,Op,A),
     isIden(Op,_,Nm),
     ConNm = subPath(Path,marker(con),Nm),
@@ -202,7 +201,7 @@ lo.comp.parseType{
 
   parseContractName:(location,string,list[env],constraint,report,report){}.
   parseContractName(_,Id,Env,Con,Rp,Rp) :-
-    isContract(Id,Env,conEntry(_,Spec,_)),
+    isContract(Id,Env,conEntry(_,_,Spec,_)),
     (_,Con) = freshen(Spec,[]).
   parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
     reportError("contract \(Id) not declared",Lc,Rp,Rpx).

@@ -25,11 +25,12 @@ lo.comp.imports{
     parse(A,Rp,Rp0) %% getNTokens(Strm,Pkg,5)!,
     pickupPkgSpec(A,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
-  pickupPkgSpec:(ast,list[(visibility,pkg)],tipe,list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
-  pickupPkgSpec(Term,decodeImports(Is),decodeSignature(Ex),Types,Enums,Contracts,Impls,Rp,Rp) :-
+  pickupPkgSpec:(ast,list[(visibility,pkg)],list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
+  pickupPkgSpec(Term,decodeImports(Is),Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
     isUnary(Term,"#pkg",_,E),
     isString(E,_,Enc),
     tuple([P,tuple(Is),Ex,Tp,tuple(C),tuple(Co),tuple(Im)]) = decodeValue(Enc),
+    faceType(Fields) = decodeSignature(Ex),
     faceType(Types) = decodeSignature(Tp),
     pickupEnums(C,Enums,[]),
     findContracts(Co,Contracts,[]),
@@ -60,7 +61,7 @@ lo.comp.imports{
 
   findContracts:(list[term],list[conEntry],list[conEntry]){}.
   findContracts([],C,C).
-  findContracts([tuple([strng(Nm),strng(Sig),strng(ConSig),FaceSig]),..M],[conEntry(Nm,Con,decodeSignature(FaceSig)),..C],Cx) :-
+  findContracts([tuple([strng(Nm),strng(ConNm),strng(ConSig),FaceSig]),..M],[conEntry(Nm,ConNm,Con,decodeSignature(FaceSig)),..C],Cx) :-
     decodeConstraint(ConSig,Con),
     findContracts(M,C,Cx).
 

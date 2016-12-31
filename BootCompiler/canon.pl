@@ -14,7 +14,6 @@ isCanon(stringLit(_)).
 isCanon(apply(_,_)).
 isCanon(call(_,_,_)).
 isCanon(dot(_,_)).
-isCanon(pkgRef(_,_,_)).
 isCanon(enum(_,_)).
 isCanon(record(_,_,_,_)).
 isCanon(true(_)).
@@ -74,10 +73,6 @@ showCanonTerm(call(_,Op,Args),O,Ox) :-
 showCanonTerm(dot(Rc,Fld),O,Ox) :-
   showCanonTerm(Rc,O,O1),
   appStr(".",O1,O2),
-  appStr(Fld,O2,Ox).
-showCanonTerm(pkgRef(_,Rc,Fld),O,Ox) :-
-  showCanonTerm(Rc,O,O1),
-  appStr("#",O1,O2),
   appStr(Fld,O2,Ox).
 showCanonTerm(enum(_,Nm),O,Ox) :-
   appStr("'",O,O1),

@@ -1,9 +1,8 @@
-:- module(transUtils,[trCons/3,className/3,labelAccess/5,extraVars/2,thisVar/2,
-          lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,lookupTypeName/3,
+:- module(transUtils,[trCons/3,labelAccess/5,extraVars/2,thisVar/2,
+          lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,
           makePkgMap/6,programAccess/5,
           genNewName/4,genVar/2,
           pushOpt/3, isOption/2,layerName/2,
-          trCons/3,trPrg/3,typeTrArity/2,
           genAnons/2,genVars/2]).
 
 :- use_module(misc).
@@ -17,24 +16,6 @@ trCons(Nm,Arity,strct(Name,Arity)) :-
   string_concat(Nm,"%",N1),
   string_concat(N1,Sz,Name).
 trCons(Nm,Args,strct(Name,Arity)) :-
-  length(Args,Arity),
-  number_string(Arity,Sz),
-  string_concat(Nm,"%",N1),
-  string_concat(N1,Sz,Name).
-
-className(Outer,Name,Nm) :-
-  sub_string(Outer,_,_,_,"#"),!,
-  string_concat(Outer,".",O),
-  string_concat(O,Name,Nm).
-className(Outer,Name,Nm) :-
-  localName(Outer,"#",Name,Nm).
-
-trPrg(Nm,Arity,prg(Name,Arity)) :-
-  integer(Arity),!,
-  number_string(Arity,Sz),
-  string_concat(Nm,"%",N1),
-  string_concat(N1,Sz,Name).
-trPrg(Nm,Args,prg(Name,Arity)) :-
   length(Args,Arity),
   number_string(Arity,Sz),
   string_concat(Nm,"%",N1),
@@ -74,14 +55,11 @@ genNewName(Map,Variant,Ar,prg(Nm,Ar)) :-
  *    lyr(pk,Defs,Lc,void,void,void)
  */
 
-stdMap([lyr(std,[],'',void,void,void)]).
-
 makePkgMap(Pkg,Defs,Types,Imports,Enums,Map) :-
-  stdMap(StdMap),
   makeModuleMap(Pkg,Defs,DfList,Rest,Enums),
   makeImportsMap(Imports,Rest,R0),
   makeTypesMap(Pkg,Types,R0,[]),
-  pushMap(Pkg,DfList,StdMap,Map).
+  pushMap(Pkg,DfList,[],Map).
 
 pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void)|Std]).
 
@@ -225,26 +203,10 @@ classDef(moduleClass(_,_,_)).
 classDef(inherit(_,_,_,_)).
 classDef(inheritField(_,_,_)).
 
-lookupTypeName(Map,Nm,T) :-
-  lookup(Map,Nm,tpDef,T).
-
-tpDef(localType(_)).
-tpDef(inherit(_,_,_,_)).
-tpDef(moduleType(_,_,_)).
-
 lookupDefn(Map,Nm,Df) :-
   lookup(Map,Nm,nonType,Df).
 
 nonType(Df) :- Df \= moduleType(_,_,_), Df \= localType(_).
-
-lookupPackageRef(Map,Pkg,Nm,V) :-
-  lookup(Map,Nm,pkgRef(Pkg),V).
-
-pkgRef(Pkg,moduleClass(Pkg,_,_)).
-pkgRef(Pkg,moduleFun(Pkg,_,_,_,_)).
-pkgRef(Pkg,moduleRel(Pkg,_,_,_,_)).
-pkgRef(Pkg,moduleVar(Pkg,_,_)).
-pkgRef(Pkg,moduleType(Pkg,_)).
 
 programAccess(moduleFun(_,Prog,Access,Closure,Arity),Prog,Access,Closure,Arity).
 programAccess(localFun(Prog,Access,Closure,Arity,_,_),Prog,Access,Closure,Arity).
@@ -283,12 +245,3 @@ genVars(K,[V|Rest]) :-
   genVar("V",V),
   genVars(K1,Rest).
 
-typeTrArity(Tp,Ar) :-
-  isFunctionType(Tp,A),
-  Ar is A+1.
-typeTrArity(Tp,Ar) :-
-  isPredType(Tp,Ar).
-typeTrArity(Tp,Ar) :-
-  isClassType(Tp,A),
-  Ar is A+1.
-typeTrArity(_,1).

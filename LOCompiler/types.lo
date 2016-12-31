@@ -1,6 +1,7 @@
 lo.comp.types{
   import lo.
-  import lo.comp.wff.
+
+  import lo.comp.misc.
 
   public
   type tipe ::= anonType 
@@ -25,6 +26,15 @@ lo.comp.types{
         |  implementsFace(tipe,list[(string,tipe)])
         |  conCon(constraint,constraint)
         |  univCon(tipe,constraint).
+
+  public type conEntry ::= conEntry(string,string,constraint,tipe).
+
+  public type implEntry <~ { name:string}.
+
+  public implEntry:(string,constraint) <=> implEntry.
+  implEntry(Nm,C){
+    name = Nm.
+  }
 
   public
   implementation display[tipe] .. {
@@ -74,6 +84,7 @@ lo.comp.types{
   -- This code is ugly. But, we dont have lambdas or higher-order programs at the moment.
   showMoreCons:(constraint) => list[ss].
   showMoreCons(conCon(A,B)) => [showConstraint(B),ss(", "),..showMoreCons(A)].
+  showMoreCons(C) => [showConstraint(C)].
 
   showMoreConQ:(constraint) => list[ss].
   showMoreConQ(univCon(V,Con)) => [ss(", "),dispType(V),..showMoreConQ(Con)].
@@ -114,6 +125,17 @@ lo.comp.types{
   public isIdenticalType:(tipe,tipe){}.
   isIdenticalType(kVar(V),kVar(V)).
   isIdenticalType(T1,T2) :- isIdenticalVar(T1,T2).
+
+  public isPredType:(tipe){}.
+  isPredType(univType(_,T)) :- isPredType(T).
+  isPredType(constrained(T,C)) :- isPredType(T).
+  isPredType(predType(_)).
+
+
+  public isClassType:(tipe){}.
+  isClassType(univType(_,T)) :- isClassType(T).
+  isClassType(constrained(T,C)) :- isClassType(T).
+  isClassType(classType(_,_)).
 
   public
   constraints:(tipe)=>list[constraint].
@@ -181,7 +203,11 @@ lo.comp.types{
 
   public implementationName:(constraint)=>string.
   implementationName(conTract(Nm,Args,_)) =>
-    formatSS(ssSeq([ss(Nm),..surfaceNames(Args,marker(con))])).
+    formatSS(ssSeq([ss(Nm),..surfaceNames(Args,"$")])).
+
+  public contractName:(constraint) => string.
+  contractName(conTract(Nm,_,_)) =>
+    pathSuffix(Nm,"$").
 
   surfaceNames:(list[tipe],string) => list[ss].
   surfaceNames([],_) => [].

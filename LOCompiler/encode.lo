@@ -23,7 +23,7 @@ lo.comp.encode{
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.
   encInt(N,L) => [D,..L] :- digitVal(D,N), N>=0, N=<9.
-  encInt(N,L) => encInt(N / 10,[D,..L]) :- N>10, digitVal(D,N%10).
+  encInt(N,L) => encInt(N / 10,[D,..L]) :- N>=10, digitVal(D,N%10).
 
   private encEls:(list[term],list[integer]) => list[integer].
   encEls([],L) => L.
@@ -89,10 +89,13 @@ lo.comp.encode{
   private encFieldTps:(list[(string,tipe)],list[integer]) => list[integer].
   encFieldTps([],L) => L.
   encFieldTps([(Fld,Tp),..M],L) => encodeText(Fld,encType(Tp,encFieldTps(M,L))).
+
+  public encodeConstraint:(constraint) => list[integer].
+  encodeConstraint(Con) => encConstraint(Con,[]).
             
   private encConstraint:(constraint,list[integer]) => list[integer].
   encConstraint(univCon(V,C),L) => [0c:,..encType(V,encConstraint(C,L))].
-  encConstraint(conTract(Nm,Args,Deps),L) => [0cc,..encodeText(Nm,encTypes(Args,encTypes(Deps,L)))].
+  encConstraint(conTract(Nm,Args,Deps),L) => [0cc,..encodeText(Nm,encType(tupleType(Args),encType(tupleType(Deps),L)))].
   encConstraint(implementsFace(Tp,Flds),L) => [0ca,..encType(Tp,encFieldTypes(Flds,L))].
   encConstraint(conCon(C,E),L) => [0c|,..encConstraint(C,encConstraint(E,L))].
 }

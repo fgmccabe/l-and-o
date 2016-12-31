@@ -1,9 +1,15 @@
 lo.comp.package{
   import lo.
 
+  import lo.comp.types.
+
   public type pkg ::= pkg(string,version).
 
   public type version ::= defltVersion | vers(string).
+
+  public type visibility ::= priVate | pUblic.
+
+  public type pkgSpec ::= pkgSpec(pkg,list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
 
   public implementation equality[pkg] .. {
     P1 == P2 :- samePackage(P1,P2).

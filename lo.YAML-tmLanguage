@@ -35,11 +35,11 @@ patterns:
 
   patterns:
   - name: escape.var.lo
-    match: \$(\w+)
+    match: \\(\w+)
     captures:
       '1' : {name: identifier.lo}
   - name: string.interpolated
-    begin: \$\(
+    begin: \\\(
     end: \)
     patterns:
       - include: $self

@@ -1,7 +1,9 @@
 lo.comp.transutils {
   import lo.
 
+  import lo.comp.args.
   import lo.comp.location.
+  import lo.comp.package.
   import lo.comp.canon.
   import lo.comp.imports.
   import lo.comp.term.
@@ -10,6 +12,10 @@ lo.comp.transutils {
   public type trOption ::= debugging | dbgVars(string,term,term) | pkgName(string).
 
   public type trOptions ::= trOptions(list[trOption]).
+
+  public trOpts:(compOption,string) => trOptions.
+  trOpts(C,P) => trOptions([pkgName(P),debugging]) :- C.debugging=true.
+  trOpts(_,P) => trOptions([pkgName(P)]).
 
   public isOption:(trOption,trOptions){}.
   isOption(O,trOptions(L)) :- O in L.
@@ -20,34 +26,34 @@ lo.comp.transutils {
   public trCons:(string,integer) => term.
   trCons(Nm,Ar) => strct(Nm+"%\(Ar)",Ar).
 
-  public type lyr ::= lyr(string,list[(string,mapEntry)],term,term,term).
+  public type lyr ::= lyr(string,list[(string,mapEntry)],list[pred],term,term).
 
-  public type mapEntry ::= moduleFun(string,string,string,integer)
+  public type mapEntry ::= moduleFun(string,string,string,string,integer)
             | moduleRel(string,string,string,string,integer)
             | moduleVar(string,string,string)
             | moduleClass(string,string,integer)
             | moduleImpl(string,term)
             | localFun(string,string,string,integer,term,term)
             | localRel(string,string,string,integer,term,term)
-            | localCar(string,string,term,term)
-            | localClass(string,string,string,integer,term,term)
+            | localVar(string,string,term,term)
+            | localClass(string,string,integer,term,term)
+            | inherit(string,term,term,term)
+            | inheritField(term,term,term)
+            | labelArg(term,term,term)
             | notInMap.
 
-  stdMap:()=>list[lyr].
-  stdMap() => [lyr("",[],anon,anon,anon)].
-
-  public makePkgMap:(pkg,list[canonDef],list[pkgSpec]) => (list[lyr],list[(string,term,tipe)]).
-  makePkgMap(pkg(Pkg,_),Defs,Imports) => (Classes,[lyr(Pkg,DfList,anon,anon,anon),..stdMap()]) :-
-    makeModuleMap(Pkg,Defs,DfList,Rest,Classes),
+  public makePkgMap:(string,list[canonDef],list[pkgSpec]) => (list[string],list[lyr]).
+  makePkgMap(Pkg,Defs,Imports) => (Enums,[lyr(Pkg,DfList,[],anon,anon)]) :-
+    makeModuleMap(Pkg,Defs,DfList,Rest,Enums),
     makeImportsMap(Imports,Rest,[]).
 
-  makeModuleMap:(string,list[canonDef],list[lyr],list[lyr],list[(string,string,tipe)]){}.
-  makeModuleMap(Pkg,[Def,..Rest],Map,Mx,Classes) :-
-    makeMdlEntry(Pkg,Def,Map,M0,Classes,Clx),
-    makeModuleMap(Pkg,Rest,M0,Mx,Clx).
+  makeModuleMap:(string,list[canonDef],list[(string,mapEntry)],list[(string,mapEntry)],list[string]){}.
+  makeModuleMap(Pkg,[Def,..Rest],Map,Mx,Enums) :-
+    makeMdlEntry(Pkg,Def,Map,M0,Enums,Enx),
+    makeModuleMap(Pkg,Rest,M0,Mx,Enx).
   makeModuleMap(_,[],Map,Map,[]).
 
-  makeMdlEntry:(string,canonDef,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,string,tipe)],list[(string,string,tipe)]){}.
+  makeMdlEntry:(string,canonDef,list[(string,mapEntry)],list[(string,mapEntry)],list[string],list[string]){}.
   makeMdlEntry(Pkg,funDef(_,Nm,Tp,_,_),
       [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,grammDef(_,Nm,Tp,_,_),
@@ -55,9 +61,12 @@ lo.comp.transutils {
   makeMdlEntry(Pkg,relDef(_,Nm,Tp,_,_),
       [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,varDef(_,Nm,_,_,_,_),
-      [(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm)))),..Mx],Mx,Clx,Clx).
-  makeMdlEntry(Pkg,classDef(_,Nm,Tp,_,_,_),
-      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(Tp,0))),..Mx],Mx,[(Nm,localName(Pkg,"#",Nm),Tp),..Clx],Clx).
+      [(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm))),..Mx],Mx,Clx,Clx).
+  makeMdlEntry(Pkg,classDef(_,Nm,_,Tp,_,_,_),
+      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(Tp,0))),..Mx],Mx,[Nm,..Clx],Clx).
+  makeMdlEntry(Pkg,implDef(_,_,ImplNm,_,_,tpl(Deps),_,_),
+      [(ImplNm,moduleImpl(ImplNm,LclNm)),..Mx],Mx,Ens,Enx) :-
+    (isEmpty(Deps) ? LclNm=enum(ImplNm), Ens=[ImplNm,..Enx] | LclNm=strct(ImplNm,length(Deps)), Ens=Enx).
   makeMdlEntry(Pkg,_,Mx,Mx,Clx,Clx).
   
   makeImportsMap:(list[pkgSpec],list[(string,mapEntry)],list[(string,mapEntry)]){}.
@@ -67,145 +76,149 @@ lo.comp.transutils {
   makeImportsMap([],Map,Map).
 
   makeImportMap:(pkgSpec,list[(string,mapEntry)],list[(string,mapEntry)]){}.
-  makeImportMap(pkgSpec(pkg(Pkg,_),faceType(Fields),_,Classes,_,Impls,_),Map,Mx) :-
-    importFields(Pkg,Classes,Fields,Map,M0),
+  makeImportMap(pkgSpec(pkg(Pkg,_),Fields,_,Enums,_,Impls,_),Map,Mx) :-
+    importFields(Pkg,Enums,Fields,Map,M0),
     importImplementations(Impls,M0,Mx).
 
-  importFields:(string,list[(string,string,tipe)],list[(string,tipe)],list[(string,mapEntry)],list[(string,mapEntry)]){}.
+  importFields:(string,list[string],list[(string,tipe)],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   importFields(_,_,[],Map,Map).
-  importFields(Pkg,Classes,[(Nm,Tp)|Fields],Map,Mx) :-
+  importFields(Pkg,Enums,[(Nm,Tp),..Fields],Map,Mx) :-
     moveQuants(Tp,_,QTp),
     moveConstraints(QTp,_,Template),
-    makeImportEntry(Template,Classes,Pkg,Nm,Map,M0),
-    importFields(Pkg,Classes,Fields,M0,Mx).
+    makeImportEntry(Template,Enums,Pkg,Nm,Map,M0),
+    importFields(Pkg,Enums,Fields,M0,Mx).
+
+  makeImportEntry:(tipe,list[string],string,string,list[(string,mapEntry)],list[(string,mapEntry)]){}.
+  makeImportEntry(funType(A,_),_,Pkg,Nm,
+      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+  makeImportEntry(grammarType(A,_),_,Pkg,Nm,
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+  makeImportEntry(predType(A),_,Pkg,Nm,
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+  makeImportEntry(classType(A,_),_,Pkg,Nm,
+      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(A,0))),..Mx],Mx).
+  makeImportEntry(_,Enums,Pkg,Nm,
+      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),0)),..Mx],Mx) :-
+    Nm in Enums!.
+  makeImportEntry(_,_,Pkg,Nm,[(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm))),..Mx],Mx).
 
   importImplementations:(list[implEntry],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   importImplementations([],Map,Map).
-  importImplementations([implEntry(Nm,Con),..L],[(Nm,moduleImpl(prg(Nm,1),Struct,prg(Nm,3))),..M],Mx) :-
+  importImplementations([implEntry(Nm,Con),..L],[(Nm,moduleImpl(Nm,Struct)),..M],Mx) :-
     contractArity(Con,Ar),
     contractStruct(Ar,Nm,Struct),
     importImplementations(L,M,Mx).
 
   contractArity:(constraint,integer){}.
   contractArity(univCon(_,Con),Ar) :- contractArity(Con,Ar).
-  contractArity(conCOn(Con,_),Ar) :- contractArity(Con,A), Ar is A+1.
+  contractArity(conCon(Con,_),A+1) :- contractArity(Con,A).
   contractArity(_,0).
 
   contractStruct:(integer,string,term){}.
   contractStruct(0,Nm,enum(Nm)).
   contractStruct(Ar,Nm,strct(Nm,Ar)).
 
-  makeImportEntry:(tipe,list[(string,string,tipe)],string,list[(string,mapEntry)],list[(string,mapEntry)]){}.
-  makeImportEntry(funType(A,_),_,Pkg,Nm,
-      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,1))),..Mx],Mx).
-  makeImportEntry(grammarType(A,_),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,2))),..Mx],Mx).
-  makeImportEntry(predType(A),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
-  makeImportEntry(classType(A,_),_,Pkg,Nm,
-      [(Nm,moduleClass(prg(AccessName,1),strct(LclName,Ar),prg(AccessName,3))),..Mx],Mx) :-
-    AccessName = localName(Pkg,"@",Nm),
-    LclName = localName(Pkg,"@",Nm).
-  makeImportEntry(_,Classes,Pkg,Nm,
-      [(Nm,moduleClass(prg(AccessName,1),enum(LclName),prg(LclName,3))),..Mx],Mx) :-
-    (Nm,LclName,AccessName) in Classes.
-  makeImportEntry(_,_,Pkg,Nm,[(Nm,moduleVar(Pkg,prg(localName(Pkg,"@",Nm),1))),..Mx],Mx).
-
-  public lookup:(list[lyr],string,(string,mapEntry){},mapEntry){}.
+  private lookup:(list[lyr],string,(mapEntry){},mapEntry){}.
   lookup([],_,_,notInMap).
-  lookup([lyr(_Prefix,Defns,_Lc,_Lbl,_LbVr,_ThVr),.._],Nm,Filter,Reslt) :-
-    filteredSearch(Defns,Filter,Nm,Reslt)!.
+  lookup([lyr(_,Defns,_,_,_),.._],Nm,Filter,Reslt) :-
+    filteredSearch(Defns,Filter,Nm,Reslt).
   lookup([_,..Layers],Nm,Filter,Reslt) :-
     lookup(Layers,Nm,Filter,Reslt).
 
-  private filteredSearch:(list[(string,mapEntry)],(string,mapEntry){},string,mapEntry){}.
+  private filteredSearch:(list[(string,mapEntry)],(mapEntry){},string,mapEntry){}.
   filteredSearch(Defns,Filter,Nm,Defn) :-
     (Nm,Defn) in Defns,
-    call(Filter,Defn),!.
+    Filter(Defn).
 
+  public lookupVarName:(list[lyr],string,mapEntry){}.
   lookupVarName(Map,Nm,V) :-
-    lookup(Map,Nm,anyDef,V).
+    lookup(Map,Nm,anyDef,V)!.
 
-  anyDef(moduleVar(_Pkg,_Vn)).
-  anyDef(localVar(_Vn,_ClVr,_TVr)).
-  anyDef(labelArg(_N,_ClVr,_TVr)).
-  anyDef(localClass(_,_,_,_,_)).
-  anyDef(moduleClass(_,_,_)).
-  anyDef(inherit(_,_,_,_)).
-  anyDef(inheritField(_,_,_)).
-  anyDef(moduleContract(_,_,_)).
-  anyDef(moduleImpl(_,_,_)).
-  anyDef(moduleFun(_,_,_)).
-  anyDef(localFun(_,_,_,_)).
+  anyDef:(mapEntry){}.
+  anyDef(_).
 
+  public lookupRelName:(list[lyr],string,mapEntry){}.
   lookupRelName(Map,Nm,V) :-
-    lookup(Map,Nm,relDef,V).
+    lookup(Map,Nm,relEntry,V)!.
 
-  relDef(localRel(_,_,_)).
-  relDef(moduleRel(_,_)).
-  relDef(inherit(_,_,_,_)).
-  relDef(inheritField(_,_,_)).
+  private relEntry:(mapEntry){}.
+  relEntry(localRel(_,_,_,_,_,_)).
+  relEntry(moduleRel(_,_,_,_,_)).
+  relEntry(inherit(_,_,_,_)).
+  relEntry(inheritField(_,_,_)).
 
+  public lookupFunName:(list[lyr],string,mapEntry){}.
   lookupFunName(Map,Nm,V) :-
-    lookup(Map,Nm,funDef,V).
+    lookup(Map,Nm,funEntry,V)!.
 
-  funDef(localFun(_,_,_,_)).
-  funDef(moduleFun(_,_,_)).
-  funDef(inherit(_,_,_,_)).
-  funDef(inheritField(_,_,_)).
-  funDef(localClass(_,_,_,_,_)).
-  funDef(moduleClass(_,_,_)).
-  funDef(moduleImpl(_,_,_)).
+  private funEntry:(mapEntry){}.
+  funEntry(localFun(_,_,_,_,_,_)).
+  funEntry(moduleFun(_,_,_,_,_)).
+  funEntry(inherit(_,_,_,_)).
+  funEntry(inheritField(_,_,_)).
+  funEntry(localClass(_,_,_,_,_)).
+  funEntry(moduleClass(_,_,_)).
+  funEntry(moduleImpl(_,_)).
 
+  public lookupClassName:(list[lyr],string,mapEntry){}.
   lookupClassName(Map,Nm,V) :-
-    lookup(Map,Nm,classDef,V).
+    lookup(Map,Nm,classEntry,V)!.
 
-  classDef(localClass(_,_,_,_,_)).
-  classDef(moduleClass(_,_,_)).
-  classDef(inherit(_,_,_,_)).
-  classDef(inheritField(_,_,_)).
+  private classEntry:(mapEntry){}.
+  classEntry(localClass(_,_,_,_,_)).
+  classEntry(moduleClass(_,_,_)).
+  classEntry(inherit(_,_,_,_)).
+  classEntry(inheritField(_,_,_)).
 
-  lookupTypeName(Map,Nm,T) :-
-    lookup(Map,Nm,tpDef,T).
-
-  tpDef(localType(_)).
-  tpDef(inherit(_,_,_,_)).
-  tpDef(moduleType(_,_)).
-
+  public lookupDefn:(list[lyr],string,mapEntry){}.
   lookupDefn(Map,Nm,Df) :-
-    lookup(Map,Nm,nonType,Df).
+    lookup(Map,Nm,nonType,Df)!.
 
-  nonType(Df) :- Df \= moduleType(_,_), Df \= localType(_).
+  private nonType:(mapEntry){}.
+  nonType(_).
 
-  lookupPackageRef(Map,Pkg,Nm,V) :-
-    lookup(Map,Nm,pkgRef(Pkg),V).
+  public lookupPkgRef:(list[lyr],string,string,mapEntry){}.
+  lookupPkgRef(Map,Pkg,Nm,Df) :-
+    lookupPkg(Map,Pkg,Nm,Df)!.
 
-  pkgRef(Pkg,moduleClass(Pkg,_,_)).
-  pkgRef(Pkg,moduleFun(Pkg,_,_)).
-  pkgRef(Pkg,moduleRel(Pkg,_)).
-  pkgRef(Pkg,moduleVar(Pkg,_)).
-  pkgRef(Pkg,moduleType(Pkg,_)).
+  private lookupPkg:(list[lyr],string,string,mapEntry){}.
+  lookupPkg([lyr(_,Defns,_,_,_),.._],Pkg,Nm,Reslt) :-
+    (Nm,Def) in Defns,
+    samePkg(Defn,Pkg).
+  lookupPkg([_,..Layers],Pkg,Nm,Reslt) :-
+    lookupPkg(Layers,Pkg,Nm,Reslt).
 
-  mapName(moduleFun(_,Prog,Access),Prog,Access).
-  mapName(localFun(Prog,Access,_,_),Prog,Access).
+  private samePkg:(mapEntry,string){}.
+  samePkg(moduleFun(_,Pkg,_,_,_),Pkg).
+  samePkg(moduleRel(Pkg,_,_,_,_),Pkg).
 
-  extraVars([lyr(_,_,_,_,void,void)|_],[]) :- !.
-  extraVars([lyr(_,_,_,_,LbVr,ThVr)|_],[LbVr,ThVr]).
+  public programAccess:(mapEntry,string,string,string,integer){}.
+  programAccess(moduleFun(_,Prog,Access,Closure,Arity),Prog,Access,Closure,Arity).
+  programAccess(localFun(Prog,Access,Closure,Arity,_,_),Prog,Access,Closure,Arity).
+  programAccess(moduleRel(_,Prog,Access,Closure,Arity),Prog,Access,Closure,Arity).
+  programAccess(localRel(Prog,Access,Closure,Arity,_,_),Prog,Access,Closure,Arity).
+  programAccess(moduleVar(_,Prog,Access),Prog,Access,Access,1).
+  programAccess(localVar(Prog,Access,_,_),Prog,Access,Access,1).
 
-  thisVar([lyr(_,_,_,_,_,ThVr)|_],ThVr) :- ThVr \= void.
+  public extraVars:(list[lyr],list[term]){}.
+  extraVars([lyr(_,_,_,anon,anon),.._],[]).
+  extraVars([lyr(_,_,_,LbVr,ThVr),.._],[LbVr,ThVr]).
 
-  labelAccess(Q,Q,[lyr(_,_,_,_,void,void)|_],G,G) :- !.
-  labelAccess(Q,Qx,[lyr(_,_,_,LblGl,LbVr,_)|_],G,Gx) :- concat(LblGl,Gx,G),merge([LbVr],Q,Qx).
+  public thisVar:(list[lyr],term){}.
+  thisVar([lyr(_,_,_,_,ThVr),.._],ThVr) :- ThVr \= anon.
 
-  pushOpt(Opts,Opt,[Opt|Opts]).
-
-  isOption(Opt,Opts) :- is_member(Opt,Opts),!.
+  public labelAccess:(list[term],list[term],list[lyr],list[pred],list[pred]){}.
+  labelAccess(Q,Q,[lyr(_,_,_,anon,anon),.._],G,G).
+  labelAccess(Q,merge([LbVr],Q),[lyr(_,_,LblGl,LbVr,_),.._],G,Gx) :- G = LblGl<>Gx.
 
   public layerName:(list[lyr])=>string.
-  layerName([lyr(Nm,_,_,_,_,_),.._]) => Nm.
+  layerName([lyr(Nm,_,_,_,_),.._]) => Nm.
 
-  public genVar:(string)=>term.
-  genVar(Prefix) => idnt(_str_gen(Prefix)).
+  public genVarbl:(string,term){}.
+  genVarbl(Prefix,varbl(_str_gen(Prefix))).
+
+  public genNewName:(list[lyr],string,integer,term){}.
+  genNewName(Map,Variant,Ar,prg(localName(layerName(Map),"@",_str_gen(Variant)),Ar)).
 
   public genAnons:(integer) => list[term].
   genAnons(0) => [].
@@ -214,12 +227,14 @@ lo.comp.transutils {
 
   public genVars:(integer) => list[term].
   genVars(0) => [].
-  genVars(K) => [genVar("V"),..genVars(K-1)] :-
-    K>0.
+  genVars(K) => [V,..genVars(K-1)] :-
+    K>0,
+    genVarbl("V",V).
 
   public localName:(string,string,string) => string.
-  localName(_,Glue,Nm) => Nm :- 
-    _str_find(Nm,Glue,_,_).
+  localName(Pkg,Glue,Nm) => Nm :- 
+    _str_start(Pkg,Nm),
+    _str_find(Nm,Glue,0,_).
   localName(Pkg,Glue,Nm) => Pkg+Glue+Nm.
 
   public effectiveArity:(tipe,integer) => integer.
@@ -232,8 +247,6 @@ lo.comp.transutils {
   tpArity(classType(E,_)) => tpArity(E).
   tpArity(univType(_,T)) => tpArity(T).
   tpArity(constrained(T,_)) => tpArity(T).
-  tpArity(tupleType(L)) => tpArity(L).
-  tpArity(faceType(F)) => tpArity(F).
-  
-  
+  tpArity(tupleType(L)) => length(L).
+  tpArity(faceType(F)) => length(F).
 }

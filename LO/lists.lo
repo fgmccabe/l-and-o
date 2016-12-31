@@ -57,15 +57,15 @@ lo.list{
 
   public implementation all e ~~ folding[list[e]->>e] .. {
     foldLeft(f,x,[]) => x.
-    foldLeft(f,x,[e,..l]) => foldLeft(f,f.apply(x,e),l).
+    foldLeft(f,x,[e,..l]) => foldLeft(f,f(x,e),l).
 
     foldRight(f,x,[]) => x.
-    foldRight(f,x,[e,..l]) => f.apply(e,foldRight(f,x,l)).
+    foldRight(f,x,[e,..l]) => f(e,foldRight(f,x,l)).
   }
 
-  public mapList:all f,v,w ~~ f <~ { apply:(v)=>w } |: (list[v],f) => list[w].
+  public mapList:all v,w ~~ (list[v],((v)=>w)) => list[w].
   mapList([],_) => [].
-  mapList([e,..l],f) => [f.apply(e),..mapList(l,f)].
+  mapList([e,..l],f) => [f(e),..mapList(l,f)].
 
   public implementation all e,f ~~ coercion[e,f] |: coercion[list[e],list[f]] .. {
     _coerce(Sx) => coerceList(Sx).

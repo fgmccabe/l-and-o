@@ -2,8 +2,8 @@ lo.collection{
   import lo.core.
 
   public contract all c,e ~~ folding[c->>e] <~ {
-    foldRight:all x,f ~~ f <~ { apply:(e,x)=>x } |: (f,x,c) => x.
-    foldLeft:all x,f ~~ f <~ { apply:(x,e)=>x } |: (f,x,c) => x.
+    foldRight:all x ~~ (((e,x)=>x),x,c) => x.
+    foldLeft:all x ~~ (((x,e)=>x),x,c) => x.
   }
 
   public contract all c,e ~~ filter[c->>e] <~ {

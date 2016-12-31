@@ -15,7 +15,6 @@ lo.comp.grapher{
   import lo.comp.package.
   import lo.comp.imports.
   import lo.comp.misc.
-  import lo.comp.wff.
 
   public makeGraph:(list[pkg],repository,catalog,report,report) => list[list[(pkg,list[pkg])]].
   makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => graphPkgs(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).

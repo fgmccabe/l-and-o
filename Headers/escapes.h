@@ -274,6 +274,7 @@ escape(_pwr,False,False,"F2fff","raise X to the power Y")
   escape(_sub_str,False,False,"F3SiiS","extract a substring")
   escape(_str_split,False,False,"P4SiSS","split a string at a point")
   escape(_str_concat,False,False,"F2SSS","Concatenate two strings")
+  escape(_str_start,False,False,"P2SS","True if second string starts with first")
 /*
   escape(getenv,False,False,"F2SSS","get an environment variable")
   escape(setenv,True,False,"P2SS","set an environment variable")
