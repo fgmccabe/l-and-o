@@ -1,13 +1,14 @@
 test.l{
   import lo.
 
-  /*
-  public implementation additive[integer] .. {
-    X+Y => _int_plus(X,Y).
-    X-Y => _int_minus(X,Y).
-    zero = 0.
+/*
+  public
+  implementation all x ~~ stream[list[x] ->> x] .. {
+    _eof([]).
+    _hdtl([E,..L],E,L).
+    _cons(E,L) => [E,..L].
   }
-  */
+*/
 
   public implementation all x ~~ additive[x] |: additive[option[x]] ..{
     X+Y => optAdd(X,Y).

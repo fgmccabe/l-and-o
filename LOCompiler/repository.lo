@@ -20,7 +20,7 @@ lo.comp.repository{
     findPkg(Repo,Pkg,V,ActV,Text)!.
 
   findPkg:(repository,string,version,version,list[integer]){}.
-  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,U))) :-
+  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,parseUri(U)))) :-
     locateVersion(Man,Pkg,V,ActV,_,U).
 
   public pkgSrcUri:(repository,string,version,version,uri){}.
@@ -30,11 +30,13 @@ lo.comp.repository{
   public resolveFile:(uri,string) => uri.
   resolveFile(Root,Fl) => resolveUri(Root,parseUri(Fl)).
 
-  public addPackage:(repository,uri,string,version,list[integer]) => repository.
-  addPackage(repo(Root,Man),U,Pkg,Vers,Text) => repo(Root,NM) :-
-    putResource(resolveFile(Root,Pkg+(packageHash(Pkg,Vers)::string)),Text),
+  public addPackage:(repository,uri,pkg,list[integer]) => repository.
+  addPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text) => repo(Root,NM) :-
+    Fn = Pkg+(packageHash(Pkg,Vers)::string),
+    putResource(resolveUri(Root,parseUri(Fn)),Text),
     NM = addToManifest(Man,U,Pkg,Vers,Fn),
-    flushManifest(Root,NM).
+    RepoUri = resolveUri(Root,parseUri("manifest")),
+    flushManifest(RepoUri,NM).
 
   packageHash:(string,version) => integer.
   packageHash(Pkg,defltVersion) => hash(Pkg).
@@ -43,7 +45,7 @@ lo.comp.repository{
   public packagePresent:(repository,pkg){}.
   packagePresent(repo(Root,Man),pkg(Pkg,Vers)) :-
     locateVersion(Man,Pkg,Vers,_,S,U),
-    CodeFile = resolveUri(Root,U),
+    CodeFile = resolveUri(Root,parseUri(U)),
     SrcFile = resolveUri(Root,S),
     resourcePresent(CodeFile,readMode),
     (resourcePresent(SrcFile,readMode) ?

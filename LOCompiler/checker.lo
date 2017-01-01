@@ -341,7 +341,8 @@ lo.comp.typecheck{
     ElTp=newVar("_E"),
     typeOfArg(A,AT,declareVar("stream\$X",vr(Lc,v(Lc,"stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
     checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
-    checkTerminals(P,"_cons",PB,ElTp,E3,_,Rp1,Rpx).
+    typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E3,_,HDTL,Rp1,Rp2),
+    checkTerminals(P,HDTL,PB,ElTp,E3,_,Rp2,Rpx).
 
   private splitGrHead:(ast,string,ast,list[ast]){}.
   splitGrHead(Term,Nm,Args,Hed) :-
@@ -464,7 +465,7 @@ lo.comp.typecheck{
     StrmTp = newVar("_S"),
     ElTp = newVar("_E"),
     checkGrammarType(Lc,Env,StrmTp,ElTp,Rp,Rp0),
-    typeOfTerm(S,StrmTp,Env,E0,Strm,Rp0,Rp1),
+    typeOfTerm(R,StrmTp,Env,E0,Strm,Rp0,Rp1),
     M = iden(Lc,_str_gen("_")),
     typeOfTerm(M,StrmTp,E0,E1,Rest,Rp1,Rp2),
     checkNonTerminal(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,ElTp,declareVar("stream_X",vr(Lc,v(Lc,"stream_X"),StrmTp),E1),Ev,NT,Rp2,Rpx).
@@ -485,7 +486,7 @@ lo.comp.typecheck{
   checkConds([C],Ev,Env,Cond,Rp,Rpx) :-
     checkCond(C,Ev,Env,Cond,Rp,Rpx).
   checkConds([C,..L],Ev,Env,conjCond(C0,Cm),Rp,Rpx) :-
-    checkCond(C,Ev,E0,Co,Rp,Rp0),
+    checkCond(C,Ev,E0,C0,Rp,Rp0),
     checkConds(L,E0,Env,Cm,Rp0,Rpx).
 
   private typeOfArg:(ast,tipe,list[env],list[env],canonTerm,report,report){}.
@@ -641,7 +642,7 @@ lo.comp.typecheck{
 
   private isListType:(tipe,location,list[env]){}.
   isListType(Tp,Lc,Env) :-
-    isType("map",Env,_,T),
+    isType("list",Env,_,T),
     moveQuants(T,_,typeExp(MpOp,_)),
     typeExp(MpOp,_) = deRef(Tp).
 
@@ -699,11 +700,13 @@ lo.comp.typecheck{
   genTpVars([_,..I]) => [newVar("__"),..genTpVars(I)].
 
   private checkNonTerminal:(ast,tipe,tipe,list[env],list[env],canonNT,report,report){}.
-  checkNonTerminal(Tpl,_,ElTp,E,Env,grTerms(Terms),Rp,Rpx) :-
-    isSquareTuple(Tpl,_,Els),
-    checkTerminals(Els,"_hdtl",Terms,ElTp,E,Env,Rp,Rpx).
-  checkNonTerminal(strg(Lc,Text),_,ElTp,Env,Env,grTerms(Terms),Rp,Rpx) :-
-    checkTerminals(explodeStringLit(Lc,Text),"_hdtl",Terms,ElTp,Env,_,Rp,Rpx).  -- strings are exploded into code points
+  checkNonTerminal(Tpl,StrmTp,ElTp,E,Env,grTerms(Terms),Rp,Rpx) :-
+    isSquareTuple(Tpl,Lc,Els),
+    typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E,E0,HDTL,Rp,Rp0),
+    checkTerminals(Els,HDTL,Terms,ElTp,E0,Env,Rp0,Rpx).
+  checkNonTerminal(strg(Lc,Text),StrmTp,ElTp,E,Env,grTerms(Terms),Rp,Rpx) :-
+    typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E,E0,HDTL,Rp,Rp0),
+    checkTerminals(explodeStringLit(Lc,Text),HDTL,Terms,ElTp,E0,Env,Rp0,Rpx).  -- strings are exploded into code points
   checkNonTerminal(Term,Tp,ElTp,Env,Ex,GrNT,Rp,Rpx) :-
     isRoundTuple(Term,Lc,Els),
     checkNonTerminals(Els,Tp,ElTp,Env,Ex,GrNT,Rp,Rpx)!.
@@ -752,16 +755,17 @@ lo.comp.typecheck{
     knownType(F,GrTp,Env,E0,Op,Rp,Rp0),
     ( deRef(GrTp) = grammarType(ArgTp,StrmTp) ?
       ( checkType(Lc,StrmTp,Tp,Env,Rp0,Rp1) ?
-        typeOfTerm(A,ArgTp,E0,Ev,Arg,Rp1,Rpx),
+        typeOfArg(A,ArgTp,E0,Ev,Arg,Rp1,Rpx),
         NT = grCall(Lc,Op,Arg) |
         reportError("type of \(Op) : \(GrTp) not consistent with stream type \(Tp)",Lc,Rp0,Rpx),
         NT = grTerms([]), Ev = E0) |
       reportError("\(F) : \(GrTp) not a grammar",Lc,Rp0,Rpx),
       NT = grTerms([]),
       Ev = Env).
-  checkNonTerminal(Term,_,_,Env,Env,grTest(EOF),Rp,Rpx) :-
+  checkNonTerminal(Term,StreamTp,ElTp,Env,Ev,grDip(v(Lc,NV),Cond),Rp,Rpx) :-
     isIden(Term,Lc,"eof"),
-    checkCond(unary(Lc,"_eof",iden(Lc,streamVar)),Env,_,EOF,Rp,Rpx).
+    NV = _str_gen("_"),
+    checkCond(unary(Lc,"_eof",iden(Lc,NV)),declareVar(NV,vr(Lc,v(Lc,NV),StreamTp),Env),Ev,Cond,Rp,Rpx).
   checkNonTerminal(Term,_,_,Env,Ex,grTest(Cond),Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     checkConds(Els,Env,Ex,Cond,Rp,Rpx).
@@ -770,9 +774,9 @@ lo.comp.typecheck{
   checkNonTerminals([],_,_,Env,Env,grTest(trueCond),Rp,Rp).
   checkNonTerminals([N,..Els],Tp,ElTp,Env,Ev,grConj(Lhs,Rhs),Rp,Rpx) :-
     checkNonTerminal(N,Tp,ElTp,Env,E0,Lhs,Rp,Rp0),
-    checkNonTerminals(Els,Tp,ElTp,E0,Ex,Rhs,Rp0,Rpx).
+    checkNonTerminals(Els,Tp,ElTp,E0,Ev,Rhs,Rp0,Rpx).
 
-  private checkTerminals:(list[ast],string,list[(location,string,canonTerm)],tipe,list[env],list[env],report,report){}.
+  private checkTerminals:(list[ast],canonTerm,list[(location,canonTerm,canonTerm)],tipe,list[env],list[env],report,report){}.
   checkTerminals([],_,[],_,Env,Env,Rp,Rp).
   checkTerminals([T,..L],V,[(T.loc,V,TT),..M],ElTp,Env,Ev,Rp,Rpx) :-
     typeOfTerm(T,ElTp,Env,E0,TT,Rp,Rp0),

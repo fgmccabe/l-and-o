@@ -290,7 +290,7 @@ lo.uri {
   -- Resolve a url against a base. The base must be an absolute URI, either net or local.
   public 
   resolveUri:(uri,uri) => uri.
-  resolveUri(_,U) => U :- absUri(_,_,_).=U.
+  resolveUri(_,U) => U :- absUri(_,_,_)=U.
   resolveUri(absUri(Scheme,Base,_),relUri(Path,Query)) => absUri(Scheme,resolvePath(Base,Path),Query).
 
   resolvePath:(rsrcName,rsrcName)=>rsrcName.

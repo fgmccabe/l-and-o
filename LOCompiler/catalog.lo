@@ -8,7 +8,7 @@ lo.comp.catalog{
 
   public type catalog ::= catalog(list[catEntry]).
 
-  private type catEntry ::= catEntries(map[pkg,uri]) | default(uri) | version(version) | base(uri).
+  private type catEntry ::= catEntries(map[pkg,uri]) | default(uri) | vErsion(version) | base(uri).
   
   public locateCatalog:(uri) => catalog.
   locateCatalog(Uri) => Cat :-
@@ -36,7 +36,7 @@ lo.comp.catalog{
   -- Tokenization
 
   private type token ::= catalg
-    | content | version | bAse | deflt | lbrce | rbrce
+    | content | verson | bAse | deflt | lbrce | rbrce
     | thin_arrow | term | period | colon | hash | idn(list[integer]) | strg(list[integer]).
 
   tokens:(list[token]) --> list[integer].
@@ -84,7 +84,7 @@ lo.comp.catalog{
   catStmt:(catEntry) --> list[token].
   catStmt(catEntries(Contents)) --> [content, lbrce], contents([],Contents), [rbrce].
   catStmt(base(BaseUri)) --> [bAse, colon, strg(Base)], { parseableUri(Base,BaseUri) }, [term].
-  catStmt(version(V)) --> [verson, colon], versn(V), [term].
+  catStmt(vErsion(V)) --> [verson, colon], versn(V), [term].
   catStmt(default(CatUri)) --> [deflt, colon, strg(U)], { uriParse(CatUri)%%U }, [term].
 
   parseableUri:(list[integer],uri){}.

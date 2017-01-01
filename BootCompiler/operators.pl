@@ -32,8 +32,6 @@
   infixOp("=<",899,900,899).	 /* less than or equal */
   infixOp(">",899,900,899).	 /* greater than */
   infixOp(">=",899,900,899).	 /* greater than or equal */
-  infixOp(".=",899,900,899).	 /* match predicate */
-  infixOp("=.",899,900,899).	 /* match predicate */
   infixOp("in",899,900,899).	 /* list membership */
   infixOp("<>",799,800,800).	 /* list append */
   infixOp("#",759,760,759).	 /* package separator */
@@ -104,7 +102,6 @@
   follows('.<<','.','.<<.').
   follows('.','^','.^').
   follows('.^','.','.^.').
-  follows('.','=','.=').
   follows('.','>','.>').
   follows('.>','>','.>>').
   follows('.>>','.','.>>.').
@@ -134,7 +131,6 @@
   follows('<=','>','<=>').
   follows('<','>','<>').
   follows('','=','=').
-  follows('=','.','=.').
   follows('=','<','=<').
   follows('=','=','==').
   follows('=','>','=>').
@@ -165,7 +161,6 @@
   final('.~.',".~.").	 /* bitwise 1's complement */
   final('.<<.',".<<.").	 /* shift left */
   final('.^.',".^.").	 /* bitwise xor */
-  final('.=',".=").	 /* match predicate */
   final('.>>.',".>>.").	 /* logical shift right */
   final('.>>>.',".>>>.").	 /* arithmetic shift right */
   final('..',"..").	 /* class body */
@@ -191,7 +186,6 @@
   final('<=>',"<=>").	 /* class constructor type */
   final('<>',"<>").	 /* list append */
   final('=',"=").	 /* unifies predicate */
-  final('=.',"=.").	 /* match predicate */
   final('=<',"=<").	 /* less than or equal */
   final('==',"==").	 /* equality predicate */
   final('=>',"=>").	 /* function arrow */

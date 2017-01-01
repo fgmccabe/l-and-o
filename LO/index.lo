@@ -145,7 +145,7 @@ lo.index{
 
   rmve:all k,v ~~ equality[k] |: (integer,k,map[k,v]) => map[k,v].
   rmve(_,_,trEmpty) => trEmpty.
-  rmve(H,K,trLeaf(H,L)) => reformLeaf(H,subtract((K,_),L)).
+  rmve(H,K,trLeaf(H1,L)) => (H=H1 ? reformLeaf(H,subtract((K,_),L)) | trLeaf(H1,L)).
   rmve(H,K,T) =>
     ( CM = M ?
       ( nthBit(H,Ln) ?

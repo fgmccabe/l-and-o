@@ -9,8 +9,8 @@ lo.comp.freshen{
   }.
 
   public implementation freshen[tipe] .. {
-    freshen(T,M) => freshenType(T,M).
-    skolemize(T,M) => skolemizeType(T,M).
+    freshen(T,M) => freshenType(deRef(T),M).
+    skolemize(T,M) => skolemizeType(deRef(T),M).
   }
 
   private freshenType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
@@ -45,7 +45,7 @@ lo.comp.freshen{
   frshnType(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
   frshnType(tupleType(A),B) => tupleType(frshnTypes(A,B)).
   frshnType(faceType(F),B) => faceType(frshnFields(F,B)).
-  frshnType(univType(kVar(Nm),T),B) => univType(NV,frshnType(T,B[\+Nm])).
+  frshnType(univType(kVar(Nm),T),B) => univType(kVar(Nm),frshnType(T,B[\+Nm])).
   frshnType(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
   frshnType(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
 

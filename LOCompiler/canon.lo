@@ -64,7 +64,7 @@ lo.comp.canon {
             | phraseCond(location,canonNT,canonTerm,canonTerm).
 
   public type
-  canonNT ::= grTerms(list[(location,string,canonTerm)])
+  canonNT ::= grTerms(list[(location,canonTerm,canonTerm)])
           | grCall(location,canonTerm,canonTerm)
           | grTest(canonCond)
           | grOne(canonNT)
@@ -210,7 +210,7 @@ lo.comp.canon {
   dispNT(grConj(L,R)) => ssSeq([dispNT(L),ss(","),dispNT(R)]).
   dispNT(grCond(T,L,R)) => ssSeq([ss("("),dispNT(T),ss("?"),dispNT(L),ss("|"),dispNT(R),ss(")")]).
 
-  private dispTerminals:(list[(location,string,canonTerm)]) => list[ss].
+  private dispTerminals:(list[(location,canonTerm,canonTerm)]) => list[ss].
   dispTerminals([]) => [].
   dispTerminals([(_,_,T)]) => [dispTerm(T)].
   dispTerminals([(_,_,T),..L]) => [dispTerm(T),ss(","),..dispTerminals(L)].

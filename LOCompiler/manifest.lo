@@ -10,7 +10,7 @@ lo.comp.manifest{
   -- A manifest entry looks like:
   -- packageName : { (version:file[uri])* }
 
-  type manifestEntry ::= manifestEntry(string,list[(version,uri,uri)]).
+  type manifestEntry ::= manifestEntry(string,list[(version,uri,string)]).
 
   -- Tokenization and parsing manifest files
 
@@ -67,12 +67,12 @@ lo.comp.manifest{
   entry:(manifestEntry) --> list[token].
   entry(manifestEntry(Pk,Versions)) --> [pkgId(Pk), colon, lbrce], versions(Versions), [rbrce].
 
-  versions:(list[(version,uri,uri)]) --> list[token].
+  versions:(list[(version,uri,string)]) --> list[token].
   versions([V,..More]) --> version(V), versions(More).
   versions([]) --> [].
 
-  version:((version,uri,uri)) --> list[token].
-  version((V,Uri,CodeUri)) --> versionName(V), [equals, pkgId(F), utok(U)], { uriParse(Uri)%%U, uriParse(CodeUri)%%explode(F) }.
+  version:((version,uri,string)) --> list[token].
+  version((V,Uri,Fn)) --> versionName(V), [equals, pkgId(Fn), utok(U)], { uriParse(Uri)%%U }.
 
   versionName:(version) --> list[token].
   versionName(defltVersion) --> [stAr].
@@ -90,34 +90,34 @@ lo.comp.manifest{
   showEntry:(manifestEntry) => ss.
   showEntry(manifestEntry(Pk,Versions)) => ssSeq([ss("  "),ss(Pk),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
 
-  showVersions:(list[(version,uri,uri)]) => list[ss].
+  showVersions:(list[(version,uri,string)]) => list[ss].
   showVersions([]) => [].
   showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
 
-  showVersion:((version,uri,uri)) => ss.
-  showVersion((V,SrcUri,CodeUri)) => ssSeq([ss("    "),disp(V),ss("="),disp(CodeUri),ss("["),disp(SrcUri),ss("]\n")]).
+  showVersion:((version,uri,string)) => ss.
+  showVersion((V,SrcUri,CodeFn)) => ssSeq([ss("    "),disp(V),ss("="),ss(CodeFn),ss("["),disp(SrcUri),ss("]\n")]).
 
   -- Simple API to manipulate entries in a mAnifest
 
-  public locateVersion:(manifest,string,version,version,uri,uri){}.
-  locateVersion(manifest(Entries),Pkg,Vers,Act,SrcUri,CodeUri) :-
+  public locateVersion:(manifest,string,version,version,uri,string){}.
+  locateVersion(manifest(Entries),Pkg,Vers,Act,SrcUri,CodeFn) :-
     manifestEntry(Pkg,V) in Entries,
-    getVersion(Vers,Act,V,SrcUri,CodeUri).
+    getVersion(Vers,Act,V,SrcUri,CodeFn).
 
-  getVersion:(version,version,list[(version,uri,uri)],uri,uri){}.
-  getVersion(Vers,Vers,V,SrcUri,CodeUri) :- (Vers,SrcUri,CodeUri) in V!.
-  getVersion(defltVersion,Act,V,SrcUri,CodeUri) :- (Act,SrcUri,CodeUri) in V!.
+  getVersion:(version,version,list[(version,uri,string)],uri,string){}.
+  getVersion(Vers,Vers,V,SrcUri,CodeFn) :- (Vers,SrcUri,CodeFn) in V!.
+  getVersion(defltVersion,Act,V,SrcUri,CodeFn) :- (Act,SrcUri,CodeFn) in V!.
 
-  public addToManifest:(manifest,uri,string,version,uri) => manifest.
-  addToManifest(manifest(M),SrcUri,Pkg,Version,CodeUri) => manifest(addEntry(M,SrcUri,Pkg,Version,CodeUri)).
+  public addToManifest:(manifest,uri,string,version,string) => manifest.
+  addToManifest(manifest(M),SrcUri,Pkg,Version,CodeFn) => manifest(addEntry(M,SrcUri,Pkg,Version,CodeFn)).
 
-  addEntry:(list[manifestEntry],uri,string,version,uri) => list[manifestEntry].
-  addEntry([],SrcUri,Pkg,Version,CodeUri) => [(manifestEntry(Pkg,[(Version,SrcUri,CodeUri)]))].
-  addEntry([manifestEntry(Pkg,Vers),..E],SrcUri,Pkg,Version,CodeUri) => [manifestEntry(Pkg,addVersion(Vers,SrcUri,Version,CodeUri)),..E].
-  addEntry([E,..M],SrcUri,Pkg,Version,CodeUri) => [E,..addEntry(M,SrcUri,Pkg,Version,CodeUri)].
+  addEntry:(list[manifestEntry],uri,string,version,string) => list[manifestEntry].
+  addEntry([],SrcUri,Pkg,Version,CodeFn) => [(manifestEntry(Pkg,[(Version,SrcUri,CodeFn)]))].
+  addEntry([manifestEntry(Pkg,Vers),..E],SrcUri,Pkg,Version,CodeFn) => [manifestEntry(Pkg,addVersion(Vers,SrcUri,Version,CodeFn)),..E].
+  addEntry([E,..M],SrcUri,Pkg,Version,CodeFn) => [E,..addEntry(M,SrcUri,Pkg,Version,CodeFn)].
 
-  addVersion:(list[(version,uri,uri)],uri,version,uri) => list[(version,uri,uri)].
-  addVersion([],SrcUri,Vers,CodeUri) => [(Vers,SrcUri,CodeUri)].
-  addVersion([(Vers,_,_),..V],SrcUri,Vers,CodeUri) => [(Vers,SrcUri,CodeUri),..V] . -- replace version
-  addVersion([V,..M],SrcUri,Vers,CodeUri) => [V,..addVersion(M,SrcUri,Vers,CodeUri)].
+  addVersion:(list[(version,uri,string)],uri,version,string) => list[(version,uri,string)].
+  addVersion([],SrcUri,Vers,CodeFn) => [(Vers,SrcUri,CodeFn)].
+  addVersion([(Vers,_,_),..V],SrcUri,Vers,CodeFn) => [(Vers,SrcUri,CodeFn),..V] . -- replace version
+  addVersion([V,..M],SrcUri,Vers,CodeFn) => [V,..addVersion(M,SrcUri,Vers,CodeFn)].
 }

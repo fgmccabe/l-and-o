@@ -249,4 +249,5 @@ lo.comp.transutils {
   tpArity(constrained(T,_)) => tpArity(T).
   tpArity(tupleType(L)) => length(L).
   tpArity(faceType(F)) => length(F).
+  tpArity(_) => 0.
 }

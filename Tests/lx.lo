@@ -29,7 +29,7 @@ lx{
   tkState(Chars,Off) <=> {
     eof() :- Chars = [].
 
-    hdtl(Ch,Next) :- Chars =. [Ch,..Rest],  Next = tkState(Rest,Off+1).
+    hdtl(Ch,Next) :- Chars = [Ch,..Rest],  Next = tkState(Rest,Off+1).
 
     cons(Ch) => tkState([Ch,..Chars],Off).
 

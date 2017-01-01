@@ -164,6 +164,7 @@ lo.comp.dependencies{
   surfaceName:(ast)=>ss.
   surfaceName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
   surfaceName(S) =>  ss(Nm) :-  (isSquareTerm(S,_,Op,_), isIden(Op,_,Nm)).
+  surfaceName(T) => ss("()\(length(Els))") :- isRoundTuple(T,_,Els).
 
   collectDefines:(list[ast],string,defnKind,list[ast],list[ast]){}.
   collectDefines([],_,_,[],[]).
@@ -259,28 +260,37 @@ lo.comp.dependencies{
   refsInCond(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"\\+",_,L).
   refsInCond(T,All,So) =>  refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"=",_,L,R).
   refsInCond(T,All,So) =>  refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"\\=",_,L,R).
-  refsInCond(T,All,So) =>  refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,".=",_,L,R).
   refsInCond(T,All,So) =>  refsInNT(L,All,refsInTerm(LR,All,refsInTerm(LL,All,So))) :-  (isBinary(T,"%%",_,L,R), isBinary(R,"~",_,LL,LR)).
   refsInCond(T,All,So) =>  refsInNT(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"%%",_,L,R).
   refsInCond(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
   refsInCond(T,All,So) =>  refsInConds(Args,All,So) :-  isRoundTuple(T,_,Args).
+  refsInCond(T,All,So) => refsInTerm(T,All,So).
 
   refsInConds:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInConds([],_,So) => So.
   refsInConds([T,..L],All,So) => refsInConds(L,All,refsInCond(T,All,So)). 
 
   refsInNT:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInNT(T,All,So) =>  refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).
-  refsInNT(T,All,So) =>  refsInNT(R,All,refsInNT(LR,All,refsInCond(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
-  refsInNT(T,All,So) =>  refsInNT(R,All,refsInNT(L,All,So)) :-  isBinary(T,"|",_,L,R).
-  refsInNT(T,All,So) =>  refsInNT(L,All,refsInNT(R,All,So)) :-  isBinary(T,",",_,L,R).
-  refsInNT(T,All,So) =>  refsInNT(L,All,So) :-  isUnary(T,"!",_,L).
-  refsInNT(T,All,So) =>  refsInNT(L,All,So) :-  isUnary(T,"\\+",_,L).
-  refsInNT(T,All,So) =>  refsInNT(L,All,So) :-  isUnary(T,"+",_,L).
-  refsInNT(T,All,So) =>  refsInNT(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
-  refsInNT(T,All,So) =>  refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"=",_,L,R).
-  refsInNT(T,All,So) =>  refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"\\=",_,L,R).
-  refsInNT(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
+  refsInNT(T,All,So) => refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).
+  refsInNT(T,All,So) => refsInNT(R,All,refsInNT(LR,All,refsInNT(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
+  refsInNT(T,All,So) => refsInNT(R,All,refsInNT(L,All,So)) :-  isBinary(T,"|",_,L,R).
+  refsInNT(T,All,So) => refsInNT(L,All,refsInNT(R,All,So)) :-  isBinary(T,",",_,L,R).
+  refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"!",_,L).
+  refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"\\+",_,L).
+  refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"+",_,L).
+  refsInNT(T,All,So) => refsInNT(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
+  refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"=",_,L,R).
+  refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"\\=",_,L,R).
+  refsInNT(T,All,So) => refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
+  refsInNT(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
+  refsInNT(T,All,So) => So :- isString(T,_,_).
+  refsInNT(T,All,So) => refsInNTs(Els,All,So) :- isRoundTuple(T,_,Els).
+  refsInNT(T,All,So) => refsInConds(Els,All,So) :- isBraceTuple(T,_,Els).
+  refsInNT(T,All,So) => So :- isIden(T,_,"eof").
+
+  refsInNTs:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
+  refsInNTs([],_,So) => So.
+  refsInNTs([N,..L],All,So) => refsInNTs(L,All,refsInNT(N,All,So)).
 
   refsInTerm:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTerm(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isIden(T,_,Nm).

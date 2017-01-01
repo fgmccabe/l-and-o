@@ -89,6 +89,7 @@ lo.comp.resolve{
   addExtra:(list[canonTerm],canonTerm) => canonTerm.
   addExtra([],T) => T.
   addExtra(Ex,tpl(A)) => tpl(Ex<>A).
+  addExtra(Ex,apply(Lc,Op,tpl(A))) => apply(Lc,Op,tpl(Ex<>A)).
   
   private resolveTerm:(canonTerm,list[implEntry],report,report) => canonTerm.
   resolveTerm(v(Lc,Nm),_,Rp,Rp) => v(Lc,Nm).
@@ -136,6 +137,7 @@ lo.comp.resolve{
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
     overloadRef(T,DTerms,resolveTerms(Args,Dict,Rp0,Rpx),OverOp,RArgs).
   resolveCond(callCond(Lc,P,A),Dict,Rp,Rpx) => callCond(Lc,resolveTerm(P,Dict,Rp,Rp0),resolveTerm(A,Dict,Rp0,Rpx)).
+  resolveCond(isTrue(C),Dict,Rp,Rpx) => isTrue(resolveTerm(C,Dict,Rp,Rpx)).
 
   resolveGr:(canonNT,list[implEntry],report,report) => canonNT.
   resolveGr(grTerms(Terms),Dict,Rp,Rpx) => grTerms(resolveTerminals(Terms,Dict,Rp,Rpx)).
@@ -153,9 +155,9 @@ lo.comp.resolve{
     RArgs = resolveTerms(Args,Dict,Rp0,Rpx).
   resolveGr(grCall(Lc,Op,Args),Dict,Rp,Rpx) => grCall(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(Args,Dict,Rp,Rpx)).
 
-  resolveTerminals:(list[(location,string,canonTerm)],list[implEntry],report,report) => list[(location,string,canonTerm)].
+  resolveTerminals:(list[(location,canonTerm,canonTerm)],list[implEntry],report,report) => list[(location,canonTerm,canonTerm)].
   resolveTerminals([],_,Rp,Rp) => [].
-  resolveTerminals([(Lc,Op,T),..L],Dict,Rp,Rpx) => [(Lc,Op,resolveTerm(T,Dict,Rp,Rp0)),..resolveTerminals(L,Dict,Rp0,Rpx)].
+  resolveTerminals([(Lc,Op,T),..L],Dict,Rp,Rpx) => [(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(T,Dict,Rp0,Rp1)),..resolveTerminals(L,Dict,Rp1,Rpx)].
 
   overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
   overloadRef(mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).

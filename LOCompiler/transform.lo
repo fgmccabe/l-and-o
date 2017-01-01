@@ -236,12 +236,12 @@ lo.comp.transform{
     genNewName(Map,"Hed",length(TQ)+1,HdProg),
     C1 = clse([HedStrm,..TQ],HdProg,[HedStrm,..TQ],TG).
 
-  pushTerminals:(list[(location,string,canonTerm)],list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],list[clse],list[clse],report,report){}.
+  pushTerminals:(list[(location,canonTerm,canonTerm)],list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],list[clse],list[clse],report,report){}.
   pushTerminals([],_,_,G,Gx,Strm,Strmx,Q,Q,Ex,Ex,Rp,Rp) :-
     joinStream(Strm,Strmx,G,Gx).
   pushTerminals([(Lc,SV,T),..More],Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     genVarbl("NStrm",NStrm),
-    trGoal(callCond(Lc,v(Lc,SV),tpl([mkCanon(Strm),T,mkCanon(NStrm)])),G,G0,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trGoal(callCond(Lc,SV,tpl([mkCanon(Strm),T,mkCanon(NStrm)])),G,G0,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     pushTerminals(More,Map,Opts,G0,Gx,NStrm,Strmx,[NStrm,..Q0],Qx,Ex0,Exx,Rp0,Rpx).
 
   mkCanon:(term)=>canonTerm.
@@ -582,6 +582,7 @@ lo.comp.transform{
   implementFunCall(localClass(Mdl,_,Ar,LbVr,ThVr),_,_,_,Args,cons(strct(Mdl,Ar+2),Args<>[LbVr,ThVr]),Q,merge([Lbvr,ThVr],Q),Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp).
   implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,_,Args,
         cons(strct(Mdl,length(Args)),Args),Q,merge([LbVr,ThVr],Q),Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp).
+  implementFunCall(moduleImpl(_,Mdl),_,_,_,[],Mdl,Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp).
   implementFunCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp).
   implementFunCall(notInMap,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExpCallOp(dot(v(Lc,Nm),"_call"),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
