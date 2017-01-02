@@ -36,6 +36,29 @@ lo.comp.imports{
     findContracts(Co,Contracts,[]),
     pickupImplementations(Im,Impls,[]).
 
+  public importPkgs:(list[pkg],list[pkgSpec],repository,report,report) => list[pkgSpec].
+  importPkgs([],Specs,_,Rp,Rp) => Specs.
+  importPkgs([Pkg,..L],SoFar,Repo,Rp,Rpx) => importPkgs(L,SoFar,Repo,Rp,Rpx) :- alreadyImported(Pkg,SoFar).
+  importPkgs([Pkg,..L],SoFar,Repo,Rp,Rpx) => importPkgs(L,[Spec,..SoFar],Repo,Rp0,Rpx) :- 
+    importPkg(Pkg,Repo,Spec,Rp,Rp0).
+
+  public importClosure:(list[pkg],list[pkgSpec],repository,report,report) => list[pkgSpec].
+  importClosure([],Specs,_,Rp,Rp) => Specs.
+  importClosure([Pkg,..L],SoFar,Repo,Rp,Rpx) => importClosure(L,SoFar,Repo,Rp,Rpx) :- alreadyImported(Pkg,SoFar)!.
+  importClosure([Pkg,..L],SoFar,Repo,Rp,Rpx) => importClosure(L,importClosure(publicImports(importsOfSpec(Spec)),[Spec,..SoFar],Repo,Rp0,Rp1),Repo,Rp1,Rpx) :- 
+    importPkg(Pkg,Repo,Spec,Rp,Rp0).
+
+  alreadyImported:(pkg,list[pkgSpec]){}.
+  alreadyImported(Pkg,Specs) :- pkgSpec(Pkg,_,_,_,_,_,_) in Specs.
+
+  importsOfSpec:(pkgSpec) => list[(visibility,pkg)].
+  importsOfSpec(pkgSpec(_,_,_,_,_,_,Imps)) => Imps.
+   
+  publicImports:(list[(visibility,pkg)]) => list[pkg].
+  publicImports([]) => [].
+  publicImports([(pUblic,Pkg),..L]) => [Pkg,..publicImports(L)].
+  publicImports([(priVate,_),..L]) => publicImports(L).
+
   decodeImports:(list[term]) => list[(visibility,pkg)].
   decodeImports([]) => [].
   decodeImports([cons(strct("import",2),[Vz,Pk]),..Is]) => [(decodeViz(Vz),decodePkg(Pk)),..decodeImports(Is)].

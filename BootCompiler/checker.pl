@@ -868,7 +868,7 @@ processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|De
   newTypeVar("_E",ElTp),
   typeOfTerms(A,AT,E1,E2,Lc,Args),!,
   checkNonTerminal(R,Tp,ElTp,E2,E3,Body),
-  checkTerminals(P,"_cons",PB,ElTp,E3,_).
+  checkTerminals(P,"_hdtl",PB,ElTp,E3,_).
 
 checkNonTerminal(tuple(Lc,"[]",Els),_,ElTp,E,Env,terminals(Lc,Terms)) :- !,
   checkTerminals(Els,"_hdtl",Terms,ElTp,E,Env).

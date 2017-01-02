@@ -6,7 +6,6 @@ test.l{
   implementation all x ~~ stream[list[x] ->> x] .. {
     _eof([]).
     _hdtl([E,..L],E,L).
-    _cons(E,L) => [E,..L].
   }
 */
 
@@ -59,4 +58,10 @@ test.l{
   positive(N) :- N>0.
 
   show filter([1,-2,3],positive).
+
+  ab:(integer) --> list[integer].
+  ab(T) --> "a", ab(T), "b".
+  ab(X) --> [X].
+
+  assert ab(0cx) %% explode("aaxbb").
 }

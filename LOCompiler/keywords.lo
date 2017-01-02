@@ -41,6 +41,7 @@ lo.comp.keywords{
   keyword("public").
   keyword("contract").
   keyword("all").
+  keyword("exists").
   keyword("type").
   keyword("implementation").
   keyword("void").

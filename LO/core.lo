@@ -53,7 +53,6 @@ lo.core{
   contract all S,E ~~ stream[S ->> E] <~ {
     _eof:(S){}.
     _hdtl:(S,E,S){}.
-    _cons:(E,S)=>S.
   }
 
   -- implement standard contracts for integers
@@ -204,7 +203,6 @@ lo.core{
   implementation all x ~~ stream[list[x] ->> x] .. {
     _eof([]).
     _hdtl([E,..L],E,L).
-    _cons(E,L) => [E,..L].
   }
 
   -- display contract for lists

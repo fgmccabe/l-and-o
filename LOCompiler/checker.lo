@@ -21,11 +21,11 @@ lo.comp.typecheck{
   import lo.comp.resolve.
 
   public checkProgram:(ast,version,repository,report,report)=>canonPkg.
-  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,computeImports(Public,Imports)),Imports,ODefs,OOthers) :-
+  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,computeImports(Public,Imports)),ImportClosure,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
-    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,Others,Rp,Rp0),
-    findImportedImplementations(Imports,[],OverDict),
+    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
+    findImportedImplementations(ImportClosure,[],OverDict),
     overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
     OOthers = overloadOthers(Others,ODict,Rp1,Rpx),
     computeExport(ODefs,[],Public,Exports,Types,Enums,Contracts,Impls).
@@ -35,12 +35,12 @@ lo.comp.typecheck{
   computeImports(Pub,[pkgSpec(pkg(Pk,V),_,_,_,_,_,_),..Pkgs]) => [(exportViz(Pk,imp,Pub),pkg(Pk,V)),..computeImports(Pub,Pkgs)].
 
   private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
-      list[canonDef],list[(string,defnKind)],list[pkgSpec],list[canonOther],report,report){}.
-  thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,Others,Rp,Rpx) :-
+      list[canonDef],list[(string,defnKind)],list[pkgSpec],list[pkgSpec],list[canonOther],report,report){}.
+  thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,ImportClosure,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
     -- _logmsg("After rewrite: \(Stmts)"),
     dependencies(Stmts,Groups,Public,Annots,Imps,Otrs,Rp0,Rp1),
-    processImportGroup(Imps,Imports,Lc,Repo,Base,IBase,Rp1,Rp2),
+    processImportGroup(Imps,Imports,ImportClosure,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
     checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
     -- _logmsg("Checked defs: \(Defs)").
@@ -62,45 +62,25 @@ lo.comp.typecheck{
     isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
     typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
-  processImportGroup:(list[ast],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
-  processImportGroup(Stmts,ImportSpecs,Lc,Repo,Env,Ex,Rp,Rpx) :-
+  processImportGroup:(list[ast],list[pkgSpec],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
+  processImportGroup(Stmts,ImportSpecs,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
-    importAll(Imports,Repo,[],AllImports,ImportSpecs,[],Rp,Rpx),
-    importAllDefs(ImportSpecs,Lc,Repo,Env,Ex).
+    ImportSpecs = importPkgs(Imports,[],Repo,Rp,Rp0),
+    ImportClosure = importClosure(Imports,[],Repo,Rp0,Rpx),
+    importAllDefs(ImportClosure,Lc,Repo,Env,Ex).
 
-  findAllImports:(list[ast],list[(location,visibility,pkg)]){}.
+  findAllImports:(list[ast],list[pkg]){}.
   findAllImports([],[]).
-  findAllImports([St,..More],[findImport(St,priVate),..Imports]) :-
+  findAllImports([St,..More],[findImport(St),..Imports]) :-
     findAllImports(More,Imports).
 
-  findImport:(ast,visibility)=>(location,visibility,pkg).
-  findImport(St,_) => findImport(I,priVate) :-
+  findImport:(ast)=>pkg.
+  findImport(St) => findImport(I) :-
     isUnary(St,"private",_,I).
-  findImport(St,_) => findImport(I,pUblic):-
-    isUnary(St,"public",Lc,I).
-  findImport(St,Viz) => (Lc,Viz,pkgName(P)) :-
-    isUnary(St,"import",Lc,P).
-
-  importAll:(list[(location,visibility,pkg)],repository,list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],list[pkgSpec],report,report){}.
-  importAll([],_,AllImports,AllImports,Specs,Specs,Rp,Rp).
-  importAll([P,..L],Repo,SoFar,All,ImportSpecs,RestSpecs,Rp,Rpx) :-
-    (alreadyImported(P,SoFar) ?
-      importAll(L,Repo,SoFar,All,ImportSpecs,RestSpecs,Rp,Rpx) |
-      importOne(Repo,P,SoFar,SoF,ImportSpecs,MoreSpecs,Rp,Rp0),
-      importAll(L,Repo,SoF,All,MoreSpecs,RestSpecs,Rp0,Rpx)).
-
-  alreadyImported:((location,visibility,pkg),list[(location,visibility,pkg)]){}.
-  alreadyImported((_,_,Pk),SoFar) :-
-    (_,_,Pk) in SoFar.
-
-  importOne:(repository,(location,visibility,pkg),list[(location,visibility,pkg)],list[(location,visibility,pkg)],list[pkgSpec],list[pkgSpec],report,report){}.
-  importOne(Repo,(Lc,Viz,Pkg),SoFar,All,[Spec,..More],Rest,Rp,Rpx) :-
-    importPkg(Pkg,Repo,Spec,Rp,Rp0),
-    Spec = pkgSpec(_,_,_,_,_,_,Imports),
-    addPublicImports(Imports,Lc,Referenced),
-    importAll(Referenced,Repo,[(Lc,Viz,Pkg),..SoFar],All,More,Rest,Rp0,Rpx).
-  importOne(_,(Lc,_,Pkg),SoFar,SoFar,Specs,Specs,Rp,Rpx) :-
-    reportError("could not import package \(Pkg)",Lc,Rp,Rpx).
+  findImport(St) => findImport(I):-
+    isUnary(St,"public",_,I).
+  findImport(St) => pkgName(P) :-
+    isUnary(St,"import",_,P).
 
   addPublicImports:(list[(visibility,pkg)],location,list[(location,visibility,pkg)]){}.
   addPublicImports([],_,[]).
@@ -377,7 +357,7 @@ lo.comp.typecheck{
   checkClassBody(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath,Rp,Rpx) :-
     faceOfType(deRef(ClassTp),Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
-    thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(Lc,v(Lc,"this"),ClassTp),pushScope(Env)),_OEnv,Defs,Public,_Imports,Others,Rp,Rpx),
+    thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(Lc,v(Lc,"this"),ClassTp),pushScope(Env)),_OEnv,Defs,Public,_Imports,_,Others,Rp,Rpx),
     computeExport(Defs,Fields,Public,_,Types,_,[],[]).
 
   private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.

@@ -4,7 +4,6 @@ g{
   contract all S,E ~~ stream[S ->> E] <~ {
     _eof:(S){}.
     _hdtl:(S,E,S){}.
-    _cons:(E,S)=>S.
   }
 
   public 
@@ -25,8 +24,6 @@ g{
     _eof(nil).
 
     _hdtl(pair(E,L),E,L).
-
-    _cons(E,L) => pair(E,L).
   }.
 
   brackets:all s ~~ stream[s->>integer] |: (integer)-->s.

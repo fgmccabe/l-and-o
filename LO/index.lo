@@ -235,7 +235,6 @@ lo.index{
 
   public implementation all k,v ~~ equality[k] |: stream[map[k,v] ->> (k,v)] .. {
     _eof(trEmpty).
-    _cons((K,V),M) => insrt(K,V,M).
     _hdtl(M,(K,V),R) :- (var(R) ? pckEl(M,K,V,R)! | M = insrt(K,V,R)).
   }
 

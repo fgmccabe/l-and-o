@@ -35,8 +35,8 @@ exit(X) :- halt(X).
 
 '_unify'(X,Y) :- unify_with_occurs_check(X,Y).
 
-'_int_plus'(X,Y,Z) :- Z is (X+Y).
-'_int_minus'(X,Y,Z) :- Z is (X-Y).
+'_int_plus'(X,Y,Z) :- plus(X,Y,Z).
+'_int_minus'(X,Y,Z) :- plus(Y,Z,X).
 '_int_times'(X,Y,Z) :- Z is (X*Y).
 '_int_div'(X,Y,Z) :- Z is div(X,Y).
 '_int_mod'(X,Y,Z) :- Z is (X mod Y).
