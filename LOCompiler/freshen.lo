@@ -36,9 +36,12 @@ lo.comp.freshen{
   frshnType(thisType,_) => thisType.
   frshnType(kVar(Nm),B) => Tp :- present(B,Nm,Tp).
   frshnType(kVar(Nm),_) => kVar(Nm).
+  frshnType(kFun(Nm,_),B) => Tp :- present(B,Nm,Tp).
+  frshnType(kFun(Nm,Ar),_) => kFun(Nm,Ar).
   frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_,_,_).
   frshnType(tipe(Nm),_) => tipe(Nm).
-  frshnType(typeExp(Nm,A),B) => typeExp(Nm,frshnTypes(A,B)).
+  frshnType(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
+  frshnType(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
   frshnType(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).
   frshnType(predType(A),B) => predType(frshnType(A,B)).
   frshnType(grammarType(A,R),B) => grammarType(frshnType(A,B),frshnType(R,B)).
@@ -101,7 +104,7 @@ lo.comp.freshen{
     freeze(R,B,FR).
   frze(predType(A),B,predType(FA)) :- freeze(A,B,FA).
   frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
-  frze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
+  frze(typeExp(O,A),B,typeExp(FO,FA)) :- frze(O,B,FO),freezeTypes(A,B,FA).
   frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
     freeze(Tp,_remove(B,V),FTp).
   frze(faceType(L),B,faceType(FL)) :-

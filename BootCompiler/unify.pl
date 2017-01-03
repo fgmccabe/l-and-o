@@ -16,11 +16,13 @@ sm(thisType,T2,Env) :- isVar("this",Env,vr(_,_,T1)),!,
 sm(T1,thisType,Env) :- isVar("this",Env,vr(_,_,T2)),!,
   sameType(T1,T2,Env).
 sm(kVar(Nm),kVar(Nm),_).
+sm(kFun(Nm,Ar),kFun(Nm,Ar),_).
 sm(V1,V2,Env) :- isUnbound(V1), isUnbound(V2), varBinding(V1,V2,Env).
 sm(V1,T2,Env) :- isUnbound(V1), checkBinding(V1,T2,Env).
 sm(T1,V2,Env) :- isUnbound(V2), checkBinding(V2,T1,Env).
 sm(type(Nm),type(Nm),_).
-sm(typeExp(Nm,A1),typeExp(Nm,A2),Env) :- smList(A1,A2,Env).
+sm(tpFun(Nm,Ar),tpFun(Nm,Ar),_).
+sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sameType(O1,O2,Env),smList(A1,A2,Env).
 sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
 sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
 sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
@@ -92,11 +94,11 @@ getFace(type(Nm),Env,Face) :- !,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
   freshen(FaceRule,voidType,_,typeRule(Lhs,Face)),
   sameType(type(Nm),Lhs,Env),!.
-getFace(typeExp(Nm,Args),Env,Face) :- !,
+getFace(typeExp(Op,Args),Env,Face) :- deRef(Op,tpFun(Nm,Ar)), length(Args,Ar),!,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
   freshen(FaceRule,voidType,_,Rl),
   moveConstraints(Rl,_,typeRule(Lhs,Face)),
-  sameType(Lhs,typeExp(Nm,Args),Env),!.
+  sameType(Lhs,typeExp(Op,Args),Env),!.
 getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
   constraints(T,C),
   collectImplements(C,Env,[],Face).

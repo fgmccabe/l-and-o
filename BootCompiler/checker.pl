@@ -78,6 +78,15 @@ importTypes([(Nm,Rule)|More],Lc,Env,Ex) :-
   declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
   importTypes(More,Lc,E0,Ex).
 
+pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
+  pickTypeTemplate(Tp,XTp).
+pickTypeTemplate(typeRule(Lhs,_),Tmp) :-
+  pickTypeTemplate(Lhs,Tmp).
+pickTypeTemplate(constrained(Tp,_),Tmp) :-
+  pickTypeTemplate(Tp,Tmp).
+pickTypeTemplate(type(Nm),type(Nm)).
+pickTypeTemplate(typeExp(Op,_),Op).
+
 importAllDefs([],_,[],_,Env,Env).
 importAllDefs([import(Viz,Pkg)|More],Lc,
       [import(Viz,Pkg,Exported,Types,Classes,Contracts,Impls)|Specs],Repo,Env,Ex) :-
@@ -190,7 +199,7 @@ defineType(N,Lc,_,Env,Env,_) :-
   isType(N,Env,tpDef(_,OLc,_)),!,
   reportError("type %s already defined at %s",[N,OLc],Lc).
 defineType(N,Lc,St,Env,Ex,Path) :-
-  parseTypeTemplate(St,[],Env,Type,Path),
+  parseTypeCore(St,Type,Path),
   declareType(N,tpDef(Lc,Type,faceType([])),Env,Ex).
 defineType(_,Lc,St,Env,Env,_) :-
   reportError("cannot parse type statement %s",[St],Lc).
@@ -265,9 +274,7 @@ declareConstraints([C|L],E,Ex) :-
   declareConstraints(L,E0,Ex).
 
 findType(Nm,_,Env,Tp) :-
-  isType(Nm,Env,tpDef(_,T,_)),
-  pickupThisType(Env,ThisType),
-  freshen(T,ThisType,_,Tp),!.
+  isType(Nm,Env,tpDef(_,Tp,_)),!.
 findType(Nm,Lc,_,anonType) :-
   reportError("type %s not known",[Nm],Lc).
 
@@ -506,6 +513,10 @@ bindAT([kVar(N)|L1],[kVar(N)|L2],Q,Qx) :-
   bindAT(L1,L2,Q,Qx).
 bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
   bindAT(L,TL,[(V,Tp)|Q],Qx).
+bindAT([kFun(N,Ar)|L1],[kFun(N,Ar)|L2],Q,Qx) :-
+  bindAT(L1,L2,Q,Qx).
+bindAT([kFun(V,Ar)|L],[tpFun(Nm,Ar)|TL],Q,Qx) :-
+  bindAT(L,TL,[(V,tpFun(Nm,Ar))|Q],Qx).
 
 typeOfTerm(V,_,Env,Env,v(Lc,N)) :-
   isIden(V,Lc,"_"),!,
@@ -691,29 +702,35 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
 checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp) :-
   (isMapSequence(Els) ; isMapType(Tp,Lc,Env)) ->
     macroMapEntries(Lc,Els,Trm),
-    findType("map",Lc,Env,MapTp),
+    newTypeVar("k",KT),
+    newTypeVar("v",VT),
+    findType("map",Lc,Env,MapOp),
+    MapTp = typeExp(MapOp,[KT,VT]),
     checkType(Lc,MapTp,Tp,Env),
     typeOfTerm(Trm,Tp,Env,Ev,Exp);
   (isListSequence(Els) ; isListType(Tp,Lc,Env)) ->
-    findType("list",Lc,Env,ListTp),
-    ListTp = typeExp(_,[ElTp]),
+    findType("list",Lc,Env,ListOp),
+    newTypeVar("L",ElTp),
+    ListTp = typeExp(ListOp,[ElTp]),
     checkType(Lc,ListTp,Tp,Env),
-    typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp);
+    typeOfListTerm(Els,Lc,ElTp,Tp,Env,Ev,Exp);
   checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp).
 
 isMapSequence([E|_]) :-
   isBinary(E,_,"->",_,_).
 
 isMapType(Tp,Lc,Env) :-
-  findType("map",Lc,Env,typeExp(MpOp,_)),
-  deRef(Tp,typeExp(MpOp,_)).
+  findType("map",Lc,Env,MpTp),
+  deRef(Tp,typeExp(MpOp,_)),
+  deRef(MpOp,MpTp).
 
 isListSequence([E|_]) :-
   \+isBinary(E,_,"->",_,_).
 
 isListType(Tp,Lc,Env) :-
-  findType("list",Lc,Env,typeExp(MpOp,_)),
-  deRef(Tp,typeExp(MpOp,_)).
+  findType("list",Lc,Env,LstTp),
+  deRef(Tp,typeExp(LsOp,_)),
+  deRef(LsOp,LstTp).
   
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,Env,Ev,Exp).
@@ -1004,7 +1021,8 @@ isPublicContract(contract(Nm,_,_,_,_),Public) :-
   is_member(con(Nm),Public),!.
 
 matchTypes(type(Nm),type(Nm),[]) :-!.
-matchTypes(typeExp(Nm,L),typeExp(Nm,R),Binding) :-
+matchTypes(typeExp(T1,L),typeExp(T2,R),Binding) :-
+  matchTypes(T1,T2,Binding),
   matchArgTypes(L,R,Binding).
 
 matchArgTypes([],[],[]).
@@ -1012,10 +1030,6 @@ matchArgTypes([kVar(Nm)|L],[kVar(Nm)|R],Binding) :- !,
   matchArgTypes(L,R,Binding).
 matchArgTypes([Tp|L],[kVar(Ot)|R],[(Ot,Tp)|Binding]) :-
   matchArgTypes(L,R,Binding).
-
-pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
-  pickTypeTemplate(Tp,XTp).
-pickTypeTemplate(typeRule(Lhs,_),Lhs).
 
 generateClassFace(Tp,Env,Face) :-
   freshen(Tp,voidType,Q,FTp),

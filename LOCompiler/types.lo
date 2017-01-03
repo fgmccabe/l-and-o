@@ -3,14 +3,15 @@ lo.comp.types{
 
   import lo.comp.misc.
 
-  public
-  type tipe ::= anonType 
+  public type tipe ::= anonType 
         | voidType
         | thisType
         | kVar(string)
+        | kFun(string,integer)
         | tVar(tipe,logical,list[constraint],string,string)
         | tipe(string)
-        | typeExp(string,list[tipe])
+        | tpFun(string,integer)
+        | typeExp(tipe,list[tipe])
         | tupleType(list[tipe])
         | funType(tipe,tipe)
         | predType(tipe)
@@ -52,10 +53,12 @@ lo.comp.types{
   dispType(voidType) => ss("void").
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
+  dispType(kFun(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispType(tVar(Curr,false,_,_,_)) =>  dispType(Curr) :-  nonvar(Curr) .
   dispType(tVar(_,_,_,Nm,Id)) => ssSeq([ss(Nm),ss("_"),ss(Id)]).
   dispType(tipe(Nm)) =>ss(Nm).
-  dispType(typeExp(Nm,A)) => ssSeq([ss(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
+  dispType(tpFun(Nm,Ar)) => ssSeq([ss(Nm),ss("%"),disp(Ar)]).
+  dispType(typeExp(Nm,A)) => ssSeq([dispType(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
   dispType(tupleType(A)) => ssSeq([ss("("),ssSeq(dispTypeEls(A)),ss(")")]).
   dispType(funType(A,R)) => ssSeq([dispType(A),ss("=>"), dispType(R)]).
   dispType(grammarType(A,R)) => ssSeq([dispType(A),ss("-->"), dispType(R)]).
@@ -131,7 +134,6 @@ lo.comp.types{
   isPredType(constrained(T,C)) :- isPredType(T).
   isPredType(predType(_)).
 
-
   public isClassType:(tipe){}.
   isClassType(univType(_,T)) :- isClassType(T).
   isClassType(constrained(T,C)) :- isClassType(T).
@@ -188,7 +190,7 @@ lo.comp.types{
   idOccIn:(string,tipe){}.
   idOccIn(Id,tVar(Curr,_,_,_,_)) :- nonvar(Curr), idOccIn(Id,Curr).
   idOccIn(Id,tVar(Curr,_,_,_,Id)) :- var(Curr).
-  idOccIn(Id,typeExp(_,A)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,typeExp(Op,A)) :- (idOccIn(Id,Op) | T in A, idOccIn(Id,T)).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).
   idOccIn(Id,funType(_,R)) :- idOccIn(Id,R).
@@ -215,8 +217,10 @@ lo.comp.types{
 
   surfaceName:(tipe) => string.
   surfaceName(tipe(Nm)) => Nm.
-  surfaceName(typeExp(Nm,_)) =>Nm.
+  surfaceName(tpFun(Nm,_)) => Nm.
+  surfaceName(typeExp(Nm,_)) => surfaceName(deRef(Nm)).
   surfaceName(kVar(Nm)) => Nm.
+  surfaceName(kFun(Nm,_)) => Nm.
   surfaceName(tupleType(Els)) => "()\(length(Els))".
 
   public bindAT:(list[tipe],list[tipe],map[string,tipe]) => map[string,tipe].
@@ -224,6 +228,8 @@ lo.comp.types{
   bindAT(_,[],Q) => Q.
   bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
   bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q[V->Tp]).
+  bindAT([kFun(N,Ar),..L1],[kFun(N,Ar),..L2],Q) => bindAT(L1,L2,Q).
+  bindAT([kFun(N,_),..L1],[Tp,..TL],Q) => bindAT(L1,TL,Q[V->Tp]).
 
   public typeArity:(tipe) => integer.
   typeArity(funType(E,_)) => typeArity(E).

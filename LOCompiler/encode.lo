@@ -62,10 +62,12 @@ lo.comp.encode{
   encType(tipe("lo.core*integer"),L) => [0ci,..L].
   encType(tipe("lo.core*float"),L) => [0cf,..L].
   encType(tipe("lo.core*string"),L) => [0cS,..L].
-  encType(typeExp("lo.core*list",[E]),L) => [0cL,..encType(E,L)].
+  encType(tpFun(Nm,Ar),L) => [0cz,..encInt(Ar,encodeText(Nm,L))].
+  encType(typeExp(Op,[E]),L) => [0cL,..encType(E,L)] :- deRef(Op)=tpFun("lo.core*list",1).
   encType(kVar(Nm),L) => [0ck,..encodeText(Nm,L)].
+  encType(kFun(Nm,Ar),L) => [0cK,..encInt(Ar,encodeText(Nm,L))].
   encType(tipe(Nm),L) => [0ct,..encodeText(Nm,L)].
-  encType(typeExp(Nm,Els),L) => [0cU,..encodeText(Nm,encTypes(Els,L))].
+  encType(typeExp(Op,Els),L) => [0cU,..encType(deRef(Op),encTypes(Els,L))].
   encType(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
   encType(funType(A,R),L) => [0cF,..encType(A,encType(R,L))].
   encType(classType(A,R),L) => [0cC,..encType(A,encType(R,L))].

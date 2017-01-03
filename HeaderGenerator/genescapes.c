@@ -99,6 +99,17 @@ static char *dumpSig(char *sig, bufferPo out) {
       sig = dName(sig, out);
       outStr(O_IO(out), ")");
       break;
+    case kfun_sig:{
+      outStr(O_IO(out),"kFun(");
+      int ar;
+      sig = dInt(sig,&ar);
+      sig = dName(sig,out);
+      outStr(O_IO(out),",");
+      outInt(O_IO(out),ar);
+      outStr(O_IO(out),")");
+      break;
+    }
+
     case anon_sig:
       outStr(O_IO(out), "anonType");
       break;
@@ -118,9 +129,21 @@ static char *dumpSig(char *sig, bufferPo out) {
           outMsg(O_IO(out), ")");
       }
       break;
+
+    case tpfun_sig:{
+      outStr(O_IO(out),"tpFun(");
+      int ar;
+      sig = dInt(sig,&ar);
+      sig = dName(sig,out);
+      outStr(O_IO(out),",");
+      outInt(O_IO(out),ar);
+      outStr(O_IO(out),")");
+      break;
+    }
+
     case poly_sig:
       outStr(O_IO(out), "typeExp(");
-      sig = dName(sig, out);
+      sig = dumpSig(sig, out);
       outStr(O_IO(out), ",");
 
       sig = dSequence(sig, out);
@@ -202,8 +225,9 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case list_sig:
       outStr(O_IO(out), "typeExp(");
+      outStr(O_IO(out),"tpFun(");
       dumpStr("lo.core*list", out);
-      outStr(O_IO(out), ",[");
+      outStr(O_IO(out),",1),[");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), "])");
       break;

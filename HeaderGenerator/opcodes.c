@@ -10,6 +10,8 @@
 #undef instruction
 #define instruction(mnem,op,A1,A2,cmnt) fprintf(out," "#mnem "= " #op",\n");
 
+#define lastInstruction
+
 int main(int argc, char **argv) {
   FILE *out = stdout;
 

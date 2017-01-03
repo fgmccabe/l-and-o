@@ -20,6 +20,7 @@ addThisType(Tp,B,[(thisType,Tp)|B]).
 hasQuants(univType(_,_)).
   
 deQuant(univType(kVar(V),Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
+deQuant(univType(kFun(V,_),Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
 deQuant(Tp,B,B,Tp).
 
 evidence(Tp,FTp) :- skolemize(Tp,[],B,T0), freshn(T0,B,FTp).
@@ -43,8 +44,10 @@ frshn(anonType,_,anonType).
 frshn(voidType,_,voidType) :- !.
 frshn(thisType,B,Tp) :- (is_member((thisType,Tp),B),! ; Tp=thisType).
 frshn(kVar(TV),B,Tp) :- (is_member((TV,Tp),B),! ; Tp=kVar(TV)).
+frshn(kFun(TV,Ar),B,Tp) :- (is_member((TV,Tp),B),! ; Tp=kFun(TV,Ar)).
 frshn(V,_,V) :- isUnbound(V),!.
 frshn(type(Nm),_,type(Nm)).
+frshn(tpFun(Nm,Ar),_,tpFun(Nm,Ar)).
 frshn(funType(A,R),B,funType(FA,FR)) :-
   frshnTypes(A,B,FA),
   rewriteType(R,B,FR).
@@ -56,7 +59,7 @@ frshn(classType(A,R),B,classType(FA,FR)) :-
   rewriteType(R,B,FR).
 frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
-frshn(typeExp(O,A),B,typeExp(O,FA)) :- frshnTypes(A,B,FA).
+frshn(typeExp(O,A),B,typeExp(FO,FA)) :- frshn(O,B,FO),frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
   rewriteType(Tp,B0,FTp).
@@ -157,7 +160,7 @@ frze(classType(A,R),B,classType(FA,FR)) :-
   freeze(R,B,FR).
 frze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
 frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
-frze(typeExp(O,A),B,typeExp(O,FA)) :- freezeTypes(A,B,FA).
+frze(typeExp(O,A),B,typeExp(FO,FA)) :- freeze(O,B,FO),freezeTypes(A,B,FA).
 frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
   subtract((V,_),B,B0),
   freeze(Tp,B0,FTp).

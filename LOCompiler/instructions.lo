@@ -1,0 +1,107 @@
+/* Automatically generated, do not edit */
+lo.comp.instructions{
+  import lo.
+  public type instruction ::=              -- type defining the opcodes
+     iLbl(string)               -- label in code stream
+   | iHalt		-- stop execution
+   | iDie		-- stop current process
+   | iSucc		-- Succeed a clause
+   | iKawl(integer,string)		-- call to program
+   | iLkawl(integer,string)		-- last call to program
+   | iDlkawl(integer,string)		-- deallocating last call
+   | iKawlO(integer,integer)		-- call object method
+   | iLkawlO(integer,integer)		-- last method call
+   | iDlkawlO(integer,integer)		-- deallocating last variable call
+   | iGo_to(string)		-- jump
+   | iEscape(integer,string)		-- service function
+   | iAlloc(integer,integer)		-- allocate locals
+   | iDealloc		-- deallocate locals
+   | iTryme(string)		-- try inline clause
+   | iRetryme(string)		-- retry inline clause
+   | iTrustme		-- last inline clause
+   | iTrycl(string)		-- try clause
+   | iRetry(string)		-- retry clause
+   | iTrust(string)		-- last clause
+   | iFayl		-- fail current execution
+   | iCut		-- cut choice point
+   | iIndexi(integer,integer)		-- integer index jump
+   | iIndexl(integer)		-- list index
+   | iIndexs(integer,integer)		-- symbol index jump
+   | iIndexn(integer,integer)		-- numerical index jump
+   | iIndexx(integer,integer)		-- constructor index jump
+   | iTrpblk		-- start error block
+   | iTrpend		-- end error block
+   | iExcept(integer)		-- raise run-time exception
+   | iGcmap(integer,integer)		-- Set active arguments & local depth
+   | iGc(integer,integer)		-- Invoke GC if not enough space
+   | iSusp(integer,integer)		-- suspend/execute call
+   | iResume(integer)		-- continue from suspended call
+   | iTrgr(integer)		-- trigger suspended calls
+   | iUAA(integer,integer)		-- Unify argument registers
+   | iUAY(integer,integer)		-- Unify
+   | iUAS(integer)		-- Unify
+   | iUcAS(integer)		-- Unify with occurs check
+   | iUAlit(integer,string)		-- Unify with literal
+   | iUAcns(integer,string)		-- Unify with constructor
+   | iUYY(integer,integer)		-- Unify Y[h],Y[m]
+   | iUYS(integer)		-- Unify
+   | iUcYS(integer)		-- Unify with occurs check
+   | iUSlit(string)		-- Unify literal
+   | iUScns(string)		-- Unify constructor
+   | iUAcns0(string)		-- Unify A[0] with constructor
+   | iUAcns1(string)		-- Unify A[1] with constructor
+   | iUAcns2(string)		-- Unify A[2] with constructor
+   | iUAcns3(string)		-- Unify A[3] with constructor
+   | iUAcns4(string)		-- Unify A[4] with constructor
+   | iMAA(integer,integer)		-- Move
+   | iMAY(integer,integer)		-- Move
+   | iMuAY(integer,integer)		-- Move unsafe
+   | iMAS(integer)		-- Move
+   | iMAlit(integer,string)		-- Move literal
+   | iMAcns(integer,string)		-- Build constructor 
+   | iMYA(integer,integer)		-- Move
+   | iMYY(integer,integer)		-- Move
+   | iMYS(integer)		-- Move
+   | iMSA(integer)		-- Move
+   | iMSY(integer)		-- Move
+   | iMSlit(string)		-- Move literal
+   | iMScns(string)		-- Build constructor
+   | iOAU(integer)		-- Unbind A[h]
+   | iOYU(integer)		-- Unbind local
+   | iOYA(integer,integer)		-- Overwrite local
+   | iOYnil(integer)		-- Overwrite with empty list
+   | iCAA(integer,integer)		-- Match
+   | iCAY(integer,integer)		-- Match
+   | iCAS(integer)		-- Match
+   | iCAlit(integer,string)		-- Match literal
+   | iCAcns(integer,string)		-- Match constructor
+   | iCYA(integer,integer)		-- Match
+   | iCYS(integer)		-- Match
+   | iCSA(integer)		-- Match
+   | iCSY(integer)		-- Match
+   | iCSlit(string)		-- Match literal
+   | iCScns(string)		-- Match constructor
+   | iCAcns0(string)		-- Match constructor in A[0]
+   | iCAcns1(string)		-- Match constructor in A[1]
+   | iCAcns2(string)		-- Match constructor in A[2]
+   | iCAcns3(string)		-- Match constructor in A[3]
+   | iCAcns4(string)		-- Match constructor in A[4]
+   | iClAA(integer,integer)		-- First/clear
+   | iClAY(integer,integer)		-- First/clear
+   | iClAS(integer)		-- First/clear
+   | iClSA(integer)		-- First/clear
+   | iClSY(integer)		-- First/clear
+   | iVrA(integer)		-- Test for variable
+   | iVrY(integer)		-- Test for variable
+   | iNvrA(integer)		-- Test for non-variable
+   | iNvrY(integer)		-- Test for non-variable
+   | iVdA(integer)		-- Void A[h]
+   | iVdAA(integer,integer)		-- Void A[h],Count
+   | iVdY(integer)		-- Void Y[X]
+   | iVdYY(integer,integer)		-- Void Y[X],Count}
+   | iClA(integer)		-- Clear A[h]
+   | iClY(integer)		-- Clear Y[X]
+   | iClS		-- Clear S++
+   | iClYY(integer,integer).		-- Clear Y[X],Count
+
+}.

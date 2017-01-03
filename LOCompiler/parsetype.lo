@@ -52,15 +52,15 @@ lo.comp.parseType{
     parseConstraint(L,Env,Q,[],C0,Rp,Rp0),
     prsType(R,Env,Q,[],_,Inner,Rp0,Rpx),
     moveConstraints(Type,C0,Inner).
-  prsType(T,Env,Q,C,Cx,Tp,Rp,Rpx) :-
+  prsType(T,Env,Q,C,C,Tp,Rp,Rpx) :-
     isIden(T,Lc,Nm),
-    prsTypeName(Lc,Nm,Env,Q,C,Cx,Tp,Rp,Rpx).
+    prsTypeName(Lc,Nm,Env,Q,Tp,Rp,Rpx).
   prsType(Sq,Env,Q,C,Cx,Type,Rp,Rpx) :-
     isSquareTerm(Sq,Lc,Op,Args), 
     isIden(Op,_,Nm),
-    prsTypeName(Lc,Nm,Env,Q,C,C0,TpCon,Rp,Rp0),
-    prsTypes(Args,Env,Q,C0,Cx,ArgTps,Rp0,Rp1),
-    applyTypeExp(TpCon,ArgTps,Lc,Type,Rp1,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
+    prsTypeName(Lc,Nm,Env,Q,TpCon,Rp,Rp0),
+    prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp0,Rp1),
+    applyTypeExp(deRef(TpCon),ArgTps,Lc,Type,Rp1,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
   prsType(F,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",_,L,R),
     prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
@@ -93,10 +93,14 @@ lo.comp.parseType{
     reportError("cannot understand type \(T)",T.loc,Rp,Rpx).
 
   private applyTypeExp:(tipe,list[tipe],location,tipe,report,report){}.
-  applyTypeExp(typeExp(Op,A),Args,_,typeExp(Op,Args),Rp,Rp) :-
-    length(A) = length(Args).
+  applyTypeExp(Op,Args,_,typeExp(Op,Args),Rp,Rp) :-
+    validTypeOp(Op,length(Args))!.
   applyTypeExp(T,Args,Lc,voidType,Rp,Rpx) :-
     reportError("cannot apply type exp \(T) to \(Args)",Lc,Rp,Rpx).
+
+  validTypeOp:(tipe,integer){}.
+  validTypeOp(tpFun(_,Ar),Ar).
+  validTypeOp(kFun(_,Ar),Ar).
 
   private prsTypes:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],report,report){}.
   prsTypes([],_,_,C,C,[],Rp,Rp).
@@ -115,17 +119,14 @@ lo.comp.parseType{
     reportError("\(A) is not a valid field designator",A.loc,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C,Cx,ArgTypes,Rp0,Rpx).
 
-  prsTypeName:(location,string,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
-  prsTypeName(_,"_",_,_,C,C,anonType,Rp,Rp).
-  prsTypeName(_,"void",_,_,C,C,voidType,Rp,Rp).
-  prsTypeName(_,"this",_,_,C,C,thisType,Rp,Rp).
-  prsTypeName(_,Id,_,B,C,C,Tp,Rp,Rp) :- present(B,Id,Tp).
-  prsTypeName(_,Id,Env,_,C,Cx,Type,Rp,Rp) :- 
-    isType(Id,Env,_,Tp),
-    (_,FT) = freshen(Tp,[]),
-    moveConstraints(FT,C0,Type),
-    mergeConstraints(C0,C,Cx).
-  prsTypeName(Lc,Id,_,_,C,C,anonType,Rp,Rpx) :- 
+  prsTypeName:(location,string,list[env],map[string,tipe],tipe,report,report){}.
+  prsTypeName(_,"_",_,_,anonType,Rp,Rp).
+  prsTypeName(_,"void",_,_,voidType,Rp,Rp).
+  prsTypeName(_,"this",_,_,thisType,Rp,Rp).
+  prsTypeName(_,Id,_,B,Tp,Rp,Rp) :- present(B,Id,Tp).
+  prsTypeName(_,Id,Env,_,Tp,Rp,Rp) :- 
+    isType(Id,Env,_,Tp).
+  prsTypeName(Lc,Id,_,_,anonType,Rp,Rpx) :- 
     reportError("type \(Id) not declared",Lc,Rp,Rpx).
 
   public parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
@@ -133,6 +134,11 @@ lo.comp.parseType{
     isBinary(P,",",_,L,R),
     parseTypeBound(L,BV,B0,Env,QT,Q0),
     parseTypeBound(R,B0,Bound,Env,Q0,Inner).
+  parseTypeBound(V,B,B1,Env,univType(kFun(Nm,Ar),Inner),Inner) :-
+    isBinary(V,"/",_,L,R),
+    isInt(L,_,Ar),
+    isIden(R,_,Nm),
+    B1 = B[Nm->kFun(Nm,Ar)].
   parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm),
     B1 = B[Nm->kVar(Nm)].
@@ -246,30 +252,31 @@ lo.comp.parseType{
   parseConBound(V,B,B[Nm->kVar(Nm)],Env,univCon(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm).
 
-  public parseTypeTemplate:(ast,list[env],tipe,string,report,report){}.
-  parseTypeTemplate(St,Env,Type,Path,Rp,Rpx) :-
+  public parseTypeCore:(ast,tipe,string){}.
+  parseTypeCore(St,Type,Path) :-
     isUnary(St,"type",_,L),
-    parseTpTemplate(L,[],Env,[],Cx,Tp,Path,Rp,Rpx),
-    wrapConstraints(Cx,Tp,Type).
-
-  parseTpTemplate:(ast,map[string,tipe],list[env],list[constraint],list[constraint],tipe,string,report,report){}.
-  parseTpTemplate(St,B,Env,C,C,Type,Path,Rp,Rpx) :-
-    isQuantified(St,V,Body),
-    parseTypeBound(V,B,BB,Env,Type,Tmplte),
-    parseTpTemplate(Body,BB,Env,[],Cx,Inner,Path,Rp,Rpx),
-    wrapConstraints(Cx,Inner,Tmplte).
-  parseTpTemplate(St,B,Env,C0,Cx,Type,Path,Rp,Rpx) :-
-    isBinary(St,"|:",_,L,R),
-    parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
-    parseTpTemplate(R,B,Env,C1,Cx,Type,Path,Rp0,Rpx).
-  parseTpTemplate(St,B,Env,Cx,Cx,Type,Path,Rp,Rpx) :-
+    parseTypeCore(L,Type,Path).
+  parseTypeCore(St,Type,Path) :-
+    isQuantified(St,_,Body),
+    parseTypeCore(Body,Type,Path).
+  parseTypeCore(St,Type,Path) :-
+    isBinary(St,"|:",_,_,R),
+    parseTypeCore(R,Type,Path).
+  parseTypeCore(St,Type,Path) :-
     isBinary(St,"<~",_,L,_),
-    parseTypeHead(L,B,Type,Path,Rp,Rpx)!.
+    parseTypeCore(L,Type,Path).
+  parseTypeCore(N,tipe(TpNm),Path) :-
+    isIden(N,_,Nm),
+    subPath(Path,marker(tpe),Nm,TpNm).
+  parseTypeCore(T,tpFun(TpNm,length(A)),Path) :-
+    isSquare(T,_,N,A),
+    isIden(N,_,Nm),
+    subPath(Path,marker(tpe),Nm,TpNm).
 
   parseTypeHead:(ast,map[string,tipe],tipe,string,report,report){}.
   parseTypeHead(N,_,tipe(subPath(Path,marker(tpe),Nm)),Path,Rp,Rp) :-
     isIden(N,_,Nm).
-  parseTypeHead(N,B,typeExp(subPath(Path,marker(tpe),TpNm),Args),Path,Rp,Rpx) :-
+  parseTypeHead(N,B,typeExp(tipe(subPath(Path,marker(tpe),TpNm)),Args),Path,Rp,Rpx) :-
     isSquareTerm(N,_,Nm,A),
     isIden(Nm,_,TpNm),
     parseHeadArgs(A,B,Args,Rp,Rpx).

@@ -63,9 +63,11 @@ decodeType(type("lo.core*float")) --> ['f'].
 decodeType(type("lo.core*string")) --> ['S'].
 decodeType(type("lo.core*logical")) --> ['l'].
 decodeType(kVar(Nm)) --> ['k'], decodeText(Nm).
+decodeType(kFun(Nm,Ar)) --> ['K'], typeLen(Ar), decodeText(Nm).
 decodeType(type(Nm)) --> ['t'], decodeText(Nm).
-decodeType(typeExp("lo.core*list",[ElTp])) --> ['L'], decodeType(ElTp).
-decodeType(typeExp(Nm,ArgTypes)) --> ['U'], decodeText(Nm), decodeTypes(ArgTypes).
+decodeType(tpFun(Nm,Ar)) --> ['z'], typeLen(Ar), decodeText(Nm).
+decodeType(typeExp(type("lo.core*list"),[ElTp])) --> ['L'], decodeType(ElTp).
+decodeType(typeExp(Op,ArgTypes)) --> ['U'], decodeType(Op), decodeTypes(ArgTypes).
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).

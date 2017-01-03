@@ -9,8 +9,10 @@ typedef enum {
     string_sig = 'S', /* String */
     logical_sig = 'l', /* Logical value */
     kvar_sig = 'k', /* quantified type variable */
+    kfun_sig = 'K', /* quantified type function */
     void_sig = 'v', /* Bottom type - no value has this type */
     type_sig = 't',                         /* A type */
+    tpfun_sig = 'z', /* A type function */
     this_sig = 'h', // this type is a special type
 
   /* Compound type signatures */

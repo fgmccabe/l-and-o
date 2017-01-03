@@ -1,0 +1,7 @@
+lo.monad{
+  public contract all m ~~ monad[m] <~ {
+    (>>=) : all a,b ~~ (m[a],(a)=>m[b]) => m[b].
+    return: all a ~~ (a) => m[a].
+    raise: (string) => m[a].
+  }
+}

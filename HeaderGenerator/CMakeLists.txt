@@ -14,4 +14,10 @@ target_link_libraries(ops ooio)
 
 set(ESC_SOURCE_FILES genescapes.c)
 add_executable(genesc ${ESC_SOURCE_FILES})
+
 target_link_libraries(genesc ooio)
+
+set(INS_SOURCE_FILES instr.c)
+add_executable(genins ${INS_SOURCE_FILES})
+
+target_link_libraries(genins ooio)

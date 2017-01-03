@@ -1,5 +1,5 @@
 :- module(parsetype,[parseType/3,
-  parseTypeRule/4,parseTypeTemplate/5,parseContract/4,parseContractConstraint/4,rewriteConstraints/4]).
+  parseTypeRule/4,parseTypeCore/3,parseContract/4,parseContractConstraint/4,rewriteConstraints/4]).
 
 :- use_module(abstract).
 :- use_module(dict).
@@ -69,23 +69,25 @@ parseTypeName(_,"_",_,_,C,C,anonType).
 parseTypeName(_,"void",_,_,C,C,voidType).
 parseTypeName(_,"this",_,_,C,C,thisType).
 parseTypeName(_,Id,_,B,C,C,Tp) :- is_member((Id,Tp),B),!.
-parseTypeName(_,Id,Env,_,C,Cx,Tp) :-
-  isType(Id,Env,tpDef(_,Tp,_)),
-  moveQuants(Tp,_,TQ),
-  moveConstraints(TQ,C,Cx,Tp).
+parseTypeName(_,Id,Env,_,C,C,TpSpec) :-
+  isType(Id,Env,tpDef(_,TpSpec,_)).
 parseTypeName(Lc,Id,_,_,C,C,anonType) :- 
   reportError("type %s not declared",[Id],Lc).
 
-parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,Tp) :- 
-  parseTypes(Args,Env,B,C0,C1,ArgTps),
-  ( isType(N,Env,tpDef(_,T,_)) -> checkType(T,Lc,ArgTps,C1,Cx,Tp) ; reportError("type %s not known",[N],Lc), Tp = typeExp(N,ArgTps), Cx=C1).
+parseTypeSquare(Lc,Id,Args,Env,B,C0,Cx,Tp) :-
+  parseTypeName(Lc,Id,Env,B,C0,C1,Op),
+  parseTypes(Args,Env,B,C1,Cx,ArgTps),
+  applyTypeExp(Lc,Op,ArgTps,Env,Tp).
 
-checkType(T,Lc,ArgTps,C1,Cx,typeExp(Op,ArgTps)) :-
-  moveQuants(T,_,TT),
-  moveConstraints(TT,C,typeExp(Op,AT)),
-  sameLength(AT,ArgTps,Lc),
-  bindAT(AT,ArgTps,[],CQ),
-  rewriteConstraints(C,CQ,C1,Cx).
+applyTypeExp(_,Op,ArgTps,_,typeExp(DOp,ArgTps)) :-
+  deRef(Op,DOp),
+  length(ArgTps,Ar),
+  validTypeOp(DOp,Ar).
+applyTypeExp(Lc,Op,ArgTps,_,voidType) :-
+  reportError("type %s not applicable to args %s",[Op,ArgTps],Lc).
+
+validTypeOp(kFun(_,Ar),Ar).
+validTypeOp(tpFun(_,Ar),Ar).
 
 bindAT([],_,Q,Q).
 bindAT(_,[],Q,Q).
@@ -93,6 +95,10 @@ bindAT([kVar(N)|L1],[kVar(N)|L2],Q,Qx) :-
   bindAT(L1,L2,Q,Qx).
 bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
   bindAT(L,TL,[(V,Tp)|Q],Qx).
+bindAT([kFun(N,Ar)|L1],[kFun(N,Ar)|L2],Q,Qx) :-
+  bindAT(L1,L2,Q,Qx).
+bindAT([kFun(N,_)|L],[Tp|TL],Q,Qx) :-
+  bindAT(L,TL,[(N,Tp)|Q],Qx).
 
 rewriteConstraints([],_,Cx,Cx).
 rewriteConstraints([Con|Cons],Q,C0,Cx) :-
@@ -106,6 +112,10 @@ parseBound(P,BV,Bound,QT,Inner) :-
   parseBound(R,B0,Bound,Q0,Inner).
 parseBound(V,B,[(N,kVar(N))|B],univType(kVar(N),Inner),Inner) :-
   isIden(V,N).
+parseBound(V,B,[(N,kFun(N,Ar))|B],univType(kFun(Nm,Ar),Inner),Inner) :-
+  isBinary(V,"/",L,R),
+  isInteger(R,Ar),
+  isIden(L,_,Nm).
 parseBound(T,B,B,Inner,Inner) :-
   locOfAst(T,Lc),
   reportError("invalid bound variable: %s",[T],Lc).
@@ -249,7 +259,8 @@ getFace(type(Nm),Env,F) :-
   isType(Nm,Env,tpDef(_,_,FR)),
   moveQuants(FR,_,FQR),
   moveConstraints(FQR,_,typeRule(_,F)).
-getFace(typeExp(Nm,Args),Env,Face) :-
+getFace(typeExp(Op,Args),Env,Face) :-
+  deRef(Op,type(Nm)),
   isType(Nm,Env,tpDef(_,_,FR)),
   moveQuants(FR,_,FQR),
   moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
@@ -259,40 +270,40 @@ getFace(type(Nm),Env,Face) :- !,
   isType(Nm,Env,tpDef(_,_,FaceRule)),
   freshen(FaceRule,voidType,_,typeRule(Lhs,Face)),
   sameType(type(Nm),Lhs,Env),!.
-getFace(typeExp(Nm,Args),Env,Face) :- !,
-  isType(Nm,Env,tpDef(_,_,FaceRule)),
-  freshen(FaceRule,voidType,_,Rl),
-  moveConstraints(Rl,_,typeRule(Lhs,Face)),
-  sameType(Lhs,typeExp(Nm,Args),Env),!.
 getFace(T,Env,faceType(Face)) :- isUnbound(T), !,
   constraints(T,C),
   collectImplements(C,Env,[],Face).
 
-parseTypeTemplate(St,B,Env,Type,Path) :-
+parseTypeCore(St,Type,Path) :-
   isUnary(St,"type",L),
-  parseTypeTemplate(L,B,Env,[],Cx,Tp,Path),
-  wrapConstraints(Cx,Tp,Type).
-
-parseTypeTemplate(St,B,Env,C,C,Type,Path) :-
-  isQuantified(St,V,Body),
-  parseBound(V,B,BB,Type,Tmplte),
-  parseTypeTemplate(Body,BB,Env,[],Cx,Inner,Path),
-  wrapConstraints(Cx,Inner,Tmplte).
-parseTypeTemplate(St,B,Env,C0,Cx,Type,Path) :-
-  isBinary(St,"|:",L,R),
-  parseConstraint(L,Env,B,C0,C1),
-  parseTypeTemplate(R,B,Env,C1,Cx,Type,Path).
-parseTypeTemplate(St,B,Env,Cx,Cx,Type,Path) :-
+  parseTypeCore(L,Type,Path).
+parseTypeCore(St,Type,Path) :-
+  isQuantified(St,_,Body),
+  parseTypeCore(Body,Type,Path).
+parseTypeCore(St,Type,Path) :-
+  isBinary(St,"|:",_,R),
+  parseTypeCore(R,Type,Path).
+parseTypeCore(St,Type,Path) :-
   isBinary(St,"<~",L,_),
-  parseTypeHead(L,B,Env,Type,Path),!.
+  parseTypeCore(L,Type,Path).
+parseTypeCore(N,type(TpNm),Path) :-
+  isIden(N,_,Nm),
+  marker(type,Marker),
+  subPath(Path,Marker,Nm,TpNm).
+parseTypeCore(N,tpFun(TpNm,Ar),Path) :-
+  isSquare(N,_,Nm,A),
+  length(A,Ar),
+  marker(type,Marker),
+  subPath(Path,Marker,Nm,TpNm).
 
 parseTypeHead(N,_,_,type(TpNm),Path) :-
   isIden(N,_,Nm),
   marker(type,Marker),
   subPath(Path,Marker,Nm,TpNm).
-parseTypeHead(N,B,_,typeExp(TpNm,Args),Path) :-
+parseTypeHead(N,B,_,typeExp(tpFun(TpNm,Ar),Args),Path) :-
   isSquare(N,_,Nm,A),
   parseHeadArgs(A,B,Args),
+  length(Args,Ar),
   marker(type,Marker),
   subPath(Path,Marker,Nm,TpNm).
 

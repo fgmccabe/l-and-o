@@ -1,6 +1,6 @@
 /*
-  Specification of the Go! Machine Instruction set
-  Copyright (c) 2016. Francis G. McCabe
+  Specification of the L&O Machine Instruction set
+  Copyright (c) 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -129,12 +129,14 @@ instruction(vrY,167,iLc,nOp,"Test for variable")
 instruction(nvrA,168,iAh,nOp,"Test for non-variable")
 instruction(nvrY,169,iLc,nOp,"Test for non-variable")
 
-instruction(vdA,180,oAh,nOp,"Void \\q{A[h]}")
-instruction(vdAA,181,oAh,Ltl,"Void \\q{A[h],Count}")
-instruction(vdY,182,oLc,nOp,"Void \\q{Y[X]}")
-instruction(vdYY,183,oLc,uLt,"Void \\q{Y[X],Count}")
-instruction(clA,184,oAh,nOp,"Clear \\q{A[h]}")
-instruction(clY,185,oLc,nOp,"Clear \\q{Y[X]}")
-instruction(clS,187,oSt,nOp,"Clear \\q{S++}")
-instruction(clYY,188,oLc,uLt,"Clear \\q{Y[X],Count}")
+instruction(vdA,180,oAh,nOp,"Void A[h]")
+instruction(vdAA,181,oAh,Ltl,"Void A[h],Count")
+instruction(vdY,182,oLc,nOp,"Void Y[X]")
+instruction(vdYY,183,oLc,uLt,"Void Y[X],Count}")
+instruction(clA,184,oAh,nOp,"Clear A[h]")
+instruction(clY,185,oLc,nOp,"Clear Y[X]")
+instruction(clS,187,oSt,nOp,"Clear S++")
+
+lastInstruction
+instruction(clYY,188,oLc,uLt,"Clear Y[X],Count")
 

@@ -21,7 +21,7 @@ lo.comp.typecheck{
   import lo.comp.resolve.
 
   public checkProgram:(ast,version,repository,report,report)=>canonPkg.
-  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,computeImports(Public,Imports)),ImportClosure,ODefs,OOthers) :-
+  checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,Imports),ImportClosure,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
@@ -35,7 +35,7 @@ lo.comp.typecheck{
   computeImports(Pub,[pkgSpec(pkg(Pk,V),_,_,_,_,_,_),..Pkgs]) => [(exportViz(Pk,imp,Pub),pkg(Pk,V)),..computeImports(Pub,Pkgs)].
 
   private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
-      list[canonDef],list[(string,defnKind)],list[pkgSpec],list[pkgSpec],list[canonOther],report,report){}.
+      list[canonDef],list[(string,defnKind)],list[(visibility,pkg)],list[pkgSpec],list[canonOther],report,report){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,ImportClosure,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
     -- _logmsg("After rewrite: \(Stmts)"),
@@ -62,25 +62,28 @@ lo.comp.typecheck{
     isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
     typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
-  processImportGroup:(list[ast],list[pkgSpec],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
-  processImportGroup(Stmts,ImportSpecs,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
+  processImportGroup:(list[ast],list[(visibility,pkg)],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
+  processImportGroup(Stmts,Imports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
-    ImportSpecs = importPkgs(Imports,[],Repo,Rp,Rp0),
-    ImportClosure = importClosure(Imports,[],Repo,Rp0,Rpx),
+    ImportedPkgs = mapList(Imports,second),
+    ImportClosure = importClosure(ImportedPkgs,[],Repo,Rp,Rpx),
     importAllDefs(ImportClosure,Lc,Repo,Env,Ex).
 
-  findAllImports:(list[ast],list[pkg]){}.
+  findAllImports:(list[ast],list[(visibility,pkg)]){}.
   findAllImports([],[]).
-  findAllImports([St,..More],[findImport(St),..Imports]) :-
+  findAllImports([St,..More],[findImport(St,priVate),..Imports]) :-
     findAllImports(More,Imports).
 
-  findImport:(ast)=>pkg.
-  findImport(St) => findImport(I) :-
+  findImport:(ast,visibility)=>(visibility,pkg).
+  findImport(St,_) => findImport(I,priVate) :-
     isUnary(St,"private",_,I).
-  findImport(St) => findImport(I):-
+  findImport(St,_) => findImport(I,pUblic):-
     isUnary(St,"public",_,I).
-  findImport(St) => pkgName(P) :-
+  findImport(St,Viz) => (Viz,pkgName(P)) :-
     isUnary(St,"import",_,P).
+
+  private second:all u,v ~~ ((u,v))=>v.
+  second((a,b)) => b.
 
   addPublicImports:(list[(visibility,pkg)],location,list[(location,visibility,pkg)]){}.
   addPublicImports([],_,[]).
@@ -109,8 +112,11 @@ lo.comp.typecheck{
   importTypes([(Nm,Rule),..More],Lc,Env) => importTypes(More,Lc,declareType(Nm,tpDef(Lc,pickTypeTemplate(Rule),Rule),Env)).
 
   pickTypeTemplate:(tipe)=>tipe.
-  pickTypeTemplate(univType(B,Tp)) => univType(B,pickTypeTemplate(Tp)).
-  pickTypeTemplate(typeRule(Lhs,_)) => Lhs.
+  pickTypeTemplate(univType(B,Tp)) => pickTypeTemplate(Tp).
+  pickTypeTemplate(typeRule(Lhs,_)) => pickTypeTemplate(Lhs).
+  pickTypeTemplate(constrained(Tp,_)) => pickTypeTemplate(Tp).
+  pickTypeTemplate(tipe(Nm)) => tipe(Nm).
+  pickTypeTemplate(typeExp(Op,_)) => Op.
 
   importContracts:(list[conEntry],location,list[env])=>list[env].
   importContracts([],_,Env)=>Env.
@@ -155,8 +161,8 @@ lo.comp.typecheck{
     ( isType(N,Env,OLc,_) ?
         reportError("type \(N) already defined at \(OLc)",Lc,Rp,Rpx),
         Ex = Env |
-        parseTypeTemplate(St,Env,Type,Path,Rp,Rpx),
-        Ex = declareType(N,tpDef(Lc,Type,faceType([])),Env)).
+        parseTypeCore(St,Env,TpCore,Path,Rp,Rpx),
+        Ex = declareType(N,tpDef(Lc,TpCore,faceType([])),Env)).
 
   private parseTypeDefs:(list[defn],list[canonDef],list[canonDef],list[env],string,report,report){}.
   parseTypeDefs([],Defs,Defs,_,_,Rp,Rp).
@@ -612,8 +618,9 @@ lo.comp.typecheck{
   private isMapType:(tipe,location,list[env]){}.
   isMapType(Tp,Lc,Env) :-
     isType("map",Env,_,T),
-    moveQuants(T,_,typeExp(MpOp,_)),
-    typeExp(MpOp,_) = deRef(Tp).
+    moveQuants(T,_,typeExp(MpTp,_)),
+    typeExp(MpOp,_) = deRef(Tp),
+    deRef(MpOp)=MpTp.
  
   -- Looks for ,.. at end, and no -> in the elements
   private isListSequence:(list[ast]){}.
@@ -623,8 +630,9 @@ lo.comp.typecheck{
   private isListType:(tipe,location,list[env]){}.
   isListType(Tp,Lc,Env) :-
     isType("list",Env,_,T),
-    moveQuants(T,_,typeExp(MpOp,_)),
-    typeExp(MpOp,_) = deRef(Tp).
+    moveQuants(T,_,typeExp(LsTp,_)),
+    typeExp(LsOp,_) = deRef(Tp),
+    deRef(LsOp)=LsTp.
 
   private typeOfListTerm:(list[ast],location,tipe,tipe,list[env],list[env],canonTerm,report,report){}.
   typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp,Rp,Rpx) :-
@@ -891,9 +899,8 @@ lo.comp.typecheck{
   pickupThisType(_) => [].
 
   private findType:(string,location,list[env],report,report) => tipe.
-  findType(Nm,_,Env,Rp,Rp) => FTp :-
-    isType(Nm,Env,_,T),
-    (_,FTp) = freshen(T,pickupThisType(Env)).
+  findType(Nm,_,Env,Rp,Rp) => Tp :-
+    isType(Nm,Env,_,Tp).
   findType(Nm,Lc,_,Rp,Rpx) => anonType :-
     reportError("type \(Nm) not known",Lc,Rp,Rpx).
 

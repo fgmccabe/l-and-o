@@ -11,8 +11,6 @@
   infixOp(":-",1219,1220,1219).	 /* clause arrow */
   infixOp("|",1219,1220,1220).	 /* type union and disjunction */
   infixOp("?",1199,1200,1199).	 /* conditional operator */
-  infixOp("<=>",1199,1200,1199).	 /* class constructor type */
-  infixOp("=>",1199,1200,1199).	 /* function arrow */
   infixOp("-->",1199,1200,1199).	 /* grammar rule */
   infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
@@ -21,7 +19,10 @@
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=",949,950,949).	 /* class rule arrow */
+  infixOp("<=>",949,950,949).	 /* class constructor type */
+  infixOp("=>",949,950,949).	 /* function arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
+  infixOp(">>=",949,950,950).	 /* monadic bind */
   infixOp("->",899,900,899).	 /* map entry */
   infixOp("=",899,900,899).	 /* unifies predicate */
   infixOp("==",899,900,899).	 /* equality predicate */
@@ -61,6 +62,7 @@
   prefixOp("implementation",1260,1259).	 /* contract implementation */
   prefixOp("type",1260,1259).	 /* type definition */
   prefixOp("all",1245,1244).	 /* universal quantifier */
+  prefixOp("exists",1245,1244).	 /* existential quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
   prefixOp("import",900,899).	 /* import module */
@@ -136,6 +138,8 @@
   follows('=','>','=>').
   follows('','>','>').
   follows('>','=','>=').
+  follows('>','>','>>').
+  follows('>>','=','>>=').
   follows('','?','?').
   follows('','@','@').
   follows('@','@','@@').
@@ -191,6 +195,7 @@
   final('=>',"=>").	 /* function arrow */
   final('>',">").	 /* greater than */
   final('>=',">=").	 /* greater than or equal */
+  final('>>=',">>=").	 /* monadic bind */
   final('?',"?").	 /* conditional operator */
   final('@',"@").	 /* tau pattern */
   final('@@',"@@").	 /* guard marker */

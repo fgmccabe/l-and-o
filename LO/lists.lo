@@ -67,6 +67,15 @@ lo.list{
   mapList([],_) => [].
   mapList([e,..l],f) => [f(e),..mapList(l,f)].
 
+  public implementation all e ~~ filter[list[e]->>e] .. {
+    filter(L,P) => filterList(L,P).
+  }
+
+  filterList:all e ~~ (list[e],(e){})=>list[e].
+  filterList([],_) => [].
+  filterList([e,..l],p) => [e,..filterList(l,p)] :- p(e).
+  filterList([_,..l],p) => filterList(l,p).
+
   public implementation all e,f ~~ coercion[e,f] |: coercion[list[e],list[f]] .. {
     _coerce(Sx) => coerceList(Sx).
   }

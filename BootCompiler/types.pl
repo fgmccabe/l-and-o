@@ -71,6 +71,7 @@ occursIn(TV,Tp) :- deRef(Tp,DTp), \+ isIdenticalVar(TV,DTp), TV = tVar(_,_,_,Id)
 
 occIn(Id,tVar(_,_,_,Id)) :-!.
 occIn(Id,tVar(Curr,_,_,_)) :- nonvar(Curr), !, occIn(Id,Curr).
+occIn(Id,typeExp(O,_)) :- occIn(Id,O),!.
 occIn(Id,typeExp(_,L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,tupleType(L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,funType(L,_)) :- is_member(A,L), occIn(Id,A).
@@ -100,10 +101,12 @@ showType(anonType,O,Ox) :- appStr("_",O,Ox).
 showType(voidType,O,Ox) :- appStr("void",O,Ox).
 showType(thisType,O,Ox) :- appStr("this",O,Ox).
 showType(kVar(Nm),O,Ox) :- appStr(Nm,O,Ox).
+showType(kFun(Nm,Ar),O,Ox) :- appStr(Nm,O,O1),appStr("/",O1,O2),appInt(Ar,O2,Ox).
 showType(tVar(Curr,_,_,_),O,Ox) :- nonvar(Curr),!,showType(Curr,O,Ox).
 showType(tVar(_,_,Nm,Id),O,Ox) :- appStr("%",O,O1),appStr(Nm,O1,O2),appSym(Id,O2,Ox).
 showType(type(Nm),O,Ox) :- appStr(Nm,O,Ox).
-showType(typeExp(Nm,A),O,Ox) :- appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,Ox).
+showType(tpFun(Nm,Ar),O,Ox) :- appStr(Nm,O,O1),appStr("%",O1,O2),appInt(Ar,O2,Ox).
+showType(typeExp(Nm,A),O,Ox) :- showType(Nm,O,O1), appStr("[",O1,O2),showTypeEls(A,O2,O3),appStr("]",O3,Ox).
 showType(tupleType(A),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,Ox).
 showType(funType(A,R),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("=>",O3,O4), showType(R,O4,Ox).
 showType(grammarType(A,R),O,Ox) :- appStr("(",O,O1), showTypeEls(A,O1,O2), appStr(")",O2,O3), appStr("-->",O3,O4), showType(R,O4,Ox).
@@ -199,8 +202,10 @@ surfaceNames([T|L],Sep,S0,Sx) :-
   surfaceNames(L,Sep,S2,Sx).
 
 surfaceName(type(Nm),Nm).
-surfaceName(typeExp(Nm,_),Nm).
+surfaceName(typeExp(Op,_),Nm) :- deRef(Op,type(Nm)).
 surfaceName(kVar(Nm),Nm).
+surfaceName(kFUn(Nm,_),Nm).
+surfaceName(tpFun(Nm,_),Nm).
 surfaceName(tupleType(Els),Nm) :-
   length(Els,Ar),
   swritef(Nm,"()%d",[Ar]).

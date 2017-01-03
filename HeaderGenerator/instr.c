@@ -1,32 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
-#include "../Engine/Headers/opcodes.h"
+#include "opcodes.h"
+#include "stringBuffer.h"
+#include "formio.h"
 
 #undef instruction
-#define instruction(M,O,A1,A2,cmt)  genIns(out,#M,A1,A2,cmt);
+#define instruction(M,O,A1,A2,cmt)  genIns(out,#M,A1,A2,cmt,term);
 
-static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt);
+#undef lastInstruction
+#define lastInstruction term = ".";
+
+static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt,char *term);
+
+char *prefix = "";
+
+int getOptions(int argc, char **argv) {
+  int opt;
+  extern char *optarg;
+  extern int optind;
+
+  while ((opt = getopt(argc, argv, "c:")) >= 0) {
+    switch (opt) {
+      case 'c':
+        prefix = optarg;
+        break;
+      default:;
+    }
+  }
+  return optind;
+}
 
 int main(int argc,char **argv)
 {
-  FILE *out=stdout;
+  int narg = getOptions(argc, argv);
 
-  if(argc>=2)
-    out = fopen(argv[1],"w");
+  if (narg < 0) {
+    fprintf(stdout, "bad args");
+    exit(1);
+  } else {
+    FILE *out=stdout;
+    char *term = "";
 
-  fprintf(out,"/* Automatically generated, do not edit */\n");
-  
-  fprintf(out,"instruction ::=              -- type defining the opcodes\n");
-  fprintf(out,"   lbl(symbol)               -- label in code stream\n");
-  fprintf(out," | cmt(string)               -- comment code stream\n");
+    if (narg < argc)
+      out = fopen(argv[narg], "w");
 
-#include "instructions.h"
+    fprintf(out,"/* Automatically generated, do not edit */\n");
+
+    fprintf(out, "%s{\n", prefix);
+    fprintf(out, "  import lo.\n");
+
+
+    fprintf(out,"  public type instruction ::=              -- type defining the opcodes\n");
+    fprintf(out,"     iLbl(string)               -- label in code stream\n");
+
+  #include "instructions.h"
+      
+    fprintf(out, "\n}.\n");
     
-  fprintf(out,";                           -- end of instruction type\n");
-  fclose(out);
-  exit(0);
+    exit(0);
+  }
 }
 
 static char *genOpAnd(FILE *f,char *sep,opAndSpec A)
@@ -48,7 +83,7 @@ static char *genOpAnd(FILE *f,char *sep,opAndSpec A)
   case oLm:				/* output local offet 0..255 */
   case oLl:				/* output local offet 0..255 */
   case oLc:                             // output local variable offset  (0..65535)
-    fprintf(f,"%snumber",sep);
+    fprintf(f,"%sinteger",sep);
     return ",";
   case iSt:                             // input at current structure pointer
   case oSt:                             // output to current structure pointer
@@ -56,37 +91,47 @@ static char *genOpAnd(FILE *f,char *sep,opAndSpec A)
   case oAr:				/* Result arity in upper slot */
   case uAr:                             // Arity in upper slot
   case uLt:                             // small literal in upper slot (-128..127)
-  case Lt:                              // 16bit literal (-32768..32767)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:             		// Structure size
-    fprintf(f,"%snumber",sep);
+  case cSz:             		            // Structure size
+  case Ltl:                             // 16 bit integer offset
+    fprintf(f,"%sinteger",sep);
     return ",";
   case Es:                              // escape code (0..65535)
-    fprintf(f,"%schar[]",sep);
+    fprintf(f,"%sstring",sep);
     return ",";
   case pcr:                             // program counter relative offset (-32768..32767)
   case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
   case ltl:                             // literal number (0..65535)
-    fprintf(f,"%ssymbol",sep);
+    fprintf(f,"%sstring",sep);
     return ",";
   default:
     printf("Problem in generating opcode type\n");
     exit(11);
   }
 }
-        
-static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt)
+
+static char *capitalize(char *str); 
+static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt,char *term)
 {
   char *sep = "(";
   
-  fprintf(out," | %s",op);
+  fprintf(out,"   | i%s",capitalize(op));
   
   sep = genOpAnd(out,sep,A1);
   sep = genOpAnd(out,sep,A2);
   
   if(strcmp(sep,",")==0)
-    fprintf(out,")\t\t-- %s\n",cmt);
+    fprintf(out,")%s\t\t-- %s\n",term,cmt);
   else
-    fprintf(out,"\t\t-- %s\n",cmt);
+    fprintf(out,"%s\t\t-- %s\n",term,cmt);
+}
+
+static char *capitalize(char *str){
+  static char buffer[128];
+  strcpy(buffer,str);
+  if(buffer[0]>='a' && buffer[0]<='z'){
+    buffer[0] = 'A'+(buffer[0]-'a');
+  }
+  return buffer;
 }
