@@ -78,7 +78,7 @@ importTypes([(Nm,Rule)|More],Lc,Env,Ex) :-
   declareType(Nm,tpDef(Lc,Type,Rule),Env,E0),
   importTypes(More,Lc,E0,Ex).
 
-pickTypeTemplate(univType(B,Tp),univType(B,XTp)) :-
+pickTypeTemplate(univType(_,Tp),XTp) :-
   pickTypeTemplate(Tp,XTp).
 pickTypeTemplate(typeRule(Lhs,_),Tmp) :-
   pickTypeTemplate(Lhs,Tmp).
@@ -700,7 +700,7 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
 % Analyse a list term to try to disambiguate maps from lists.
 
 checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp) :-
-  (isMapSequence(Els) ; isMapType(Tp,Lc,Env)) ->
+  (isMapSequence(Els) ; isMapType(Tp,Env)) ->
     macroMapEntries(Lc,Els,Trm),
     newTypeVar("k",KT),
     newTypeVar("v",VT),
@@ -708,7 +708,7 @@ checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp) :-
     MapTp = typeExp(MapOp,[KT,VT]),
     checkType(Lc,MapTp,Tp,Env),
     typeOfTerm(Trm,Tp,Env,Ev,Exp);
-  (isListSequence(Els) ; isListType(Tp,Lc,Env)) ->
+  (isListSequence(Els) ; isListType(Tp,Env)) ->
     findType("list",Lc,Env,ListOp),
     newTypeVar("L",ElTp),
     ListTp = typeExp(ListOp,[ElTp]),
@@ -719,16 +719,16 @@ checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp) :-
 isMapSequence([E|_]) :-
   isBinary(E,_,"->",_,_).
 
-isMapType(Tp,Lc,Env) :-
-  findType("map",Lc,Env,MpTp),
+isMapType(Tp,Env) :-
+  isType("map",Env,tpDef(_,MpTp,_)),!,
   deRef(Tp,typeExp(MpOp,_)),
   deRef(MpOp,MpTp).
 
 isListSequence([E|_]) :-
   \+isBinary(E,_,"->",_,_).
 
-isListType(Tp,Lc,Env) :-
-  findType("list",Lc,Env,LstTp),
+isListType(Tp,Env) :-
+  isType("list",Env,tpDef(_,LstTp,_)),!,
   deRef(Tp,typeExp(LsOp,_)),
   deRef(LsOp,LstTp).
   

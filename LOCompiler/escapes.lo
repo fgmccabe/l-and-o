@@ -7,8 +7,8 @@ lo.comp.escapes{
 
   public escapeType:(string)=>tipe.
   escapeType("exit") => funType(tupleType([tipe("lo.core*integer")]),voidType).
-  escapeType("_command_line") => funType(tupleType([]),typeExp(tipe("lo.core*list"),[tipe("lo.core*string")])).
-  escapeType("_command_opts") => funType(tupleType([]),typeExp(tipe("lo.core*list"),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
+  escapeType("_command_line") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
+  escapeType("_command_opts") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("_unify") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
   escapeType("_identical") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
   escapeType("var") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
@@ -41,12 +41,12 @@ lo.comp.escapes{
   escapeType("_basr") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_bnot") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_nthb") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")])).
-  escapeType("_readFileContents") => funType(tupleType([tipe("lo.core*string")]),typeExp(tipe("lo.core*list"),[tipe("lo.core*integer")])).
-  escapeType("_writeFileContents") => predType(tupleType([tipe("lo.core*string"),typeExp(tipe("lo.core*list"),[tipe("lo.core*integer")])])).
+  escapeType("_readFileContents") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
+  escapeType("_writeFileContents") => predType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])])).
   escapeType("_getCwd") => funType(tupleType([]),tipe("lo.core*string")).
   escapeType("_display") => predType(tupleType([tupleType([tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")])).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
-  escapeType("_ls") => funType(tupleType([tipe("lo.core*string")]),typeExp(tipe("lo.core*list"),[tipe("lo.core*string")])).
+  escapeType("_ls") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
   escapeType("_file_access") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
@@ -90,8 +90,8 @@ lo.comp.escapes{
   escapeType("_str_hash") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_str_len") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_str_gen") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
-  escapeType("explode") => funType(tupleType([tipe("lo.core*string")]),typeExp(tipe("lo.core*list"),[tipe("lo.core*integer")])).
-  escapeType("implode") => funType(tupleType([typeExp(tipe("lo.core*list"),[tipe("lo.core*integer")])]),tipe("lo.core*string")).
+  escapeType("explode") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
+  escapeType("implode") => funType(tupleType([typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])]),tipe("lo.core*string")).
   escapeType("_str_find") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
   escapeType("_sub_str") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")).
   escapeType("_str_split") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*string"),tipe("lo.core*string")])).

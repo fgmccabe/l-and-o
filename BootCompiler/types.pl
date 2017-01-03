@@ -202,9 +202,9 @@ surfaceNames([T|L],Sep,S0,Sx) :-
   surfaceNames(L,Sep,S2,Sx).
 
 surfaceName(type(Nm),Nm).
-surfaceName(typeExp(Op,_),Nm) :- deRef(Op,type(Nm)).
+surfaceName(typeExp(Op,_),Nm) :- deRef(Op,OO), surfaceName(OO,Nm).
 surfaceName(kVar(Nm),Nm).
-surfaceName(kFUn(Nm,_),Nm).
+surfaceName(kFun(Nm,_),Nm).
 surfaceName(tpFun(Nm,_),Nm).
 surfaceName(tupleType(Els),Nm) :-
   length(Els,Ar),

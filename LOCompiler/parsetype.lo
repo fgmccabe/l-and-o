@@ -136,7 +136,7 @@ lo.comp.parseType{
     parseTypeBound(R,B0,Bound,Env,Q0,Inner).
   parseTypeBound(V,B,B1,Env,univType(kFun(Nm,Ar),Inner),Inner) :-
     isBinary(V,"/",_,L,R),
-    isInt(L,_,Ar),
+    isInteger(L,_,Ar),
     isIden(R,_,Nm),
     B1 = B[Nm->kFun(Nm,Ar)].
   parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
@@ -265,13 +265,11 @@ lo.comp.parseType{
   parseTypeCore(St,Type,Path) :-
     isBinary(St,"<~",_,L,_),
     parseTypeCore(L,Type,Path).
-  parseTypeCore(N,tipe(TpNm),Path) :-
-    isIden(N,_,Nm),
-    subPath(Path,marker(tpe),Nm,TpNm).
-  parseTypeCore(T,tpFun(TpNm,length(A)),Path) :-
-    isSquare(T,_,N,A),
-    isIden(N,_,Nm),
-    subPath(Path,marker(tpe),Nm,TpNm).
+  parseTypeCore(N,tipe(subPath(Path,marker(tpe),Nm)),Path) :-
+    isIden(N,_,Nm).
+  parseTypeCore(T,tpFun(subPath(Path,marker(tpe),Nm),length(A)),Path) :-
+    isSquareTerm(T,_,N,A),
+    isIden(N,_,Nm).
 
   parseTypeHead:(ast,map[string,tipe],tipe,string,report,report){}.
   parseTypeHead(N,_,tipe(subPath(Path,marker(tpe),Nm)),Path,Rp,Rp) :-

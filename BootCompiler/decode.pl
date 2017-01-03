@@ -66,7 +66,7 @@ decodeType(kVar(Nm)) --> ['k'], decodeText(Nm).
 decodeType(kFun(Nm,Ar)) --> ['K'], typeLen(Ar), decodeText(Nm).
 decodeType(type(Nm)) --> ['t'], decodeText(Nm).
 decodeType(tpFun(Nm,Ar)) --> ['z'], typeLen(Ar), decodeText(Nm).
-decodeType(typeExp(type("lo.core*list"),[ElTp])) --> ['L'], decodeType(ElTp).
+decodeType(typeExp(tpFun("lo.core*list",1),[ElTp])) --> ['L'], decodeType(ElTp).
 decodeType(typeExp(Op,ArgTypes)) --> ['U'], decodeType(Op), decodeTypes(ArgTypes).
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).

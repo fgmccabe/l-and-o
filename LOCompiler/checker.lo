@@ -161,7 +161,7 @@ lo.comp.typecheck{
     ( isType(N,Env,OLc,_) ?
         reportError("type \(N) already defined at \(OLc)",Lc,Rp,Rpx),
         Ex = Env |
-        parseTypeCore(St,Env,TpCore,Path,Rp,Rpx),
+        parseTypeCore(St,TpCore,Path),
         Ex = declareType(N,tpDef(Lc,TpCore,faceType([])),Env)).
 
   private parseTypeDefs:(list[defn],list[canonDef],list[canonDef],list[env],string,report,report){}.

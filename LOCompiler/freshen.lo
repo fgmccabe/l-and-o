@@ -90,9 +90,11 @@ lo.comp.freshen{
   frze(anonType,_,anonType).
   frze(thisType,_,thisType).
   frze(kVar(TV),_,kVar(TV)).
+  frze(kFun(F,A),_,kFun(F,A)).
   frze(V,B,kVar(TV)) :- isUnbound(V), present(B,TV,VV), isIdenticalVar(V,deRef(VV)).
   frze(V,_,V) :- isUnbound(V).
   frze(tipe(Nm),_,tipe(Nm)).
+  frze(tpFun(F,A),_,tpFun(F,A)).
   frze(funType(A,R),B,funType(FA,FR)) :-
     freeze(A,B,FA),
     freeze(R,B,FR).

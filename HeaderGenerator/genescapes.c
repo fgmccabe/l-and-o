@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
 
 static void dumpStdType(char *name, bufferPo out);
 static void dumpStr(char *str, bufferPo out);
+static char *dInt(char *sig,int *len) ;
 static char *dName(char *sig, bufferPo out);
 static char *dSequence(char *sig, bufferPo out);
 static char *dFields(char *sig, bufferPo out);

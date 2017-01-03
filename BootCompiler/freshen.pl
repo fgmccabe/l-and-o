@@ -140,15 +140,17 @@ freezeType(Tp,B,FrZ) :-
 
 freeze(T,B,Frzn) :-
   deRef(T,Tp),
-  frze(Tp,B,Frzn).
+  frze(Tp,B,Frzn),!.
 
-frze(voidType,_,voidType) :- !.
-frze(anonType,_,anonType) :- !.
-frze(thisType,_,thisType) :- !.
-frze(kVar(TV),_,kVar(TV)) :- !.
+frze(voidType,_,voidType).
+frze(anonType,_,anonType).
+frze(thisType,_,thisType).
+frze(kVar(TV),_,kVar(TV)).
+frze(kFun(T,A),_,kFun(T,A)).
 frze(V,B,kVar(TV)) :- isUnbound(V),is_member((TV,VV),B), deRef(VV,VVV), isIdenticalVar(tVar(V),VVV), !.
 frze(V,_,V) :- isUnbound(V),!.
 frze(type(Nm),_,type(Nm)).
+frze(tpFun(Nm,Ar),_,tpFun(Nm,Ar)).
 frze(funType(A,R),B,funType(FA,FR)) :-
   freezeTypes(A,B,FA),
   freeze(R,B,FR).
