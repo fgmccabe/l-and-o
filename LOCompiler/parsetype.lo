@@ -136,8 +136,8 @@ lo.comp.parseType{
     parseTypeBound(R,B0,Bound,Env,Q0,Inner).
   parseTypeBound(V,B,B1,Env,univType(kFun(Nm,Ar),Inner),Inner) :-
     isBinary(V,"/",_,L,R),
-    isInteger(L,_,Ar),
-    isIden(R,_,Nm),
+    isInteger(R,_,Ar),
+    isIden(L,_,Nm),
     B1 = B[Nm->kFun(Nm,Ar)].
   parseTypeBound(V,B,B1,Env,univType(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm),
@@ -249,6 +249,10 @@ lo.comp.parseType{
     isBinary(P,",",_,L,R),
     parseConBound(L,BV,B0,Env,QT,Q0),
     parseConBound(R,B0,Bound,Env,Q0,Inner).
+  parseConBound(V,B,B[Nm->kFun(Nm,Ar)],Env,univCon(kFun(Nm,Ar),Inner),Inner) :-
+    isBinary(V,"/",_,L,R),
+    isInteger(R,_,Ar),
+    isIden(L,_,Nm).
   parseConBound(V,B,B[Nm->kVar(Nm)],Env,univCon(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm).
 

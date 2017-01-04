@@ -27,7 +27,7 @@ lo.comp.unify{
   sm(T1,V2,Env) :- isUnbound(V2), checkBinding(V2,T1,Env).
   sm(tipe(Nm),tipe(Nm),_).
   sm(tpFun(Nm,Ar),tpFun(Nm,Ar),_).
-  sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sm(O1,O2,Env), smList(A1,A2,Env).
+  sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sm(deRef(O1),deRef(O2),Env), smList(A1,A2,Env).
   sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
   sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
   sm(predType(A1),predType(A2),Env) :- sameType(A1,A2,Env).
@@ -103,7 +103,8 @@ lo.comp.unify{
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(_,F)).
   faceOfType(typeExp(Op,Args),Env,Face) :-
-    deRef(Op) = tipe(Nm),
+    deRef(Op) = tpFun(Nm,Ar),
+    Ar=length(Args),
     typeInDict(Nm,Env,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),

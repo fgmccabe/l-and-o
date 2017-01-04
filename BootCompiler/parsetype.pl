@@ -1,5 +1,5 @@
 :- module(parsetype,[parseType/3,
-  parseTypeRule/4,parseTypeCore/3,parseContract/4,parseContractConstraint/4,rewriteConstraints/4]).
+  parseTypeRule/4,parseTypeCore/3,parseContract/4,parseContractConstraint/4,rewriteConstraints/4,bindAT/4]).
 
 :- use_module(abstract).
 :- use_module(dict).
@@ -97,8 +97,8 @@ bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
   bindAT(L,TL,[(V,Tp)|Q],Qx).
 bindAT([kFun(N,Ar)|L1],[kFun(N,Ar)|L2],Q,Qx) :-
   bindAT(L1,L2,Q,Qx).
-bindAT([kFun(N,_)|L],[Tp|TL],Q,Qx) :-
-  bindAT(L,TL,[(N,Tp)|Q],Qx).
+bindAT([kFun(V,Ar)|L],[tpFun(Nm,Ar)|TL],Q,Qx) :-
+  bindAT(L,TL,[(V,tpFun(Nm,Ar))|Q],Qx).
 
 rewriteConstraints([],_,Cx,Cx).
 rewriteConstraints([Con|Cons],Q,C0,Cx) :-

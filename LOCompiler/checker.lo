@@ -162,6 +162,7 @@ lo.comp.typecheck{
         reportError("type \(N) already defined at \(OLc)",Lc,Rp,Rpx),
         Ex = Env |
         parseTypeCore(St,TpCore,Path),
+        Rp=Rpx,
         Ex = declareType(N,tpDef(Lc,TpCore,faceType([])),Env)).
 
   private parseTypeDefs:(list[defn],list[canonDef],list[canonDef],list[env],string,report,report){}.
@@ -282,19 +283,6 @@ lo.comp.typecheck{
   processStmt(St,Tp,Defs,Dx,Env,_,Rp,Rpx) :-
     isBinary(St,"=",Lc,L,R),
     checkDefn(Lc,L,iden(Lc,"true"),R,Tp,Defs,Dx,Env,Rp,Rpx).
-  processStmt(St,Tp,[clRule(Lc,Nm,XNm,v(Lc,Nm),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
-    isBinary(St,"<=",Lc,H,R),
-    isBraceTuple(R,_,Els),
-    isIden(H,_,Nm),
-    XNm = subPath(Path,marker(clss),Nm),
-    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,XNm,Rp,Rpx).
-  processStmt(St,classType(AT,Tp),[clRule(Lc,Nm,XNm,apply(Lc,v(Lc,Nm),Arg),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
-    isBinary(St,"<=",Lc,H,R),
-    isBraceTuple(R,_,Els),
-    splitHead(H,_,Nm,A),
-    typeOfArg(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
-    XNm = subPath(Path,marker(clss),Nm),
-    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,XNm,Rp0,Rpx).
   processStmt(St,ProgramType,Defs,Defx,E,Pth,Rp,Rpx) :-
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
@@ -614,11 +602,11 @@ lo.comp.typecheck{
   private checkSquareTuple:(location,list[ast],tipe,list[env],list[env],canonTerm,report,report){}.
   checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx) :-
     ((isMapSequence(Els) | isMapType(Tp,Lc,Env)) ?
-      checkType(Lc,findType("map",Lc,Env,Rp,Rp1),Tp,Env,Rp1,Rp2),
+      checkType(Lc,typeExp(findType("map",Lc,Env,Rp,Rp1),[newVar("K"),newVar("V")]),Tp,Env,Rp1,Rp2),
       typeOfTerm(macroMapEntries(Lc,Els,Rp2,Rp3),Tp,Env,Ev,Exp,Rp3,Rpx)|
     (isListSequence(Els) | isListType(Tp,Lc,Env)) ?
-      ListTp = findType("list",Lc,Env,Rp,Rp1),
-      ListTp = typeExp(_,[ElTp]),
+      ElTp = newVar("El"),
+      ListTp = typeExp(findType("list",Lc,Env,Rp,Rp1),[ElTp]),
       checkType(Lc,ListTp,Tp,Env,Rp1,Rp2),
       typeOfListTerm(Els,Lc,ElTp,ListTp,Env,Ev,Exp,Rp2,Rpx)|
     checkSequenceTerm(Lc,Els,Tp,Env,Ev,Exp,Rp,Rpx)).
@@ -643,7 +631,6 @@ lo.comp.typecheck{
   private isListType:(tipe,location,list[env]){}.
   isListType(Tp,Lc,Env) :-
     isType("list",Env,_,T),
-    moveQuants(T,_,typeExp(LsTp,_)),
     typeExp(LsOp,_) = deRef(Tp),
     deRef(LsOp)=LsTp.
 

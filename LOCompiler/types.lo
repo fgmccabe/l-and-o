@@ -229,7 +229,7 @@ lo.comp.types{
   bindAT([kVar(N),..L1],[kVar(N),..L2],Q) => bindAT(L1,L2,Q).
   bindAT([kVar(V),..L],[Tp,..TL],Q) => bindAT(L,TL,Q[V->Tp]).
   bindAT([kFun(N,Ar),..L1],[kFun(N,Ar),..L2],Q) => bindAT(L1,L2,Q).
-  bindAT([kFun(N,_),..L1],[Tp,..TL],Q) => bindAT(L1,TL,Q[V->Tp]).
+  bindAT([kFun(N,Ar),..L1],[tpFun(Nm,Ar),..TL],Q) => bindAT(L1,TL,Q[N->tpFun(Nm,Ar)]).
 
   public typeArity:(tipe) => integer.
   typeArity(funType(E,_)) => typeArity(E).

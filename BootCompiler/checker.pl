@@ -507,17 +507,6 @@ buildImplementation(Stmt,_,Defs,Defs,Env,Env,_) :-
 
 declImpl(imp(ImplNm,Spec),SoFar,[(ImplNm,Spec)|SoFar]).
 
-bindAT([],_,Q,Q).
-bindAT(_,[],Q,Q).
-bindAT([kVar(N)|L1],[kVar(N)|L2],Q,Qx) :-
-  bindAT(L1,L2,Q,Qx).
-bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
-  bindAT(L,TL,[(V,Tp)|Q],Qx).
-bindAT([kFun(N,Ar)|L1],[kFun(N,Ar)|L2],Q,Qx) :-
-  bindAT(L1,L2,Q,Qx).
-bindAT([kFun(V,Ar)|L],[tpFun(Nm,Ar)|TL],Q,Qx) :-
-  bindAT(L,TL,[(V,tpFun(Nm,Ar))|Q],Qx).
-
 typeOfTerm(V,_,Env,Env,v(Lc,N)) :-
   isIden(V,Lc,"_"),!,
   genstr("_",N).
