@@ -14,7 +14,7 @@ test.mapp{
   }
 
   implementation mapping[list] <= {
-    mp = mapp.
+    mp(L,F) => mapp(L,F).
   }
 
   id:(integer)=>integer.
