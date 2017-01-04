@@ -278,7 +278,7 @@ lo.comp.parseType{
   parseTypeHead:(ast,map[string,tipe],tipe,string,report,report){}.
   parseTypeHead(N,_,tipe(subPath(Path,marker(tpe),Nm)),Path,Rp,Rp) :-
     isIden(N,_,Nm).
-  parseTypeHead(N,B,typeExp(tipe(subPath(Path,marker(tpe),TpNm)),Args),Path,Rp,Rpx) :-
+  parseTypeHead(N,B,typeExp(tpFun(subPath(Path,marker(tpe),TpNm),length(Args)),Args),Path,Rp,Rpx) :-
     isSquareTerm(N,_,Nm,A),
     isIden(Nm,_,TpNm),
     parseHeadArgs(A,B,Args,Rp,Rpx).
