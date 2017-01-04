@@ -618,8 +618,7 @@ lo.comp.typecheck{
 
   private isMapType:(tipe,location,list[env]){}.
   isMapType(Tp,Lc,Env) :-
-    isType("map",Env,_,T),
-    moveQuants(T,_,typeExp(MpTp,_)),
+    isType("map",Env,_,MpTp),
     typeExp(MpOp,_) = deRef(Tp),
     deRef(MpOp)=MpTp.
  
