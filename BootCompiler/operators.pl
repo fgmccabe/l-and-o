@@ -4,7 +4,7 @@
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp(":",1249,1250,1249).	 /* type annotation */
-  infixOp("..",1249,1250,1249).	 /* class body */
+  infixOp("<=",1249,1250,1249).	 /* class rule arrow */
   infixOp("~~",1239,1240,1239).	 /* quantifier */
   infixOp("|:",1234,1235,1234).	 /* constrained type */
   infixOp("::=",1230,1231,1230).	 /* user type definition */
@@ -18,7 +18,6 @@
   infixOp("@@",1004,1005,1004).	 /* guard marker */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
-  infixOp("<=",949,950,949).	 /* class rule arrow */
   infixOp("<=>",949,950,949).	 /* class constructor type */
   infixOp("=>",949,950,949).	 /* function arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
@@ -109,7 +108,6 @@
   follows('.>>','.','.>>.').
   follows('.>>','>','.>>>').
   follows('.>>>','.','.>>>.').
-  follows('.','.','..').
   follows('.',' ','. ').
   follows('','/','/').
   follows('','|','|').
@@ -167,7 +165,6 @@
   final('.^.',".^.").	 /* bitwise xor */
   final('.>>.',".>>.").	 /* logical shift right */
   final('.>>>.',".>>>.").	 /* arithmetic shift right */
-  final('..',"..").	 /* class body */
   final('. ',". ").	 /* statement terminator */
   final('/',"/").	 /* division */
   final('|',"|").	 /* type union and disjunction */

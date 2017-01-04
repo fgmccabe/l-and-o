@@ -6,7 +6,7 @@ lo.json{
     jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) | 
     jNum(float).
 
-  public implementation display[json] .. {
+  public implementation display[json] <= {
     disp(j) => dispJson(j).
   }
 
@@ -133,7 +133,7 @@ lo.json{
   parseField(implode(S)) --> "\"", parseStr(S), "\"".
 
   -- Some helpful coercions 
-  public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] .. {
+  public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] <= {
     _coerce(M) => mapJson(M).
   }
 
@@ -145,7 +145,7 @@ lo.json{
     apply(e) => e::json.
   }
 
-  public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] .. {
+  public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] <= {
     _coerce(L) => jSeq(cList(L)).
   }
 

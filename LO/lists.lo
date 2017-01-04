@@ -50,12 +50,12 @@ lo.list{
   length([]) => 0.
   length([_,..L]) => length(L)+1.
 
-  public implementation all c ~~ sizeable[list[c]] .. {
+  public implementation all c ~~ sizeable[list[c]] <= {
     size(L) => length(L).
     isEmpty([]).
   }
 
-  public implementation all e ~~ folding[list[e]->>e] .. {
+  public implementation all e ~~ folding[list[e]->>e] <= {
     foldLeft(f,x,[]) => x.
     foldLeft(f,x,[e,..l]) => foldLeft(f,f(x,e),l).
 
@@ -67,7 +67,7 @@ lo.list{
   mapList([],_) => [].
   mapList([e,..l],f) => [f(e),..mapList(l,f)].
 
-  public implementation all e ~~ filter[list[e]->>e] .. {
+  public implementation all e ~~ filter[list[e]->>e] <= {
     filter(L,P) => filterList(L,P).
   }
 
@@ -76,7 +76,7 @@ lo.list{
   filterList([e,..l],p) => [e,..filterList(l,p)] :- p(e).
   filterList([_,..l],p) => filterList(l,p).
 
-  public implementation all e,f ~~ coercion[e,f] |: coercion[list[e],list[f]] .. {
+  public implementation all e,f ~~ coercion[e,f] |: coercion[list[e],list[f]] <= {
     _coerce(Sx) => coerceList(Sx).
   }
 

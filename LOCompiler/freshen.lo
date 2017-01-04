@@ -8,7 +8,7 @@ lo.comp.freshen{
     skolemize:(s,map[string,tipe]) =>(map[string,tipe],s).
   }.
 
-  public implementation freshen[tipe] .. {
+  public implementation freshen[tipe] <= {
     freshen(T,M) => freshenType(deRef(T),M).
     skolemize(T,M) => skolemizeType(deRef(T),M).
   }
@@ -24,7 +24,7 @@ lo.comp.freshen{
   private skolem:(string) => tipe.
   skolem(Nm) => kVar(_str_gen(Nm)).
 
-  public implementation freshen[constraint] .. {
+  public implementation freshen[constraint] <= {
     freshen(C,B) => freshenConstraint(C,B).
     skolemize(C,B) => skolemizeConstraint(C,B).
   }

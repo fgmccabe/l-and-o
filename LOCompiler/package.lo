@@ -11,22 +11,22 @@ lo.comp.package{
 
   public type pkgSpec ::= pkgSpec(pkg,list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
 
-  public implementation equality[pkg] .. {
+  public implementation equality[pkg] <= {
     P1 == P2 :- samePackage(P1,P2).
     hash(P) => packageHash(P).
   }
 
-  public implementation display[pkg] .. {
+  public implementation display[pkg] <= {
     disp(pkg(P,defltVersion)) => ss(P).
     disp(pkg(P,vers(V))) => ssSeq([ss(P),ss("#"),ss(V)]).
   }
 
-  public implementation display[version] .. {
+  public implementation display[version] <= {
     disp(defltVersion) => ss("*").
     disp(vers(V)) => ss(V).
   }
 
-  public implementation coercion[pkg,string] .. {
+  public implementation coercion[pkg,string] <= {
     _coerce(pkg(P,defltVersion)) => P.
     _coerce(pkg(P,vers(V))) => P+"#"+V.
   }

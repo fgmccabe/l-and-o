@@ -282,6 +282,19 @@ lo.comp.typecheck{
   processStmt(St,Tp,Defs,Dx,Env,_,Rp,Rpx) :-
     isBinary(St,"=",Lc,L,R),
     checkDefn(Lc,L,iden(Lc,"true"),R,Tp,Defs,Dx,Env,Rp,Rpx).
+  processStmt(St,Tp,[clRule(Lc,Nm,XNm,v(Lc,Nm),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
+    isBinary(St,"<=",Lc,H,R),
+    isBraceTuple(R,_,Els),
+    isIden(H,_,Nm),
+    XNm = subPath(Path,marker(clss),Nm),
+    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,XNm,Rp,Rpx).
+  processStmt(St,classType(AT,Tp),[clRule(Lc,Nm,XNm,apply(Lc,v(Lc,Nm),Arg),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
+    isBinary(St,"<=",Lc,H,R),
+    isBraceTuple(R,_,Els),
+    splitHead(H,_,Nm,A),
+    typeOfArg(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
+    XNm = subPath(Path,marker(clss),Nm),
+    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,XNm,Rp0,Rpx).
   processStmt(St,ProgramType,Defs,Defx,E,Pth,Rp,Rpx) :-
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
@@ -369,7 +382,7 @@ lo.comp.typecheck{
   private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
   implementationGroup([defn(INm,impl,_,_,[Stmt])],[Impl,..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
     isUnary(Stmt,"implementation",Lc,I),
-    isBinary(I,"..",_,Sq,Body),
+    isBinary(I,"<=",_,Sq,Body),
     isBraceTuple(Body,_,Els),
     parseContractConstraint(Sq,Env,Nm,Spec,Rp,Rp0),
     isContract(Nm,Env,conEntry(_,CNm,FullSpec,ConFace)),

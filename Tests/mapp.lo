@@ -13,7 +13,7 @@ test.mapp{
     mp:all e,f ~~ (m[e],(e)=>f) => m[f].
   }
 
-  implementation mapping[list] .. {
+  implementation mapping[list] <= {
     mp = mapp.
   }
 

@@ -15,7 +15,7 @@ f{
   assert fib(10) = 55.
 
   public
-  implementation additive[integer] .. {
+  implementation additive[integer] <= {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
   }
@@ -29,7 +29,7 @@ f{
   -- assert double(fib(10)) = 110.
 
   public
-  implementation all t ~~ additive[t] |: additive[cons[t]] .. {
+  implementation all t ~~ additive[t] |: additive[cons[t]] <= {
     X+Y => addEls(X,Y).
     X-Y => subEls(X,Y).
   }

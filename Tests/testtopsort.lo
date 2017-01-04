@@ -4,12 +4,12 @@ test.topsort{
 
   type all x,y ~~ df[x,y] ::= df(x,list[y]).
 
-  implementation all x ~~ depends[df[x,x]->>x] .. {
+  implementation all x ~~ depends[df[x,x]->>x] <= {
     defines(df(X,_),X).
     references(df(_,R)) => R.
   }
 
-  implementation all x,y ~~ display[x], display[y] |: display[df[x,y]] .. {
+  implementation all x,y ~~ display[x], display[y] |: display[df[x,y]] <= {
     disp(D) => dispDf(D).
   }
 
@@ -17,7 +17,7 @@ test.topsort{
   dispDf(df(X,Y)) => ssSeq([ss("("),disp(X),ss(","),disp(Y),ss(")")]).
 
 
-  implementation all x,y ~~ equality[x], equality[y] |: equality[df[x,y]] .. {
+  implementation all x,y ~~ equality[x], equality[y] |: equality[df[x,y]] <= {
     X == Y :- dfEq(X,Y).
 
     hash(D) => dfHash(D).

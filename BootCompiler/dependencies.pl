@@ -41,7 +41,7 @@ collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Expor
   call(Export,Nm,P,Px).
 collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   isUnary(St,Lc,"implementation",Inner),
-  isBinary(Inner,"..",Im,_),
+  isBinary(Inner,"<=",Im,_),
   implementationName(Im,Nm),
   call(Export,Nm,P,Px).
 collectDefinition(St,Stmts,Stx,[(Nm,Lc,[St|Defn])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
@@ -76,7 +76,7 @@ ruleName(St,Nm,con) :-
   contractName(I,Nm),!.
 ruleName(St,Nm,impl) :-
   isUnary(St,"implementation",I),
-  isBinary(I,"..",L,_),
+  isBinary(I,"<=",L,_),
   implementationName(L,Nm),!.
 ruleName(St,Nm,type) :-
   isUnary(St,"type",I),
@@ -244,7 +244,7 @@ collRefs(St,All,_,R0,Refs) :-
   collectTypeRefs(Tp,All,R0,Refs).
 collRefs(St,All,_,R0,Refs) :-
   isUnary(St,"implementation",I),
-  isBinary(I,"..",L,R),
+  isBinary(I,"<=",L,R),
   collectContractRefs(L,All,R0,R1),
   isBraceTuple(R,_,Defs),
   collectClassRefs(Defs,All,R1,Refs).

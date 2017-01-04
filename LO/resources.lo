@@ -23,7 +23,7 @@ lo.resources{
   public resourcePresent:(uri,fileMode){}.
   resourcePresent(U,M) :- _file_access(getUriPath(U),M::integer).
 
-  private implementation coercion[filePerm,integer] .. {
+  private implementation coercion[filePerm,integer] <= {
     _coerce(ownerRead) => 256.
     _coerce(ownerWrite) => 128.
     _coerce(ownerExecute) => 64.
@@ -35,7 +35,7 @@ lo.resources{
     _coerce(otherExecute) => 1.
   }
 
-  private implementation coercion[fileMode,integer] .. {
+  private implementation coercion[fileMode,integer] <= {
     _coerce(readMode) => 1.
     _coerce(writeMode) => 2.
     _coerce(executeMode) => 4.

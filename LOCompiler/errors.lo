@@ -13,14 +13,14 @@ lo.comp.errors{
     msgs = Lst.
   }.
 
-  public implementation display[report] .. {
+  public implementation display[report] <= {
     disp(R) => showReport(R).
   }
 
   private showReport:(report) => ss.
   showReport(M) => ssSeq([/*ssSeq(showMsgs(M.msgs)),*/disp(countErrors(M)),ss(" errors, "),disp(countWarnings(M)),ss(" warnings\n")]).
 
-  implementation display[reportMsg] .. {
+  implementation display[reportMsg] <= {
     disp(M) => showErrorMsg(M).
   }
 

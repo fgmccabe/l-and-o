@@ -31,7 +31,7 @@ lo.comp.lexer{
     currentLocation((Line,Off,Col,Pth)).
   }.
 
-  public implementation stream[tokenState ->> integer] .. {
+  public implementation stream[tokenState ->> integer] <= {
     _eof(tkState([],_,_,_,_)).
 
     _hdtl(tkState([0c\n,..Rest],Line,Off,Col,Pth),0c\n,tkState(Rest,Line+1,Off+1,1,Pth)).

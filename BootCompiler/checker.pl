@@ -478,7 +478,7 @@ implementationGroup([(imp(Nm),_,[Stmt])],Defs,Dfs,E,Env,Path) :-
 
 buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
   isUnary(Stmt,Lc,"implementation",I),
-  isBinary(I,"..",Sq,Body),
+  isBinary(I,"<=",Sq,Body),
   isBraceTuple(Body,_,Els),
   parseContractConstraint(Sq,Env,Nm,Spec),
   getContract(Nm,Env,contract(_,CNm,_,FullSpec,ConFace)),

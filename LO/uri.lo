@@ -306,7 +306,7 @@ lo.uri {
   edit(Segs,R) => reverse(R)<>Segs.
 
   public 
-  implementation display[uri]..{
+  implementation display[uri] <= {
     disp(absUri(Scheme,Rsrc,Query)) => ssSeq([ss(Scheme),ss(":"),dispRsrc(Rsrc),dispQuery(Query)]).
     disp(relUri(Rsrc,Query)) => ssSeq([dispRsrc(Rsrc),dispQuery(Query)]).
 

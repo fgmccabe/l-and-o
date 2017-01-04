@@ -6,7 +6,7 @@ lo.comp.genprolog{
   import lo.comp.term.
   import lo.comp.types.
 
-  public implementation coercion[prProg,list[integer]] ..{
+  public implementation coercion[prProg,list[integer]] <= {
     _coerce(P) => prog2code(P,[]).
   }
 

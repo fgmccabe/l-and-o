@@ -13,14 +13,14 @@ g{
   }
 
   public
-  implementation additive[integer] .. {
+  implementation additive[integer] <= {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
   }
 
   type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
-  implementation all e ~~ stream[cons[e] ->> e] .. {
+  implementation all e ~~ stream[cons[e] ->> e] <= {
     _eof(nil).
 
     _hdtl(pair(E,L),E,L).

@@ -12,13 +12,13 @@ q{
   }
 
   public
-  implementation equality[integer] .. {
+  implementation equality[integer] <= {
     X == X.
     hash(X) => X.
   }
 
   public
-  implementation comp[integer] .. {
+  implementation comp[integer] <= {
     X<Y :- _int_lt(X,Y).
     X>=Y :- _int_ge(X,Y).
   }

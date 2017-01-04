@@ -21,14 +21,14 @@ lo.comp.misc{
 
   public type all x,y ~~ pr[x,y] ::= pr(x,y).
 
-  public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] .. {
+  public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] <= {
     disp(D) => dispDf(D).
   }
 
   dispDf: all x,y ~~ display[x], display[y] |: (pr[x,y]) => ss.
   dispDf(pr(X,Y)) => ssSeq([ss("("),disp(X),ss(","),disp(Y),ss(")")]).
 
-  implementation all x,y ~~ equality[x], equality[y] |: equality[pr[x,y]] .. {
+  implementation all x,y ~~ equality[x], equality[y] |: equality[pr[x,y]] <= {
     X == Y :- prEq(X,Y).
 
     hash(D) => prHash(D).

@@ -14,7 +14,7 @@ lo.sets {
 
   public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
 
-  public implementation all e ~~ equality[e] |: setops[set[e]->>e] .. {
+  public implementation all e ~~ equality[e] |: setops[set[e]->>e] <= {
     union(set(M1),set(M2)) => set(M1+M2).
     intersect(set(M1),set(M2)) => set(foldMap(M1,binApp(M2),[])).
     difference(set(M1),set(M2)) => set(M1-M2).

@@ -79,7 +79,7 @@ lo.comp.manifest{
   versionName(vers(S)) --> [pkgId(S)].
 
   -- Displaying a manifest
-  public implementation display[manifest] .. {
+  public implementation display[manifest] <= {
     disp(manifest(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
   }
 

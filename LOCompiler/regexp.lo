@@ -16,7 +16,7 @@ lo.comp.regexp{
          | reLiteral(integer)
          | reSeq(list[regExp]).
 
-  public implementation display[regExp] .. {
+  public implementation display[regExp] <= {
     disp(RE) => dispRegexp(RE).
   }
 

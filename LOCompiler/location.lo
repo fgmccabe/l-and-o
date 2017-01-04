@@ -17,7 +17,7 @@ lo.comp.location{
   }.
 
   public
-  implementation display[location] .. {
+  implementation display[location] <= {
     disp(L) => locDisp(L).
   }
 
@@ -35,7 +35,7 @@ lo.comp.location{
   public widthOf:(location) => integer.
   widthOf(loc(Line,Off,Col,Len,Pth)) => Len.
 
-  public implementation sizeable[location] .. {
+  public implementation sizeable[location] <= {
     size(loc(_,_,_,Len,_)) => Len.
     size(std) => 0.
 

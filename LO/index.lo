@@ -11,7 +11,7 @@ lo.index{
     | trLeaf(integer,list[(k,v)])
     | trNode(integer,integer,map[k,v],map[k,v]).
 
-  public implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] .. {
+  public implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] <= {
     present(M,K,V) :- lookIn(hash(K),M,K,V).
     _remove(M,K) => rmve(hash(K),K,M).
     _put(M,K,V) => insrt(K,V,M).
@@ -20,7 +20,7 @@ lo.index{
     _empty = trEmpty.
   }
 
-  public implementation all k,v ~~ equality[k], equality[v] |: equality[map[k,v]] .. {
+  public implementation all k,v ~~ equality[k], equality[v] |: equality[map[k,v]] <= {
     M1 == M2 :- sameMaps(M1,M2).
     hash(M) => mapHash(M,0).
   }
@@ -37,7 +37,7 @@ lo.index{
   leafHash([],H) => H.
   leafHash([(k,v),..l],H) => leafHash(l,(h*37+hash(k))*37+hash(v)).
 
-  public implementation all k,v ~~ sizeable[map[k,v]] .. {
+  public implementation all k,v ~~ sizeable[map[k,v]] <= {
     size(M) => countEls(M,0).
     isEmpty(trEmpty).
   }
@@ -48,7 +48,7 @@ lo.index{
   countEls(trNode(_,_,L,R),C) => countEls(R,countEls(L,C)).
 
   public
-  implementation all k,v ~~ equality[k] |: additive[map[k,v]] .. {
+  implementation all k,v ~~ equality[k] |: additive[map[k,v]] <= {
     M1+M2 => mergeTree(M1,M2).
     M1-M2 => subtractTree(M1,M2).
   }
@@ -204,7 +204,7 @@ lo.index{
   mapLeaves([(k,v),..l],f) => [(k,f.apply(v)),..mapLeaves(l,f)].
 
   public
-  implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] .. {
+  implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] <= {
     disp(Tree) => ssSeq([ss("["),displayElements(Tree,"",_),ss("]")]).
   }
 
@@ -233,7 +233,7 @@ lo.index{
   nthBit:(integer,integer){}.
   nthBit(X,N) :- _nthb(X,63-N).
 
-  public implementation all k,v ~~ equality[k] |: stream[map[k,v] ->> (k,v)] .. {
+  public implementation all k,v ~~ equality[k] |: stream[map[k,v] ->> (k,v)] <= {
     _eof(trEmpty).
     _hdtl(M,(K,V),R) :- (var(R) ? pckEl(M,K,V,R)! | M = insrt(K,V,R)).
   }

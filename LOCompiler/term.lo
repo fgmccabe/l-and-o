@@ -28,7 +28,7 @@ lo.comp.term {
 
   public type prProg ::= prProg(pkgSpec,list[clse]).
 
-  public implementation display[prProg] .. {
+  public implementation display[prProg] <= {
     disp(Prog) => dispProg(Prog).
   }
 
@@ -39,7 +39,7 @@ lo.comp.term {
   dispRules([]) => [].
   dispRules([Cl,..Rls]) => [disp(Cl),..dispRules(Rls)].
 
-  public implementation display[clse] .. {
+  public implementation display[clse] <= {
     disp(Cl) => dispClause(Cl).
   }
 
@@ -47,7 +47,7 @@ lo.comp.term {
   dispClause(clse([],Hd,Args,Body)) => ssSeq([disp(Hd),disp(Args),ss(":-"),ssSeq(dispPreds("","\n    ",Body)),ss(".\n")]).
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([ss("all "),ssSeq(dispEls(""," ~~\n",Q)),disp(Hd),disp(Args),ss(":-"),ssSeq(dispPreds("","\n    ",Body)),ss(".\n")]).
 
-  public implementation display[term] .. {
+  public implementation display[term] <= {
     disp(T) => dispTerm(T).
   }
 
@@ -67,7 +67,7 @@ lo.comp.term {
   dispEls(_,Tail,[]) => [ss(Tail)].
   dispEls(Sep,Tail,[e,..l]) => [ss(Sep),dispTerm(e),..dispEls(", ",Tail,l)].
 
-  public implementation display[pred] .. {
+  public implementation display[pred] <= {
     disp(P) => displayPred(P).
   }
 

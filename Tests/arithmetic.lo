@@ -31,7 +31,7 @@ lo.arithmetic{
   }
 
   public
-  implementation arith[integer] .. {
+  implementation arith[integer] <= {
     pl(X,Y) => _int_plus(X,Y).
     mns(X,Y) => _int_minus(X,Y).
     tms(X,Y) => _int_times(X,Y).
@@ -40,7 +40,7 @@ lo.arithmetic{
   }
 
   public
-  implementation all u, v ~~ additive[u], additive[v] |: additive[(u,v)] .. {
+  implementation all u, v ~~ additive[u], additive[v] |: additive[(u,v)] <= {
     pl((A,B),(U,V)) => (A+U,B+V).
     mns((A,B),(U,V)) => (A-U,B-V).
   }

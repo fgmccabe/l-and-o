@@ -38,12 +38,12 @@ lo.comp.types{
   }
 
   public
-  implementation display[tipe] .. {
+  implementation display[tipe] <= {
     disp(T) => dispType(T).
   }
 
   public 
-  implementation display[constraint] .. {
+  implementation display[constraint] <= {
     disp(C) => showConstraint(C).
   }
 

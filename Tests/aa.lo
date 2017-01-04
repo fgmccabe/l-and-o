@@ -15,14 +15,14 @@ aa{
   }
 
   public
-  implementation additive[integer] .. {
+  implementation additive[integer] <= {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
     zero = 0.
   }
 
   public 
-  implementation arith[integer] .. {
+  implementation arith[integer] <= {
     X*Y => _int_times(X,Y).
     X/Y => _int_div(X,Y).
     X%Y => _int_mod(X,Y).

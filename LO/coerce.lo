@@ -6,19 +6,19 @@ lo.coerce{
     _coerce:(s)=>d.
   }
 
-  public implementation coercion[integer,string] .. {
+  public implementation coercion[integer,string] <= {
     _coerce(Ix) => _int2str(Ix,10,0,0)
   }
 
-  public implementation coercion[float,string] .. {
+  public implementation coercion[float,string] <= {
     _coerce(Dx) => _flt2str(Dx,0,8,true,false)
   }
 
-  public implementation coercion[string,float] .. {
+  public implementation coercion[string,float] <= {
     _coerce(Sx) => _str2flt(Sx).
   }
 
-  public implementation coercion[integer,float] .. {
+  public implementation coercion[integer,float] <= {
     _coerce(Ix) => _int2flt(Ix).
   }
 }

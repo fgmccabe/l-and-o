@@ -19,7 +19,7 @@ lo.comp.grapher{
   public makeGraph:(list[pkg],repository,catalog,report,report) => list[list[(pkg,list[pkg])]].
   makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => graphPkgs(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
 
-  private implementation depends[(pkg,list[pkg])->>pkg] .. {
+  private implementation depends[(pkg,list[pkg])->>pkg] <= {
     defines((Pk,_),Pk).
     references((Pk,I)) => I.
   }

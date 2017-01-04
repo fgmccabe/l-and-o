@@ -10,7 +10,7 @@ b{
 
   type all t ~~ named[t] |: cons[t] ::= nil | cons(t,cons[t]).
 
-  implementation named[entity] .. {
+  implementation named[entity] <= {
     name(Ch) => entityName(Ch).
   }
 
@@ -18,7 +18,7 @@ b{
   entityName(chair(Nm)) => Nm.
   entityName(p{nm=Nm}) => Nm.
 
-  implementation all t ~~ named[t] |: named[cons[t]] .. {
+  implementation all t ~~ named[t] |: named[cons[t]] <= {
     name(nil) => "".
   }
 
