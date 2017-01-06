@@ -306,6 +306,13 @@ processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :-
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
   checkDefn(Lc,L,R,Tp,Def,Env).
+processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
+  isBinary(St,Lc,"<=",L,R),
+  isBraceTuple(R,_,Els),
+  checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),!,
+  marker(class,Marker),
+  subPath(Path,Marker,Nm,ClassPath),
+  checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath).
 processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
   isBinary(St,Lc,"<=",L,R),
   checkClassHead(L,Tp,E,E1,Nm,Hd),!,
@@ -560,6 +567,9 @@ typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTuple(Term,Lc,Els), !,
   checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp).
+typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others,Types)) :-
+  isBraceTuple(Term,Lc,Els),
+  checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,"").
 typeOfTerm(tuple(_,"()",[Inner]),Tp,Env,Ev,Exp) :-
   \+ isTuple(Inner,_), !,
   typeOfTerm(Inner,Tp,Env,Ev,Exp).

@@ -6,6 +6,7 @@ catalog{
     lo.comp.base64 -> "base64.lo".
     lo.comp.canon -> "canon.lo".
     lo.comp.catalog -> "catalog.lo".
+    lo.comp.clausecomp -> "clausecomp.lo".
     lo.comp.decode -> "decode.lo".
     lo.comp.dependencies -> "dependencies.lo".
     lo.comp.debug -> "debug.lo".
@@ -20,6 +21,7 @@ catalog{
     lo.comp.grammar -> "grammar.lo".
     lo.comp.grapher -> "grapher.lo".
     lo.comp.imports -> "imports.lo".
+    lo.comp.instructions -> "instructions.lo".
     lo.comp.keywords -> "keywords.lo".
     lo.comp.lexer -> "lexer.lo".
     lo.comp.location -> "location.lo".
@@ -31,6 +33,7 @@ catalog{
     lo.comp.parseType -> "parsetype.lo".
     lo.comp.parseutils -> "parseutils.lo".
     lo.comp.regexp -> "regexp.lo".
+    lo.comp.registers -> "register.lo".
     lo.comp.repository -> "repository.lo".
     lo.comp.resolve -> "resolve.lo".
     lo.comp.term -> "term.lo".
@@ -40,6 +43,7 @@ catalog{
     lo.comp.typecheck -> "checker.lo".
     lo.comp.types -> "types.lo".
     lo.comp.unify -> "unify.lo".
+    lo.comp.varcomp -> "varcomp.lo".
   }
   default: "../LO/catalog".
 }

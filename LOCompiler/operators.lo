@@ -67,6 +67,8 @@ lo.comp.operators{
   prefixOp("type",1260,1259).	 /* type definition */
   prefixOp("all",1245,1244).	 /* universal quantifier */
   prefixOp("exists",1245,1244).	 /* existential quantifier */
+  prefixOp("return",1000,999).	 /* wrap value in monad */
+  prefixOp("raise",1000,999).	 /* error return in monad */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
   prefixOp("import",900,899).	 /* import module */

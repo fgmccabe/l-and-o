@@ -1,0 +1,8 @@
+lo.comp.clausecomp{
+  import lo.
+
+  import lo.comp.errors.
+  import lo.comp.registers.
+  import lo.comp.term.
+  import lo.comp.varcomp.
+}

@@ -14,6 +14,9 @@ lo.sets {
 
   public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
 
+  public addElement:all e ~~ equality[e] |: (set[e],e) => set[e].
+  addElement(set(S),E) => set(S[E->()]).
+
   public implementation all e ~~ equality[e] |: setops[set[e]->>e] <= {
     union(set(M1),set(M2)) => set(M1+M2).
     intersect(set(M1),set(M2)) => set(foldMap(M1,binApp(M2),[])).

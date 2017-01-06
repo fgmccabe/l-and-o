@@ -558,13 +558,6 @@ lo.comp.transform{
     lookupFunName(Map,Nm,Reslt),
     genVarbl("X",X),
     implementFunCall(Reslt,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
-/*
-  trExpCallOp(dot(Rec,Fld),Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    genVarbl("X",X),
-    XArgs = Args<>[X],
-    C = cons(trCons(Fld,length(XArgs)),XArgs),
-    trExpCallDot(Rec,Rec,C,X,Exp,merge([X],Q),Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
-  */
   trExpCallOp(T,Args,X,Q,Qx,Pre,APx,Tail,[ocall(C,Cl,Cl),..Tailx],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(T,Cl,Q,Qx,APx,Rx,Rx,Px,Map,Opts,Ex,Exx,Rp,Rpx),
     genVarbl("X",X),

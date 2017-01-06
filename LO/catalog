@@ -1,17 +1,18 @@
 catalog{
   content {
+    lo -> "lo.lo".
+    lo.collection -> "collection.lo".
     lo.core -> "core.lo".
     lo.bits -> "bits.lo".
     lo.coerce -> "coerce.lo".
+    lo.diff -> "diff.lo".
     lo.index -> "index.lo".
-    lo.resources -> "resources.lo".
-    lo.uri -> "uri.lo".
-    lo.topsort -> "topsort.lo".
-    lo -> "lo.lo".
-    lo.list -> "lists.lo".
-    lo.sets -> "sets.lo".
-    lo.collection -> "collection.lo".
     lo.json -> "json.lo".
+    lo.list -> "lists.lo".
+    lo.resources -> "resources.lo".
+    lo.sets -> "sets.lo".
+    lo.topsort -> "topsort.lo".
     lo.trie -> "trie.lo".
+    lo.uri -> "uri.lo".
   }
 }

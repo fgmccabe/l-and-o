@@ -363,7 +363,7 @@ collectExpRefs(app(_,Op,Args),All,R,Refs) :-
   collectExpRefs(Args,All,R0,Refs).
 collectExpRefs(T,All,R,Refs) :-
   isBraceTuple(T,_,Els),
-  collectExpListRefs(Els,All,R,Refs).
+  collectClassRefs(Els,All,R,Refs).
 collectExpRefs(T,All,R,Refs) :-
   isSquareTerm(T,Op,A),
   collectExpRefs(Op,All,R,R0),
