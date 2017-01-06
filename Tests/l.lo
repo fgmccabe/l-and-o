@@ -41,7 +41,7 @@ test.l{
   assert mapp([1,2,3],inc1) == [2,3,4].
 
   banjo:(integer)<=>{incr:(integer)=>integer}.
-  banjo(XB){
+  banjo(XB) <= {
     incr(Y)=>fred+Y.
     private fred:integer.
     fred = XB.

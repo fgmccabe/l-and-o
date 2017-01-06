@@ -322,7 +322,7 @@ lo.comp.transform{
   makeLabelTerm(moduleImpl(Access,Strct),Access,Strct,Access).
 
   /* A class body of the form
-  lbl(A1,..,Ak){
+  lbl(A1,..,Ak) <= {
     prog1 :- ...
   }
   is mapped to 
@@ -339,7 +339,7 @@ lo.comp.transform{
 
   findClassBody:(list[canonRule],list[canonDef]){}.
   findClassBody(Defs,Stmts) :-
-    clRule(_,_,_,_,theta(Stmts,_),_,_) in Defs.
+    clRule(_,_,_,_,theta(Stmts,_,_),_,_) in Defs.
 
   transformClassDefs:(list[canonDef],list[lyr],trOptions,list[clse],list[clse],list[clse],list[clse],list[clse],list[clse],report,report){}.
   transformClassDefs([],_,_,Rules,Rules,Entry,Entry,Extra,Extra,Rp,Rp).
@@ -695,14 +695,14 @@ lo.comp.transform{
 
   makeClassMtdMap:(list[canonRule],string,term,term,list[pred],list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   makeClassMtdMap([],_,_,_,_,List,List,_,_,_,Ex,Ex,Rp,Rp).
-  makeClassMtdMap([clRule(_,_,_,v(_,_),theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
+  makeClassMtdMap([clRule(_,_,_,v(_,_),theta(Stmts,_,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     collectLabelVars([],LbVr,ThVr,L0,L1),
     extraVars(Map,Extra),
     makeLblTerm(enum(LclName),Extra,LblTerm),
     (Extra =[] ? LblGl = [] | LblGl = [unfy(LbVr,LblTerm)]),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
-  makeClassMtdMap([clRule(_,_,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
+  makeClassMtdMap([clRule(_,_,_,Hd,theta(Stmts,_,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unfy(LbVr,LblTerm)],Map,Opts,Ex,Ex0,Rp,Rp0),
     collectLabelVars(Vs,LbVr,ThVr,L0,L1),
@@ -719,7 +719,7 @@ lo.comp.transform{
 
   makeInheritanceMap:(list[canonRule],string,term,term,list[lyr],trOptions,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)],list[clse],list[clse],list[clse],list[clse],report,report){}.
   makeInheritanceMap([],_,_,_,_,_,List,List,_,En,En,Ex,Ex,Rp,Rp).
-  makeInheritanceMap([clRule(_,_,_,_,theta(_,_),_,_),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
+  makeInheritanceMap([clRule(_,_,_,_,theta(_,_,_),_,_),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
     makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx).
   makeInheritanceMap([clRule(_,_,_,P,R,_,FaceTp),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
     pickAllFieldsFromFace(FaceTp,InhFields),

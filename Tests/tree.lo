@@ -29,7 +29,7 @@ tree{
   integer <~ comp.
 
   nd:all T<~comp ~~ (tree[T],T,tree[T])<=>tree[T].
-  nd(L,B,R){
+  nd(L,B,R) <= {
     insert(E)=> this :- E.eq(B).
     insert(E)=> nd(L.insert(E),B,R) :- E.less(B) .
     insert(E)=> nd(L,B,R.insert(E)) :- \+E.less(B) .
@@ -37,7 +37,7 @@ tree{
   }.
 
   II:all a <~ comp ~~ (a)<=>comp.
-  II(N){
+  II(N) <= {
     less(II(A)) :- N.less(A).
     eq(II(N)).
   }.
@@ -46,7 +46,7 @@ tree{
 
   testree:harness.
  -- testree<=harness.
-  testree{
+  testree <= {
     test() :-
         T0 = em.insert(II(1)),
         T1 = T0.insert(II(3)),

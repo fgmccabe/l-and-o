@@ -108,7 +108,6 @@ lo.comp.dependencies{
   ruleHead(S,L) :- isBinary(S,"-->",_,L,_).
   ruleHead(S,L) :- isBinary(S,":-",_,LL,_), ruleHead(LL,L).
   ruleHead(S,L) :- isBinary(S,"<=",_,L,_).
-  ruleHead(S,L) :- isBraceTerm(S,_,L,_).
   ruleHead(S,S) :- isRoundTerm(S,_,_,_).
 
   headName:(ast)=>string.
@@ -204,7 +203,6 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInNT(R,All,So)) :-  isBinary(S,"-->",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"<=",_,L,R).
-  stmtRefs(S,All,So) =>  refsInHead(L,All,thetaRefs(Els,All,So)) :-  isBraceTerm(S,_,L,Els).
   stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isBinary(S,"=",_,L,R).
   stmtRefs(S,All,So) =>  refsInTerm(R,All,So) :-  isUnary(S,"show",_,R).
   stmtRefs(S,All,So) =>  refsInCond(R,All,So) :-  isUnary(S,"assert",_,R).

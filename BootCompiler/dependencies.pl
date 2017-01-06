@@ -226,7 +226,7 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectExpRefs(Exp,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"<=",H,Exp),
-  collectAnnotRefs(St,All,Annots,SoFar,R0),
+  collectAnnotRefs(H,All,Annots,SoFar,R0),
   collectHeadRefs(H,All,R0,R1),
   collectLabelRefs(Exp,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-

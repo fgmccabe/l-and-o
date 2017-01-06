@@ -17,7 +17,7 @@ lo.comp.args {
   }
 
   private comp:(logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
-  comp(d,p,w,r,v,pk,dp){
+  comp(d,p,w,r,v,pk,dp) <= {
     debugging = d.
     profiling = p.
     wDir = w.

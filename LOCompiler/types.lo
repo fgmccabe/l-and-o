@@ -33,7 +33,7 @@ lo.comp.types{
   public type implEntry <~ { name:string}.
 
   public implEntry:(string,constraint) <=> implEntry.
-  implEntry(Nm,C){
+  implEntry(Nm,C) <= {
     name = Nm.
   }
 

@@ -12,37 +12,37 @@ lo.comp.ast{
 
   public
   iden:(location,string) <=> ast.
-  iden(Loc,Nm){
+  iden(Loc,Nm) <= {
     loc = Loc.
   }
 
   public
   intg:(location,integer) <=> ast.
-  intg(Loc,Ix){
+  intg(Loc,Ix) <= {
     loc = Loc.
   }
 
   public
   flot:(location,float) <=> ast.
-  flot(Loc,Dx){
+  flot(Loc,Dx) <= {
     loc = Loc
   }
 
   public
   strg:(location,string) <=> ast.
-  strg(Loc,St){
+  strg(Loc,St) <= {
     loc = Loc
   }
 
   public
   tupl:(location,string,list[ast]) <=> ast.
-  tupl(Loc,Nm,Els){
+  tupl(Loc,Nm,Els) <= {
     loc = Loc.
   }
 
   public
   appl:(location,ast,ast) <=> ast.
-  appl(Loc,Op,Arg){
+  appl(Loc,Op,Arg) <= {
     loc = Loc.
   }
 

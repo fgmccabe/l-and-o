@@ -15,7 +15,7 @@ person{
   }.
 
   person : (integer,person) ~> person.
-  person(A,S){
+  person(A,S) <= {
     spouse()=>S.
     age()=>A
   }.
@@ -25,7 +25,7 @@ person{
 
   lazy:student.
   lazy<=noone.
-  lazy{
+  lazy <= {
     studies()=>[]
   }.
 
@@ -34,7 +34,7 @@ person{
 
   shiftless:employee.
   shiftless<=noone.
-  shiftless{
+  shiftless <= {
     work()=>"macdonalds".
     salary()=>23.
   }.

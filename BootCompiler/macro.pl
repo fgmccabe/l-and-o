@@ -61,7 +61,7 @@ convertConstructor(name(Lc,Nm),Tp,Mark,Quants,Constraints,[TpRule,BodyRule|Tail]
   wrapQuants(Quants,Lc,TpCon,QTp),
   hasType(Lc,Nm,QTp,TpRl),
   call(Mark,Lc,TpRl,TpRule),
-  bodyRule(Lc,name(Lc,Nm),[],BodyRule).
+  bodyRule(Lc,name(Lc,Nm),[],BodyRule). /* construct con(_,..,_) <= {} */
 convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule|Tail],Tail) :-
   isRound(Con,Nm,ArgTypes),!, /* Construct con:(T1,..,Tn)<=>Tp */
   locOfAst(Con,Lc),
@@ -160,7 +160,8 @@ inheritThing(Lc,Hd,Rule) :-
   binary(Lc,"<=",Hd,name(Lc,"thing"),Rule).
 
 bodyRule(Lc,Hd,Els,Body) :-
-  braceTerm(Lc,Hd,Els,Body).
+  isBraceTuple(Th,Lc,Els),
+  binary(Lc,"<=",Hd,Th,Body).
 
 thingType(name(Lc,"thing"),Lc).
 

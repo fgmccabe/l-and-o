@@ -7,7 +7,7 @@ lo.trie{
   public type all k,v ~~ trie[k,v] <~ { put:(list[k],v) => trie[k,v]. get:(list[k])=>option[v]. }.
 
   private trie: all k,v ~~ equality[k] |: (option[v],map[k,trie[k,v]]) <=> trie[k,v].
-  trie(Vl,Entries){
+  trie(Vl,Entries) <= {
     put([],V) => trie(some(V),Entries).
     put([k,..l],V) => trie(Vl,Entries[k->find(Entries,k).put(l,v)]).
 

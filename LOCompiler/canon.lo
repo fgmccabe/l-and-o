@@ -8,7 +8,7 @@ lo.comp.canon {
   canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
 
   public implVar:(string,canonTerm) <=> implEntry.
-  implVar(Nm,T){
+  implVar(Nm,T) <= {
     name = Nm.
   }
 
@@ -44,7 +44,7 @@ lo.comp.canon {
             | whre(canonTerm,canonCond)
             | condExp(canonCond,canonTerm,canonTerm)
             | lambda(canonRule)
-            | theta(list[canonDef],list[canonOther])
+            | theta(list[canonDef],list[canonOther],list[canonDef])
             | dot(canonTerm,string)
             | over(location,canonTerm,list[constraint])
             | mtd(location,string).

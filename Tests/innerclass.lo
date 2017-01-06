@@ -13,9 +13,9 @@ innerClass{
   }.
 
   outer:(integer)<=>better.
-  outer(Id){
+  outer(Id) <= {
     inner:basic.
-    inner{
+    inner <= {
       id = Id.
     }.
 

@@ -286,17 +286,6 @@ lo.comp.typecheck{
   processStmt(St,ProgramType,Defs,Defx,E,Pth,Rp,Rpx) :-
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
-  processStmt(St,Tp,[clRule(Lc,Nm,XNm,v(Lc,Nm),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
-    isBraceTerm(St,Lc,L,Els),
-    isIden(L,_,Nm),
-    XNm = subPath(Path,marker(clss),Nm),
-    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,XNm,Rp,Rpx).
-  processStmt(St,classType(AT,Tp),[clRule(Lc,Nm,XNm,apply(Lc,v(Lc,Nm),Arg),theta(Stmts,Others),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
-    isBraceTerm(St,Lc,L,Els),
-    splitHead(L,_,Nm,A),
-    typeOfArg(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
-    XNm = subPath(Path,marker(clss),Nm),
-    checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,XNm,Rp0,Rpx).
   processStmt(St,Tp,Defs,Dx,E,Path,Rp,Rpx) :-
     isBinary(St,"-->",Lc,L,R),
     checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path,Rp,Rpx).
@@ -343,7 +332,7 @@ lo.comp.typecheck{
     splitHead(Term,_,Nm,Args).
 
   private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
-  checkClassRule(Lc,H,G,R,classType(AT,_),[clRule(Lc,Nm,XNm,Arg,Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(Lc,H,G,R,classType(AT,_),[clRule(Lc,Nm,XNm,mkClHed(Lc,Nm,Arg),Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
     splitHead(H,_,Nm,A),
     typeOfArg(A,AT,pushScope(E),E1,Arg,Rp,Rp0),
     SuperTp = newVar("S"),
@@ -352,6 +341,19 @@ lo.comp.typecheck{
     XNm = subPath(Pth,marker(clss),Nm),
     faceOfType(SuperTp,Env,SuperFace).
     generateClassFace(SuperTp,E1,SuperFace).
+
+************ FIX ME
+
+      processStmt(St,Tp,[clRule(Lc,Nm,XNm,Hd,theta(Stmts,Others,Types),trueCond,faceType(Types)),..Defs],Defs,E,Path,Rp,Rpx) :-
+    isBinary(St,"<=",Lc,L,R),
+    isBraceTuple(R,_,Els),
+    (isIden(L,_,Nm) ? Hd = v(Lc,Nm), Rp=Rp0 | splitHead(L,_,Nm,A), typeOfArg(A,AT,pushScope(E),E1,Arg,Rp,Rp0), Hd=apply(Lc,v(Lc,Nm),Arg)),
+    XNm = subPath(Path,marker(clss),Nm),
+    checkClassBody(Tp,Lc,Els,pushScope(E),Stmts,Others,Types,XNm,Rp,Rpx).
+
+  private mkClHed:(location,string,canonTerm) => canonTerm.
+  mkClHed(Lc,Nm,tpl([])) => v(Lc,Nm).
+  mkClHed(Lc,Nm,Arg) => apply(Lc,v(Lc,Nm),Arg).
 
   private generateClassFace:(tipe,list[env],tipe){}.
   generateClassFace(Tp,Env,Face) :-
@@ -386,7 +388,7 @@ lo.comp.typecheck{
     (_,Face) = freshen(CFace,QQ),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
     checkClassBody(Face,Lc,Els,Env,ThDefs,Others,Types,ImplName,Rp0,Rpx),
-    Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others),Face),
+    Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others,Types),Face),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement \(Stmt)",Lc,Rp,Rpx).
@@ -571,7 +573,7 @@ lo.comp.typecheck{
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isSquareTerm(Term,Lc,F,[A]),
     typeOfIndex(Lc,F,A,Tp,Env,Ev,Exp,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others),Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others,Types),Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,_str_gen("theta"),Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,v(Lc,_str_gen("_")),Rp,Rpx) :-

@@ -46,7 +46,7 @@ test.modsec{
   type meta <~ {tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta.}.
 
   private meta:(map[string,list[string]],map[string,list[string]]) <=> meta.
-  meta(Tgts,Tags) {
+  meta(Tgts,Tags) <= {
     tgts = Tgts.
     tags = Tags.
     addRule(Rl) => meta(merge(Tgts,M.target,M.id),merge(Tags,M.tags,M.id)) :- extractMetaFromRule(Rl,M).
@@ -82,7 +82,7 @@ test.modsec{
     id(Id) in Acts.
 
   private metaAnal:(string,list[string],list[string]) <=> {id:string. target:list[string]. tags:list[string]}.
-  metaAnal(Id,Tgt,Tags){
+  metaAnal(Id,Tgt,Tags) <= {
     id = Id.
     target = Tgt.
     tags = Tags.

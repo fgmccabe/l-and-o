@@ -8,7 +8,7 @@ anon2{
   bf <~ { mem:(symbol){}. }.
 
   beliefs:(list[symbol])<=>bf.
-  beliefs(I)<=>{                         -- A simple belief store
+  beliefs(I)<={                         -- A simple belief store
     mem(X) :- X in I.
   }.
 

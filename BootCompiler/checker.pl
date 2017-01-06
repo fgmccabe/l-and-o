@@ -313,23 +313,19 @@ processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],De
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
   checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath).
-processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
+processStmt(St,Tp,[classBody(Lc,Nm,v(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"<=",L,R),
-  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
-  typeOfTerm(R,SuperTp,E1,_,Repl),
-  generateClassFace(SuperTp,E,SuperFace).
-processStmt(St,Tp,[classBody(Lc,Nm,enum(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
-  isBraceTerm(St,Lc,L,Els),
-  isIden(L,Nm),
+  isBraceTuple(R,_,Els),
+  isIden(L,_,Nm),
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
   checkClassBody(Tp,Lc,Els,E,Stmts,Others,Types,ClassPath).
-processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
-  isBraceTerm(St,Lc,L,Els),
-  checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),
-  marker(class,Marker),
-  subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath).
+processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
+  isBinary(St,Lc,"<=",L,R),
+  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
+  newTypeVar("Supr",SuperTp),
+  typeOfTerm(R,SuperTp,E1,_,Repl),
+  generateClassFace(SuperTp,E,SuperFace).
 processStmt(St,Tp,Defs,Dx,E,Path) :-
   isBinary(St,Lc,"-->",L,R),
   processGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path).
@@ -567,9 +563,10 @@ typeOfTerm(Term,Tp,Env,Ev,conditional(Lc,Test,Then,Else)) :-
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTuple(Term,Lc,Els), !,
   checkSquareTuple(Lc,Els,Tp,Env,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Env,theta(Defs,Others,Types)) :-
+typeOfTerm(Term,Tp,Env,Env,theta(Path,Defs,Others,Types)) :-
   isBraceTuple(Term,Lc,Els),
-  checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,"").
+  genstr("theta",Path),
+  checkClassBody(Tp,Lc,Els,Env,Defs,Others,Types,Path).
 typeOfTerm(tuple(_,"()",[Inner]),Tp,Env,Ev,Exp) :-
   \+ isTuple(Inner,_), !,
   typeOfTerm(Inner,Tp,Env,Ev,Exp).

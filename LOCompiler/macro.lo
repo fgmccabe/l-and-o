@@ -154,7 +154,7 @@ lo.comp.macro{
   genericType(Lc,Nm,Args,squareTerm(Lc,Nm,Args)).
 
   bodyRule:(location,ast,list[ast],ast){}.
-  bodyRule(Lc,Hd,Els,braceTerm(Lc,Hd,Els)).
+  bodyRule(Lc,Hd,Els,binary(Lc,"<=",Hd,braceTuple(Lc,Els))).
 
   generateAnnotations:(list[ast],list[ast],list[ast],list[ast],list[ast]){}.
   generateAnnotations([],_,_,Stmts,Stmts).

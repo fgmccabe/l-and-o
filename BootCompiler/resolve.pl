@@ -104,6 +104,9 @@ resolveTerm(dot(Rc,Fld),Dict,dot(RRc,Fld)) :- resolveTerm(Rc,Dict,RRc).
 resolveTerm(enum(Lc,Rf),_,enum(Lc,Rf)).
 resolveTerm(tuple(Lc,Args),Dict,tuple(Lc,RArgs)) :-
   resolveTerms(Args,Dict,RArgs).
+resolveTerm(theta(Path,Defs,Others,Types),Dict,theta(Path,RDefs,ROthers,Types)) :-
+  overload(Defs,Dict,RDict,RDefs),
+  overloadOthers(Others,RDict,ROthers).
 resolveTerm(where(Trm,Cond),Dict,where(RTrm,RCond)) :-
   resolveTerm(Trm,Dict,RTrm),
   resolveCond(Cond,Dict,RCond).
