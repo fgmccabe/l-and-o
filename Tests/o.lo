@@ -1,10 +1,10 @@
 test.o{
-  type foo <~ {id:()=>integer}.
+  type foo <~ {id:all e ~~(e)=>e}.
 
   foo:(integer) <=> foo.
   foo(A) <= {
-    id()=>A
+    id(_)=>A
   }.
 
-  assert foo(3).id() = 3.
+  assert foo(3).id(4) = 3.
 }

@@ -9,7 +9,7 @@ lo.comp.errors{
   }.
 
   private report: (list[reportMsg]) <=> report.
-  report(Lst){
+  report(Lst) <= {
     msgs = Lst.
   }.
 

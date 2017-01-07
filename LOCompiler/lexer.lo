@@ -27,7 +27,7 @@ lo.comp.lexer{
   startState(Src,Pth) => tkState(Src,1,0,1,Pth).
 
   tkState:(list[integer],integer,integer,integer,string) <=> tokenState.
-  tkState(Chars,Line,Off,Col,Pth){
+  tkState(Chars,Line,Off,Col,Pth) <= {
     currentLocation((Line,Off,Col,Pth)).
   }.
 

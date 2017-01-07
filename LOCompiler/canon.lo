@@ -44,7 +44,7 @@ lo.comp.canon {
             | whre(canonTerm,canonCond)
             | condExp(canonCond,canonTerm,canonTerm)
             | lambda(canonRule)
-            | theta(list[canonDef],list[canonOther],list[canonDef])
+            | theta(list[canonDef],list[canonOther])
             | dot(canonTerm,string)
             | over(location,canonTerm,list[constraint])
             | mtd(location,string).

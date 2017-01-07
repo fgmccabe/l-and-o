@@ -220,10 +220,10 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectCondRefs(C,All,R1,R2),
   collectExpRefs(R,All,R2,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
-  isBinary(St,"-->",H,Exp),
+  isBinary(St,"-->",H,Body),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
   collectGrHeadRefs(H,All,R0,R1),
-  collectExpRefs(Exp,All,R1,Refs).
+  collectNTRefs(Body,All,R1,Refs).
 collRefs(St,All,Annots,SoFar,Refs) :-
   isBinary(St,"<=",H,Exp),
   collectAnnotRefs(H,All,Annots,SoFar,R0),
@@ -268,6 +268,67 @@ collectGrHeadRefs(Hd,All,R0,Refs) :-
   collectPtnRefs(R,All,R1,Refs).
 collectGrHeadRefs(Hd,All,R0,Refs) :-
   collectHeadRefs(Hd,All,R0,Refs).
+
+collectNTRefs(T,All,R,Refs) :-
+  isSquareTuple(T,_,Els),
+  collectExpListRefs(Els,All,R,Refs).
+collectNTRefs(T,All,R,Refs) :-
+  isRoundTuple(T,_,Els),
+  collectNTRefList(Els,All,R,Refs).
+collectNTRefs(T,All,R,Refs) :-
+  isBraceTuple(T,_,Els),
+  collectCondListRefs(Els,All,R,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,"|",L,R),
+  isBinary(L,"?",LL,LR),
+  collectNTRefs(LL,All,Rf,R0),
+  collectNTRefs(LR,All,R0,R1),
+  collectNTRefs(R,All,R1,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,"|",L,R),
+  collectNTRefs(L,All,Rf,R0),
+  collectNTRefs(R,All,R0,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,",",L,R),
+  collectNTRefs(L,All,Rf,R0),
+  collectNTRefs(R,All,R0,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isUnary(T,"!",L),
+  collectNTRefs(L,All,Rf,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isUnary(T,"\\+",L),
+  collectNTRefs(L,All,Rf,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isUnary(T,"+",L),
+  collectNTRefs(L,All,Rf,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,"@@",L,R),
+  collectNTRefs(L,All,Rf,R0),
+  collectCondRefs(R,All,R0,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isUnary(T,"@",L),
+  collectCondRefs(L,All,Rf,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,"=",L,R),
+  collectExpRefs(L,All,Rf,R0),
+  collectExpRefs(R,All,R0,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isBinary(T,"\\=",L,R),
+  collectExpRefs(L,All,Rf,R0),
+  collectExpRefs(R,All,R0,Refs).
+collectNTRefs(T,All,Rf,Refs) :-
+  isRoundTerm(T,_,O,A),
+  collectExpRefs(O,All,Rf,R0),
+  collectExpListRefs(A,All,R0,Refs).
+collectNTRefs(T,_,Rf,Rf) :-
+  isString(T,_).
+collectNTRefs(T,_,Rf,Rf) :-
+  isIden(T,_,"eof").
+
+collectNTRefList([],_,R,R).
+collectNTRefList([C|L],All,R,Refs) :-
+  collectNTRefs(C,All,R,R0),
+  collectNTRefList(L,All,R0,Refs).
 
 collectClassRefs(Defs,All,SoFar,Refs) :-
   locallyDefined(Defs,All,Rest),
@@ -326,18 +387,23 @@ collectCondRefs(C,A,R0,Refs) :-
 collectCondRefs(C,A,R0,Refs) :-
   isBinary(C,"%%",L,R),
   isBinary(R,"~",St,Re),
-  collectExpRefs(L,A,R0,R1),
+  collectNTRefs(L,A,R0,R1),
   collectExpRefs(St,A,R1,R2),
   collectExpRefs(Re,A,R2,Refs).
 collectCondRefs(C,A,R0,Refs) :-
   isBinary(C,"%%",L,R),
-  collectExpRefs(L,A,R0,R1),
+  collectNTRefs(L,A,R0,R1),
   collectExpRefs(R,A,R1,Refs).
 collectCondRefs(C,A,R0,Refs) :-
   isTuple(C,[Inner]),
   collectCondRefs(Inner,A,R0,Refs).
 collectCondRefs(C,A,R0,Refs) :-
   collectExpRefs(C,A,R0,Refs).
+
+collectCondListRefs([],_,R,R).
+collectCondListRefs([C|L],All,R,Refs) :-
+  collectCondRefs(C,All,R,R0),
+  collectCondListRefs(L,All,R0,Refs).
 
 collectExpRefs(E,A,R0,Refs) :-
   isBinary(E,":",L,R),

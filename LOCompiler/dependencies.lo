@@ -270,7 +270,7 @@ lo.comp.dependencies{
 
   refsInNT:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInNT(T,All,So) => refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).
-  refsInNT(T,All,So) => refsInNT(R,All,refsInNT(LR,All,refsInNT(LL,All,So))) :-  (isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR)).
+  refsInNT(T,All,So) => refsInNT(R,All,refsInNT(LR,All,refsInNT(LL,All,So))) :- isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
   refsInNT(T,All,So) => refsInNT(R,All,refsInNT(L,All,So)) :-  isBinary(T,"|",_,L,R).
   refsInNT(T,All,So) => refsInNT(L,All,refsInNT(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"!",_,L).
@@ -280,7 +280,7 @@ lo.comp.dependencies{
   refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"=",_,L,R).
   refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"\\=",_,L,R).
   refsInNT(T,All,So) => refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
-  refsInNT(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
+  refsInNT(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :- isRoundTerm(T,_,Op,Args).
   refsInNT(T,All,So) => So :- isString(T,_,_).
   refsInNT(T,All,So) => refsInNTs(Els,All,So) :- isRoundTuple(T,_,Els).
   refsInNT(T,All,So) => refsInConds(Els,All,So) :- isBraceTuple(T,_,Els).
