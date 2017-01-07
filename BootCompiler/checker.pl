@@ -306,23 +306,16 @@ processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :-
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
   checkDefn(Lc,L,R,Tp,Def,Env).
-processStmt(St,classType(AT,Tp),[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
+processStmt(St,ClassTp,[classBody(Lc,Nm,Hd,Stmts,Others,Types)|Defs],Defs,E,Path) :-
   isBinary(St,Lc,"<=",L,R),
   isBraceTuple(R,_,Els),
-  checkClassHead(L,classType(AT,Tp),E,E1,Nm,Hd),!,
+  checkClassHead(L,ClassTp,Tp,E,E1,Nm,Hd),!,
   marker(class,Marker),
   subPath(Path,Marker,Nm,ClassPath),
   checkClassBody(Tp,Lc,Els,E1,Stmts,Others,Types,ClassPath).
-processStmt(St,Tp,[classBody(Lc,Nm,v(Lc,Nm),Stmts,Others,Types)|Defs],Defs,E,Path) :-
+processStmt(St,ClassTp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
   isBinary(St,Lc,"<=",L,R),
-  isBraceTuple(R,_,Els),
-  isIden(L,_,Nm),
-  marker(class,Marker),
-  subPath(Path,Marker,Nm,ClassPath),
-  checkClassBody(Tp,Lc,Els,E,Stmts,Others,Types,ClassPath).
-processStmt(St,Tp,[labelRule(Lc,Nm,Hd,Repl,SuperFace)|Defs],Defs,E,_) :-
-  isBinary(St,Lc,"<=",L,R),
-  checkClassHead(L,Tp,E,E1,Nm,Hd),!,
+  checkClassHead(L,ClassTp,_,E,E1,Nm,Hd),!,
   newTypeVar("Supr",SuperTp),
   typeOfTerm(R,SuperTp,E1,_,Repl),
   generateClassFace(SuperTp,E,SuperFace).
@@ -348,9 +341,9 @@ checkDefn(Lc,L,R,Tp,defn(Lc,Nm,Cond,Value),Env) :-
   checkCond(C,E,E1,Cond),
   typeOfTerm(R,Tp,E1,_,Value).
 
-checkClassHead(Term,_,Env,Env,Nm,enum(Lc,Nm)) :-
+checkClassHead(Term,Tp,Tp,Env,Env,Nm,enum(Lc,Nm)) :-
   isIden(Term,Lc,Nm),!.
-checkClassHead(Term,classType(AT,_),Env,Ex,Nm,Ptn) :-
+checkClassHead(Term,classType(AT,Tp),Tp,Env,Ex,Nm,Ptn) :-
   splitHead(Term,Nm,A,C),!,
   locOfAst(Term,Lc),
   pushScope(Env,E0),

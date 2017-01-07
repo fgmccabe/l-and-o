@@ -40,7 +40,7 @@ lo.comp.genprolog{
   convertPred(ocall(Call,Lb,Th),Ox) => appStr("ocall(",convertTerm(Call,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c),..Ox])])])).
   convertPred(neck,Ox) => [0c!,..Ox].
   convertPred(fail,Ox) => appStr("fail",Ox).
-  convertPred(raise(E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
+  convertPred(except(E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
   
   convertTerm:(term,list[integer]) => list[integer].
   convertTerm(anon,Ox) => [0c_,..Ox].

@@ -24,7 +24,7 @@ lo.comp.term {
                     | ocall(term,term,term)
                     | neck
                     | fail
-                    | raise(term).
+                    | except(term).
 
   public type prProg ::= prProg(pkgSpec,list[clse]).
 
@@ -78,7 +78,7 @@ lo.comp.term {
   displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("/"),dispTerm(Th),ss("."),dispTerm(Rc)]).
   displayPred(unfy(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
   displayPred(fail) => ss("fail").
-  displayPred(raise(T)) => ssSeq([ss("raise "),disp(T)]).
+  displayPred(except(T)) => ssSeq([ss("raise "),disp(T)]).
 
   private dispPreds:(string,string,list[pred]) => list[ss].
   dispPreds(_,_,[]) => [].

@@ -84,7 +84,7 @@ lo.comp.transform{
     genRaise(Lc,LclPrg,G,[],Rp,Rpx).
 
   genRaise:(location,term,list[pred],list[pred],report,report){}.
-  genRaise(Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(widthOf(Lc))])),..P],P,Rp,Rp).
+  genRaise(Lc,LclName,[except(cons(strct("error",4),[LclName,intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(widthOf(Lc))])),..P],P,Rp,Rp).
 
   transformPredicate:(canonDef,list[lyr],trOptions,list[clse],list[clse],list[clse],list[clse],report,report){}.
   transformPredicate(relDef(_,Nm,_,[],Clses),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
