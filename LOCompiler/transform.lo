@@ -40,7 +40,7 @@ lo.comp.transform{
     transformPredicate(relDef(Lc,Nm,Tp,Cx,Clses),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx).
   transformMdlDef(varDef(Lc,Nm,_,_,Value,Cond),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
     transformDefn(Map,Opts,Lc,Nm,Cond,Value,Rules,Rx,Ex,Exx,Rp,Rpx).
-  transformMdlDef(classDef(Lc,Nm,_,Tp,_,Defs,Face),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
+  transformMdlDef(classDef(Lc,Nm,Tp,_,Defs,Face),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
     transformClass(Lc,Nm,Defs,Face,Map,Opts,Rules,Rx,_,_,Ex,Exx,Rp,Rpx).
   transformMdlDef(typeDef(_,_,_,_),_,_,Rules,Rules,Ex,Ex,Rp,Rp).
   transformMdlDef(cnDefn(_,_,_),_,_,Rules,Rules,Ex,Ex,Rp,Rp).
@@ -339,7 +339,7 @@ lo.comp.transform{
 
   findClassBody:(list[canonRule],list[canonDef]){}.
   findClassBody(Defs,Stmts) :-
-    clRule(_,_,_,_,theta(Stmts,_),_,_) in Defs.
+    clRule(_,_,_,theta(Stmts,_),_,_) in Defs.
 
   transformClassDefs:(list[canonDef],list[lyr],trOptions,list[clse],list[clse],list[clse],list[clse],list[clse],list[clse],report,report){}.
   transformClassDefs([],_,_,Rules,Rules,Entry,Entry,Extra,Extra,Rp,Rp).
@@ -363,7 +363,7 @@ lo.comp.transform{
   transformClassDef(varDef(Lc,Nm,_,_,Value,Cond),Map,Opts,Rules,Rx,Entry,Enx,Ex,Exx,Rp,Rpx) :-
     transformDefn(Map,Opts,Lc,Nm,Cond,Value,Rules,Rx,Ex,Exx,Rp,Rpx),
     entryClause(Map,Nm,Entry,Enx).
-  transformClassDef(classDef(Lc,Nm,_,Tp,Cx,Defs,Face),Map,Opts,Rules,Rx,Entry,Enx,Ex,Exx,Rp,Rpx) :-
+  transformClassDef(classDef(Lc,Nm,Tp,Cx,Defs,Face),Map,Opts,Rules,Rx,Entry,Enx,Ex,Exx,Rp,Rpx) :-
     transformClass(Lc,Nm,Defs,Face,Map,Opts,Rules,Rx,Entry,E0,Ex,Exx,Rp,Rpx),
     entryClause(Map,Nm,E0,Enx).
 
@@ -397,9 +397,9 @@ lo.comp.transform{
 
   transformImplementation:(location,string,canonTerm,canonTerm,tipe,list[lyr],trOptions,list[clse],list[clse],list[clse],list[clse],report,report){}.
   transformImplementation(Lc,ImplName,tpl([]),Body,Face,Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
-    transformClass(Lc,ImplName,[clRule(Lc,ImplName,ImplName,v(Lc,ImplName),Body,trueCond,Face)],Face,Map,Opts,Rules,R0,R0,Rx,Ex,Exx,Rp,Rpx).
+    transformClass(Lc,ImplName,[clRule(Lc,ImplName,v(Lc,ImplName),Body,trueCond,Face)],Face,Map,Opts,Rules,R0,R0,Rx,Ex,Exx,Rp,Rpx).
   transformImplementation(Lc,ImplName,Hd,Body,Face,Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
-    transformClass(Lc,ImplName,[clRule(Lc,ImplName,ImplName,apply(Lc,v(Lc,ImplName),Hd),Body,trueCond,Face)],Face,Map,Opts,Rules,R0,R0,Rx,Ex,Exx,Rp,Rpx).
+    transformClass(Lc,ImplName,[clRule(Lc,ImplName,apply(Lc,v(Lc,ImplName),Hd),Body,trueCond,Face)],Face,Map,Opts,Rules,R0,R0,Rx,Ex,Exx,Rp,Rpx).
     
   trPtns:(list[canonTerm],list[term],list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   trPtns([],Args,Args,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rp).
@@ -695,21 +695,21 @@ lo.comp.transform{
 
   makeClassMtdMap:(list[canonRule],string,term,term,list[pred],list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   makeClassMtdMap([],_,_,_,_,List,List,_,_,_,Ex,Ex,Rp,Rp).
-  makeClassMtdMap([clRule(_,_,_,v(_,_),theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
+  makeClassMtdMap([clRule(_,_,v(_,_),theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     collectLabelVars([],LbVr,ThVr,L0,L1),
     extraVars(Map,Extra),
     makeLblTerm(enum(LclName),Extra,LblTerm),
     (Extra =[] ? LblGl = [] | LblGl = [unfy(LbVr,LblTerm)]),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
-  makeClassMtdMap([clRule(_,_,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
+  makeClassMtdMap([clRule(_,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :- 
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unfy(LbVr,LblTerm)],Map,Opts,Ex,Ex0,Rp,Rp0),
     collectLabelVars(Vs,LbVr,ThVr,L0,L1),
     extraVars(Map,Extra),
     makeLblTerm(Lbl,Extra,LblTerm),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  makeClassMtdMap([clRule(_,_,_,_,_,_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  makeClassMtdMap([clRule(_,_,_,_,_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
 
   makeLblTerm:(term,list[term],term){}.
@@ -719,9 +719,9 @@ lo.comp.transform{
 
   makeInheritanceMap:(list[canonRule],string,term,term,list[lyr],trOptions,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)],list[clse],list[clse],list[clse],list[clse],report,report){}.
   makeInheritanceMap([],_,_,_,_,_,List,List,_,En,En,Ex,Ex,Rp,Rp).
-  makeInheritanceMap([clRule(_,_,_,_,theta(_,_),_,_),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
+  makeInheritanceMap([clRule(_,_,_,theta(_,_),_,_),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
     makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx).
-  makeInheritanceMap([clRule(_,_,_,P,R,_,FaceTp),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
+  makeInheritanceMap([clRule(_,_,P,R,_,FaceTp),..Defs],LclName,LbVr,ThVr,Map,Opts,List,Lx,Fields,Entry,En,Ex,Exx,Rp,Rpx) :-
     pickAllFieldsFromFace(FaceTp,InhFields),
     extraVars(Map,Extra),
     genVarbl("CV",CV),
@@ -766,9 +766,9 @@ lo.comp.transform{
   collectMtd(grammDef(_,Nm,Tp,_,_),OuterNm,Lbl,ThV,List,
         [(Nm,localRel(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),localName(OuterNm,"^",Nm),effectiveArity(Tp,0),Lbl,ThV)),..List]).
   collectMtd(varDef(_,Nm,_,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),Lbl,ThV)),..List]).
-  collectMtd(classDef(_,Nm,_,Tp,_,_,_),OuterNm,Lbl,ThV,List,
+  collectMtd(classDef(_,Nm,Tp,_,_,_),OuterNm,Lbl,ThV,List,
         [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),0,Lbl,ThV)),..List]) :- \+ isClassType(Tp).
-  collectMtd(classDef(_,Nm,_,Tp,_,_,_),OuterNm,Lbl,ThV,List,
+  collectMtd(classDef(_,Nm,Tp,_,_,_),OuterNm,Lbl,ThV,List,
         [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),effectiveArity(Tp,0),Lbl,ThV)),..List]).
 
   collectLabelVars:(list[term],term,term,list[(string,mapEntry)],list[(string,mapEntry)]){}.

@@ -105,7 +105,7 @@ lo.comp.typecheck{
   declareFields:(list[(string,tipe)],location,list[env]) => list[env].
   declareFields([],_,Env) => Env.
   declareFields([(Nm,Tp),..More],Lc,Env) =>
-    declareFields(More,Lc,declareVar(Nm,vr(Lc,v(Lc,Nm),Tp),Env)).
+    declareFields(More,Lc,declareVar(Nm,vr(v(Lc,Nm),Tp),Env)).
 
   importTypes:(list[(string,tipe)],location,list[env]) => list[env].
   importTypes([],_,Env)=>Env.
@@ -202,7 +202,7 @@ lo.comp.typecheck{
   formMethods([(Nm,Tp),..M],Lc,Q,Con,Env,Ev) :-
     moveQuants(Tp,FQ,QTp),
     moveQuants(MTp,merge(FQ,Q),constrained(QTp,Con)),
-    formMethods(M,Lc,Q,Con,declareVar(Nm,vr(Lc,mtd(Lc,Nm),MTp),Env),Ev).
+    formMethods(M,Lc,Q,Con,declareVar(Nm,vr(mtd(Lc,Nm),MTp),Env),Ev).
 
   -- handle program definitions
   private varGroup:(list[defn],list[(string,tipe)],list[(string,ast)],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
@@ -216,10 +216,10 @@ lo.comp.typecheck{
     ((Nm,Annot) in Annots)!,
     isBinary(Annot,":",Lc,_,T),
     parseType(T,Env,Tp,Rp,Rp0),
-    parseAnnotations(More,Fields,Annots,declareVar(Nm,vr(Lc,v(Lc,Nm),Tp),Env),Ex,Path,Rp0,Rpx).
+    parseAnnotations(More,Fields,Annots,declareVar(Nm,vr(v(Lc,Nm),Tp),Env),Ex,Path,Rp0,Rpx).
   parseAnnotations([defn(N,valu,Lc,_,_),..More],Fields,Annots,Env,Ex,Path,Rp,Rpx) :-
     ((N,Tp) in Fields)!,
-    parseAnnotations(More,Fields,Annots,declareVar(N,vr(Lc,v(Lc,N),Tp),Env),Ex,Path,Rp,Rpx).
+    parseAnnotations(More,Fields,Annots,declareVar(N,vr(v(Lc,N),Tp),Env),Ex,Path,Rp,Rpx).
   parseAnnotations([defn(N,valu,Lc,_,_),..More],Fields,Annots,Env,Ex,Path,Rp,Rpx) :-
     reportError("no type annotation for variable \(N)",Lc,Rp,Rp0),
     parseAnnotations(More,Fields,Annots,Env,Ex,Path,Rp0,Rpx).
@@ -238,7 +238,7 @@ lo.comp.typecheck{
 
   private pickupVarType:(string,location,list[env],report,report) => tipe.
   pickupVarType(N,_,Env,Rp,Rp)=>Tp :-
-    isVar(N,Env,vr(_,_,Tp)).
+    isVar(N,Env,vr(_,Tp)).
   pickupVarType(N,Lc,_,Rp,Rpx) => newVar("_") :- 
     reportError("\(N) not declared",Lc,Rp,Rpx).
 
@@ -315,7 +315,7 @@ lo.comp.typecheck{
   checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,_,Rp,Rpx) :-
     splitGrHead(L,Nm,A,P),
     ElTp=newVar("_E"),
-    typeOfArg(A,AT,declareVar("stream\$X",vr(Lc,v(Lc,"stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
+    typeOfArg(A,AT,declareVar("stream\$X",vr(v(Lc,"stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
     checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
     typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E3,_,HDTL,Rp1,Rp2),
     checkTerminals(P,HDTL,PB,ElTp,E3,_,Rp2,Rpx).
@@ -332,25 +332,30 @@ lo.comp.typecheck{
     splitHead(Term,_,Nm,Args).
 
   private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
-  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,XNm,Hd,Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(_,H,G,R,ClassTp,[clRule(Lc,Nm,Hd,theta(ClDefs,ClOthers),Cond,faceType(Types)),..Defs],Defs,E,Pth,Rp,Rpx) :-
+    isBraceTuple(R,Lc,Els),
     checkClassHead(H,ClassTp,SuperTp,pushScope(E),E1,Nm,Hd,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
+    checkThetaTerm(SuperTp,Lc,Els,E1,ClDefs,ClOthers,Types,subPath(Pth,marker(clss),Nm),Rp0,Rpx).
+  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,Hd,Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
+    checkClassHead(H,ClassTp,_,pushScope(E),E1,Nm,Hd,Rp,Rp0),
+    checkCond(G,E1,E2,Cond,Rp0,Rp1),
+    SuperTp = newVar("SpTp"),
     typeOfTerm(R,SuperTp,E2,_,Repl,Rp1,Rpx),
-    XNm = subPath(Pth,marker(clss),Nm),
-    faceOfType(SuperTp,Env,SuperFace).
+    faceOfType(SuperTp,E2,SuperFace).
 
   private checkClassHead:(ast,tipe,tipe,list[env],list[env],string,canonTerm,report,report){}.
   checkClassHead(Term,Tp,Tp,Env,Env,Nm,v(Lc,Nm),Rp,Rp) :-
     isIden(Term,Lc,Nm).
   checkClassHead(Term,classType(AT,Tp),Tp,Env,Ev,Nm,apply(Lc,v(Lc,Nm),Args),Rp,Rpx) :-
     splitHead(Term,Lc,Nm,A),
-    typeOfArg(A,AT,pushScope(Env),Ev,Args,Rp,Rpx).
+    typeOfArg(A,AT,Env,Ev,Args,Rp,Rpx).
 
   private checkThetaTerm:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[(string,tipe)],string,report,report){}.
   checkThetaTerm(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath,Rp,Rpx) :-
     faceOfType(deRef(ClassTp),Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
-    thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(Lc,v(Lc,"this"),ClassTp),pushScope(Env)),_OEnv,Defs,Public,_Imports,_,Others,Rp,Rpx),
+    thetaEnv(ClassPath,nullRepo,Lc,Els,Fields,declareVar("this",vr(v(Lc,"this"),ClassTp),Env),_OEnv,Defs,Public,_Imports,_,Others,Rp,Rpx),
     computeExport(Defs,Fields,Public,_,Types,_,[],[]).
 
   private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
@@ -371,7 +376,7 @@ lo.comp.typecheck{
     moveQuants(ConFace,_,CFace),
     (_,Face) = freshen(CFace,QQ),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
-    checkThetaTerm(Face,Lc,Els,Env,ThDefs,Others,Types,ImplName,Rp0,Rpx),
+    checkThetaTerm(Face,Lc,Els,pushScope(Env),ThDefs,Others,Types,ImplName,Rp0,Rpx),
     Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others),Face),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
@@ -432,7 +437,7 @@ lo.comp.typecheck{
     checkGrammarType(Lc,Env,StrmTp,ElTp,Rp,Rp0),
     typeOfTerm(S,StrmTp,Env,E0,Strm,Rp0,Rp1),
     typeOfTerm(M,StrmTp,E0,E1,Rest,Rp1,Rp2),
-    checkNonTerminal(L,StrmTp,ElTp,declareVar(streamVar,vr(Lc,v(Lc,streamVar),StrmTp),E1),Ev,NT,Rp2,Rpx).
+    checkNonTerminal(L,StrmTp,ElTp,declareVar(streamVar,vr(v(Lc,streamVar),StrmTp),E1),Ev,NT,Rp2,Rpx).
   checkCond(Term,Env,Ev,phraseCond(Lc,NT,Strm,Rest),Rp,Rpx) :-
     isBinary(Term,"%%",Lc,L,R),
     StrmTp = newVar("_S"),
@@ -441,7 +446,7 @@ lo.comp.typecheck{
     typeOfTerm(R,StrmTp,Env,E0,Strm,Rp0,Rp1),
     M = iden(Lc,_str_gen("_")),
     typeOfTerm(M,StrmTp,E0,E1,Rest,Rp1,Rp2),
-    checkNonTerminal(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,ElTp,declareVar("stream_X",vr(Lc,v(Lc,"stream_X"),StrmTp),E1),Ev,NT,Rp2,Rpx).
+    checkNonTerminal(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,ElTp,declareVar("stream_X",vr(v(Lc,"stream_X"),StrmTp),E1),Ev,NT,Rp2,Rpx).
   checkCond(Term,Env,Ev,Call,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     PrTp = newVar("_P"),
@@ -480,7 +485,7 @@ lo.comp.typecheck{
       Term = v(Lc,_str_gen("_")) |
       isVar(Nm,Env,Spec) ?
       typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
-      Ev = declareVar(Nm,vr(Lc,v(Lc,Nm),Tp),Env), Term=v(Lc,Nm), Rp=Rpx).
+      Ev = declareVar(Nm,vr(v(Lc,Nm),Tp),Env), Term=v(Lc,Nm), Rp=Rpx).
   typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :- 
     checkType(Lc,findType("integer",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
   typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Dx),Rp,Rpx) :- 
@@ -721,7 +726,7 @@ lo.comp.typecheck{
     isUnary(Term,"@",Lc,Test),
     isRoundTerm(Test,_,Op,Args),
     NV = _str_gen("_"),
-    checkCond(appl(Lc,binary(Lc,".",iden(Lc,NV),Op),tupl(Lc,"()",Args)),declareVar(NV,vr(Lc,v(Lc,NV),Tp),Env),Ev,Cond,Rp,Rpx).
+    checkCond(appl(Lc,binary(Lc,".",iden(Lc,NV),Op),tupl(Lc,"()",Args)),declareVar(NV,vr(v(Lc,NV),Tp),Env),Ev,Cond,Rp,Rpx).
   checkNonTerminal(Term,Tp,_,Env,Ev,NT,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     GrTp = newVar("_G"),
@@ -738,7 +743,7 @@ lo.comp.typecheck{
   checkNonTerminal(Term,StreamTp,ElTp,Env,Ev,grDip(v(Lc,NV),Cond),Rp,Rpx) :-
     isIden(Term,Lc,"eof"),
     NV = _str_gen("_"),
-    checkCond(unary(Lc,"_eof",iden(Lc,NV)),declareVar(NV,vr(Lc,v(Lc,NV),StreamTp),Env),Ev,Cond,Rp,Rpx).
+    checkCond(unary(Lc,"_eof",iden(Lc,NV)),declareVar(NV,vr(v(Lc,NV),StreamTp),Env),Ev,Cond,Rp,Rpx).
   checkNonTerminal(Term,_,_,Env,Ex,grTest(Cond),Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     checkConds(Els,Env,Ex,Cond,Rp,Rpx).
@@ -760,25 +765,25 @@ lo.comp.typecheck{
   collectPrograms([Eqn,..Stmts],Env,Cx,[funDef(Lc,Nm,Tp,Cx,[Eqn,..Eqns]),..Defs],Dx) :-
     Eqn = equation(Lc,Nm,_,_,_),
     collectEquations(Stmts,S0,Nm,Eqns),
-    isVar(Nm,Env,vr(_,_,Tp)),
+    isVar(Nm,Env,vr(_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([Cl,..Stmts],Env,Cx,[relDef(Lc,Nm,Tp,Cx,[Cl,..Clses]),..Defs],Dx) :-
     Cl = clause(Lc,Nm,_,_),
     collectClauses(Stmts,S0,Nm,Clses),
-    isVar(Nm,Env,vr(_,_,Tp)),
+    isVar(Nm,Env,vr(_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([vrDef(Lc,Nm,Value,Cond),..Stmts],Env,Cx,[varDef(Lc,Nm,Tp,Cx,Value,Cond),..Defs],Dx) :-
-    isVar(Nm,Env,vr(_,_,Tp)),
+    isVar(Nm,Env,vr(_,Tp)),
     collectPrograms(Stmts,Env,Cx,Defs,Dx).
-  collectPrograms([Cl,..Stmts],Env,Cx,[classDef(Lc,Nm,XNm,Tp,Cx,[Cl,..Rules],Face),..Defs],Dx) :-
-    isRuleForClass(Cl,Lc,Nm,XNm,Face),
+  collectPrograms([Cl,..Stmts],Env,Cx,[classDef(Lc,Nm,Tp,Cx,[Cl,..Rules],Face),..Defs],Dx) :-
+    isRuleForClass(Cl,Lc,Nm,Face),
     collectClassRules(Stmts,S0,Nm,Rules),
-    isVar(Nm,Env,vr(_,_,Tp)),
+    isVar(Nm,Env,vr(_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
   collectPrograms([Rl,..Stmts],Env,Cx,[grammDef(Lc,Nm,Tp,Cx,[Rl,..Rules]),..Defs],Dx) :-
     isGrammarRule(Rl,Lc,Nm),
     collectGrammarRules(Stmts,S0,Nm,Rules),
-    isVar(Nm,Env,vr(_,_,Tp)),
+    isVar(Nm,Env,vr(_,Tp)),
     collectPrograms(S0,Env,Cx,Defs,Dx).
 
   collectClauses:(list[canonRule],list[canonRule],string,list[canonRule]){}.
@@ -818,14 +823,14 @@ lo.comp.typecheck{
 
   collectClassRules:(list[canonRule],list[canonRule],string,list[canonRule]){}.
   collectClassRules([Cl,..Stmts],Sx,Nm,[Cl,..Ex]) :-
-    isRuleForClass(Cl,_,Nm,_,_),
+    isRuleForClass(Cl,_,Nm,_),
     collectClassRules(Stmts,Sx,Nm,Ex).
   collectClassRules([Rl,..Stmts],[Rl,..Sx],Nm,Eqns) :-
     collectClassRules(Stmts,Sx,Nm,Eqns).
   collectClassRules([],[],_,[]).
 
-  isRuleForClass:(canonRule,location,string,string,tipe){}.
-  isRuleForClass(clRule(Lc,Nm,XNm,_,_,_,Face),Lc,Nm,XNm,Face).
+  isRuleForClass:(canonRule,location,string,tipe){}.
+  isRuleForClass(clRule(Lc,Nm,_,_,_,Face),Lc,Nm,Face).
 
   private explodeStringLit:(location,string) => list[ast].
   explodeStringLit(Lc,Str) => makeIntList(explode(Str),Lc).
@@ -838,9 +843,9 @@ lo.comp.typecheck{
   streamVar = "stream_X".
 
   private typeOfVar:(location,vr,tipe,list[env],canonTerm,report,report){}.
-  typeOfVar(Lc,vr(VLc,VNm,VT),Tp,Env,Term,Rp,Rpx) :-
+  typeOfVar(Lc,vr(V,VT),Tp,Env,Term,Rp,Rpx) :-
     (_,FTp) = freshen(VT,pickupThisType(Env)),
-    manageConstraints(FTp,[],Lc,VNm,MTp,Term),
+    manageConstraints(FTp,[],Lc,relocate(V,Lc),MTp,Term),
     checkType(Lc,MTp,Tp,Env,Rp,Rpx).
 
   private manageConstraints:(tipe,list[constraint],location,canonTerm,tipe,canonTerm){}.
@@ -880,7 +885,7 @@ lo.comp.typecheck{
     checkType(Lc,Dep,ElTp,Env,Rp0,Rpx).
 
   private pickupThisType:(list[env]) => map[string,tipe].
-  pickupThisType(Env) => [ "this" -> ThisType] :- isVar("this",Env,vr(_,_,ThisType)).
+  pickupThisType(Env) => [ "this" -> ThisType] :- isVar("this",Env,vr(_,ThisType)).
   pickupThisType(_) => [].
 
   private findType:(string,location,list[env],report,report) => tipe.
@@ -898,7 +903,7 @@ lo.comp.typecheck{
 
   private pushFace:(list[(string,tipe)],location,list[env]) => list[env].
   pushFace([],_,E) => E.
-  pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(Lc,v(Lc,N),T),E)).
+  pushFace([(N,T),..L],Lc,E) => pushFace(L,Lc,declareVar(N,vr(v(Lc,N),T),E)).
 
   computeExport:(list[canonDef],list[(string,tipe)],list[(string,defnKind)],
                   list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry]){}.
@@ -917,7 +922,7 @@ lo.comp.typecheck{
     isPublicVar(Nm,Fields,Public).
   exportDef(relDef(_,Nm,Tp,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
-  exportDef(classDef(_,Nm,XNm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,[Nm,..Clx],Clx,Cons,Cons,Impl,Impl) :-
+  exportDef(classDef(_,Nm,Tp,_,_,_),Fields,Public,[(Nm,Tp),..Ex],Ex,Types,Types,[Nm,..Clx],Clx,Cons,Cons,Impl,Impl) :-
     isPublicVar(Nm,Fields,Public).
   exportDef(typeDef(_,Nm,_,FaceRule),_,Public,Exports,Exports,[(Nm,FaceRule),..Tx],Tx,Enums,Enums,Cons,Cons,Impl,Impl) :-
     isPublicType(Nm,Public).

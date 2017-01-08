@@ -47,7 +47,7 @@ lo.comp.freevars{
   checkDef(funDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
   checkDef(relDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
   checkDef(grammDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
-  checkDef(classDef(_,Nm,_,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
+  checkDef(classDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
   checkDef(implDef(_,_,_,_,_,_,Th),Vars,Rp,Rpx) :- 
   checkDef(_,_,Rp,Rp).
 

@@ -21,7 +21,7 @@ lo.comp.resolve{
   overloadDef(funDef(Lc,Nm,Tp,Cx,Eqns),Dict,Rp,Rpx) => overloadFunction(Lc,Nm,Tp,Cx,Eqns,Dict,Rp,Rpx).
   overloadDef(relDef(Lc,Nm,Tp,Cx,Cls),Dict,Rp,Rpx) => overloadPredicate(Lc,Nm,Tp,Cx,Cls,Dict,Rp,Rpx).
   overloadDef(varDef(Lc,Nm,Tp,Cx,Value,Cond),Dict,Rp,Rpx) => overloadDefn(Lc,Nm,Tp,Cx,Value,Cond,Dict,Rp,Rpx).
-  overloadDef(classDef(Lc,Nm,XNm,Tp,Cx,Rules,Face),Dict,Rp,Rpx) => overloadClass(Lc,Nm,XNm,Tp,Cx,Rules,Face,Dict,Rp,Rpx).
+  overloadDef(classDef(Lc,Nm,Tp,Cx,Rules,Face),Dict,Rp,Rpx) => overloadClass(Lc,Nm,Tp,Cx,Rules,Face,Dict,Rp,Rpx).
   overloadDef(grammDef(Lc,Nm,Tp,Cx,Rules),Dict,Rp,Rpx) => overloadGrammar(Lc,Nm,Tp,Cx,Rules,Dict,Rp,Rpx).
   overloadDef(T,_,Rp,Rp) => T :-
     T = typeDef(_,_,_,_).
@@ -53,8 +53,8 @@ lo.comp.resolve{
   overloadGrammar(Lc,Nm,Tp,Cx,Rules,Dict,Rp,Rpx) => grammDef(Lc,Nm,Tp,[],overloadRules(Rules,FDict,CVars,Rp,Rpx)) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict).
 
-  private overloadClass:(location,string,string,tipe,list[constraint],list[canonRule],tipe,list[implEntry],report,report) => canonDef.
-  overloadClass(Lc,Nm,XNm,Tp,Cx,Rules,Face,Dict,Rp,Rpx) => classDef(Lc,Nm,XNm,Tp,[],overloadRules(Rules,FDict,CVars,Rp,Rpx),Face) :-
+  private overloadClass:(location,string,tipe,list[constraint],list[canonRule],tipe,list[implEntry],report,report) => canonDef.
+  overloadClass(Lc,Nm,Tp,Cx,Rules,Face,Dict,Rp,Rpx) => classDef(Lc,Nm,Tp,[],overloadRules(Rules,FDict,CVars,Rp,Rpx),Face) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict).
 
   private overloadImplementation:(location,string,string,constraint,list[constraint],canonTerm,canonTerm,tipe,list[implEntry],report,report) => canonDef.
@@ -83,8 +83,8 @@ lo.comp.resolve{
       clause(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveCond(Cond,Dict,Rp0,Rpx)).
   overloadRule(grRule(Lc,Nm,Args,Hed,Body),Dict,Ex,Rp,Rpx) =>
       grRule(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveGr(Hed,Dict,Rp0,Rp1),resolveGr(Body,Dict,Rp1,Rp2)).
-  overloadRule(clRule(Lc,Nm,XNm,Args,Repl,Cond,Tp),Dict,Ex,Rp,Rpx) =>
-      clRule(Lc,Nm,XNm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveTerm(Repl,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx),Tp).
+  overloadRule(clRule(Lc,Nm,Args,Repl,Cond,Tp),Dict,Ex,Rp,Rpx) =>
+      clRule(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveTerm(Repl,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx),Tp).
 
   addExtra:(list[canonTerm],canonTerm) => canonTerm.
   addExtra([],T) => T.

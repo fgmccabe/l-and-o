@@ -62,7 +62,7 @@ lo.comp.transutils {
       [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(Tp,0))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,varDef(_,Nm,_,_,_,_),
       [(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm))),..Mx],Mx,Clx,Clx).
-  makeMdlEntry(Pkg,classDef(_,Nm,_,Tp,_,_,_),
+  makeMdlEntry(Pkg,classDef(_,Nm,Tp,_,_,_),
       [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(Tp,0))),..Mx],Mx,[Nm,..Clx],Clx).
   makeMdlEntry(Pkg,implDef(_,_,ImplNm,_,_,tpl(Deps),_,_),
       [(ImplNm,moduleImpl(ImplNm,LclNm)),..Mx],Mx,Ens,Enx) :-

@@ -15,10 +15,10 @@ lo.comp.unify{
   sm(voidType,voidType,_).
   sm(thisType,thisType,_).
   sm(thisType,T2,Env) :-
-    isVar("this",Env,vr(_,_,T)),
+    isVar("this",Env,vr(_,T)),
     sameType(T,T2,Env).
   sm(T1,thisType,Env) :-
-    isVar("this",Env,vr(_,_,T)),
+    isVar("this",Env,vr(_,T)),
     sameType(T,T2,Env).
   sm(kVar(Nm),kVar(Nm),_).
   sm(kFun(Nm,Ar),kFun(Nm,Ar),_).

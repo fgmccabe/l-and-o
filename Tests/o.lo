@@ -1,5 +1,5 @@
 test.o{
-  type foo <~ {id:all e ~~(e)=>e}.
+  type foo <~ {id:all e ~~(e)=>integer}.
 
   foo:(integer) <=> foo.
   foo(A) <= {

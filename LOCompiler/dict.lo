@@ -7,7 +7,7 @@ lo.comp.dict{
   import lo.
 
   public
-  type vr ::= vr(location,canonTerm,tipe).
+  type vr ::= vr(canonTerm,tipe).
 
   public
   type env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,conEntry],map[string,map[string,implEntry]]).
@@ -34,7 +34,7 @@ lo.comp.dict{
   }
 
   private showVr:(vr)=>ss.
-  showVr(vr(Lc,T,Tp)) => ssSeq([ss(" "),disp(T),ss(" |= "),disp(Tp),ss(" @ "),disp(Lc),ss("\n")]).
+  showVr(vr(T,Tp)) => ssSeq([ss(" "),disp(T),ss(" |= "),disp(Tp),ss("\n")]).
 
   public
   typeInDict:(string,list[env],tipe){}.
@@ -81,7 +81,7 @@ lo.comp.dict{
 
   public
   isVar:(string,list[env],vr){}.
-  isVar(Nm,_,vr(std,v(std,Nm),escapeType(Nm))) :- isEscape(Nm).
+  isVar(Nm,_,vr(v(std,Nm),escapeType(Nm))) :- isEscape(Nm).
   isVar(Nm,Env,Def) :- varInD(Nm,Env,Def)!.
 
   public
