@@ -1,0 +1,23 @@
+test.m{
+  import lo.
+  import lo.monad.
+
+  implementation monad[option->>()] <= {
+    some(A) >>= F => F(A).
+    none >>= _ => none.
+
+    return X => some(X).
+    raise _ => none.
+  }
+
+  private bump:(string)=>option[integer].
+  bump("alpha")=>some(1).
+  bump("beta")=>some(2).
+  bump(_)=>none.
+
+  private double:(integer)=>option[integer].
+  double(X) => some(X+X).
+
+  assert ((return "alpha" >>= bump) >>= double) = some(2).
+  assert (return "gamma" >>= bump) = none.
+}

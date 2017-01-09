@@ -21,7 +21,7 @@
   infixOp("<=>",949,950,949).	 /* class constructor type */
   infixOp("=>",949,950,949).	 /* function arrow */
   infixOp("<~",949,949,948).	 /* type interface rule */
-  infixOp(">>=",949,950,950).	 /* monadic bind */
+  infixOp(">>=",899,900,900).	 /* monadic bind */
   infixOp("->",899,900,899).	 /* map entry */
   infixOp("=",899,900,899).	 /* unifies predicate */
   infixOp("==",899,900,899).	 /* equality predicate */
@@ -62,11 +62,11 @@
   prefixOp("type",1260,1259).	 /* type definition */
   prefixOp("all",1245,1244).	 /* universal quantifier */
   prefixOp("exists",1245,1244).	 /* existential quantifier */
-  prefixOp("return",1000,999).	 /* wrap value in monad */
-  prefixOp("raise",1000,999).	 /* error return in monad */
   prefixOp("\\+",905,904).	 /* logical negation */
   prefixOp("@",905,904).	 /* tau pattern */
   prefixOp("import",900,899).	 /* import module */
+  prefixOp("return",899,890).	 /* wrap value in monad */
+  prefixOp("raise",899,890).	 /* error return in monad */
   prefixOp(".~.",650,649).	 /* bitwise 1's complement */
   prefixOp("-",300,299).	 /* arithmetic negation */
   postfixOp(". ",1899,1900).	 /* statement terminator */

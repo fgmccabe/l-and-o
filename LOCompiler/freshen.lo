@@ -15,14 +15,19 @@ lo.comp.freshen{
 
   private freshenType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
   freshenType(univType(kVar(Nm),T),B) => freshenType(T,B[Nm->newVar(Nm)]).
+  freshenType(univType(kFun(Nm,Ar),T),B) => freshenType(T,B[Nm->newTFun(Nm,Ar)]).
   freshenType(T,B) => (B,frshnType(T,B)).
 
   private skolemizeType:(tipe,map[string,tipe]) => (map[string,tipe],tipe).
   skolemizeType(univType(kVar(Nm),T),B) => skolemizeType(T,B[Nm->skolem(Nm)]).
+  skolemizeType(univType(kFun(Nm,Ar),T),B) => skolemizeType(T,B[Nm->skolemFun(Nm,Ar)]).
   skolemizeType(T,B) => (B,frshnType(T,B)).
 
   private skolem:(string) => tipe.
   skolem(Nm) => kVar(_str_gen(Nm)).
+
+  private skolemFun:(string,integer) => tipe.
+  skolemFun(Nm,Ar) => kFun(_str_gen(Nm),Ar).
 
   public implementation freshen[constraint] <= {
     freshen(C,B) => freshenConstraint(C,B).
@@ -38,7 +43,7 @@ lo.comp.freshen{
   frshnType(kVar(Nm),_) => kVar(Nm).
   frshnType(kFun(Nm,_),B) => Tp :- present(B,Nm,Tp).
   frshnType(kFun(Nm,Ar),_) => kFun(Nm,Ar).
-  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_,_,_).
+  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_,_).
   frshnType(tipe(Nm),_) => tipe(Nm).
   frshnType(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
   frshnType(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
@@ -64,10 +69,12 @@ lo.comp.freshen{
 
   private freshenConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
   freshenConstraint(univCon(kVar(Nm),C),B) => freshenConstraint(C,B[Nm->newVar(Nm)]).
+  freshenConstraint(univCon(kFun(Nm,Ar),C),B) => freshenConstraint(C,B[Nm->newTFun(Nm,Ar)]).
   freshenConstraint(C,B) => (B,frshnConstraint(C,B)).
 
   private skolemizeConstraint:(constraint,map[string,tipe]) => (map[string,tipe],constraint).
   skolemizeConstraint(univCon(kVar(Nm),T),B) => skolemizeConstraint(T,B[Nm->skolem(Nm)]).
+  skolemizeConstraint(univCon(kFun(Nm,Ar),T),B) => skolemizeConstraint(T,B[Nm->skolem(Nm)]).
   skolemizeConstraint(T,B) => (B,frshnConstraint(T,B)).
 
   frshnConstraint:(constraint,map[string,tipe]) => constraint.
@@ -75,6 +82,7 @@ lo.comp.freshen{
   frshnConstraint(implementsFace(Tp,Els),B) => implementsFace(frshnType(Tp,B),frshnFields(Els,B)).
   frshnConstraint(conCon(Con,Ext),B) => conCon(frshnConstraint(Con,B),frshnConstraint(Ext,B)).
   frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B[\+Nm]).
+  frshnConstraint(univCon(kFun(Nm,_),C),B) => frshnConstraint(C,B[\+Nm]).
 
   public freezeType:(tipe,map[string,tipe],tipe){}.
   freezeType(Tp,B,FrZ) :-

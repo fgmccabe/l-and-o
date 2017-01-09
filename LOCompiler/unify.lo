@@ -64,7 +64,7 @@ lo.comp.unify{
     checkConstraints(C,Env).
 
   checkConstraints:(list[constraint],list[env]){}.
-  checkConstraints(C,_) :- (var(C) ? true | C = [C1,..M], checkConstraint(C1,Env), checkConstraints(M,Env)).
+  checkConstraints(C,_) :- (var(C) ? true | C=[] | C = [C1,..M], checkConstraint(C1,Env), checkConstraints(M,Env)).
 
   checkConstraint:(constraint,list[env]){}.
   checkConstraint(conTract(Nm,Args,Deps),Env) :-

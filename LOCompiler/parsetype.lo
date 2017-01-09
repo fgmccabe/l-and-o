@@ -315,6 +315,6 @@ lo.comp.parseType{
     -- reapply quantifiers to a constraint to get full form
   reConQuant:(list[(string,tipe)],constraint,constraint){}.
   reConQuant([],Tp,Tp).
-  reConQuant([(Nm,_),..M],Tp,QTp) :-
-    reConQuant(M,univCon(kVar(Nm),Tp),QTp).
+  reConQuant([(Nm,V),..M],Tp,QTp) :-
+    reConQuant(M,univCon(V,Tp),QTp).
 }

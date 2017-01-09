@@ -7,6 +7,7 @@ catalog{
     test.maps -> "maps.lo".
     test.l -> "l.lo".
     test.gr -> "gr.lo".
+    test.m -> "m.lo".
     test.o -> "o.lo".
   }
   default: "../LO/catalog".

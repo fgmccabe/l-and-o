@@ -8,7 +8,8 @@ lo.comp.types{
         | thisType
         | kVar(string)
         | kFun(string,integer)
-        | tVar(tipe,logical,list[constraint],string,string)
+        | tVar(tipe,list[constraint],string,string)
+        | tFun(tipe,integer,string,string)
         | tipe(string)
         | tpFun(string,integer)
         | typeExp(tipe,list[tipe])
@@ -54,8 +55,10 @@ lo.comp.types{
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
   dispType(kFun(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
-  dispType(tVar(Curr,false,_,_,_)) =>  dispType(Curr) :-  nonvar(Curr) .
-  dispType(tVar(_,_,_,Nm,Id)) => ssSeq([ss(Nm),ss("_"),ss(Id)]).
+  dispType(tVar(Curr,_,_,_)) =>  dispType(Curr) :-  nonvar(Curr).
+  dispType(tVar(_,_,_,Id)) => ss(Id).
+  dispType(tFun(Curr,_,_,_)) => dispType(Curr) :- nonvar(Curr).
+  dispType(tFun(_,Ar,_,Nm)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispType(tipe(Nm)) =>ss(Nm).
   dispType(tpFun(Nm,Ar)) => ssSeq([ss(Nm),ss("%"),disp(Ar)]).
   dispType(typeExp(Nm,A)) => ssSeq([dispType(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
@@ -111,22 +114,26 @@ lo.comp.types{
 
   public
   deRef:(tipe)=>tipe.
-  deRef(tVar(Curr,false,_,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
+  deRef(tVar(Curr,_,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
+  deRef(tFun(Curr,_,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
   deRef(T) => T.
 
   public
   isUnbound:(tipe){}.
-  isUnbound(T) :- deRef(T) = tVar(Curr,_,_,_,_), var(Curr).
+  isUnbound(T) :- deRef(T) = tVar(Curr,_,_,_), var(Curr).
+  isUnbound(T) :- deRef(T) = tFun(Curr,_,_,_), var(Curr).
 
   public isTypeVar:(tipe){}.
-  isTypeVar(T) :- D=deRef(T), (D=tVar(_,_,_,_,_) | D=kVar(_)).
+  isTypeVar(T) :- D=deRef(T), (D=tVar(_,_,_,_) | D=kVar(_)).
 
   public
   isIdenticalVar:(tipe,tipe){}.
-  isIdenticalVar(tVar(_,_,_,_,Id),tVar(_,_,_,_,Id)).
+  isIdenticalVar(tVar(_,_,_,Id),tVar(_,_,_,Id)).
+  isIdenticalVar(tFun(_,_,_,Id),tFun(_,_,_,Id)).
 
   public isIdenticalType:(tipe,tipe){}.
   isIdenticalType(kVar(V),kVar(V)).
+  isIdenticalType(kFun(V,Ar),kFun(V,Ar)).
   isIdenticalType(T1,T2) :- isIdenticalVar(T1,T2).
 
   public isPredType:(tipe){}.
@@ -141,8 +148,8 @@ lo.comp.types{
 
   public
   constraints:(tipe)=>list[constraint].
-  constraints(tVar(_,_,Con,_,_)) => Con.
-  constraints(_) => [].
+  constraints(tVar(_,Con,_,_)) => Con.
+  constraints(_) => _.
 
   private
   collectConstraints:(tipe,list[constraint]) => list[constraint].
@@ -172,24 +179,39 @@ lo.comp.types{
 
   public
   newVar:(string) => tipe.
-  newVar(Nm) => tVar(_,false,_,Nm,_str_gen(Nm)).
+  newVar(Nm) => tVar(_,_,Nm,_str_gen(Nm)).
+
+  public newTFun:(string,integer)=>tipe.
+  newTFun(Nm,Ar) => tFun(_,Ar,Nm,_str_gen(Nm)).
 
   public
   bind:(tipe,tipe){}.
-  bind(T,Tp) :- \+ occursIn(T,Tp), T=tVar(Tp,_,_,_,_).
+  bind(T,Tp) :- (typeKind(T)=typeKind(Tp), \+ occursIn(T,Tp), bnd(T,Tp))!.
+
+  private type typeKind ::= simpleType | typeFun(integer).
+
+  private typeKind:(tipe)=>typeKind.
+  typeKind(tFun(_,Ar,_,_)) => typeFun(Ar).
+  typeKind(kFun(_,Ar)) => typeFun(Ar).
+  typeKind(tpFun(_,Ar)) => typeFun(Ar).
+  typeKind(_) => simpleType.
+
+  private bnd:(tipe,tipe){}.
+  bnd(tVar(Tp,_,_,_),Tp).
+  bnd(tFun(Tp,_,_,_),Tp).
 
   public
   occursIn:(tipe,tipe){}.
-  occursIn(T,Tp) :- (T = tVar(Curr,_,_,_,Id) ? ( var(Curr) ? \+sameVar(Id,deRef(Tp)), idOccIn(Id,deRef(Tp)) | occursIn(Curr,Tp)) | false).
+  occursIn(T,Tp) :- (T = tVar(Curr,_,_,Id) ? ( var(Curr) ? \+sameVar(Id,deRef(Tp)), idOccIn(Id,deRef(Tp)) | occursIn(Curr,Tp)) | false).
 
   private
   sameVar:(string,tipe){}.
-  sameVar(Id,tVar(_,_,_,_,Id)).
+  sameVar(Id,tVar(_,_,_,Id)).
 
   private
   idOccIn:(string,tipe){}.
-  idOccIn(Id,tVar(Curr,_,_,_,_)) :- nonvar(Curr), idOccIn(Id,Curr).
-  idOccIn(Id,tVar(Curr,_,_,_,Id)) :- var(Curr).
+  idOccIn(Id,tVar(Curr,_,_,_)) :- nonvar(Curr), idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Curr,_,_,Id)) :- var(Curr).
   idOccIn(Id,typeExp(Op,A)) :- (idOccIn(Id,Op) | T in A, idOccIn(Id,T)).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).

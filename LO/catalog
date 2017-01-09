@@ -9,6 +9,7 @@ catalog{
     lo.index -> "index.lo".
     lo.json -> "json.lo".
     lo.list -> "lists.lo".
+    lo.monad -> "monad.lo".
     lo.resources -> "resources.lo".
     lo.sets -> "sets.lo".
     lo.topsort -> "topsort.lo".
