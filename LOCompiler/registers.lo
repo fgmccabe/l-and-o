@@ -11,6 +11,9 @@ lo.comp.registers{
   public regUsed:(varSet,integer) => varSet.
   regUsed(usdRegs(A,L,F,G),Rg) => usdRegs(addElement(A,Rg),L,F,G).
 
+  public freeReg:(varSet,integer) => varSet.
+  freeReg(usdRegs(A,L,F,G),Rg) => usdRegs(removeElement(A,Rg),L,F,G).
+
   public freeUsed:(varSet,integer) => varSet.
   freeUsed(usdRegs(A,L,F,G),Lc) => usdRegs(A,L,addElement(F,Lc),G).
 
@@ -19,4 +22,6 @@ lo.comp.registers{
 
   public varSlotSz:integer.
   varSlotSz = 2.
+
+  public type literal ::= literal(string,term).
 }

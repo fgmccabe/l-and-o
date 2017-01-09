@@ -6,5 +6,41 @@ lo.comp.clausecomp{
   import lo.comp.term.
   import lo.comp.varcomp.
 
-  
+
+  type initialized ::= notInited | inited.
+
+  type dictEntry ::= dictEntry(string,initialized,option[source]).
+
+  unifyHead:(list[term],map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
+
+  unifyTerm:(term,logical,source,map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
+  unifyTerm(anon,_,Src,D,D,VS,VS,Lts,Lts,_) =>
+    skipOver(Src).
+  unifyTerm(T,TL,Src,D,D,VS,VSx,Lts,Ltsx,_) => unifyLiteral(T,TL,Src,VS,VSx,Lts,Ltsx) :- isGroundTerm(T).
+  unifyTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => unifyVar(Dst,Src,In,D,Dx,VS,Vx,Lt,last) :- present(D,Nm,dictEntry(_,In,Dst)).
+
+  unifyVar:(option[source],source,initialized,map[string,dictEntry],map[string,dictEntry],varSet,varSet,logical) => list[instruction].
+  unifyVar(none,sReg,_,D,D,V,V,_) => [iClS].
+  unifyVar(none,Rg,)
+
+  skipOver:(source) => list[instruction].
+  skipOver(voidVar) => [].
+  skipOver(aReg(_)) => [].
+  skipOver(yReg(_,_)) => [].
+  skipOver(sReg) => [iClS].
+
+  unifyLiteral:(term,logical,source,varSet,varSet,list[literal],list[literal]) => list[instruction].
+  unifyLiteral(T,TL,Src,VS,Vx,Lts,Lts) => unifyLit(Lb,TL,Src,VS,Vx) :- literal(Lb,T) in Lts.
+  unifyLiteral(T,TL,Src,VS,Vx,Lts,Ltsx) => unifyLit(Lb,TL,Src,VS,Vx) :- newLiteral(T,Lts,Ltsx).
+
+  unifyLit:(string,logical,source,varSet,varSet) => list[instruction].
+  unifyLit(_,_,anon,Vs,Vs) => [].
+  unifyLit(Lb,true,aReg(Rg),VS,freeReg(VS,Rg)) => [iUAlit(Rg,Lb)].
+  unifyLit(Lb,false,aReg(Rg),VS,VS) => [iUAlit(Rg,Lb)].
+  unifyLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iUAlit(0,Lb)].
+  unifyLit(Lb,_,sReg,VS,VS) => [iUSlit(Lcb)].
+
+  newLiteral:(term,list[literal],list[literal]){}.
+  newLiteral(T,Lts,[literal(_str_gen("L"),T)]).
+
 }

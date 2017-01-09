@@ -46,32 +46,11 @@ lo.comp.unify{
   varBinding:(tipe,tipe,list[env]){}.
   varBinding(T1,T2,_) :- isIdenticalVar(T1,T2).
   varBinding(V1,V2,Env) :- \+ isIdenticalVar(T1,T2),
-    mergeConstraints(constraints(V1),constraints(V2),Env), 
     bind(V1,V2).
 
-  mergeConstraints:(list[constraint],list[constraint],list[env]){}.
-  mergeConstraints(C1,C2,Env) :-
-    ( var(C1) ? copyConstraints(C2,C1,Env) | C1 = [_,..L1], mergeConstraints(L1,C2,Env) ).
-
-  copyConstraints:(list[constraint],list[constraint],list[env]){}.
-  copyConstraints(C1,C2,_) :-
-    ( var(C2) ? true | C1 = [C,..L1], C2 = [C,..L2], copyConstraints(L1,L2,Env)).
-
   checkBinding:(tipe,tipe,list[env]){}.
-  checkBinding(V,Tp,Env) :- 
-    C = constraints(V),
-    bind(V,Tp),
-    checkConstraints(C,Env).
-
-  checkConstraints:(list[constraint],list[env]){}.
-  checkConstraints(C,_) :- (var(C) ? true | C=[] | C = [C1,..M], checkConstraint(C1,Env), checkConstraints(M,Env)).
-
-  checkConstraint:(constraint,list[env]){}.
-  checkConstraint(conTract(Nm,Args,Deps),Env) :-
-    (surfaceBound(Args) ? checkForImpl(conTract(Nm,Args,Deps),Env) | true).
-  checkConstraint(implementsFace(Tp,Face),Env) :-
-    faceOfType(Tp,Env,faceType(TpFace)),
-    checkFace(Face,TpFace,Env).
+  checkBinding(V,Tp,_) :- 
+    bind(V,Tp).
 
   surfaceBound:(list[tipe]){}.
   surfaceBound([]).

@@ -86,4 +86,18 @@ lo.comp.term {
 
   public genVr:(string) => term.
   genVr(Nm) => varbl(_str_gen(Nm)).
+
+  public isGroundTerm:(term){}.
+  isGroundTerm(intgr(_)).
+  isGroundTerm(flot(_)).
+  isGroundTerm(enum(_)).
+  isGroundTerm(strct(_,_)).
+  isGroundTerm(prg(_,_)).
+  isGroundTerm(strng(_)).
+  isGroundTerm(tuple(Els)) :-
+    isGroundTerm(E) *> E in Els.
+  isGroundTerm(cons(Op,Els)) :-
+    isGroundTerm(Op),
+    isGroundTerm(E) *> E in Els.
+  isGroundTerm(code(_,_,_)).
 }

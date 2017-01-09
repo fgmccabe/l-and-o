@@ -1,11 +1,7 @@
 test.a{
   import lo.
 
-  a:all t ~~ (list[t],list[t])=>list[t].
-  a([],X) => X.
-  a([E,..X],Y) => [E,..a(X,Y)].
-
-  assert a([1,2,3],[4,5,6]) = [1,2,3,4,5,6].
+  -- Test predicates, backtracking and *>
 
   p:(string,string){}.
   p("a","b").
@@ -28,8 +24,5 @@ test.a{
   assert gp(x,y) *> m(y).
 
   assert \+ (gp(x,y) *> f(x)).
-
-  fred:string.
-  fred = "fred".
 }.
 

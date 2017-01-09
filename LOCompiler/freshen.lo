@@ -43,7 +43,7 @@ lo.comp.freshen{
   frshnType(kVar(Nm),_) => kVar(Nm).
   frshnType(kFun(Nm,_),B) => Tp :- present(B,Nm,Tp).
   frshnType(kFun(Nm,Ar),_) => kFun(Nm,Ar).
-  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_,_).
+  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_).
   frshnType(tipe(Nm),_) => tipe(Nm).
   frshnType(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
   frshnType(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
@@ -136,9 +136,8 @@ lo.comp.freshen{
 
   reQuant:(list[(string,tipe)],map[string,tipe],tipe,tipe){}.
   reQuant([],_,T,T).
-  reQuant([(_,Tp),..R],BB,T,FZT) :- 
+  reQuant([(_,Tp),..R],BB,FT,FZT) :- 
     V = deRef(Tp), isUnbound(V),
-    freezeConstraints(constraints(V),BB,T,FT)!,
     reQuant(R,BB,FT,FZT).
   reQuant([_,..B],BB,T,FT) :- reQuant(B,BB,T,FT).
 
