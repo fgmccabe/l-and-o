@@ -10,15 +10,15 @@ test.mapp{
   mapp([e,..l],f) => [f(e),..mapp(l,f)].
 
   public contract all m/1 ~~ mapping[m] <~ {
-    mp:all e,f ~~ (m[e],(e)=>f) => m[f].
+    (//):all e,f ~~ (m[e],(e)=>f) => m[f].
   }
 
   implementation mapping[list] <= {
-    mp(L,F) => mapp(L,F).
+    L//F => mapp(L,F).
   }
 
   id:(integer)=>integer.
   id(X) => X.
 
-  assert mp([1,2,3],id) = [1,2,3].
+  assert [1,2,3]//id = [1,2,3].
 }

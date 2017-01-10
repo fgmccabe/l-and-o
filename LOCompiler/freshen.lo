@@ -35,27 +35,31 @@ lo.comp.freshen{
   }
 
   frshnType:(tipe,map[string,tipe]) => tipe.
-  frshnType(anonType,_) => anonType.
-  frshnType(voidType,_) => voidType.
-  frshnType(thisType,B) => Tp :- present(B,"this",Tp).
-  frshnType(thisType,_) => thisType.
-  frshnType(kVar(Nm),B) => Tp :- present(B,Nm,Tp).
-  frshnType(kVar(Nm),_) => kVar(Nm).
-  frshnType(kFun(Nm,_),B) => Tp :- present(B,Nm,Tp).
-  frshnType(kFun(Nm,Ar),_) => kFun(Nm,Ar).
-  frshnType(V,B) => (var(Curr) ? V | frshnType(Curr,B)) :-  V=tVar(Curr,_,_).
-  frshnType(tipe(Nm),_) => tipe(Nm).
-  frshnType(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
-  frshnType(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
-  frshnType(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).
-  frshnType(predType(A),B) => predType(frshnType(A,B)).
-  frshnType(grammarType(A,R),B) => grammarType(frshnType(A,B),frshnType(R,B)).
-  frshnType(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
-  frshnType(tupleType(A),B) => tupleType(frshnTypes(A,B)).
-  frshnType(faceType(F),B) => faceType(frshnFields(F,B)).
-  frshnType(univType(kVar(Nm),T),B) => univType(kVar(Nm),frshnType(T,B[\+Nm])).
-  frshnType(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
-  frshnType(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
+  frshnType(Tp,M) => frshn(deRef(Tp),M).
+
+  frshn:(tipe,map[string,tipe]) => tipe.
+  frshn(anonType,_) => anonType.
+  frshn(voidType,_) => voidType.
+  frshn(thisType,B) => Tp :- present(B,"this",Tp).
+  frshn(thisType,_) => thisType.
+  frshn(kVar(Nm),B) => Tp :- present(B,Nm,Tp).
+  frshn(kVar(Nm),_) => kVar(Nm).
+  frshn(kFun(Nm,_),B) => Tp :- present(B,Nm,Tp).
+  frshn(kFun(Nm,Ar),_) => kFun(Nm,Ar).
+  frshn(tipe(Nm),_) => tipe(Nm).
+  frshn(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
+  frshn(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
+  frshn(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).
+  frshn(predType(A),B) => predType(frshnType(A,B)).
+  frshn(grammarType(A,R),B) => grammarType(frshnType(A,B),frshnType(R,B)).
+  frshn(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
+  frshn(tupleType(A),B) => tupleType(frshnTypes(A,B)).
+  frshn(faceType(F),B) => faceType(frshnFields(F,B)).
+  frshn(univType(kVar(Nm),T),B) => univType(kVar(Nm),frshnType(T,B[\+Nm])).
+  frshn(univType(kFun(Nm,Ar),T),B) => univType(kFun(Nm,Ar),frshnType(dT,B[\+Nm])).
+  frshn(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
+  frshn(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
+  frshn(Tp,_) => Tp.
 
   private
   frshnTypes:(list[tipe],map[string,tipe]) => list[tipe].

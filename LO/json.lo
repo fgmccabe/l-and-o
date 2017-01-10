@@ -140,10 +140,8 @@ lo.json{
   private mapJson:all v ~~ coercion[v,json] |: (map[string,v])=>json.
   mapJson(M) => jColl(mapMap(M,entryCoerce)).
 
-  private entryCoerce:{ apply:all v ~~ coercion[v,json] |: (v)=>json }.
-  entryCoerce{
-    apply(e) => e::json.
-  }
+  private entryCoerce:all v ~~ coercion[v,json] |: (v)=>json.
+  entryCoerce(e) => e::json.
 
   public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] <= {
     _coerce(L) => jSeq(cList(L)).

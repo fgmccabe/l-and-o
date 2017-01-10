@@ -285,6 +285,7 @@ lo.comp.dependencies{
   refsInNT(T,All,So) => refsInNTs(Els,All,So) :- isRoundTuple(T,_,Els).
   refsInNT(T,All,So) => refsInConds(Els,All,So) :- isBraceTuple(T,_,Els).
   refsInNT(T,All,So) => So :- isIden(T,_,"eof").
+  refsInNT(T,All,So) => refsInTerm(T,All,So).
 
   refsInNTs:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInNTs([],_,So) => So.

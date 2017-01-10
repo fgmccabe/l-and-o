@@ -65,7 +65,7 @@ lo.comp.typecheck{
   processImportGroup:(list[ast],list[(visibility,pkg)],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
   processImportGroup(Stmts,Imports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
-    ImportedPkgs = mapList(Imports,second),
+    ImportedPkgs = Imports//second,
     ImportClosure = importClosure(ImportedPkgs,[],Repo,Rp,Rpx),
     importAllDefs(ImportClosure,Lc,Repo,Env,Ex).
 
@@ -480,11 +480,12 @@ lo.comp.typecheck{
   typeOfTerm(V,_,Env,Env,v(Lc,_str_gen("_")),Rp,Rp) :- isIden(V,Lc,"_").
   typeOfTerm(V,Tp,Env,Ev,Term,Rp,Rpx) :-
     isIden(V,Lc,Nm),
-    ( isKeyword(Nm) ?
-      reportError("unexpected keyword: \(Nm)",Lc,Rp,Rpx),
-      Term = v(Lc,_str_gen("_")) |
+    ( 
       isVar(Nm,Env,Spec) ?
       typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
+      isKeyword(Nm) ?
+      reportError("unexpected keyword: \(Nm)",Lc,Rp,Rpx),
+      Term = v(Lc,_str_gen("_")) |
       Ev = declareVar(Nm,vr(v(Lc,Nm),Tp),Env), Term=v(Lc,Nm), Rp=Rpx).
   typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :- 
     checkType(Lc,findType("integer",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).

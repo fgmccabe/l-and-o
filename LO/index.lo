@@ -194,14 +194,14 @@ lo.index{
   mapPairs(trLeaf(_,Lf),L) => Lf<>L.
   mapPairs(trNode(_,_,Lf,Rg),L) => mapPairs(Rg,mapPairs(Lf,L)).
 
-  public mapMap:all f,k,v,w ~~ f <~ { apply:(v)=>w } |: (map[k,v],f) => map[k,w].
+  public mapMap:all k,v,w ~~ (map[k,v],(v)=>w) => map[k,w].
   mapMap(trEmpty,_) => trEmpty.
   mapMap(trLeaf(Hsh,L),F) => trLeaf(Hsh,mapLeaves(L,F)).
   mapMap(trNode(Hsh,Ln,L,R),F) => trNode(Hsh,Ln,mapMap(L,F),mapMap(R,F)).
 
-  private mapLeaves:all f,k,v,w ~~ f <~ { apply:(v)=>w } |: (list[(k,v)],f) => list[(k,w)].
+  private mapLeaves:all k,v,w ~~ (list[(k,v)],(v)=>w) => list[(k,w)].
   mapLeaves([],_) => [].
-  mapLeaves([(k,v),..l],f) => [(k,f.apply(v)),..mapLeaves(l,f)].
+  mapLeaves([(k,v),..l],f) => [(k,f(v)),..mapLeaves(l,f)].
 
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] <= {

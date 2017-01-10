@@ -7,7 +7,11 @@ lo.collection{
   }
 
   public contract all c,e ~~ filter[c->>e] <~ {
-    filter:(c,(e){}) => c.
+    (^/):(c,(e){}) => c.
+  }
+
+  public contract all m/1 ~~ mapping[m] <~ {
+    (//):all e,f ~~ (m[e],(e)=>f) => m[f].
   }
 
   public contract all m,k,v ~~ map[m ->> k,v] <~ {
@@ -18,4 +22,5 @@ lo.collection{
     pairs:(m) => list[(k,v)].
     _empty:m.
   }.
+
 }

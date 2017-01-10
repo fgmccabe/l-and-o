@@ -85,7 +85,7 @@ lo.comp.genprolog{
   fmtVer(vers(V)) => strng(fV).
 
   fmtImports:(list[(visibility,pkg)]) => term.
-  fmtImports(Imports) => tuple(mapList(Imports,fmtImport)).
+  fmtImports(Imports) => tuple(Imports//fmtImport).
 
   fmtImport:((visibility,pkg)) => term.
   fmtImport((Viz,Pkg)) => cons(strct("import",2),[fmtViz(Viz),fmtPkg(Pkg)]).
@@ -98,19 +98,19 @@ lo.comp.genprolog{
   fmtTypes(Fields) => fmtType(faceType(Fields)).
 
   fmtEnums:(list[string]) => term.
-  fmtEnums(Enums) => tuple(mapList(Enums,fmtEnum)).
+  fmtEnums(Enums) => tuple(Enums//fmtEnum).
 
   fmtEnum:(string) => term.
   fmtEnum(E) => strng(E).
 
   fmtContracts:(list[conEntry]) => term.
-  fmtContracts(L) => tuple(mapList(L,fmtContract)).
+  fmtContracts(L) => tuple(L//fmtContract).
 
   fmtContract:(conEntry) => term.
   fmtContract(conEntry(Nm,ConNm,Con,Face)) => tuple([strng(Nm),strng(ConNm),fmtConstraint(Con),fmtType(Face)]).
 
   fmtImpls:(list[implEntry]) => term.
-  fmtImpls(L) => tuple(mapList(L,fmtImpl)).
+  fmtImpls(L) => tuple(L//fmtImpl).
 
   fmtImpl:(implEntry) => term.
   fmtImpl(implEntry(Nm,Con)) => tuple([strng(Nm),fmtConstraint(Con)]).

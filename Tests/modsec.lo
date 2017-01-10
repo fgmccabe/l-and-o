@@ -6,9 +6,11 @@ test.modsec{
   import lo.resources.
   import lo.json.
 
-  type modSecRule ::= modSecRule(list[string],string,list[msAct]) | modSecMarker(string).
+  -- import test.parsetools.
 
-  type msTgt ::= headers | header(string) | args | arg(string) | local(string) | pattern(string).
+  type modSecRule ::= modSecRule(list[msgTgt],string,list[msAct]) | modSecMarker(string).
+
+  type msgTgt ::= tgtVar(string) | negTgt(msgTgt) | indexed(msgTgt,string).
 
   type msAct ::= single(string) | id(string) | tag(string) | other(string,string).
 
@@ -43,7 +45,7 @@ test.modsec{
   analyseRules([Rl,..l],M,Mx) :-
     analyseRules(l,M.addRule(Rl),Mx).
 
-  type meta <~ {tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta.}.
+  type meta <~ { tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta. }
 
   private meta:(map[string,list[string]],map[string,list[string]]) <=> meta.
   meta(Tgts,Tags) <= {
@@ -68,17 +70,15 @@ test.modsec{
   tags2json:(map[string,list[string]]) => map[string,json].
   tags2json(M) => mapMap(M,lst).
 
-  lst:{ apply:(list[string]) => json }.
-  lst{ 
-    apply(L) => jSeq(listify(L)).
+  lst:(list[string]) => json.
+  lst(L) => jSeq(listify(L)).
 
-    private listify:(list[string]) => list[json].
-    listify([])=>[].
-    listify([s,..l]) => [jTxt(s),..listify(l)].
-  }
+  private listify:(list[string]) => list[json].
+  listify([])=>[].
+  listify([s,..l]) => [jTxt(s),..listify(l)].
 
   extractMetaFromRule:(modSecRule,{id:string. target:list[string]. tags:list[string]}){}.
-  extractMetaFromRule(modSecRule(Tgt,Pth,Acts),metaAnal(Id,Tgt,findTags(Acts,[]))) :-
+  extractMetaFromRule(modSecRule(Tgts,Pth,Acts),metaAnal(Id,Tgts//extractTgt,findTags(Acts,[]))) :-
     id(Id) in Acts.
 
   private metaAnal:(string,list[string],list[string]) <=> {id:string. target:list[string]. tags:list[string]}.
@@ -88,13 +88,18 @@ test.modsec{
     tags = Tags.
   }
 
+  extractTgt:(msgTgt)=>string.
+  extractTgt(tgtVar(Nm)) => Nm.
+  extractTgt(indexed(T,Nm)) => extractTgt(T)+":"+Nm.
+  extractTgt(negTgt(T)) => "!"+extractTgt(T).
+
   findTags:(list[msAct],list[string]) => list[string].
   findTags([],Tgs) => Tgs.
   findTags([tag(T),..l],Tgs) => findTags(l,[T,..Tgs]).
   findTags([_,..l],Tgs) => findTags(l,Tgs).
 
   implementation display[modSecRule] <= {
-    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),dispTgt(Tgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]).
+    disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),ssSeq(Tgt//dispTgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]).
     disp(modSecMarker(Id)) => ssSeq([ss("SecMarker:"),ss(Id)]).
   }
 
@@ -105,15 +110,17 @@ test.modsec{
     disp(other(V,A)) => ssSeq([ss(V),ss(":'"),ss(A),ss("'")]).
   }
 
-  private dispTgt:(list[string]) => ss.
-  dispTgt(T) => disp(T).
+  private dispTgt:(msgTgt) => ss.
+  dispTgt(tgtVar(Nm)) => ss(Nm).
+  dispTgt(negTgt(T)) => ssSeq([ss("!"),dispTgt(T)]).
+  dispTgt(indexed(V,O)) => ssSeq([dispTgt(V),ss(":"),ss(O)]).
 
   private dispActions:(list[msAct]) => ss.
   dispActions(A) => disp(A).
 
   implementation coercion[modSecRule,json] <= {
-    _coerce(modSecRule(Tgt,Ptn,[])) =>  jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgt)), "pattern"->jTxt(Ptn)])]).
-    _coerce(modSecRule(Tgt,Ptn,Action)) => jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgt)), "pattern"->jTxt(Ptn), "action"->jSeq(jActions(Action))])]).
+    _coerce(modSecRule(Tgts,Ptn,[])) =>  jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgts//extractTgt)), "pattern"->jTxt(Ptn)])]).
+    _coerce(modSecRule(Tgts,Ptn,Action)) => jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgts//extractTgt)), "pattern"->jTxt(Ptn), "action"->jSeq(jActions(Action))])]).
     _coerce(modSecMarker(Id)) => jColl(["SecMarker" -> jTxt(Id)]).
   }
 
@@ -141,16 +148,22 @@ test.modsec{
   rule(modSecRule(Tgt,Ptn,Action)) --> [secRule], target(Tgt), pattern(Ptn), actions(Action).
   rule(modSecMarker(implode(Id))) --> [secMarker], [idn(Id)].
 
-  target:(list[string]) --> list[secTkn].
-  target(T) --> [idn(S)], { tgtSeq(T) %% S}.
+  target:(list[msgTgt]) --> list[secTkn].
+  target([T,..LT]) --> tgt(T), moreTgts(LT).
 
-  tgtSeq:(list[string]) --> list[integer].
-  tgtSeq([]) --> eof.
-  tgtSeq([implode(I),..L]) --> frag(I,[],0c|), moreTgts(L).
+  moreTgts:(list[msgTgt]) --> list[secTkn].
+  moreTgts([T,..L]) --> [bar], tgt(T), moreTgts(L).
+  moreTgts([]) --> [].
 
-  moreTgts:(list[string]) --> list[integer].
-  moreTgts([]) --> eof.
-  moreTgts(L) --> "|", tgtSeq(L).
+  tgt:(msgTgt) --> list[secTkn].
+  tgt(negTgt(T)) --> [pling], tgt(T).
+  tgt(T) --> [amp], tgt(T).
+  tgt(Tgt) --> [idn(Nm)], tgtModifier(tgtVar(implode(Nm)),Tgt).
+
+  tgtModifier:(msgTgt,msgTgt) --> list[secTkn].
+  tgtModifier(V,indexed(V,implode(Txt))) --> [colon], [idn(Txt)].
+  tgtModifier(V,Tgt) --> [lbra, idn(Txt), rbra], tgtModifier(indexed(V,implode(Txt)),Tgt).
+  tgtModifier(V,V) --> [].
 
   pattern:(string) --> list[secTkn].
   pattern(P) --> [strg(S)], {P = implode(S)}.
@@ -179,19 +192,19 @@ test.modsec{
   arg(implode(A)) --> frag(A,[],0c,).
 
   iden:(list[integer]) --> list[integer].
-  iden([C,..L]) --> idStart(C), moreIden(L).
+  iden([C,..L]) --> idChar(C), moreIden(L).
 
-  idStart:(integer) --> list[integer].
-  idStart(0c_) --> [0c_].
-  idStart(Ch) --> [Ch] , {_isLetterChar(Ch)}.
+  idChar:(integer) --> list[integer].
+  idChar(0c_) --> [0c_].
+  idChar(0c-) --> [0c-].
+  idChar(0c/) --> [0c/].
+  idChar(0c*) --> [0c*].
+  idChar(Ch) --> [Ch] , {_isLetterChar(Ch)}.
+  idChar(Ch) --> [Ch] , {_isNdChar(Ch) }!.
 
   moreIden:(list[integer]) --> list[integer].
-  moreIden([C,..L]) --> alphaNum(C), moreIden(L).
+  moreIden([C,..L]) --> idChar(C), moreIden(L).
   moreIden([]) --> [].
-
-  alphaNum:(integer) --> list[integer].
-  alphaNum(Ch) --> idStart(Ch).
-  alphaNum(Ch) --> [Ch] , {_isNdChar(Ch) }!.
 
   -- Absorb the \eol markers into a sequence of lines.
 
@@ -216,7 +229,7 @@ test.modsec{
   -- Tokenization of modsecurity source
 
   private type secTkn ::= secRule | secAction | secDefaultAction | secMarker | secRuleUpdate
-   | idn(list[integer]) | strg(list[integer]).
+   | idn(list[integer]) | strg(list[integer]) | colon | bar | pling | lbra | rbra | amp.
 
   implementation display[secTkn] <= {
     disp(secAction) => ss("SecAction").
@@ -226,6 +239,12 @@ test.modsec{
     disp(secRuleUpdate) => ss("SecRuleUpdate").
     disp(strg(Seq)) => ssSeq([ss("\""), ss(implode(Seq)), ss("\"")]).
     disp(idn(Text)) => ssSeq([ss("'"), ss(implode(Text)), ss("'")]).
+    disp(bar) => ss("|").
+    disp(pling) => ss("!").
+    disp(colon) => ss(":").
+    disp(lbra) => ss("[").
+    disp(rbra) => ss("]").
+    disp(amp) => ss("&").
   }
 
   tokenize:(list[list[integer]]) => list[list[secTkn]].
@@ -256,11 +275,14 @@ test.modsec{
   token(secRule) --> ("SecRule"|"secrule"|"Secrule"|"SECRULE")!.
   token(secAction) --> ("SecAction"|"Secaction"|"secaction"|"SECACTION")!.
   token(secMarker) --> ("SecMarker"|"Secmarker"|"secmarker"|"SECMARKER")!.
-  token(strg(Seq)) --> "\"", stringText(Seq), "\"".
-  token(idn(Text)) --> frag(Text,[],0c ).
-
-  iden:(list[integer]) --> list[integer].
-  iden(L) --> frag(L,[],0c ).
+  token(strg(Seq)) --> "\"", stringText(Seq,0c"), "\"".
+  token(colon) --> ":".
+  token(pling) --> "!".
+  token(amp) --> "&".
+  token(bar) --> "|".
+  token(idn(Text)) --> iden(Text).
+  token(idn(Text)) --> "/", frag(Text,[],0c/), "/".
+  token(idn(Text)) --> "'", stringText(Seq,0c'), "'".
 
   frag:(list[integer],list[integer],integer) --> list[integer].
   frag(L,L,_) --> eof.
@@ -269,8 +291,8 @@ test.modsec{
   frag(L,L,Dl) --> [Dl]+.
   frag([C,..L],X,Dl) --> [C], frag(L,X,Dl).
 
-  stringText:(list[integer]) --> list[integer].
-  stringText([C,..More]) --> "\\", [C], stringText(More).
-  stringText([C,..More]) --> [C], { C \= 0c" }, stringText(More).
-  stringText([]) --> "\""+.
+  stringText:(list[integer],integer) --> list[integer].
+  stringText([C,..More],Qt) --> "\\", [C], stringText(More,Qt).
+  stringText([C,..More],Qt) --> [C], { C \= Qt }, stringText(More,Qt).
+  stringText([],Qt) --> [Qt]+.
 }

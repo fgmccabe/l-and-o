@@ -9,6 +9,7 @@ catalog{
     test.gr -> "gr.lo".
     test.m -> "m.lo".
     test.o -> "o.lo".
+    test.parsetools -> "parsetools.lo".
   }
   default: "../LO/catalog".
 }

@@ -63,12 +63,16 @@ lo.list{
     foldRight(f,x,[e,..l]) => f(e,foldRight(f,x,l)).
   }
 
+  public implementation mapping[list] <= {
+    L//F => mapList(L,F).
+  }
+
   public mapList:all v,w ~~ (list[v],((v)=>w)) => list[w].
   mapList([],_) => [].
   mapList([e,..l],f) => [f(e),..mapList(l,f)].
 
   public implementation all e ~~ filter[list[e]->>e] <= {
-    filter(L,P) => filterList(L,P).
+    L^/P => filterList(L,P).
   }
 
   filterList:all e ~~ (list[e],(e){})=>list[e].

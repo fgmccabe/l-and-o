@@ -34,6 +34,8 @@
   infixOp(">=",899,900,899).	 /* greater than or equal */
   infixOp("in",899,900,899).	 /* list membership */
   infixOp("<>",799,800,800).	 /* list append */
+  infixOp("//",800,800,799).	 /* map over */
+  infixOp("^/",800,800,799).	 /* filter */
   infixOp("#",759,760,759).	 /* package separator */
   infixOp("+",720,720,719).	 /* addition */
   infixOp("-",720,720,719).	 /* subtraction */
@@ -112,6 +114,7 @@
   follows('.>>>','.','.>>>.').
   follows('.',' ','. ').
   follows('','/','/').
+  follows('/','/','//').
   follows('','|','|').
   follows('|',':','|:').
   follows('|','|','||').
@@ -122,6 +125,7 @@
   follows('\\','=','\\=').
   follows('\\=','=','\\==').
   follows('','^','^').
+  follows('^','/','^/').
   follows('',':',':').
   follows(':',':','::').
   follows('::','=','::=').
@@ -169,6 +173,7 @@
   final('.>>>.',".>>>.").	 /* arithmetic shift right */
   final('. ',". ").	 /* statement terminator */
   final('/',"/").	 /* division */
+  final('//',"//").	 /* map over */
   final('|',"|").	 /* type union and disjunction */
   final('|:',"|:").	 /* constrained type */
   final('||',"||").	 /* bag of constructor */
@@ -178,6 +183,7 @@
   final('\\=',"\\=").	 /* not unifyable */
   final('\\==',"\\==").	 /* not equals */
   final('^',"^").	 /* grammar iterator */
+  final('^/',"^/").	 /* filter */
   final(':',":").	 /* type annotation */
   final('::',"::").	 /* type coercion */
   final('::=',"::=").	 /* user type definition */
