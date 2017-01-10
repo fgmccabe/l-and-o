@@ -6,78 +6,78 @@ lo.comp.varcomp{
   import lo.comp.registers.
   import lo.comp.term.
 
-  public unifyVar:(source,source,varSet) => (list[instruction],varSet).
-  unifyVar(voidVar,_,Used) => ([],Used).
-  unifyVar(_,voidVar,Used) => ([],Used).
-  unifyVar(aReg(Reg),aReg(Reg),Used) => ([],Used).
-  unifyVar(aReg(Reg),aReg(Rg),Used) => ([iUAA(Reg,Rg)],Used) :- Reg\=Rg.
-  unifyVar(aReg(Reg),yReg(Lc,_),Used) => ([iUAY(Reg,Lc)],Used).
-  unifyVar(aReg(Reg),sReg,Used) => ([iUAS(Reg)],Used).
-  unifyVar(yReg(Lc,_),aReg(Reg),Used) => ([iUAY(Reg,Lc)],Used).
-  unifyVar(yReg(Lc,_),yReg(Lc,_),Used) => ([],Used).
-  unifyVar(yReg(Lc,_),yReg(Loc,_),Used) => ([iUYY(Lc,Loc)],Used) :- Lc<255, Loc<255.
-  unifyVar(yReg(Lc,_),yReg(Loc,_),Used) => ([iMAY(0,Lc),iUAY(0,Loc)],Used).
-  unifyVar(yReg(Lc,_),sReg,Used) => ([iUYS(Lc)],Used).
+  public unifyVar:(source,source,varSet,list[instruction],varSet){}.
+  unifyVar(voidVar,_,Used,[],Used).
+  unifyVar(_,voidVar,Used, [],Used).
+  unifyVar(aReg(Reg),aReg(Reg),Used, [],Used).
+  unifyVar(aReg(Reg),aReg(Rg),Used, [iUAA(Reg,Rg)],Used) :- Reg\=Rg.
+  unifyVar(aReg(Reg),yReg(Lc,_),Used, [iUAY(Reg,Lc)],Used).
+  unifyVar(aReg(Reg),sReg,Used, [iUAS(Reg)],Used).
+  unifyVar(yReg(Lc,_),aReg(Reg),Used, [iUAY(Reg,Lc)],Used).
+  unifyVar(yReg(Lc,_),yReg(Lc,_),Used, [],Used).
+  unifyVar(yReg(Lc,_),yReg(Loc,_),Used, [iUYY(Lc,Loc)],Used) :- Lc<255, Loc<255.
+  unifyVar(yReg(Lc,_),yReg(Loc,_),Used, [iMAY(0,Lc),iUAY(0,Loc)],Used).
+  unifyVar(yReg(Lc,_),sReg,Used, [iUYS(Lc)],Used).
   unifyVar(sReg,aReg(Rg),Used)  => ([iUAS(Rg)],Used).
-  unifyVar(sReg,yReg(Lc,_),Used) => ([iUYS(Lc)],Used).
+  unifyVar(sReg,yReg(Lc,_),Used, [iUYS(Lc)],Used).
 
-  public moveVar:(source,source,varSet,logical) => (list[instruction],varSet).
-  moveVar(voidVar,_,Used,_) => ([],Used).
-  moveVar(aReg(Rg),aReg(Rg),Used,_) => ([],Used).
-  moveVar(aReg(Rg),aReg(Reg),Used,_) => ([iMAA(Rg,Reg)],regUsed(Used,Rg)).
-  moveVar(aReg(Rg),yReg(Lc,Safe),Used,Last) => ([iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
-  moveVar(aReg(Rg),yReg(Lc,_),Used,_) => ([iMUAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz))).
-  moveVar(aReg(Rg),sReg,Used,_) => ([iMAS(Rg)],regUsed(Used,Rg)).
-  moveVar(yReg(Lc,_),aReg(Rg),Used,_) => ([iMYA(Lc,Rg)],locUsed(Used,Lc)).
-  moveVar(yReg(Lc,_),yReg(Lc,_),Used,_) => ([],Used).
-  moveVar(yReg(Lc,_),yReg(Loc,_),Used,_) => ([iMYY(Lc,Loc)],locUsed(Used,Lc)) :- Lc<255, Loc<255.
-  moveVar(yReg(Lc,_),yReg(Loc,_),Used,_) => ([iMAY(0,Loc),iMYA(Lc,0)],locUsed(Used,Lc)).
-  moveVar(yReg(Lc,_),sReg,Used,_) => ([iMYS(Lc)],locUsed(Used,Lc)).
-  moveVar(sReg,aReg(Rg),Used,_) => ([iMSA(Rg)],Used).
-  moveVar(sReg,yReg(Lc,_),Used,_) => ([iMSY(Lc)],Used).
+  public moveVr:(source,source,varSet,logical,list[instruction],varSet){}.
+  moveVr(voidVar,_,Used,_,[],Used).
+  moveVr(aReg(Rg),aReg(Rg),Used,_,[],Used).
+  moveVr(aReg(Rg),aReg(Reg),Used,_,[iMAA(Rg,Reg)],regUsed(Used,Rg)).
+  moveVr(aReg(Rg),yReg(Lc,Safe),Used,Last,[iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
+  moveVr(aReg(Rg),yReg(Lc,_),Used,_,[iMUAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz))).
+  moveVr(aReg(Rg),sReg,Used,_,[iMAS(Rg)],regUsed(Used,Rg)).
+  moveVr(yReg(Lc,_),aReg(Rg),Used,_,[iMYA(Lc,Rg)],locUsed(Used,Lc)).
+  moveVr(yReg(Lc,_),yReg(Lc,_),Used,_,[],Used).
+  moveVr(yReg(Lc,_),yReg(Loc,_),Used,_,[iMYY(Lc,Loc)],locUsed(Used,Lc)) :- Lc<255, Loc<255.
+  moveVr(yReg(Lc,_),yReg(Loc,_),Used,_,[iMAY(0,Loc),iMYA(Lc,0)],locUsed(Used,Lc)).
+  moveVr(yReg(Lc,_),sReg,Used,_,[iMYS(Lc)],locUsed(Used,Lc)).
+  moveVr(sReg,aReg(Rg),Used,_,[iMSA(Rg)],Used).
+  moveVr(sReg,yReg(Lc,_),Used,_,[iMSY(Lc)],Used).
 
 
-  public overVar:(source,source,varSet,logical) => (list[instruction],varSet).
-  overVar(voidVar,_,Used,_) => ([],Used).
-  overVar(aReg(Rg),aReg(Rg),Used,_) => ([],Used).
-  overVar(aReg(Rg),aReg(Reg),Used,_) => ([iMAA(Rg,Reg)],regUsed(Used,Rg)).
-  overVar(aReg(Rg),yReg(Lc,Safe),Used,Last) => ([iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
-  overVar(aReg(Rg),yReg(Lc,_),Used,_) => ([iMUAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz))).
-  overVar(aReg(Rg),sReg,Used,_) => ([iMAS(Rg)],regUsed(Used,Rg)).
-  overVar(yReg(Lc,_),aReg(Rg),Used,_) => ([iOYA(Lc,Rg)],locUsed(Used,Lc)).
-  overVar(yReg(Lc,_),yReg(Lc,_),Used,_) => ([],Used).
-  overVar(yReg(Lc,_),yReg(Loc,_),Used,_) => ([iMAY(0,Lc),iOYA(Loc,0)],locUsed(Used,Lc)).
-  overVar(yReg(Lc,_),sReg,Used,_) => ([iMYS(Lc)],locUsed(Used,Lc)).
+  public overVar:(source,source,varSet,logical,list[instruction],varSet){}.
+  overVar(voidVar,_,Used,_,[],Used).
+  overVar(aReg(Rg),aReg(Rg),Used,_,[],Used).
+  overVar(aReg(Rg),aReg(Reg),Used,_,[iMAA(Rg,Reg)],regUsed(Used,Rg)).
+  overVar(aReg(Rg),yReg(Lc,Safe),Used,Last,[iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
+  overVar(aReg(Rg),yReg(Lc,_),Used,_,[iMUAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz))).
+  overVar(aReg(Rg),sReg,Used,_,[iMAS(Rg)],regUsed(Used,Rg)).
+  overVar(yReg(Lc,_),aReg(Rg),Used,_,[iOYA(Lc,Rg)],locUsed(Used,Lc)).
+  overVar(yReg(Lc,_),yReg(Lc,_),Used,_,[],Used).
+  overVar(yReg(Lc,_),yReg(Loc,_),Used,_,[iMAY(0,Lc),iOYA(Loc,0)],locUsed(Used,Lc)).
+  overVar(yReg(Lc,_),sReg,Used,_,[iMYS(Lc)],locUsed(Used,Lc)).
 
-  public matchVar:(source,source,varSet) => (list[instruction],varSet).
-  matchVar(voidVar,_,Used) => ([],Used).
-  matchVar(aReg(Rg),aReg(Rg),Used) => ([],Used).
-  matchVar(aReg(Rg),aReg(Reg),Used) => ([iNvra(Rg),iCAA(Rg,Reg)],Used).
-  matchVar(aReg(Rg),yReg(Lc,Safe),Used) => ([iNvra(Rg),iCAY(Rg,Lc)],Used).
-  matchVar(aReg(Rg),sReg,Used,_) => ([iNvra(Rg),iCAS(Rg)],Used).
-  matchVar(yReg(Lc,_),aReg(Rg),Used) => ([iNvrY(Lc),iCYA(Lc,Rg)],Used).
-  matchVar(yReg(Lc,_),yReg(Lc,_),Used) => ([],Used).
-  matchVar(yReg(Lc,_),yReg(Loc,_),Used) => ([iNvrY(Lc),iMAY(0,Loc),iCAY(0,Lc)],Used).
-  matchVar(yReg(Lc,_),sReg,Used) => ([iNvrY(Lc),iCYS(Lc)],Used).
-  matchVar(sReg,aReg(Rg),Used) => ([iCSA(Rg)],Used).
-  matchVar(sReg,yReg(Lc,_),Used,_) => ([iCSY(Lc)],Used).
+  public matchVar:(source,source,varSet,list[instruction],varSet){}.
+  matchVar(voidVar,_,Used,[],Used).
+  matchVar(aReg(Rg),aReg(Rg),Used,[],Used).
+  matchVar(aReg(Rg),aReg(Reg),Used,[iNvra(Rg),iCAA(Rg,Reg)],Used).
+  matchVar(aReg(Rg),yReg(Lc,Safe),Used,[iNvra(Rg),iCAY(Rg,Lc)],Used).
+  matchVar(aReg(Rg),sReg,Used,_,[iNvra(Rg),iCAS(Rg)],Used).
+  matchVar(yReg(Lc,_),aReg(Rg),Used,[iNvrY(Lc),iCYA(Lc,Rg)],Used).
+  matchVar(yReg(Lc,_),yReg(Lc,_),Used,[],Used).
+  matchVar(yReg(Lc,_),yReg(Loc,_),Used,[iNvrY(Lc),iMAY(0,Loc),iCAY(0,Lc)],Used).
+  matchVar(yReg(Lc,_),sReg,Used,[iNvrY(Lc),iCYS(Lc)],Used).
+  matchVar(sReg,aReg(Rg),Used,[iCSA(Rg)],Used).
+  matchVar(sReg,yReg(Lc,_),Used,_,[iCSY(Lc)],Used).
 
-  public clearVar:(source,varSet) => (list[instruction],varSet).
-  clearVar(voidVar,Used) => ([],Used).
-  clearVar(aReg(Rg),Used) => ([iClA(Rg)],regUsed(Used,Rg)).
-  clearVar(yReg(Lc,_),Used) => ([iClY(Lc)],locUsed(Used,Lc)).
-  clearVar(sReg,User) => ([iCLS],Used).
+  public clearVar:(source,varSet,list[instruction],varSet){}.
+  clearVar(voidVar,Used,[],Used).
+  clearVar(aReg(Rg),Used,[iClA(Rg)],regUsed(Used,Rg)).
+  clearVar(yReg(Lc,_),Used,[iClY(Lc)],locUsed(Used,Lc)).
+  clearVar(sReg,User,[iCLS],Used).
 
-  public firstUse:(source,source,varSet) => (list[instruction],varSet).
-  firstUse(voidVar,Src,Used) => clearVar(Src,Used).
-  firstUse(Dst,voidVar,Used) => clearVar(Dst,Used).
-  firstUse(aReg(Rg),aReg(Rg),Used) => ([iClA(Rg)],regUsed(lclGc(Used,varSlotSz),Rg)).
-  firstUse(aReg(Rg),aReg(Reg),Used) => ([iClAA(Rg,Reg)],regUsed(regUsed(lclGc(Used,varSlotSz),Reg),Rg)).
-  firstUse(aReg(Rg),yReg(Lc,Safe),Used) => ([iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Loc)).
-  firstUse(yReg(Lc,_),aReg(Rg),Used) => ([iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Lc)).
-  firstUse(yReg(Lc,_),yReg(Lc,_),Used) => ([iClY(Lc)],locUsed(Used,Lc)).
-  firstUse(yReg(Lc,_),yReg(Loc,_),Used) => ([iClY(Lc),iMAY(0,Lc),iMYA(Loc,0)],locUsed(locUsed(Used,Loc),Lc)).
-  firstUse(sReg,aReg(Rg),Used) => ([iClSA(Rg)],regUsed(Used,Rg)).
-  firstUse(sReg,yReg(Lc,_),Used,_) => ([iClSY(Lc)],locUsed(Used,Lc)).
+  public clearVr:(source,source,varSet,list[instruction],varSet).
+  clearVr(voidVar,Src,Used) => clearVar(Src,Used).
+  clearVr(Dst,voidVar,Used) => clearVar(Dst,Used).
+  clearVr(aReg(Rg),aReg(Rg),Used,[iClA(Rg)],regUsed(lclGc(Used,varSlotSz),Rg)).
+  clearVr(aReg(Rg),aReg(Reg),Used,[iClAA(Rg,Reg)],regUsed(regUsed(lclGc(Used,varSlotSz),Reg),Rg)).
+  clearVr(aReg(Rg),yReg(Lc,Safe),Used,[iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Loc)).
+  clearVr(yReg(Lc,_),aReg(Rg),Used,[iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Lc)).
+  clearVr(yReg(Lc,_),yReg(Lc,_),Used,[iClY(Lc)],locUsed(Used,Lc)).
+  clearVr(yReg(Lc,_),yReg(Loc,_),Used,[iClY(Lc),iMAY(0,Lc),iMYA(Loc,0)],locUsed(locUsed(Used,Loc),Lc)).
+  clearVr(sReg,aReg(Rg),Used,[iClSA(Rg)],regUsed(Used,Rg)).
+  clearVr(sReg,yReg(Lc,_),Used,_,[iClSY(Lc)],locUsed(Used,Lc)).
 
 }

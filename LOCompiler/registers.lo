@@ -5,6 +5,10 @@ lo.comp.registers{
 
   public type varSet ::= usdRegs(set[integer],set[integer],set[integer],integer).
 
+  public type initialized ::= notInited | inited.
+
+  public type dictEntry ::= dictEntry(string,initialized,source).
+
   public locUsed:(varSet,integer) => varSet.
   locUsed(usdRegs(A,L,F,G),Lc) => usdRegs(A,addElement(L,Lc),F,G).
 
