@@ -1,6 +1,6 @@
 /*
-  Process control functions for the Go! run-time system
-  Copyright (c) 2016. Francis G. McCabe
+  Process control functions for the L&O run-time system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "go.h"			/* Main april header file */
+#include "lo.h"			/* Main april header file */
 
 #ifndef DEFSTACK
 #define DEFSTACK 1024    /* default initial size of process stack */
@@ -36,16 +36,16 @@ typedef struct {
 
 ptrI procClass;
 
-static const char *state_names[] = {"go.stdlib#quiescent",
-                                    "go.stdlib#runnable",
-                                    "go.stdlib#wait_io",
-                                    "go.stdlib#wait_term",
-                                    "go.stdlib#wait_timer",
-                                    "go.stdlib#wait_lock",
-                                    "go.stdlib#wait_child",
-                                    "go.stdlib#wait_rendezvous",
-                                    "go.stdlib#in_exclusion",
-                                    "go.stdlib#dead"};
+static const char *state_names[] = {"lo.stdlib#quiescent",
+                                    "lo.stdlib#runnable",
+                                    "lo.stdlib#wait_io",
+                                    "lo.stdlib#wait_term",
+                                    "lo.stdlib#wait_timer",
+                                    "lo.stdlib#wait_lock",
+                                    "lo.stdlib#wait_child",
+                                    "lo.stdlib#wait_rendezvous",
+                                    "lo.stdlib#in_exclusion",
+                                    "lo.stdlib#dead"};
 
 static void inheritProcess(classPo class, classPo request);
 static void initProcessClass(classPo class, classPo request);
@@ -197,7 +197,7 @@ void initThreadClass(void) {
   procClass = newSpecialClass("#process", prSizeFun, prCompFun,
                               prOutFun, prCopyFun, prScanFun, prHashFun);
 
-  threadClass = newClassDf("go.stdlib#thread", 0);
+  threadClass = newClassDf("lo.stdlib#thread", 0);
 }
 
 static long prSizeFun(specialClassPo class, objPo o) {
@@ -697,7 +697,7 @@ void *forkThread(void *arg) {
   P->proc.state = runnable;
   pthread_cleanup_push(destroyThread, P);
 
-    runGo(P);        // start the execution of Go! code
+    runGo(P);        // start the execution of L&O code
 
   pthread_cleanup_pop(True);
   return NULL;
@@ -718,7 +718,7 @@ retCode g__fork(processPo P, ptrPo a) {
     ptrI prog;
 
     if (isGoObject(p))
-      prog = objectCode(goObjV(as));
+      prog = objectCode(loObjV(as));
     else if (isObjct(p))
       prog = ProgramOf(programOfClass(objV(p->class)));
     else {

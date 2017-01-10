@@ -1,6 +1,6 @@
 /* 
   File I/O functions
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 
-#include "go.h"
+#include "lo.h"
 #include "fileio.h"
 #include "term.h"
 #include "formioP.h"
@@ -50,7 +50,7 @@ void initFileIo(void) {
 }
 
 void initFiles(void) {
-  filePtrClass = newSpecialClass("go.stdlib#file", flSizeFun, flCompFun,
+  filePtrClass = newSpecialClass("lo.stdlib#file", flSizeFun, flCompFun,
                                  flOutFun, flCopyFun, flScanFun, flHashFun);
 }
 
@@ -190,7 +190,7 @@ retCode g__checkRoot(processPo P, ptrPo a) {
     return liberror(P, "__checkRoot", eSTRNEEDD);
   else {
 
-    switch (checkRoot(goSysPath, stringVal(stringV(Base)), stringVal(stringV(Url)))) {
+    switch (checkRoot(loSysPath, stringVal(stringV(Base)), stringVal(stringV(Url)))) {
       case Ok:
         return Ok;
       case Fail:

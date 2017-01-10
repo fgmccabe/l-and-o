@@ -1,5 +1,5 @@
 /* 
-   List related definitions for the Go! engine
+   List related definitions for the L&O engine
    (c) 2000-2007 F.G.McCabe
 
    This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 
 #include "word.h"
 
-extern ptrI emptyList;			/* The class constructor "go.stdlib#[]" */
+extern ptrI emptyList;			/* The class constructor "lo.stdlib#[]" */
 extern ptrI listClass,nilClass;
 
 static inline logical isList(objPo p)

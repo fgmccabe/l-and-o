@@ -1,6 +1,6 @@
 /* 
-  The run-time engine for Go!
-  Copyright (c) 2016. Francis G. McCabe
+  The run-time engine for L&O
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-#include "go.h"			/* main header file */
+#include "lo.h"			/* main header file */
 #include "opcodes.h"		/* The definitions of the opcodes */
 #include "dict.h"		/* Dictionary handling stuff */
 #include "process.h"		/* Process handling */
@@ -30,7 +30,7 @@
 #include "esc.h"
 
 #ifndef TRAIL_FUDGE
-#define TRAIL_FUDGE GO_REGS  /* How much room to leave for trail entries */
+#define TRAIL_FUDGE LO_REGS  /* How much room to leave for trail entries */
 #endif
 
 #ifdef EXECTRACE
@@ -271,7 +271,7 @@ void runGo(register processPo P) {
     switch (op_cde(PCX)) {
 
       case halt:        /* stop execution */
-        go_exit(0);      /* exit the program */
+        lo_exit(0);      /* exit the program */
         return;
 
       case die:        /* kill this process */
@@ -319,7 +319,7 @@ void runGo(register processPo P) {
             if (IsDefined(prog))
               arity = codeArity(codeV(ProgramOf(prog)));
             else
-              arity = GO_REGS;
+              arity = LO_REGS;
           }
 
           cPC = PC;      /* emulate a kawl, return back to this instruction */
@@ -506,7 +506,7 @@ void runGo(register processPo P) {
               objPo p = objV(prog);
 
               if (isGoObject(p))
-                prog = objectCode(goObjV(prog));
+                prog = objectCode(loObjV(prog));
               else if (isObjct(p))
                 prog = ProgramOf(programOfClass(objV(p->class)));
               else {
@@ -564,7 +564,7 @@ void runGo(register processPo P) {
             objPo p = objV(prog);
 
             if (isGoObject(p))
-              prog = objectCode(goObjV(prog));
+              prog = objectCode(loObjV(prog));
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
             else {
@@ -618,7 +618,7 @@ void runGo(register processPo P) {
             objPo p = objV(prog);
 
             if (isGoObject(p))
-              prog = objectCode(goObjV(prog));
+              prog = objectCode(loObjV(prog));
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
             else {

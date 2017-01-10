@@ -22,13 +22,13 @@ int main(int argc,char **argv)
   fprintf(out,"%% Automatically generated, do not edit \n");
   fprintf(out,"\\setlongtables\n");
   fprintf(out,"\\begin{longtable}{|cll|}\n");
-  fprintf(out,"\\caption{\\go instruction set summary}\\label{howitworks:table}\\\\ \n");
+  fprintf(out,"\\caption{\\lo instruction set summary}\\label{howitworks:table}\\\\ \n");
   fprintf(out,"\\hline\n");
   fprintf(out,"OpCode&Mnemonic&Summary\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"\\endfirsthead\n");
   fprintf(out,"\\multicolumn{3}{c}{\n");
-  fprintf(out,"{Table \\ref{howitworks:table} \\go instruction set summary (cont.)}}\\\\\n");
+  fprintf(out,"{Table \\ref{howitworks:table} \\lo instruction set summary (cont.)}}\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"OpCode&Mnemonic&Summary\\\\\n");
   fprintf(out,"\\hline\n");

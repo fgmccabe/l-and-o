@@ -1,6 +1,6 @@
 /*
   Access to the environment variables
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "go.h"			/* main header file */
+#include "lo.h"			/* main header file */
 
 retCode g_getenv(processPo P, ptrPo a) {
   ptrI k = deRefI(&a[1]);

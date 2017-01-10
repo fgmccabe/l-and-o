@@ -1,6 +1,6 @@
 /*
-  List handling functions for Go!
-  Copyright (c) 2016. Francis G. McCabe
+  List handling functions for L&O
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -13,7 +13,7 @@
   permissions and limitations under the License.
 */
 
-#include "go.h"
+#include "lo.h"
 
 ptrI permLsPair(heapPo H,ptrI head,ptrI tail)
 {

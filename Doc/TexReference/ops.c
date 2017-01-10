@@ -21,13 +21,13 @@ int main(int argc,char **argv)
   fprintf(out,"%% Automatically generated, do not edit \n");
   fprintf(out,"\\setlongtables\n");
   fprintf(out,"\\begin{longtable}{|llll|}\n");
-  fprintf(out,"\\caption{\\go standard operators}\\label{grammar:operators}\\\\ \n");
+  fprintf(out,"\\caption{\\lo standard operators}\\label{grammar:operators}\\\\ \n");
   fprintf(out,"\\hline\n");
   fprintf(out,"Operator&Priority&Assoc.&Description\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"\\endfirsthead\n");
   fprintf(out,"\\multicolumn{4}{c}{\n");
-  fprintf(out,"{Table \\ref{grammar:operators} \\go standard operators (cont.)}}\\\\\n");
+  fprintf(out,"{Table \\ref{grammar:operators} \\lo standard operators (cont.)}}\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"Operator&Priority&Assoc.&Description\\\\\n");
   fprintf(out,"\\hline\n");

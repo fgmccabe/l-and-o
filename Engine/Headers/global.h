@@ -1,6 +1,6 @@
 /*
-  Global memory management of Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+  Global memory management of L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at

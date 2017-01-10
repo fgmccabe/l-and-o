@@ -1,6 +1,6 @@
 /* 
-   Main memory layout definitions for the Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+   Main memory layout definitions for the L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -49,12 +49,12 @@
 
 
 /* BE VERY CAREFUL if you change this .... */
-/* Definition of a cell/pointer for the Go! run-time engine
+/* Definition of a cell/pointer for the L&O run-time engine
  * The value pointed at is preceded by a descriptor word which contains
  * a tag and possible attribute value
  */
 
-/* As with nearly every Prolog system out there, the Go! engine uses a tagged 
+/* As with nearly every Prolog system out there, the L&O engine uses a tagged
    pointer architecture. However, this one uses both tagged pointer and tagged 
    cell. This is to minimize the in-pointer tags (to 2 bits) and to maximize 
    potential for expansion.

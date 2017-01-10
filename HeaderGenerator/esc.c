@@ -1,6 +1,6 @@
 /*
  * Generate the escapes.ap module to allow the compiler access to the 
- * standard escapes in the Go! run-time
+ * standard escapes in the L&O run-time
  */
 
 #include "config.h"
@@ -26,7 +26,7 @@ int main(int argc,char **argv)
   FILE *out = stdout;
 
   fprintf(out,"/* Automatically generated, do not edit */\n");
-  fprintf(out,"#include \"go.ah\";\n\n");
+  fprintf(out,"#include \"lo.ah\";\n\n");
   fprintf(out,"module\n{\n");
 
   fprintf(out,"  escTypes =  collect{\t\t -- standard escape types\n");
@@ -93,23 +93,23 @@ static char *genOpType(FILE *f,char *tp)
 {
   switch(*tp++){
   case integer_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"integer\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"integer\",[])");
     return tp;
     
   case float_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"float\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"float\",[])");
     return tp;
     
   case number_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"number\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"number\",[])");
     return tp;
     
   case symbol_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"symbol\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"symbol\",[])");
     return tp;
     
   case string_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"list\",[uType(\"go.stdlib\",\"char\",[])])");
+    fprintf(f,"uType(\"lo.stdlib\",\"list\",[uType(\"lo.stdlib\",\"char\",[])])");
     return tp;
     
   case top_sig:
@@ -117,7 +117,7 @@ static char *genOpType(FILE *f,char *tp)
     return tp;
     
   case logical_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"logical\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"logical\",[])");
     return tp;
     
   case type_sig:
@@ -125,11 +125,11 @@ static char *genOpType(FILE *f,char *tp)
     return tp;
     
   case opaque_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"opaque\",[])");
+    fprintf(f,"uType(\"lo.stdlib\",\"opaque\",[])");
     return tp;
     
   case list_sig:
-    fprintf(f,"uType(\"go.stdlib\",\"list\",[");
+    fprintf(f,"uType(\"lo.stdlib\",\"list\",[");
     tp = genOpType(f,tp);
     fprintf(f,"])");
     return tp;
@@ -184,7 +184,7 @@ static char *genOpType(FILE *f,char *tp)
 
     if(*tp=='#'){
       tp++;
-      fprintf(f,"uType(\"go.stdlib\",\"");
+      fprintf(f,"uType(\"lo.stdlib\",\"");
     }
     else if(strchr(tp,'#')!=NULL){
       fprintf(f,"uType(\"");

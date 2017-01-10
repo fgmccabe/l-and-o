@@ -1,6 +1,6 @@
 /*
-  Bootstrap the Go! run-time
-  Copyright (c) 2016. Francis G. McCabe
+  Bootstrap the L&O run-time
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -13,7 +13,7 @@
   permissions and limitations under the License.
 */
 
-#include "go.h"			/* Main Go! header file */
+#include "lo.h"			/* Main L&O header file */
 #include "escodes.h"
 
 
@@ -52,30 +52,32 @@ static void defineExitProg(void)
   exitProg=buildCode(proc_exit_seq,0,NumberOf(proc_exit_seq),0);
 }
 
-static void defineTrapProg(void)
-{
-  insWord proc_seq[] = {
-    instrhb(alloc,3,2),
-    instrhb(gcmap,3,0),
-    instrhb(clAY,1,1),                  /* pick up the error trap value */
-    instrhb(escape,1,Esc_errorcode),
-    instrhb(gcmap,1,1),
-    instrhb(mAlit,2,0),         /* 0 */
-    instrhb(mAlit,3,0),         /* 0 */
-    instrhb(clAY,4,2),          /* $s */
-    instrhb(escape,4,Esc_stringOf),      /* __stringOf(xx,0,0,$s) */
-    instrhb(gcmap,4,2),
-    instrhb(mAY,1,2),           /* $s */
-    instrhb(escape,1,Esc_logmsg),      /* __logMsg($s) */
-    instrhb(gcmap,1,0),
-    instr(die)                  /* Finally we expire */
-  };
-  ptrI trap = buildCode(proc_seq,0,NumberOf(proc_seq),1);
+//
+//static void defineTrapProg(void)
+//{
+//  insWord proc_seq[] = {
+//    instrhb(alloc,3,2),
+//    instrhb(gcmap,3,0),
+//    instrhb(clAY,1,1),                  /* pick up the error trap value */
+//    instrhb(escape,1,Esc_errorcode),
+//    instrhb(gcmap,1,1),
+//    instrhb(mAlit,2,0),         /* 0 */
+//    instrhb(mAlit,3,0),         /* 0 */
+//    instrhb(clAY,4,2),          /* $s */
+//    instrhb(escape,4,Esc_stringOf),      /* __stringOf(xx,0,0,$s) */
+//    instrhb(gcmap,4,2),
+//    instrhb(mAY,1,2),           /* $s */
+//    instrhb(escape,1,Esc_logmsg),      /* __logMsg($s) */
+//    instrhb(gcmap,1,0),
+//    instr(die)                  /* Finally we expire */
+//  };
+//  ptrI trap = buildCode(proc_seq,0,NumberOf(proc_seq),1);
+//
+//  updateCodeLit(codeV(trap),0,zero);
+//
+//  trapProg=trap;
+//}
 
-  updateCodeLit(codeV(trap),0,zero);
-
-  trapProg=trap;
-}
 //
 //static void defineObjectProg(ptrI sym)
 //{
@@ -105,7 +107,7 @@ static void defineTrapProg(void)
 
 /*
  * This program is used to map special classes like integer into
- * Go! programs
+ * L&O programs
  * This program is only safe before the first GC
  */
 ptrI defineSpecialProg(const char *name)
@@ -161,11 +163,11 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
 
   defineExitProg();
   defineDieProg();
-  defineTrapProg();
+//  defineTrapProg();
 //  defineObjectProg(kmain);
   defineResumeProgs();                  /* define the resume entry points */
 
-  ptrI mainThread = goObject(&globalHeap,objP(permObject(&globalHeap,threadClass)));
+  ptrI mainThread = loObject(&globalHeap,objP(permObject(&globalHeap,threadClass)));
 
   processPo root = rootProcess(mainThread,kmain,classPath);
 
@@ -175,11 +177,11 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
 		     errorMsg,NumberOf(errorMsg))){
   default:
     logMsg(logFile,"corrupt or no boot file found in %U: %U",classPath,errorMsg);
-    go_exit(EXIT_FAIL);
+    lo_exit(EXIT_FAIL);
     return;
   case Eof:
     logMsg(logFile,"no boot file found in path %U",classPath);
-    go_exit(EXIT_FAIL);
+    lo_exit(EXIT_FAIL);
     return;
   case Ok:{
     gcRemoveRoot(&globalHeap,gcRoot);
@@ -188,7 +190,7 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
 
     if(!IsProgram(prog)){
       logMsg(logFile,"%U entry point not found",bootEntry);
-      go_exit(EXIT_FAIL);
+      lo_exit(EXIT_FAIL);
     }
     else{
       root->proc.PROG = ProgramOf(prog); /* this is where we establish the program */

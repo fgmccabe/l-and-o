@@ -1,6 +1,6 @@
 /* 
   Lock synchronization functions
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 
 #include <errno.h>
 
-#include "go.h"
+#include "lo.h"
 #include "clock.h"
 
 #define NANO (1000000000)
@@ -252,7 +252,7 @@ retCode g__acquireLock(processPo P, ptrPo a) {
     rootPo root = gcAddRoot(&P->proc.heap, &A1);
     gcAddRoot(&P->proc.heap, &A2);
 
-    dynPo lk = goObjV(A1);    /* pick up the lock-carrying object */
+    dynPo lk = loObjV(A1);    /* pick up the lock-carrying object */
 
     assert(lk->lock != NULL);
 
@@ -309,7 +309,7 @@ retCode g__waitLock(processPo P, ptrPo a) {
     rootPo root = gcAddRoot(&P->proc.heap, &A1);
     gcAddRoot(&P->proc.heap, &A2);
 
-    dynPo lk = goObjV(A1);    /* pick up the lock-carrying object */
+    dynPo lk = loObjV(A1);    /* pick up the lock-carrying object */
 
     assert(lk->lock != NULL);    /* must already have the lock */
 
@@ -356,7 +356,7 @@ retCode g__releaseLock(processPo P, ptrPo a) {
   if (isvar(A1))
     return liberror(P, "__releaseLock", eINSUFARG);
 
-  dynPo lk = goObjV(A1);
+  dynPo lk = loObjV(A1);
 
   if (lk->lock != NULL) {
 #ifdef LOCKTRACE

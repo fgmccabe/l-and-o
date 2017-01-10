@@ -1,6 +1,6 @@
 /*
-  Permissions handling header for the Go! run-time system
-  Copyright (c) 2016. Francis G. McCabe
+  Permissions handling header for the L&O run-time system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #define _PERMS_H_
 
 #include "config.h"		/* pick up standard configuration header */
-#include "go.h"			/* Main header file */
+#include "lo.h"			/* Main header file */
 
 logical inPermissions(ptrI perms,ptrI perm);
 ptrI permitedAmount(ptrI perms,ptrI perm);

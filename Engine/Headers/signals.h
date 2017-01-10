@@ -1,6 +1,6 @@
 /*
   Signal management functions
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -20,6 +20,6 @@
 void setupSignals(void);
 void startInterrupts(sigset_t blocked);	/* enable control-C interrupts */
 sigset_t stopInterrupts(void);	/* stop control-C interruptes */
-void go_exit(int);		/* When we want to stop */
+void lo_exit(int);		/* When we want to stop */
 void initSuspend(void);
 #endif

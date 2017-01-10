@@ -1,6 +1,6 @@
 /*
   System interface escapes
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>		/* system error numbers */
-#include "go.h"
+#include "lo.h"
 #include "fileio.h"
 
 retCode g_exit(processPo P, ptrPo a) {

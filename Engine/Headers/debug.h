@@ -1,5 +1,5 @@
-#ifndef _GO_DEBUG_H_
-#define _GO_DEBUG_H_
+#ifndef _LO_DEBUG_H_
+#define _LO_DEBUG_H_
 
 /* Declarations of the debugger hooks */ 
 

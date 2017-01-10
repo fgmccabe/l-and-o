@@ -6,7 +6,7 @@ catalog{
     lo.comp.base64 -> "base64.lo".
     lo.comp.canon -> "canon.lo".
     lo.comp.catalog -> "catalog.lo".
-    lo.comp.clausecomp -> "clausecomp.lo".
+    lo.comp.comp.unify -> "compunify.lo".
     lo.comp.decode -> "decode.lo".
     lo.comp.dependencies -> "dependencies.lo".
     lo.comp.debug -> "debug.lo".
@@ -43,7 +43,6 @@ catalog{
     lo.comp.typecheck -> "checker.lo".
     lo.comp.types -> "types.lo".
     lo.comp.unify -> "unify.lo".
-    lo.comp.varcomp -> "varcomp.lo".
   }
   default: "../LO/catalog".
 }

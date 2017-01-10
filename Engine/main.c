@@ -1,6 +1,6 @@
 /* 
-  Main program for the Go! run-time system
-  Copyright (c) 2016. Francis G. McCabe
+  Main program for the L&O run-time system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <stdlib.h>
-#include "go.h"		/* Main header file */
+#include "lo.h"		/* Main header file */
 #include "fileio.h"
 #include "clock.h"
 #include "debug.h"
@@ -33,13 +33,13 @@ logical traceMessage = False;  // true if tracing message passing
 logical tracePut = False;  // true if tracing term freeze 
 logical traceLock = False;  /* true if tracing locks */
 #ifdef XTRACE
-#ifdef GOXLIB
+#ifdef LOXLIB
 logical traceX = False;			/* True if tracing X windows stuff */
 #endif
 #endif
 
-byte goSysPath[MAX_MSG_LEN] = {0};      // Pointer to Go!'s installation point
-static byte goCWD[MAX_MSG_LEN] = {0};
+byte loSysPath[MAX_MSG_LEN] = {0};      // Pointer to L&O's installation point
+static byte loCWD[MAX_MSG_LEN] = {0};
 static byte classPath[MAX_MSG_LEN] = {0};  // Go class path string 
 static byte entryPoint[MAX_MSG_LEN] = {0};  // Go entry point class 
 static byte debugPkg[MAX_MSG_LEN] = {0};  // Standard debug package 
@@ -230,7 +230,7 @@ int getOptions(int argc, char **argv) {
 #if 0
             case 'x':		/* turn on tracing of X windows */
 #ifdef XTRACE
-#ifdef GOXLIB
+#ifdef LOXLIB
               traceX=True;
 #else
               logMsg(logFile,"X not enabled\n");
@@ -288,12 +288,12 @@ int getOptions(int argc, char **argv) {
       }
 
       case 'm': {                          /* modify the entry point */
-        strMsg(entryPoint, NumberOf(entryPoint), "go.boot@%s", optarg);
+        strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@%s", optarg);
         break;
       }
 
       case 'd': {                      /* non-standard initial working directory */
-        strMsg(goCWD, NumberOf(goCWD), "%s", optarg);
+        strMsg(loCWD, NumberOf(loCWD), "%s", optarg);
         break;
       }
 
@@ -355,24 +355,24 @@ int main(int argc, char **argv) {
   initLogfile((string) "-");
 
   {
-    char *dir = getenv("GO_DIR"); /* pick up the installation directory */
+    char *dir = getenv("LO_DIR"); /* pick up the installation directory */
     char cbuff[MAXPATHLEN];
     char *cwd = getcwd(cbuff, NumberOf(cbuff)); /* compute current starting directory */
 
     if (dir == NULL)
-      dir = GODIR;                  /* Default installation path */
+      dir = LODIR;                  /* Default installation path */
 
-    strMsg(goSysPath, NumberOf(goSysPath), "%s", dir);
+    strMsg(loSysPath, NumberOf(loSysPath), "%s", dir);
 
     if (cwd == NULL)
       syserr("cant determine current directory");
     else {
-      strMsg(goCWD, NumberOf(goCWD), "%s/", cwd);
+      strMsg(loCWD, NumberOf(loCWD), "%s/", cwd);
       strMsg(classPath, NumberOf(classPath), "%s:%s/", dir, cwd);
     }
   }
 
-  strMsg(entryPoint, NumberOf(entryPoint), "go.boot@__main"); /* standard entry point */
+  strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__main"); /* standard entry point */
 
   if ((narg = getOptions(argc, argv)) < 0) {
     outMsg(logFile, _("usage: %s [-v] [-m mainclass] [-L log] [-g host:port] [-V] [-P classpath]"
@@ -396,9 +396,9 @@ int main(int argc, char **argv) {
 
   setupSignals();
 
-  bootstrap(entryPoint, SymbolDebug, classPath, goCWD);
+  bootstrap(entryPoint, SymbolDebug, classPath, loCWD);
 
-  return EXIT_SUCCEED;          /* exit the go system cleanly */
+  return EXIT_SUCCEED;          /* exit the lo system cleanly */
 }
 
 /*

@@ -1,6 +1,6 @@
 /*
-  Install standard escapes into Go! system
-  Copyright (c) 2016. Francis G. McCabe
+  Install standard escapes into L&O system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,7 @@
  */
 #include "config.h"		/* pick up standard configuration header */
 #include <string.h>		/* String functions */
-#include "go.h"
+#include "lo.h"
 #include "signature.h"          // Access the signature definitions
 #include "esc.h"
 #include "escodes.h"
@@ -45,8 +45,8 @@ static void install_escape(char *escape_fn, funpo escape_code, int code,
 #define tdf(A, S, B)
 
 #undef escape
-#define escape(name, code, secr, pr, spec, cmnt) {\
-  install_escape("##name##",g_##name,code,pr,spec);\
+#define escape(name, secr, pr, spec, cmnt) {\
+  install_escape("##name##",g_##name,Esc##name,pr,spec);\
 };
 
 /* Set up the escape table */
@@ -69,10 +69,8 @@ static char *skipSig(char *tp) {
     case integer_sig:
     case float_sig:
     case string_sig:
-    case top_sig:
     case void_sig:
     case logical_sig:
-    case type_sig:
       return tp;
     case list_sig:
       return skipSig(tp);

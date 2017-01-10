@@ -1,6 +1,6 @@
 /* 
-  Symbol related definitions for the Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+  Symbol related definitions for the L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -13,8 +13,8 @@
   permissions and limitations under the License.
 */
 
-#ifndef _GO_SYMBOLS_H_
-#define _GO_SYMBOLS_H_
+#ifndef _LO_SYMBOLS_H_
+#define _LO_SYMBOLS_H_
 
 #include <string.h>
 
@@ -58,7 +58,7 @@ extern ptrI kmainThread;		/* The main thread */
 extern ptrI kstart;                     /* entry point for new threads */
 extern ptrI kdelay;                     /* delay response handler */
 
-extern ptrI doResume[GO_REGS];          /* array of resume exit points */
+extern ptrI doResume[LO_REGS];          /* array of resume exit points */
 
 /* Symbol structure */
 typedef struct _symb_record_ {

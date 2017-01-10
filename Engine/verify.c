@@ -1,7 +1,7 @@
 /*
   Code verifier module -- check that a code segment satisfies basic 
   sanity constraints.
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,7 @@
   permissions and limitations under the License.
 */
 
-#include "go.h"
+#include "lo.h"
 #include <stdio.h>
 #include "disass.h"
 #include "esc.h"
@@ -27,7 +27,7 @@ typedef struct {
 typedef struct _segment_ *segPo;
 
 typedef struct _segment_ {
-  Var args[GO_REGS];
+  Var args[LO_REGS];
   long lCount;                      //  number of locals in use
   varPo locals;                     //  entry state for this segment
   unsigned long arity;              //  Arity of the code
@@ -427,7 +427,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case iAh: {                            // input argument register in upper slot (0..255)
       int regNo = op_h_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS || !seg->args[regNo].inited)
+      if (regNo > LO_REGS || !seg->args[regNo].inited)
         return "attempted to access unset argument register";
       else
         seg->args[regNo].read = True;
@@ -438,7 +438,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case iAm: {                            // input argument register in middle slot (0..255)
       int regNo = op_m_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS || !seg->args[regNo].inited)
+      if (regNo > LO_REGS || !seg->args[regNo].inited)
         return "attempted to access unset argument register";
       else
         seg->args[regNo].read = True;
@@ -449,7 +449,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case iAl: {                            // input argument register in lower slot (0..255)
       int regNo = op_l_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS || !seg->args[regNo].inited)
+      if (regNo > LO_REGS || !seg->args[regNo].inited)
         return "attempted to access unset argument register";
       else
         seg->args[regNo].read = True;
@@ -579,7 +579,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case oAh: {                            // output argument register in upper slot (0..255)
       int regNo = op_h_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS)
+      if (regNo > LO_REGS)
         return "attempted to set non-existent register";
       else
         seg->args[regNo].inited = True;
@@ -590,7 +590,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case oAm: {                            // output argument register in middle slot (0..255)
       int regNo = op_m_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS)
+      if (regNo > LO_REGS)
         return "attempted to set non-existent register";
       else
         seg->args[regNo].inited = True;
@@ -601,7 +601,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case oAl: {                            // output argument register in lower slot (0..255)
       int regNo = op_l_val(pcx);          // Pick up input register name
 
-      if (regNo > GO_REGS)
+      if (regNo > LO_REGS)
         return "attempted to set non-existent register";
       else
         seg->args[regNo].inited = True;
@@ -655,7 +655,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       int regNo = op_h_val(pcx);          // Pick up register name
       int i;
 
-      for (i = regNo + 1; i < GO_REGS; i++)
+      for (i = regNo + 1; i < LO_REGS; i++)
         seg->args[i].inited = False;
       return NULL;
     }
@@ -666,7 +666,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       for (i = 1; i <= regNo; i++)
         seg->args[i].inited = True;
 
-      for (i = regNo + 1; i < GO_REGS; i++)
+      for (i = regNo + 1; i < LO_REGS; i++)
         seg->args[i].inited = False;
       return NULL;
     }

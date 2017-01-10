@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "go.h"
+#include "lo.h"
 #include "term.h"
 #include "hashTable.h"
 #include "unicode.h"
@@ -173,21 +173,21 @@ static uinteger spHashFun(specialClassPo class, objPo o) {
 
 // This is called to set up the standard classes in the system
 void standardClasses(void) {
-  kvoid = newEnumSym("go.stdlib#void");
+  kvoid = newEnumSym("lo.stdlib#void");
 
-  thingClass = newClassDf("go.stdlib#thing", 0);
-  thingProg = newProgLbl("go.stdlib#thing", 3);
+  thingClass = newClassDf("lo.stdlib#thing", 0);
+  thingProg = newProgLbl("lo.stdlib#thing", 3);
 
-  emptyList = newEnumSym("go.stdlib#[]");
-  nilClass = newClassDf("go.stdlib#[]", 0);
-  listClass = newClassDf("go.stdlib#,..", 2);
-  commaClass = newClassDf("go.stdlib#,", 2);
+  emptyList = newEnumSym("lo.stdlib#[]");
+  nilClass = newClassDf("lo.stdlib#[]", 0);
+  listClass = newClassDf("lo.stdlib#,..", 2);
+  commaClass = newClassDf("lo.stdlib#,", 2);
 
   suspClass = newClassDf("#suspension", 3);
   varClass = newClassDf("#var", 1);
 
-  trueClass = newEnumSym("go.stdlib#true");
-  falseClass = newEnumSym("go.stdlib#false");
+  trueClass = newEnumSym("lo.stdlib#true");
+  falseClass = newEnumSym("lo.stdlib#false");
 
   initCodeClass();
   initSymbolClass();
@@ -611,7 +611,7 @@ static logical trimDirs(string path, string request, string buffer, long len, st
 static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
     long fLen) {
   long len = pathLen;
-  int16 bLen = (int16) (fLen - strlen(".goc") - 1);
+  int16 bLen = (int16) (fLen - strlen(".loc") - 1);
   byte buffer[MAX_FILE_LEN];
   byte pthBuffer[MAX_FILE_LEN];
   long p = 0;
@@ -655,9 +655,9 @@ static string computeClassFileName(string path, long pathLen, string className, 
     }
 
     if (uniStrLen(version) > 0)
-      strMsg(&buffer[i], fLen - i, ".%U.goc", version);
+      strMsg(&buffer[i], fLen - i, ".%U.loc", version);
     else
-      strMsg(&buffer[i], fLen - i, ".goc"); /* we drop through if no version */
+      strMsg(&buffer[i], fLen - i, ".loc"); /* we drop through if no version */
 
     if (filePresent(buffer)) {
       uniCpy(fn, fLen, buffer);
@@ -667,9 +667,9 @@ static string computeClassFileName(string path, long pathLen, string className, 
       byte suffix[MAX_FILE_LEN];
 
       if (uniStrLen(version) > 0)
-        strMsg(suffix, NumberOf(suffix), ".%U.goc", version);
+        strMsg(suffix, NumberOf(suffix), ".%U.loc", version);
       else
-        strMsg(suffix, NumberOf(suffix), ".goc");
+        strMsg(suffix, NumberOf(suffix), ".loc");
 
       if (trimDirs(pthBuffer, className, fBuffer, NumberOf(fBuffer), suffix)) {
         if (filePresent(fBuffer)) {

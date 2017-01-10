@@ -1,6 +1,6 @@
 /*
- Dissassembly of Go! instructions
- Copyright (c) 2016. Francis G. McCabe
+ Dissassembly of L&O instructions
+ Copyright (c) 2016, 2017. Francis G. McCabe
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  except in compliance with the License. You may obtain a copy of the License at
@@ -13,13 +13,15 @@
  permissions and limitations under the License.
  */
 
-#include "go.h"
+#include "lo.h"
 #include "esc.h"
 
 #undef instruction
 #define instruction(Nm, Cd, A1, A2, Cmt) \
   case Nm:                      /* Cmt */\
   return outIns(logFile,#Nm,A1,A2,code,pc,pcx,a,y,S,mode,B,hBase,hLimit);
+#undef lastInstruction
+#define lastInstruction
 
 static insPo outIns(ioPo out, char *Nm, opAndSpec A1, opAndSpec A2, codePo code, insPo pc, insWord pcx,
     ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B, ptrPo hBase, ptrPo hLimit);

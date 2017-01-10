@@ -1,6 +1,6 @@
 /*
-  Header file for the character management of Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+  Header file for the character management of L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -13,8 +13,8 @@
   permissions and limitations under the License.
 */
 
-#ifndef _GO_CHAR_H_
-#define _GO_CHAR_H_
+#ifndef _LO_CHAR_H_
+#define _LO_CHAR_H_
 
 #include "word.h"
 

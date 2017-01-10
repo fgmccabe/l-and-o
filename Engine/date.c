@@ -1,6 +1,6 @@
 /*
-  Time and date functions for the Go! system 
-  Copyright (c) 2016. Francis G. McCabe
+  Time and date functions for the L&O system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #include <signal.h>
 #include <time.h>
 #include <math.h>
-#include "go.h"
+#include "lo.h"
 
 /*
  * Implementation of time related escapes 

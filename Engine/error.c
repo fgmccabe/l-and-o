@@ -1,6 +1,6 @@
 /* 
   Error handling and exiting functions
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include "config.h"		/* pick up standard configuration header */
 #include <stdlib.h>
 #include <errno.h>
-#include "go.h"
+#include "lo.h"
 #include "dict.h"
 #include "symbols.h"
 #include "errors.h"
@@ -104,7 +104,7 @@ void initErrorSymbols(void)
   eNOTENUF = newSymbol("eNOTENUF");
   eINTRUPT = newSymbol("eINTRUPT");
 
-  errorClass = newClassDef((string)"go.stdlib#error",2);
+  errorClass = newClassDef((string)"lo.stdlib#error",2);
 }
 
 

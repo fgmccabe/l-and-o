@@ -1,6 +1,6 @@
 /* 
-  Public header file for accessing April's abstract syntax
-  Copyright (c) 2016. Francis G. McCabe
+  Public header file
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -12,8 +12,8 @@
   KIND, either express or implied. See the License for the specific language governing
   permissions and limitations under the License.
 */
-#ifndef _GO_H
-#define _GO_H
+#ifndef _LO_H_
+#define _LO_H_
 
 #include <stdlib.h>
 #include "config.h"
@@ -27,8 +27,8 @@
 
 typedef struct _process_ *processPo;
 
-#ifndef GO_REGS			    /* do we know how many registers? */
-#define GO_REGS 64		  /* should'nt be more than #bits in an integer*/
+#ifndef LO_REGS			    /* do we know how many registers? */
+#define LO_REGS 64		  /* should'nt be more than #bits in an integer*/
 #endif
 
 #include "word.h"		    /* standard definition of a cell & access fns */

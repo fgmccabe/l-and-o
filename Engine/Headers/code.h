@@ -1,6 +1,6 @@
 /* 
-  Code related definitions for the Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+  Code related definitions for the L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -177,7 +177,7 @@ static inline logical IsGoObject(ptrI x) {
   return isGoObject(objV(x));
 }
 
-static inline dynPo goObjV(ptrI x) {
+static inline dynPo loObjV(ptrI x) {
   assert(IsGoObject(x));
 
   return (dynPo) objV(x);
@@ -217,8 +217,8 @@ static inline void setCode(programPo lb, ptrI code) {
   markGrey((objPo) lb);
 }
 
-extern ptrI goObject(heapPo H, ptrI T);
-/* create a Go! object */
+extern ptrI loObject(heapPo H, ptrI T);
+/* create a L&O object */
 
 extern void initPrograms(void);
 extern ptrI newProgLbl(const char *name, long arity);

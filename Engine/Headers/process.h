@@ -1,6 +1,6 @@
 /* 
-  Go! process record structure
-  Copyright (c) 2016. Francis G. McCabe
+  L&O process record structure
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -79,7 +79,7 @@ typedef struct {
   ptrPo sBase;                          /* Base of on-board stack */
   ptrPo sTop;                           /* Limit of on-board stack */
   HeapRec heap;                         /* Stack heap record */
-  ptrI A[GO_REGS];                      /* Copies of the argument registers */
+  ptrI A[LO_REGS];                      /* Copies of the argument registers */
   choicePo B;                           /* Current choice point */
   choicePo SB;                          /* Where to cut to */
   choicePo cSB;                         /* Continuation slashback point */

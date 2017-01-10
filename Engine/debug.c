@@ -1,6 +1,6 @@
 /* 
- Instruction-level debugging of Go! code
- Copyright (c) 2016. Francis G. McCabe
+ Instruction-level debugging of L&O code
+ Copyright (c) 2016, 2017. Francis G. McCabe
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  except in compliance with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@
  KIND, either express or implied. See the License for the specific language governing
  permissions and limitations under the License.
  */
-#include "go.h"
+#include "lo.h"
 #include "debug.h"
 #include "disass.h"
 #include "esc.h"
@@ -195,8 +195,8 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
           break;
 
         case 'q':
-          outMsg(logFile, "terminating go session");
-          go_exit(0);
+          outMsg(logFile, "terminating lo session");
+          lo_exit(0);
           break;
 
         case 'c':

@@ -110,7 +110,7 @@
 /* #undef NOCOLOURS */
 
 /* Name of package */
-#define PACKAGE "go"
+#define PACKAGE "lo"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "fmccabe@gmail.com"
@@ -193,4 +193,4 @@
 
 #define VERIFY_OBJECT
 
-#define GODIR "/opt/go/go"
+#define LODIR "/opt/lo/lo"

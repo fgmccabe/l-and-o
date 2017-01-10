@@ -1,6 +1,6 @@
 /* 
   Convert a term into a unit clause
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 */
 #include <stdlib.h>
 #include <stdarg.h>		/* we need variable arguments */
-#include "go.h"			/* main header file */
+#include "lo.h"			/* main header file */
 #include "esc.h"
 
 typedef struct _instruction_ *iPo;
@@ -51,7 +51,7 @@ typedef struct {
   /* all A registers before this are reserved */
   logical yMap[256];
   /* map of the Y registers in use */
-  logical aMap[GO_REGS];                /* map of the A registers in use */
+  logical aMap[LO_REGS];                /* map of the A registers in use */
 } map;
 
 typedef struct {
@@ -761,6 +761,9 @@ static void genOpAnd(genPo S, iPo ins, opAndSpec A, va_list *args) {
     break;\
   }
 
+#undef lastInstruction
+#define lastInstruction
+
 
 static iPo putIns(genPo S, opCode mnem, ...) {
   iPo ins = (iPo) allocPool(iPool);
@@ -1174,7 +1177,7 @@ retCode g__newObject(processPo P, ptrPo a) {
   else {
     switchProcessState(P, in_exclusion);
 
-    ptrI O = goObject(&P->proc.heap, T);
+    ptrI O = loObject(&P->proc.heap, T);
 
     setProcessRunnable(P);
 
@@ -1191,7 +1194,7 @@ retCode g__newObject(processPo P, ptrPo a) {
  *   valis O
  * }
  */
-ptrI goObject(heapPo H, ptrI T) {
+ptrI loObject(heapPo H, ptrI T) {
   assert(isobj(T));
 
   ptrI Tf = T;        /* The initial constructor */

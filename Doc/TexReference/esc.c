@@ -31,13 +31,13 @@ int main(int argc,char **argv)
   fprintf(out,"%% Automatically generated, do not edit \n");
   fprintf(out,"\\setlongtables\n");
   fprintf(out,"\\begin{longtable}{|ll|}\n");
-  fprintf(out,"\\caption{\\go escapes summary}\\label{howitworks:esc}\\\\ \n");
+  fprintf(out,"\\caption{\\lo escapes summary}\\label{howitworks:esc}\\\\ \n");
   fprintf(out,"\\hline\n");
   fprintf(out,"Escape:type&Summary\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"\\endfirsthead\n");
   fprintf(out,"\\multicolumn{2}{c}{\n");
-  fprintf(out,"{Table \\ref{howitworks:esc} \\go escapes summary (cont.)}}\\\\\n");
+  fprintf(out,"{Table \\ref{howitworks:esc} \\lo escapes summary (cont.)}}\\\\\n");
   fprintf(out,"\\hline\n");
   fprintf(out,"Escape:type&Summary\\\\\n");
   fprintf(out,"\\hline\n");

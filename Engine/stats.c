@@ -1,6 +1,6 @@
 /* 
-  Statistics measurement for the Go! engine
-  Copyright (c) 2016. Francis G. McCabe
+  Statistics measurement for the L&O engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -15,7 +15,8 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "go.h"			/* main header file */
+#include "lo.h"			/* main header file */
+#include "escodes.h"
 
 #ifdef STATSTRACE
 
@@ -68,9 +69,9 @@ static void sortCounts(long count, long base[], long sorted[]) {
       break;
 
 #undef escape
-#define escape(Nm, Op, Sc, Priv, Tp, Cmt) \
-    case Op:                      /* Cmt */\
-      outMsg(logFile,"##name##: %d " Cmt "\n",escCount[Op]);\
+#define escape(Nm, Sc, Priv, Tp, Cmt) \
+    case Esc##Nm:                      /* Cmt */\
+      outMsg(logFile,"##name##: %d " Cmt "\n",escCount[Esc##Nm]);\
       break;
 #undef constr
 #define constr(Nm, Tp, T)

@@ -1,6 +1,6 @@
 /*
-  Arithmetic functions for the Go! system
-  Copyright (c) 2016. Francis G. McCabe
+  Arithmetic functions for the L&O system
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <errno.h>		/* system error doubles */
-#include "go.h"
+#include "lo.h"
 
 static long inSizeFun(specialClassPo class, objPo o);
 static comparison nmCompFun(specialClassPo class, objPo o1, objPo o2);
@@ -33,9 +33,9 @@ static uinteger ftHashFun(specialClassPo class, objPo o);
 static objPo ftCopyFun(specialClassPo class, objPo dst, objPo src);
 
 void initArithClasses(void) {
-  integerClass = newSpecialClass("go.stdlib#integer", inSizeFun, nmCompFun,
+  integerClass = newSpecialClass("lo.stdlib#integer", inSizeFun, nmCompFun,
                                  inOutFun, inCopyFun, inScanFun, inHashFun);
-  floatClass = newSpecialClass("go.stdlib#float", ftSizeFun, nmCompFun,
+  floatClass = newSpecialClass("lo.stdlib#float", ftSizeFun, nmCompFun,
                                ftOutFun, ftCopyFun, ftScanFun, ftHashFun);
 }
 

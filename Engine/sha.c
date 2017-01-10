@@ -53,7 +53,7 @@
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
-#include "go.h"
+#include "lo.h"
 #include "sha1.h"
 
 /*

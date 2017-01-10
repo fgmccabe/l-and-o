@@ -1,5 +1,5 @@
 /* Special call to top-level program loaded at boot-time
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@
   permissions and limitations under the License.
 */
 #include <string.h>
-#include "go.h"			/* main header file */
+#include "lo.h"			/* main header file */
 
 // __call(package,entry,arguments) -- list of strings
 // results in the call:

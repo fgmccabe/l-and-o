@@ -1,6 +1,6 @@
 /*
-  Unix Signal handling for the Go! run-time engine
-  Copyright (c) 2016. Francis G. McCabe
+  Unix Signal handling for the L&O run-time engine
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 
 */
 #include <signal.h>
-#include "go.h"			/* Main header file */
+#include "lo.h"			/* Main header file */
 
 /* 
  * Signal handling functions
@@ -23,7 +23,7 @@
 static void sig_fatal(int sig)
 {
   outMsg(logFile,"bus error or segmentation fault\n");
-  go_exit(EXIT_FAIL);
+  lo_exit(EXIT_FAIL);
 }
 
 /* Handle the suspension of Go reasonably ... */
@@ -79,11 +79,11 @@ void startInterrupts(sigset_t blocked)	/* enable interrupts again */
 
 static void interruptMe(int sig) /* This one is invoked when user presses ^C */
 {
-  go_exit(EXIT_FAIL);		/* We just abort everything */
+  lo_exit(EXIT_FAIL);		/* We just abort everything */
 }
 
 
-void go_exit(int code)
+void lo_exit(int code)
 {
   if(code!=0)
     outMsg(logFile,"Terminating with code %d\n",code);

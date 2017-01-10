@@ -1,6 +1,6 @@
 /*
-  Dictionary and symbol handling functions for Go!
-  Copyright (c) 2016. Francis G. McCabe
+  Dictionary and symbol handling functions for L&O
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include "config.h"
 #include <string.h>		/* Access string defs */
 
-#include "go.h"
+#include "lo.h"
 #include "hashTable.h"
 
 /* standard symbols */
@@ -46,7 +46,7 @@ ptrI kdefined;                          /* the imported package description */
 ptrI universal;                         /* universal package version */
 ptrI klabel;                            /* The special $label property */
 ptrI kstart;                            /* entry point for new threads */
-ptrI doResume[GO_REGS];                 /* array of special exit points for  */
+ptrI doResume[LO_REGS];                 /* array of special exit points for  */
 ptrI kdelay;				/* standard delay handler */
 
 /* Standard dictionaries ... */
@@ -61,7 +61,7 @@ static uinteger syHashFun(specialClassPo class,objPo o);
 
 void initSymbolClass(void)
 {
-  symbolClass=newSpecialClass("go.stdlib#symbol",sySizeFun,syCompFun,
+  symbolClass=newSpecialClass("lo.stdlib#symbol",sySizeFun,syCompFun,
 			      syOutFun,syCopyFun,syScanFun,syHashFun);
 }
 
@@ -185,21 +185,21 @@ void initDict()				/* Initialize the dictionary */
   zero = permInteger(0);
 
   kmain = newProgLbl("main",1);
-  kmainThread = newEnumSym("go.stdlib#rootThread");
-  bootProg = newSymbol("go.boot");
+  kmainThread = newEnumSym("lo.stdlib#rootThread");
+  bootProg = newSymbol("lo.boot");
 
   kprocessFlag = newSymbol("$process");
   
   /* special value symbols */
 
-  kfifo = newEnumSym("go.io#fifoSpecial");
-  kdir = newEnumSym("go.io#directory");
-  kcharfile = newEnumSym("go.io#charSpecial");
-  kblock = newEnumSym("go.io#blockSpecial");
-  kplain = newEnumSym("go.io#plainFile");
-  ksymlink = newEnumSym("go.io#symlink");
-  ksock = newEnumSym("go.io#socket");
-  kunknown = newEnumSym("go.io#unknownFileType");
+  kfifo = newEnumSym("lo.io#fifoSpecial");
+  kdir = newEnumSym("lo.io#directory");
+  kcharfile = newEnumSym("lo.io#charSpecial");
+  kblock = newEnumSym("lo.io#blockSpecial");
+  kplain = newEnumSym("lo.io#plainFile");
+  ksymlink = newEnumSym("lo.io#symlink");
+  ksock = newEnumSym("lo.io#socket");
+  kunknown = newEnumSym("lo.io#unknownFileType");
 
   kloadflag = newSymbol("$loaded");     /* This property is set on a package as it is loaded */
 
@@ -210,7 +210,7 @@ void initDict()				/* Initialize the dictionary */
   klabel = newSymbol("$label");
 
   kstart = newEnumSym("start_thread%0"); /* first call to a thread */
-  kdelay = newProgLbl("go.stdlib@delayHandler",1);
+  kdelay = newProgLbl("lo.stdlib@delayHandler",1);
 }
 
 /* remove all entries from the dictionary */

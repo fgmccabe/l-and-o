@@ -1,6 +1,6 @@
 /* 
   Standard error number definitions
-  Copyright (c) 2016. Francis G. McCabe
+  Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of the License at
@@ -56,7 +56,7 @@ extern ptrI eINSUFARG,                  // Insufficiently instatiated argument
   eNOTENUF,                             /* not enough arguments */
   eINTRUPT;				// Interrupted
 
-#ifdef GOXLIB
+#ifdef LOXLIB
 extern ptrI eNOX;			/* no X connection */
 #endif
 
