@@ -1,0 +1,6 @@
+test.s {
+  import lo.
+  import lo.sort.
+
+  assert sort([3,2,1,2],(<)) == [1,2,2,3].
+}

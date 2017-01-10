@@ -4,12 +4,12 @@ person{
   person <~ { age:()=>integer. spouse:()=>person }.
 
   nowhere : place.
-  nowhere{
+  nowhere <= {
     name()=>"nowhere"
   }.
 
   noone : person.
-  noone{
+  noone <= {
     age()=>0.
     spouse()=>noone.
   }.
@@ -24,7 +24,7 @@ person{
   student <~ { studies:()=>list[string] }.
 
   lazy:student.
-  lazy<=noone.
+  lazy <= noone.
   lazy <= {
     studies()=>[]
   }.
@@ -33,7 +33,7 @@ person{
   employee <~ { work:()=>string. salary:()=>integer }.
 
   shiftless:employee.
-  shiftless<=noone.
+  shiftless <= noone.
   shiftless <= {
     work()=>"macdonalds".
     salary()=>23.

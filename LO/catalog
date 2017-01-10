@@ -12,6 +12,7 @@ catalog{
     lo.monad -> "monad.lo".
     lo.resources -> "resources.lo".
     lo.sets -> "sets.lo".
+    lo.sort -> "sort.lo".
     lo.topsort -> "topsort.lo".
     lo.trie -> "trie.lo".
     lo.uri -> "uri.lo".

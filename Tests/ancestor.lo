@@ -16,7 +16,7 @@ ancestor{
   ancestorTester:harness.
 
   ancestorTester <= harness.
-  ancestorTester<=>{
+  ancestorTester <= {
     test() :- parent("a","b"),        -- define the tests to be applied here
                 \+parent("b","a"),
                 ancestor("a","f"),

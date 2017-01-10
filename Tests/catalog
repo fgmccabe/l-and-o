@@ -10,6 +10,7 @@ catalog{
     test.m -> "m.lo".
     test.o -> "o.lo".
     test.parsetools -> "parsetools.lo".
+    test.s -> "s.lo".
   }
   default: "../LO/catalog".
 }
