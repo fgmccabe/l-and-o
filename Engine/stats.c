@@ -37,6 +37,10 @@ void countIns(insWord PCX) {
   insCount[op_cde(PCX)]++;
 }
 
+
+#undef lastInstruction
+#define lastInstruction
+
 static void sortCounts(long count, long base[], long sorted[]) {
   long i, j;
 

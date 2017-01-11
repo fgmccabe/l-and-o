@@ -61,7 +61,7 @@ static uinteger syHashFun(specialClassPo class,objPo o);
 
 void initSymbolClass(void)
 {
-  symbolClass=newSpecialClass("lo.stdlib#symbol",sySizeFun,syCompFun,
+  symbolClass=newSpecialClass("lo.core#symbol",sySizeFun,syCompFun,
 			      syOutFun,syCopyFun,syScanFun,syHashFun);
 }
 
@@ -185,7 +185,7 @@ void initDict()				/* Initialize the dictionary */
   zero = permInteger(0);
 
   kmain = newProgLbl("main",1);
-  kmainThread = newEnumSym("lo.stdlib#rootThread");
+  kmainThread = newEnumSym("lo.core#rootThread");
   bootProg = newSymbol("lo.boot");
 
   kprocessFlag = newSymbol("$process");

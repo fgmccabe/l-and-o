@@ -22,7 +22,7 @@
 #include "fileio.h"
 
 retCode g_exit(processPo P, ptrPo a) {
-  exit((long) NumberVal(objV(deRefI(&a[1]))));
+  exit((long) FloatVal(objV(deRefI(&a[1]))));
 }
 
 /* This is used to attach a shell to a process, so that when the child terminates

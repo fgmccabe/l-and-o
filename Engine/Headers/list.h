@@ -25,7 +25,7 @@
 
 #include "word.h"
 
-extern ptrI emptyList;			/* The class constructor "lo.stdlib#[]" */
+extern ptrI emptyList;			/* The class constructor "lo.core#[]" */
 extern ptrI listClass,nilClass;
 
 static inline logical isList(objPo p)

@@ -12,21 +12,10 @@
   KIND, either express or implied. See the License for the specific language governing
   permissions and limitations under the License.
 */
-#include "config.h"
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <assert.h>
 #include "lo.h"			/* main header file */
-#include "opcodes.h"		/* The definitions of the opcodes */
-#include "dict.h"		/* Dictionary handling stuff */
-#include "process.h"		/* Process handling */
-#include "global.h"
-#include "symbols.h"
-#include "clock.h"
-#include "errors.h"             /* Access error definitions */
 #include "debug.h"		/* Debugger access functions */
-#include "term.h"
 #include "esc.h"
 
 #ifndef TRAIL_FUDGE
@@ -144,7 +133,7 @@ static logical occCheck(ptrPo x,ptrPo v);
 
 #define backTrack()        \
   do{            \
-        PC = B->PC;        \
+  PC = B->PC;        \
   PROG = B->PROG;        \
   Lits = codeLits(codeV(PROG));    \
   }while(False)
@@ -177,7 +166,7 @@ void chainSuspension(processPo P, ptrPo p) {
 #define validateS(N) {Svalid=N;}
 #define lastValid() { assert(Svalid==0); }
 #else
-                                                                                                                        #define isSvalid(C)
+#define isSvalid(C)
 #define validateS(N)
 #define lastValid()
 #endif
@@ -309,7 +298,7 @@ void runGo(register processPo P) {
 
       case kawl: {                         /* call Ar,prog call program */
         if (P->proc.F) {      /* We have been interrupted */
-          int arity;
+          uinteger arity;
 
           // Compute the arity of the call, so we can save the right registers
 
@@ -1275,7 +1264,7 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         if (!isvar(vx) && IsNumber(vl)) {
-          integer val = (integer) NumberVal(vl);
+          integer val = (integer) FloatVal(vl);
 
           PC += val % max + 1;
         }
@@ -2878,98 +2867,6 @@ static retCode ident(ptrPo T1, ptrPo T2) {
 
 logical identical(ptrI T1, ptrI T2) {
   return (logical) (ident(&T1, &T2) == Ok);
-}
-
-static comparison compareObjects(objPo p1, objPo p2) {
-  ptrI cl1 = p1->class;
-  ptrI cl2 = p2->class;
-
-  if (IsSpecialClass(cl1)) {
-    if (cl2 == cl1) {
-      specialClassPo sClass = (specialClassPo) objV(cl1);
-      return sClass->compFun(sClass, p1, p2);
-    }
-    else
-      return incomparible;
-  }
-  else if (isClass(cl1)) {
-    if (!isClass(cl2))
-      return incomparible;
-    else {
-      clssPo class1 = (clssPo) objV(cl1);
-      clssPo class2 = (clssPo) objV(cl2);
-      long arity = classArity(class1);
-
-      if (cl1 == cl2) {
-        ptrPo a1 = objectArgs(p1);
-        ptrPo a2 = objectArgs(p2);
-        long ix = 0;
-        comparison comp = same;
-        for (ix = 0; comp == same && ix < arity; ix++, a1++, a2++)
-          comp = compareObjects(objV(deRefI(a1)), objV(deRefI(a2)));
-        return comp;
-      }
-      else if (arity < classArity(class2))
-        return smaller;
-      else if (arity > classArity(class2))
-        return bigger;
-      else {
-        int res = uniCmp(className(class1), className(class2));
-        if (res < 0)
-          return smaller;
-        else
-          return bigger;
-      }
-    }
-  }
-  else
-    return incomparible;
-}
-
-/* return same if T1=T2, smaller if T1<T2,  bigger if T1>T2 and incomparible if incomparible */
-/* Only equivalent types are comparable */
-comparison compTerm(ptrPo T1, ptrPo T2) {
-  ptrPo T1_stack[MAX_DEPTH];
-  ptrPo T2_stack[MAX_DEPTH];
-  register unsigned int depth = NumberOf(T1_stack) - 1;
-
-  T1_stack[depth] = T1;
-  T2_stack[depth] = T2;
-
-  while (depth < NumberOf(T1_stack)) {
-    register ptrI Tg1 = *(T1 = deRef(T1_stack[depth]));
-    register ptrI Tg2 = *(T2 = deRef(T2_stack[depth]));
-    register objPo Term1 = objV(Tg1);
-    register objPo Term2 = objV(Tg2);
-
-    depth++;                    // Element popped off the stack
-
-    switch (ptg(Tg1)) {
-      case varTg:
-        if (isvar(Tg2)) {    /* are we identicaling two variables? */
-          if (T1 != T2)
-            return incomparible;  /* not identical, and not comparable */
-          else
-            break;
-        }
-        else
-          return incomparible;  /* variables not comparible with any non-var */
-      case objTg: {
-        switch (ptg(Tg2)) {
-          case varTg:
-            return incomparible;
-          case objTg:
-            return compareObjects(Term1, Term2);
-          case fwdTg:
-            return incomparible;
-        }
-        return incomparible;
-      }
-      case fwdTg:
-        return incomparible;
-    }
-  }
-  return same;
 }
 
 #ifdef DO_OCCURS_CHECK

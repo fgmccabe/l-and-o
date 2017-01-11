@@ -62,6 +62,30 @@ void install_escapes(void) {
 #undef escape
 }
 
+static integer scanInt(char **sig) {
+  if (**sig == '-')
+    return -scanInt(++(*sig));
+  else {
+    char ch = *(*sig)++;
+    integer ii = 0;
+    while (ch >= '0' && ch <= '9') {
+      ii = ii * 10 + (ch - '0');
+      ch = *(*sig)++;
+    }
+
+    return ii;
+  }
+}
+
+// This is NOT v. safe, but is only called on internal code
+static char *skipName(char *sig) {
+  char qt = *sig++;
+  while (*sig != qt) {
+    sig++;
+  }
+  return ++sig;
+}
+
 static char *skipSig(char *tp) {
   assert(tp != NULL);
 
@@ -72,31 +96,45 @@ static char *skipSig(char *tp) {
     case void_sig:
     case logical_sig:
       return tp;
+    case kvar_sig:
+      return skipName(tp);
+    case kfun_sig:
+      scanInt(&tp);
+      return skipName(tp);
+    case type_sig:
+      return skipName(tp);
+    case poly_sig: {
+      tp = skipSig(tp);
+      integer ar = scanInt(&tp);
+      while (ar-- > 0)
+        tp = skipSig(tp);
+      return tp;
+    }
     case list_sig:
       return skipSig(tp);
     case funct_sig: {
-      int ar = *tp++;
+      integer ar = scanInt(&tp);
 
       while (ar-- > 0)
         tp = skipSig(tp);
       return skipSig(tp);
     }
     case grammar_sig: {
-      int ar = *tp++;
+      integer ar = scanInt(&tp);
 
       while (ar-- > 0)
         tp = skipSig(tp);
       return skipSig(tp);
     }
     case pred_sig: {
-      int ar = *tp++;
+      integer ar = scanInt(&tp);
 
       while (ar-- > 0)
         tp = skipSig(tp + 1);
       return tp;
     }
     case tuple_sig: {
-      int ar = *tp++;
+      integer ar = scanInt(&tp);
 
       while (ar-- > 0)
         tp = skipSig(tp);
@@ -104,22 +142,12 @@ static char *skipSig(char *tp) {
     }
     case forall_sig:
       return skipSig(skipSig(tp + 1));
-    case poly_sig: {
-      char delim = *tp++;
 
-      while (*tp++ != delim);
-
-      int ar = *tp++;
-
-      while (ar-- > 0)
-        tp = skipSig(tp);
-      return tp;
-    }
     case face_sig: {
-      int ar = *tp++;                     // the number of elements in the interface
+      integer ar = scanInt(&tp);     // the number of elements in the interface
 
       while (ar-- > 0) {
-        tp = skipSig(tp);
+        tp = skipSig(skipName(tp));
       }
       return tp;
     }
@@ -130,13 +158,17 @@ static char *skipSig(char *tp) {
 }
 
 static int sigArity(char *spec) {
+  integer ar;
   switch (*spec) {
     case funct_sig:
-      return (int) (spec[1]) + 1;
+      ar = scanInt(&spec);
+      return ar + 1;
     case pred_sig:
-      return (int) (spec[1]);
+      ar = scanInt(&spec);
+      return ar;
     case grammar_sig:
-      return (int) (spec[1]) + 2;
+      ar = scanInt(&spec);
+      return ar + 2;
     case forall_sig:
       return sigArity(skipSig(spec + 2));
     default:

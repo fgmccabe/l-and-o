@@ -59,6 +59,9 @@ static void showSegs(segPo root);
 
 static poolPo segpool = NULL;
 
+#undef lastInstruction
+#define lastInstruction
+
 static segPo initVerify(codePo cde, unsigned long length) {
   if (segpool == NULL)
     segpool = newPool(sizeof(segRecord), 16);

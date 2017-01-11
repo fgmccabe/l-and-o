@@ -173,28 +173,28 @@ static uinteger spHashFun(specialClassPo class, objPo o) {
 
 // This is called to set up the standard classes in the system
 void standardClasses(void) {
-  kvoid = newEnumSym("lo.stdlib#void");
+  kvoid = newEnumSym("lo.core#void");
 
-  thingClass = newClassDf("lo.stdlib#thing", 0);
-  thingProg = newProgLbl("lo.stdlib#thing", 3);
+  thingClass = newClassDf("lo.core#thing", 0);
+  thingProg = newProgLbl("lo.core#thing", 3);
 
-  emptyList = newEnumSym("lo.stdlib#[]");
-  nilClass = newClassDf("lo.stdlib#[]", 0);
-  listClass = newClassDf("lo.stdlib#,..", 2);
-  commaClass = newClassDf("lo.stdlib#,", 2);
+  emptyList = newEnumSym("lo.core#[]");
+  nilClass = newClassDf("lo.core#[]", 0);
+  listClass = newClassDf("lo.core#,..", 2);
+  commaClass = newClassDf("lo.core#,", 2);
 
   suspClass = newClassDf("#suspension", 3);
   varClass = newClassDf("#var", 1);
 
-  trueClass = newEnumSym("lo.stdlib#true");
-  falseClass = newEnumSym("lo.stdlib#false");
+  trueClass = newEnumSym("lo.core#true");
+  falseClass = newEnumSym("lo.core#false");
 
   initCodeClass();
   initSymbolClass();
   initStringClass();
   initDynamicClass();
-  initArithClasses();
-//  initHashClass();
+  initIntegerClass();
+  initFloatClass();
   initThreadClass();
 }
 

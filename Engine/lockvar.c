@@ -244,7 +244,7 @@ retCode g__acquireLock(processPo P, ptrPo a) {
   else if (!IsNumber(o2))
     return liberror(P, "__acquireLock", eNUMNEEDD);
   else {
-    double tmOut = NumberVal(o2);
+    double tmOut = FloatVal(o2);
 
     if (isvar(A1))
       return liberror(P, "__acquireLock", eINSUFARG);
@@ -304,7 +304,7 @@ retCode g__waitLock(processPo P, ptrPo a) {
   else if (!IsNumber(o2))
     return liberror(P, "__waitLock", eNUMNEEDD);
   else {
-    double tmOut = NumberVal(o2);
+    double tmOut = FloatVal(o2);
 
     rootPo root = gcAddRoot(&P->proc.heap, &A1);
     gcAddRoot(&P->proc.heap, &A2);

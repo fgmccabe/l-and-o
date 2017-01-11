@@ -50,7 +50,7 @@ void initFileIo(void) {
 }
 
 void initFiles(void) {
-  filePtrClass = newSpecialClass("lo.stdlib#file", flSizeFun, flCompFun,
+  filePtrClass = newSpecialClass("lo.core#file", flSizeFun, flCompFun,
                                  flOutFun, flCopyFun, flScanFun, flHashFun);
 }
 
@@ -1138,7 +1138,7 @@ retCode g__outch(processPo P, ptrPo a) {
     else {
       again:
       switchProcessState(P, wait_io);
-      retCode ret = outChar(file, IntVal(tc));
+      retCode ret = outChar(file, (codePoint)IntVal(tc));
       setProcessRunnable(P);
 
       switch (ret) {

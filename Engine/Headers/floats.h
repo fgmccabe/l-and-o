@@ -22,42 +22,37 @@
 
 #ifndef PI
 // Define PI to 50 decimal places ....
-#define	PI	3.14159265358979323846264338327950288419716939937510
+#define  PI  3.14159265358979323846264338327950288419716939937510
 #endif
 
 typedef struct _integer_record_ {
-  ptrI class;			/* == integerClass */
+  ptrI class;      /* == integerClass */
   integer i;
 } integerRec, *integerPo;
 
-extern ptrI integerClass;		/* integerClass is a specialClass */
+extern ptrI integerClass;    /* integerClass is a specialClass */
 
-static inline ptrI allocateInteger(heapPo P,integer i)
-{
-  integerPo new = (integerPo)allocateSpecial(P,integerClass);
+static inline ptrI allocateInteger(heapPo P, integer i) {
+  integerPo new = (integerPo) allocateSpecial(P, integerClass);
 
-  memcpy(&new->i,&i,sizeof(integer));
+  memcpy(&new->i, &i, sizeof(integer));
   return objP(new);
 }
 
-static inline logical IsInt(ptrI p)
-{
-  return HasClass(p,integerClass);
+static inline logical IsInt(ptrI p) {
+  return HasClass(p, integerClass);
 }
 
-static inline logical isInteger(objPo p)
-{
-  return hasClass(p,integerClass);
+static inline logical isInteger(objPo p) {
+  return hasClass(p, integerClass);
 }
 
-static inline integerPo intV(ptrI x)
-{
+static inline integerPo intV(ptrI x) {
   assert(IsInt(x));
-  return (integerPo)objV(x);
+  return (integerPo) objV(x);
 }
 
-static inline integer integerVal(integerPo p)
-{
+static inline integer integerVal(integerPo p) {
 #ifdef DOUBLE_ALIGNMENT
   integer i;
 
@@ -68,8 +63,7 @@ static inline integer integerVal(integerPo p)
 #endif
 }
 
-static inline integer IntVal(ptrI p)
-{
+static inline integer IntVal(ptrI p) {
   assert(IsInt(p));
   return integerVal(intV(p));
 }
@@ -77,26 +71,23 @@ static inline integer IntVal(ptrI p)
 extern ptrI permInteger(integer i);
 
 typedef struct _float_record_ {
-  ptrI class;				/* == floatClass */
+  ptrI class;        /* == floatClass */
   double f;
 } floatRec, *floatPo;
 
 extern ptrI floatClass;
 
-static inline logical isFloat(objPo p)
-{
-  return hasClass(p,floatClass);
+static inline logical isFloat(objPo p) {
+  return hasClass(p, floatClass);
 }
 
-static inline floatPo floatV(ptrI x)
-{
-  assert(HasClass(x,floatClass));
-  return (floatPo)objV(x);
+static inline floatPo floatV(ptrI x) {
+  assert(HasClass(x, floatClass));
+  return (floatPo) objV(x);
 }
 
-static inline double floatVal(floatPo p)
-{
-  assert(isFloat((objPo)p));
+static inline double floatVal(floatPo p) {
+  assert(isFloat((objPo) p));
 
 #ifdef DOUBLE_ALIGNMENT
   number f;
@@ -107,48 +98,41 @@ static inline double floatVal(floatPo p)
 #endif
 }
 
-static inline logical IsNumber(objPo p)
-{
-  return (logical)(isFloat(p)||isInteger(p));
+static inline logical IsNumber(objPo p) {
+  return (logical) (isFloat(p) || isInteger(p));
 }
 
-static inline double NumberVal(objPo p)
-{
-  if(isInteger(p))
-    return (double)integerVal((integerPo)p);
-  else 
-    return floatVal((floatPo)p);
+static inline double FloatVal(objPo p) {
+  return floatVal((floatPo) p);
 }
 
-static inline double roundNumber(register double f)
-{
-  if(f>=0.0)
+static inline double roundNumber(register double f) {
+  if (f >= 0.0)
     return floor(f);
   else
     return ceil(f);
 }
 
-static inline ptrI allocateFloat(heapPo P,double f)
-{
+static inline ptrI allocateFloat(heapPo P, double f) {
   floatPo new;
 
-  new = (floatPo)allocateSpecial(P,floatClass);
+  new = (floatPo) allocateSpecial(P, floatClass);
 
-  memcpy(&new->f,&f,sizeof(double));
+  memcpy(&new->f, &f, sizeof(double));
   return objP(new);
 }
 
 extern ptrI permFloat(double f);
 
-static inline ptrI allocateNumber(heapPo P,double f)
-{
-  integer n = (integer)f;
-  
-  if(((double)n)==f)
-    return allocateInteger(P,n);
+static inline ptrI allocateNumber(heapPo P, double f) {
+  integer n = (integer) f;
+
+  if (((double) n) == f)
+    return allocateInteger(P, n);
   else
-    return allocateFloat(P,f);
+    return allocateFloat(P, f);
 }
 
-void initArithClasses(void);
+void initIntegerClass(void);
+void initFloatClass(void);
 #endif

@@ -31,7 +31,6 @@
 retCode equal(processPo P,ptrPo T1,ptrPo T2);
 retCode unifyType(processPo P,ptrPo T1,ptrPo T2);
 logical identical(ptrI T1,ptrI T2);
-comparison compTerm(ptrPo T1,ptrPo T2);
 retCode match(processPo P,ptrPo T1,ptrPo T2);
 retCode testmatch(ptrPo T1,ptrPo T2);
 

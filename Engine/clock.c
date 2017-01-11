@@ -58,7 +58,7 @@ retCode g_delay(processPo P, ptrPo a)
     else{
       struct timespec tm;
       double seconds;
-      double fraction = modf(NumberVal(A1),&seconds);
+      double fraction = modf(FloatVal(A1),&seconds);
 
 #define NANO (1000000000)
 
@@ -96,7 +96,7 @@ retCode g_sleep(processPo P, ptrPo a)
     if(!IsNumber(A1))
       return liberror(P,"sleep",eNUMNEEDD);
     else{
-      double f = NumberVal(A1);
+      double f = FloatVal(A1);
       struct timeval now;
       double seconds;
       double fraction = modf(f,&seconds);

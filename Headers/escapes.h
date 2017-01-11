@@ -22,7 +22,7 @@
 #define thingType "t'#thing'"
 
 /* Define the standard escapes */
-escape(exit,True,False,"F1iv","terminate L&O engine")
+escape(_exit,True,False,"P1i","terminate L&O engine")
 escape(_command_line,False,False,"F0LS","command line arguments")
 escape(_command_opts,False,False,"F0LT2SS","command line options")
 
@@ -62,45 +62,43 @@ escape(_flt2int,False,False,"F1fi","convert float to integer")
 
 escape(_flt_hash,False,False,"F1fi","compute hash of float")
 
-escape(_pwr,False,False,"F2fff","raise X to the power Y")
+escape(pwr,False,False,"F2fff","raise X to the power Y")
 
-/*  escape(sqrt,False,False,":k'u'NF1k'u'f","square root")
-  escape(exp,False,False,":k'u'NF1k'u'k'u'","exponential")
-  escape(log,False,False,":k'u'NF1k'u'f","logarithm")
-  escape(log10,False,False,":k'u'NF1k'u'f","10-based logarithm")
-  escape(pi,False,False,"F0f","return PI")
-  escape(sin,False,False,":k'u'NF1k'u'f","sine")
-  escape(cos,False,False,":k'u'NF1k'u'f","cosine")
-  escape(tan,False,False,":k'u'NF1k'u'f","tangent")
-  escape(asin,False,False,":k'u'NF1k'u'f","arc sine")
-  escape(acos,False,False,":k'u'NF1k'u'f","arc cosine")
-  escape(atan,False,False,":k'u'NF1k'u'f","arc tangent")
+escape(sqrt,False,False,"F1ff","square root")
+escape(exp,False,False,"F1ff","exponential")
+escape(log,False,False,"F1ff","logarithm")
+escape(log10,False,False,"F1ff","10-based logarithm")
+escape(pi,False,False,"F0f","return PI")
+escape(sin,False,False,"F1ff","sine")
+escape(cos,False,False,"F1ff","cosine")
+escape(tan,False,False,"F1ff","tangent")
+escape(asin,False,False,"F1ff","arc sine")
+escape(acos,False,False,"F1ff","arc cosine")
+escape(atan,False,False,"F1ff","arc tangent")
 
-  escape(srand,False,False,":1Np1k'u'","set random seed")
-  escape(rand,False,False,":k'u'NF1k'u'f","random # generator")
-  escape(irand,False,False,"F1ii","generate random integer")
+escape(trunc,False,False,"F1ff","truncate to nearest integer")
+escape(floor,False,False,"F1ff","truncate to lower integer")
+escape(ceil,False,False,"F1ff","truncate to next integer")
+escape(integral,False,False,"P1F","test if number is integral")
 
-  escape(ldexp,False,False,"F2NNf","raise x to 2**y")
-  escape(frexp,False,False,"P3ffi","split x into mant and exp")
-  escape(modf,False,False,"P3fff","split x into int and frac")
-*/
-  escape(_band,False,False,"F2iii","bitwise and two integers")
-  escape(_bor,False,False,"F2iii","bitwise or two integers")
-  escape(_bxor,False,False,"F2iii","bitwise xor two integers")
-  escape(_blsl,False,False,"F2iii","logical left shift")
-  escape(_blsr,False,False,"F2iii","logical right shift")
-  escape(_basr,False,False,"F2iii","arithmetic right shift")
-  escape(_bnot,False,False,"F1ii","bitwise negate number")
-  escape(_nthb,False,False,"P2ii","is nth bit set?")
+escape(srand,False,False,"P1f","set random seed")
+escape(rand,False,False,"F0f","random # generator")
+escape(irand,False,False,"F1ii","generate random integer")
+
+escape(_ldexp,False,False,"F2fff","raise x to 2**y")
+escape(_frexp,False,False,"P3ffi","split x into mant and exp")
+escape(_modf,False,False,"P3fff","split x into int and frac")
+
+escape(_band,False,False,"F2iii","bitwise and two integers")
+escape(_bor,False,False,"F2iii","bitwise or two integers")
+escape(_bxor,False,False,"F2iii","bitwise xor two integers")
+escape(_blsl,False,False,"F2iii","logical left shift")
+escape(_blsr,False,False,"F2iii","logical right shift")
+escape(_basr,False,False,"F2iii","arithmetic right shift")
+escape(_bnot,False,False,"F1ii","bitwise negate number")
+escape(_nthb,False,False,"P2ii","is nth bit set?")
 
 /*
-  escape(trunc,False,False,":k'u'NF1k'u'k'u'","truncate to nearest integer")
-  escape(floor,False,False,":k'u'NF1k'u'k'u'","truncate to lower integer")
-  escape(ceil,False,False,"F1Ni","truncate to next integer")
-  escape(itrunc,False,False,"F1Ni","truncate to 64 bit integer")
-  escape(integral,False,False,"P1N","test if number is integral")
-  escape(n2float,False,False,":k'u'NF1k'u'f","float a number")
-  
   escape(ground,False,False,":k't'AP1k't'","test for grounded")
 
   escape(_suspend,False,False,":k'u'A:k'v'AP2k'u'k'v'","suspend if variable not bound")

@@ -303,7 +303,7 @@ retCode g_num2str(processPo P, ptrPo a) {
     logical left = (logical) (width > 0);
     byte buffer[128];
     ioPo out = O_IO(openBufferStr(buffer, NumberOf(buffer)));
-    retCode res = outDouble(out, NumberVal(objV(a1)),
+    retCode res = outDouble(out, FloatVal(objV(a1)),
                             (char) (identical(a5, trueClass) ? 'g' : 'f'),
                             abs((int) width), (int) prec, ' ', left, (string) "", identical(a4, trueClass));
 
@@ -385,6 +385,9 @@ retCode g_explode(processPo P, ptrPo a) {
       out = consLsPair(H, el, out);
     }
 
+    if(buffer!=buff)
+      free(buffer);
+
     gcRemoveRoot(H, root);
     return funResult(P, a, 2, out);
   }
@@ -396,7 +399,7 @@ retCode g_implode(processPo P, ptrPo a) {
   if (!isGroundTerm(&Ls))
     return liberror(P, "implode", eINSUFARG);
   else {
-    long sLen = 4 * ListLen(Ls) + 1;
+    long sLen = 4 * ListLen(Ls) + 1; // Over estimate of string size.
     long pos = 0;
     byte text[sLen];
 

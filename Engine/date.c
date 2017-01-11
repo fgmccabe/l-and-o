@@ -45,7 +45,7 @@ retCode g__time2date(processPo P, ptrPo a) {
   if (isvar(T))
     return liberror(P, "_time2date", eINSUFARG);
   else {
-    time_t when = (time_t) NumberVal(objV(T));
+    time_t when = (time_t) FloatVal(objV(T));
     double fraction = 0;
     struct tm *now = localtime((time_t *) &when);
     ptrI val = kvoid;
@@ -126,7 +126,7 @@ retCode g__time2utc(processPo P, ptrPo a) {
   if (isvar(T))
     return liberror(P, "_time2utc", eINSUFARG);
   else {
-    time_t when = (time_t) NumberVal(objV(T));
+    time_t when = (time_t) FloatVal(objV(T));
     double fraction = 0;
     struct tm *now = gmtime((time_t *) &when);
     ptrI val = kvoid;
