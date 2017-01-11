@@ -288,7 +288,7 @@ static retCode strPrepare(string tgt, long tLen, string src, long sLen,
   return Ok;
 }
 
-retCode g_num2str(processPo P, ptrPo a) {
+retCode g__flt2str(processPo P, ptrPo a) {
   ptrI a1 = deRefI(&a[1]);
   ptrI a2 = deRefI(&a[2]);
   ptrI a3 = deRefI(&a[3]);
@@ -296,10 +296,12 @@ retCode g_num2str(processPo P, ptrPo a) {
   ptrI a5 = deRefI(&a[5]);
 
   if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4) || isvar(a5))
-    return liberror(P, "num2str", eINSUFARG);
+    return liberror(P, "_flt2str", eINSUFARG);
+  else if(!isFloat(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)))
+    return liberror(P,"_flt2str", eINVAL);
   else {
-    integer width = isFloat(objV(a2)) ? (integer) floatVal(floatV(a2)) : integerVal(intV(a2));
-    integer prec = isFloat(objV(a3)) ? (integer) floatVal(floatV(a3)) : integerVal(intV(a3));
+    integer width = integerVal(intV(a2));
+    integer prec = integerVal(intV(a3));
     logical left = (logical) (width > 0);
     byte buffer[128];
     ioPo out = O_IO(openBufferStr(buffer, NumberOf(buffer)));
@@ -320,19 +322,21 @@ retCode g_num2str(processPo P, ptrPo a) {
   }
 }
 
-retCode g_int2str(processPo P, ptrPo a) {
+retCode g__int2str(processPo P, ptrPo a) {
   ptrI a1 = deRefI(&a[1]);
   ptrI a2 = deRefI(&a[2]);
   ptrI a3 = deRefI(&a[3]);
   ptrI a4 = deRefI(&a[4]);
 
   if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4))
-    return liberror(P, "int2str", eINTNEEDD);
+    return liberror(P, "_int2str", eINTNEEDD);
+  else if(!isInteger(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
+    return liberror(P,"_int2str", eINVAL);
   else {
-    integer val = isFloat(objV(a1)) ? (integer) floatVal(floatV(a1)) : integerVal(intV(a1));
-    integer base = isFloat(objV(a2)) ? (integer) floatVal(floatV(a2)) : integerVal(intV(a2));
+    integer val = integerVal(intV(a1));
+    integer base = integerVal(intV(a2));
     logical sign = (logical) (base < 0);
-    integer width = isFloat(objV(a3)) ? (integer) floatVal(floatV(a3)) : integerVal(intV(a3));
+    integer width = integerVal(intV(a3));
     codePoint pad = IntVal(a4);
     logical left = (logical) (width < 0);
     byte buffer[128];
@@ -349,7 +353,7 @@ retCode g_int2str(processPo P, ptrPo a) {
       return funResult(P, a, 5, rslt);
     }
     else
-      return liberror(P, "int2str", eIOERROR);
+      return liberror(P, "_int2str", eIOERROR);
   }
 }
 
@@ -434,3 +438,4 @@ retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
 
   return closeFile(f);
 }
+

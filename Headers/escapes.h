@@ -168,7 +168,6 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_classload,True,False,"p4SssLs","load class file")
 
 */
-  escape(_display,False,False,"P2T3iiiS","Display a term on console")
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
 /*  
   // Socket handling functions
@@ -260,11 +259,9 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
   escape(_str_gen,False,False,"F1SS","Generate a unique string")
 
-
-/*
-  escape(_stringOf,False,False,":k't'AF3k't'iiS","convert value to a string")
+  escape(_stringOf,False,False,":k't'F3k't'iiS","Display a general term")
   escape(_trim,False,False,"F2SiS","trim a string to a width")
-*/
+  
   escape(explode,False,False,"F1SLi","convert string to list of code points")
   escape(implode,False,False,"F1LiS","convert list of code points to string")
 

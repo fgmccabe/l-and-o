@@ -20,7 +20,4 @@ retCode outCell(ioPo f,ptrPo x,long depth,int prec,logical alt);
 retCode outType(ioPo f,ptrPo x,long depth,int prec,logical alt);
 retCode decodeTerm(ioPo in,heapPo P,heapPo R,ptrPo tgt,string errorMsg,long msgSize);
 retCode skipEncoded(ioPo in,string errorMsg, long msgLen);
-
-retCode outXML(ioPo f,ptrPo x,long depth,int prec,logical alt) ;
-retCode xmlQuoteString(ioPo f,string s,long len);
 #endif

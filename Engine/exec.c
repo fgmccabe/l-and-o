@@ -21,7 +21,7 @@
 #include "lo.h"
 #include "fileio.h"
 
-retCode g_exit(processPo P, ptrPo a) {
+retCode g__exit(processPo P, ptrPo a) {
   exit((long) FloatVal(objV(deRefI(&a[1]))));
 }
 

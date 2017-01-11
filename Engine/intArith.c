@@ -234,7 +234,7 @@ retCode g__int_abs(processPo P, ptrPo a) {
     if (!isInteger(A1))
       return liberror(P, "_int_abs", eINTNEEDD);
     else {
-      integer rslt = abs(integerVal((integerPo) A1));
+      integer rslt = llabs(integerVal((integerPo) A1));
 
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, rslt);
@@ -318,7 +318,7 @@ retCode g__int2flt(processPo P, ptrPo a) {
 
 /* irand(X) => Random integer in range [0..X) */
 
-retCode g__irand(processPo P, ptrPo a) {
+retCode g_irand(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -326,7 +326,7 @@ retCode g__irand(processPo P, ptrPo a) {
     objPo A1 = objV(x);
 
     if (isInteger(A1)) {
-      double num1 = integerVal(A1);
+      double num1 = (double)integerVal((integerPo)A1);
 
       if (roundNumber(num1) == num1 && num1 > 0) {
         integer ans = (integer) (num1 * ((double) rand()) / (RAND_MAX + 1.0));

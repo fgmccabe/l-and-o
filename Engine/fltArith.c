@@ -24,6 +24,7 @@ static comparison fltCompFun(specialClassPo class, objPo o1, objPo o2);
 static long ftSizeFun(specialClassPo class, objPo o);
 static retCode ftOutFun(specialClassPo class, ioPo out, objPo o);
 static retCode ftScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o);
+static uinteger fltHash(double n);
 static uinteger ftHashFun(specialClassPo class, objPo o);
 static objPo ftCopyFun(specialClassPo class, objPo dst, objPo src);
 
@@ -74,7 +75,7 @@ static uinteger ftHashFun(specialClassPo class, objPo o) {
 }
 
 /* Simple arithmetic predicates */
-retCode g__integral(processPo P, ptrPo a) {
+retCode g_integral(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (isvar(x))
@@ -300,7 +301,28 @@ retCode g__flt2int(processPo P, ptrPo a) {
   }
 }
 
-retCode g__pwr(processPo P, ptrPo a) {
+retCode g__str2flt(processPo P, ptrPo a) {
+  ptrI x = deRefI(&a[1]);
+  ptrI y = deRefI(&a[2]);
+
+  if (IsString(x)) {
+    string src = stringVal(stringV(x));
+    double reslt = parseNumber(src, uniStrLen(src));
+
+    if (isvar(y)) {    /* check the output argument */
+      ptrI Ans = allocateFloat(&P->proc.heap, reslt);
+
+      bindVar(P, deRef(&a[2]), Ans);
+      return Ok;
+    } else if (isFloat(objV(y)) && FloatVal(objV(y)) == reslt)
+      return Ok;
+    else
+      return Fail;
+  } else
+    return liberror(P, "_str2flt", eINSUFARG); /* dont support inverse mode */
+}
+
+retCode g_pwr(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   objPo A1 = objV(x);
   ptrI y = deRefI(&a[2]);
@@ -325,7 +347,7 @@ retCode g__pwr(processPo P, ptrPo a) {
     return liberror(P, "pow", eINSUFARG);
 }
 
-retCode g__sqrt(processPo P, ptrPo a) {
+retCode g_sqrt(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -360,7 +382,7 @@ retCode g__sqrt(processPo P, ptrPo a) {
 }
 
 /* exponential e**x */
-retCode g__exp(processPo P, ptrPo a) {
+retCode g_exp(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -368,7 +390,7 @@ retCode g__exp(processPo P, ptrPo a) {
     objPo A1 = objV(x);
 
     if (isFloat(A1)) {
-      double num1 = floatVal((floatPo)A1);
+      double num1 = floatVal((floatPo) A1);
       double ans;
 
       errno = 0;    /* clear errno prior to computation */
@@ -386,7 +408,7 @@ retCode g__exp(processPo P, ptrPo a) {
 
         bindVar(P, deRef(&a[2]), Ans);
         return Ok;
-      } else if (isFloat(objV(y)) && floatVal((floatPo)objV(y)) == ans)
+      } else if (isFloat(objV(y)) && floatVal((floatPo) objV(y)) == ans)
         return Ok;
       else
         return Fail;
@@ -397,7 +419,7 @@ retCode g__exp(processPo P, ptrPo a) {
 }
 
 /* logarithm loge(x) */
-retCode g__log(processPo P, ptrPo a) {
+retCode g_log(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -434,7 +456,7 @@ retCode g__log(processPo P, ptrPo a) {
 }
 
 /* logarithm log10(x) */
-retCode g__log10(processPo P, ptrPo a) {
+retCode g_log10(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -470,7 +492,7 @@ retCode g__log10(processPo P, ptrPo a) {
     return liberror(P, "log10", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__pi(processPo P, ptrPo a) {
+retCode g_pi(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (!isvar(x)) {
@@ -488,7 +510,7 @@ retCode g__pi(processPo P, ptrPo a) {
   }
 }
 
-retCode g__trunc(processPo P, ptrPo a) {
+retCode g_trunc(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -514,8 +536,7 @@ retCode g__trunc(processPo P, ptrPo a) {
   }
 }
 
-
-retCode g__floor(processPo P, ptrPo a) {
+retCode g_floor(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -541,7 +562,7 @@ retCode g__floor(processPo P, ptrPo a) {
   }
 }
 
-retCode g__ceil(processPo P, ptrPo a) {
+retCode g_ceil(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -568,7 +589,7 @@ retCode g__ceil(processPo P, ptrPo a) {
 }
 
 /* Trigonometric functions */
-retCode g__sin(processPo P, ptrPo a) {
+retCode g_sin(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -594,7 +615,7 @@ retCode g__sin(processPo P, ptrPo a) {
     return liberror(P, "sin", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__cos(processPo P, ptrPo a) {
+retCode g_cos(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -620,7 +641,7 @@ retCode g__cos(processPo P, ptrPo a) {
     return liberror(P, "cos", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__tan(processPo P, ptrPo a) {
+retCode g_tan(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -646,7 +667,7 @@ retCode g__tan(processPo P, ptrPo a) {
     return liberror(P, "tan", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__asin(processPo P, ptrPo a) {
+retCode g_asin(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -682,7 +703,7 @@ retCode g__asin(processPo P, ptrPo a) {
     return liberror(P, "asin", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__acos(processPo P, ptrPo a) {
+retCode g_acos(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -718,7 +739,7 @@ retCode g__acos(processPo P, ptrPo a) {
     return liberror(P, "acos", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g__atan(processPo P, ptrPo a) {
+retCode g_atan(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 
@@ -748,7 +769,7 @@ retCode g__atan(processPo P, ptrPo a) {
  * srand(n) - reinitialize the random doubles generator
  */
 
-retCode g__srand(processPo P, ptrPo a) {
+retCode g_srand(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (!isvar(x)) {
@@ -771,7 +792,7 @@ retCode g__srand(processPo P, ptrPo a) {
 
 /* rand(X) => Random No. in range [0..X) */
 
-retCode g__rand(processPo P, ptrPo a) {
+retCode g_rand(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   ptrI y = deRefI(&a[2]);
 

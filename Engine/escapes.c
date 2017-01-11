@@ -63,8 +63,10 @@ void install_escapes(void) {
 }
 
 static integer scanInt(char **sig) {
-  if (**sig == '-')
-    return -scanInt(++(*sig));
+  if (**sig == '-') {
+    (*sig)++;
+    return -scanInt(sig);
+  }
   else {
     char ch = *(*sig)++;
     integer ii = 0;
