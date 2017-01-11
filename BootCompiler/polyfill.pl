@@ -21,7 +21,7 @@
                     listify/2,
                     '_readFileContents'/2,
                     '_writeFileContents'/2,
-                    '_getCwd'/1,
+                    '_cwd'/1,
                     '_logmsg'/1,
                     '_flt_hash'/2,
                     '_str_hash'/2,
@@ -173,7 +173,7 @@ writeCodes(Str,[Code|More]) :-
      put_code(Str,Code),
      writeCodes(Str,More).
 
-'_getCwd'(U) :-
+'_cwd'(U) :-
     working_directory(C,C),
     string_concat("file:",C,U).
 
@@ -202,11 +202,7 @@ hashCodes([C|More],H0,Hx) :-
 
 % File access primitives
 
-'_file_access'(S,M) :- exists_file(S), access(S,M),!.
-
-access(S,1) :- access_file(S,read).
-access(S,2) :- access_file(S,write).
-access(S,4) :- access_file(S,execute).
+'_file_present'(S) :- exists_file(S).
 
 '_file_size'(F,S) :- size_file(F,S).
 

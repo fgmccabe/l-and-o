@@ -11,27 +11,29 @@
   License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
   KIND, either express or implied. See the License for the specific language governing
   permissions and limitations under the License.
-*/ 
+*/
 
 #ifndef _IO_FORMIO_H_
 #define _IO_FORMIO_H_
 
 #include "io.h"
 
-retCode outInteger(ioPo f,integer i,unsigned int base,int width,int precision,
-		     codePoint pad,logical left,string prefix,logical sign);
-retCode outDouble(ioPo out,double x,char mode,int width,int precision,
-		    codePoint pad,logical left,string prefix,logical sign);
-retCode outMsg(ioPo f,char *fmt,...);
-retCode logMsg(ioPo out,char *fmt,...);
+retCode outInteger(ioPo f, integer i, unsigned int base, int width, int precision,
+                   codePoint pad, logical left, string prefix, logical sign);
+retCode outDouble(ioPo out, double x, char mode, int width, int precision,
+                  codePoint pad, logical left, string prefix, logical sign);
+retCode outMsg(ioPo f, char *fmt, ...);
+retCode logMsg(ioPo out, char *fmt, ...);
 
-retCode outUniString(ioPo f,string str,int len,int width,int precision,
-		     codePoint pad,logical leftPad,logical alt);
-retCode outInt(ioPo f,integer i);
-retCode outFloat(ioPo out,double x);
-retCode outUStr(ioPo f,string str);
+retCode outUniString(ioPo f, string str, int len, int width, int precision,
+                     codePoint pad, logical leftPad, logical alt);
+retCode outInt(ioPo f, integer i);
+retCode outFloat(ioPo out, double x);
+retCode outUStr(ioPo f, string str);
 
-integer parseInteger(string s,long len);
-double  parseNumber(string s,long len);
+retCode int2Str(integer i, int base, byte *buff, long len);
+
+integer parseInteger(string s, long len);
+double parseNumber(string s, long len);
 
 #endif

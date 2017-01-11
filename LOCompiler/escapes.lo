@@ -6,7 +6,7 @@ lo.comp.escapes{
   import lo.comp.types.
 
   public escapeType:(string)=>tipe.
-  escapeType("exit") => funType(tupleType([tipe("lo.core*integer")]),voidType).
+  escapeType("_exit") => predType(tupleType([tipe("lo.core*integer")])).
   escapeType("_command_line") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
   escapeType("_command_opts") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("_unify") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
@@ -32,7 +32,28 @@ lo.comp.escapes{
   escapeType("_int2flt") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*float")).
   escapeType("_flt2int") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*integer")).
   escapeType("_flt_hash") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*integer")).
-  escapeType("_pwr") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("pwr") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("sqrt") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("exp") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("log") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("log10") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("pi") => funType(tupleType([]),tipe("lo.core*float")).
+  escapeType("sin") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("cos") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("tan") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("asin") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("acos") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("atan") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("trunc") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("floor") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("ceil") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("integral") => predType(tupleType([tipe("lo.core*float")])).
+  escapeType("srand") => predType(tupleType([tipe("lo.core*float")])).
+  escapeType("rand") => funType(tupleType([]),tipe("lo.core*float")).
+  escapeType("irand") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
+  escapeType("_ldexp") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("_frexp") => predType(tupleType([tipe("lo.core*float"),tipe("lo.core*float"),tipe("lo.core*integer")])).
+  escapeType("_modf") => predType(tupleType([tipe("lo.core*float"),tipe("lo.core*float"),tipe("lo.core*float")])).
   escapeType("_band") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_bor") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_bxor") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
@@ -43,8 +64,7 @@ lo.comp.escapes{
   escapeType("_nthb") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")])).
   escapeType("_readFileContents") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
   escapeType("_writeFileContents") => predType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])])).
-  escapeType("_getCwd") => funType(tupleType([]),tipe("lo.core*string")).
-  escapeType("_display") => predType(tupleType([tupleType([tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")])).
+  escapeType("_cwd") => funType(tupleType([]),tipe("lo.core*string")).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
   escapeType("_ls") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
   escapeType("_file_access") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
@@ -90,6 +110,8 @@ lo.comp.escapes{
   escapeType("_str_hash") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_str_len") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_str_gen") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_stringOf") => univType(kVar("t"),funType(tupleType([kVar("t"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string"))).
+  escapeType("_trim") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.core*string")).
   escapeType("explode") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
   escapeType("implode") => funType(tupleType([typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])]),tipe("lo.core*string")).
   escapeType("_str_find") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
@@ -99,7 +121,7 @@ lo.comp.escapes{
   escapeType("_str_start") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
 
   public isEscape:(string){}.
-  isEscape("exit").
+  isEscape("_exit").
   isEscape("_command_line").
   isEscape("_command_opts").
   isEscape("_unify").
@@ -125,7 +147,28 @@ lo.comp.escapes{
   isEscape("_int2flt").
   isEscape("_flt2int").
   isEscape("_flt_hash").
-  isEscape("_pwr").
+  isEscape("pwr").
+  isEscape("sqrt").
+  isEscape("exp").
+  isEscape("log").
+  isEscape("log10").
+  isEscape("pi").
+  isEscape("sin").
+  isEscape("cos").
+  isEscape("tan").
+  isEscape("asin").
+  isEscape("acos").
+  isEscape("atan").
+  isEscape("trunc").
+  isEscape("floor").
+  isEscape("ceil").
+  isEscape("integral").
+  isEscape("srand").
+  isEscape("rand").
+  isEscape("irand").
+  isEscape("_ldexp").
+  isEscape("_frexp").
+  isEscape("_modf").
   isEscape("_band").
   isEscape("_bor").
   isEscape("_bxor").
@@ -136,8 +179,7 @@ lo.comp.escapes{
   isEscape("_nthb").
   isEscape("_readFileContents").
   isEscape("_writeFileContents").
-  isEscape("_getCwd").
-  isEscape("_display").
+  isEscape("_cwd").
   isEscape("_logmsg").
   isEscape("_ls").
   isEscape("_file_access").
@@ -183,6 +225,8 @@ lo.comp.escapes{
   isEscape("_str_hash").
   isEscape("_str_len").
   isEscape("_str_gen").
+  isEscape("_stringOf").
+  isEscape("_trim").
   isEscape("explode").
   isEscape("implode").
   isEscape("_str_find").

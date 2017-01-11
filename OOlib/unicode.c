@@ -28,8 +28,7 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
       *code = (codePoint) b;
       *start = pos;
       return Ok;
-    }
-    else if (UC80(b)) {
+    } else if (UC80(b)) {
       if (pos < end) {
         byte nb = src[pos++];
         codePoint ch = (codePoint) (UX80(b) << 6 | UXR(nb));
@@ -40,11 +39,9 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
           return Ok;
         } else
           return Error;
-      }
-      else
+      } else
         return Eof;
-    }
-    else if (UC800(b)) {
+    } else if (UC800(b)) {
       if (pos + 2 < end) {
         byte md = src[pos++];
         byte up = src[pos++];
@@ -55,14 +52,11 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
           *code = ch;
           *start = pos;
           return Ok;
-        }
-        else
+        } else
           return Error;
-      }
-      else
+      } else
         return Eof;
-    }
-    else if (UC1000(b)) {
+    } else if (UC1000(b)) {
       if (pos + 3 < end) {
         byte md = src[pos++];
         byte up = src[pos++];
@@ -78,11 +72,9 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
           return Error;
       } else
         return Eof;
-    }
-    else
+    } else
       return Error;
-  }
-  else
+  } else
     return Eof;
 }
 
@@ -96,8 +88,7 @@ retCode prevPoint(string src, long *start, codePoint *code) {
       *code = (codePoint) b;
       *start = pos;
       return Ok;
-    }
-    else {
+    } else {
       codePoint pt = 0;
       int factor = 0;
       while (UCR(b)) {
@@ -116,12 +107,10 @@ retCode prevPoint(string src, long *start, codePoint *code) {
         *code = pt | (UX1000(b) << factor);
         *start = pos;
         return Ok;
-      }
-      else
+      } else
         return Error;
     }
-  }
-  else
+  } else
     return Eof;
 }
 
@@ -183,8 +172,7 @@ logical isUniIdentifier(string str) {
       if (!(isLetterChar(ch) || (!first && isNdChar(ch))))
         return False;
       first = False;
-    }
-    else
+    } else
       return False;
   }
   return first ? False : True; // empty strings are not identifiers
@@ -300,20 +288,20 @@ retCode uniNCpy(string dest, long len, const string src, long sLen) {
   return pos < len ? Ok : Eof;
 }
 
-int uniCmp(string s1, string s2) {
+comparison uniCmp(string s1, string s2) {
   long pos = 0;
   assert(s1 != NULL && s2 != NULL);
 
   while (s1[pos] == s2[pos]) {
     if (s1[pos] == 0)
-      return 0;
+      return same;
     pos++;
   }
 
   if (s1[pos] < s2[pos] || s1[pos] == 0)
-    return -1;
+    return smaller;
   else
-    return 1;
+    return bigger;
 }
 
 logical uniIsTail(string s1, string s2) {
@@ -352,17 +340,20 @@ retCode uniInsert(string dest, long len, const string src) {
   return Error;                  /* Bomb out */
 }
 
-int uniNCmp(string s1, string s2, long l) {
+comparison uniNCmp(string s1, string s2, long l) {
   long pos = 0;
   while (pos < l && s1[pos] == s2[pos]) {
     if (s1[pos] == 0)
-      return 0;
+      return same;
     pos++;
   }
-  if (pos < l)
-    return s2[pos] - s1[pos];
-  else
-    return 0;
+  if (pos < l) {
+    if (s2[pos] > s1[pos])
+      return bigger;
+    else
+      return smaller;
+  } else
+    return same;
 }
 
 /* Tack on an ASCII string to the end of a unicode string */
@@ -440,6 +431,20 @@ string uniSearchAny(string s, long len, string term) {
   return NULL;
 }
 
+// This is a poor algorithm. Fix me with Boyer-Moore or better
+long uniSearch(string src, long len, long start, string tgt) {
+  long pos = start;
+  long tgtLen = uniStrLen(tgt);
+
+  while(pos<len-tgtLen){
+    if(uniNCmp(&src[pos],tgt,tgtLen)==same)
+      return pos;
+    else
+      pos++;
+  }
+  return -1;
+}
+
 string uniLast(string s, long l, codePoint c) {
   long last = uniLastIndexOf(s, l, c);
 
@@ -454,7 +459,7 @@ logical uniIsLit(string s1, char *s2) {
   while (s2[pos] != 0 && s1[pos] == s2[pos])
     pos++;
 
-  return (logical)(s2[pos] == 0 && s1[pos] == 0);
+  return (logical) (s2[pos] == 0 && s1[pos] == 0);
 }
 
 logical uniIsLitPrefix(string s1, char *s2) {
@@ -462,7 +467,7 @@ logical uniIsLitPrefix(string s1, char *s2) {
   while (s2[pos] != '\0' && s1[pos] == s2[pos])
     pos++;
 
-  return (logical)(s2[pos] == 0);
+  return (logical) (s2[pos] == 0);
 }
 
 uinteger uniHash(const string name) {
@@ -490,22 +495,20 @@ retCode uniLower(string s, long sLen, string d, long dLen) {
     codePoint ch;
     if (nxtPoint(s, &sPos, sLen, &ch) == Ok) {
       appendCodePoint(d, &dPos, dLen, lowerOf(ch));
-    }
-    else
+    } else
       return Error;
   }
   if (dPos < dLen - 1) {
     d[dPos] = 0;
     return Ok;
-  }
-  else
+  } else
     return Eof;
 }
 
-string uniDuplicate(string s){
+string uniDuplicate(string s) {
   size_t len = uniStrLen(s);
-  string copy = (string)malloc((len+1)*sizeof(byte));
+  string copy = (string) malloc((len + 1) * sizeof(byte));
 
-  memcpy(copy,s,len+1);
+  memcpy(copy, s, len + 1);
   return copy;
 }

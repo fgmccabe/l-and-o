@@ -79,7 +79,7 @@ escape(atan,False,False,"F1ff","arc tangent")
 escape(trunc,False,False,"F1ff","truncate to nearest integer")
 escape(floor,False,False,"F1ff","truncate to lower integer")
 escape(ceil,False,False,"F1ff","truncate to next integer")
-escape(integral,False,False,"P1F","test if number is integral")
+escape(integral,False,False,"P1f","test if number is integral")
 
 escape(srand,False,False,"P1f","set random seed")
 escape(rand,False,False,"F0f","random # generator")
@@ -131,9 +131,23 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
   escape(_openURL,True,False,"F4SSSiO","open a URL")
 */
-  escape(_readFileContents,True,False,"F1SLi","Get the contents of a file as a list of integer codes")
+  escape(_file_contents,True,False,"F1SLi","Get the contents of a file as a list of integer codes")
   escape(_writeFileContents,True,False,"P2SLi","write a file from a list of integer codes")
-  escape(_getCwd,True,False,"F0S","return url of current working directory")
+  escape(_cwd,True,False,"F0S","return url of current working directory")
+  escape(_cd,False,False,"P1S","change current working directory")
+  escape(_rm,True,False,"P1S","remove file")
+  escape(_mv,True,False,"P2SS","rename file")
+  escape(_mkdir,True,False,"P2Si","create directory")
+  escape(_rmdir,True,False,"P1S","delete directory")
+  escape(_chmod,True,False,"P2Si","change mode of a file or directory")
+  escape(_ls,True,False,"F1SLS","return a list of files in a directory")
+
+  escape(_file_mode,True,False,"F1Si","report modes of a file")
+  escape(_file_present,True,False,"P1S","check presence of a file")
+  escape(_file_type,True,False,"F1Si","report on the type of a file")
+  escape(_file_size,True,False,"F1Si","report on the size of a file")
+  escape(_file_modified,True,False,"F1Sf","report on when a file was last modified")
+  escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
 /*
 
   escape(_openInFile,True,False,"F2SiO","open input file")
@@ -157,7 +171,6 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_outch,True,False,"p2Oi","write a single character")
   escape(_outbyte,True,False,"p2Oi","write a single byte")
   escape(_outtext,True,False,"p2OS","write a string as a block")
-  escape(_outsym,True,False,"p2Os","write a symbol")
   escape(_stdfile,True,False,"F1iO","standard file descriptor")
   escape(_fposition,True,False,"F1Oi","report current file position")
   escape(_fseek,True,False,"p2Oi","seek to new file position")
@@ -169,33 +182,19 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
 */
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
-/*  
+  
+  /*
   // Socket handling functions
   escape(_connect,True,False,"p5SiiOO","connect to remote host")
   escape(_listen,True,False,"p2iO","listen on a port")
   escape(_accept,True,False,"p7OOOSSii","accept connection")
-  //  escape(_udpPort,True,False,"p2NO","estabish a UDP port")
-  //  escape(_udpGet,True,False,"p4OSSN","read a UDP datagram")
-  //  escape(_udpSend,True,False,"p4OSSN","send a UDP datagram")
+  escape(_udpPort,True,False,"p2NO","estabish a UDP port")
+  escape(_udpGet,True,False,"p4OSSN","read a UDP datagram")
+  escape(_udpSend,True,False,"p4OSSN","send a UDP datagram")
   escape(hosttoip,False,False,"F1SLS","IP address of host")
   escape(iptohost,False,False,"F1SS","host name from IP")
+*/
   
-  escape(_cwd,False,False,"F0S","return current working directory")
-  escape(_cd,False,False,"p1S","change current working directory")
-  escape(_rm,True,False,"p1S","remove file")
-  escape(_mv,True,False,"p2SS","rename file")
-  escape(_mkdir,True,False,"p2Si","create directory")
-  escape(_rmdir,True,False,"p1S","delete directory")
-  escape(_chmod,True,False,"p2Si","change mode of a file or directory")
-  escape(_ls,True,False,"F1SLT2S"fileType"","report on contents of a directory")
-  */
-  escape(_ls,True,False,"F1SLS","return a list of files in a directory")
-  // escape(_file_mode,True,False,"P2Si","report modes of a file")
-  escape(_file_access,True,False,"P2Si","check access on a file")
-  // escape(_file_type,True,False,"F1Si","report on the type of a file")
-  escape(_file_size,True,False,"F1Si","report on the size of a file")
-  escape(_file_modified,True,False,"F1Sf","report on when a file was last modified")
-  //escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
   /*
 
 // Timing and delaying
@@ -246,7 +245,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_isLetterChar,False,False,"P1i","is letter char")
   escape(_digitCode,False,False,"F1ii","convert char to num")
 
-// String and symbol handling escapes
+// String handling escapes
   escape(_int2str,False,False,"F4iiiiS","format an integer as a string")
   escape(_flt2str,False,False,"F5fiillS","format a floating as a string")
   escape(_str2flt,False,False,"F1Sf","parse a string as a float")

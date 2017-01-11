@@ -127,13 +127,6 @@ typedef struct _general_record_ {
   ptrI args[ZEROARRAYSIZE];
 } generalRec;
 
-typedef enum {
-  smaller, /* One item is smaller than another */
-    same, /* Two items are the same */
-    bigger, /* One it bigger than the other */
-    incomparible                  /* Incomparible */
-} comparison;
-
 // Some typedefs to help with working with classes
 
 typedef long (*classSizeFun)(specialClassPo class, objPo o);

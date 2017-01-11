@@ -59,15 +59,15 @@ static byte *Int2StrByBase(byte *str, integer i, unsigned int base) {
   return str;
 }
 
-retCode int2Str(integer i, byte *buff, long len) {
+retCode int2Str(integer i, int base, byte *buff, long len) {
   if (i < 0) {
     *buff = '-';
-    if (Int2StrByBase(buff + 1, -i, 10) - buff >= 0)
+    if (Int2StrByBase(buff + 1, -i, base) - buff >= 0)
       return Ok;
     else
       return Error;
   }
-  else if (Int2StrByBase(buff, i, 10) - buff >= 0)
+  else if (Int2StrByBase(buff, i, base) - buff >= 0)
     return Ok;
   else
     return Error;

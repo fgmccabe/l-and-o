@@ -36,8 +36,7 @@ retCode g__cwd(processPo P, ptrPo a) {
 
     free(cwd);
     return equal(P, &CWD, &a[1]);
-  }
-  else
+  } else
     return Error;
 }
 
@@ -56,8 +55,7 @@ retCode g__cd(processPo P, ptrPo a) {
     if (chdir(strData) != -1) {
       setProcessRunnable(P);
       return Ok;
-    }
-    else {
+    } else {
       setProcessRunnable(P);
 
       switch (errno) {
@@ -95,8 +93,7 @@ retCode g__rm(processPo P, ptrPo a) {
     if (unlink(strData) != -1) {
       setProcessRunnable(P);
       return Ok;
-    }
-    else {
+    } else {
       setProcessRunnable(P);
       switch (errno) {
         case EINTR:
@@ -132,8 +129,7 @@ retCode g__mv(processPo P, ptrPo a) {
     if (rename(fn1, fn2) != -1) {
       setProcessRunnable(P);
       return Ok;
-    }
-    else {
+    } else {
       setProcessRunnable(P);
       switch (errno) {
         case EINTR:
@@ -178,8 +174,7 @@ retCode g__mkdir(processPo P, ptrPo a) {
         default:
           return liberror(P, "__mkdir", eINVAL);
       }
-    }
-    else {
+    } else {
       setProcessRunnable(P);
       return Ok;
     }
@@ -203,8 +198,7 @@ retCode g__rmdir(processPo P, ptrPo a) {
     if (rmdir(str) == 0) {
       setProcessRunnable(P);
       return Ok;
-    }
-    else {
+    } else {
       setProcessRunnable(P);
       switch (errno) {
         case EINTR:
@@ -299,8 +293,7 @@ retCode g__file_mode(processPo P, ptrPo a) {
         default:
           return liberror(P, "__fmode", eNOTFND);
       }
-    }
-    else {
+    } else {
       ptrI modes = allocateInteger(&P->proc.heap, buf.st_mode);
 
       setProcessRunnable(P);
@@ -308,6 +301,8 @@ retCode g__file_mode(processPo P, ptrPo a) {
     }
   }
 }
+
+
 
 /*
  * file_type check out the type of the file
@@ -434,8 +429,7 @@ retCode g__file_size(processPo P, ptrPo a) {
         default:
           return liberror(P, "__file_size", eNOTFND);
       }
-    }
-    else {
+    } else {
       ptrI details = allocateInteger(&P->proc.heap, buf.st_size);
 
       setProcessRunnable(P);
@@ -445,7 +439,7 @@ retCode g__file_size(processPo P, ptrPo a) {
 }
 
 /*
- * __file_date(file,) - return file creation and modification 
+ * __file_date(file,access,modified,created) - return file creation and modification
  */
 
 retCode g__file_date(processPo P, ptrPo a) {
@@ -486,27 +480,73 @@ retCode g__file_date(processPo P, ptrPo a) {
         default:
           return liberror(P, "__file_date", eNOTFND);
       }
-    }
-    else {
+    } else {
       setProcessRunnable(P);
-      /*	number accessTime = buf.st_atimespec.tv_sec+
-	((number)buf.st_atimespec.tv_nsec)/NANO;
-        ptrI details = allocateNumber(&P->proc.heap,accessTime);
-      */
 
-      ptrI details = allocateFloat(&P->proc.heap, buf.st_atime);
+      ptrI details = allocateInteger(&P->proc.heap, buf.st_atime);
       retCode ret = equal(P, &details, &a[2]);
 
       if (ret == Ok) {
-        details = allocateFloat(&P->proc.heap, buf.st_mtime);
+        details = allocateInteger(&P->proc.heap, buf.st_mtime);
         ret = equal(P, &details, &a[3]);
       }
 
       if (ret == Ok) {
-        details = allocateFloat(&P->proc.heap, buf.st_ctime);
+        details = allocateInteger(&P->proc.heap, buf.st_ctime);
         ret = equal(P, &details, &a[4]);
       }
       return ret;
+    }
+  }
+}
+
+/*
+ * __file_modified(file,modified) - return file  modification
+ */
+
+retCode g__file_modified(processPo P, ptrPo a) {
+  ptrI t1 = deRefI(&a[1]);
+
+  if (!IsString(t1))
+    return liberror(P, "__file_modified", eSTRNEEDD);
+  else if (!isvar(deRefI(&a[2])))
+    return liberror(P, "__file_modified", eVARNEEDD);
+  else {
+    struct stat buf;
+
+    tryAgain:
+    switchProcessState(P, wait_io);
+
+    char *str = (char *) stringVal(stringV(t1));
+
+    if (stat(str, &buf) == -1) {
+      setProcessRunnable(P);
+
+      switch (errno) {
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__file_date", eNOFILE);
+        case ENAMETOOLONG:
+          return liberror(P, "__file_date", eINVAL);
+        case ENOENT:
+          return liberror(P, "__file_date", eNOTFND);
+        case EACCES:
+          return liberror(P, "__file_date", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__file_date", eINVAL);
+        case EIO:
+          return liberror(P, "__file_date", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__file_date", eINVAL);
+        default:
+          return liberror(P, "__file_date", eNOTFND);
+      }
+    } else {
+      setProcessRunnable(P);
+
+      ptrI details = allocateInteger(&P->proc.heap, buf.st_mtime);
+      return equal(P, &details, &a[2]);
     }
   }
 }
@@ -542,8 +582,7 @@ retCode g__ls(processPo P, ptrPo a) {
         default:
           return liberror(P, "__ls", eNOTFND);
       }
-    }
-    else {
+    } else {
       ptrI dir = emptyList;
       ptrI dirEntry = emptyList;
       ptrI name = emptyList;
@@ -558,38 +597,8 @@ retCode g__ls(processPo P, ptrPo a) {
         /* skip special entries "." and ".." */
         if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
           name = allocateCString(H, ent->d_name);
-          dirEntry = objP(allocateObject(H, commaClass));
 
-          updateArg(objV(dirEntry), 0, name);
-
-          switch (ent->d_type) {
-            case DT_FIFO:
-              updateArg(objV(dirEntry), 1, kfifo);
-              break;
-            case DT_CHR:
-              updateArg(objV(dirEntry), 1, kcharfile);
-              break;
-            case DT_DIR:
-              updateArg(objV(dirEntry), 1, kdir);
-              break;
-            case DT_BLK:
-              updateArg(objV(dirEntry), 1, kblock);
-              break;
-            case DT_REG:
-              updateArg(objV(dirEntry), 1, kplain);
-              break;
-            case DT_SOCK:
-              updateArg(objV(dirEntry), 1, ksock);
-              break;
-            case DT_LNK:
-              updateArg(objV(dirEntry), 1, ksymlink);
-              break;
-            default:
-              updateArg(objV(dirEntry), 1, kunknown);
-              break;
-          }
-
-          dir = consLsPair(H, dirEntry, dir); /* directory ends up in reverse order */
+          dir = consLsPair(H, name, dir); /* directory ends up in reverse order */
         }
       }
 

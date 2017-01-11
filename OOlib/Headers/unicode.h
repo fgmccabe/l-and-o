@@ -80,8 +80,8 @@ logical isUniIdentifier(string id);
 unsigned long uniStrLen(const string s);
 retCode uniCpy(string dest,long len,const string src);
 retCode uniNCpy(string dest,long len,const string src,long sLen);
-int uniCmp(string s1,string s2);
-int uniNCmp(string s1,string s2,long l);
+comparison uniCmp(string s1,string s2);
+comparison uniNCmp(string s1,string s2,long l);
 retCode uniInsert(string dest,long len,const string src);
 retCode appendCodePoint(string dest, long *pos, long len, codePoint ch);
 retCode uniTack(string dest,long len,const char *src);
@@ -91,6 +91,7 @@ long uniIndexOf(string s,long len,long from,codePoint c);
 long uniLastIndexOf(string s,long len,codePoint c);
 string uniSubStr(string s,long len,long from,long cnt,string buff,long bLen);
 
+long uniSearch(string src,long len,long start,string tgt);
 string uniSearchAny(string s,long len,string term);
 string uniLast(string s,long l,codePoint c);
 string uniDuplicate(string s);

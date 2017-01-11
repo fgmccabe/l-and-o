@@ -54,8 +54,7 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
       return smaller;
     else
       return bigger;
-  }
-  else
+  } else
     return incomparible;
 }
 
@@ -126,8 +125,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
       if (buffer != NULL)
         free(buffer);
       return liberror(P, "__stringOf", eINVAL);
-    }
-    else {
+    } else {
       uint64 len;
       string txt = getStrText(O_STRING(str), &len);
 
@@ -144,8 +142,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
           while (w-- > 0)
             *p++ = ' ';                   /* pad out with spaces */
           *p = 0;
-        }
-        else {
+        } else {
           string p = text;
           long w = -width - (integer) len;
           while (w-- > 0)
@@ -164,8 +161,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
             free(buffer);
           return funResult(P, a, 4, txtList);
         }
-      }
-      else {
+      } else {
         ptrI txtList = kvoid;
         rootPo root = gcAddRoot(&P->proc.heap, &txtList);
         ret = closeOutString(str, &P->proc.heap, &txtList);
@@ -221,8 +217,7 @@ retCode g__trim(processPo P, ptrPo a) {
         if (cnt < 0)
           cnt = 0;
         strncpy((char *) &buffer[cnt], (char *) l, awidth - cnt);     // plop in the string contents
-      }
-      else {
+      } else {
         strncpy((char *) buffer, (char *) data, awidth);
 
         if (len < width) {
@@ -262,22 +257,19 @@ static retCode strPrepare(string tgt, long tLen, string src, long sLen,
       for (i = 0; i < width; i++)
         tgt[i] = src[i];
       tgt[i] = '\0';      /* terminate */
-    }
-    else {
+    } else {
       for (i = 0; i < sLen; i++)
         tgt[i] = src[i];
       while (i < width)
         appendCodePoint(tgt, &i, tLen, pad);
       tgt[i] = '\0';
     }
-  }
-  else {          /* right aligned */
+  } else {          /* right aligned */
     if (gaps < 0) {
       for (j = 0, i = sLen + gaps; i < sLen; i++, j++) /* lose the left part of the source */
         tgt[j] = src[i];
       tgt[j] = '\0';
-    }
-    else {        /* extra pad on the left */
+    } else {        /* extra pad on the left */
       for (j = 0, i = gaps; i > 0; i--)
         appendCodePoint(tgt, &j, tLen, pad);
       for (i = 0; i < sLen; j++, i++)
@@ -297,8 +289,8 @@ retCode g__flt2str(processPo P, ptrPo a) {
 
   if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4) || isvar(a5))
     return liberror(P, "_flt2str", eINSUFARG);
-  else if(!isFloat(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)))
-    return liberror(P,"_flt2str", eINVAL);
+  else if (!isFloat(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)))
+    return liberror(P, "_flt2str", eINVAL);
   else {
     integer width = integerVal(intV(a2));
     integer prec = integerVal(intV(a3));
@@ -316,8 +308,7 @@ retCode g__flt2str(processPo P, ptrPo a) {
       closeFile(out);
 
       return funResult(P, a, 6, rslt);
-    }
-    else
+    } else
       return liberror(P, "num2str", eIOERROR);
   }
 }
@@ -330,29 +321,27 @@ retCode g__int2str(processPo P, ptrPo a) {
 
   if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4))
     return liberror(P, "_int2str", eINTNEEDD);
-  else if(!isInteger(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
-    return liberror(P,"_int2str", eINVAL);
+  else if (!isInteger(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
+    return liberror(P, "_int2str", eINVAL);
   else {
     integer val = integerVal(intV(a1));
     integer base = integerVal(intV(a2));
-    logical sign = (logical) (base < 0);
     integer width = integerVal(intV(a3));
     codePoint pad = IntVal(a4);
     logical left = (logical) (width < 0);
     byte buffer[128];
     byte result[128];
 
-    strMsg(buffer, NumberOf(buffer), "%d", val);
+    retCode ret = int2Str(val, base, buffer, NumberOf(buffer));
 
-    retCode ret = strPrepare(result, NumberOf(result), buffer, uniStrLen(buffer),
-                             pad, left, labs(width));
+    if (ret == Ok)
+      ret = strPrepare(result, NumberOf(result), buffer, uniStrLen(buffer), pad, left, labs(width));
 
     if (ret == Ok) {
       ptrI rslt = allocateString(&P->proc.heap, result, uniStrLen(result));
 
       return funResult(P, a, 5, rslt);
-    }
-    else
+    } else
       return liberror(P, "_int2str", eIOERROR);
   }
 }
@@ -389,12 +378,41 @@ retCode g_explode(processPo P, ptrPo a) {
       out = consLsPair(H, el, out);
     }
 
-    if(buffer!=buff)
+    if (buffer != buff)
       free(buffer);
 
     gcRemoveRoot(H, root);
     return funResult(P, a, 2, out);
   }
+}
+
+retCode explodeString(processPo P, byte *text, long length, ptrPo a) {
+  byte buff[MAX_SYMB_LEN];
+  string buffer = (length > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * length) : buff);
+  strncpy((char *) buffer, (char *) text, length); // Copy out the string in case of GC
+
+  *a = emptyList;
+  ptrI el = kvoid;
+  heapPo H = &P->proc.heap;
+  rootPo root = gcAddRoot(H, a);
+
+  gcAddRoot(H, &el);
+
+  long pos = length;
+
+  while (pos > 0) {
+    codePoint ch;
+    if (prevPoint(buffer, &pos, &ch) != Ok)
+      return Error;
+    el = allocateInteger(H, ch);
+    *a = consLsPair(H, el, *a);
+  }
+
+  if (buffer != buff)
+    free(buffer);
+
+  gcRemoveRoot(H, root);
+  return Ok;
 }
 
 retCode g_implode(processPo P, ptrPo a) {
@@ -415,8 +433,7 @@ retCode g_implode(processPo P, ptrPo a) {
         if (pos < sLen) {
           appendCodePoint(text, &pos, sLen, (codePoint) IntVal(C));
           Ls = deRefI(h + 1);
-        }
-        else
+        } else
           return liberror(P, "implode", eINVAL);
       }
     }
@@ -426,6 +443,252 @@ retCode g_implode(processPo P, ptrPo a) {
 
     setProcessRunnable(P);
     return funResult(P, a, 2, result);
+  }
+}
+
+retCode g__str_len(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || !isString(objV(a1)))
+    return liberror(P, "_str_len", eSTRNEEDD);
+  else {
+    string s1 = stringVal(stringV(a1));
+    integer slen = uniStrLen(s1);
+
+    if (isvar(a2)) {
+      ptrI R = allocateInteger(&P->proc.heap, slen);
+
+      bindVar(P, deRef(&a[2]), R);
+      return Ok;
+    } else if (integerVal(intV(a2)) == slen)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_hash(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || !isString(objV(a1)))
+    return liberror(P, "_str_hash", eSTRNEEDD);
+  else {
+    string s = stringVal(stringV(a1));
+    integer hash = uniHash(s);
+
+    if (isvar(a2)) {
+      ptrI R = allocateInteger(&P->proc.heap, hash);
+
+      bindVar(P, deRef(&a[2]), R);
+      return Ok;
+    } else if (integerVal(intV(a2)) == hash)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_concat(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_str_concat", eSTRNEEDD);
+  else if (!isString(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_str_concat", eINVAL);
+  else {
+    string s1 = stringVal(stringV(a1));
+    string s2 = stringVal(stringV(a2));
+    unsigned long slen1 = uniStrLen(s1);
+    unsigned long slen2 = uniStrLen(s2);
+    unsigned long tlen = slen1 + slen2;
+    byte catted[tlen + 1];
+
+    uniCpy(catted, tlen + 1, s1);
+    uniCpy(&catted[slen1], slen2 + 1, s2);
+
+    ptrI rslt = allocateString(&P->proc.heap, catted, uniStrLen(catted));
+
+    return funResult(P, a, 3, rslt);
+  }
+}
+
+retCode g__str_lt(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_str_lt", eSTRNEEDD);
+  else if (!isString(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_str_lt", eINVAL);
+  else {
+    string s1 = stringVal(stringV(a1));
+    string s2 = stringVal(stringV(a2));
+
+    if (uniCmp(s1, s2) == smaller)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_ge(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_str_ge", eSTRNEEDD);
+  else if (!isString(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_str_ge", eINVAL);
+  else {
+    string s1 = stringVal(stringV(a1));
+    string s2 = stringVal(stringV(a2));
+
+    if (uniCmp(s1, s2) != smaller)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_start(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_str_start", eSTRNEEDD);
+  else if (!isString(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_str_start", eINVAL);
+  else {
+    string s1 = stringVal(stringV(a1));
+    string s2 = stringVal(stringV(a2));
+
+    if (uniNCmp(s1, s2, uniStrLen(s2)) == same)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_find(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+
+  if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isString(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
+    return liberror(P, "_str_find", eINSUFARG);
+  else {
+    string src = stringVal(stringV(a1));
+    string tgt = stringVal(stringV(a2));
+    integer start = integerVal(intV(a3));
+
+    integer pos = uniSearch(src, uniStrLen(src), start, tgt);
+
+    if (pos < 0)
+      return Fail;
+    else if (isvar(a4)) {
+      ptrI R = allocateInteger(&P->proc.heap, pos);
+
+      bindVar(P, deRef(&a[2]), R);
+      return Ok;
+    } else if (integerVal(intV(a2)) == pos)
+      return Ok;
+    else
+      return Fail;
+  }
+}
+
+retCode g__str_split(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+
+  if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)))
+    return liberror(P, "_str_split", eINSUFARG);
+  else {
+    string src = stringVal(stringV(a1));
+    integer start = integerVal(intV(a2));
+    unsigned long len = uniStrLen(src);
+
+    if (start < 0 || start > len)
+      return Fail;
+    else {
+      if (isvar(a3)) {
+        ptrI left = allocateString(&P->proc.heap, src, start);
+        bindVar(P, deRef(&a[3]), left);
+      } else {
+        string left = stringVal(stringV(a3));
+        if (uniNCmp(src, left, start) != same)
+          return Fail;
+      }
+      if (isvar(a4)) {
+        ptrI right = allocateString(&P->proc.heap, &src[start], len - start);
+        bindVar(P, deRef(&a[4]), right);
+        return Ok;
+      } else {
+        string right = stringVal(stringV(a4));
+
+        if (uniNCmp(&src[start], right, len - start) == same)
+          return Ok;
+        else
+          return Fail;
+      }
+    }
+  }
+}
+
+retCode g__sub_str(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+
+  if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
+    return liberror(P, "_sub_str", eINSUFARG);
+  else {
+    string src = stringVal(stringV(a1));
+    integer start = integerVal(intV(a2));
+    integer end = integerVal(intV(a3));
+    unsigned long len = uniStrLen(src);
+
+    end = min(end, len);
+
+    if (start < 0 || start > len || end < start)
+      return Fail;
+    else if (isvar(a4)) {
+      ptrI sub = allocateString(&P->proc.heap, &src[start], end - start);
+      bindVar(P, deRef(&a[4]), sub);
+      return Ok;
+    } else {
+      string sub = stringVal(stringV(a4));
+      if (uniNCmp(&src[start], sub, end - start) != same)
+        return Fail;
+      else
+        return Ok;
+    }
+  }
+}
+
+retCode g__str_gen(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1) || !isString(objV(a1)))
+    return liberror(P, "_str_gen", eINSUFARG);
+  else if (!isvar(a2)) return liberror(P, "_str_gen", eVARNEEDD);
+  else {
+    string prefix = stringVal(stringV(a1));
+    byte buff[128];
+    strMsg(buff, NumberOf(buff), "%s%ld", prefix, random());
+
+    ptrI sub = allocateString(&P->proc.heap, buff, uniStrLen(buff));
+    bindVar(P, deRef(&a[4]), sub);
+    return Ok;
   }
 }
 

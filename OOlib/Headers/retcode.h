@@ -20,4 +20,11 @@ typedef enum {
   Ok,Fail,Switch,Suspend,Interrupt,Error,Eof,Space}
 retCode;
 
+typedef enum {
+  smaller, /* One item is smaller than another */
+  same, /* Two items are the same */
+  bigger, /* One it bigger than the other */
+  incomparible                  /* Incomparible */
+} comparison;
+
 #endif

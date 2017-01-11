@@ -12,7 +12,7 @@ lo.comp.repository{
   public openRepository:(uri) => repository.
   openRepository(Root) => repo(Root,readManifest(RepoUri)) :-
     RepoUri = resolveUri(Root,parseUri("manifest")),
-    resourcePresent(RepoUri,readMode).
+    resourcePresent(RepoUri).
   openRepository(Root) => repo(Root,manifest([])).
 
   public locatePackage:(repository,string,version,version,list[integer]){}.
@@ -47,7 +47,7 @@ lo.comp.repository{
     locateVersion(Man,Pkg,Vers,_,S,U),
     CodeFile = resolveUri(Root,parseUri(U)),
     SrcFile = resolveUri(Root,S),
-    resourcePresent(CodeFile,readMode),
-    (resourcePresent(SrcFile,readMode) ?
+    resourcePresent(CodeFile),
+    (resourcePresent(SrcFile) ?
         newerFile(CodeFile,SrcFile) | true).
 }

@@ -18,7 +18,7 @@ set(SOURCE_FILES
         Headers/word.h
         Headers/char.h Headers/clock.h
         Headers/code.h Headers/cons.h Headers/constants.h Headers/dbgflags.h Headers/debug.h Headers/disass.h
-        Headers/encoded.h Headers/signature.h
+        Headers/encoded.h Headers/signature.h Headers/term.h
         Headers/errors.h Headers/esc.h Headers/escodes.h Headers/eval.h Headers/process.h Headers/ops.h Headers/opcodes.h
         Headers/global.h Headers/heap.h Headers/list.h Headers/local.h Headers/perms.h Headers/vars.h
         Headers/fileio.h Headers/lo.h
