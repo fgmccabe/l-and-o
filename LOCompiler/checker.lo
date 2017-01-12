@@ -454,7 +454,7 @@ lo.comp.typecheck{
     ( deRef(PrTp) = predType(ArgTp) ?
       typeOfArg(A,ArgTp,E0,Ev,Arg,Rp0,Rpx),
       Call = callCond(Lc,Pred,Arg) |
-      reportError("\(Pred)|=\(PrTp) not a predicate",Lc,Rp0,Rpx),
+      reportError("\(Pred)\:\(PrTp) not a predicate",Lc,Rp0,Rpx),
       E0=Ev, Call = trueCond).
   checkCond(Term,Env,Ev,isTrue(Exp),Rp,Rpx) :-
     knownType(Term,findType("logical",Lc,Env,Rp,Rp0),Env,Ev,Exp,Rp0,Rpx).
@@ -515,8 +515,8 @@ lo.comp.typecheck{
     checkCond(binary(Lc,".",NV,Test),E0,Ev,Cond,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBinary(Term,".",Lc,L,F),
-    isIden(F,_,Fld),
-    recordAccessExp(Lc,L,Fld,Tp,Env,Ev,Exp,Rp,Rpx).
+    isIden(F,FLc,Fld),
+    recordAccessExp(FLc,L,Fld,Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,condExp(Test,Then,Else),Rp,Rpx) :-
     isBinary(Term,"|",Lc,L,El),
     isBinary(L,"?",_,Tst,Th),

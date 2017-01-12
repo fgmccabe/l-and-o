@@ -1,0 +1,60 @@
+lo.array{
+  import lo.core.
+  import lo.collection.
+  import lo.index.
+  import lo.list.
+
+  public type all e ~~ array[e] <~ {
+  }
+
+  private array:all e ~~ (map[integer,e]) <=> array[e].
+  array(Els) <= {}.
+
+  public implementation all e ~~ map[array[e] ->> integer,e] <= {
+    present(A,Ix,V) :- arrayPresent(A,Ix,V).
+    _remove(A,Ix) => removeElement(A,ix).
+    _put(A,Ix,V) => addElement(A,Ix,V).
+    keys(A) => arrayKeys(A).
+    pairs(A) => arrayPairs(A).
+    _empty = emptyArray.
+  }
+
+  private arrayPresent:all e ~~ (array[e],integer,e){}.
+  arrayPresent(array(Els),Ix,El) :- present(Els,Ix,El).
+
+  private removeElement:all e ~~ (array[e],integer) => array[e].
+  removeElement(array(Els),Ix) => array(_remove(Els,Ix)).
+
+  private addElement:all e ~~ (array[e],integer,e) => array[e].
+  addElement(array(Els),Ix,El) => array(_put(Els,Ix,El)).
+
+  private arrayKeys:all e ~~ (array[e]) => list[integer].
+  arrayKeys(array(Els)) => keys(Els).
+
+  private arrayPairs:all e ~~ (array[e]) => list[(integer,e)].
+  arrayPairs(array(Els)) => pairs(Els).
+
+  public implementation all c ~~ sizeable[array[c]] <= {
+    size(A) => arraySize(A).
+    isEmpty(A) :- arrayIsEmpty(A).
+  }
+
+  private arraySize:all e ~~ (array[e]) => integer.
+  arraySize(array(Els)) => size(Els).
+
+  private arrayIsEmpty:all e ~~ (array[e]){}.
+  arrayIsEmpty(array(Els)) :- isEmpty(Els).
+
+  public emptyArray:all t ~~ array[t].
+  emptyArray = array([]).
+
+  public implementation all e ~~ display[e] |: display[array[e]] <= {
+    disp(A) => displayArray(A).
+  }
+
+  public displayArray:all e ~~ display[e] |: (array[e]) => ss.
+  displayArray(array(Els)) => ssSeq([ss("[|"),ssSeq(pairs(Els)//show2nd),ss("|]]")]).
+
+  show2nd: all u,v ~~ display[v] |: ((u,v)) => ss.
+  show2nd((_,v)) => disp(v).
+}

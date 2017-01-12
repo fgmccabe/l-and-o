@@ -134,27 +134,29 @@ lo.comp.grammar{
       [tok(lpar,Lc0)],
       term(2000,Seq,_,Rp,Rp0),
       checkFor(rpar,Lc1,"missing close paren",Rp0,Rp1),
-      Lc = Lc0.merge(Lc1),
-      termArgs(appl(Lc,Lft,tupl(Lc,"()",tupleize(Seq))),Term,otherMark,Mark,Rp1,Rpx).
+      termArgs(appl(Lft.loc.merge(Lc1),Lft,tupl(Lc0.merge(Lc1),"()",tupleize(Seq))),Term,otherMark,Mark,Rp1,Rpx).
   termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(lbra,Lc0), tok(rbra,Lc1)],
-      Lc = Lft.loc.merge(Lc1),
-      termArgs(appl(Lc,Lft,tupl(Lc0.merge(Lc1),"[]",[])),Term,otherMark,Mark,Rp,Rpx).
-  termArgs(Lft,appl(Lc,Lft,tupl(Lc,"[]",tupleize(Seq))),_,otherMark,Rp,Rpx) -->
+      termArgs(appl(Lft.loc.merge(Lc1),Lft,tupl(Lc0.merge(Lc1),"[]",[])),Term,otherMark,Mark,Rp,Rpx).
+  termArgs(Lft,appl(Lc,Lft,tupl(TpLc,"[]",tupleize(Seq))),_,otherMark,Rp,Rpx) -->
       [tok(lbra,Lc0)],
       term(2000,Seq,_,Rp,Rp0),
       checkFor(rbra,Lc1,"missing close bracket",Rp0,Rpx),
-      Lc = Lc0.merge(Lc1).
-  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",[])),_,endBrce,Rp,Rp) -->
+      TpLc = Lc0.merge(Lc1),
+      Lc = Lft.loc.merge(Lc1).
+  termArgs(Lft,appl(Lc,Lft,tupl(TpLc,"{}",[])),_,endBrce,Rp,Rp) -->
       [tok(lbrce,Lc0), tok(rbrce,Lc1)],
-      Lc = Lc0.merge(Lc1).
-  termArgs(Lft,appl(Lft.loc.merge(Lc1),Lft,tupl(Lc,"{}",Els)),_,endBrce,Rp,Rpx) -->
+      Lc = Lft.loc.merge(Lc1),
+      TpLc = Lc0.merge(Lc1).
+  termArgs(Lft,appl(Lc,Lft,tupl(TpLc,"{}",Els)),_,endBrce,Rp,Rpx) -->
       [tok(lbrce,Lc0)],
       terms(Els,Rp,Rp0),
-      checkFor(rbrce,Lc1,"missing close brace",Rp0,Rpx).
+      checkFor(rbrce,Lc1,"missing close brace",Rp0,Rpx),
+      Lc = Lft.loc.merge(Lc1),
+      TpLc = Lc0.merge(Lc1).
   termArgs(Lft,Term,_,Mark,Rp,Rpx) -->
       [tok(idTok("."),Lc), tok(idTok(Fld),LcF)],
-      termArgs(binary(Lc,".",Lft,iden(LcF,Fld)),Term,otherMark,Mark,Rp,Rpx).
+      termArgs(binary(Lft.loc.merge(LcF),".",Lft,iden(LcF,Fld)),Term,otherMark,Mark,Rp,Rpx).
   termArgs(Term,Term,Mark,Mark,Rp,Rp) --> [].
 
   private

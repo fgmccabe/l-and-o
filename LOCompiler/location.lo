@@ -1,5 +1,6 @@
 lo.comp.location{
   import lo.
+  import lo.array.
   
   public 
   type location <~ {
@@ -44,17 +45,8 @@ lo.comp.location{
 
   public type hasLoc <~ { loc:location. }.
 
-  public locationContext:(location,list[integer]) => list[integer].
-  locationContext(loc(Ln,_,Col,Len,_),Codes) => Line <> showArrow(Col,min(Len,size(Line)-Col)) :- Line=findLine(Ln,Codes).
-
-  private findLine:(integer,list[integer]) => list[integer].
-  findLine(1,Codes) => skipLine(Codes).
-  findLine(N,Codes) => findLine(N-1,skipLine(Codes)).
-
-  private skipLine:(list[integer])=>list[integer].
-  skipLine([]) => [].
-  skipLine([0c\n,.._]) => [].
-  skipLine([C,..L]) => [C,..skipLine(L)].
+  public locationContext:(location,string) => ss.
+  locationContext(loc(_,_,Col,Len,_),Line) => ssSeq([ss(Line),ss(implode(showArrow(Col-1,min(Len,size(Line)-Col))))]).
 
   private showArrow:(integer,integer) => list[integer].
   showArrow(Col,Len) =>
@@ -63,4 +55,14 @@ lo.comp.location{
   private showChars:(integer,integer,list[integer]) => list[integer].
   showChars(0,_,Tl) => Tl.
   showChars(N,C,Tl) => [C,..showChars(N-1,C,Tl)].
+
+  -- Used to help display messages in context. We organize the source into an array of strings.
+  public collectSrc:(list[integer],integer,array[string]) => array[string].
+  collectSrc([],_,A) => A.
+  collectSrc(Codes,Ix,A) => collectSrc(Rest,Ix+1,A[Ix->implode(Ln)]) :- findLine(Codes,Ln,Rest).
+
+  private findLine:(list[integer],list[integer],list[integer]){}.
+  findLine([],[],[]).
+  findLine([0c\n,..L],[0c\n],L).
+  findLine([Ch,..L],[Ch,..Ln],Rest) :- findLine(L,Ln,Rest).
 }

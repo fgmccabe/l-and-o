@@ -1,0 +1,4 @@
+test.gt{
+  gt:(integer){}.
+  gt(1).
+}

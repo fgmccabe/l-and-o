@@ -1,5 +1,6 @@
 lo.comp.driver{
   import lo.
+  import lo.array.
   import lo.uri.
   import lo.resources.
 
@@ -25,12 +26,12 @@ lo.comp.driver{
     (opts.dependency ? 
       processArgs(opts,opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)) |
       compilePkgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir),opts,reportBase,Rp),
-      _logmsg("\(Rp)")).
+      _logmsg(formatSS(fullReport(Rp)))).
 
   processArgs:(compOption,list[pkg],repository,catalog){}.
   processArgs(Opts,Pkgs,Repo,Cat) :-
     processGroups(makeGraph(Pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)!,
-    _logmsg("\(Rpx)").
+    _logmsg(formatSS(fullReport(Rpx))).
 
   processGroups:(list[list[(pkg,list[pkg])]],repository,catalog,compOption,list[pkg],report,report){}.
   processGroups(_,_,_,_,_,Rp,Rpx) :-
@@ -76,9 +77,8 @@ lo.comp.driver{
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rpx),
           Repox = addPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
-          Rpx = Rp1) |
-        Rpx = Rp0),
-      _logmsg("\(Rpx)") |
+          Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
+        Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),
       Repox = Repo).
 

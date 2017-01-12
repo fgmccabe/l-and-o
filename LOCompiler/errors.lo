@@ -1,8 +1,10 @@
 lo.comp.errors{
-  import lo.comp.location.
   import lo.
+  import lo.array.
 
-  public type reportMsg ::= errorMsg(location,string) | warnMsg(location,string) | othMsg(location,string).
+  import lo.comp.location.
+
+  public type reportMsg ::= sourcedMsg(reportMsg,string) | errorMsg(location,string) | warnMsg(location,string) | othMsg(location,string).
 
   public type report <~ {
     msgs:list[reportMsg].
@@ -21,16 +23,18 @@ lo.comp.errors{
   showReport(M) => ssSeq([/*ssSeq(showMsgs(M.msgs)),*/disp(countErrors(M)),ss(" errors, "),disp(countWarnings(M)),ss(" warnings\n")]).
 
   implementation display[reportMsg] <= {
-    disp(M) => showErrorMsg(M).
+    disp(M) => showMsg(M).
   }
 
-  showErrorMsg:(reportMsg) => ss.
-  showErrorMsg(errorMsg(std,M)) => ssSeq([ss("Error "),ss(M),ss("\n")]).
-  showErrorMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
-  showErrorMsg(warnMsg(std,M)) => ssSeq([ss("Warning "),ss(M),ss("\n")]).
-  showErrorMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
-  showErrorMsg(othMsg(std,M)) => ss(M).
-  showErrorMsg(othMsg(Lc,M)) => ssSeq([ss("Info @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg:(reportMsg) => ss.
+  showMsg(errorMsg(std,M)) => ssSeq([ss("Error "),ss(M),ss("\n")]).
+  showMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(warnMsg(std,M)) => ssSeq([ss("Warning "),ss(M),ss("\n")]).
+  showMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(othMsg(std,M)) => ssSeq([ss(M),ss("\n")]).
+  showMsg(othMsg(Lc,M)) => ssSeq([ss("Info @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(sourcedMsg(M,Line)) => ssSeq([showMsg(M),locationContext(Lc,Line)]) :- hasLocation(M,Lc).
+  showMsg(sourcedMsg(M,_)) => showMsg(M).
 
   public countErrors:(report) => integer.
   countErrors(report(L)) => cntErrors(L,0).
@@ -56,31 +60,39 @@ lo.comp.errors{
 
   public
   reportError:(string,location,report,report){}.
-  reportError(Msg,Lc,report(L),report([errorMsg(Lc,Msg),..L])):-
-    _logmsg("\(errorMsg(Lc,Msg))").
+  reportError(Msg,Lc,report(L),report([errorMsg(Lc,Msg),..L])).
 
   public
   reportWarn:(string,location,report,report){}.
-  reportWarn(Msg,Lc,report(L),report([warnMsg(Lc,Msg),..L])):-
-    _logmsg("\(warnMsg(Lc,Msg))").
+  reportWarn(Msg,Lc,report(L),report([warnMsg(Lc,Msg),..L])).
 
   public
   reportMsg:(string,location,report,report){}.
-  reportMsg(Msg,Lc,report(L),report([othMsg(Lc,Msg),..L])):-
-    _logmsg("\(othMsg(Lc,Msg))").
+  reportMsg(Msg,Lc,report(L),report([othMsg(Lc,Msg),..L])).
 
   public
   logMsg:(string){}.
   logMsg(Msg) :- _logmsg(Msg).
 
-  public dispReport:(report,list[integer])=>ss.
-  dispReport(Rp,Src) => ssSeq(showMsgs(Rp.msgs,Src)).
+  public populateContext:(report,string,array[string]) => report.
+  populateContext(report(Msgs),Pth,Lines) => report(sourceMsgs(Msgs,Pth,Lines)).
 
-  showMsgs:(list[reportMsg],list[integer]) => list[ss].
-  showMsgs([],_) => [].
-  showMsgs([E,..L],Src) => [showInCxt(E,Src),..showMsgs(L,Src)].
+  sourceMsgs:(list[reportMsg],string,array[string]) => list[reportMsg].
+  sourceMsgs([],_,_) => [].
+  sourceMsgs([errorMsg(Lc,Msg),..L],Pth,Lines) => [sourcedMsg(errorMsg(Lc,Msg),Line),..sourceMsgs(L,Pth,Lines)] :-
+    findSourceLine(Lc,Pth,Lines,Line).
+  sourceMsgs([warnMsg(Lc,Msg),..L],Pth,Lines) => [sourcedMsg(warnMsg(Lc,Msg),Line),..sourceMsgs(L,Pth,Lines)] :-
+    findSourceLine(Lc,Pth,Lines,Line).
+  sourceMsgs([M,..L],Pth,Lines) => [M,..sourceMsgs(L,Pth,Lines)].
 
-  showInCxt:(reportMsg,list[integer]) => ss.
-  showInCxt(errorMsg(Lc,Msg),Src) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n"),ss(implode(locationContext(Lc,Src)))]).
+  findSourceLine:(location,string,array[string],string){}.
+  findSourceLine(loc(Ln,_,_,_,Pth),Pth,Lines,Line) :- present(Lines,Ln,Line).
 
+  public fullReport:(report) => ss.
+  fullReport(report(Msgs)) => ssSeq([ssSeq(Msgs//showMsg),showReport(report(Msgs))]).
+
+  hasLocation:(reportMsg,location){}.
+  hasLocation(errorMsg(Lc,_),Lc) :- Lc\=std.
+  hasLocation(warnMsg(Lc,_),Lc) :- Lc\=std.
+  hasLocation(othMsg(Lc,_),Lc) :- Lc\=std.
 }

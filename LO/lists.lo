@@ -87,4 +87,36 @@ lo.list{
   coerceList:all e,f ~~ coercion[e,f] |: (list[e]) => list[f].
   coerceList([]) => [].
   coerceList([e,..l]) => [_coerce(e),..coerceList(l)].
+
+  public implementation all e ~~ map[list[e] ->> integer,e] <= {
+    present(L,Ix,V) :- nthEl(L,Ix,V)!.
+    _remove(L,Ix) => dropNth(L,Ix).
+    _put = replaceNth.
+    keys(L) => indexes(L,0).
+    pairs(L) => listPairs(L,0).
+    _empty = [].
+  }
+
+  public nthEl:all e ~~ (list[e],integer,e){}.
+  nthEl([e,.._],0,e).
+  nthEl([_,..L],Ix,e) :- Ix>0, nthEl(L,Ix-1,e).
+
+  private dropNth:all e ~~ (list[e],integer) => list[e].
+  dropNth([],_) => [].
+  dropNth([_,..L],0) => L.
+  dropNth([E,..L],Ix) => [E,..dropNth(L,Ix-1)] :- Ix>0.
+
+  private replaceNth:all e ~~ (list[e],integer,e) => list[e].
+  replaceNth([_,..L],0,e) => [e,..L].
+  replaceNth([],0,e) => [e].
+  replaceNth([E,..L],Ix,e) => [E,..replaceNth(L,Ix-1,e)] :- Ix>0.
+
+  private indexes:all e ~~ (list[e],integer) => list[integer].
+  indexes([],_) => [].
+  indexes([_,..L],Ix) => [Ix,..indexes(L,Ix+1)].
+
+  private listPairs:all e ~~ (list[e],integer) => list[(integer,e)].
+  listPairs([],_) => [].
+  listPairs([E,..L],Ix) => [(Ix,E),..listPairs(L,Ix+1)].
+
 }
