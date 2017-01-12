@@ -97,7 +97,7 @@ lo.comp.transform{
     closureEntry(Map,Nm,Ex0,Exx).
 
   transformClauses:(list[lyr],trOptions,term,list[term],list[canonRule],integer,list[clse],list[clse],list[clse],list[clse],report,report){}.
-  transformClauses(_,_,_,_,[],No,Rules,Rules,Ex,Ex,Rp,Rpx).
+  transformClauses(_,_,_,_,[],No,Rules,Rules,Ex,Ex,Rpx,Rpx).
   transformClauses(Map,Opts,LclFun,Extra,[Cl,..Defs],No,Rules,Rx,Ex,Exx,Rp,Rpx) :-
     transformClause(Cl,Map,Opts,LclFun,Extra,No,Rules,R0,Ex,Ex0,Rp,Rp0),
     transformClauses(Map,Opts,LclFun,Extra,Defs,No+1,R0,Rx,Ex0,Exx,Rp0,Rpx).
@@ -518,7 +518,7 @@ lo.comp.transform{
     lookupVarName(Map,Nm,Reslt),
     implementDotExp(Reslt,v(Lc,Nm),C,X,Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
   trDotExp(R,C,X,X,Q,merge([X],Q0),Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trExp(R,Rc,Q,Q0,Pre,Px,Tail,[ocall(C,Rc,Rc),..Tailx],Map,Opts,Ex,Exx,Rp,Rp).
+    trExp(R,Rc,Q,Q0,Pre,Px,Tail,[ocall(C,Rc,Rc),..Tailx],Map,Opts,Ex,Exx,Rp,Rpx).
 
   implementDotExp:(mapEntry,canonTerm,term,term,term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   implementDotExp(inherit(_,Super,ClVr,ThVr),_,C,X,X,Q,merge([X,ClVr,ThVr],Q),Pre,Pre,[call(Super,[C,ClVr,ThVr]),..Tail],Tail,_,_,Ex,Ex,Rp,Rp).

@@ -43,4 +43,24 @@ lo.comp.location{
   }
 
   public type hasLoc <~ { loc:location. }.
+
+  public locationContext:(location,list[integer]) => list[integer].
+  locationContext(loc(Ln,_,Col,Len,_),Codes) => Line <> showArrow(Col,min(Len,size(Line)-Col)) :- Line=findLine(Ln,Codes).
+
+  private findLine:(integer,list[integer]) => list[integer].
+  findLine(1,Codes) => skipLine(Codes).
+  findLine(N,Codes) => findLine(N-1,skipLine(Codes)).
+
+  private skipLine:(list[integer])=>list[integer].
+  skipLine([]) => [].
+  skipLine([0c\n,.._]) => [].
+  skipLine([C,..L]) => [C,..skipLine(L)].
+
+  private showArrow:(integer,integer) => list[integer].
+  showArrow(Col,Len) =>
+    showChars(Col,0c ,showChars(Len,0c^,[0c\n])).
+
+  private showChars:(integer,integer,list[integer]) => list[integer].
+  showChars(0,_,Tl) => Tl.
+  showChars(N,C,Tl) => [C,..showChars(N-1,C,Tl)].
 }

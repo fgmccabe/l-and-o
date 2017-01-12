@@ -14,6 +14,10 @@ lo.comp.grammar{
   parseFile(U,Rp,Rpx) => Term :-
     parse(Term,Rp,Rpx) %% tokenizeFile(U).
 
+  public parseSrc:(uri,list[integer],report,report) => ast.
+  parseSrc(U,Codes,Rp,Rpx) => Term :-
+    parse(Term,Rp,Rpx) %% tokenCodes(Codes,getUriPath(U)).
+
   public nextTerm:(list[token],ast,list[token],report,report){}.
   nextTerm(Toks,Term,Rest,Rp,Rpx) :-
     parse(Term,Rp,Rpx) %% Toks ~ Rest.

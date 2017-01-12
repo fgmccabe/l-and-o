@@ -24,10 +24,6 @@ lo.comp.errors{
     disp(M) => showErrorMsg(M).
   }
 
-  showMsgs:(list[reportMsg]) => list[ss].
-  showMsgs([]) => [].
-  showMsgs([E,..L]) => [showErrorMsg(E),..showMsgs(L)].
-
   showErrorMsg:(reportMsg) => ss.
   showErrorMsg(errorMsg(std,M)) => ssSeq([ss("Error "),ss(M),ss("\n")]).
   showErrorMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
@@ -76,4 +72,15 @@ lo.comp.errors{
   public
   logMsg:(string){}.
   logMsg(Msg) :- _logmsg(Msg).
+
+  public dispReport:(report,list[integer])=>ss.
+  dispReport(Rp,Src) => ssSeq(showMsgs(Rp.msgs,Src)).
+
+  showMsgs:(list[reportMsg],list[integer]) => list[ss].
+  showMsgs([],_) => [].
+  showMsgs([E,..L],Src) => [showInCxt(E,Src),..showMsgs(L,Src)].
+
+  showInCxt:(reportMsg,list[integer]) => ss.
+  showInCxt(errorMsg(Lc,Msg),Src) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n"),ss(implode(locationContext(Lc,Src)))]).
+
 }

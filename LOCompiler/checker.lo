@@ -455,7 +455,7 @@ lo.comp.typecheck{
       typeOfArg(A,ArgTp,E0,Ev,Arg,Rp0,Rpx),
       Call = callCond(Lc,Pred,Arg) |
       reportError("\(Pred)|=\(PrTp) not a predicate",Lc,Rp0,Rpx),
-      Call = trueCond).
+      E0=Ev, Call = trueCond).
   checkCond(Term,Env,Ev,isTrue(Exp),Rp,Rpx) :-
     knownType(Term,findType("logical",Lc,Env,Rp,Rp0),Env,Ev,Exp,Rp0,Rpx).
 

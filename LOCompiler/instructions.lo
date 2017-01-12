@@ -1,5 +1,5 @@
 /* Automatically generated, do not edit */
-lo.comp.instructions{
+lo.comp.code.instructions{
   import lo.
   public type instruction ::=              -- type defining the opcodes
      iLbl(string)               -- label in code stream
