@@ -19,8 +19,8 @@
                     '_int_lt'/2, '_int_ge'/2,
                     '_flt_lt'/2,'_flt_ge'/2,
                     listify/2,
-                    '_readFileContents'/2,
-                    '_writeFileContents'/2,
+                    '_get_file'/2,
+                    '_put_file'/2,
                     '_cwd'/1,
                     '_logmsg'/1,
                     '_flt_hash'/2,
@@ -28,7 +28,7 @@
                     '_band'/3,'_bor'/3,'_bxor'/3,
                     '_blsr'/3,'_basr'/3,'_blsl'/3,
                     '_nthb'/2,
-                    '_file_access'/2,'_file_size'/2,'_file_modified'/2,'_ls'/2
+                    '_file_present'/1,'_file_size'/2,'_file_modified'/2,'_ls'/2
                     ]).
 
 exit(X) :- halt(X).
@@ -154,16 +154,16 @@ codeGe([C|L],[C|M]) :-
 '_str_start'(Key,Str) :-
   string_concat(Key,_,Str).
 
-'_readFileContents'(Fl,Chars) :-
+'_get_file'(Fl,Text) :-
   open(Fl,read,Stream),
   read_until_eof(Stream,Codes),
-  listify(Codes,Chars).
+  string_codes(Text,Codes).
 
 read_until_eof(Str,[]) :- at_end_of_stream(Str), close(Str).
 read_until_eof(Str,[Ch|M]) :- get_code(Str,Ch), read_until_eof(Str,M).
 
-'_writeFileContents'(Fl,Chars) :-
-  listify(Codes,Chars),
+'_put_file'(Fl,Text) :-
+  string_codes(Text,Codes),
   open(Fl,write,Stream),
   writeCodes(Stream,Codes),
   close(Stream).   

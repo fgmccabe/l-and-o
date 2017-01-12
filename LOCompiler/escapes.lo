@@ -32,7 +32,7 @@ lo.comp.escapes{
   escapeType("_int2flt") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*float")).
   escapeType("_flt2int") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*integer")).
   escapeType("_flt_hash") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*integer")).
-  escapeType("pwr") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*float")]),tipe("lo.core*float")).
+  escapeType("_pwr") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*float")]),tipe("lo.core*float")).
   escapeType("sqrt") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
   escapeType("exp") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
   escapeType("log") => funType(tupleType([tipe("lo.core*float")]),tipe("lo.core*float")).
@@ -62,14 +62,23 @@ lo.comp.escapes{
   escapeType("_basr") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_bnot") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_nthb") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")])).
-  escapeType("_readFileContents") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
-  escapeType("_writeFileContents") => predType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])])).
+  escapeType("_get_file") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_put_file") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_cwd") => funType(tupleType([]),tipe("lo.core*string")).
-  escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_cd") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_rm") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_mv") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
+  escapeType("_mkdir") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
+  escapeType("_rmdir") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_chmod") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
   escapeType("_ls") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
-  escapeType("_file_access") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
+  escapeType("_file_mode") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
+  escapeType("_file_present") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_file_type") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
+  escapeType("_file_date") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
+  escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
   escapeType("_isCcChar") => predType(tupleType([tipe("lo.core*integer")])).
   escapeType("_isCfChar") => predType(tupleType([tipe("lo.core*integer")])).
   escapeType("_isCnChar") => predType(tupleType([tipe("lo.core*integer")])).
@@ -147,7 +156,7 @@ lo.comp.escapes{
   isEscape("_int2flt").
   isEscape("_flt2int").
   isEscape("_flt_hash").
-  isEscape("pwr").
+  isEscape("_pwr").
   isEscape("sqrt").
   isEscape("exp").
   isEscape("log").
@@ -177,14 +186,23 @@ lo.comp.escapes{
   isEscape("_basr").
   isEscape("_bnot").
   isEscape("_nthb").
-  isEscape("_readFileContents").
-  isEscape("_writeFileContents").
+  isEscape("_get_file").
+  isEscape("_put_file").
   isEscape("_cwd").
-  isEscape("_logmsg").
+  isEscape("_cd").
+  isEscape("_rm").
+  isEscape("_mv").
+  isEscape("_mkdir").
+  isEscape("_rmdir").
+  isEscape("_chmod").
   isEscape("_ls").
-  isEscape("_file_access").
+  isEscape("_file_mode").
+  isEscape("_file_present").
+  isEscape("_file_type").
   isEscape("_file_size").
   isEscape("_file_modified").
+  isEscape("_file_date").
+  isEscape("_logmsg").
   isEscape("_isCcChar").
   isEscape("_isCfChar").
   isEscape("_isCnChar").

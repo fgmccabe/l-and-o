@@ -23,7 +23,7 @@ typedef struct {
   pthread_t owner;			/* The current owner of the lock */
   pthread_mutex_t mutex;		/* The mutex itself */
   pthread_cond_t cond;			/* Condition variable */
-} GoLock, *lockPo;
+} Lock, *lockPo;
 
 lockPo newLock(void);
 

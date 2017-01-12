@@ -23,6 +23,6 @@ typedef unsigned char byte;
 
 #define LARGE_INT64 (((int64)-1)>>1)
 
-typedef int64 PTRINT;
+typedef uint64 PTRINT;
 
 #endif

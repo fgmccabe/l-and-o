@@ -15,11 +15,13 @@
 
  */
 
-/* Declare standard symbols and constructors */
+/* Declare standard types used in escapes */
 
-#define processState "t'#processState'"
-#define threadType "t'#thread'"
-#define thingType "t'#thing'"
+#define processState "t'lo.thread#processState'"
+#define threadType "t'lo.thread#thread'"
+#define lockType "t'lo.thread#lock'"
+#define thingType "t'lo.core#thing'"
+#define fileType "t'lo.io#file'"
 
 /* Define the standard escapes */
 escape(_exit,True,False,"P1i","terminate L&O engine")
@@ -62,7 +64,7 @@ escape(_flt2int,False,False,"F1fi","convert float to integer")
 
 escape(_flt_hash,False,False,"F1fi","compute hash of float")
 
-escape(pwr,False,False,"F2fff","raise X to the power Y")
+escape(_pwr,False,False,"F2fff","raise X to the power Y")
 
 escape(sqrt,False,False,"F1ff","square root")
 escape(exp,False,False,"F1ff","exponential")
@@ -121,18 +123,12 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   // Term construction
   escape(_univ,False,False,":k'u'A:k'v'AF2sLk'u'k'v'","weird function to construct terms")  
 
-  // Lock management
-  escape(_acquireLock,False,False,":k't'AP2k't'N","acquire lock")
-  escape(_waitLock,False,False,":k't'AP2k't'N","release and wait on a lock")
-  escape(_releaseLock,False,False,":k't'AP1k't'","release a lock")
-
   // Sha function
   escape(_sha1,False,False,"F1LiLi","compute hash of a byte string")
 
-  escape(_openURL,True,False,"F4SSSiO","open a URL")
 */
-  escape(_file_contents,True,False,"F1SLi","Get the contents of a file as a list of integer codes")
-  escape(_writeFileContents,True,False,"P2SLi","write a file from a list of integer codes")
+  escape(_get_file,True,False,"F1SS","Get the contents of a file as a string")
+  escape(_put_file,True,False,"P2SS","write a file from a string")
   escape(_cwd,True,False,"F0S","return url of current working directory")
   escape(_cd,False,False,"P1S","change current working directory")
   escape(_rm,True,False,"P1S","remove file")
@@ -148,36 +144,37 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_file_size,True,False,"F1Si","report on the size of a file")
   escape(_file_modified,True,False,"F1Sf","report on when a file was last modified")
   escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
-/*
 
-  escape(_openInFile,True,False,"F2SiO","open input file")
-  escape(_openOutFile,True,False,"F2SiO","open output file")
-  escape(_openAppendFile,True,False,"F2SiO","open output file")
-  escape(_openAppendIOFile,True,False,"F2SiO","open output file")
+  escape(_openInFile,True,False,"F2Si"fileType,"open input file")
+  escape(_openOutFile,True,False,"F2Si"fileType,"open output file")
+  escape(_openAppendFile,True,False,"F2Si"fileType,"open output file")
+  escape(_openAppendIOFile,True,False,"F2Si"fileType,"open output file")
+ /* 
+  escape(_openURL,True,False,"F4SSSiO","open a URL")
   escape(_checkRoot,True,False,"P2SS","check url against root URL")
   escape(_mergeURL,True,False,"F2SSS","merge URLs")
   escape(_createURL,True,False,"F4SSSiO","create a URL")
   escape(_popen,True,False,"p7SLSLT2sSOOOi","open a pipe")
-  
-  escape(_close,True,False,"p1O","close file")
-  escape(_eof,True,False,"P1O","end of file test")
-  escape(_ready,True,False,"P1O","file ready test")
-  escape(_inchars,True,False,"F2OiS","read block string")
-  escape(_inbytes,True,False,"F2OiLi","read block of bytes")
-  escape(_inchar,True,False,"F1Oc","read single character")
-  escape(_inbyte,True,False,"F1Oi","read single byte")
-  escape(_inline,True,False,"F2OSS","read a line")
-  escape(_intext,True,False,"F2OSS","read until matching character")
-  escape(_outch,True,False,"p2Oi","write a single character")
-  escape(_outbyte,True,False,"p2Oi","write a single byte")
-  escape(_outtext,True,False,"p2OS","write a string as a block")
-  escape(_stdfile,True,False,"F1iO","standard file descriptor")
-  escape(_fposition,True,False,"F1Oi","report current file position")
-  escape(_fseek,True,False,"p2Oi","seek to new file position")
-  escape(_flush,True,False,"p1O","flush the I/O buffer")
-  escape(_flushall,True,False,"p0","flush all files")
-  escape(_setfileencoding,True,False,"p2Oi", "set file encoding on file")
-    
+  */
+  escape(_close,True,False,"P1"fileType,"close file")
+  escape(_eof,True,False,"P1"fileType,"end of file test")
+  escape(_ready,True,False,"P1"fileType,"file ready test")
+  escape(_inchars,True,False,"F2"fileType"iS","read block string")
+  escape(_inbytes,True,False,"F2"fileType"iLi","read block of bytes")
+  escape(_inchar,True,False,"F1"fileType"i","read single character")
+  escape(_inbyte,True,False,"F1"fileType"i","read single byte")
+  escape(_inline,True,False,"F2"fileType"SS","read a line")
+  escape(_intext,True,False,"F2"fileType"SS","read until matching character")
+  escape(_outch,True,False,"P2"fileType"i","write a single character")
+  escape(_outbyte,True,False,"P2"fileType"i","write a single byte")
+  escape(_outtext,True,False,"P2"fileType"S","write a string as a block")
+  escape(_stdfile,True,False,"F1i"fileType,"standard file descriptor")
+  escape(_fposition,True,False,"F1"fileType"i","report current file position")
+  escape(_fseek,True,False,"P2"fileType"i","seek to new file position")
+  escape(_flush,True,False,"P1"fileType,"flush the I/O buffer")
+  escape(_flushall,True,False,"P0","flush all files")
+  escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
+/*    
   escape(_classload,True,False,"p4SssLs","load class file")
 
 */
@@ -284,6 +281,11 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_assoc,False,False,":k't'AP2k't'p0","associate a goal with a var")
   escape(_shell,True,False,"p4SLSLT2SSi","Run a shell cmd")
 
+  // Lock management
+  escape(_acquireLock,False,False,":k't'AP2k't'N","acquire lock")
+  escape(_waitLock,False,False,":k't'AP2k't'N","release and wait on a lock")
+  escape(_releaseLock,False,False,":k't'AP1k't'","release a lock")
+
   escape(_ins_debug,False,False,"p0","set instruction-level")
   escape(_stackTrace,False,False,"p0","Print a stack trace")
 */
@@ -291,3 +293,4 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 #undef processState
 #undef threadType
 #undef thingType
+#undef fileType

@@ -90,7 +90,7 @@
    The assumption that we make is that a pointer is at least 4 bytes.
 */
 typedef PTRINT ptrI, *ptrPo;
-/* ptrInt normally generated during config */
+/* PTRINT normally generated during config */
 typedef struct _general_record_ *objPo;
 /* a core pointer */
 

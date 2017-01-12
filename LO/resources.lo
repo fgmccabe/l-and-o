@@ -4,11 +4,11 @@ lo.resources{
 
   public
   getResource:(uri) => list[integer].
-  getResource(U) => _readFileContents(getUriPath(U)).
+  getResource(U) => explode(_get_file(getUriPath(U))).
 
   public
   putResource:(uri,list[integer]){}.
-  putResource(U,Content) :- _writeFileContents(getUriPath(U),Content).
+  putResource(U,Content) :- _put_file(getUriPath(U),implode(Content)).
 
   public
   cwd:()=>uri.

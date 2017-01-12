@@ -322,7 +322,7 @@ retCode g__str2flt(processPo P, ptrPo a) {
     return liberror(P, "_str2flt", eINSUFARG); /* dont support inverse mode */
 }
 
-retCode g_pwr(processPo P, ptrPo a) {
+retCode g__pwr(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   objPo A1 = objV(x);
   ptrI y = deRefI(&a[2]);

@@ -192,7 +192,7 @@ retCode waitLock(lockPo l, double tmOut) {
 }
 
 lockPo newLock(void) {
-  lockPo l = (lockPo) malloc(sizeof(GoLock));
+  lockPo l = (lockPo) malloc(sizeof(Lock));
 
   l->owner = NULL;
   l->count = 0;

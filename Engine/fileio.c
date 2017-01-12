@@ -774,74 +774,120 @@ retCode g__inbytes(processPo P, ptrPo a) {
 }
 
 /*
- * _file_contents(file)
+ * _get_file(file)
  *
- * Read everything from a file
+ * Read everything from a file. Convenient, but expensive because it buffers the contents.
  */
 
-retCode g__file_contents(processPo P, ptrPo a) {
+retCode g__get_file(processPo P, ptrPo a) {
+  switchProcessState(P, wait_io);
+
   ptrI t1 = deRefI(&a[1]);
-  objPo o1 = objV(t1);
-  objPo t2 = objV(deRefI(&a[2]));
-  long count;
+  ptrI t2 = deRefI(&a[2]);
 
-  if (!hasClass(o1, filePtrClass))
-    return liberror(P, "__file_contents", eINVAL);
+  if (!IsString(t1))
+    return liberror(P, "_get_file", eSTRNEEDD);
+  if (!isvar(t2))
+    return liberror(P, "_get_file", eVARNEEDD);
 
-  else {
-    ioPo file = filePtr(t1);
-    long ix = 0;
+  ioPo file = openInFile(stringVal(stringV(t1)), utf8Encoding);
+  setProcessRunnable(P);
 
-    if (isReadingFile(file) != Ok)
-      return liberror(P, "__inbytes", eNOPERM);
+  long count = 0;
 
-    ioPo outBuff = O_IO(openStrOutput((string) "", utf8Encoding));
-    byte buffer[1024];
+  if (isReadingFile(file) != Ok)
+    return liberror(P, "_get_file", eNOPERM);
 
-    retCode ret = Ok;
+  ioPo outBuff = O_IO(openStrOutput((string) "", utf8Encoding));
+  byte buffer[1024];
 
-    while (ret == Ok) {
-      long bytesRead;
-      again:        /* come back in case of interrupt */
-      switchProcessState(P, wait_io);
-      ret = inBytes(file, buffer, NumberOf(buffer), &bytesRead);
-      setProcessRunnable(P);
+  retCode ret = Ok;
 
-      switch (ret) {
-        case Eof: {
-          if (bytesRead == 0) {
-            if (ix == 0)
-              return liberror(P, "__inbytes", eEOF);
-            else {
-              ix += bytesRead;
-              continue;
-            }
+  while (ret == Ok) {
+    long bytesRead;
+    again:        /* come back in case of interrupt */
+    switchProcessState(P, wait_io);
+    ret = inBytes(file, buffer, NumberOf(buffer), &bytesRead);
+    setProcessRunnable(P);
+
+    switch (ret) {
+      case Eof: {
+        if (bytesRead == 0) {
+          if (count == 0) {
+            closeFile(file);
+            closeFile(outBuff);
+            return liberror(P, "_get_file", eEOF);
           } else {
-            ix += bytesRead;
+            count += bytesRead;
             continue;
           }
-        }
-        case Ok:        /* We are able to stuff successfully */
-          ix += bytesRead;
-          outBlock(outBuff, buffer, bytesRead);
+        } else {
+          count += bytesRead;
           continue;
-        case Interrupt:
-          if (checkForPause(P))
-            goto again;
-          else {
-            return liberror(P, "__inbytes", eINTRUPT);
-          }
-        default:
-          return liberror(P, "__inbytes", eIOERROR);
+        }
       }
+      case Ok:        /* We are able to stuff successfully */
+        count += bytesRead;
+        outBlock(outBuff, buffer, bytesRead);
+        continue;
+      case Interrupt:
+        if (checkForPause(P))
+          goto again;
+        else {
+          closeFile(file);
+          closeFile(outBuff);
+          return liberror(P, "_get_file", eINTRUPT);
+        }
+      default:
+        closeFile(file);
+        closeFile(outBuff);
+        return liberror(P, "_get_file", eIOERROR);
     }
+  }
 
-    /* grab the result */
-    ptrI reslt = emptyList;
-    uinteger length;
-    explodeString(P, getStrText(O_STRING(outBuff), &length), length, &reslt);
+  /* grab the result */
+  uinteger length;
+  string text = getStrText(O_STRING(outBuff), &length);
+  ptrI reslt = allocateString(&P->proc.heap, text, length);
 
-    return equal(P, &a[3], &reslt);
+  closeFile(file);
+  closeFile(outBuff);
+
+  return equal(P, &a[3], &reslt);
+}
+
+/*
+ * Put the contents of a string into a file.
+ */
+
+retCode g__put_file(processPo P, ptrPo a) {
+
+  ptrI t1 = deRefI(&a[1]);
+
+  if (!IsString(t1))
+    return liberror(P, "_put_file", eSTRNEEDD);
+
+  ptrI t2 = deRefI(&a[2]);
+
+  if (!isString(objV(t2)))
+    return liberror(P, "_put_file", eSTRNEEDD);
+
+  switchProcessState(P, wait_io);
+
+  ioPo file = newOutFile(stringVal(stringV(t1)), utf8Encoding);
+
+  retCode ret = outUStr(file, stringVal(stringV(t2)));
+  setProcessRunnable(P);
+
+  closeFile(file);
+
+  switch (ret) {
+    case Ok:
+      return Ok;
+    case Interrupt:      /* should never happen */
+      return liberror(P, "_put_file", eINTRUPT);
+    default:
+      return liberror(P, "_put_file", eIOERROR);
   }
 }
 
