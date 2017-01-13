@@ -6,44 +6,43 @@ lo.comp.code.unify{
   import lo.comp.code.registers.
   import lo.comp.term.
 
-  unifyHead:(list[term],map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
-
-  public unifyTerm:(term,logical,source,map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
+  public unifyTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
+        varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].
   unifyTerm(anon,_,Src,D,D,VS,VS,Lts,Lts,_) => skipOver(Src).
   unifyTerm(T,Top,Src,D,D,VS,VSx,Lt,Ltx,_) => unifyLit(Lb,Top,Src,VS,VSx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
   unifyTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => unifyVar(Entry,Src,D,Dx,VS,Vx,last) :- present(D,Nm,Entry).
-  unifyTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => unifyOp(Lb,Top,Src,V,V0) <> unifyEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
+  unifyTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => unifyOp(Lb,Src,Top,V,V0) <> unifyEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
       accessLiteral(Op,Lb,Lt,Lt0).
 
-  unifyEls:(list[term],map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal]) => list[instruction].
+  unifyEls:(list[term],map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
   unifyEls([],D,D,V,V,Lt,Lt) => [].
   unifyEls([e],D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,false,sReg,D,Dx,V,Vx,Lt,Ltx,true).
   unifyEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>unifyEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
-  unifyVar:(dictEntry,source,map[string,dictEntry],map[string,dictEntry],varSet,varSet,logical) => list[instruction].
-  unifyVar(dictEntry(_,_,voidVar),sReg,D,D,V,V,_) => [iClS].
-  unifyVar(dictEntry(_,_,voidVar),_,D,D,V,V,_) => [].
-  unifyVar(dictEntry(_,initialized,Src),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
-  unifyVar(dictEntry(Nm,notInited,Src),Dst,D,D[Nm->dictEntry(Nm,initialized,Src)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  unifyVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
+  unifyVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
+  unifyVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
+  unifyVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
+  unifyVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
 
-  skipOver:(source) => list[instruction].
-  skipOver(voidVar) => [].
+  skipOver:(addr) => list[instruction].
+  skipOver(voidAddr) => [].
   skipOver(aReg(_)) => [].
   skipOver(yReg(_,_)) => [].
   skipOver(sReg) => [iClS].
 
-  unifyLit:(string,logical,source,varSet,varSet) => list[instruction].
-  unifyLit(_,_,voidVar,Vs,Vs) => [].
+  unifyLit:(string,logical,addr,varSet,varSet) => list[instruction].
+  unifyLit(_,_,voidAddr,Vs,Vs) => [].
   unifyLit(Lb,true,aReg(Rg),VS,freeAReg(VS,Rg)) => [iUAlit(Rg,Lb)].
   unifyLit(Lb,false,aReg(Rg),VS,VS) => [iUAlit(Rg,Lb)].
   unifyLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iUAlit(0,Lb)].
   unifyLit(Lb,_,sReg,VS,VS) => [iUSlit(Lcb)].
 
-  accessLiteral:(term,string,list[literal],list[literal]){}.
-  accessLiteral(T,Lb,Lt,Lt) :- literal(Lb,T) in Lt.
-  accessLiteral(T,Lb,Lts,[literal(Lb,T)]) :- Lb = _str_gen("L").
+  accessLiteral:(term,string,list[litrl],list[litrl]){}.
+  accessLiteral(T,Lb,Lt,Lt) :- litrl(Lb,T) in Lt.
+  accessLiteral(T,Lb,Lts,[litrl(Lb,T)]) :- Lb = _str_gen("L").
 
-  unifyOp:(string,source,logical,varSet,varSet) => list[instruction].
+  unifyOp:(string,addr,logical,varSet,varSet) => list[instruction].
   unifyOp(Lb,aReg(1),true,V,freeAReg(V,1)) => [iUAcns1(Lb)].
   unifyOp(Lb,aReg(1),false,V,V) =>  [iUAcns1(Lb)].
   unifyOp(Lb,aReg(2),true,V,freeAReg(V,2)) => [iUAcns2(Lb)].
@@ -57,32 +56,33 @@ lo.comp.code.unify{
   unifyOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iUAcns0(Lb)].
   unifyOp(Lb,sReg,_,V,V) =>  [iUScns(Lb)].
 
-  public matchTerm:(term,logical,source,map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
+  public matchTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
+      varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].
   matchTerm(anon,_,Src,D,D,VS,VS,Lts,Lts,_) => skipOver(Src).
-  matchTerm(T,Top,Src,D,D,VS,VSx,Lt,Ltx,_) => matchLit(Lb,Top,Src,VS,VSx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
-  matchTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => matchVar(Dst,Src,In,D,Dx,VS,Vx,Lt,last) :- present(D,Nm,dictEntry(_,In,Dst)).
-  matchTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => matchOp(Lb,Top,Src,V,V0) <> matchEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
-      accessLiteral(Op,Lt,Lt0).
+  matchTerm(T,Top,Src,D,Dx,VS,VSx,Lt,Ltx,_) => matchLit(Lb,Top,Src,VS,VSx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
+  matchTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => matchVar(Entry,Src,D,Dx,VS,Vx,last) :- present(D,Nm,Entry).
+  matchTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => matchOp(Lb,Src,Top,V,V0) <> matchEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
+      accessLiteral(Op,Lb,Lt,Lt0).
 
-  matchEls:(list[term],map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal]) => list[instruction].
+  matchEls:(list[term],map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
   matchEls([],D,D,V,V,Lt,Lt) => [].
   matchEls([e],D,Dx,V,Vx,Lt,Ltx) => matchTerm(e,false,sReg,D,Dx,V,Vx,Lt,Ltx,true).
   matchEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => matchTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>matchEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
-  matchVar:(source,source,initialized,map[string,dictEntry],map[string,dictEntry],varSet,varSet,logical) => list[instruction].
-  matchVar(voidVar,sReg,_,D,D,V,V,_) => [iClS].
-  matchVar(voidVar,_,_,D,D,V,V,_) => [].
-  matchVar(Src,Dst,true,D,D,V,Vx,Last) => Ins :- matchVr(Src,Dst,V,Last,Ins,Vx).
-  matchVar(Src,Dst,false,D,Dx,V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx), updateInited(Src,D,Dx).
+  matchVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
+  matchVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
+  matchVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
+  matchVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,_) => Ins :- matchVr(Src,Dst,V,Ins,Vx).
+  matchVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
 
-  matchLit:(string,logical,source,varSet,varSet) => list[instruction].
-  matchLit(_,_,anon,Vs,Vs) => [].
-  matchLit(Lb,true,aReg(Rg),VS,freeReg(VS,Rg)) => [iCAlit(Rg,Lb)].
+  matchLit:(string,logical,addr,varSet,varSet) => list[instruction].
+  matchLit(_,_,voidAddr,Vs,Vs) => [].
+  matchLit(Lb,true,aReg(Rg),VS,freeAReg(VS,Rg)) => [iCAlit(Rg,Lb)].
   matchLit(Lb,false,aReg(Rg),VS,VS) => [iCAlit(Rg,Lb)].
   matchLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iCAlit(0,Lb)].
   matchLit(Lb,_,sReg,VS,VS) => [iCSlit(Lcb)].
 
-  matchOp:(string,source,logical,varSet,varSet) => list[instruction].
+  matchOp:(string,addr,logical,varSet,varSet) => list[instruction].
   matchOp(Lb,aReg(1),true,V,freeAReg(V,1)) => [iCAcns1(Lb)].
   matchOp(Lb,aReg(1),false,V,V) =>  [iCAcns1(Lb)].
   matchOp(Lb,aReg(2),true,V,freeAReg(V,2)) => [iCAcns2(Lb)].
@@ -91,37 +91,44 @@ lo.comp.code.unify{
   matchOp(Lb,aReg(3),false,V,V) =>  [iCAcns3(Lb)].
   matchOp(Lb,aReg(4),true,V,freeAReg(V,4)) => [iCAcns4(Lb)].
   matchOp(Lb,aReg(4),false,V,V) =>  [iCAcns4(Lb)].
-  matchOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iCAcns(Rg.Lb)].
+  matchOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iCAcns(Rg,Lb)].
   matchOp(Lb,aReg(Rg),false,V,V) =>  [iCAcns(Rg,Lb)].
   matchOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iCAcns0(Lb)].
   matchOp(Lb,sReg,_,V,V) =>  [iCScns(Lb)].
 
-  public buildTerm:(term,logical,source,map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal],logical) => list[instruction].
-  buildTerm(anon,_,Src,D,D,V,Vx,Lts,Lts,_) => clearVar(Src,V,Vx).
+  public buildTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
+        varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].
+  buildTerm(anon,_,Src,D,D,V,Vx,Lts,Lts,_) => clearTrm(Src,V,Vx).
   buildTerm(T,Top,Src,D,D,VS,VSx,Lt,Ltx,_) => buildLit(Lb,Top,Src,VS,VSx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
-  buildTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => buildVar(Dst,Src,In,D,Dx,VS,Vx,Lt,last) :- present(D,Nm,dictEntry(_,In,Dst)).
-  buildTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => buildOp(Lb,Top,Src,V,V0) <> buildEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
-      accessLiteral(Op,Lt,Lt0).
+  buildTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => buildVar(Entry,Src,D,Dx,VS,Vx,last) :- present(D,Nm,Entry).
+  buildTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => buildOp(Lb,Src,Top,V,V0) <> buildEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
+      accessLiteral(Op,Lb,Lt,Lt0).
 
-  buildEls:(list[term],map[string,dictEntry],map[string,dictEntry],varSet,varSet,list[literal],list[literal]) => list[instruction].
+  public clearTrm:(addr,varSet,varSet) => list[instruction].
+  clearTrm(voidAddr,V,V)=>[].
+  clearTrm(aReg(Rg),V,regUsed(V,Rg))=>[iClA(Rg)].
+  clearTrm(yReg(Lc,_),V,locUsed(V,Lc))=>[iClY(Lc)].
+  clearTrm(sReg,V,V) => [iCLS].
+
+  buildEls:(list[term],map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
   buildEls([],D,D,V,V,Lt,Lt) => [].
   buildEls([e],D,Dx,V,Vx,Lt,Ltx) => buildTerm(e,false,sReg,D,Dx,V,Vx,Lt,Ltx,true).
   buildEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => buildTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>buildEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
-  buildVar:(source,source,initialized,map[string,dictEntry],map[string,dictEntry],varSet,varSet,logical) => list[instruction].
-  buildVar(voidVar,sReg,_,D,D,V,V,_) => [iClS].
-  buildVar(voidVar,_,_,D,D,V,V,_) => [].
-  buildVar(Src,Dst,true,D,D,V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Ins,Vx).
-  buildVar(Src,Dst,false,D,Dx,V,Vx,Last) => Ins :- clearVr(Src,Dst,V,Last,Ins,Vx), updateInited(Src,D,Dx).
+  buildVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
+  buildVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
+  buildVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
+  buildVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  buildVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- clearVr(Src,Dst,V,Ins,Vx).
 
-  buildLit:(string,logical,source,varSet,varSet) => list[instruction].
-  buildLit(_,_,anon,Vs,Vs) => [].
-  buildLit(Lb,true,aReg(Rg),VS,freeReg(VS,Rg)) => [iCAlit(Rg,Lb)].
+  buildLit:(string,logical,addr,varSet,varSet) => list[instruction].
+  buildLit(_,_,voidAddr,Vs,Vs) => [].
+  buildLit(Lb,true,aReg(Rg),VS,freeAReg(VS,Rg)) => [iCAlit(Rg,Lb)].
   buildLit(Lb,false,aReg(Rg),VS,VS) => [iCAlit(Rg,Lb)].
   buildLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iCAlit(0,Lb)].
   buildLit(Lb,_,sReg,VS,VS) => [iCSlit(Lcb)].
 
-  buildOp:(string,source,logical,varSet,varSet) => list[instruction].
+  buildOp:(string,addr,logical,varSet,varSet) => list[instruction].
   buildOp(Lb,aReg(1),true,V,freeAReg(V,1)) => [iCAcns1(Lb)].
   buildOp(Lb,aReg(1),false,V,V) =>  [iCAcns1(Lb)].
   buildOp(Lb,aReg(2),true,V,freeAReg(V,2)) => [iCAcns2(Lb)].
@@ -130,15 +137,14 @@ lo.comp.code.unify{
   buildOp(Lb,aReg(3),false,V,V) =>  [iCAcns3(Lb)].
   buildOp(Lb,aReg(4),true,V,freeAReg(V,4)) => [iCAcns4(Lb)].
   buildOp(Lb,aReg(4),false,V,V) =>  [iCAcns4(Lb)].
-  buildOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iCAcns(Rg.Lb)].
+  buildOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iCAcns(Rg,Lb)].
   buildOp(Lb,aReg(Rg),false,V,V) =>  [iCAcns(Rg,Lb)].
   buildOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iCAcns0(Lb)].
   buildOp(Lb,sReg,_,V,V) =>  [iCScns(Lb)].
 
-
-  public unifyVr:(source,source,varSet,list[instruction],varSet){}.
-  unifyVr(voidVar,_,Used,[],Used).
-  unifyVr(_,voidVar,Used, [],Used).
+  public unifyVr:(addr,addr,varSet,list[instruction],varSet){}.
+  unifyVr(voidAddr,_,Used,[],Used).
+  unifyVr(_,voidAddr,Used, [],Used).
   unifyVr(aReg(Reg),aReg(Reg),Used, [],Used).
   unifyVr(aReg(Reg),aReg(Rg),Used, [iUAA(Reg,Rg)],Used) :- Reg\=Rg.
   unifyVr(aReg(Reg),yReg(Lc,_),Used, [iUAY(Reg,Lc)],Used).
@@ -151,8 +157,8 @@ lo.comp.code.unify{
   unifyVr(sReg,aReg(Rg),Used,[iUAS(Rg)],Used).
   unifyVr(sReg,yReg(Lc,_),Used,[iUYS(Lc)],Used).
 
-  public moveVr:(source,source,varSet,logical,list[instruction],varSet){}.
-  moveVr(voidVar,_,Used,_,[],Used).
+  public moveVr:(addr,addr,varSet,logical,list[instruction],varSet){}.
+  moveVr(voidAddr,_,Used,_,[],Used).
   moveVr(aReg(Rg),aReg(Rg),Used,_,[],Used).
   moveVr(aReg(Rg),aReg(Reg),Used,_,[iMAA(Rg,Reg)],regUsed(Used,Rg)).
   moveVr(aReg(Rg),yReg(Lc,Safe),Used,Last,[iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
@@ -166,47 +172,40 @@ lo.comp.code.unify{
   moveVr(sReg,aReg(Rg),Used,_,[iMSA(Rg)],Used).
   moveVr(sReg,yReg(Lc,_),Used,_,[iMSY(Lc)],Used).
 
+  public overVr:(addr,addr,varSet,logical,list[instruction],varSet){}.
+  overVr(voidAddr,_,Used,_,[],Used).
+  overVr(aReg(Rg),aReg(Rg),Used,_,[],Used).
+  overVr(aReg(Rg),aReg(Reg),Used,_,[iMAA(Rg,Reg)],regUsed(Used,Rg)).
+  overVr(aReg(Rg),yReg(Lc,Safe),Used,Last,[iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
+  overVr(aReg(Rg),yReg(Lc,_),Used,_,[iMuAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz),Rg)).
+  overVr(aReg(Rg),sReg,Used,_,[iMAS(Rg)],regUsed(Used,Rg)).
+  overVr(yReg(Lc,_),aReg(Rg),Used,_,[iOYA(Lc,Rg)],locUsed(Used,Lc)).
+  overVr(yReg(Lc,_),yReg(Lc,_),Used,_,[],Used).
+  overVr(yReg(Lc,_),yReg(Loc,_),Used,_,[iMAY(0,Lc),iOYA(Loc,0)],locUsed(Used,Lc)).
+  overVr(yReg(Lc,_),sReg,Used,_,[iMYS(Lc)],locUsed(Used,Lc)).
 
-  public overVar:(source,source,varSet,logical,list[instruction],varSet){}.
-  overVar(voidVar,_,Used,_,[],Used).
-  overVar(aReg(Rg),aReg(Rg),Used,_,[],Used).
-  overVar(aReg(Rg),aReg(Reg),Used,_,[iMAA(Rg,Reg)],regUsed(Used,Rg)).
-  overVar(aReg(Rg),yReg(Lc,Safe),Used,Last,[iMAY(Rg,Lc)],regUsed(Used,Rg)) :- (Safe | Last).
-  overVar(aReg(Rg),yReg(Lc,_),Used,_,[iMUAY(Rg,Lc)],regUsed(lclGc(Used,varSlotSz))).
-  overVar(aReg(Rg),sReg,Used,_,[iMAS(Rg)],regUsed(Used,Rg)).
-  overVar(yReg(Lc,_),aReg(Rg),Used,_,[iOYA(Lc,Rg)],locUsed(Used,Lc)).
-  overVar(yReg(Lc,_),yReg(Lc,_),Used,_,[],Used).
-  overVar(yReg(Lc,_),yReg(Loc,_),Used,_,[iMAY(0,Lc),iOYA(Loc,0)],locUsed(Used,Lc)).
-  overVar(yReg(Lc,_),sReg,Used,_,[iMYS(Lc)],locUsed(Used,Lc)).
+  public matchVr:(addr,addr,varSet,list[instruction],varSet){}.
+  matchVr(voidAddr,_,Used,[],Used).
+  matchVr(aReg(Rg),aReg(Rg),Used,[],Used).
+  matchVr(aReg(Rg),aReg(Reg),Used,[iNvrA(Rg),iCAA(Rg,Reg)],Used).
+  matchVr(aReg(Rg),yReg(Lc,Safe),Used,[iNvrA(Rg),iCAY(Rg,Lc)],Used).
+  matchVr(aReg(Rg),sReg,Used,[iNvrA(Rg),iCAS(Rg)],Used).
+  matchVr(yReg(Lc,_),aReg(Rg),Used,[iNvrY(Lc),iCYA(Lc,Rg)],Used).
+  matchVr(yReg(Lc,_),yReg(Lc,_),Used,[],Used).
+  matchVr(yReg(Lc,_),yReg(Loc,_),Used,[iNvrY(Lc),iMAY(0,Loc),iCAY(0,Lc)],Used).
+  matchVr(yReg(Lc,_),sReg,Used,[iNvrY(Lc),iCYS(Lc)],Used).
+  matchVr(sReg,aReg(Rg),Used,[iCSA(Rg)],Used).
+  matchVr(sReg,yReg(Lc,_),Used,[iCSY(Lc)],Used).
 
-  public matchVar:(source,source,varSet,list[instruction],varSet){}.
-  matchVar(voidVar,_,Used,[],Used).
-  matchVar(aReg(Rg),aReg(Rg),Used,[],Used).
-  matchVar(aReg(Rg),aReg(Reg),Used,[iNvra(Rg),iCAA(Rg,Reg)],Used).
-  matchVar(aReg(Rg),yReg(Lc,Safe),Used,[iNvra(Rg),iCAY(Rg,Lc)],Used).
-  matchVar(aReg(Rg),sReg,Used,_,[iNvra(Rg),iCAS(Rg)],Used).
-  matchVar(yReg(Lc,_),aReg(Rg),Used,[iNvrY(Lc),iCYA(Lc,Rg)],Used).
-  matchVar(yReg(Lc,_),yReg(Lc,_),Used,[],Used).
-  matchVar(yReg(Lc,_),yReg(Loc,_),Used,[iNvrY(Lc),iMAY(0,Loc),iCAY(0,Lc)],Used).
-  matchVar(yReg(Lc,_),sReg,Used,[iNvrY(Lc),iCYS(Lc)],Used).
-  matchVar(sReg,aReg(Rg),Used,[iCSA(Rg)],Used).
-  matchVar(sReg,yReg(Lc,_),Used,_,[iCSY(Lc)],Used).
-
-  public clearVar:(source,varSet,list[instruction],varSet){}.
-  clearVar(voidVar,Used,[],Used).
-  clearVar(aReg(Rg),Used,[iClA(Rg)],regUsed(Used,Rg)).
-  clearVar(yReg(Lc,_),Used,[iClY(Lc)],locUsed(Used,Lc)).
-  clearVar(sReg,User,[iCLS],Used).
-
-  public clearVr:(source,source,varSet,list[instruction],varSet).
-  clearVr(voidVar,Src,Used) => clearVar(Src,Used).
-  clearVr(Dst,voidVar,Used) => clearVar(Dst,Used).
-  clearVr(aReg(Rg),aReg(Rg),Used,[iClA(Rg)],regUsed(lclGc(Used,varSlotSz),Rg)).
-  clearVr(aReg(Rg),aReg(Reg),Used,[iClAA(Rg,Reg)],regUsed(regUsed(lclGc(Used,varSlotSz),Reg),Rg)).
-  clearVr(aReg(Rg),yReg(Lc,Safe),Used,[iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Loc)).
-  clearVr(yReg(Lc,_),aReg(Rg),Used,[iClAY(Rg,Lc)],locUsed(regUsed(Used,Rg),Lc)).
-  clearVr(yReg(Lc,_),yReg(Lc,_),Used,[iClY(Lc)],locUsed(Used,Lc)).
-  clearVr(yReg(Lc,_),yReg(Loc,_),Used,[iClY(Lc),iMAY(0,Lc),iMYA(Loc,0)],locUsed(locUsed(Used,Loc),Lc)).
-  clearVr(sReg,aReg(Rg),Used,[iClSA(Rg)],regUsed(Used,Rg)).
-  clearVr(sReg,yReg(Lc,_),Used,_,[iClSY(Lc)],locUsed(Used,Lc)).
+  public clearVr:(addr,addr,varSet,list[instruction],varSet){}.
+  clearVr(voidAddr,Src,V,clearTrm(Src,V,Vx),Vx).
+  clearVr(Dst,voidAddr,V,clearTrm(Dst,V,Vx),Vx).
+  clearVr(aReg(Rg),aReg(Rg),V,[iClA(Rg)],regUsed(lclGc(V,varSlotSz),Rg)).
+  clearVr(aReg(Rg),aReg(Reg),V,[iClAA(Rg,Reg)],regUsed(regUsed(lclGc(V,varSlotSz),Reg),Rg)).
+  clearVr(aReg(Rg),yReg(Lc,Safe),V,[iClAY(Rg,Lc)],locUsed(regUsed(V,Rg),Loc)).
+  clearVr(yReg(Lc,_),aReg(Rg),V,[iClAY(Rg,Lc)],locUsed(regUsed(V,Rg),Lc)).
+  clearVr(yReg(Lc,_),yReg(Lc,_),V,[iClY(Lc)],locUsed(V,Lc)).
+  clearVr(yReg(Lc,_),yReg(Loc,_),V,[iClY(Lc),iMAY(0,Lc),iMYA(Loc,0)],locUsed(locUsed(V,Loc),Lc)).
+  clearVr(sReg,aReg(Rg),V,[iClSA(Rg)],regUsed(V,Rg)).
+  clearVr(sReg,yReg(Lc,_),V,[iClSY(Lc)],locUsed(V,Lc)).
 }

@@ -3,31 +3,28 @@ lo.comp.code.registers{
 
   import lo.comp.term.
 
-  public type source ::= voidVar | aReg(integer) | yReg(integer,logical) | sReg.
+  public type addr ::= voidAddr | aReg(integer) | yReg(integer,logical) | sReg.
 
-  public type varSet ::= usdRegs(set[integer],set[integer],set[integer],integer).
+  public type varSet ::= usdRegs(set[integer],set[integer],integer).
 
   public type initialized ::= notInited | inited.
 
-  public type dictEntry ::= dictEntry(string,initialized,source).
+  public type varDesc ::= varDesc(string,initialized,addr).
 
   public locUsed:(varSet,integer) => varSet.
-  locUsed(usdRegs(A,L,F,G),Lc) => usdRegs(A,addElement(L,Lc),F,G).
+  locUsed(usdRegs(A,L,G),Lc) => usdRegs(A,addElement(L,Lc),G).
 
   public regUsed:(varSet,integer) => varSet.
-  regUsed(usdRegs(A,L,F,G),Rg) => usdRegs(addElement(A,Rg),L,F,G).
+  regUsed(usdRegs(A,L,G),Rg) => usdRegs(addElement(A,Rg),L,G).
 
   public freeAReg:(varSet,integer) => varSet.
-  freeAReg(usdRegs(A,L,F,G),Rg) => usdRegs(removeElement(A,Rg),L,F,G).
-
-  public freeUsed:(varSet,integer) => varSet.
-  freeUsed(usdRegs(A,L,F,G),Lc) => usdRegs(A,L,addElement(F,Lc),G).
+  freeAReg(usdRegs(A,L,G),Rg) => usdRegs(removeElement(A,Rg),L,G).
 
   public lclGc:(varSet,integer) => varSet.
-  lclGc(usdRegs(A,L,F,G),Sz) => usdRegs(A,L,F,G+Sz).
+  lclGc(usdRegs(A,L,G),Sz) => usdRegs(A,L,G+Sz).
 
   public varSlotSz:integer.
   varSlotSz = 2.
 
-  public type literal ::= literal(string,term).
+  public type litrl ::= litrl(string,term).
 }

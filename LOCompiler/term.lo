@@ -20,8 +20,8 @@ lo.comp.term {
 
   public type pred ::= call(term,list[term])
                     | ecall(string,list[term])
-                    | unfy(term,term)
                     | ocall(term,term,term)
+                    | unfy(term,term)
                     | neck
                     | fail
                     | except(term).

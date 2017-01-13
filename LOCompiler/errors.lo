@@ -28,11 +28,11 @@ lo.comp.errors{
 
   showMsg:(reportMsg) => ss.
   showMsg(errorMsg(std,M)) => ssSeq([ss("Error "),ss(M),ss("\n")]).
-  showMsg(errorMsg(Lc,M)) => ssSeq([ss("Error @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(errorMsg(Lc,M)) => ssSeq([ss("Error at "),disp(Lc),ss("\n"),ss(M),ss("\n")]).
   showMsg(warnMsg(std,M)) => ssSeq([ss("Warning "),ss(M),ss("\n")]).
-  showMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(warnMsg(Lc,M)) => ssSeq([ss("Warning at "),disp(Lc),ss("\n"),ss(M),ss("\n")]).
   showMsg(othMsg(std,M)) => ssSeq([ss(M),ss("\n")]).
-  showMsg(othMsg(Lc,M)) => ssSeq([ss("Info @"),disp(Lc),ss("\n"),ss(M),ss("\n")]).
+  showMsg(othMsg(Lc,M)) => ssSeq([ss("Info at "),disp(Lc),ss("\n"),ss(M),ss("\n")]).
   showMsg(sourcedMsg(M,Line)) => ssSeq([showMsg(M),locationContext(Lc,Line)]) :- hasLocation(M,Lc).
   showMsg(sourcedMsg(M,_)) => showMsg(M).
 
@@ -44,6 +44,7 @@ lo.comp.errors{
 
   private cntErrors:(list[reportMsg],integer) => integer.
   cntErrors([],C) => C.
+  cntErrors([sourcedMsg(errorMsg(_,_),_),..L],C) => cntErrors(L,C+1).
   cntErrors([errorMsg(_,_),..L],C) => cntErrors(L,C+1).
   cntErrors([_,..L],C) => cntErrors(L,C).
 
@@ -52,6 +53,7 @@ lo.comp.errors{
 
   private cntWarninngs:(list[reportMsg],integer) => integer.
   cntWarninngs([],C) => C.
+  cntWarninngs([sourcedMsg(warnMsg(_,_),_),..L],C) => cntWarninngs(L,C+1).
   cntWarninngs([warnMsg(_,_),..L],C) => cntWarninngs(L,C+1).
   cntWarninngs([_,..L],C) => cntWarninngs(L,C).
   
@@ -89,7 +91,7 @@ lo.comp.errors{
   findSourceLine(loc(Ln,_,_,_,Pth),Pth,Lines,Line) :- present(Lines,Ln,Line).
 
   public fullReport:(report) => ss.
-  fullReport(report(Msgs)) => ssSeq([ssSeq(Msgs//showMsg),showReport(report(Msgs))]).
+  fullReport(report(Msgs)) => ssSeq([ssSeq(reverse(Msgs)//showMsg),showReport(report(Msgs))]).
 
   hasLocation:(reportMsg,location){}.
   hasLocation(errorMsg(Lc,_),Lc) :- Lc\=std.

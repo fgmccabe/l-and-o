@@ -1,0 +1,31 @@
+lo.comp.code.estimate{
+  import lo.
+
+  import lo.comp.term.
+
+  public estimateUnifySpace:(term,logical)=>integer.
+  public estimateArgSpace:(list[term],logical) => integer.
+  public estimateGoalSpace:(pred) => integer.
+
+
+  estimateUnifySpace(anon,_) => 0.
+  estimateUnifySpace(varbl(_),true) => 2.
+  estimateUnifySpace(varbl(_),false) => 0.
+  estimateUnifySpace(T,_) => 0 :- isGroundTerm(T).
+  estimateUnifySpace(tuple(Els),_) => estimateEls(Els,false)+size(Els)+2.
+  estimateUnifySpace(cons(Op,Els),_) => estimateEls(Els,false)+size(Els)+2.
+
+  estimateEls:(list[term],logical) => integer.
+  estimateEls([],_) => 0.
+  estimateEls([t,..l],top) => estimateUnifySpace(t,top)+estimateEls(l,top).
+
+  estimateArgSpace(Args,top) => estimateEls(Args,top).
+
+  estimateGoalSpace(call(_,Args)) => estimateArgSpace(Args,true).
+  estimateGoalSpace(ecall(_,Args)) => estimateArgSpace(Args,true).
+  estimateGoalSpace(unfy(L,R)) => estimateUnifySpace(L,true)+estimateUnifySpace(R,true).
+  estimateGoalSpace(ocall(C,T,L)) => estimateUnifySpace(C,true)+estimateUnifySpace(T,true)+estimateUnifySpace(L,true).
+  estimateGoalSpace(neck) => 0.
+  estimateGoalSpace(fail) => 0.
+  estimateGoalSpace(except(T)) => estimateUnifySpace(T,true).
+}

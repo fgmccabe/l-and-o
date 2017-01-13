@@ -1,0 +1,49 @@
+lo.comp.code.analyse{
+  import lo.
+
+  import lo.comp.code.registers.
+
+  import lo.comp.escapes.
+  import lo.comp.term.
+
+  /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
+
+  type occForm ::= oArg | oTerm.
+
+  -- Usedto keep track of occurrences.
+  type occurrence ::= occ(string,set[(occForm,integer,integer)]).
+
+  findOccsInGoal:(pred,map[string,occurrence],integer,integer) => map[string,occurrence].
+  findOccsInGoal(call(Op,Args),M,Gp,Ix) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,Ix,oArg,oTerm),oArg,oTerm).
+  findOccsInGoal(ecall(Op,Args),M,Gp,Ix) => findOccsInTerms(Args,M,Gp,Ix,oArg,oTerm).
+  findOccsInGoal(ocall(C,L,T),M,Gp,Ix) => findOccsInTerms([C,L,T],M,Gp,Ix,oArg,oTerm).
+  findOccsInGoal(unfy(L,R),M,Gp,Ix) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,Ix,oArg,oTerm),Gp,Ix,oArg,oTerm).
+  findOccsInGoal(except(T),M,Gp,Ix) => findOccsInTerm(T,M,Gp,Ix,oArg,oTerm).
+  findOccsInGoal(neck,M,_,_) => M.
+  findOccsInGoal(fail,M,_,_) => M.
+
+  findOccsInTerm:(term,map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
+  findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix):- !isEscape(Nm).
+  findOccs(T,M,_,_,_) => M :- isGroundTerm(T).
+  findOccs(tuple(Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
+  findOccs(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
+
+  findOccsInTerms:(list[term],map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
+  findOccsInTerms([],M,_,_,_,_) => M.
+  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix,Key,iKey).   
+
+  updateOccurrence:(string,map[string,occurrence],occForm,integer,integer) => map[string,occurrence].
+  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,addElement(Occs,(Key,Gp,Ix)))] :- present(M,Nm,occ(Nm,Occs)).
+  updateOccurrence(_,M,_,_,_) => M.
+
+  public partitionGoals:(list[pred],list[pred]) => list[list[pred]].
+  partitionGoals([],P) => reverse(P).
+  partitionGoals([G,..Rest],P) => partitionGoals(Rest,[G,..P]) :- isSafeGoal(G).
+  partitionGoals([G,..Rest],P) => [reverse([G,..P]),..partitionGoals(Rest,[])].
+
+  isSafeGoal:(pred){}.
+  isSafeGoal(neck).
+  isSafeGoal(fail).
+  isSafeGoal(unfy(_,_)).
+  
+}

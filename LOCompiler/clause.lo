@@ -1,0 +1,11 @@
+lo.comp.code.clause{
+  import lo.
+
+  import lo.comp.errors.
+  import lo.comp.code.estimate.
+  import lo.comp.code.instructions.
+  import lo.comp.code.registers.
+  import lo.comp.term.
+
+  
+}

@@ -55,13 +55,13 @@ lo.comp.driver{
     processGroup(L,Repo0,RepoX,Cat,Opts,CP0,CPx,Rp0,Rpx).
 
   processPkg:(pkg,list[pkg],repository,repository,catalog,compOption,list[pkg],list[pkg],report,report){}.
-  processPkg(P,Imps,Repo,Repo,_,_,CP,CP,Rp,Rpx) :-
+  processPkg(P,Imps,Repo,Repo,_,_,CP,CP,Rp,Rp) :-
     importsOk(Imps,CP),
     packagePresent(Repo,P),
-    reportMsg("skipping package \(P)",std,Rp,Rpx).
+    _logmsg("skipping package \(P)").
   processPkg(P,_,Repo,RepoX,Cat,Opts,CP,[P,..CP],Rp,Rpx) :-
-    reportMsg("compiling package \(P)",std,Rp,Rp0),
-    compilePkg(P,Repo,RepoX,Cat,Opts,Rp0,Rpx)!.
+    _logmsg("compiling package \(P)"),
+    compilePkg(P,Repo,RepoX,Cat,Opts,Rp,Rpx)!.
 
   importsOk:(list[pkg],list[pkg]){}.
   importsOk([],_).

@@ -6,6 +6,9 @@ catalog{
     lo.comp.base64 -> "base64.lo".
     lo.comp.canon -> "canon.lo".
     lo.comp.catalog -> "catalog.lo".
+    lo.comp.code.analyse -> "analyse.lo".
+    lo.comp.code.clause -> "clause.lo".
+    lo.comp.code.estimate -> "estimate.lo".
     lo.comp.code.instructions -> "instructions.lo".
     lo.comp.code.registers -> "registers.lo".
     lo.comp.code.unify -> "compunify.lo".
