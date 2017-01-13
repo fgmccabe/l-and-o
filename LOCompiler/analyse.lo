@@ -1,5 +1,6 @@
 lo.comp.code.analyse{
   import lo.
+  import lo.sort.
 
   import lo.comp.code.registers.
 
@@ -8,19 +9,47 @@ lo.comp.code.analyse{
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
 
-  type occForm ::= oArg | oTerm.
+  type occForm ::= hArg | hTerm | lTerm | oArg | oTerm.
 
   -- Usedto keep track of occurrences.
   type occurrence ::= occ(string,set[(occForm,integer,integer)]).
 
-  findOccsInGoal:(pred,map[string,occurrence],integer,integer) => map[string,occurrence].
-  findOccsInGoal(call(Op,Args),M,Gp,Ix) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,Ix,oArg,oTerm),oArg,oTerm).
-  findOccsInGoal(ecall(Op,Args),M,Gp,Ix) => findOccsInTerms(Args,M,Gp,Ix,oArg,oTerm).
-  findOccsInGoal(ocall(C,L,T),M,Gp,Ix) => findOccsInTerms([C,L,T],M,Gp,Ix,oArg,oTerm).
-  findOccsInGoal(unfy(L,R),M,Gp,Ix) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,Ix,oArg,oTerm),Gp,Ix,oArg,oTerm).
-  findOccsInGoal(except(T),M,Gp,Ix) => findOccsInTerm(T,M,Gp,Ix,oArg,oTerm).
-  findOccsInGoal(neck,M,_,_) => M.
-  findOccsInGoal(fail,M,_,_) => M.
+  occupiedRegisters:(list[(occForm,integer,integer)]) => set[integer].
+  occupiedRegisters(Occs) => foldRight(registerUsed,Occs,nullSet).
+
+  registerUsed:((occForm,integer,integer),set[integer]) => set[integer].
+  registerUsed((hArg,_,Ix),Regs) => addMem(Regs,Ix).
+  registerUsed((lArg,_,Ix),Regs) => addMem(Regs,Ix).
+  registerUsed(_,Regs) => Regs.
+
+
+  classifyVar:(occurrence) => (addr,option[integer]).
+  classifyVar(occ(Nm,Occs)) => classifyVr(Occs::list[(occForm,integer,integer)]).
+
+  classifyVr:(list[(occForm,integer,integer)]) => (addr,option[integer]).
+  classifyVr([]) => voidAddr. -- should never happen if our quantification is good.
+  classifyVr([_]) => voidAddr. -- singleton variable
+  classifyVr([(_,Gp,_),..Rest]) => (aReg(-1),some(G)) :- (_,G,_) in Rest *> G=Gp. -- -1 means not yet allocated
+  classifyVr(Occs) => (yReg(-1,true),none) :- (hTerm,_,_) in Occs | (hArg,_,_) in Occs | (oTerm,_,_) in Occs | (lTerm,_,_) in Occs.
+  classifyVr(_) => (yReg(-1,false),none).
+
+
+
+  findOccsInHead:(list[term],map[string,occurrence],integer) => map[string,occurrence].
+  findOccsInHead(Args,M) => findOccsInTerms(Args,N,1,1,hArg,hTerm).
+
+  findOccsInPart:(list[pred],map[string,occurrence],integer)
+  findOccsInPart([],M,Gp) => M.
+  findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
+
+  findOccsInGoal:(pred,map[string,occurrence],integer) => map[string,occurrence].
+  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,lArg,lTerm),oArg,oTerm).
+  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInTerms(Args,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInTerms([C,L,T],M,Gp,1,lArg,lTerm).
+  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,0,oArg,oTerm),Gp,1,oArg,oTerm).
+  findOccsInGoal(except(T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(neck,M,_) => M.
+  findOccsInGoal(fail,M,_) => M.
 
   findOccsInTerm:(term,map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
   findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix):- !isEscape(Nm).
@@ -30,10 +59,10 @@ lo.comp.code.analyse{
 
   findOccsInTerms:(list[term],map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
   findOccsInTerms([],M,_,_,_,_) => M.
-  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix,Key,iKey).   
+  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).   
 
   updateOccurrence:(string,map[string,occurrence],occForm,integer,integer) => map[string,occurrence].
-  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,addElement(Occs,(Key,Gp,Ix)))] :- present(M,Nm,occ(Nm,Occs)).
+  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,addMem(Occs,(Key,Gp,Ix)))] :- present(M,Nm,occ(Nm,Occs)).
   updateOccurrence(_,M,_,_,_) => M.
 
   public partitionGoals:(list[pred],list[pred]) => list[list[pred]].

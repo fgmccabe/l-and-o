@@ -45,7 +45,8 @@ lo.comp.resolve{
     RCond = resolveCond(Cond,Dict,Rp,Rp0),
     RExp = resolveTerm(Exp,Dict,Rp0,Rpx).
   overloadDefn(Lc,Nm,Tp,Cx,Exp,Cond,Dict,Rp,Rpx) => funDef(Lc,Nm,funType(tupleType([]),Tp),[],[equation(Lc,Nm,tpl(CVars),RExp,RCond)]) :-
-    RCond = resolveCond(Cond,Dict,Rp,Rp0),
+    defineCVars(Lc,Cx,Dict,CVars,FDict),
+    RCond = resolveCond(Cond,FDict,Rp,Rp0),
     RExp = resolveTerm(Exp,FDict,Rp0,Rpx).
 
   private overloadGrammar:(location,string,tipe,list[constraint],list[canonRule],list[implEntry],report,report) => canonDef.

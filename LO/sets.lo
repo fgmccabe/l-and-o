@@ -3,29 +3,24 @@ lo.sets {
   import lo.index.
   import lo.list.
   import lo.collection.
-
-  public contract all k,e ~~ setops[k->>e] <~ {
-    union : (k,k)=>k.
-    intersect : (k,k)=>k.
-    difference : (k,k)=>k.
-    pick: (k,e){}.
-    empty: k.
-  }.
+  import lo.coerce.
 
   public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
 
-  public addElement:all e ~~ equality[e] |: (set[e],e) => set[e].
-  addElement(set(S),E) => set(S[E->()]).
+  public nullSet:all e ~~ equality[e] |: set[e].
+  nullSet = set([]).
 
-  public removeElement:all e ~~ equality[e] |: (set[e],e) => set[e].
-  removeElement(set(S),E) => set(S[\+E]).
+  public implementation all e ~~ equality[e] |: membership[set[e]->>e] <= {
+    empty = nullSet.
+    addMem(set(S),E) => set(S[E->()]).
+    delMem(set(S),E) => set(S[\+E]).
+    pick(set(M1),k) :- k in keys(M1).
+  }
 
   public implementation all e ~~ equality[e] |: setops[set[e]->>e] <= {
     union(set(M1),set(M2)) => set(M1+M2).
     intersect(set(M1),set(M2)) => set(foldMap(M1,binApp(M2),[])).
     difference(set(M1),set(M2)) => set(M1-M2).
-    pick(set(M1),k) :- (k,_) in pairs(M1).
-    empty = set([]).
   }
 
   private type all k ~~ equality[k] |: binApp[k] <~ { apply:(k,(),map[k,()])=>map[k,()] }.
@@ -33,5 +28,9 @@ lo.sets {
   binApp(O) <= {
     apply(k,_,S) => S[k->()] :- present(O,k,_).
     apply(_,_,S) => S.
+  }
+
+  public implementation all e ~~ equality[e] |: coercion[set[e],list[e]] <= {
+    _coerce(set(Els)) => keys(Els).
   }
 }

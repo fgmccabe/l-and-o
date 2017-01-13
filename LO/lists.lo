@@ -97,6 +97,13 @@ lo.list{
     _empty = [].
   }
 
+  public implementation all e ~~ equality[e] |: membership[list[e] ->> e] <= {
+    empty = [].
+    addMem(L,e) => [e,..L].
+    delMem(L,e) => subtract(e,L).
+    pick(L,e) :- e in L.
+  }
+
   public nthEl:all e ~~ (list[e],integer,e){}.
   nthEl([e,.._],0,e).
   nthEl([_,..L],Ix,e) :- Ix>0, nthEl(L,Ix-1,e).

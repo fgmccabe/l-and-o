@@ -4,8 +4,7 @@ lo.array{
   import lo.index.
   import lo.list.
 
-  public type all e ~~ array[e] <~ {
-  }
+  public type all e ~~ array[e] <~ {}
 
   private array:all e ~~ (map[integer,e]) <=> array[e].
   array(Els) <= {}.

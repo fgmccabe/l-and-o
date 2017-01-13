@@ -12,13 +12,13 @@ lo.comp.code.registers{
   public type varDesc ::= varDesc(string,initialized,addr).
 
   public locUsed:(varSet,integer) => varSet.
-  locUsed(usdRegs(A,L,G),Lc) => usdRegs(A,addElement(L,Lc),G).
+  locUsed(usdRegs(A,L,G),Lc) => usdRegs(A,addMem(L,Lc),G).
 
   public regUsed:(varSet,integer) => varSet.
-  regUsed(usdRegs(A,L,G),Rg) => usdRegs(addElement(A,Rg),L,G).
+  regUsed(usdRegs(A,L,G),Rg) => usdRegs(addMem(A,Rg),L,G).
 
   public freeAReg:(varSet,integer) => varSet.
-  freeAReg(usdRegs(A,L,G),Rg) => usdRegs(removeElement(A,Rg),L,G).
+  freeAReg(usdRegs(A,L,G),Rg) => usdRegs(delMem(A,Rg),L,G).
 
   public lclGc:(varSet,integer) => varSet.
   lclGc(usdRegs(A,L,G),Sz) => usdRegs(A,L,G+Sz).
