@@ -94,6 +94,7 @@ lo.list{
     _put = replaceNth.
     keys(L) => indexes(L,0).
     pairs(L) => listPairs(L,0).
+    values(L) => L.
     _empty = [].
   }
 
@@ -118,6 +119,10 @@ lo.list{
   replaceNth([],0,e) => [e].
   replaceNth([E,..L],Ix,e) => [E,..replaceNth(L,Ix-1,e)] :- Ix>0.
 
+  public lastEl:all e ~~ (list[e],e){}.
+  lastEl([X],X).
+  lastEl([_,..L],X) :- lastEl(L,X). 
+
   private indexes:all e ~~ (list[e],integer) => list[integer].
   indexes([],_) => [].
   indexes([_,..L],Ix) => [Ix,..indexes(L,Ix+1)].
@@ -126,4 +131,16 @@ lo.list{
   listPairs([],_) => [].
   listPairs([E,..L],Ix) => [(Ix,E),..listPairs(L,Ix+1)].
 
+  public zip: all e,f ~~ (list[e],list[f]) => list[(e,f)].
+  zip([],_) => [].
+  zip(_,[]) => [].
+  zip([e1,..l1],[e2,..l2]) => [(e1,e2),..zip(l1,l2)].
+
+  public unzip: all e,f ~~ (list[(e,f)],list[e],list[f]){}.
+  unzip([],[],[]).
+  unzip([(e,f),..l],[e,..r1],[f,..r2]) :- unzip(l,r1,r2).
+
+  public iota:(integer,integer)=>list[integer].
+  iota(F,T) => [] :- F>T.
+  iota(F,T) => [F,..iota(F+1,T)] :- F=<T.
 }

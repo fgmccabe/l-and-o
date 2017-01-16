@@ -149,7 +149,7 @@ lo.comp.lexer{
 
   readFormat:(list[integer]) --> tokenState.
   readFormat([]) --> [0c;].
-  readFormat([Ch,..More]) --> [Ch], readFormat(More).
+  readFormat([Ch,..More]) --> [Ch], Ch\=0c\\, Ch\=0c", readFormat(More).
   readFormat([]) --> eof.
 
   readNumber:(tok) --> tokenState.

@@ -7,64 +7,6 @@ lo.comp.code.analyse{
   import lo.comp.escapes.
   import lo.comp.term.
 
-  /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
-
-  type occForm ::= hArg | hTerm | lTerm | oArg | oTerm.
-
-  -- Usedto keep track of occurrences.
-  type occurrence ::= occ(string,set[(occForm,integer,integer)]).
-
-  occupiedRegisters:(list[(occForm,integer,integer)]) => set[integer].
-  occupiedRegisters(Occs) => foldRight(registerUsed,Occs,nullSet).
-
-  registerUsed:((occForm,integer,integer),set[integer]) => set[integer].
-  registerUsed((hArg,_,Ix),Regs) => addMem(Regs,Ix).
-  registerUsed((lArg,_,Ix),Regs) => addMem(Regs,Ix).
-  registerUsed(_,Regs) => Regs.
-
-
-  classifyVar:(occurrence) => (addr,option[integer]).
-  classifyVar(occ(Nm,Occs)) => classifyVr(Occs::list[(occForm,integer,integer)]).
-
-  classifyVr:(list[(occForm,integer,integer)]) => (addr,option[integer]).
-  classifyVr([]) => voidAddr. -- should never happen if our quantification is good.
-  classifyVr([_]) => voidAddr. -- singleton variable
-  classifyVr([(_,Gp,_),..Rest]) => (aReg(-1),some(G)) :- (_,G,_) in Rest *> G=Gp. -- -1 means not yet allocated
-  classifyVr(Occs) => (yReg(-1,true),none) :- (hTerm,_,_) in Occs | (hArg,_,_) in Occs | (oTerm,_,_) in Occs | (lTerm,_,_) in Occs.
-  classifyVr(_) => (yReg(-1,false),none).
-
-
-
-  findOccsInHead:(list[term],map[string,occurrence],integer) => map[string,occurrence].
-  findOccsInHead(Args,M) => findOccsInTerms(Args,N,1,1,hArg,hTerm).
-
-  findOccsInPart:(list[pred],map[string,occurrence],integer)
-  findOccsInPart([],M,Gp) => M.
-  findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
-
-  findOccsInGoal:(pred,map[string,occurrence],integer) => map[string,occurrence].
-  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,lArg,lTerm),oArg,oTerm).
-  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInTerms(Args,M,Gp,1,lArg,lTerm).
-  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInTerms([C,L,T],M,Gp,1,lArg,lTerm).
-  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,0,oArg,oTerm),Gp,1,oArg,oTerm).
-  findOccsInGoal(except(T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
-  findOccsInGoal(neck,M,_) => M.
-  findOccsInGoal(fail,M,_) => M.
-
-  findOccsInTerm:(term,map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
-  findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix):- !isEscape(Nm).
-  findOccs(T,M,_,_,_) => M :- isGroundTerm(T).
-  findOccs(tuple(Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
-  findOccs(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
-
-  findOccsInTerms:(list[term],map[string,occurrence],integer,integer,occForm,occForm) => map[string,occurrence].
-  findOccsInTerms([],M,_,_,_,_) => M.
-  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).   
-
-  updateOccurrence:(string,map[string,occurrence],occForm,integer,integer) => map[string,occurrence].
-  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,addMem(Occs,(Key,Gp,Ix)))] :- present(M,Nm,occ(Nm,Occs)).
-  updateOccurrence(_,M,_,_,_) => M.
-
   public partitionGoals:(list[pred],list[pred]) => list[list[pred]].
   partitionGoals([],P) => reverse(P).
   partitionGoals([G,..Rest],P) => partitionGoals(Rest,[G,..P]) :- isSafeGoal(G).
@@ -74,5 +16,173 @@ lo.comp.code.analyse{
   isSafeGoal(neck).
   isSafeGoal(fail).
   isSafeGoal(unfy(_,_)).
-  
+
+  /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
+
+  type occForm ::= hArg | hTerm | lTerm | oArg | oTerm.
+
+  -- Usedto keep track of occMaps.
+  type occMap ::= occ(string,list[(occForm,integer,integer)]).
+
+  public varAnalysis:(list[term],pred,list[list[pred]]) => map[string,varEntry].
+  varAnalysis(Q,Hd,Parts) => allocateVars(usageTable(occurranceTable(Q,Hd,Parts))).
+
+  occurranceTable:(list[term],pred,list[list[pred]]) => map[string,occMap].
+  occurranceTable(Q,call(_,Args),Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
+
+  occMap:(list[term],map[string,occMap]) => map[string,occMap].
+  occMap([],M) => M.
+  occMap([varbl(Nm),..Q],M) => occMap(Q,M[Nm->occ(Nm,[])]).
+
+  -- Find occurrances of variables to help decide how to allocate them.
+  findOccsInHead:(list[term],map[string,occMap],integer) => map[string,occMap].
+  findOccsInHead(Args,M) => findOccsInTerms(Args,N,1,1,hArg,hTerm).
+
+  findOccsInParts:(list[list[pred]],map[string,occMap],integer) => map[string,occMap].
+  findOccsInParts([P1,..P],M,Gno) => findOccsInParts(P,findOccsInPart(P1,M,Gno),Gno+1).
+  findOccsInParts([],M,_) => M.
+
+  findOccsInPart:(list[pred],map[string,occMap],integer)
+  findOccsInPart([],M,Gp) => M.
+  findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
+
+  findOccsInGoal:(pred,map[string,occMap],integer) => map[string,occMap].
+  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,lArg,lTerm),oArg,oTerm).
+  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInTerms(Args,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInTerms([C,L,T],M,Gp,1,lArg,lTerm).
+  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,0,oArg,oTerm),Gp,1,oArg,oTerm).
+  findOccsInGoal(except(T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(neck,M,_) => M.
+  findOccsInGoal(fail,M,_) => M.
+
+  findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
+  findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix):- !isEscape(Nm).
+  findOccs(T,M,_,_,_) => M :- isGroundTerm(T).
+  findOccs(tuple(Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
+  findOccs(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
+
+  findOccsInTerms:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
+  findOccsInTerms([],M,_,_,_,_) => M.
+  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).   
+
+  updateOccurrence:(string,map[string,occMap],occForm,integer,integer) => map[string,occMap].
+  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix),..Occs])] :- present(M,Nm,occ(Nm,Occs)).
+  updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix)])].
+
+  type usageMap ::= usage(string,occMap,addr,set[integer],set[integer],set[integer]).
+
+  -- Analyse how variables are used.
+  usageTable:(map[string,occMap]) => list[usageMap].
+  usageTable(Occs) => foldMap(Occs,bildEntry(values(Occs)),[]).
+
+  -- this should be a lambda
+  bildEntry:(list[occMap]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
+  bildEntry(T) <= {
+    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,OccsmaReg(-1),Use,Avoid,Conflict),..Out]:- 
+      classifyVr(Occs,aReg(_),some(G)),
+      Use=occupiedRegisters(Occ),
+      Avoid=avoidRegisters(T,G,Use,nullSet),
+      Conflict = conflict(Occ).
+    apply(_,_,Out) => Out.
+  }
+
+  occupiedRegisters:(list[(occForm,integer,integer)]) => set[integer].
+  occupiedRegisters(Occs) => foldRight(registerUsed,nullSet,Occs).
+
+  registerUsed:((occForm,integer,integer),set[integer]) => set[integer].
+  registerUsed((hArg,_,Ix),Regs) => addMem(Regs,Ix).
+  registerUsed((lArg,_,Ix),Regs) => addMem(Regs,Ix).
+  registerUsed(_,Regs) => Regs.
+   
+  -- This would be better with lambdas
+  avoidRegisters:(list[occMap],integer,set[integer],set[integer]) => set[integer].
+  avoidRegisters([],Gp,Used,SoFar) => SoFar.
+  avoidRegisters([occ(_,Occs),..O],Gp,Used,SoFar) =>
+    avoidRegisters(O,Gp,Used,pickRegisters(Occs,Gp,Used,SoFar)).
+
+  pickRegisters:(list[(occForm,integer,integer)],integer,set[integer],set[integer]) => set[integer].
+  pickRegisters([],_,_,SoFar) => SoFar.
+  pickRegisters([(hArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ pick(Used,Rg).
+  pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ pick(Used,Rg).
+  pickRegisters([_,..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,SoFar).
+
+  conflict:(list[(occForm,integer,integer)]) => set[integer].
+  conflict(Ocs) => nonArgUses(1,numRegisters,Ocs)+laterUses(Ocs,Ocs).
+
+  nonArgUses:(integer,integer,list[(occForm,integer,integer)]) => set[integer].
+  nonArgUses(Rg,Lim,_) => nullSet :- Rg>Lim.
+  nonArgUses(Rg,Lim,Ocs) => addMem(nonArgUses(Rg+1,Lim,Ocs),Rg) :- \+ (lArg,_,Rg) in Ocs.
+  nonArgUses(Rg,Lim,Ocs) => nonArgUses(Rg+1,Lim,Ocs).
+
+  laterUses:(list[(occForm,integer,integer)],list[(occForm,integer,integer)]) => set[integer].
+  laterUses([],_) => nullSet.
+  laterUses([(lTerm,_,Rg),..O],Ocs) => addMem(laterUsed(O,Ocs),Rg) :- (lTerm,_,GG) in Ocs, GG>Rg.
+  laterUses([(oTerm,_,Rg),..O],Ocs) => addMem(laterUsed(O,Ocs),Rg) :- (oTerm,_,GG) in Ocs, GG>Rg.
+  laterUses([_,..O],Ocs) => laterUses(O,Ocs).
+
+  classifyVr:(list[(occForm,integer,integer)],addr,option[integer]){}.
+  classifyVr([],voidAddr,none). -- should never happen if our quantification is good.
+  classifyVr([_],voidAddr,none). -- singleton variable
+  classifyVr([(_,Gp,_),..Rest],aReg(-1),some(G)) :- (_,G,_) in Rest *> G=Gp. -- -1 means not yet allocated
+  classifyVr(Occs,yReg(-1,true),none) :- ((hTerm,_,_) in Occs | (hArg,_,_) in Occs | (oTerm,_,_) in Occs | (lTerm,_,_) in Occs)!.
+  classifyVr(_,yReg(-1,false),none).
+
+  classifyVar:(list[(occForm,integer,integer)]) => addr.
+  classifyVar(Ocss) => Addr :- classifyVr(Occs,Addr,_).
+
+  maxRegister:(pred)=>integer.
+  maxRegister(call(_,Args)) => size(Args).
+  maxRegister(ecall(_,Args)) => size(Args).
+  maxRegister(oCall(_,_,_)) => 3.
+  maxRegister(except(_)) => 1.
+  maxRegister(unfy(_,_)) => 2.
+  maxRegister(_) => 0.
+
+  collectVarUsage:(map[string,occMap],map[string,(set[integer],set[integer],set[integer])]) => 
+      map[string,(occMap,addr,set[integer],set[integer],set[integer])].
+  collectVarUsage(M,Usage) => foldMap(M,collEntry(Usage),[]).
+
+  collEntry:(map[string,(set[integer],set[integer],set[integer])]) <=> {
+    apply:(string,occMap,map[string,(occMap,addr,set[integer],set[integer],set[integer])]) => 
+        map[string,(occMap,addr,set[integer],set[integer],set[integer])].
+  }
+  collEntry(Usage) <= {
+    apply(Nm,Occs,Tb) => Tb[Nm->(Occs,aReg(-1),Use,Avoid,Conflict)] :- present(Usage,Nm,(Use,Avoid,Conflict)).
+    apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
+  }
+
+  allocateVars:(list[usageMap]) => (map[string,varEntry],integer,list[integer],list[integer]).
+  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms),NumPerms,Used,FreeRgs) :- allocateHeadRegs(Table,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
+
+  -- allocate registers based on occurrences in head
+  allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varEntry],list[integer],list[integer],map[string,varEntry]){}.
+  allocateHeadRegs([],UsedRgs,FreeRgs,Dict,UsedRgs,FreeRgs,Dict).
+  allocateHeadRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
+    ((hArg,_,Rg) in Occs ?
+      ( Rg in Fr ?
+        D0 = D[Nm->varEntry(Nm,true,true,aReg(Rg),lastRgUsage(Occs))],
+        U0 = addMem(Ur,Rg),
+        F0 = delMem(Fr,Rg) |
+        D0 = D[Nm->varEntry(Nm,false,true,notAlloc,lastRgUsage(Occs))],
+        U0=U,
+        F0=Fr) |
+        F0=F, U0=Ur,D0=D),
+    allocateHeadRegs(Tble,U0,F0,D0,Ux,Fx,Dx).
+
+  findPerms:(list[usageMap],integer,integer,map[string,varEntry],map[string,varEntry]) => list[(string,option[(integer,integer)],addr,defined)].
+  findPerms([],PermNo,PermNo,D,D) => [].
+  findPerms([usage(Nm,occ(_,Occs),yReg(,_,Sfe),Use,Avoid,Conflict),..Tble],NoP,NoPx,D,Dx) =>
+    [(Nm,lastRgUsage(Occs),yReg(0,Sfe),definedInRegister(Occs)),..findPerms(Tble,NoP+1,NoPx,D,Dx)].
+  findPerms([usage(Nm,occ(_,Occs),voidAddr,_,_,_),..Tble],NoP,NoPx,D,Dx) =>
+    findPerms(Tble,NoP,NoPx,inited,D[Nm->varDesc(Nm,definedInRegister(Occs),voidAddr,none)],Dx).
+  findPerms([_,..Tble],NoP,NoPx,D,Dx) => findPerms(Tble,NoP,NoPx,D,Dx).
+
+  compPos:(option[(integer,integer)],option[(integer,integer)]){}.
+  compPos(some((G1,_)),some((G2,_))) :- G1<G2.
+  compPos(some((G,X1)),some((G,X2))) :- X1<X2.
+
+  allocPerms:(list[(string,option[(integer,integer)],addr,defined)],map[string,varEntry],integer) => map[string,varEntry].
+  allocPerms([],M,_) => M.
+  allocPerms([(Nm,U,yReg(_,Sfe),D),..T],D,vNo) =>
+    allocPerms(T,vNo-1,D[Nm->varDesc(Nm,notInited,D,yReg(vNo,Sfe),U)]).
 }

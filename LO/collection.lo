@@ -14,12 +14,17 @@ lo.collection{
     (//):all e,f ~~ (m[e],(e)=>f) => m[f].
   }
 
+  public contract all m/2 ~~ ixmap[m] <~ {
+    (///):all k,e,f ~~ (m[k,e],(k,e)=>f)=>m[k,f].
+  }
+
   public contract all m,k,v ~~ map[m ->> k,v] <~ {
     present:(m,k,v){}.
     _remove:(m,k) => m.
     _put:(m,k,v) => m.
     keys:(m) => list[k].
     pairs:(m) => list[(k,v)].
+    values:(m) => list[v].
     _empty:m.
   }.
 

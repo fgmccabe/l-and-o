@@ -546,15 +546,15 @@ lo.comp.typecheck{
     checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
     typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
     typeOfTerm(Rhs,ResTp,E1,E2,Res,Rp1,Rpx),
-    Exp = lambda(equation(Lc,_str_gen("L"),Arg,Res,trueCond)). -- Have to sort out free variables at some point
-  typeOfTerm(Term,Tp,Env,Ev,lambda(clause(Lc,_str_gen("R"),Arg,Cond)),Rp,Rpx) :-
+    Exp = lambda(computeNewVars(E2),equation(Lc,_str_gen("L"),Arg,Res,trueCond)). -- Have to sort out free variables at some point
+  typeOfTerm(Term,Tp,Env,Env,lambda(computeNewVars(E2),clause(Lc,_str_gen("R"),Arg,Cond)),Rp,Rpx) :-
     isBinary(Term,":-",Lc,Lhs,Rhs),
     isRoundTuple(Lhs,_,A),
     ArgTp = tupleType(mkTypes(length(A))),
     FunTp = predType(ArgTp),
     checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
     typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
-    checkCond(Rhs,E1,_,Cond,Rp1,Rpx).
+    checkCond(Rhs,E1,E2,Cond,Rp1,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),
@@ -899,8 +899,11 @@ lo.comp.typecheck{
   mkTypes(0) => [].
   mkTypes(N) => [newVar("_"),..mkTypes(N-1)].
 
-  private computeNewVars:(list[env]) => list[string].
-  computeNewVars(Env) => keys(topVars(Env)).
+  private computeNewVars:(list[env]) => list[canonTerm].
+  computeNewVars(Env) => values(topVars(Env))//pickVar.
+
+  private pickVar:(vr) => canonTerm.
+  pickVar(vr(Trm,_)) => Trm.
 
   private pushFace:(list[(string,tipe)],location,list[env]) => list[env].
   pushFace([],_,E) => E.

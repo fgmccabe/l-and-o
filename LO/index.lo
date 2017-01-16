@@ -17,6 +17,7 @@ lo.index{
     _put(M,K,V) => insrt(K,V,M).
     keys(M) => keyMap(M,[]).
     pairs(M) => mapPairs(M,[]).
+    values(M) => mapValues(M,[]).
     _empty = trEmpty.
   }
 
@@ -58,11 +59,45 @@ lo.index{
 
   public foldMap:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (map[k,v],f,u) => u.
   foldMap(trLeaf(_,Els),f,u) => foldLeafs(Els,f,u).
-  foldMap(trNode(_,_,Left,Right),f,u) => foldMap(Right,f,foldMap(Right,f,u)).
+  foldMap(trNode(_,_,Left,Right),f,u) => foldMap(Right,f,foldMap(Left,f,u)).
 
   foldLeafs:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (list[(k,v)],f,u) => u.
   foldLeafs([],_,u)=>u.
   foldLeafs([(k,v),..l],f,u) => foldLeafs(l,f,f.apply(k,v,u)).
+
+  public implementation all k,v ~~ folding[map[k,v]->>v] <= {
+    foldRight(F,U,M) => fldRight(M,F,U).
+    foldLeft(F,U,M) => fldLeft(M,F,U).
+  }
+
+  private fldRight:all k,v,u ~~ (map[k,v],(v,u)=>u,u) => u.
+  fldRight(trLeaf(_,Els),f,u) => rightLeafs(Els,f,u).
+  fldRight(trNode(_,_,Left,Right),f,u) => fldRight(Right,f,fldRight(Left,f,u)).
+
+  rightLeafs:all k,v,u ~~ (list[(k,v)],(v,u)=>u,u) => u.
+  rightLeafs([],_,u)=>u.
+  rightLeafs([(_,v),..l],f,u) => rightLeafs(l,f,f(v,u)).
+
+  private fldLeft:all k,v,u ~~ (map[k,v],(v,u)=>u,u) => u.
+  fldLeft(trLeaf(_,Els),f,u) => leftLeafs(Els,f,u).
+  fldLeft(trNode(_,_,Left,Right),f,u) => fldLeft(Left,f,fldLeft(Right,f,u)).
+
+  leftLeafs:all k,v,u ~~ (list[(k,v)],(v,u)=>u,u) => u.
+  leftLeafs([],_,u)=>u.
+  leftLeafs([(_,v),..l],f,u) => f(leftLeafs(l,f,u),v).
+
+  public implementation ixmap[map] <= {
+    M///f => ixMap(M,f).
+  }
+
+  ixMap:all k,v,w ~~ (map[k,v],(k,v)=>w) => map[k,w].
+  ixMap(trEmpty,_) => trEmpty.
+  ixMap(trNode(Hsh,Len,L,R),f) => trNode(Hsh,Len,ixMap(L,f),ixMap(R,f)).
+  ixMap(trLeaf(Hash,Els),f) => trLeaf(Hash,applyF(Els,f)).
+
+  private applyF:all k,v,w ~~ (list[(k,v)],(k,v)=>w)=>list[(k,w)].
+  applyF([],_) => [].
+  applyF([(K,V),..L],f) => [(K,f(K)),..applyF(L,f)].
 
   lookIn: all k,v ~~ equality[k] |: (integer,map[k,v],k,v){}.
   lookIn(H,trLeaf(H,Els),K,V) :- findMember(K,Els,V).
@@ -202,6 +237,15 @@ lo.index{
   private mapLeaves:all k,v,w ~~ (list[(k,v)],(v)=>w) => list[(k,w)].
   mapLeaves([],_) => [].
   mapLeaves([(k,v),..l],f) => [(k,f(v)),..mapLeaves(l,f)].
+
+  private mapValues:all k,v ~~ (map[k,v],list[v]) => list[v].
+  mapValues(trEmpty,L) => L.
+  mapValues(trLeaf(_,Lf),L) => projectValues(Lf,L).
+  mapValues(trNode(_,_,Lf,Rg),L) => mapValues(Rg,mapValues(Lf,L)).
+
+  private projectValues:all k,v ~~ (list[(k,v)],list[v]) => list[v].
+  projectValues([],So) => So.
+  projectValues([(_,V),..L],So) => projectValues(L,[V,..So]).
 
   public
   implementation all k,v ~~ display[k], display[v] |: display[map[k,v]] <= {

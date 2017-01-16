@@ -115,7 +115,7 @@ lo.comp.resolve{
         Over = T).
   resolveTerm(mtd(Lc,Nm),_,Rp,Rpx) => v(Lc,Nm):-
     reportError("cannot find implementation for naked method \(Nm)",Lc,Rp,Rpx).
-  resolveTerm(lambda(Rl),Dict,Rp,Rpx) => lambda(overloadRule(Rl,Dict,[],Rp,Rpx)).
+  resolveTerm(lambda(Q,Rl),Dict,Rp,Rpx) => lambda(Q,overloadRule(Rl,Dict,[],Rp,Rpx)).
   resolveTerm(theta(D,O),Dict,Rp,Rpx) => theta(overloadDefs(D,Dict,Rp,Rp0),overloadOthers(O,Dict,Rp0,Rpx)).
 
   resolveTerms:(list[canonTerm],list[implEntry],report,report) => list[canonTerm].

@@ -15,6 +15,7 @@ lo.array{
     _put(A,Ix,V) => addElement(A,Ix,V).
     keys(A) => arrayKeys(A).
     pairs(A) => arrayPairs(A).
+    values(A) => arrayValues(A).
     _empty = emptyArray.
   }
 
@@ -32,6 +33,9 @@ lo.array{
 
   private arrayPairs:all e ~~ (array[e]) => list[(integer,e)].
   arrayPairs(array(Els)) => pairs(Els).
+
+  private arrayValues:all e ~~ (array[e]) => list[e].
+  arrayValues(array(Els)) => values(Els).
 
   public implementation all c ~~ sizeable[array[c]] <= {
     size(A) => arraySize(A).
@@ -56,4 +60,8 @@ lo.array{
 
   show2nd: all u,v ~~ display[v] |: ((u,v)) => ss.
   show2nd((_,v)) => disp(v).
+
+  public implementation all e ~~ coercion[array[e],list[e]] <= {
+    _coerce(array(Els)) => values(Els).
+  }
 }

@@ -18,9 +18,9 @@ lo.sets {
   }
 
   public implementation all e ~~ equality[e] |: setops[set[e]->>e] <= {
-    union(set(M1),set(M2)) => set(M1+M2).
-    intersect(set(M1),set(M2)) => set(foldMap(M1,binApp(M2),[])).
-    difference(set(M1),set(M2)) => set(M1-M2).
+    union(S1,S2) => setUnion(S1,S2).
+    intersect(S1,S2) => setIntersection(S1,S2).
+    difference(S1,S2) => setDifference(S1,S2).
   }
 
   private type all k ~~ equality[k] |: binApp[k] <~ { apply:(k,(),map[k,()])=>map[k,()] }.
@@ -33,4 +33,29 @@ lo.sets {
   public implementation all e ~~ equality[e] |: coercion[set[e],list[e]] <= {
     _coerce(set(Els)) => keys(Els).
   }
+
+  public implementation all e ~~ equality[e] |: additive[set[e]] <= {
+    S1+S2 => setUnion(S1,S2).
+    S1-S2 => setDifference(S1,S2).
+  }
+
+  private setUnion:all e ~~ equality[e] |: (set[e],set[e]) => set[e].
+  setUnion(set(M1),set(M2)) => set(M1+M2).
+
+  private setDifference:all e ~~ equality[e] |: (set[e],set[e]) => set[e].
+  setDifference(set(M1),set(M2)) => set(M1-M2).
+
+  private setIntersection:all e ~~ equality[e] |: (set[e],set[e]) => set[e].
+  setIntersection(set(M1),set(M2)) =>  set(foldMap(M1,binApp(M2),[])).
+
+  public implementation mapping[sets] <= {
+    S // F => setMap(S,F).
+  }
+
+  public setMap:all e ~~ equality[e],equality[f] |: (set[e],(e)=>f)=>set[f].
+  setMap(set(Els),F) => foldF(F,nullSet,keys(Els)). -- not elegant without lambdas
+
+  private foldF:all e,f ~~ equality[e], equality[f] |: ((e)=>f,set[f],list[e]) => set[f].
+  foldF(_,S,[]) => S.
+  foldF(F,S,[e,..l]) => foldF(F,addMem(S,f(e)),l).
 }

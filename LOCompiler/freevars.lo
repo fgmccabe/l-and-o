@@ -1,29 +1,35 @@
 lo.comp.freevars{
   import lo.
-  import canon.
+  import lo.comp.term.
 
-   public type
-  canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
+  varsInTerm:(term,map[string,integer]) => map[string,integer].
+  varsInTerm(anon,M) => M.
+  varsInTerm(varbl(Nm),M) => M[Nm->Cx+1] :- present(M,Nm,Cx).
+  varsInTerm(varbl(Nm),M) => M[Nm->1].
+  varsInTerm(intgr(_),M) => M.
+  varsInTerm(flot(_),M) => M.
+  varsInTerm(strng(_),M) => M.
+  varsInTerm(enum(_),M) => M.
+  varsInTerm(strct(_,_),M) => M.
+  varsInTerm(prg(_,_),M) => M.
+  varsInTerm(tuple(Els),M) => foldRight(varsInTerm,M,Els).
+  varsInTerm(cons(Op,Els),M) => varsInTerm(Op,foldRight(varsInTerm,M,Els)).
+  varsInTerm(code(_,_,_),M) => M.
 
-  public type
-  canonDef ::= funDef(location,string,tipe,list[constraint],list[canonRule])
-           |   relDef(location,string,tipe,list[constraint],list[canonRule])
-           |   grammDef(location,string,tipe,list[constraint],list[canonRule])
-           |   classDef(location,string,string,tipe,list[constraint],list[canonRule])
-           |   varDef(location,string,tipe,list[constraint],canonTerm,canonCond)
-           |   otherDef(location,canonOther)
-           |   typeDef(location,string,tipe,tipe)
-           |   cnDefn(location,string,conEntry)
-           |   implDef(location,string,string,constraint,list[constraint],canonTerm,canonTerm).
+  varsInPred:(pred,map[string,integer]) => map[string,integer].
+  varsInPred(call(Op,Els),M) => varsInTerm(Op,foldRight(varsInTerm,M,Els)).
+  varsInPred(ecall(_,Els),M) => foldRight(varsInTerm,M,Els).
+  varsInPred(ocall(C,L,T),M) => varsInTerm(C,varsInTerm(L,varsInTerm(T,M))).
+  varsInPred(unfy(L,R),M) => varsInTerm(L,varsInTerm(R,M)).
+  varsInPred(except(E),M) => varsInTerm(E,M).
+  varsInPred(neck,M) => M.
+  varsInPred(fail,M) => M.
 
-  public type canonOther ::= integrity(location,canonCond)
-           | expShow(location,canonTerm).
+  varsInClause:(clse,map[string,integer]) => map[string,integer].
+  varsInClause(clse(Q,Op,Args,Body)) =>
+  
 
-  public checkVarCounts:(list[canonDef],list[canonOther],map[string,integer],report,report){}.
-  checkVarCounts(Defs,Others,Ext,Rp,Rpx) :-
-    ThDict = collectThetaVars(Defs,Ext),
-    checkDefs(Defs,ThDict,Rp,Rp0),
-    checkOthers(Others,ThDict,Rp0,Rpx).
+
 
   private collectThetaVars:(list[canonDef],map[string,integer]) => map[string,integer].
   collectThetaVars([],Vars) => Vars.
