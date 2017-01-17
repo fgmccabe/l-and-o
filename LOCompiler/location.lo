@@ -25,7 +25,7 @@ lo.comp.location{
   locDisp:(location)=>ss.
   locDisp(std) => ss("<standard>").
   locDisp(loc(Ln,Off,Col,Len,Pth)) => 
-        ssSeq([ss(Pth),ss(":"),disp(Ln),ss("/"),disp(Col),ss("("),disp(Len),ss(")")]).
+        ssSeq([ss(Pth),ss("@"),disp(Ln),ss(":"),disp(Col),ss("("),disp(Len),ss(")")]).
 
   public lineOf:(location) => integer.
   lineOf(loc(Line,Off,Col,Len,Pth)) => Line.

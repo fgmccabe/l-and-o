@@ -1,32 +1,9 @@
 lo.comp.freevars{
   import lo.
-  import lo.comp.term.
+  import lo.comp.canon.
+  import lo.comp.types.
 
-  varsInTerm:(term,map[string,integer]) => map[string,integer].
-  varsInTerm(anon,M) => M.
-  varsInTerm(varbl(Nm),M) => M[Nm->Cx+1] :- present(M,Nm,Cx).
-  varsInTerm(varbl(Nm),M) => M[Nm->1].
-  varsInTerm(intgr(_),M) => M.
-  varsInTerm(flot(_),M) => M.
-  varsInTerm(strng(_),M) => M.
-  varsInTerm(enum(_),M) => M.
-  varsInTerm(strct(_,_),M) => M.
-  varsInTerm(prg(_,_),M) => M.
-  varsInTerm(tuple(Els),M) => foldRight(varsInTerm,M,Els).
-  varsInTerm(cons(Op,Els),M) => varsInTerm(Op,foldRight(varsInTerm,M,Els)).
-  varsInTerm(code(_,_,_),M) => M.
-
-  varsInPred:(pred,map[string,integer]) => map[string,integer].
-  varsInPred(call(Op,Els),M) => varsInTerm(Op,foldRight(varsInTerm,M,Els)).
-  varsInPred(ecall(_,Els),M) => foldRight(varsInTerm,M,Els).
-  varsInPred(ocall(C,L,T),M) => varsInTerm(C,varsInTerm(L,varsInTerm(T,M))).
-  varsInPred(unfy(L,R),M) => varsInTerm(L,varsInTerm(R,M)).
-  varsInPred(except(E),M) => varsInTerm(E,M).
-  varsInPred(neck,M) => M.
-  varsInPred(fail,M) => M.
-
-  varsInClause:(clse,map[string,integer]) => map[string,integer].
-  varsInClause(clse(Q,Op,Args,Body)) =>
+  
   
 
 

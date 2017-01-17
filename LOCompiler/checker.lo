@@ -25,9 +25,13 @@ lo.comp.typecheck{
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
-    findImportedImplementations(ImportClosure,[],OverDict),
-    overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
-    OOthers = overloadOthers(Others,ODict,Rp1,Rpx),
+    (errorFree(Rp0) ? 
+      findImportedImplementations(ImportClosure,[],OverDict),
+      overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
+      OOthers = overloadOthers(Others,ODict,Rp1,Rpx) |
+      Rpx=Rp0,
+      ODefs=Defs,
+      OOthers=Others),
     computeExport(ODefs,[],Public,Exports,Types,Enums,Contracts,Impls).
 
   private computeImports:(list[(string,defnKind)],list[pkgSpec]) => list[(visibility,pkg)].
