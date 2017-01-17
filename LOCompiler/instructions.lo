@@ -1,5 +1,5 @@
 /* Automatically generated, do not edit */
-lo.comp.code.instructions{
+lo.comp.instructions{
   import lo.
   public type instruction ::=              -- type defining the opcodes
      iLbl(string)               -- label in code stream
@@ -104,6 +104,7 @@ lo.comp.code.instructions{
    | iClS		-- Clear S++
    | iClYY(integer,integer).		-- Clear Y[X],Count
 
+
   public implementation display[instruction] <= {
     disp(iHalt) => ss("halt").
     disp(iDie) => ss("die").
@@ -206,4 +207,5 @@ lo.comp.code.instructions{
     disp(iClS) => ss("clS").
     disp(iClYY(A1,A2)) => ssSeq([ss("clYY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   }
+
 }.

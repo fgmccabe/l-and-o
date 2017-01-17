@@ -10,8 +10,8 @@ lo.collection{
     (^/):(c,(e){}) => c.
   }
 
-  public contract all m/1 ~~ mapping[m] <~ {
-    (//):all e,f ~~ (m[e],(e)=>f) => m[f].
+  public contract all m/1,e,f ~~ mapping[m->>e,f] <~ {
+    (//):(m[e],(e)=>f) => m[f].
   }
 
   public contract all m/2 ~~ ixmap[m] <~ {

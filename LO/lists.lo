@@ -63,7 +63,7 @@ lo.list{
     foldRight(f,x,[e,..l]) => f(e,foldRight(f,x,l)).
   }
 
-  public implementation mapping[list] <= {
+  public implementation all e,f ~~ mapping[list->>e,f] <= {
     L//F => mapList(L,F).
   }
 

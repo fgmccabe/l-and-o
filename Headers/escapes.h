@@ -157,7 +157,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_popen,True,False,"p7SLSLT2sSOOOi","open a pipe")
   */
   escape(_close,True,False,"P1"fileType,"close file")
-  escape(_eof,True,False,"P1"fileType,"end of file test")
+  escape(_end_of_file,True,False,"P1"fileType,"end of file test")
   escape(_ready,True,False,"P1"fileType,"file ready test")
   escape(_inchars,True,False,"F2"fileType"iS","read block string")
   escape(_inbytes,True,False,"F2"fileType"iLi","read block of bytes")

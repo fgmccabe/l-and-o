@@ -48,14 +48,14 @@ lo.sets {
   private setIntersection:all e ~~ equality[e] |: (set[e],set[e]) => set[e].
   setIntersection(set(M1),set(M2)) =>  set(foldMap(M1,binApp(M2),[])).
 
-  public implementation mapping[sets] <= {
+  public implementation all e,f ~~ equality[e], equality[f] |: mapping[set->>e,f] <= {
     S // F => setMap(S,F).
   }
 
-  public setMap:all e ~~ equality[e],equality[f] |: (set[e],(e)=>f)=>set[f].
+  public setMap:all e,f ~~ equality[e],equality[f] |: (set[e],(e)=>f)=>set[f].
   setMap(set(Els),F) => foldF(F,nullSet,keys(Els)). -- not elegant without lambdas
 
   private foldF:all e,f ~~ equality[e], equality[f] |: ((e)=>f,set[f],list[e]) => set[f].
   foldF(_,S,[]) => S.
-  foldF(F,S,[e,..l]) => foldF(F,addMem(S,f(e)),l).
+  foldF(F,S,[e,..l]) => foldF(F,addMem(S,F(e)),l).
 }

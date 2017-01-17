@@ -42,7 +42,7 @@ lo.comp.code.analyse{
   findOccsInParts([P1,..P],M,Gno) => findOccsInParts(P,findOccsInPart(P1,M,Gno),Gno+1).
   findOccsInParts([],M,_) => M.
 
-  findOccsInPart:(list[pred],map[string,occMap],integer)
+  findOccsInPart:(list[pred],map[string,occMap],integer) => map[string,occMap].
   findOccsInPart([],M,Gp) => M.
   findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
 
@@ -56,7 +56,7 @@ lo.comp.code.analyse{
   findOccsInGoal(fail,M,_) => M.
 
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
-  findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix):- !isEscape(Nm).
+  findOccs(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
   findOccs(T,M,_,_,_) => M :- isGroundTerm(T).
   findOccs(tuple(Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
   findOccs(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
@@ -78,10 +78,10 @@ lo.comp.code.analyse{
   -- this should be a lambda
   bildEntry:(list[occMap]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
   bildEntry(T) <= {
-    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,OccsmaReg(-1),Use,Avoid,Conflict),..Out]:- 
+    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,Occs,aReg(-1),Use,Avoid,Conflict),..Out] :- 
       classifyVr(Occs,aReg(_),some(G)),
-      Use=occupiedRegisters(Occ),
-      Avoid=avoidRegisters(T,G,Use,nullSet),
+      Use = occupiedRegisters(Occ),
+      Avoid = avoidRegisters(T,G,Use,nullSet),
       Conflict = conflict(Occ).
     apply(_,_,Out) => Out.
   }
@@ -152,10 +152,12 @@ lo.comp.code.analyse{
   }
 
   allocateVars:(list[usageMap]) => (map[string,varEntry],integer,list[integer],list[integer]).
-  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms),NumPerms,Used,FreeRgs) :- allocateHeadRegs(Table,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
+  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms),NumPerms,Used,FreeRgs) :-
+    allocateHeadRegs(Table,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
 
   -- allocate registers based on occurrences in head
-  allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varEntry],list[integer],list[integer],map[string,varEntry]){}.
+  allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varEntry],
+        list[integer],list[integer],map[string,varEntry]){}.
   allocateHeadRegs([],UsedRgs,FreeRgs,Dict,UsedRgs,FreeRgs,Dict).
   allocateHeadRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     ((hArg,_,Rg) in Occs ?
@@ -169,9 +171,10 @@ lo.comp.code.analyse{
         F0=F, U0=Ur,D0=D),
     allocateHeadRegs(Tble,U0,F0,D0,Ux,Fx,Dx).
 
-  findPerms:(list[usageMap],integer,integer,map[string,varEntry],map[string,varEntry]) => list[(string,option[(integer,integer)],addr,defined)].
+  findPerms:(list[usageMap],integer,integer,map[string,varEntry],map[string,varEntry]) => 
+      list[(string,option[(integer,integer)],addr,defined)].
   findPerms([],PermNo,PermNo,D,D) => [].
-  findPerms([usage(Nm,occ(_,Occs),yReg(,_,Sfe),Use,Avoid,Conflict),..Tble],NoP,NoPx,D,Dx) =>
+  findPerms([usage(Nm,occ(_,Occs),yReg(_,Sfe),Use,Avoid,Conflict),..Tble],NoP,NoPx,D,Dx) =>
     [(Nm,lastRgUsage(Occs),yReg(0,Sfe),definedInRegister(Occs)),..findPerms(Tble,NoP+1,NoPx,D,Dx)].
   findPerms([usage(Nm,occ(_,Occs),voidAddr,_,_,_),..Tble],NoP,NoPx,D,Dx) =>
     findPerms(Tble,NoP,NoPx,inited,D[Nm->varDesc(Nm,definedInRegister(Occs),voidAddr,none)],Dx).
