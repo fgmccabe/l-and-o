@@ -57,7 +57,7 @@ lo.array{
   }
 
   public displayArray:all e ~~ display[e] |: (array[e]) => ss.
-  displayArray(array(Els)) => ssSeq([ss("[|"),ssSeq(pairs(Els)//show2nd),ss("|]]")]).
+  displayArray(array(Els)) => ssSeq([ss("[|"),ssSeq(pairs(Els)//show2nd),ss("|]")]).
 
   show2nd: all u,v ~~ display[v] |: ((u,v)) => ss.
   show2nd((_,v)) => disp(v).

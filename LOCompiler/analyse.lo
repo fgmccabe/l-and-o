@@ -21,7 +21,7 @@ lo.comp.code.analyse{
 
   type occForm ::= hArg | hTerm | lTerm | oArg | oTerm.
 
-  -- Usedto keep track of occMaps.
+  -- Usedto keep track of occurrences.
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],pred,list[list[pred]]) => (map[string,varDesc],integer,list[integer],list[integer]).

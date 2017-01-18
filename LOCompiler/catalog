@@ -12,6 +12,7 @@ catalog{
     lo.comp.code.instructions -> "instructions.lo".
     lo.comp.code.registers -> "registers.lo".
     lo.comp.code.unify -> "compunify.lo".
+    lo.comp.indexing -> "indexing.lo".
     lo.comp.decode -> "decode.lo".
     lo.comp.dependencies -> "dependencies.lo".
     lo.comp.debug -> "debug.lo".
