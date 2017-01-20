@@ -6,20 +6,21 @@ lo.comp.indexing{
 
   import lo.comp.code.instructions.
 
-  public type aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(term,list[(integer,string)],aoTr)]).
+  private type ix ::= ix(term,list[(integer,string)]).
 
-  public genTree:(term,integer)=>aoTr.
-  genTree(anon,n) => oXN([(anon,n,eTree)]).
-  genTree(varbl(Id),n) => oXN([(varbl(Id),n,eTree)]).
-  genTree(intgr(Ix),n) => oXN([(intgr(Ix),n,eTree)]).
-  genTree(flot(Dx),n) => oXN([(flot(Dx),n,eTree)]).
-  genTree(strng(Sx),n) => oXN([(strng(Sx),n,eTree)]).
-  genTree(enum(Id),n) => oXN([(enum(Id),n,eTree)]).
-  genTree(strct(Id,Cx),n) => oXN([(strct(Id,Cx),n,eTree)]).
-  genTree(prg(Id,Cx),n) => oXN([(prg(Id,Cx),n,eTree)]).
-  genTree(code(Tp,Code,Terms),n) => oXN([(code(Tp,Code,Terms),n,eTree)]).
-  genTree(tuple(Els),n) => oxN([(tuple(Els),n,aXN(genTreeEls(Els,n)))]).
-  genTree(cons(Op,Els),n) => oxN([(cons(Op,Els),n,aXN(genTreeEls(Els,n)))]).
+  private type aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
+
+
+
+  genTree:(term,integer)=>aoTr.
+  genTree(anon,n) => oXN([(ix(anon,n),eTree)]).
+  genTree(varbl(Id),n) => oXN([(ix(varbl(Id),n),eTree)]).
+  genTree(intgr(Ix),n) => oXN([(ix(intgr(Ix),n),eTree)]).
+  genTree(flot(Dx),n) => oXN([(ix(flot(Dx),n),eTree)]).
+  genTree(strng(Sx),n) => oXN([(ix(strng(Sx),n),eTree)]).
+  genTree(enum(Id),n) => oXN([(ix(enum(Id),n),eTree)]).
+  genTree(tuple(Els),n) => oxN([(ix(tuple(Els),n),aXN(genTreeEls(Els,n)))]).
+  genTree(cons(Op,Els),n) => oxN([(ix(cons(Op,Els),n),aXN(genTreeEls(Els,n)))]).
 
   genTreeEls:(list[term],integer) => list[aoTr].
   genTreeEls([],_) => [].
@@ -30,26 +31,23 @@ lo.comp.indexing{
   isSameIx(flot(Ix),flot(Ix)).
   isSameIx(enum(Ix),enum(Ix)).
   isSameIx(strng(Ix),strng(Ix)).
-  isSameIx(strct(Id,Cx),strct(Id,Cx)).
-  isSameIx(prg(Id,Cx),prg(Id,Cx)).
-  isSameIx(code(Tp,Code,Lits),code(Tp,Code,Lits)).
   isSameIx(varbl(_),varbl(_)).
 
   isSameCons:(term,term){}.
   isSameCons(cons(Op,E1),cons(Op,E2)) :- size(E1)==size(E2).
   isSameCons(tuple(E1),tuple(E2)) :- size(E1)==size(E2).
 
-  addInTriple:(list[(term,set[integer],aoTr)],term,set[integer],aoTr) => list[(term,set[integer],aoTr)].
+  addInTriple:(list[(ix,aoTr)],term,list[(ix,aoTr)]) => list[(ix,aoTr)].
   addInTriple([],C,N,S) => [(C,N,S)].
-  addInTriple([(A,n,s),..L],C,N,S) => [(C,N+n,S),..L] :- isSameIx(A,C).
-  addInTriple([(A,n,s),..L],C,N,S) => [(C,N+n,mergeTree(s,S)),..L] :- isSameCons(A,C).
+  addInTriple([ixEntry(A,n,s),..L],C,N,S) => [ixEntry(C,N+n,S),..L] :- isSameIx(A,C).
+  addInTriple([ixEntry(A,n,s),..L],C,N,S) => [ixEntry(C,N+n,mergeTree(s,S)),..L] :- isSameCons(A,C).
   addInTriple([X,..L],C,N,S) => [X,..addInTriple(L,C,N,S)].
 
   mergeTree:(aoTr,aoTr) => aoTr.
   mergeTree(eTree,t) => t.
   mergeTree(t,eTree) => t.
-  mergeTree(oXN([(C,N,S)]),oXN(Triples)) => oXN(addInTriple(Triples,C,N,S)).
-  mergeTree(oXN(Triples),oXN([(C,N,S)])) => oXN(addInTriple(Triples,C,N,S)).
+  mergeTree(oXN([(ix(C,N),S)]),oXN(Triples)) => oXN(addInTriple(Triples,C,N,S)).
+  mergeTree(oXN(Triples),oXN([(ix(C,N),S)])) => oXN(addInTriple(Triples,C,N,S)).
   mergeTree(oXN(T1),oXN(T2)) => aXN(addTrList(T1,T2)).
 
   addTrList:(list[aoTr],list[aoTr]) => list[oaTr].
@@ -84,41 +82,47 @@ lo.comp.indexing{
       NTr = BT).
   pickColumn([_,L],BT,Tc,Vc,Ix,BCol) => pickColumn(L,BT,Tc,Vc,Ix+1,BCol).
 
+  checkEntries:(list[(ix,aoTr)],aoTr)],integer,integer,integer,integer){}.
   checkEntries([],C,V,C,V).
-  checkEntries([(varbl(_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C,V+1,Cx,Vx).
-  checkEntries([(intgr(_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(flot(_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(strng(_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(enum(_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(strct(_,_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(prg(_,_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(cons(_,_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(tuple(_,_),_,_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(varbl(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C,V+1,Cx,Vx).
+  checkEntries([(ix(intgr(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(flot(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(strng(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(enum(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(cons(_,_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(tuple(_,_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
 
   genIndex:(oaTr,integer,list[instruction],integer,list[list[instruction]]) => list[instruction].
-  genIndex(oXN(L),Col,Deflt,Arity,Clauses) =>
-    computeSubIxes(L,[],[],[],[],[],[],[],[],VarList,IntList,FltList,EnumList,StrList,StrctList,ConsList,TplList).
+  genIndex(oXN(L),Col,Deflt,Arity,Clauses) => :-
+    computeSubIxes(L,[],[],[],[],[],[],[],VarList,IntList,FltList,StrList,StrctList,ConsList,TplList),
+    VCode = genSequence(sort(VarList,compClPt),true).
 
-  computeSubIxes:(list[(term,integer,integer)],list[integer],list[(term,list[integer])],list[(term,list[integer])],
-    list[(term,list[integer])],list[(term,list[integer])],list[(term,list[integer])],list[(term,list[integer])],
-    list[(term,list[integer])],
-    list[integer],list[(term,list[integer])],list[(term,list[integer])],list[(term,list[integer])],list[(term,list[integer])],
-    list[(term,list[integer])],list[(term,list[integer])],list[(term,list[integer])]){}.
-  computeSubIxes([],VarList,IntList,FltList,EnumList,StrList,StrctList,ConsList,TplList,VarList,IntList,FltList,EnumList,StrList,StrctList,ConsList,TplList).
-  computeSubIxes([(varbl(_),cl,_),..L],VL,IntList,FltList,EnumList,StrList,StrctList,ConsList,TplList,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL<>cl,IntList,FltList,EnumList,StrList,StrctList,ConsList,TplList,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-  computeSubIxes([(intgr(Ix),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,[(intgr(Ix),cl),..IL],FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(flot(Dx),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,[(flot(Dx),cl),..FL],EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(strng(Sx),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,EL,[(strng(Sx),cl),..SL],StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(enum(Sx),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,[(enum(Sx),cl),..EL],SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(strct(Sx,Cx),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,EL,SL,[(strct(Sx,Cx),cl),..StL],CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(cons(Op,_),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,EL,SL,StL,[(Op,cl),..CL],TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
-  computeSubIxes([(tuple(Els),cl,_),..L],VL,IL,FL,EL,SL,StL,CL,TL,VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,EL,SL,StL,CL,[(intgr(size(Els)),cl),..TL],VLx,ILx,FLx,ELx,SLx,StLx,CLx,TLx).
+  computeSubIxes:(list[(ix,aoTr)],
+    list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],
+    list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix]){}.
+  computeSubIxes([],VarList,IntList,FltList,StrList,ConsList,TplList,VarList,IntList,FltList,StrList,ConsList,TplList).
+  computeSubIxes([(ix(varbl(_),cl),_),..L],VL,IL,FL,SL,CL,TP,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL<>cl,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+  computeSubIxes([(ix(intgr(Ix),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,[ix(intgr(Ix),cl),..IL],FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
+  computeSubIxes([(ix(flot(Dx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,IL,[ix(flot(Dx),cl),..FL],SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
+  computeSubIxes([(ix(strng(Sx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,IL,FL,[ix(strng(Sx),cl),..SL],CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
+  computeSubIxes([(ix(enum(Sx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,IL,FL,SL,[ix(enum(Sx),cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
+  computeSubIxes([(ix(cons(Op,_),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,IL,FL,SL,StL,[ix(Op,cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
+  computeSubIxes([(ix(tuple(Els),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,VL,IL,FL,SL,StL,CL,[(intgr(size(Els)),cl),..TL],VLx,ILx,FLx,SLx,CLx,TLx).
+
+  compClPt:((integer,string),(integer,string)){}.
+  compClPt((X,_),(Y,_)) :- X<Y.
+
+  genSequence:(list[(integer,string)],logical) => list[instruction].
+  genSequence([(_,Lb)],true) => [iGo_to(Lb)].
+  genSequence([(_,Lb)],false) => [iTrust(Lb)].
+  genSequence([(_,Lb),..R],true) => [iTrycl(Lb),..genSequence(R,false)].
+  genSequence([(_,Lb),..R],false) => [iRetry(Lb),..genSequence(R,false)].
+  genSequence([],_) => [iFayl].
 }

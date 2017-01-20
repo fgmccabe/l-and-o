@@ -1,16 +1,17 @@
 lo.comp.transform{
   import lo.
-  import lo.comp.location.
   import lo.comp.args.
   import lo.comp.canon.
-  import lo.comp.package.
-  import lo.comp.types.
-  import lo.comp.term.
+  import lo.comp.debug.
   import lo.comp.errors.
   import lo.comp.escapes.
-  import lo.comp.debug.
+  import lo.comp.freevars.
+  import lo.comp.location.
   import lo.comp.misc.
+  import lo.comp.package.
+  import lo.comp.term.
   import lo.comp.transutils.
+  import lo.comp.types.
 
   /*
    * Implement a semantic reduction from L&O to Prolog-style rules
@@ -510,6 +511,8 @@ lo.comp.transform{
     Cl1 = clse(LQ,CondPr,[LRslt,..LQ],TG),
     Cl2 = clse(LQ,CondPr,[RRslt,..LQ],RG),
     Ex2 = [Cl1,Cl2,..Exx].
+  trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    trLambda(Rl,Rslt,Q,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(XX,anon,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rpx) :-
     reportMsg("internal: cannot transform \(XX) as expression",std,Rp,Rpx).
 
@@ -594,6 +597,22 @@ lo.comp.transform{
   implementPkgRefExp(moduleClass(Enum,_,0),_,_,_,_,enum(Enum),Q,Q,Pre,Pre,Rp,Rp).
   implementPkgRefExp(_,Lc,Pkg,Ref,Xi,Xi,Q,Q,Pre,Pre,Rp,Rpx) :-
     reportError("illegal access to \(Pkg)#\(Ref)",Lc,Rp,Rpx).
+
+  trLambda:(canonRule,term,list[term],list[lyr],trOptions,list[clse],list[clse],report,report){}.
+   -- We build $$(_call(Args<>Rep),$$(Free),_) :- Cond, !, replacement
+  trLambda(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
+    FreeVars = freeVarsInRule(equation(Lc,Nm,tpl(A),Cond,Exp),Q,[]),
+    Lam = _str_gen(Nm),
+    trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), -- head of lambda
+    trGoal(Cond,PreGx,[neck,..PostGx],Q1,Q2,Map,Opts,Ex0,Ex1),       -- condition goals
+    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2),      -- replacement expression
+    CallStrct = cons(trCons("_call",size(Args)),Args),
+    mkClosure(Lam,FreeVars,Closure),
+    Ex2 = [clse(merge(FreeVars,Q3),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Exx].
+
+  mkClosure:(string,list[term])=>term.
+  mkClosure(Lam,[]) => enum(Lam).
+  mkClosure(Lam,FreeVars) => cons(strct(Lam,size(FreeVars)),FreeVars).
 
   trGoal:(canonCond,list[pred],list[pred],list[term],list[term],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   trGoal(trueCond,Goals,Goals,Q,Q,_,_,Ex,Ex,Rp,Rp).

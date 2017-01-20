@@ -7,6 +7,7 @@ catalog{
     test.mapp -> "mapp.lo".
     test.maps -> "maps.lo".
     test.l -> "l.lo".
+    test.lambda -> "lambda.lo".
     test.gr -> "gr.lo".
     test.m -> "m.lo".
     test.o -> "o.lo".

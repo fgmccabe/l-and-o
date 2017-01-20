@@ -580,20 +580,20 @@ typeOfTerm(Term,Tp,Env,Ev,Exp) :-
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isSquareTerm(Term,Lc,F,[A]),!,
   typeOfIndex(Lc,F,A,Tp,Env,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Ev,lambda(equation(Lc,"",Args,true(Lc),Exp))) :-
+typeOfTerm(Term,Tp,Env,Env,lambda(equation(Lc,"$",Args,true(Lc),Exp))) :-
   isBinary(Term,Lc,"=>",H,R),
   isTuple(H,_,A),
   genTpVars(A,AT),
-  RT = newTypeVar("_E"),
-  checkType(Lc,funType(AT,RT),Tp,Env,E0),
-  typeOfTerms(A,AT,E0,E1,Lc,Args),
-  typeOfTerm(R,RT,E1,Ev,Exp).
-typeOfTerm(Term,Tp,Env,Ev,lambda(clause(Lc,"",Args,true(Lc),Body))) :-
+  newTypeVar("_E",RT),
+  checkType(Lc,funType(AT,RT),Tp,Env),
+  typeOfTerms(A,AT,Env,E1,Lc,Args),
+  typeOfTerm(R,RT,E1,_,Exp).
+typeOfTerm(Term,Tp,Env,Ev,lambda(clause(Lc,"$",Args,true(Lc),Body))) :-
   isBinary(Term,Lc,":-",H,R),
   isTuple(H,_,A),
   genTpVars(A,AT),
-  checkType(Lc,predType(AT),Tp,Env,E0),
-  typeOfTerms(A,AT,E0,E1,Lc,Args),
+  checkType(Lc,predType(AT),Tp,Env),
+  typeOfTerms(A,AT,Env,E1,Lc,Args),
   checkCond(R,E1,Ev,Body).
 typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),

@@ -294,22 +294,22 @@ lo.comp.dependencies{
   refsInTerm:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTerm(T,All,So) =>  (((Nm,valu) in All, \+ (Nm,valu) in So) ? [(Nm,valu),..So] | So) :-  isIden(T,_,Nm).
   refsInTerm(T,_,So) =>  So :-  isScalar(T).
-  refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,":",_,L,R).
-  refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,"::",_,L,R).
-  refsInTerm(T,All,So) =>  refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
-  refsInTerm(T,All,So) =>  refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
-  refsInTerm(T,All,So) =>  refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
-  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
-  refsInTerm(T,All,So) =>  refsInIndex(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
-  refsInTerm(T,All,So) =>  refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).
-  refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(iden(Lc,",.."),All,refsInTerm(iden(Lc,"[]"),All,So))) :-  isSquareTuple(T,Lc,Args).
-  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,",..",_,L,R).
-  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"->",_,L,R).
-  refsInTerm(T,All,So) =>  thetaRefs(Els,All,So) :-  isBraceTuple(T,_,Els).
-  refsInTerm(T,All,So) =>  refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"=>",_,L,R).
-  refsInTerm(T,All,So) =>  refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,":-",_,L,R).
-  refsInTerm(T,All,So) =>  refsInNT(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"-->",_,L,R).
-  refsInTerm(T,All,So) =>  refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
+  refsInTerm(T,All,So) => refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,":",_,L,R).
+  refsInTerm(T,All,So) => refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,"::",_,L,R).
+  refsInTerm(T,All,So) => refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
+  refsInTerm(T,All,So) => refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
+  refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
+  refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
+  refsInTerm(T,All,So) => refsInIndex(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
+  refsInTerm(T,All,So) => refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).
+  refsInTerm(T,All,So) => refsInTerms(Args,All,refsInTerm(iden(Lc,",.."),All,refsInTerm(iden(Lc,"[]"),All,So))) :-  isSquareTuple(T,Lc,Args).
+  refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,",..",_,L,R).
+  refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"->",_,L,R).
+  refsInTerm(T,All,So) => thetaRefs(Els,All,So) :-  isBraceTuple(T,_,Els).
+  refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"=>",_,L,R).
+  refsInTerm(T,All,So) => refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,":-",_,L,R).
+  refsInTerm(T,All,So) => refsInNT(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"-->",_,L,R).
+  refsInTerm(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
   refsInTerm(T,All,So) => So. -- ignore errors for now
 
   refsInTerms:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].

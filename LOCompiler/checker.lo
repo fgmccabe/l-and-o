@@ -276,11 +276,9 @@ lo.comp.typecheck{
     isBinary(St,":-",Lc,L,G),
     isBinary(L,"<=",_,H,R),
     checkClassRule(Lc,H,G,R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
-  processStmt(St,predType(AT),[clause(Lc,Nm,Args,Body),..Defs],Defs,E,_,Rp,Rpx) :-
+  processStmt(St,ProgramType,Defs,Dfx,E,_,Rp,Rpx) :-
     isBinary(St,":-",Lc,L,R),
-    splitHead(L,_,Nm,A),
-    typeOfArg(A,AT,pushScope(E),E0,Args,Rp,Rp0),
-    checkCond(R,E0,_,Body,Rp0,Rpx).
+    checkClause(Lc,L,R,ProgramType,Defs,Dfx,E,Rp,Rpx).
   processStmt(St,predType(AT),[clause(Lc,Nm,Args,trueCond),..Defs],Defs,E,_,Rp,Rpx) :-
     splitHead(St,Lc,Nm,A),
     typeOfArg(A,AT,pushScope(E),E0,Args,Rp,Rpx).
@@ -290,15 +288,16 @@ lo.comp.typecheck{
   processStmt(St,ProgramType,Defs,Defx,E,Pth,Rp,Rpx) :-
     isBinary(St,"<=",Lc,H,R),
     checkClassRule(Lc,H,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
-  processStmt(St,Tp,Defs,Dx,E,Path,Rp,Rpx) :-
+  processStmt(St,Tp,Defs,Dx,E,_,Rp,Rpx) :-
     isBinary(St,"-->",Lc,L,R),
-    checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Path,Rp,Rpx).
+    checkGrammarRule(Lc,L,R,Tp,Defs,Dx,E,Rp,Rpx).
   processStmt(St,Tp,Defs,Defs,_,_,Rp,Rpx) :-
     reportError("Statement \(St) not consistent with expected type \(Tp)",St.loc,Rp,Rpx).
 
   private splitHead:(ast,location,string,ast){}.
   splitHead(T,Lc,Nm,A) :- isRound(T,Lc,N,A), isIden(N,_,Nm).
   splitHead(T,Lc,Nm,roundTuple(Lc,[])) :- isIden(T,Lc,Nm).
+  splitHead(T,Lc,"$",T) :- isRoundTuple(T,_,_).
 
   private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
   checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Exp,Cond),..Defs],Defs,E,Rp,Rpx) :-
@@ -309,14 +308,20 @@ lo.comp.typecheck{
   checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_,Rp,Rpx) :-
     reportError("equation not consistent with expected type: \(ProgramType)",Lc,Rp,Rpx).
 
+  private checkClause:(location,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
+  checkClause(Lc,L,R,predType(AT),[clause(Lc,Nm,Args,Body),..Defs],Defs,E,Rp,Rpx) :-
+    splitHead(L,_,Nm,A),
+    typeOfArg(A,AT,pushScope(E),E0,Args,Rp,Rp0),
+    checkCond(R,E0,_,Body,Rp0,Rpx).
+
   private checkDefn:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}
   checkDefn(Lc,L,C,R,Tp,[vrDef(Lc,Nm,Value,Cond),..Dx],Dx,E,Rp,Rpx) :-
     isIden(L,_,Nm),
     checkCond(C,pushScope(E),E1,Cond,Rp,Rp0),
     typeOfTerm(R,Tp,E1,_,Value,Rp0,Rpx).
 
-  private checkGrammarRule:(location,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
-  checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,_,Rp,Rpx) :-
+  private checkGrammarRule:(location,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
+  checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,Rp,Rpx) :-
     splitGrHead(L,Nm,A,P),
     ElTp=newVar("_E"),
     typeOfArg(A,AT,declareVar("stream\$X",vr(v(Lc,"stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
@@ -541,24 +546,17 @@ lo.comp.typecheck{
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isUnary(Term,"-",Lc,Arg),         -- handle unary minus
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,"=>",Lc,Lhs,Rhs),
-    isRoundTuple(Lhs,_,A),
-    ArgTp = tupleType(mkTypes(length(A))),
-    ResTp = newVar("_"),
-    FunTp = funType(ArgTp,ResTp),
-    checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
-    typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
-    typeOfTerm(Rhs,ResTp,E1,E2,Res,Rp1,Rpx),
-    Exp = lambda(computeNewVars(E2),equation(Lc,_str_gen("L"),Arg,Res,trueCond)). -- Have to sort out free variables at some point
-  typeOfTerm(Term,Tp,Env,Env,lambda(computeNewVars(E2),clause(Lc,_str_gen("R"),Arg,Cond)),Rp,Rpx) :-
+    checkEquation(Lc,Lhs,iden(Lc,"true"),Rhs,Tp,[Eqn,.._],_,Env,Rp,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,lambda(Clse),Rp,Rpx) :-
     isBinary(Term,":-",Lc,Lhs,Rhs),
     isRoundTuple(Lhs,_,A),
-    ArgTp = tupleType(mkTypes(length(A))),
-    FunTp = predType(ArgTp),
-    checkType(Lc,FunTp,Tp,Env,Rp,Rp0),
-    typeOfTerm(Lhs,ArgTp,pushScope(Env),E1,Arg,Rp0,Rp1),
-    checkCond(Rhs,E1,E2,Cond,Rp1,Rpx).
+    checkClause(Lc,Lhs,Rhs,Tp,[Clse],[],Env,Rp,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Env,Rp,Rpx) :-
+    isBinary(Term,"-->",Lc,Lhs,Rhs),
+    isRoundTuple(Lhs,_,_),
+    checkGrammarRule(Lc,L,R,Tp,[Rle],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),

@@ -8,6 +8,7 @@
 :- use_module(misc).
 :- use_module(escapes).
 :- use_module(location).
+:- use_module(freevars).
 
 transformProg(prog(pkg(Pkg,Vers),Imports,Defs,Others,Fields,Types,Contracts,Impls),
     Opts,export(pkg(Pkg,Vers),Imports,Fields,Types,Classes,Rules,Contracts,Impls)) :-
@@ -541,6 +542,8 @@ trExp(conditional(Lc,T,L,R),Rslt,Q,Qx,Pre,Prx,Post,Post,Map,Opts,Ex,Exx) :- !,
   Cl2 = clse(LQ,CondPr,[RRslt|LQ],RG),
   Ex2 = [Cl1,Cl2|Exx],
   merge([Rslt|LQ],Q,Qx).
+trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx) :-
+  trLambdaRule(Rl,Rslt,Q,Map,Opts,Ex,Exx).
 trExp(XX,void,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-
   reportMsg("internal: cannot transform %s as expression",[XX]).
 
@@ -643,6 +646,26 @@ implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,_,Args,
 implementFunCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,Args),Q,Q,Pre,Px,Tail,Tailx,Pre,Px,Tail,Tailx,_,_,Ex,Ex).
 implementFunCall(notInMap,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   trExpCallOp(dot(v(Lc,Nm),"_call"),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
+
+% We build $$(_call(Args<>Rep),$$(Free),_) :- Cond, !, replacement
+trLambdaRule(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
+  freeVarsInRule(equation(Lc,Nm,A,Cond,Exp),Q,[],FreeVars),
+  genstr(Nm,Lam),
+  trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), % head args
+  trGoal(Cond,PreGx,[neck|PostGx],Q1,Q2,Map,Opts,Ex0,Ex1),   % condition goals
+  trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2),  % replacement expression
+  length(Args,Ar),
+  trCons("_call",Ar,Con),
+  CallStrct = cons(Con,Args),
+  mkClosure(Lam,FreeVars,Closure),
+  merge(FreeVars,Q3,QQ),
+  Ex2 = [clse(QQ,prg(Lam,3),[CallStrct,Closure,anon],Goals)|Exx].
+
+mkClosure(Lam,FreeVars,Closure) :-
+  length(FreeVars,Ar),
+  (Ar = 0 -> 
+    Closure=enum(Lam) | 
+    Closure=cons(strct(Lam,Ar),FreeVars)).
 
 trGoal(true(_),Goals,Goals,Q,Q,_,_,Ex,Ex) :-!.
 trGoal(false(_),[fail|Rest],Rest,Q,Q,_,_,Ex,Ex) :- !.

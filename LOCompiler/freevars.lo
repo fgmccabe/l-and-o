@@ -1,119 +1,98 @@
 lo.comp.freevars{
   import lo.
+
   import lo.comp.canon.
+  import lo.comp.location.
+  import lo.comp.term.
   import lo.comp.types.
 
-  
-  
+  public freeVarsInRule:(canonRule,list[term],list[term]) => list[term].
+  freeVarsInRule(equation(_,_,A,Exp,Cond),Q,F) => freeVarsInGoal(Cond,Q,freeVars(Exp,Q,freeVars(A,Q,F))).
+  freeVarsInRule(clause(_,_,A,Body),Q,F) => freeVarsInGoal(Body,Q,freeVars(A,Q,F)).
+  freeVarsInRule(grRule(_,_,A,PB,Body),Q,F) => freeVarsInNT(PB,Q,freeVarsInNT(Body,Q,freeVars(A,Q,F))).
 
+  freeVarsInRules:(list[canonRule],list[term],list[term]) => list[term].
+  freeVarsInRules([],_,FV) => FV.
+  freeVarsInRules([Rl,..L],Q,F) => freeVarsInRules(L,Q,freeVarsInRule(Rl,Q,F)).
 
+  freeVarsList:(list[canonTerm],list[term],list[term]) => list[term].
+  freeVarsList([],_,FV) => FV.
+  freeVarsList([T,..L],Q,F) => freeVarsList(L,Q,freeVars(T,Q,F)).
 
-  private collectThetaVars:(list[canonDef],map[string,integer]) => map[string,integer].
-  collectThetaVars([],Vars) => Vars.
-  collectThetaVars([D,..L],Vars) => collectThetaVars(L,pickupFromDef(D,Vars)).
+  freeVars:(canonTerm,list[term],list[term]) => list[term].
+  freeVars(v(_,Lb),Q,F) => [varbl(Lb),..F] :- varbl(Lb) in Q.
+  freeVars(v(_,_),_,F) => F.
+  freeVars(int(_),_,F) => F.
+  freeVars(flt(_),_,F) => F.
+  freeVars(str(_),_,F) => F.
+  freeVars(tpl(Els),Q,F) => freeVarsList(Els,Q,F).
+  freeVars(apply(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
+  freeVars(dot(Rc,_),Q,F) =>freeVars(Rc,Q,F).
+  freeVars(whre(T,C),Q,F) => freeVars(T,Q,freeVarsInGoal(C,Q,F)).
+  freeVars(condExp(C,T,E),Q,F) => freeVars(T,Q,freeVars(E,Q,freeVarsInGoal(C,Q,F))).
+  freeVars(lambda(Rl),Q,F) => freeVarsInRule(Rl,Q,F).
+  freeVars(theta(Defs,_),Q,F) => freeVarsInDefs(Defs,filterDefs(Defs,Q),F).
 
-  private pickupFromDef:(canonDef,map[string,integer]) => map[string,integer].
-  pickupFromDef(funDef(_,Nm,_,_,_),Vars) => Vars[Nm->0].
-  pickupFromDef(relDef(_,Nm,_,_,_),Vars) => Vars[Nm->0].
-  pickupFromDef(grammDef(_,Nm,_,_,_),Vars) => Vars[Nm->0].
-  pickupFromDef(classDef(_,Nm,_,_,_,_),Vars) => Vars[Nm->0].
-  pickupFromDef(varDef(_,Nm,_,_,_,_),Vars) => Vars[Nm->0].
-  pickupFromDef(_,Vars) => Vars.
+  freeVarsInGoal:(canonCond,list[term],list[term]) => list[term].
+  freeVarsInGoal(trueCond,_,F) => F.
+  freeVarsInGoal(falseCond,_,F) => F.
+  freeVarsInGoal(conjCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
+  freeVarsInGoal(disjCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
+  freeVarsInGoal(forallCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
+  freeVarsInGoal(condCond(T,L,R),Q,F) => freeVarsInGoal(T,Q,freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F))).
+  freeVarsInGoal(unifyCond(_,L,R),Q,F) => freeVars(L,Q,freeVars(R,Q,F)).
+  freeVarsInGoal(oneCond(L),Q,F) =>freeVarsInGoal(L,Q,F).
+  freeVarsInGoal(negCond(L),Q,F) =>freeVarsInGoal(L,Q,F).
+  freeVarsInGoal(callCond(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
+  freeVarsInGoal(isTrue(A),Q,F) => freeVars(A,Q,F).
+  freeVarsInGoal(phraseCond(_,NT,L,R),Q,F) => freeVarsInNT(NT,Q,freeVars(L,Q,freeVars(R,Q,F))).
 
-  private checkDefs:(list[canonDef],map[string,integer],report,report){}.
-  checkDefs([],_,Rp,Rp).
-  checkDefs([Def,..L],Vars,Rp,Rpx) :-
-    checkDef(Def,Vars,Rp,Rp0),
-    checkDefs(L,Vars,Rp0,Rpx).
+  freeVarsInNT:(canonNT,list[term],list[term]) => list[term].
+  freeVarsInNT(grTerms(Terms),Q,F) => freeVarsInTerminals(Terms,Q,F).
+  freeVarsInNT(grCall(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
+  freeVarsInNT(grTest(C),Q,F) => freeVarsInGoal(C,Q,F).
+  freeVarsInNT(grDip(T,C),Q,F) => freeVarsInGoal(C,Q,freeVars(T,Q,F)).
+  freeVarsInNT(grOne(C),Q,F) => freeVarsInNT(C,Q,F).
+  freeVarsInNT(grNeg(C),Q,F) => freeVarsInNT(C,Q,F).
+  freeVarsInNT(grAhed(C),Q,F) => freeVarsInNT(C,Q,F).
+  freeVarsInNT(grDisj(L,R),Q,F) => freeVarsInNT(R,Q,freeVarsInNT(L,Q,F)).
+  freeVarsInNT(grConj(L,R),Q,F) => freeVarsInNT(R,Q,freeVarsInNT(L,Q,F)).
+  freeVarsInNT(grCond(T,L,R),Q,F) => freeVarsInNT(R,Q,freeVarsInNT(L,Q,freeVarsInNT(T,Q,F))).
 
-  private checkDef:(canonDef,map[string,integer],report,report){}.
-  checkDef(funDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
-  checkDef(relDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
-  checkDef(grammDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
-  checkDef(classDef(_,Nm,_,_,Rls),Vars,Rp,Rpx) :- checkRules(Rls,Vars,Rp,Rpx).
-  checkDef(implDef(_,_,_,_,_,_,Th),Vars,Rp,Rpx) :- 
-  checkDef(_,_,Rp,Rp).
+  freeVarsInTerminals:(list[(location,canonTerm,canonTerm)],list[term],list[term]) => list[term].
+  freeVarsInTerminals([],_,F) => F.
+  freeVarsInTerminals([(_,_,T),..L],Q,F) => freeVarsInTerminals(L,Q,freeVars(T,Q,F)).
 
-  findVarsInDefn:(canonDef,map[string,integer]) => map[string,integer].
-  findVarsInDefn(funDef(_,_,_,_,Rls),Ext) => findVarsInDfn(Rls,Ext)
+  freeVarsInDefs:(list[canonDef],list[term],list[term]) => list[term].
+  freeVarsInDefs(Defs,Q,F) => findVarsInDefs(Defs,filterDefs(Defs,Q),F).
 
-  findVarsInDfn(list[canonRule],map[string,integer],map[string,integer]) => map[string,integer].
-  findVarsInDfn(Rules,External,ExtX) => Vars :-
-    editRefs(External,ExtX,findVarsInRules(Rules,[]),Vars).
+  findVarsInDefs:(list[canonDef],list[term],list[term]) => list[term].
+  findVarsInDefs([],_,F) => F.
+  findVarsInDefs([D,..L],Q,F) => findVarsInDefs(L,Q,freeVarsInDef(D,Q,F)).
 
-  private findVarsInRules:(list[canonRule],map[string,integer]) => map[string,integer].
-  findVarsInRules([],SoFar) => SoFar.
-  findVarsInRules([Rl,..L],SoFar) => findVarsInRules(L,findVarsInRule(Rl,SoFar)).
+  private filterDefs:(list[canonDef],list[term]) => list[term].
+  filterDefs([],Vars) => Vars.
+  filterDefs([D,..L],Vars) => filterDefs(L,filterDef(D,Vars)).
 
-  -- This sorts out 'local' vars from 'external' vars. 
-  -- Updates count of external refs and removes free from local
+  private filterDef:(canonDef,list[term]) => list[term].
+  filterDef(funDef(_,Nm,_,_,_),Vars) => subtract(varbl(Nm),Vars).
+  filterDef(relDef(_,Nm,_,_,_),Vars) => subtract(varbl(Nm),Vars).
+  filterDef(grammDef(_,Nm,_,_,_),Vars) => subtract(varbl(Nm),Vars).
+  filterDef(classDef(_,Nm,_,_,_,_),Vars) => subtract(varbl(Nm),Vars).
+  filterDef(varDef(_,Nm,_,_,_,_),Vars) => subtract(varbl(Nm),Vars).
+  filterDef(_,Vars) => Vars.
 
-  private editRefs:(map[string,integer],map[string,integer],map[string,integer],map[integer]){}.
-  editRefs(Ext,ExtX,Vars,VarsX) :-
-    pickoutExt(pairs(Ext),Ext,ExtX,Vars,VarsX).
+  freeVarsInDef:(canonDef,list[term],list[term]) => list[term].
+  freeVarsInDef(funDef(_,_,_,_,Rls),Q,F) => freeVarsInRules(Rls,Q,F).
+  freeVarsInDef(relDef(_,_,_,_,Rls),Q,F) => freeVarsInRules(Rls,Q,F).
+  freeVarsInDef(grammDef(_,_,_,_,Rls),Q,F) => freeVarsInRules(Rls,Q,F).
+  freeVarsInDef(classDef(_,_,_,_,Rls,_),Q,F) => freeVarsInRules(Rls,Q,F).
+  freeVarsInDef(varDef(_,_,_,_,L,C),Q,F) => freeVars(L,Q,freeVarsInGoal(C,Q,F)).
+  freeVarsInDef(otherDef(_,Ot),Q,F) => freeVarsInOther(Ot,Q,F).
+  freeVarsInDef(implDef(_,_,_,_,_,L,R,_),Q,F) => freeVars(R,Q,freeVars(L,Q,F)).
+  freeVarsInDef(_,_,F) => F.
 
-  private pickoutExt:(list[(string,integer)],map[string,integer],map[string,integer],map[string,integer],map[integer]){}.
-  pickoutExt([],Ext,Ext,Vars,Vars).
-  pickoutExt([(V,C),..L],Ext,ExtX,Vars,VarsX) :- present(Vars,V,Lc),
-    pickoutExt(L,Ext[V->C+Lc],ExtX,Vars[\+V],VarsX).
-  pickoutExt([_,..L],ExtX,Vars,VarsX) :-
-    pickoutExt(L,Ext,ExtX,Vars,VarsX).
- 
-  findVarsInRule:(canonRule,map[string,integer]) => map[string,integer].
-  findVarsInRule(clause(_,_,Hd,Body),SoFar) => findVarsInCond(Body,findVarsInTerm(Hd,SoFar)).
-  findVarsInRule(equation(_,_,Hd,Repl,Body),SoFar) => findVarsInTerm(Repl,findVarsInCond(Body,findVarsInTerm(Hd,SoFar))).
-  findVarsInRule(vrDef(_,_,Exp,Body),SoFar) => findVarsInCond(Body,findVarsInTerm(Exp,SoFar)).
-  findVarsInRule(clRule(_,_,_,Hd,Body,Cond,_),SoFar) => findVarsInTerm(Body,findVarsInCond(Cond,findVarsInTerm(Hd,SoFar))).
-  findVarsInRule(grRule(_,_,Hd,Body,Hed),SoFar) => findVarsInNT(Hed,findVarsInNT(Body,findVarsInTerm(Hd,SoFar))).
-  findVarsInRule(tpRule(_,_),SoFar) => SoFar.
-
-  findVarsInTerm:(canonTerm,map[string,integer]) => map[string,integer].
-  findVarsInTerm(v(_,Nm),SoFar) => SoFar[Nm->Count+1] :- present(SoFar,Nm,Count).
-  findVarsInTerm(v(_,Nm),SoFar) => SoFar[Nm->1].
-  findVarsInTerm(int(_),SoFar) => SoFar.
-  findVarsInTerm(flt(_),SoFar) => SoFar.
-  findVarsInTerm(str(_),SoFar) => SoFar.
-  findVarsInTerm(apply(_,Op,Arg),SoFar) => findVarsInTerm(Arg,findVarsInTerm(Op,SoFar)).
-  findVarsInTerm(tpl(Els),SoFar) => findVarsInTerms(Els,SoFar).
-  findVarsInTerm(whre(T,C),SoFar) => findVarsInTerm(T,findVarsInCond(C,SoFar)).
-  findVarsInTerm(cond(If,Th,El),SoFar) => findVarsInTerm(El,findVarsInTerm(Th,findVarsInCond(If,SoFar))).
-  findVarsInTerm(lambda(Rl),SoFar) => findVarsInRule(Rl,SoFar).
-  findVarsInTerm(theta(_,_),SoFar) => SoFar.
-  findVarsInTerm(dot(Rc,_),SoFar) => findVarsInTerm(Rc,SoFar).
-  findVarsInTerm(over(_,E,_),SoFar) => findVarsInTerm(E,SoFar).
-  findVarsInTerm(mtd(_,_),SoFar) => SoFar.
-
-  private findVarsInTerms:(list[canonTerm],map[string,integer]) => map[string,integer].
-  findVarsInTerms([],SoFar) => SoFar.
-  findVarsInTerms([T,..L],SoFar) => findVarsInTerms(L,findVarsInTerm(T,SoFar)).
-
-  private findVarsInCond:(canonCond,map[string,integer]) => map[string,integer].
-  findVarsInCond(trueCond,SoFar) => SoFar.
-  findVarsInCond(falseCond,SoFar) => SoFar.
-  findVarsInCond(conjCond(L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,SoFar)).
-  findVarsInCond(disjCond(L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,SoFar)).
-  findVarsInCond(forallCond(L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,SoFar)).
-  findVarsInCond(condCond(T,L,R),SoFar) => findVarsInCond(R,findVarsInCond(L,findVarsInCond(T,SoFar))).
-  findVarsInCond(unifyCond(_,L,R),SoFar) => findVarsInTerm(R,findVarsInTerm(L,SoFar)).
-  findVarsInCond(isTrue(E),SoFar) => findVarsInTerm(E,SoFar).
-  findVarsInCond(oneCond(R),SoFar) => findVarsInCond(R,SoFar).
-  findVarsInCond(negCond(R),SoFar) => findVarsInCond(R,SoFar).
-  findVarsInCond(callCond(_,O,A),SoFar) => findVarsInTerm(A,findVarsInTerm(O,SoFar)).
-  findVarsInCond(phraseCond(_,G,L,R),SoFar) => findVarsInNT(G,findVarsInTerm(R,findVarsInTerm(L,SoFar))).
-
-  private findVarsInNT:(canonNT,map[string,integer]) => map[string,integer].
-  findVarsInNT(grTerms(L),SoFar) => findVarsInTerminals(L,SoFar).
-  findVarsInNT(grCall(_,O,A),SoFar) => findVarsInTerm(A,findVarsInTerm(O,SoFar)).
-  findVarsInNT(grTest(C),SoFar) => findVarsInCond(C,SoFar).
-  findVarsInNT(grOne(G),SoFar) => findVarsInNT(G,SoFar).
-  findVarsInNT(grNeg(G),SoFar) => findVarsInNT(G,SoFar).
-  findVarsInNT(grAhed(G),SoFar) => findVarsInNT(G,SoFar).
-  findVarsInNT(grDep(E,G),SoFar) => findVarsInCond(G,findVarsInTerm(E,SoFar)).
-  findVarsInNT(grConj(L,R),SoFar) => findVarsInNT(R,findVarsInNT(L,SoFar)).
-  findVarsInNT(grDisj(L,R),SoFar) => findVarsInNT(R,findVarsInNT(L,SoFar)).
-  findVarsInNT(grCond(T,L,R),SoFar) => findVarsInNT(R,findVarsInNT(L,findVarsInCond(T,SoFar))).
-
-  private findVarsInTerminals:(list[(location,string,canonTerm)],map[string,integer]) => map[string,integer].
-  findVarsInTerminals([],SoFar) => SoFar.
-  findVarsInTerminals([(_,_,T),..L],SoFar) => findVarsInTerminals(L,findVarsInTerm(T,SoFar)).
+  freeVarsInOther:(canonOther,list[term],list[term]) => list[term].
+  freeVarsInOther(integrity(_,C),Q,F) => freeVarsInGoal(C,Q,F).
+  freeVarsInOther(expShow(_,E),Q,F) => freeVars(E,Q,F).
 }

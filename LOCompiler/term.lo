@@ -13,8 +13,7 @@ lo.comp.term {
                    | prg(string,integer)
                    | strng(string)
                    | tuple(list[term])
-                   | cons(term,list[term])
-                   | code(tipe,list[integer],list[term]).
+                   | cons(term,list[term]).
 
   public type clse ::= clse(list[term],term,list[term],list[pred]).
 
@@ -99,5 +98,4 @@ lo.comp.term {
   isGroundTerm(cons(Op,Els)) :-
     isGroundTerm(Op),
     isGroundTerm(E) *> E in Els.
-  isGroundTerm(code(_,_,_)).
 }

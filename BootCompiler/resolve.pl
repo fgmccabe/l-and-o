@@ -63,6 +63,20 @@ overloadClause(Extra,clause(Lc,Nm,Args,Cond,Body),Dict,clause(Lc,Nm,RArgs,RCond,
   resolveCond(Cond,Dict,RCond),
   resolveCond(Body,Dict,RBody).
 
+% These are used when resolving lambdas only. A lambda cannot introduce any dictionary variables
+overloadRule(equation(Lc,Nm,Args,Cond,Exp),Dict,equation(Lc,Nm,RArgs,RCond,RExp)) :-
+  resolveTerms(Args,Dict,RArgs),
+  resolveCond(Cond,Dict,RCond),
+  resolveTerm(Exp,Dict,RExp).
+overloadRule(clause(Lc,Nm,Args,Cond,Body),Dict,clause(Lc,Nm,RArgs,RCond,RBody)) :-
+  resolveTerms(Args,Dict,RArgs),
+  resolveCond(Cond,Dict,RCond),
+  resolveCond(Body,Dict,RBody).
+overloadRule(grammarRule(Lc,Nm,Args,PB,Body),Dict,grammarRule(Lc,Nm,RArgs,RPB,RBody)) :-
+  resolveTerms(Args,Dict,RArgs),
+  resolveTerminals(PB,Dict,RPB),
+  resolveGr(Body,Dict,RBody).
+
 overloadDefn(Lc,Nm,[],Cond,Tp,Exp,Dict,defn(Lc,Nm,[],RCond,Tp,RExp)) :-
   resolveCond(Cond,Dict,RCond),
   resolveTerm(Exp,Dict,RExp).
@@ -129,6 +143,8 @@ resolveTerm(over(Lc,T,Cx),Dict,Over) :-
       Over = T).
 resolveTerm(mtd(Lc,Nm),_,v(Lc,Nm)) :-
   reportError("cannot find implementation for %s",[Nm],Lc).
+resolveTerm(lambda(Rl),Dict,lambda(ORl)) :-
+  overloadRule(Rl,Dict,ORl).
 
 overloadList([],_,_,[]):-!.
 overloadList([T|L],C,D,[RT|RL]) :-

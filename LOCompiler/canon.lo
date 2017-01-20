@@ -43,7 +43,7 @@ lo.comp.canon {
             | tpl(list[canonTerm])
             | whre(canonTerm,canonCond)
             | condExp(canonCond,canonTerm,canonTerm)
-            | lambda(list[canonTerm],canonRule)
+            | lambda(canonRule)
             | theta(list[canonDef],list[canonOther])
             | dot(canonTerm,string)
             | over(location,canonTerm,list[constraint])
@@ -179,7 +179,7 @@ lo.comp.canon {
   dispTerm(dot(R,F)) => ssSeq([dispTerm(R),ss("."),ss(F)]).
   dispTerm(over(_,T,C)) => ssSeq([disp(C),ss("|:"),dispTerm(T)]).
   dispTerm(mtd(_,M)) => ss(M).
-  dispTerm(lambda(Q,R)) => ssSeq([ss("<"),dispRule(R),ss(">")]).
+  dispTerm(lambda(R)) => ssSeq([ss("<"),dispRule(R),ss(">")]).
   dispTerm(theta(D,O)) => ssSeq([ss("{"),ssSeq(dispDefs(D)),ssSeq(dispOthers(O)),ss("}")]).
 
   private dispEls:(list[canonTerm]) => list[ss].

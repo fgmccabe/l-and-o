@@ -434,6 +434,18 @@ collectExpRefs(T,All,R,Refs) :-
   isSquareTerm(T,Op,A),
   collectExpRefs(Op,All,R,R0),
   collectIndexRefs(A,All,R0,Refs).
+collectExpRefs(T,All,R0,Refs) :-
+  isBinary(T,"=>",L,R),
+  collectExpRefs(L,All,R0,R1),
+  collectExpRefs(R,All,R1,Refs).
+collectExpRefs(T,All,R0,Refs) :-
+  isBinary(T,":-",L,R),
+  collectExpRefs(L,All,R0,R1),
+  collectCondRefs(R,All,R1,Refs).
+collectExpRefs(T,All,R0,Refs) :-
+  isBinary(T,"-->",L,R),
+  collectExpRefs(L,All,R0,R1),
+  collectNTRefs(R,All,R1,Refs).
 collectExpRefs(_,_,Refs,Refs).
 
 collectExpListRefs([],_,Refs,Refs).

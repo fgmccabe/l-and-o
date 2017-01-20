@@ -1,0 +1,12 @@
+test.lambda{
+  import lo.
+
+  assert [1,2,3]//((X)=>X) = [1,2,3].
+
+  assert [1,2,3]//((X)=>X+1) = [2,3,4].
+
+  incr:(list[integer],integer) => list[integer].
+  incr(L,I) => L//((X)=>X+I).
+
+  assert incr([1,2,3],3) = [4,5,6].  
+}
