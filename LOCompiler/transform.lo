@@ -600,14 +600,14 @@ lo.comp.transform{
 
   trLambda:(canonRule,term,list[term],list[lyr],trOptions,list[clse],list[clse],report,report){}.
    -- We build $$(_call(Args<>Rep),$$(Free),_) :- Cond, !, replacement
-  trLambda(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
-    FreeVars = freeVarsInRule(equation(Lc,Nm,tpl(A),Cond,Exp),Q,[]),
+  trLambda(equation(Lc,Nm,tpl(A),Exp,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    FreeVars = freeVarsInRule(equation(Lc,Nm,tpl(A),Exp,Cond),Q,[]),
     Lam = _str_gen(Nm),
-    trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), -- head of lambda
-    trGoal(Cond,PreGx,[neck,..PostGx],Q1,Q2,Map,Opts,Ex0,Ex1),       -- condition goals
-    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2),      -- replacement expression
+    trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
+    trGoal(Cond,PreGx,[neck,..PostGx],Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rp1),       -- condition goals
+    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rpx),      -- replacement expression
     CallStrct = cons(trCons("_call",size(Args)),Args),
-    mkClosure(Lam,FreeVars,Closure),
+    Closure = mkClosure(Lam,FreeVars),
     Ex2 = [clse(merge(FreeVars,Q3),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Exx].
 
   mkClosure:(string,list[term])=>term.

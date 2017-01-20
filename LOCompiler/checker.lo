@@ -553,7 +553,7 @@ lo.comp.typecheck{
     isBinary(Term,":-",Lc,Lhs,Rhs),
     isRoundTuple(Lhs,_,A),
     checkClause(Lc,Lhs,Rhs,Tp,[Clse],[],Env,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Env,Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Rp,Rpx) :-
     isBinary(Term,"-->",Lc,Lhs,Rhs),
     isRoundTuple(Lhs,_,_),
     checkGrammarRule(Lc,L,R,Tp,[Rle],[],Env,Rp,Rpx).
