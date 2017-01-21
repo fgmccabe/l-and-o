@@ -22,7 +22,7 @@ lo.comp.decode{
   decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
   decodeTerm(tuple(Els)) --> "u", decInt(Len), decTerms(Len,Els).
   decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
-  decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tuple(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
+  -- decodeTerm(code(Tp,Bytes,Lits)) --> "#", decodeType(Tp), decodeTerm(tuple(Lits)), decodeText(B64), { Bytes = decode64(B64)}.
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].

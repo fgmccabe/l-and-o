@@ -47,7 +47,7 @@ extraArity(Arity,Vars,ExAr) :-
   length(Vars,E),
   ExAr is E+Arity.
 
-transformFunction(Map,Opts,function(Lc,Nm,Tp,[],Eqns),Rules,Rx,Ex,Exx) :-
+transformFunction(Map,Opts,function(Lc,Nm,_,[],Eqns),Rules,Rx,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
   programAccess(Reslt,LclFun,_,_,Arity),
   pushOpt(Opts,inProg(Nm),FOpts),
@@ -55,7 +55,7 @@ transformFunction(Map,Opts,function(Lc,Nm,Tp,[],Eqns),Rules,Rx,Ex,Exx) :-
   extraArity(Arity,Extra,Ar),
   LclPrg = prg(LclFun,Ar),
   transformEquations(Map,FOpts,LclPrg,Extra,Eqns,1,_,Rules,R0,Ex,Ex0),
-  failSafeEquation(FOpts,Lc,LclPrg,Extra,Tp,R0,Rx),
+  failSafeEquation(Lc,Nm,LclPrg,Ar,R0,Rx),
   closureEntry(Map,Nm,Ex0,Exx).
 
 transformEquations(_,_,_,_,[],No,No,Rules,Rules,Ex,Ex).
@@ -75,14 +75,11 @@ transformEqn(equation(Lc,Nm,A,Cond,Value),Map,Opts,LclPrg,Extra,QNo,[clse(Q,LclP
   deframeDebug(Nm,QNo,Px,[],ClOpts),                      % generate frame exit debugging
   breakDebug(Nm,CGx,PostG,ClOpts).                         % generate break point debugging
 
-failSafeEquation(Opts,Lc,LclPrg,Extra,Tp,[clse([],LclPrg,Anons,G)|Rest],Rest) :-
-  typeArity(Tp,Ar),
-  length(Extra,EA),
-  Arity is Ar+1+EA,
+failSafeEquation(Lc,Nm,LclPrg,Arity,[clse([],LclPrg,Anons,G)|Rest],Rest) :-
   genAnons(Arity,Anons),
-  genRaise(Opts,Lc,LclPrg,G,[]).
+  genRaise(Lc,strg(Nm),G,[]).
 
-genRaise(_,Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
+genRaise(Lc,LclName,[raise(cons(strct("error",4),[LclName,intgr(Lno),intgr(Off),intgr(Sz)]))|P],P) :-
   lcLine(Lc,Lno),
   lcColumn(Lc,Off),
   lcSize(Lc,Sz).
@@ -659,7 +656,9 @@ trLambdaRule(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
   CallStrct = cons(Con,Args),
   mkClosure(Lam,FreeVars,Closure),
   merge(FreeVars,Q3,QQ),
-  Ex2 = [clse(QQ,prg(Lam,3),[CallStrct,Closure,anon],Goals)|Exx].
+  LclPrg = prg(Lam,3),
+  Ex2 = [clse(QQ,LclPrg,[CallStrct,Closure,anon],Goals)|Ex3],
+  failSafeEquation(Lc,"lambda",LclPrg,3,Ex3,Exx).
 
 mkClosure(Lam,FreeVars,Closure) :-
   length(FreeVars,Ar),

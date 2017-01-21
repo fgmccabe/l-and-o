@@ -59,7 +59,7 @@ lo.comp.transform{
     extraArity(Arity,Extra,Ar),
     LclPrg = prg(LclFun,Ar),
     transformEquations(Map,Opts,LclPrg,Extra,Eqns,1,Rules,R0,Ex,Ex0,Rp,Rp0),
-    failSafeEquation(Opts,Lc,LclPrg,Ar,R0,Rx,Rp0,Rpx),
+    failSafeEquation(Lc,strng(Nm),LclPrg,Ar,R0,Rx,Rp0,Rpx),
     closureEntry(Map,Nm,Ex0,Exx).
 
   transformEquations:(list[lyr],trOptions,term,list[term],list[canonRule],integer,list[clse],list[clse],list[clse],list[clse],report,report){}.
@@ -80,9 +80,9 @@ lo.comp.transform{
     deframeDebug(Nm,QNo,Px,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,CGx,PostG,ClOpts).                         -- generate break point debugging
 
-  failSafeEquation:(trOptions,location,term,integer,list[clse],list[clse],report,report){}.
-  failSafeEquation(Opts,Lc,LclPrg,Arity,[clse([],LclPrg,genAnons(Arity),G),..Rest],Rest,Rp,Rpx) :-
-    genRaise(Lc,LclPrg,G,[],Rp,Rpx).
+  failSafeEquation:(location,term,term,integer,list[clse],list[clse],report,report){}.
+  failSafeEquation(Lc,Nm,LclPrg,Arity,[clse([],LclPrg,genAnons(Arity),G),..Rest],Rest,Rp,Rpx) :-
+    genRaise(Lc,Nm,G,[],Rp,Rpx).
 
   genRaise:(location,term,list[pred],list[pred],report,report){}.
   genRaise(Lc,LclName,[except(cons(strct("error",4),[LclName,intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(widthOf(Lc))])),..P],P,Rp,Rp).
@@ -129,7 +129,7 @@ lo.comp.transform{
     lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
     deframeDebug(Nm,0,G7,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    failSafeEquation(Opts,Lc,LclPrg,length(Extra)+1,R0,Rx,Rp1,Rpx).
+    failSafeEquation(Lc,strng(Nm),LclPrg,length(Extra)+1,R0,Rx,Rp1,Rpx).
 
   transformGrammar:(canonDef,list[lyr],trOptions,list[clse],list[clse],list[clse],list[clse],report,report){}.
   transformGrammar(grammDef(_,Nm,_,[],Rls),Map,Opts,Rules,Rx,Ex,Exx,Rp,Rpx) :-
@@ -286,8 +286,8 @@ lo.comp.transform{
     transformClause(clause(Lc,"show",tpl([]),(foldRight(collectShow,trueCond,Shows):canonCond)),Map,Opts,ShowNm,Extra,1,Rules,R0,R0,Rx,Rp,Rpx).
 
   collectShow:(canonOther,canonCond)=>canonCond.
-  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),tpl([trLocation(Lc),S])).
-  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([trLocation(Lc),S])),O).
+  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),tpl([S])).
+  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([S])),O).
 
   trLocation:(location) => canonTerm.
   trLocation(Lc) => tpl([int(lineOf(Lc)),int(columnOf(Lc)),int(widthOf(Lc))]).
@@ -602,13 +602,14 @@ lo.comp.transform{
    -- We build $$(_call(Args<>Rep),$$(Free),_) :- Cond, !, replacement
   trLambda(equation(Lc,Nm,tpl(A),Exp,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(equation(Lc,Nm,tpl(A),Exp,Cond),Q,[]),
-    Lam = _str_gen(Nm),
+    genNewName(Map,Nm,3,prg(Lam,_)),
     trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
     trGoal(Cond,PreGx,[neck,..PostGx],Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rp1),       -- condition goals
-    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rpx),      -- replacement expression
+    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rp2),      -- replacement expression
     CallStrct = cons(trCons("_call",size(Args)),Args),
     Closure = mkClosure(Lam,FreeVars),
-    Ex2 = [clse(merge(FreeVars,Q3),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Exx].
+    Ex2 = [clse(merge(FreeVars,Q3),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Ex3],
+    failSafeEquation(Lc,strng(Nm),prg(Lam,3),3,Ex3,Exx,Rp2,Rpx).
 
   mkClosure:(string,list[term])=>term.
   mkClosure(Lam,[]) => enum(Lam).

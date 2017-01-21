@@ -297,7 +297,6 @@ lo.comp.typecheck{
   private splitHead:(ast,location,string,ast){}.
   splitHead(T,Lc,Nm,A) :- isRound(T,Lc,N,A), isIden(N,_,Nm).
   splitHead(T,Lc,Nm,roundTuple(Lc,[])) :- isIden(T,Lc,Nm).
-  splitHead(T,Lc,"$",T) :- isRoundTuple(T,_,_).
 
   private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
   checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Exp,Cond),..Defs],Defs,E,Rp,Rpx) :-
@@ -548,15 +547,17 @@ lo.comp.typecheck{
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,"=>",Lc,Lhs,Rhs),
-    checkEquation(Lc,Lhs,iden(Lc,"true"),Rhs,Tp,[Eqn,.._],_,Env,Rp,Rpx).
+    checkEquation(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),iden(Lc,"true"),Rhs,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
+    isBinary(Term,":-",Lc,L,G),
+    isBinary(L,"=>",_,H,R),
+    checkEquation(Lc,appl(Lc,iden(Lc,"lambda"),H),G,R,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Clse),Rp,Rpx) :-
     isBinary(Term,":-",Lc,Lhs,Rhs),
-    isRoundTuple(Lhs,_,A),
-    checkClause(Lc,Lhs,Rhs,Tp,[Clse],[],Env,Rp,Rpx).
+    checkClause(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),Rhs,deRef(Tp),[Clse],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Rp,Rpx) :-
     isBinary(Term,"-->",Lc,Lhs,Rhs),
-    isRoundTuple(Lhs,_,_),
-    checkGrammarRule(Lc,L,R,Tp,[Rle],[],Env,Rp,Rpx).
+    checkGrammarRule(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),R,deRef(Tp),[Rle],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),

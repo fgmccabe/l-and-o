@@ -9,4 +9,6 @@ test.lambda{
   incr(L,I) => L//((X)=>X+I).
 
   assert incr([1,2,3],3) = [4,5,6].  
+
+  show incr([3,2,7],5).
 }
