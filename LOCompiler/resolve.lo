@@ -163,6 +163,7 @@ lo.comp.resolve{
   overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
   overloadRef(mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
   overloadRef(v(Lc,Nm),DT,RArgs,v(Lc,Nm),DT<>RArgs).
+  overloadRef(mtd(Lc,Nm),_,RArgs,v(Lc,Nm),RArgs). -- actually an error recovery step
 
   resolveContracts:(location,list[constraint],list[implEntry],list[canonTerm],report,report){}.
   resolveContracts(_,[],_,[],Rp,Rp).

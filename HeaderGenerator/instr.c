@@ -231,7 +231,7 @@ static void genInsDisp(FILE *out,char *op,opAndSpec A1,opAndSpec A2)
 {
   char *sep = "(";
 
-  fprintf(out,"    disp(i%s",capitalize(op));
+  fprintf(out,"  showIns(i%s",capitalize(op));
   sep = opAndArg(out,sep,A1,1);
   sep = opAndArg(out,sep,A2,2);
 
@@ -254,8 +254,11 @@ static void genInsDisp(FILE *out,char *op,opAndSpec A1,opAndSpec A2)
 
 static void dumpDisplay(FILE *out){
   fprintf(out,"\n\n  public implementation display[instruction] <= {\n");
+  fprintf(out,"    disp(I) => showIns(I).\n");
+  fprintf(out,"  }\n");
+
+  fprintf(out,"\n  showIns:(instruction)=>ss.\n");
 
 #include "instructions.h"
 
-  fprintf(out, "  }\n");
 }

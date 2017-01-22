@@ -57,4 +57,17 @@ lo.comp.misc{
   collect([],_,[],[]).
   collect([e,..l],p,[e,..m],o) :- p(e), collect(l,p,m,o).
   collect([e,..l],p,m,[e,..o]) :- \+ p(e), collect(l,p,m,o).
+
+  -- Not brilliantly fast; but it does not need to be.
+  public nextPrime:(integer)=>integer.
+  nextPrime(From) => head(sieve(3,From,[3])).
+
+  sieve:(integer,integer,list[integer]) => list[integer].
+  sieve(Curr,Max,SoFar) => SoFar :- Curr>Max.
+  sieve(Curr,Max,SoFar) => sieve(Nxt,Max,[Nxt,..SoFar]) :-
+    filter(Curr+2,Nxt,SoFar).
+
+  filter:(integer,integer,list[integer]){}.
+  filter(Ix,Ix,L) :- E%Ix \= 0 *> E in L.
+  filter(Ix,Nx,L) :- filter(Ix+2,Nx,L).
 }

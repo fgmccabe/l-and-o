@@ -225,4 +225,12 @@ lo.core{
   private dispOptional:all x ~~ display[x] |: (option[x]) => ss.
   dispOptional(none) => ss("none").
   dispOptional(some(X)) => ssSeq([ss("some("),disp(X),ss(")")]).
+
+  -- Display 2-tuples
+  public implementation all x,y ~~ display[x], display[y] |: display[(x,y)] <= {
+    disp(T) => dispPair(T).
+  }
+
+  private dispPair:all x,y ~~ display[x], display[y] |: ((x,y)) => ss.
+  dispPair((a,b)) => ssSeq([ss("("),disp(a),ss(" , "),disp(b),ss(")")]).
 }

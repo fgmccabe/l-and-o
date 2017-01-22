@@ -547,17 +547,17 @@ lo.comp.typecheck{
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,"=>",Lc,Lhs,Rhs),
-    checkEquation(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),iden(Lc,"true"),Rhs,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
+    checkEquation(Lc,appl(Lc,iden(Lc,"fun"),Lhs),iden(Lc,"true"),Rhs,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,":-",Lc,L,G),
     isBinary(L,"=>",_,H,R),
-    checkEquation(Lc,appl(Lc,iden(Lc,"lambda"),H),G,R,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
+    checkEquation(Lc,appl(Lc,iden(Lc,"fun"),H),G,R,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Clse),Rp,Rpx) :-
     isBinary(Term,":-",Lc,Lhs,Rhs),
-    checkClause(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),Rhs,deRef(Tp),[Clse],[],Env,Rp,Rpx).
+    checkClause(Lc,appl(Lc,iden(Lc,"pred"),Lhs),Rhs,deRef(Tp),[Clse],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Rp,Rpx) :-
     isBinary(Term,"-->",Lc,Lhs,Rhs),
-    checkGrammarRule(Lc,appl(Lc,iden(Lc,"lambda"),Lhs),R,deRef(Tp),[Rle],[],Env,Rp,Rpx).
+    checkGrammarRule(Lc,appl(Lc,iden(Lc,"grm"),Lhs),R,deRef(Tp),[Rle],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     FnTp = newVar("F"),

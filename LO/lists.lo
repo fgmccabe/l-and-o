@@ -143,4 +143,10 @@ lo.list{
   public iota:(integer,integer)=>list[integer].
   iota(F,T) => [] :- F>T.
   iota(F,T) => [F,..iota(F+1,T)] :- F=<T.
+
+  public head:all e ~~ (list[e]) => e.
+  head([E,.._]) => E.
+
+  public tail:all e ~~ (list[e]) => list[e].
+  tail([_,..L]) => L.
 }

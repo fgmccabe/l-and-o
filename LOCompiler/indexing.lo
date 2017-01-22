@@ -1,6 +1,8 @@
-lo.comp.indexing{
+lo.comp.code.indexing{
   import lo.
+  import lo.sort.
 
+  import lo.comp.misc.
   import lo.comp.term.
   import lo.comp.types.
 
@@ -10,19 +12,26 @@ lo.comp.indexing{
 
   private type aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
 
+  implementation display[aoTr] <= {
+    disp(T) => showTree(T).
+  }
 
+  showTree:(aoTr) => ss.
+  showTree(eTree) => ss("{}").
+  showTree(aXN(L)) => ssSeq([ss("("),ssSeq(L//showTree),ss(")")]).
+  showTree(oXN(L)) => ssSeq([ss("{"),ssSeq(L//(((ix(T,N),ST))=>ssSeq([dispTerm(T),ss(":"),disp(N),ss(" "),showTree(ST)]))),ss("}")]).
 
-  genTree:(term,integer)=>aoTr.
+  private genTree:(term,list[(integer,string)])=>aoTr.
   genTree(anon,n) => oXN([(ix(anon,n),eTree)]).
   genTree(varbl(Id),n) => oXN([(ix(varbl(Id),n),eTree)]).
   genTree(intgr(Ix),n) => oXN([(ix(intgr(Ix),n),eTree)]).
   genTree(flot(Dx),n) => oXN([(ix(flot(Dx),n),eTree)]).
   genTree(strng(Sx),n) => oXN([(ix(strng(Sx),n),eTree)]).
   genTree(enum(Id),n) => oXN([(ix(enum(Id),n),eTree)]).
-  genTree(tuple(Els),n) => oxN([(ix(tuple(Els),n),aXN(genTreeEls(Els,n)))]).
-  genTree(cons(Op,Els),n) => oxN([(ix(cons(Op,Els),n),aXN(genTreeEls(Els,n)))]).
+  genTree(tuple(Els),n) => oXN([(ix(tuple(Els),n),aXN(genTreeEls(Els,n)))]).
+  genTree(cons(Op,Els),n) => oXN([(ix(cons(Op,Els),n),aXN(genTreeEls(Els,n)))]).
 
-  genTreeEls:(list[term],integer) => list[aoTr].
+  genTreeEls:(list[term],list[(integer,string)]) => list[aoTr].
   genTreeEls([],_) => [].
   genTreeEls([T,..L],N) => [genTree(T,N),..genTreeEls(L,N)].
 
@@ -37,10 +46,10 @@ lo.comp.indexing{
   isSameCons(cons(Op,E1),cons(Op,E2)) :- size(E1)==size(E2).
   isSameCons(tuple(E1),tuple(E2)) :- size(E1)==size(E2).
 
-  addInTriple:(list[(ix,aoTr)],term,list[(ix,aoTr)]) => list[(ix,aoTr)].
-  addInTriple([],C,N,S) => [(C,N,S)].
-  addInTriple([ixEntry(A,n,s),..L],C,N,S) => [ixEntry(C,N+n,S),..L] :- isSameIx(A,C).
-  addInTriple([ixEntry(A,n,s),..L],C,N,S) => [ixEntry(C,N+n,mergeTree(s,S)),..L] :- isSameCons(A,C).
+  addInTriple:(list[(ix,aoTr)],term,list[(integer,string)],aoTr) => list[(ix,aoTr)].
+  addInTriple([],C,N,S) => [(ix(C,N),S)].
+  addInTriple([(ix(A,n),s),..L],C,N,S) => [(ix(C,N<>n),S),..L] :- isSameIx(A,C).
+  addInTriple([(ix(A,n),s),..L],C,N,S) => [(ix(C,N<>n),mergeTree(s,S)),..L] :- isSameCons(A,C).
   addInTriple([X,..L],C,N,S) => [X,..addInTriple(L,C,N,S)].
 
   mergeTree:(aoTr,aoTr) => aoTr.
@@ -48,26 +57,26 @@ lo.comp.indexing{
   mergeTree(t,eTree) => t.
   mergeTree(oXN([(ix(C,N),S)]),oXN(Triples)) => oXN(addInTriple(Triples,C,N,S)).
   mergeTree(oXN(Triples),oXN([(ix(C,N),S)])) => oXN(addInTriple(Triples,C,N,S)).
-  mergeTree(oXN(T1),oXN(T2)) => aXN(addTrList(T1,T2)).
+  mergeTree(aXN(T1),aXN(T2)) => aXN(addTrList(T1,T2)).
 
-  addTrList:(list[aoTr],list[aoTr]) => list[oaTr].
+  addTrList:(list[aoTr],list[aoTr]) => list[aoTr].
   addTrList([],L2) => L2.
   addTrList(L1,[]) => L1.
   addTrList([E1,..L1],[E2,..L2]) => [mergeTree(E1,E2),..addTrList(L1,L2)].
 
-  genMergedTree:(list[(integer,list[term])]) => aoTr.
+  genMergedTree:(list[(list[(integer,string)],list[term])]) => aoTr.
   genMergedTree([]) => eTree.
-  genMergedTree([(n,Els),..L]) => mergeTree(aXN(genMergedTree(Els,n)),genMergedTree(L)).
+  genMergedTree([(n,Els),..L]) => mergeTree(aXN(genTreeEls(Els,n)),genMergedTree(L)).
 
-  firstTree:(aoTr) => oaTr.
+  firstTree:(aoTr) => aoTr.
   firstTree(aXN([oXN(S),.._])) => oXN(S).
   firstTree(T) => T.
 
   bestCol:(aoTr) => (aoTr,integer).
-  bestCol(aXN(L)) => pickColumn(L,eTree,-1,-1,-1).
+  bestCol(aXN(L)) => pickColumn(L,eTree,-1,-1,1,-1).
   bestCol(T) => (T,1).
 
-  pickColumn:(list[oaTr],oaTr,integer,integer,integer,integer) => (oaTr,integer).
+  pickColumn:(list[aoTr],aoTr,integer,integer,integer,integer) => (aoTr,integer).
   pickColumn([],B,_,_,_,Col) => (B,Col).
   pickColumn([oXN(Sub),..L],BT,TCount,VCount,Ix,BCol) => pickColumn(L,NTr,NTc,NVc,Ix+1,NCol) :-
     checkEntries(Sub,0,0,C,V),
@@ -80,9 +89,9 @@ lo.comp.indexing{
       NVc = VCount,
       NCol = BCol,
       NTr = BT).
-  pickColumn([_,L],BT,Tc,Vc,Ix,BCol) => pickColumn(L,BT,Tc,Vc,Ix+1,BCol).
+  pickColumn([_,..L],BT,Tc,Vc,Ix,BCol) => pickColumn(L,BT,Tc,Vc,Ix+1,BCol).
 
-  checkEntries:(list[(ix,aoTr)],aoTr)],integer,integer,integer,integer){}.
+  checkEntries:(list[(ix,aoTr)],integer,integer,integer,integer){}.
   checkEntries([],C,V,C,V).
   checkEntries([(ix(varbl(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C,V+1,Cx,Vx).
   checkEntries([(ix(intgr(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
@@ -90,19 +99,18 @@ lo.comp.indexing{
   checkEntries([(ix(strng(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
   checkEntries([(ix(enum(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
   checkEntries([(ix(cons(_,_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(ix(tuple(_,_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
+  checkEntries([(ix(tuple(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
 
-  genIndex:(oaTr,integer,list[instruction],integer,list[list[instruction]]) => list[instruction].
-  genIndex(oXN(L),Col,Deflt,Arity,Clauses) => :-
-    computeSubIxes(L,[],[],[],[],[],[],[],VarList,IntList,FltList,StrList,StrctList,ConsList,TplList),
-    VCode = genSequence(sort(VarList,compClPt),true).
+  mkIndex:(aoTr,integer,string) => list[instruction].
+  mkIndex(oXN(L),Col,Deflt) => selectIndexStream(VarList,IntList,FltList,StrList,ConsList,TplList,Col,Deflt):-
+    computeSubIxes(L,[],[],[],[],[],[],VarList,IntList,FltList,StrList,ConsList,TplList).
 
   computeSubIxes:(list[(ix,aoTr)],
     list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],
     list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix]){}.
   computeSubIxes([],VarList,IntList,FltList,StrList,ConsList,TplList,VarList,IntList,FltList,StrList,ConsList,TplList).
   computeSubIxes([(ix(varbl(_),cl),_),..L],VL,IL,FL,SL,CL,TP,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL<>cl,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
+    computeSubIxes(L,cl<>VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
   computeSubIxes([(ix(intgr(Ix),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
     computeSubIxes(L,VL,[ix(intgr(Ix),cl),..IL],FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
   computeSubIxes([(ix(flot(Dx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
@@ -112,12 +120,54 @@ lo.comp.indexing{
   computeSubIxes([(ix(enum(Sx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
     computeSubIxes(L,VL,IL,FL,SL,[ix(enum(Sx),cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
   computeSubIxes([(ix(cons(Op,_),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,SL,StL,[ix(Op,cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
+    computeSubIxes(L,VL,IL,FL,SL,[ix(Op,cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
   computeSubIxes([(ix(tuple(Els),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,SL,StL,CL,[(intgr(size(Els)),cl),..TL],VLx,ILx,FLx,SLx,CLx,TLx).
+    computeSubIxes(L,VL,IL,FL,SL,CL,[ix(intgr(size(Els)),cl),..TL],VLx,ILx,FLx,SLx,CLx,TLx).
 
-  compClPt:((integer,string),(integer,string)){}.
+  compClPt:((integer,list[(integer,string)]),(integer,list[(integer,string)])){}.
   compClPt((X,_),(Y,_)) :- X<Y.
+
+  selectIndexStream:(list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],integer,string)=> list[instruction].
+  selectIndexStream(VL,_,_,_,_,_,_,_) => [] :- size(VL)>2.
+  selectIndexStream(VL,IL,_,_,_,_,Col,Deflt) => genHashSequence(IL,Deflt,VL,((A,M)=>[iIndexi(A,M)]),Col) :- IL\=[].
+  selectIndexStream(VL,_,FL,_,_,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexn(A,M)]),Col) :- FL\=[].
+  selectIndexStream(VL,_,_,SL,_,_,Col,Deflt) => genHashSequence(SL,Deflt,VL,((A,M)=>[iIndexs(A,M)]),Col) :- SL\=[].
+  selectIndexStream(VL,_,_,_,CL,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- CL\=[].
+  selectIndexStream(VL,_,_,_,_,TL,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- TL\=[].
+  selectIndexStream(_,_,_,_,_,_,_,_) => [].
+
+  genHashSequence:(list[ix],string,list[(integer,string)],(integer,integer)=>list[instruction],integer) => list[instruction].
+  genHashSequence(HL,Deflt,VL,ixFun,Col) => ixFun(Col,Max)<>[iGo_to(Deflt)]<>mkHashTable(IxT,VL,0,Max,[]) :- size(HL)>1,
+    Max = nextPrime(size(HL)+1),
+    IxT = sort(computeHashes(HL,Max),compClPt).
+  genHashSequence(_,_,_,_,_) => [].
+
+  computeHashes:(list[ix],integer) => list[(integer,list[(integer,string)])].
+  computeHashes([],_) => [].
+  computeHashes([ix(intgr(Ix),cl),..L],Max) => [(Ix%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(flot(Dx),cl),..L],Max) => [(hash(Dx)%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(strng(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(enum(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(tuple(Els),cl),..L],Max) => [(size(Els)%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(cons(strct(Op,Ar),_),cl),..L],Max) => [(hash(Op)%Max,cl),..computeHashes(L,Max)].
+
+  mkHashTable:(list[(integer,list[(integer,string)])],list[(integer,string)],integer,integer,list[instruction]) => list[instruction].
+  mkHashTable(IxT,VL,Pt,Max,Aux) => Aux :- Pt>=Max.
+  mkHashTable(IxT,VL,Pt,Max,Aux) => 
+      mkHashEntry(sort(snip(IxT,RxT,Pt,[])<>VL,(((Cl1,_),(Cl2,_)) :- Cl1<Cl2)),Aux,Aux0)<>mkHashTable(RxT,VL,Pt+1,Max,Aux0).
+
+  mkHashEntry:(list[(integer,string)],list[instruction],list[instruction]) => list[instruction].
+  mkHashEntry([],Aux,Aux) => [iFayl].
+  mkHashEntry([(_,Lbl)],Aux,Aux) => [iGo_to(Lbl)].
+  mkHashEntry(Entries,Aux,Axx) => [iGo_to(Lbl)] :-
+    Lbl = _str_gen("Lbl"),
+    Axx = Aux<>[iLbl(Lbl),..genSequence(Entries,true)].
+
+  snip:(list[(integer,list[(integer,string)])],list[(integer,list[(integer,string)])],integer,list[(integer,string)])=>list[(integer,string)].
+  snip([],[],_,SoFar) => SoFar.
+  snip([(Hx,Cls),..L],R,Hx,SoFar) => snip(L,R,Hx,Cls<>SoFar).
+  snip([(H,Cls),..L],[(H,Cls),..R],Hx,SoFar) => snip(L,R,Hx,SoFar) :- H<Hx.
+  snip(L,L,_,SoFar) => SoFar.
 
   genSequence:(list[(integer,string)],logical) => list[instruction].
   genSequence([(_,Lb)],true) => [iGo_to(Lb)].
@@ -125,4 +175,13 @@ lo.comp.indexing{
   genSequence([(_,Lb),..R],true) => [iTrycl(Lb),..genSequence(R,false)].
   genSequence([(_,Lb),..R],false) => [iRetry(Lb),..genSequence(R,false)].
   genSequence([],_) => [iFayl].
+
+  public genIndex:(list[(string,clse)],string) => list[instruction].
+  genIndex(Clses,Deflt) => mkIndex(IxTree,Col,Deflt) :-
+    Tr = genMergedTree(collectHeads(Clses,0)),
+    (IxTree,Col) = bestCol(Tr).
+
+  collectHeads:(list[(string,clse)],integer) => list[(list[(integer,string)],list[term])].
+  collectHeads([],_) => [].
+  collectHeads([(Lbl,clse(_,_,Args,_)),..L],ClNo) => [([(ClNo,Lbl)],Args),..collectHeads(L,ClNo+1)].
 }

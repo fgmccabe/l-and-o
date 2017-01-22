@@ -50,7 +50,7 @@ lo.comp.term {
     disp(T) => dispTerm(T).
   }
 
-  private dispTerm:(term) => ss.
+  public dispTerm:(term) => ss.
   dispTerm(anon) => ss("_").
   dispTerm(varbl(Nm)) => ssSeq([ss(Nm),ss("?")]).
   dispTerm(intgr(Ix)) => disp(Ix).

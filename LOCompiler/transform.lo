@@ -514,7 +514,7 @@ lo.comp.transform{
   trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trLambda(Rl,Rslt,Q,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(XX,anon,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rpx) :-
-    reportMsg("internal: cannot transform \(XX) as expression",std,Rp,Rpx).
+    reportError("internal: cannot transform \(XX) as expression",std,Rp,Rpx).
 
   trDotExp:(canonTerm,term,term,term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   trDotExp(v(Lc,Nm),C,X,Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -610,6 +610,24 @@ lo.comp.transform{
     Closure = mkClosure(Lam,FreeVars),
     Ex2 = [clse(merge(FreeVars,Q3),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Ex3],
     failSafeEquation(Lc,strng(Nm),prg(Lam,3),3,Ex3,Exx,Rp2,Rpx).
+  trLambda(clause(Lc,Nm,tpl(A),Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    FreeVars = freeVarsInRule(clause(Lc,Nm,tpl(A),Cond),Q,[]),
+    genNewName(Map,Nm,3,prg(Lam,_)),
+    trPtns(A,Args,[],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
+    trGoal(Cond,PreGx,PostG,Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rpx),       -- condition goals
+    CallStrct = cons(trCons("_call",size(Args)),Args),
+    Closure = mkClosure(Lam,FreeVars),
+    Ex1 = [clse(merge(FreeVars,Q2),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Exx].
+  trLambda(grRule(Lc,Nm,tpl(A),grTerms(PB),Body),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    FreeVars = freeVarsInRule(grRule(Lc,Nm,tpl(A),grTerms(PB),Body),Q,[]),
+    genNewName(Map,Nm,3,prg(Lam,_)),
+    trPtns(A,Args,[],[],Q1,Goals,PreGx,PostG,G7,Map,ClOpts,Ex,Ex0,Rp,Rp0),  -- head args
+    genVarbl("StIn",StIn),
+    dcgBody(Body,Map,Opts,PreGx,PostG,StIn,StOut,[StIn,..Q1],Q2,Ex0,Ex1,Rp0,Rp1), -- grammar body
+    pushTerminals(PB,Map,Opts,G7,[],StOut,StX,Q2,Q4,Ex1,Ex2,Rp1,Rpx),     -- push back
+    Closure = mkClosure(Lam,FreeVars),
+    CallStrct = cons(trCons("_call",size(Args)+2),[StIn,StX,..Args]),
+    Ex2 = [clse(merge(FreeVars,Q4),prg(Lam,3),[CallStrct,Closure,anon],Goals),..Exx].
 
   mkClosure:(string,list[term])=>term.
   mkClosure(Lam,[]) => enum(Lam).

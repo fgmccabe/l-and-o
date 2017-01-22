@@ -12,7 +12,8 @@ lo.comp.grammar{
 
   public parseFile:(uri,report,report) => ast.
   parseFile(U,Rp,Rpx) => Term :-
-    parse(Term,Rp,Rpx) %% tokenizeFile(U).
+    parse(Term,Rp,Rp0) %% tokenizeFile(U) ~ Rest,
+    (Rest=[],Rp0=Rpx | Rest=[Tk,.._],reportError("extra tokens found in file",Tk.loc,Rp0,Rpx)).
 
   public parseSrc:(uri,list[integer],report,report) => ast.
   parseSrc(U,Codes,Rp,Rpx) => Term :-
