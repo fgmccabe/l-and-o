@@ -6,7 +6,6 @@ catalog{
     lo.core -> "core.lo".
     lo.bits -> "bits.lo".
     lo.coerce -> "coerce.lo".
-    lo.diff -> "diff.lo".
     lo.index -> "index.lo".
     lo.io -> "io.lo".
     lo.json -> "json.lo".
