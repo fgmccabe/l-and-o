@@ -25,7 +25,7 @@ freeVars(v(_,_),_,F,F).
 freeVars(intLit(_),_,F,F).
 freeVars(floatLit(_),_,F,F).
 freeVars(stringLit(_),_,F,F).
-freeVars(tuple(Els),Q,F,FV) :- freeVarsList(Els,Q,F,FV).
+freeVars(tuple(_,Els),Q,F,FV) :- freeVarsList(Els,Q,F,FV).
 freeVars(apply(Op,A),Q,F,FV) :- freeVars(Op,Q,F,F0), freeVarsList(A,Q,F0,FV).
 freeVars(dot(Rc,_),Q,F,FV) :- freeVars(Rc,Q,F,FV).
 freeVars(where(T,C),Q,F,FV) :- freeVars(T,Q,F,F0),freeVarsInGoal(C,Q,F0,FV).

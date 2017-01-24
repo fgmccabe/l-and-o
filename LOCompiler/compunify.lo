@@ -20,10 +20,10 @@ lo.comp.code.unify{
   unifyEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>unifyEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
   unifyVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
-  unifyVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
-  unifyVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
-  unifyVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
-  unifyVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  unifyVar(varDesc(_,_,_,voidAddr,_),sReg,D,D,V,V,_) => [iClS].
+  unifyVar(varDesc(_,_,_,voidAddr,_),_,D,D,V,V,_) => [].
+  unifyVar(varDesc(_,initialized,_,Src,_),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
+  unifyVar(varDesc(Nm,notInited,Def,Src,Wh),Dst,D,D[Nm->varDesc(Nm,initialized,Def,Src,Wh)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
 
   skipOver:(addr) => list[instruction].
   skipOver(voidAddr) => [].
@@ -70,10 +70,10 @@ lo.comp.code.unify{
   matchEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => matchTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>matchEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
   matchVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
-  matchVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
-  matchVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
-  matchVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,_) => Ins :- matchVr(Src,Dst,V,Ins,Vx).
-  matchVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  matchVar(varDesc(_,_,_,voidAddr,_),sReg,D,D,V,V,_) => [iClS].
+  matchVar(varDesc(_,_,_,voidAddr,_),_,D,D,V,V,_) => [].
+  matchVar(varDesc(_,initialized,_,Src,_),Dst,D,D,V,Vx,_) => Ins :- matchVr(Src,Dst,V,Ins,Vx).
+  matchVar(varDesc(Nm,notInited,Def,Src,Lst),Dst,D,D[Nm->varDesc(Nm,initialized,Def,Src,Lst)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
 
   matchLit:(string,logical,addr,varSet,varSet) => list[instruction].
   matchLit(_,_,voidAddr,Vs,Vs) => [].
@@ -116,10 +116,10 @@ lo.comp.code.unify{
   buildEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => buildTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>buildEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
   buildVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
-  buildVar(varDesc(_,_,voidAddr),sReg,D,D,V,V,_) => [iClS].
-  buildVar(varDesc(_,_,voidAddr),_,D,D,V,V,_) => [].
-  buildVar(varDesc(_,initialized,Src),Dst,D,D,V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
-  buildVar(varDesc(Nm,notInited,Src),Dst,D,D[Nm->varDesc(Nm,initialized,Src)],V,Vx,Last) => Ins :- clearVr(Src,Dst,V,Ins,Vx).
+  buildVar(varDesc(_,_,_,voidAddr,_),sReg,D,D,V,V,_) => [iClS].
+  buildVar(varDesc(_,_,_,voidAddr,_),_,D,D,V,V,_) => [].
+  buildVar(varDesc(_,initialized,_,Src,_),Dst,D,D,V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  buildVar(varDesc(Nm,notInited,Def,Src,Lst),Dst,D,D[Nm->varDesc(Nm,initialized,Def,Src,Lst)],V,Vx,Last) => Ins :- clearVr(Src,Dst,V,Ins,Vx).
 
   buildLit:(string,logical,addr,varSet,varSet) => list[instruction].
   buildLit(_,_,voidAddr,Vs,Vs) => [].

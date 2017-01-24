@@ -331,7 +331,7 @@ findClassBody(Defs,Stmts) :-
 lbl(A1,..,Ak){
   prog1 :- ...
 }
-is mapped to 
+is mapped to
 
 pkg#lbl(prog1(X1,..,Xm),Lb,Th) :- pkg#lbl@prog(X1,..,Xm,Lb,Th)
 
@@ -404,13 +404,13 @@ transformImplementation(Lc,ImplName,Def,Face,Map,Opts,Rules,Rx,Ex,Exx) :-
   labelDefn(Map,Opts,Lc,ImplName,_,Rules,R0),
   genClassMap(Map,Opts,Lc,ImplName,[Def],Face,CMap,R0,En0,Ex,Ex1),!,
   transformClassBody([Def],CMap,Opts,En1,Rx,En0,En1,Ex1,Exx).
-  
+
 trPtns([],Args,Args,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
 trPtns([P|More],[A|Args],Ax,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
   trPtn(P,A,Q,Q0,Pre,Pre0,Post,Pst0,Map,Opts,Ex,Ex0),
   trPtns(More,Args,Ax,Q0,Qx,Pre0,Prx,Pst0,Psx,Map,Opts,Ex0,Exx).
 
-trPtn(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :- 
+trPtn(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :-
   thisVar(Map,ThVr),!,
   merge([ThVr],Q,Qx).
 trPtn(v(Lc,"this"),idnt("_"),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :- !,
@@ -505,7 +505,7 @@ trExps([P|More],[A|Args],Extra,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
   trExp(P,A,Q,Q0,Pre,Pre0,Post,Pst0,Map,Opts,Ex,Ex0),
   trExps(More,Args,Extra,Q0,Qx,Pre0,Prx,Pst0,Psx,Map,Opts,Ex0,Exx).
 
-trExp(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :- 
+trExp(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :-
   thisVar(Map,ThVr),!,
   merge([ThVr],Q,Qx).
 trExp(v(Lc,Nm),Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Ex) :-
@@ -659,11 +659,25 @@ trLambdaRule(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
   LclPrg = prg(Lam,3),
   Ex2 = [clse(QQ,LclPrg,[CallStrct,Closure,anon],Goals)|Ex3],
   failSafeEquation(Lc,"lambda",LclPrg,3,Ex3,Exx).
+trLambdaRule(clause(Lc,Nm,A,Cond,Body),Closure,Q,Map,Opts,Ex,Exx) :-
+  freeVarsInRule(clause(Lc,Nm,A,Cond,Body),Q,[],FreeVars),
+  genstr(Nm,Lam),
+  trPtns(A,Args,[],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), % head args
+  trGoal(Cond,PreGx,PostC,Q1,Q2,Map,Opts,Ex0,Ex1),   % condition goals
+  trGoal(Body,PostC,PostG,Q2,Q3,Map,Opts,Ex1,Ex2),
+  length(Args,Ar),
+  trCons("_call",Ar,Con),
+  CallStrct = cons(Con,Args),
+  mkClosure(Lam,FreeVars,Closure),
+  merge(FreeVars,Q3,QQ),
+  LclPrg = prg(Lam,3),
+  Ex2 = [clse(QQ,LclPrg,[CallStrct,Closure,anon],Goals)|Exx].
+
 
 mkClosure(Lam,FreeVars,Closure) :-
   length(FreeVars,Ar),
-  (Ar = 0 -> 
-    Closure=enum(Lam) | 
+  (Ar = 0 ->
+    Closure=enum(Lam) |
     Closure=cons(strct(Lam,Ar),FreeVars)).
 
 trGoal(true(_),Goals,Goals,Q,Q,_,_,Ex,Ex) :-!.
@@ -774,7 +788,7 @@ implementGoalCall(notInMap,Lc,Pred,Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
 implementGoalCall(_,_,Pred,_,G,G,Q,Q,_,_,Ex,Ex) :-
   reportMsg("cannot handle source for %s",[Pred]).
 
-trGoalDot(v(_,Nm),C,[call(Super,[C,LbVr,ThVr])|Gx],Gx,Q,Qx,Map,_,Ex,Ex) :- 
+trGoalDot(v(_,Nm),C,[call(Super,[C,LbVr,ThVr])|Gx],Gx,Q,Qx,Map,_,Ex,Ex) :-
   lookupVarName(Map,Nm,inherit(_,Super,LbVr,ThVr)),!,
   merge([LbVr,ThVr],Q,Qx).
 trGoalDot(Rec,C,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
@@ -793,14 +807,14 @@ pickAllFieldsFromFace(Tp,Fields) :-
   moveConstraints(QTp,_,faceType(Fields)).
 
 makeClassMtdMap([],_,_,_,void,List,List,_,_,_,Ex,Ex).
-makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([classBody(_,_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :-
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   collectLabelVars([],LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(enum(LclName),Extra,LblTerm),
   (Extra =[] -> LblGl = [] ; LblGl = [unify(LbVr,LblTerm)]),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :-
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unify(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
   collectLabelVars(Vs,LbVr,ThVr,L0,L1),
@@ -809,14 +823,14 @@ makeClassMtdMap([classBody(_,_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx).
 makeClassMtdMap([labelRule(_,_,_,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx) :-
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([implBody(_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([implBody(_,enum(_,_),Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :-
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   collectLabelVars([],LbVr,ThVr,L0,L1),
   extraVars(Map,Extra),
   makeLblTerm(enum(LclName),Extra,LblTerm),
   (Extra =[] -> LblGl = [] ; LblGl = [unify(LbVr,LblTerm)]),
   makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx).
-makeClassMtdMap([implBody(_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :- 
+makeClassMtdMap([implBody(_,Hd,Stmts,_,_)|Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx) :-
   collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
   trPtn(Hd,Lbl,[],Vs,LblGl,Px,Px,[unify(LbVr,LblTerm)],Map,Opts,Ex,Ex0),
   collectLabelVars(Vs,LbVr,ThVr,L0,L1),

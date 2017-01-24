@@ -3,203 +3,110 @@ lo.comp.reduce{
 
   import lo.
 
+  import lo.comp.misc.
   import lo.comp.term.
-  import lo.comp.location.
 
-  reduceProg:(prProg) => prProg.
+  public reduceProg:(prProg) => prProg.
   reduceProg(prProg(Spec,Clauses)) => prProg(Spec,Clauses//reduceClause).
-
 
   reduceClause:(clse) => clse.
   reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
-    reduceArgs(Args,Q,NArgs,[],Guard,Q1),
-    reduceBody(Body,Q1,NBody).
+    reduceArgs(Args,Q,NArgs,Pre,Post,Q1)!,
+    reduceBody(Body,Q1,NBody,NQ).
 
   reduceArgs:(list[term],list[term],list[term],list[pred],list[pred],list[term]){}.
-  reduceArgs([],Q,[],Guard,Guard,Q).
-  reduceArgs([A,..L],Q,[NA,..NL],G,Gx,Qx) :-
-    reduceArg(A,Q,NA,A0,G,G0),
-    reduceArgs(L,Q0,NL,G0,Gx,Qx).
+  reduceArgs([],Q,[],[],[],Q).
+  reduceArgs([A,..L],Q,[NA,..NL],Pr,Po,Qx) :-
+    reduceArg(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    reduceArgs(L,Q0,NL,Pr0,Po0,Qx).
 
-    reFactArgs(Args,Q,Lc) => valof{
-      QQ : Q;
-      Pr : []; Ps : [];
-      NL = collect{
-        for T in Args do{
-          (EL,EQ,EPr,EPs) = reFactArg(T,QQ,Lc);
-          Pr:=EPr<>Pr; Ps:=Ps<>EPs;
-          QQ := EQ;
-          elemis EL;
-        };
-      };
-      valis (NL,QQ,Pr,Ps)
-    };
+  reduceArg:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceArg(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
+  reduceArg(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
+  reduceArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
+  reduceArg(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
+  reduceArg(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceArg(tuple(Els),Q,tuple(NEls),Pre,Prx,Post,Psx,Qx) :-
+    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
+    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
-    reFactArg(Term,Q,Lc) => {
-      case Term in {
-        idnt(_) => (Term,Q,[],[])
-      | intgr(_) => (Term,Q,[],[])
-      | float(_) => (Term,Q,[],[])
-      | symb(_) => (Term,Q,[],[])
-      | ch(_) => (Term,Q,[],[])
-      | strg(_) => (Term,Q,[],[])
-      | mtch(T) => valof{
-          (nT,nQ,nP,nS) = reFactMatchArg(T,Q,Lc);
-          valis (mtch(nT),nQ,nP,nS)
-        }
-      | bild(T) => valof{
-          (nT,nQ,nP,nS) = reFactArg(T,Q,Lc);
-          valis (bild(nT),nQ,nP,nS)
-        }
-      | cons(F,A) => valof{
-          QQ : Q;
-          Pr : []; Ps : [];
-          NL = collect{
-            for T in A do{
-              (EL,EQ,EPr,EPs) = reFactTerm(T,QQ,Lc);
-              Pr:=Pr<>EPr; Ps:=EPs<>Ps;
-              QQ := EQ;
-              elemis EL;
-            };
-          };
-          valis (cons(F,NL),QQ,Pr,Ps)
-        }
-      | vdel => (Term,Q,[],[])
-      }
-    };
+  reduceTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceTerms([],Q,[],Pre,Pre,Post,Post,Q).
+  reduceTerms([A,..L],Q,[NA,..NL],Pr,Rpx,Po,Psx,Qx) :-
+    reduceTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    reduceTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
-    reFactTerm(Term,Q,Lc) => {
-      if isGroundC(Term) then
-        (Term,Q,[],[])
-      else{
-        case Term in {
-          idnt(_) => (Term,Q,[],[])
-        | intgr(_) => (Term,Q,[],[])
-        | float(_) => (Term,Q,[],[])
-        | symb(_) => (Term,Q,[],[])
-        | ch(_) => (Term,Q,[],[])
-        | strg(_) => (Term,Q,[],[])
-        | mtch(T) => valof{
-            (nT,nQ,nP,nS) = reFactMatchTerm(T,Q,Lc);
-            valis (mtch(nT),nQ,nP,nS)
-          }
-        | bild(T) => valof{
-            (nT,nQ,nP,nS) = reFactTerm(T,Q,Lc);
-            valis (bild(nT),nQ,nP,nS)
-          }
-        | cons(_,_) => valof{
-            VD = idnt(genNew("$%"));
-            (NT,NQ,NPr,NPs) = reFactArg(Term,Q,Lc);
-            valis (VD,[VD,..NQ],NPr,[defn(VD,NT,Lc)]<>NPs)
-          }
-        | T => (Term,Q,[],[])
-        }
-      }
-    };
+  reduceTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
+  reduceTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
+  reduceTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
+  reduceTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
+  reduceTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceTerm(tuple(Els),Q,VV,Pre,Prx,[unfy(VV,tuple(NEls)),..Post],Psx,Qx) :-
+    VV = genVr("$%"),
+    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(VV,cons(Op,NEls)),..Post],Psx,Qx) :-
+    VV = genVr("$%"),
+    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
-    reFactMatchArg(Term,Q,Lc) => {
-      case Term in {
-        idnt(_) => (Term,Q,[],[])
-      | intgr(_) => (Term,Q,[],[])
-      | float(_) => (Term,Q,[],[])
-      | symb(_) => (Term,Q,[],[])
-      | ch(_) => (Term,Q,[],[])
-      | strg(_) => (Term,Q,[],[])
-      | cons(F,A) => valof{
-          QQ : Q;
-          Pr : []; Ps : [];
-          NL = collect{
-            for T in A do{
-              (EL,EQ,EPr,EPs) = reFactMatchTerm(T,QQ,Lc);
-              Pr:=Pr<>EPr; Ps:=EPs<>Ps;
-              QQ := EQ;
-              elemis EL;
-            };
-          };
-          valis (cons(F,NL),QQ,Pr,Ps)
-        }
-      | vdel => (Term,Q,[],[])
-      }
-    };
+  reduceBody:(list[pred],list[term],list[pred],list[term]){}.
+  reduceBody([],Q,[],Q).
+  reduceBody([P,..L],Q,Pre,NQ) :-
+    reducePred(P,Q,NP,Pre,[NP,..Ps],Ps,Psx,Q1),
+    reduceBody(L,Q1,Psx,NQ).
 
-    reFactMatchTerm(Term,Q,Lc) => {
-      if isGroundC(Term) then (Term,Q,[],[])
-      else{
-        case Term in {
-          idnt(_) => (Term,Q,[],[])
-        | intgr(_) => (Term,Q,[],[])
-        | float(_) => (Term,Q,[],[])
-        | symb(_) => (Term,Q,[],[])
-        | ch(_) => (Term,Q,[],[])
-        | strg(_) => (Term,Q,[],[])
-        | cons(_,_) => valof{
-            VD = idnt(genNew("$%"));
-            (NT,NQ,NPr,NPs) = reFactMatchArg(Term,Q,Lc);
-            valis (VD,[VD,..NQ],NPr,[defn(mtch(NT),VD,Lc)]<>NPs)
-          }
-        | vdel => (Term,Q,[],[])
-        }
-      }
-    };
+  reducePred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reducePred(call(Op,Args),Q,call(NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-
+    reduceBildArg(Op,Q,NOp,Pre,Pr0,Post,Ps0,Q0),
+    reduceBildArgs(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
+  reducePred(ecall(Op,Args),Q,ecall(Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
+    reduceBildArgs(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
+  reducePred(ocall(Cl,Lb,Th),Q,ocall(NCl,NLb,NTh),Pre,Prx,Pos,Psx,Qx) :-
+    reduceBildArg(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
+    reduceBildArg(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
+    reduceBildArg(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
+  reducePred(unfy(L,R),Q,unfy(NL,NR),Pre,Prx,Pos,Psx,Qx) :-
+    reduceBildArg(L,Q,NL,Pre,Pr0,Post,Ps0,Q0),
+    reduceBildArg(R,Q0,NR,Pr0,Prx,Ps0,Psx,Qx).
+  reducePred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
+  reducePred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
+  reducePred(except(E),Q,except(NE),Pre,Prx,Pos,Psx,Qx) :-
+    reduceBildArg(E,Q,NE,Pre,Prx,Post,Psx,Qx).
 
-    reFactBody(Body,Q) => valof{
-      QQ : Q;
-      NL = collect{
-        for G in Body do{
-          (EQ,Gls) = reFactGoal(G,QQ);
-          for GG in Gls do
-            elemis GG;
-          QQ := EQ;
-        };
-      };
-      valis (NL,QQ)
-    };
+  reduceBildArgs:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildArgs([],Q,[],Pre,Pre,Post,Post,Q).
+  reduceBildArgs([A,..L],Q,[NA,..NL],Pr,Prx,Po,Pox,Qx) :-
+    reduceBildArg(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    reduceBildArgs(L,Q0,NL,Pr0,Prx,Po0,Pox,Qx).
 
-    reFactGoal(G,Q) => case G in {
-      call(P,A,Lc) => valof{
-        (NT,TQ,TPr,TPs) = reFactArgs(A,Q,Lc);
-        valis (TQ,TPr<>TPs<>[call(P,NT,Lc)])
-      }
-    | ecall(P,A,Lc) => valof{
-        (NT,TQ,TPr,TPs) = reFactArgs(A,Q,Lc);
-        valis (TQ,TPr<>TPs<>[ecall(P,NT,Lc)])
-      }
-    | ocall(Gl,Ob,Th,Lc) => valof{
-        ([nG,nO,nT],TQ,Tpr,TPs) = reFactArgs([Gl,Ob,Th],Q,Lc);
-        valis (TQ,Tpr<>TPs<>[ocall(nG,nO,nT,Lc)])
-      }
-    | suspc(V,A,Lc) => valof{
-        (nV,Q1,vPr,vPs) = reFactArg(V,Q,Lc);
-        (nA,Q2,aPr,aPs) = reFactArg(A,Q1,Lc);
-        valis (Q2,vPr<>vPs<>aPr<>aPs<>[suspc(nV,nA,Lc)])
-      }
-    | defn(mtch(V),Val,Lc) => valof{
-        (nVal,Q1,Pr,Ps) = reFactArg(Val,Q,Lc);
-        (nV,Q2,mPr,mPs) = reFactMatchArg(V,Q1,Lc);
-        valis (Q2,Pr<>Ps<>[defn(mtch(nV),nVal,Lc)]<>mPr<>mPs)
-      }
+  reduceBildArg:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildArg(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
+  reduceBildArg(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
+  reduceBildArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
+  reduceBildArg(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
+  reduceBildArg(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceBildArg(tuple(Els),Q,tuple(NEls),Pre,Prx,Post,Psx,Qx) :-
+    reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceBildArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
+    reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
-    | defn(V,Val,Lc) => valof{
-        (nVal,Q1,Pr,Ps) = reFactArg(Val,Q,Lc);
-        (nV,QQ,vPr,vPs) = reFactArg(V,Q1,Lc);
-        valis (QQ,vPr<>Pr<>vPs<>Ps<>[defn(nV,nVal,Lc)])
-      }
-    | neck(_) => (Q,[G])
-    | fail(_) => (Q,[G])
+  reduceBildTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildTerms([],Q,[],Pre,Pre,Post,Post,Q).
+  reduceBildTerms([A,..L],Q,[NA,..NL],Pr,Rpx,Po,Psx,Qx) :-
+    reduceBildTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    reduceBildTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
-    | trpBegin => (Q,[G])
-    | trpEnd => (Q,[G])
-  /*  | errr(E,Lc) => valof{
-        (nE,Q2) = reFactBody(E,Q);
-
-        valis (Q2,[errr(nE,Lc)])
-      }
-  */
-    | rais(A,Lc) => valof{
-        (nA,QQ,Pr,Ps) = reFactArg(A,Q,Lc);
-        valis (QQ,Pr<>Ps<>[rais(nA,Lc)])
-      }
-    };
-
-  } export (reFactor)
+  reduceBildTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(tuple(Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
+    VV = genVr("$%"),
+    reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,tuple(NEls)),..Prx],Post,Psx,Qx).
+  reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
+    VV = genVr("$%"),
+    reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
 }

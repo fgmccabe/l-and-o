@@ -5,7 +5,11 @@ lo.comp.code.clause{
   import lo.comp.code.estimate.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
+  import lo.comp.code.unify.
+
+  import lo.comp.escapes.
+  import lo.comp.errors.
   import lo.comp.term.
 
-  
+
 }
