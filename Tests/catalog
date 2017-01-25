@@ -3,11 +3,12 @@ catalog{
     test.a -> "a.lo".
     test.c -> "c.lo".
     test.gt -> "gt.lo".
+    test.j -> "j.lo".
+    test.l -> "l.lo".
+    test.lambda -> "lambda.lo".
     test.modsec -> "modsec.lo".
     test.mapp -> "mapp.lo".
     test.maps -> "maps.lo".
-    test.l -> "l.lo".
-    test.lambda -> "lambda.lo".
     test.gr -> "gr.lo".
     test.m -> "m.lo".
     test.o -> "o.lo".

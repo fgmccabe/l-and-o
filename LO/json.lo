@@ -27,6 +27,33 @@ lo.json{
   dispSeq([],_) => [].
   dispSeq([e,..l],s) => [ss(s),dispJson(e),..dispSeq(l,",")].
 
+  public implementation equality[json] <= {
+    T1 == T2 :- equalJson(T1,T2).
+    hash(T) => hashJson(T).
+  }
+
+  equalJson:(json,json){}
+  equalJson(jTrue,jTrue).
+  equalJson(jFalse,jFalse).
+  equalJson(jNull,jNull).
+  equalJson(jTxt(S1),jTxt(S2)) :- S1==S2.
+  equalJson(jNum(D1),jNum(D2)) :- D1==D2.
+  equalJson(jColl(C1),jColl(C2)) :- C1==C2.
+  equalJson(jSeq(L1),jSeq(L2)) :- L1==L2.
+
+  hashJson:(json) => integer.
+  hashJson(jTrue) => hash("true").
+  hashJson(jFalse) => hash("false").
+  hashJson(jNull) => hash("null").
+  hashJson(jNum(D)) => hash(D).
+  hashJson(jTxt(S)) => hash(S).
+  hashJson(jSeq(L)) => hash(L).
+  hashJson(jColl(C)) => hash(C).
+
+  public implementation coercion[string,json] <= {
+    _coerce(S) => J :- parseJson(J) %% S.
+  }
+
   public parseJson:all s ~~ stream[s->>integer] |: (json) --> s.
   parseJson(J) --> skipBlanks(), jP(J).
 
@@ -43,7 +70,7 @@ lo.json{
   jP(jNull) --> "null".
   jP(jNum(-N)) --> "-", readNumber(N).
   jP(jNum(N)) --> readNumber(N).
-  jP(jTxt(implode(S))) --> 0c", parseStr(S), 0c".
+  jP(jTxt(implode(S))) --> "\"", parseStr(S), "\"".
   jP(jSeq(L)) --> "[", skipBlanks(), parseSeq(L), "]".
   jP(jColl(M)) --> "{", skipBlanks(), parseColl([],M), "}".
 
