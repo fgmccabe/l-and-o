@@ -51,7 +51,7 @@ lo.json{
   hashJson(jColl(C)) => hash(C).
 
   public implementation coercion[string,json] <= {
-    _coerce(S) => J :- parseJson(J) %% S.
+    _coerce(S) => J :- parseJson(J) %% explode(S).
   }
 
   public parseJson:all s ~~ stream[s->>integer] |: (json) --> s.
