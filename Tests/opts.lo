@@ -1,5 +1,6 @@
 test.opts{
   import lo.
+  import lo.either.
   import lo.options.
 
   abOpt: optionsProcessor.

@@ -1,0 +1,28 @@
+lo.either{
+  import lo.core.
+
+  -- Either or values
+  public type all a,b ~~ either[a,b] ::= either(a) | alternate(b).
+
+  -- Display either-or values
+  public implementation all x,y ~~ display[x], display[y] |: display[either[x,y]] <= {
+    disp(T) => dispEither(T).
+  }
+
+  private dispEither:all x,y ~~ display[x], display[y] |: (either[x,y]) => ss.
+  dispEither(either(a)) => ssSeq([ss("either("),disp(a),ss(")")]).
+  dispEither(alternate(b)) => ssSeq([ss("or("),disp(b),ss(")")]).
+
+  public implementation all x,y ~~ equality[x], equality[y] |: equality[either[x,y]] <= {
+    X == Y :- eitherEquals(X,Y).
+    hash(X) => eitherHash(X).
+  }
+
+  eitherEquals:all x,y ~~ equality[x], equality[y] |: (either[x,y],either[x,y]){}.
+  eitherEquals(either(A),either(B)) :- A==B.
+  eitherEquals(alternate(A),alternate(B)) :- A==B.
+
+  eitherHash:all x,y ~~ equality[x],equality[y] |: (either[x,y])=>integer.
+  eitherHash(either(A)) => hash(A)*37.
+  eitherHash(alternate(B)) => hash(B)*41.
+}
