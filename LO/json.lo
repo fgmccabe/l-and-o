@@ -3,7 +3,7 @@ lo.json{
 
   public type json ::=
     jTrue | jFalse | jNull |
-    jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) | 
+    jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) |
     jNum(float).
 
   public implementation display[json] <= {
@@ -29,7 +29,7 @@ lo.json{
 
   public parseJson:all s ~~ stream[s->>integer] |: (json) --> s.
   parseJson(J) --> skipBlanks(), jP(J).
-    
+
   private skipBlanks:all s ~~ stream[s->>integer] |: () --> s.
   skipBlanks() --> [0c ],skipBlanks().
   skipBlanks() --> [0c\t],skipBlanks().
@@ -43,7 +43,7 @@ lo.json{
   jP(jNull) --> "null".
   jP(jNum(-N)) --> "-", readNumber(N).
   jP(jNum(N)) --> readNumber(N).
-  jP(jTxt(implode(S))) --> "\"", parseStr(S), "\"".
+  jP(jTxt(implode(S))) --> 0c", parseStr(S), 0c".
   jP(jSeq(L)) --> "[", skipBlanks(), parseSeq(L), "]".
   jP(jColl(M)) --> "{", skipBlanks(), parseColl([],M), "}".
 
@@ -74,7 +74,7 @@ lo.json{
   readNatural(SoFar,SoFar) --> \+digit(_).
 
   readMoreNumber:all s ~~ stream[s->>integer] |: (float,integer) --> s.
-  readMoreNumber(Fp,Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr), 
+  readMoreNumber(Fp,Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr),
       exponent(_int2flt(Decimal)+Fr,Fp).
   readMoreNumber(Ix::float,Ix) --> [].
 
@@ -120,7 +120,7 @@ lo.json{
   private moreSeq:all s ~~ stream[s->>integer] |: (list[json]) --> s.
   moreSeq([]) --> "]"+.
   moreSeq([e,..l]) --> ",", skipBlanks(), jP(e), skipBlanks(), moreSeq(l).
-  
+
   private parseColl:all s ~~ stream[s->>integer] |: (map[string,json],map[string,json]) --> s.
   parseColl(m,m) --> "}"+.
   parseColl(m,c) --> parseField(f), skipBlanks(), ":", skipBlanks(), jP(v), parseMoreColl(m[f->v],c).
@@ -132,7 +132,7 @@ lo.json{
   private parseField:all s ~~ stream[s->>integer] |: (string) --> s.
   parseField(implode(S)) --> "\"", parseStr(S), "\"".
 
-  -- Some helpful coercions 
+  -- Some helpful coercions
   public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] <= {
     _coerce(M) => mapJson(M).
   }
