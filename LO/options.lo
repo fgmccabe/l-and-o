@@ -1,0 +1,63 @@
+lo.options{
+  import lo.
+
+  -- Process command line list of strings to produce a set of Options
+  public type optionsProcessor <~ {
+    shortForm : string.
+    alternatives : list[string].
+    usage : string.
+    validator : option[(string){}].
+  }
+
+  -- Either or values
+  public type all a,b ~~ either[a,b] ::= either(a) | alternate(b).
+
+  -- Display either-or values
+  public implementation all x,y ~~ display[x], display[y] |: display[either[x,y]] <= {
+    disp(T) => dispEither(T).
+  }
+
+  private dispEither:all x,y ~~ display[x], display[y] |: (either[x,y]) => ss.
+  dispEither(either(a)) => ssSeq([ss("either("),disp(a),ss(")")]).
+  dispEither(alternate(b)) => ssSeq([ss("or("),disp(b),ss(")")]).
+
+  public implementation all x,y ~~ equality[x], equality[y] |: equality[either[x,y]] <= {
+    X == Y :- eitherEquals(X,Y).
+    hash(X) => eitherHash(X).
+  }
+
+  eitherEquals:all x,y ~~ equality[x], equality[y] |: (either[x,y],either[x,y]){}.
+  eitherEquals(either(A),either(B)) :- A==B.
+  eitherEquals(alternate(A),alternate(B)) :- A==B.
+
+  eitherHash:all x,y ~~ equality[x],equality[y] |: (either[x,y])=>integer.
+  eitherHash(either(A)) => hash(A)*37.
+  eitherHash(alternate(B)) => hash(B)*41.
+
+  public processOptions:(list[string],list[optionsProcessor]) =>
+    either[(list[(string,option[string])],list[string]),string].
+  processOptions(Raw,Opts) => processAll(Raw,Opts,[]).
+
+  processAll:(list[string],list[optionsProcessor],list[(string,option[string])]) =>
+    either[(list[(string,option[string])],list[string]),string].
+  processAll([],_,SoFar) => either((SoFar,[])).
+  processAll(["--",..A],_,SoFar) => either((SoFar,A)).
+  processAll([A,..L],Opts,SoFar) =>
+    processOption(A,L,Opts,SoFar).
+
+  processOption:(string,list[string],list[optionsProcessor],list[(string,option[string])]) => either[(list[(string,option[string])],list[string]),string].
+  processOption(A,L,Opts,SoFar) => checkOption(L,O.shortForm,O.validator,Opts,SoFar) :-
+    (O in Opts, (A==O.shortForm | A in O.alternatives))!.
+  processOption(A,L,_,SoFar) => either((SoFar,[A,..L])).
+
+  checkOption:(list[string],string,option[(string){}],list[optionsProcessor],list[(string,option[string])]) =>
+    either[(list[(string,option[string])],list[string]),string].
+  checkOption(Args,O,none,Opts,SoFar) =>
+        processAll(Args,Opts,[(O,none),..SoFar]).
+  checkOption([A,..Args],O,some(V),Opts,SoFar) =>
+        processAll(Args,Opts,[(O,some(A)),..SoFar]) :- V(A).
+  checkOption(_,_,_,Opts,_) => alternate(collectUsage(Opts)).
+
+  collectUsage:(list[optionsProcessor]) => string.
+  collectUsage(Opts) => foldRight(((O:optionsProcessor),S)=>S+O.usage,"",Opts).
+}

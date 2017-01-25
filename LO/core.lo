@@ -11,16 +11,16 @@ lo.core{
   public (\==):all x ~~ equality[x] |: (x,x){}.
   x \== y :- \+ x==y.
 
-  public 
+  public
   contract all x ~~ /*equality[x] |: */ comp[x] <~ {
     (<): (x,x){}.
     (>=): (x,x){}.
   }
-  
+
   public
   type all t ~~ option[t] ::= none | some(t).
-  
-  public 
+
+  public
   contract all x ~~ additive[x] <~ {
     (+): (x,x)=>x.
     (-): (x,x)=>x.
@@ -125,7 +125,7 @@ lo.core{
   min(X,Y) => X :- X<Y.
   min(_,Y) => Y.
 
-  public 
+  public
   max: all t ~~ comp[t] |: (t,t)=>t.
   max(X,Y)  => X:- X>Y.
   max(_,Y) => Y.
@@ -226,6 +226,19 @@ lo.core{
   dispOptional(none) => ss("none").
   dispOptional(some(X)) => ssSeq([ss("some("),disp(X),ss(")")]).
 
+  public implementation all x ~~ equality[x] |: equality[option[x]] <= {
+    X == Y :- optionEqual(X,Y).
+    hash(X) => optionHash(X).
+  }
+
+  private optionEqual:all x ~~ equality[x] |: (option[x],option[x]){}.
+  optionEqual(some(A),some(B)) :- A==B.
+  optionEqual(none,none).
+
+  private optionHash:all x ~~ equality[x] |: (option[x]) => integer.
+  optionHash(some(X)) => hash("some")*37+hash(X).
+  optionHash(none) => hash("none").
+
   -- Display 2-tuples
   public implementation all x,y ~~ display[x], display[y] |: display[(x,y)] <= {
     disp(T) => dispPair(T).
@@ -233,4 +246,15 @@ lo.core{
 
   private dispPair:all x,y ~~ display[x], display[y] |: ((x,y)) => ss.
   dispPair((a,b)) => ssSeq([ss("("),disp(a),ss(" , "),disp(b),ss(")")]).
+
+  public implementation all x,y ~~ equality[x], equality[y] |: equality[(x,y)] <= {
+    X == Y :- pairEquals(X,Y).
+    hash(X) => pairHash(X).
+  }
+
+  pairEquals:all x,y ~~ equality[x], equality[y] |: ((x,y),(x,y)){}.
+  pairEquals((A1,A2),(B1,B2)) :- A1==B1, A2==B2.
+
+  pairHash:all x,y ~~ equality[x],equality[y] |: ((x,y))=>integer.
+  pairHash((A,B)) => hash(A)*37+hash(B).
 }

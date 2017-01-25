@@ -209,9 +209,11 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) => refsInType(I,All,So) :- isBinary(S,":",_,_,I).
 
   refsInHead:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInHead(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).
-  refsInHead(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
+  refsInHead(S,All,So) => refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).
+  refsInHead(S,All,So) => refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
   refsInHead(S,All,So) => So :- isIden(S,_,_).
+  refsInHead(S,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :- isBinary(A,_,_,L,R).
+  refsInHead(S,All,So) => refsInTerm(R,All,So) :- isUnary(A,_,_,R).
 
   refsInType:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).
@@ -230,7 +232,7 @@ lo.comp.dependencies{
 
   refsInTypes:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTypes([],_,So) => So.
-  refsInTypes([T,..L],All,So) => refsInTypes(L,All,refsInType(T,All,So)). 
+  refsInTypes([T,..L],All,So) => refsInTypes(L,All,refsInType(T,All,So)).
 
   refsInScope:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInScope([],_,So) => So.
@@ -266,7 +268,7 @@ lo.comp.dependencies{
 
   refsInConds:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInConds([],_,So) => So.
-  refsInConds([T,..L],All,So) => refsInConds(L,All,refsInCond(T,All,So)). 
+  refsInConds([T,..L],All,So) => refsInConds(L,All,refsInCond(T,All,So)).
 
   refsInNT:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInNT(T,All,So) => refsInTerms(Args,All,So) :-  isSquareTuple(T,_,Args).

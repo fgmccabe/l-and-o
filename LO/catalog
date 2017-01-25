@@ -2,6 +2,7 @@ catalog{
   content {
     lo -> "lo.lo".
     lo.array -> "arrays.lo".
+    lo.boot -> "boot.lo".
     lo.collection -> "collection.lo".
     lo.core -> "core.lo".
     lo.bits -> "bits.lo".
@@ -11,11 +12,13 @@ catalog{
     lo.json -> "json.lo".
     lo.list -> "lists.lo".
     lo.monad -> "monad.lo".
+    lo.options -> "options.lo".
     lo.resources -> "resources.lo".
     lo.sets -> "sets.lo".
     lo.sort -> "sort.lo".
     lo.topsort -> "topsort.lo".
     lo.trie -> "trie.lo".
+    lo.unit -> "unit.lo".
     lo.uri -> "uri.lo".
   }
 }

@@ -1,8 +1,8 @@
 /*
-  Bootstrap program, this program is loaded automatically 
-  when the Go! engine is started. Its main function is to set up the 
+  Bootstrap program, this program is loaded automatically
+  when the L&O engine is started. Its main function is to set up the
   environment and then load and execute the program mentioned in the command line
-  
+
   Copyright (c) 2016. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -15,9 +15,9 @@
   KIND, either express or implied. See the License for the specific language governing
   permissions and limitations under the License.
 */
-go.boot{
-  __main:[string,list[(char,symbol)],list[string]]*.
-  __main(Path,Options,Cmd) -> 
+lo.boot{
+  __main:(string,list[(char,symbol)],list[string]){}.
+  __main(Path,Options,Cmd) ->
       ([Prog,..Args] = Cmd ?
 	 pkg = implode(chopGoc(Prog));
 	 entry = __default(`m,Options,'main');
@@ -34,10 +34,10 @@ go.boot{
           ))
      | {__logmsg("Entry: "<>explode(entry)<>" not defined in "<>Prog)};exit(1)
       ).
-  
+
   private execInits:[list[symbol]]*.
   execInits([]) -> {}.
-  execInits([P,..L]) -> 
+  execInits([P,..L]) ->
       __call(P,'$init',0,[]);
       execInits(L).
 

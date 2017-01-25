@@ -1,0 +1,25 @@
+test.opts{
+  import lo.
+  import lo.options.
+
+  abOpt: optionsProcessor.
+  abOpt <= {
+    shortForm = "-a".
+    alternatives = [].
+    usage = "Must have a b".
+    validator = some(("b"):-true).
+  }
+
+  bbOpt: optionsProcessor.
+  bbOpt <= {
+    shortForm = "-b".
+    alternatives = ["--bb"].
+    usage = "Just b".
+    validator = none.
+  }
+
+  show processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt]).
+
+  assert processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt]) == either(([("-b",none),("-a",some("b"))],["Alpha"])).
+
+}

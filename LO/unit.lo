@@ -1,0 +1,24 @@
+/*
+ * unit testing harness
+ */
+lo.unit{
+  import lo.io.
+
+  harness <~ { doTest:(){}.  }.
+
+  harness:harness.
+  harness <= {
+    doTest().
+  }.
+
+  check:(harness){}.
+  check(T) :-
+    T.doTest() ?
+      stdout.outLine("test \(T) ok") |
+      stdout.outLine("test \(T) failed")).
+
+  checkUnit:(harness){}.
+  checkUnit(T) :-
+      stdout.outLine("starting unit \(T)"),
+      check(T).
+}

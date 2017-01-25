@@ -12,6 +12,7 @@ catalog{
     test.gr -> "gr.lo".
     test.m -> "m.lo".
     test.o -> "o.lo".
+    test.opts -> "opts.lo".
     test.parsetools -> "parsetools.lo".
     test.s -> "s.lo".
   }
