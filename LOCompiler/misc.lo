@@ -34,7 +34,7 @@ lo.comp.misc{
     hash(D) => prHash(D).
   }
 
-  prEq:all x,y ~~ equality[x], equality[y] |: (pr[x,y],pr[x,y]){}. 
+  prEq:all x,y ~~ equality[x], equality[y] |: (pr[x,y],pr[x,y]){}.
   prEq(pr(X1,Y1),pr(X2,Y2)) :- X1==X2, Y1==Y2.
 
   prHash:all x,y ~~ equality[x], equality[y] |: (pr[x,y]) => integer.
@@ -44,14 +44,6 @@ lo.comp.misc{
   replace([],_,r) => [r].
   replace([e,..l],e,r) => [r,..l].
   replace([e,..l],t,r) => [e,..replace(l,t,r)] :- e\=t.
-
-  public interleave:all x~~(list[x],x) => list[x].
-  interleave([],_)=>[].
-  interleave([F,..L],S)=>[F,..mixin(L,S)].
-  
-  private mixin:all x~~(list[x],x)=>list[x].
-  mixin([],_)=>[].
-  mixin([F,..L],S) =>[S,F,..mixin(L,S)].
 
   public collect:all x ~~ (list[x],(x){},list[x],list[x]){}.
   collect([],_,[],[]).

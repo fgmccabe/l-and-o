@@ -229,6 +229,7 @@ lo.comp.dependencies{
   refsInType(T,All,So) =>  refsInType(R,All,So) :-  isBinary(T,"<~",_,_,R). -- type rule
   refsInType(T,All,So) =>  refsInType(I,All,So) :-  isQuantified(T,_,I).
   refsInType(T,All,So) =>  refsInScope(E,All,So) :-  isBraceTuple(T,_,E).
+  refsInType(T,_,So) => So.  -- actually an error case
 
   refsInTypes:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTypes([],_,So) => So.

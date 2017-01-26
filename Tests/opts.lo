@@ -3,24 +3,39 @@ test.opts{
   import lo.either.
   import lo.options.
 
-  abOpt: optionsProcessor.
+  type testOption ::= test(string,logical).
+
+  implementation display[testOption] <= {
+    disp(test(A,L)) => ssSeq([ss("A="),ss(A),ss(", L="),(L?ss("true")|ss("false"))]).
+  }
+
+  implementation equality[testOption] <= {
+    test(S,L) == test(S,L).
+    hash(test(S,L)) => 0.
+  }
+
+  abOpt: optionsProcessor[testOption].
   abOpt <= {
     shortForm = "-a".
     alternatives = [].
-    usage = "Must have a b".
+    usage = "Must have an a".
     validator = some(("b"):-true).
+    setOption(X,test(_,L)) => test(X,L).
   }
 
-  bbOpt: optionsProcessor.
+  bbOpt: optionsProcessor[testOption].
   bbOpt <= {
     shortForm = "-b".
     alternatives = ["--bb"].
     usage = "Just b".
     validator = none.
+    setOption(L,test(A,_)) => test(A,true).
   }
 
-  show processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt]).
+  show processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt],test("",false)).
 
-  assert processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt]) == either(([("-b",none),("-a",some("b"))],["Alpha"])).
+  assert processOptions(["-a","b","--bb","Alpha"],[abOpt,bbOpt],test("",false)) == either((test("b",true),["Alpha"])).
+
+  show processOptions(["-a","a","--","Alpha"],[abOpt,bbOpt],test("",false)).
 
 }

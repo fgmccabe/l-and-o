@@ -121,7 +121,7 @@ lo.list{
 
   public lastEl:all e ~~ (list[e],e){}.
   lastEl([X],X).
-  lastEl([_,..L],X) :- lastEl(L,X). 
+  lastEl([_,..L],X) :- lastEl(L,X).
 
   private indexes:all e ~~ (list[e],integer) => list[integer].
   indexes([],_) => [].
@@ -130,6 +130,14 @@ lo.list{
   private listPairs:all e ~~ (list[e],integer) => list[(integer,e)].
   listPairs([],_) => [].
   listPairs([E,..L],Ix) => [(Ix,E),..listPairs(L,Ix+1)].
+
+  public interleave:all x~~(list[x],x) => list[x].
+  interleave([],_)=>[].
+  interleave([F,..L],S)=>[F,..mixin(L,S)].
+
+  private mixin:all x~~(list[x],x)=>list[x].
+  mixin([],_)=>[].
+  mixin([F,..L],S) =>[S,F,..mixin(L,S)].
 
   public zip: all e,f ~~ (list[e],list[f]) => list[(e,f)].
   zip([],_) => [].
