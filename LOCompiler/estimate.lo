@@ -7,7 +7,6 @@ lo.comp.code.estimate{
   public estimateArgSpace:(list[term],logical) => integer.
   public estimateGoalSpace:(pred) => integer.
 
-
   estimateUnifySpace(anon,_) => 0.
   estimateUnifySpace(varbl(_),true) => 2.
   estimateUnifySpace(varbl(_),false) => 0.

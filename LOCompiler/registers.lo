@@ -19,11 +19,47 @@ lo.comp.code.registers{
   public regUsed:(varSet,integer) => varSet.
   regUsed(usdRegs(A,L,G),Rg) => usdRegs(addMem(A,Rg),L,G).
 
+  public usedRegs:(varSet) => set[integer].
+  usedRegs(usdRegs(A,_,_)) => A.
+
+  public resetUsed:(varSet) => varSet.
+  resetUsed(usdRegs(_,L,G)) => usdRegs(nullSet,L,G). 
+
+  public maxReg:(varSet) => integer.
+  maxReg(usdRegs(A,_,_)) => foldRight(A,max,0).
+
   public freeAReg:(varSet,integer) => varSet.
   freeAReg(usdRegs(A,L,G),Rg) => usdRegs(delMem(A,Rg),L,G).
 
   public lclGc:(varSet,integer) => varSet.
   lclGc(usdRegs(A,L,G),Sz) => usdRegs(A,L,G+Sz).
+
+  public gcPredict:(varSet) => integer.
+  gcPredict(usdRegs(_,_,G)) => G.
+
+  public resetGc:(varSet) => varSet.
+  resetGc(usdRegs(A,L,_)) => usdRegs(A,L,0).
+
+  public gcMap:(varSet,integer,list[instruction],instruction){}.
+  gcMap(usdRgs(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs)),Ins,iGcmap(Arity,Esize)) :-
+    Esize = foldRight(Locs,max,0).
+
+  clearYs:(integer,integer,set[integer]) => list[instruction].
+  clearYs(Rg,Mx,_) => [] :- Rg>Mx.
+  clearYs(Rg,Mx,Locs) => [iClY(Rg),..clearYs(Rg+1,Mx,Locs)] :- \+ pick(Locs,Rg).
+  clearYs(Rg,Mx,Locs) => clearYs(Rg+1,Mx,Locs).
+
+  clearAs:(integer,integer,set[integer]) => list[instruction].
+  clearAs(Rg,Mx,_) => [] :- Rg>Mx.
+  clearAs(Rg,Mx,Regs) => [iVdA(Rg),..clearAs(Rg+1,Mx,Regs)] :- \+ pick(Regs,Rg).
+  clearAs(Rg,Mx,Regs,Pre) => clearAs(Rg+1,Mx,Regs).
+
+  public usedLocals:(varSet) => set[integer].
+  usedLocals(usdRegs(_,L,_)) => L.
+
+  public maxLocals:(varSet) => integer.
+  maxLocals(usdRegs(_,L,_)) => foldRight(max,0,L).
+
 
   public varSlotSz:integer.
   varSlotSz = 2.

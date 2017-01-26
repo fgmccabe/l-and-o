@@ -24,11 +24,11 @@ lo.comp.code.analyse{
   -- Usedto keep track of occurrences.
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
-  public varAnalysis:(list[term],pred,list[list[pred]]) => (map[string,varDesc],integer,list[integer],list[integer]).
-  varAnalysis(Q,Hd,Parts) => allocateVars(usageTable(occurranceTable(Q,Hd,Parts))).
+  public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,list[integer],list[integer]).
+  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(occurranceTable(Q,Args,Parts))).
 
-  occurranceTable:(list[term],pred,list[list[pred]]) => map[string,occMap].
-  occurranceTable(Q,call(_,Args),Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
+  occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
+  occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
 
   occMap:(list[term],map[string,occMap]) => map[string,occMap].
   occMap([],M) => M.
@@ -63,7 +63,7 @@ lo.comp.code.analyse{
 
   findOccsInTerms:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerms([],M,_,_,_,_) => M.
-  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).   
+  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).
 
   updateOccurrence:(string,map[string,occMap],occForm,integer,integer) => map[string,occMap].
   updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix),..Occs])] :- present(M,Nm,occ(Nm,Occs)).
@@ -78,7 +78,7 @@ lo.comp.code.analyse{
   -- this should be a lambda
   bildEntry:(list[occMap]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
   bildEntry(T) <= {
-    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out] :- 
+    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out] :-
       classifyVr(Occs,aReg(_),some(G)),
       Use = occupiedRegisters(Occ),
       Avoid = avoidRegisters(T,G,Use,nullSet),
@@ -93,7 +93,7 @@ lo.comp.code.analyse{
   registerUsed((hArg,_,Ix),Regs) => addMem(Regs,Ix).
   registerUsed((lArg,_,Ix),Regs) => addMem(Regs,Ix).
   registerUsed(_,Regs) => Regs.
-   
+
   -- This would be better with lambdas
   avoidRegisters:(list[occMap],integer,set[integer],set[integer]) => set[integer].
   avoidRegisters([],Gp,Used,SoFar) => SoFar.
@@ -138,12 +138,12 @@ lo.comp.code.analyse{
   maxRegister(unfy(_,_)) => 2.
   maxRegister(_) => 0.
 
-  collectVarUsage:(map[string,occMap],map[string,(set[integer],set[integer],set[integer])]) => 
+  collectVarUsage:(map[string,occMap],map[string,(set[integer],set[integer],set[integer])]) =>
       map[string,(occMap,addr,set[integer],set[integer],set[integer])].
   collectVarUsage(M,Usage) => foldMap(M,collEntry(Usage),[]).
 
   collEntry:(map[string,(set[integer],set[integer],set[integer])]) <=> {
-    apply:(string,occMap,map[string,(occMap,addr,set[integer],set[integer],set[integer])]) => 
+    apply:(string,occMap,map[string,(occMap,addr,set[integer],set[integer],set[integer])]) =>
         map[string,(occMap,addr,set[integer],set[integer],set[integer])].
   }
   collEntry(Usage) <= {
@@ -177,7 +177,7 @@ lo.comp.code.analyse{
   lastRgUsage([(_,Gp,Ix),..U],G,I) => lastRgUsage(U,Gp,Ix) :- ( Gp>G | Gp=G, Ix>I).
   lastRgUsage([_,..U],G,I) => lastRgUsage(U,G,I).
 
-  findPerms:(list[usageMap],integer,integer,map[string,varDesc],map[string,varDesc]) => 
+  findPerms:(list[usageMap],integer,integer,map[string,varDesc],map[string,varDesc]) =>
       list[(string,option[(integer,integer)],addr,defined)].
   findPerms([],PermNo,PermNo,D,D) => [].
   findPerms([usage(Nm,occ(_,Occs),yReg(_,Sfe),Use,Avoid,Conflict),..Tble],NoP,NoPx,D,Dx) =>

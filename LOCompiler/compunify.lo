@@ -6,6 +6,10 @@ lo.comp.code.unify{
   import lo.comp.code.registers.
   import lo.comp.term.
 
+  public unifyArgs:(list[term],map[string,varDesc],list[litrl],varSet,logical,varSet,map[string,varDesc],list[litrl],list[instruction]){}.
+  unifyArgs(Args,D0,Refs,Used,Last,Usx,Dx,Rfx,Inx) :-
+    unifyEls(Args,true,D0,Dx,Used,Usx,Refs,Rfx,Last) = Inx.
+
   public unifyTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
         varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].
   unifyTerm(anon,_,Src,D,D,VS,VS,Lts,Lts,_) => skipOver(Src).
@@ -14,10 +18,10 @@ lo.comp.code.unify{
   unifyTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => unifyOp(Lb,Src,Top,V,V0) <> unifyEls(Els,D,Dx,V,Vx,Lt0,Ltx) :-
       accessLiteral(Op,Lb,Lt,Lt0).
 
-  unifyEls:(list[term],map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
-  unifyEls([],D,D,V,V,Lt,Lt) => [].
-  unifyEls([e],D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,false,sReg,D,Dx,V,Vx,Lt,Ltx,true).
-  unifyEls([e,..l],D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,false,sReg,D,D0,V,V0,Lt,Lt0,false)<>unifyEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
+  unifyEls:(list[term],logical,map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
+  unifyEls([],_,D,D,V,V,Lt,Lt) => [].
+  unifyEls([e],Top,D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,Top,sReg,D,Dx,V,Vx,Lt,Ltx,true).
+  unifyEls([e,..l],Top,D,Dx,V,Vx,Lt,Ltx) => unifyTerm(e,Top,sReg,D,D0,V,V0,Lt,Lt0,false)<>unifyEls(l,D0,Dx,V0,Vx,Lt0,Ltx).
 
   unifyVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
   unifyVar(varDesc(_,_,_,voidAddr,_),sReg,D,D,V,V,_) => [iClS].

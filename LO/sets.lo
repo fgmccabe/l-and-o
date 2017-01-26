@@ -58,4 +58,16 @@ lo.sets {
   private foldF:all e,f ~~ equality[e], equality[f] |: ((e)=>f,set[f],list[e]) => set[f].
   foldF(_,S,[]) => S.
   foldF(F,S,[e,..l]) => foldF(F,addMem(S,F(e)),l).
+
+  public implementation all e ~~ folding[set[e]->>e] <= {
+    foldRight(F,X,S) => foldRightEls(F,X,S::list[e]).
+    foldLeft(F,X,S) => foldLeftEls(F,X,S::list[e]).
+  }
+
+  private foldLeftEls:all f,e,x ~~ ((x,e)=>x,x,list[e]) => x.
+  foldLeftEls(F,X,S) => foldLeft(F,X,S).
+
+  private foldRightEls:all f,e,x ~~ ((e,x)=>x,x,list[e]) => x.
+  foldRightEls(F,X,S) => foldRight(F,X,S).
+
 }

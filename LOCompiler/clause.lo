@@ -2,6 +2,7 @@ lo.comp.code.clause{
   import lo.
 
   import lo.comp.errors.
+  import lo.comp.code.analyse.
   import lo.comp.code.estimate.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
@@ -11,5 +12,75 @@ lo.comp.code.clause{
   import lo.comp.errors.
   import lo.comp.term.
 
+  compCl:(clse,list[litrl])=>(list[instruction],list[litrl]).
+  compCl(clse(Q,Nm,Args,Body),Lits) => (Code,bLits):-
+    Parts = partitionGoals(Body,[]),
+    (Dict,PermSize,UsedRgs,FreeRgs) = varAnalysis(Q,Args,Parts),
+    unifyArgs(Args,Dict,Lits,UsedRgs,Us0,D0,Rf0,HCode),
+    heapSize = estimateArgSpace(Args,false),
+    hSize = gcPredict(Us0), -- heapSize should == hSize
+    allocating = ((PermSize>0 | size(Parts)>1) ? true | false),
+    compBodyParts(Parts,1,D0,Rf0,Us0,allocating,bCode,bLits,bU),
+    Arity = size(Args),
+    lSize = max(maxLocals(bU,PermSize)),
+    Code =
+      (hSize>0 ? [iGc(Arity,hSize)] | []) <>
+      (lSize>0 ? [iAlloc(Arity,lSize),iGcMap(Arity,lSize),..clearLocals(usedLocals(Us0),1,lSize)] | []) <>
+      HCode<>bCode.
 
+
+  clearLocals:(set[integer],integer,integer) => list[instruction].
+  clearLocals(Lcls,Rg,Max) => [] :- Rg>Max.
+  clearLocals(Lcls,Rg,Max) => [iClY(Rg),..clearLocals(Lcls,Rg+1,Max)] :- \+ pick(Lcls,Rg).
+  clearLocals(Lcls,Rg,Max) => clearLocals(Lcls,Rg+1,Max).
+
+  compBodyParts:(list[list[pred]],integer,map[string,varDesc],list[litrl],varSet,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
+  compBodyParts([],_,Dx,_,Lits,Vs,_,[iSucc],Dx,Lits,Vs).
+  compBodyParts([P],Gp,D0,L0,Vs0,Allo,Code,Dx,Lx,Vsx) :-
+    Mx = maxReg(Vs0),
+    compPart(P,Gp,D0,L0,resetGc(Vs0),true,Allo,fCode,Dx,Lx,Vsx),
+    lSize = gcPredict(Vsx),
+    (lSize > 0 ?
+      ((Allo | maxLocals(Vsx)>0) ?
+        (Pre,_) = gcMap(Vs0,Mx),
+        Code = Pre<>[iGc(Mx,lSize),..fCode] |
+        Code = clearAs(1,Mx,usedRegs(Vs0)) <> [iGc(Mx,lSize)] <> fCode) |
+      Code = fCode).
+  compBodyParts([P,..Arts],Gp,D0,L0,Vs0,Allo,Code,Dx,Lx,Vsx) :-
+    compPart(P,Gp,D0,L0,resetGc(Vs0),false,false,fCode,D1,L2,V1),
+    lSize = gcPredict(V1),
+    Mx = maxReg(Vs0),
+    (Pre,_) = gcMap(Vs0,Mx),
+    (lSize>0 ?
+      gCode = Pre<>[iGc(Mx,lSize)] |
+      gCode = []),
+    compBodyParts(Args,Gp+1,D1,L1,resetUsed(V1),All,bCode,Dx,Lx,Vx),
+    Code = gCode<>fCode<>bCode.
+
+  compPart:(list[pred],integer,map[string,varDesc],list[litrl],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
+  compPart([],_,D,Ltx,Vs,_,_,[],D,Ltx,Vs).
+  compPart([G],Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    compGoal(G,Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx).
+  compPart([G,G1,..R],Gp,D,Lt,Vs,Last,Alloc,pCode<>rCode,Dx,Ltx,Vsx) :-
+    compGoal(G,Gp,D,Lt,Vs,false,false,pCode,D0,Lt0,Vs0),
+    compPart([G1,..R],Gp,D0,Lt0,Vs0,Last,Alloc,rCode,Dx,Ltx,Vsx),
+
+  compGoal:(pred,integer,map[string,varDesc],list[litrl],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
+  compGoal(fail,_,D,Lt,Vs,_,_,[iFayl],D,Lt,Vs).
+  compGoal(neck,_,D,Lt,Vs,true,Alloc,Code,D,Lt,Vs) :-
+    ((Alloc | maxLocals(Vs)>0) ?
+      Code = [iCut,iDealloc,iGcmap(0,0)] |
+      Code = [iCut,iSucc]).
+  compGoal(next,_,D,Lt,Vs,false,_,[iCut],D,Lt,Vs).
+  compGoal(ecall(Esc,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    callArgs(Args,1,Gp,D,Lt,Vs,Last,aCode,D0,Lt0,Vs0),
+    Arity = size(Args),
+    (Pre,Map) = gcMap(Vs,Arity),
+    
+
+  call(term,list[term])
+                    | ecall(string,list[term])
+                    | ocall(term,term,term)
+                    | unfy(term,term)
+                    | except(term).
 }
