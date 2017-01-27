@@ -32,7 +32,7 @@ lo.collection{
     empty: k.
     addMem:(k,e)=>k.
     delMem:(k,e)=>k.
-    pick:(k,e){}.
+    (in):(e,k){}.
   }
 
   public contract all k,e ~~ setops[k->>e] <~ {

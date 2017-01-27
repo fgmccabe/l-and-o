@@ -102,9 +102,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/esc.h">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/escodes.h">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/eval.h">
 			<Option target="lo"/>
 		</Unit>
@@ -295,6 +292,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/writef.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/escodes.h">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/CMakeLists.txt">

@@ -1,4 +1,4 @@
-/* 
+/*
   This is where you define a new escape function so that the compiler and
   the run-time system can see it
   Copyright (c) 2016, 2017. Francis G. McCabe
@@ -32,7 +32,8 @@ escape(_unify,False,False,":k't'P2k't'k't'","unification")
 escape(_identical,False,False,":k't'P2k't'k't'","test for identicality")
 
 escape(var,False,False,":k't'P1k't'","test for variable")
-escape(nonvar,False,False,":k't'P1k't'","test for non-variable")
+escape(ground,False,False,":k't'P1k't'","test for grounded-ness")
+
 
 // escape(_call,True,False,"p4ssiLS","dynamic call")
 
@@ -101,8 +102,6 @@ escape(_bnot,False,False,"F1ii","bitwise negate number")
 escape(_nthb,False,False,"P2ii","is nth bit set?")
 
 /*
-  escape(ground,False,False,":k't'AP1k't'","test for grounded")
-
   escape(_suspend,False,False,":k'u'A:k'v'AP2k'u'k'v'","suspend if variable not bound")
 
   escape(_assert,False,False,":k'u'Ap2sk'u'","assert a term")
@@ -121,7 +120,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
  // escape(_delProp,False,False,":k'u'AP2"thingType"s","delete a property from a symbol")
 
   // Term construction
-  escape(_univ,False,False,":k'u'A:k'v'AF2sLk'u'k'v'","weird function to construct terms")  
+  escape(_univ,False,False,":k'u'A:k'v'AF2sLk'u'k'v'","weird function to construct terms")
 
   // Sha function
   escape(_sha1,False,False,"F1LiLi","compute hash of a byte string")
@@ -149,7 +148,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_openOutFile,True,False,"F2Si"fileType,"open output file")
   escape(_openAppendFile,True,False,"F2Si"fileType,"open output file")
   escape(_openAppendIOFile,True,False,"F2Si"fileType,"open output file")
- /* 
+ /*
   escape(_openURL,True,False,"F4SSSiO","open a URL")
   escape(_checkRoot,True,False,"P2SS","check url against root URL")
   escape(_mergeURL,True,False,"F2SSS","merge URLs")
@@ -174,12 +173,12 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_flush,True,False,"P1"fileType,"flush the I/O buffer")
   escape(_flushall,True,False,"P0","flush all files")
   escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
-/*    
+/*
   escape(_classload,True,False,"p4SssLs","load class file")
 
 */
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
-  
+
   /*
   // Socket handling functions
   escape(_connect,True,False,"p5SiiOO","connect to remote host")
@@ -191,14 +190,14 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(hosttoip,False,False,"F1SLS","IP address of host")
   escape(iptohost,False,False,"F1SS","host name from IP")
 */
-  
+
   /*
 
 // Timing and delaying
-  escape(delay,False,False,"p1N","delay for period of time")  
-  escape(sleep,False,False,"p1N","sleep until a definite time")  
-  escape(now,False,False,"F0f","current time")  
-  escape(today,False,False,"F0i","time at midnight")  
+  escape(delay,False,False,"p1N","delay for period of time")
+  escape(sleep,False,False,"p1N","sleep until a definite time")
+  escape(now,False,False,"F0f","current time")
+  escape(today,False,False,"F0i","time at midnight")
   escape(ticks,False,False,"F0f","used CPU time")
   escape(_time2date,False,False,"P012NiiiiiiffS", "convert a time to a date")
   escape(_time2utc,False,False,"P012NiiiiiiffS", "convert a time to UTC date")
@@ -257,7 +256,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
   escape(_stringOf,False,False,":k't'F3k't'iiS","Display a general term")
   escape(_trim,False,False,"F2SiS","trim a string to a width")
-  
+
   escape(explode,False,False,"F1SLi","convert string to list of code points")
   escape(implode,False,False,"F1LiS","convert list of code points to string")
 

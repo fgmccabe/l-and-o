@@ -21,3 +21,7 @@ set(INS_SOURCE_FILES instr.c)
 add_executable(genins ${INS_SOURCE_FILES})
 
 target_link_libraries(genins ooio)
+
+set(ASM_SOURCE_FILES mnem.c)
+add_executable(mnem ${ASM_SOURCE_FILES})
+target_link_libraries(mnem ooio)

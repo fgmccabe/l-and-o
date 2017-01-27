@@ -481,7 +481,7 @@ buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
   % We have to unify the implemented contract and the contract (spec)ification
   moveQuants(FullSpec,_,Qcon),
   moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
-  moveQuants(Spec,_,ASpec),
+  moveQuants(Spec,SQ,ASpec),
   moveConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
   sameLength(OArgs,AArgs,Lc),
   sameLength(ODeps,ADeps,Lc),
@@ -490,8 +490,11 @@ buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
   bindAT(ODeps,ADeps,AQ,QQ),
   rewriteConstraints(OC,QQ,[],OCx),% OCx will become additional contract requirements
   moveQuants(ConFace,_,Face),
-  rewriteType(Face,QQ,faceType(Fields)),
-  pushScope(Env,ThEnv),
+  rewriteType(Face,QQ,EffType),
+  pushScope(Env,E0),
+  moveQuants(FaceType,SQ,EffType),
+  evidence(FaceType,voidType,IQ,faceType(Fields)),
+  declareTypeVars(IQ,Lc,E0,ThEnv),
   thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others),
   computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
   implementationName(conTract(CNm,AArgs,ADeps),ImplName),
@@ -720,7 +723,7 @@ isListType(Tp,Env) :-
   isType("list",Env,tpDef(_,LstTp,_)),!,
   deRef(Tp,typeExp(LsOp,_)),
   deRef(LsOp,LstTp).
-  
+
 typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp) :-
   typeOfTerm(name(Lc,"[]"),ListTp,Env,Ev,Exp).
 typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Op,[Hd,Tl])) :-

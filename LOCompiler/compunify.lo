@@ -42,8 +42,10 @@ lo.comp.code.unify{
   unifyLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iUAlit(0,Lb)].
   unifyLit(Lb,_,sReg,VS,VS) => [iUSlit(Lcb)].
 
-  accessLiteral:(term,string,list[litrl],list[litrl]){}.
+  public accessLiteral:(term,string,list[litrl],list[litrl]){}.
   accessLiteral(T,Lb,Lt,Lt) :- litrl(Lb,T) in Lt.
+  accessLiteral(strng(Sx),Lb,Lts,[litrl(Sx,strng(Sx))]).
+  accessLiteral(enum(Sx),Lb,Lts,[litrl(Sx,enum(Sx))]).
   accessLiteral(T,Lb,Lts,[litrl(Lb,T)]) :- Lb = _str_gen("L").
 
   unifyOp:(string,addr,logical,varSet,varSet) => list[instruction].

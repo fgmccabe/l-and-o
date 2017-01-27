@@ -7,6 +7,7 @@ catalog{
     lo.comp.canon -> "canon.lo".
     lo.comp.catalog -> "catalog.lo".
     lo.comp.code.analyse -> "analyse.lo".
+    lo.comp.code.asm -> "asm.lo".
     lo.comp.code.clause -> "clause.lo".
     lo.comp.code.estimate -> "estimate.lo".
     lo.comp.code.indexing -> "indexing.lo".

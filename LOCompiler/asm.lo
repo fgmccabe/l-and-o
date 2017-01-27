@@ -1,0 +1,135 @@
+lo.comp.code.asm{
+/* Automatically generated, do not edit */
+
+  import lo.
+  import lo.comp.escapes.
+  import lo.comp.code.instructions.
+  import lo.comp.code.registers.
+
+  public asm:(list[instruction],list[litrl])=>list[integer].
+  asm(Ins,Lits) => mnem(Ins,genLblTbl(Ins,0,[]),genLitTbl(Lits,0,[]),0).
+
+  private mnem:(list[instruction],map[string,integer],map[string,integer],integer)=>list[integer].
+  mnem([],_,_,_) => [].
+  mnem([iLbl(_),..I],Lbls,Lits,Pc) => mnem(I,Lbls,Lits,Pc).
+  mnem([iHalt,..I],Lbls,Lits,pc) => [0,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iDie,..I],Lbls,Lits,pc) => [16777216,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iSucc,..I],Lbls,Lits,pc) => [33554432,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iKawl(V0,V1),..I],Lbls,Lits,pc) => [50331648.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iLkawl(V0,V1),..I],Lbls,Lits,pc) => [67108864.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iDlkawl(V0,V1),..I],Lbls,Lits,pc) => [83886080.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iKawlO(V0,V1),..I],Lbls,Lits,pc) => [100663296.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iLkawlO(V0,V1),..I],Lbls,Lits,pc) => [117440512.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iDlkawlO(V0,V1),..I],Lbls,Lits,pc) => [134217728.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iGo_to(V0),..I],Lbls,Lits,pc) => [201326592.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iEscape(V0,V1),..I],Lbls,Lits,pc) => [218103808.|.(V0.<<.16).|.escCode(V1),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iAlloc(V0,V1),..I],Lbls,Lits,pc) => [268435456.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iDealloc,..I],Lbls,Lits,pc) => [285212672,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTryme(V0),..I],Lbls,Lits,pc) => [301989888.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iRetryme(V0),..I],Lbls,Lits,pc) => [318767104.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrustme,..I],Lbls,Lits,pc) => [335544320,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrycl(V0),..I],Lbls,Lits,pc) => [352321536.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iRetry(V0),..I],Lbls,Lits,pc) => [369098752.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrust(V0),..I],Lbls,Lits,pc) => [385875968.|.(pcGap(pc,V0,Lbls,16777215)),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iFayl,..I],Lbls,Lits,pc) => [402653184,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCut,..I],Lbls,Lits,pc) => [419430400,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iIndexi(V0,V1),..I],Lbls,Lits,pc) => [436207616.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iIndexl(V0),..I],Lbls,Lits,pc) => [452984832.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iIndexs(V0,V1),..I],Lbls,Lits,pc) => [469762048.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iIndexn(V0,V1),..I],Lbls,Lits,pc) => [486539264.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iIndexx(V0,V1),..I],Lbls,Lits,pc) => [503316480.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrpblk,..I],Lbls,Lits,pc) => [520093696,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrpend,..I],Lbls,Lits,pc) => [536870912,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iExcept(V0),..I],Lbls,Lits,pc) => [553648128.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iGcmap(V0,V1),..I],Lbls,Lits,pc) => [570425344.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iGc(V0,V1),..I],Lbls,Lits,pc) => [587202560.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iSusp(V0,V1),..I],Lbls,Lits,pc) => [620756992.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iResume(V0),..I],Lbls,Lits,pc) => [637534208.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iTrgr(V0),..I],Lbls,Lits,pc) => [654311424.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAA(V0,V1),..I],Lbls,Lits,pc) => [704643072.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAY(V0,V1),..I],Lbls,Lits,pc) => [721420288.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAS(V0),..I],Lbls,Lits,pc) => [754974720.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUcAS(V0),..I],Lbls,Lits,pc) => [771751936.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAlit(V0,V1),..I],Lbls,Lits,pc) => [788529152.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns(V0,V1),..I],Lbls,Lits,pc) => [838860800.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUYY(V0,V1),..I],Lbls,Lits,pc) => [855638016.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUYS(V0),..I],Lbls,Lits,pc) => [872415232.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUcYS(V0),..I],Lbls,Lits,pc) => [889192448.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUSlit(V0),..I],Lbls,Lits,pc) => [1006632960.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUScns(V0),..I],Lbls,Lits,pc) => [1056964608.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns0(V0),..I],Lbls,Lits,pc) => [922746880.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns1(V0),..I],Lbls,Lits,pc) => [939524096.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns2(V0),..I],Lbls,Lits,pc) => [956301312.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns3(V0),..I],Lbls,Lits,pc) => [973078528.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iUAcns4(V0),..I],Lbls,Lits,pc) => [989855744.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMAA(V0,V1),..I],Lbls,Lits,pc) => [1174405120.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMAY(V0,V1),..I],Lbls,Lits,pc) => [1191182336.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMuAY(V0,V1),..I],Lbls,Lits,pc) => [1207959552.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMAS(V0),..I],Lbls,Lits,pc) => [1241513984.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMAlit(V0,V1),..I],Lbls,Lits,pc) => [1258291200.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMAcns(V0,V1),..I],Lbls,Lits,pc) => [1275068416.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMYA(V0,V1),..I],Lbls,Lits,pc) => [1291845632.|.(V0.<<.8).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMYY(V0,V1),..I],Lbls,Lits,pc) => [1308622848.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMYS(V0),..I],Lbls,Lits,pc) => [1342177280.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMSA(V0),..I],Lbls,Lits,pc) => [1392508928.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMSY(V0),..I],Lbls,Lits,pc) => [1409286144.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMSlit(V0),..I],Lbls,Lits,pc) => [1426063360.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iMScns(V0),..I],Lbls,Lits,pc) => [1476395008.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iOAU(V0),..I],Lbls,Lits,pc) => [1509949440.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iOYU(V0),..I],Lbls,Lits,pc) => [1526726656.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iOYA(V0,V1),..I],Lbls,Lits,pc) => [1543503872.|.(V0.<<.8).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iOYnil(V0),..I],Lbls,Lits,pc) => [1560281088.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAA(V0,V1),..I],Lbls,Lits,pc) => [1845493760.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAY(V0,V1),..I],Lbls,Lits,pc) => [1862270976.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAS(V0),..I],Lbls,Lits,pc) => [1879048192.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAlit(V0,V1),..I],Lbls,Lits,pc) => [1895825408.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns(V0,V1),..I],Lbls,Lits,pc) => [1946157056.|.(V0.<<.16).|.ltOff(V1,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCYA(V0,V1),..I],Lbls,Lits,pc) => [1962934272.|.(V0.<<.8).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCYS(V0),..I],Lbls,Lits,pc) => [1979711488.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCSA(V0),..I],Lbls,Lits,pc) => [2030043136.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCSY(V0),..I],Lbls,Lits,pc) => [2046820352.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCSlit(V0),..I],Lbls,Lits,pc) => [2063597568.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCScns(V0),..I],Lbls,Lits,pc) => [2113929216.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns0(V0),..I],Lbls,Lits,pc) => [2147483648.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns1(V0),..I],Lbls,Lits,pc) => [2164260864.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns2(V0),..I],Lbls,Lits,pc) => [2181038080.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns3(V0),..I],Lbls,Lits,pc) => [2197815296.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iCAcns4(V0),..I],Lbls,Lits,pc) => [2214592512.|.ltOff(V0,Lits),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClAA(V0,V1),..I],Lbls,Lits,pc) => [2684354560.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClAY(V0,V1),..I],Lbls,Lits,pc) => [2701131776.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClAS(V0),..I],Lbls,Lits,pc) => [2734686208.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClSA(V0),..I],Lbls,Lits,pc) => [2751463424.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClSY(V0),..I],Lbls,Lits,pc) => [2768240640.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVrA(V0),..I],Lbls,Lits,pc) => [2785017856.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVrY(V0),..I],Lbls,Lits,pc) => [2801795072.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iNvrA(V0),..I],Lbls,Lits,pc) => [2818572288.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iNvrY(V0),..I],Lbls,Lits,pc) => [2835349504.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVdA(V0),..I],Lbls,Lits,pc) => [3019898880.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVdAA(V0,V1),..I],Lbls,Lits,pc) => [3036676096.|.(V0.<<.16).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVdY(V0),..I],Lbls,Lits,pc) => [3053453312.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iVdYY(V0,V1),..I],Lbls,Lits,pc) => [3070230528.|.(V0.<<.8).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClA(V0),..I],Lbls,Lits,pc) => [3087007744.|.(V0.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClY(V0),..I],Lbls,Lits,pc) => [3103784960.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClS,..I],Lbls,Lits,pc) => [3137339392,..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iClYY(V0,V1),..I],Lbls,Lits,pc) => [3154116608.|.(V0.<<.8).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
+
+  private genLblTbl:(list[instruction],integer,map[string,integer]) => map[string,integer].
+  genLblTbl([],_,D) => D.
+  genLblTbl([iLbl(Lbl),..I],Pc,D) => genLblTbl(I,Pc,D[Lbl->Pc]).
+  genLblTbl([_,..I],Pc,D) => genLblTbl(I,Pc+1,D).
+
+  private genLitTbl:(list[litrl],integer,map[string,integer]) => map[string,integer].
+  genLitTbl([],_,D) => D.
+  genLitTbl([litrl(Lbl,_),..I],Pc,D) => genLitTbl(I,Pc+1,D[Lbl->Pc]).
+
+  private ltOff:(string,map[string,integer]) => integer.
+  ltOff(Lb,Lbls) => Tgt :-
+    present(Lbls,Lb,Tgt).
+
+  private pcGap:(integer,string,map[string,integer],integer) => integer.
+  pcGap(pc,Lb,Lbls,mx) => Gap :-
+    present(Lbls,Lb,Tgt),
+    Gap = Tgt-pc,
+    Gap=<mx.
+
+}               -- end of generated module

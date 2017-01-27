@@ -8,13 +8,13 @@ lo.list{
   [] <> X => X.
   [E,..X] <> Y => [E,..X<>Y].
 
-  public (in):all t ~~ (t,list[t]){}.
-  X in [X,.._].
-  X in [_,..Y] :- X in Y.
+  public listEl:all t ~~ (t,list[t]){}.
+  listEl(X,[X,.._]).
+  listEl(X,[_,..Y]) :- listEl(X,Y).
 
   public merge:all t ~~ (list[t],list[t]) => list[t].
   merge([],X) => X.
-  merge([e,..l],x) => merge(l,x) :- e in x.
+  merge([e,..l],x) => merge(l,x) :- listEl(e,x).
   merge([e,..l],x) => [e,..merge(l,x)].
 
   public multiCat:all x ~~ (list[list[x]]) => list[x].
@@ -36,10 +36,6 @@ lo.list{
   public drop:all t ~~ (list[t]) => list[t].
   drop([_,..L]) => L.
 
-  public isMember:all t ~~ (t,list[t]){}.
-  isMember(E,[E,.._]).
-  isMember(E,[_,..L]) :- isMember(E,L).
-
   public subtract:all t ~~ (t,list[t])=>list[t].
   subtract(_,[]) => [].
   subtract(E,[E,..R]) => R.
@@ -53,6 +49,13 @@ lo.list{
   public implementation all c ~~ sizeable[list[c]] <= {
     size(L) => length(L).
     isEmpty([]).
+  }
+
+  public implementation all e ~~ membership[list[e]->>e] <= {
+    empty = [].
+    addMem(L,E) => [E,..L].
+    delMem(L,E) => subtract(E,L).
+    X in Y :- listEl(X,Y).
   }
 
   public implementation all e ~~ folding[list[e]->>e] <= {
@@ -98,11 +101,11 @@ lo.list{
     _empty = [].
   }
 
-  public implementation all e ~~ equality[e] |: membership[list[e] ->> e] <= {
+  public implementation all e ~~ membership[list[e] ->> e] <= {
     empty = [].
     addMem(L,e) => [e,..L].
     delMem(L,e) => subtract(e,L).
-    pick(L,e) :- e in L.
+    e in L :- listEl(e,L).
   }
 
   public nthEl:all e ~~ (list[e],integer,e){}.

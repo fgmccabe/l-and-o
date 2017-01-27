@@ -3,7 +3,7 @@ lo.comp.types{
 
   import lo.comp.misc.
 
-  public type tipe ::= anonType 
+  public type tipe ::= anonType
         | voidType
         | thisType
         | kVar(string)
@@ -43,7 +43,7 @@ lo.comp.types{
     disp(T) => dispType(T).
   }
 
-  public 
+  public
   implementation display[constraint] <= {
     disp(C) => showConstraint(C).
   }
@@ -55,9 +55,9 @@ lo.comp.types{
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
   dispType(kFun(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
-  dispType(tVar(Curr,_,_)) =>  dispType(Curr) :-  nonvar(Curr).
+  dispType(tVar(Curr,_,_)) =>  dispType(Curr) :-  \+var(Curr).
   dispType(tVar(_,_,Id)) => ss(Id).
-  dispType(tFun(Curr,_,_,_)) => dispType(Curr) :- nonvar(Curr).
+  dispType(tFun(Curr,_,_,_)) => dispType(Curr) :- \+var(Curr).
   dispType(tFun(_,Ar,_,Nm)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispType(tipe(Nm)) =>ss(Nm).
   dispType(tpFun(Nm,Ar)) => ssSeq([ss(Nm),ss("%"),disp(Ar)]).
@@ -114,8 +114,8 @@ lo.comp.types{
 
   public
   deRef:(tipe)=>tipe.
-  deRef(tVar(Curr,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
-  deRef(tFun(Curr,_,_,_)) =>  deRef(Curr) :-  nonvar(Curr) .
+  deRef(tVar(Curr,_,_)) =>  deRef(Curr) :-  \+var(Curr) .
+  deRef(tFun(Curr,_,_,_)) =>  deRef(Curr) :-  \+var(Curr) .
   deRef(T) => T.
 
   public
@@ -205,7 +205,7 @@ lo.comp.types{
 
   private
   idOccIn:(string,tipe){}.
-  idOccIn(Id,tVar(Curr,_,_)) :- nonvar(Curr), idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Curr,_,_)) :- \+var(Curr), idOccIn(Id,Curr).
   idOccIn(Id,tVar(Curr,_,Id)) :- var(Curr).
   idOccIn(Id,typeExp(Op,A)) :- (idOccIn(Id,Op) | T in A, idOccIn(Id,T)).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).

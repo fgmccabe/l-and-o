@@ -25,7 +25,7 @@ lo.comp.typecheck{
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
     thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
-    (errorFree(Rp0) ? 
+    (errorFree(Rp0) ?
       findImportedImplementations(ImportClosure,[],OverDict),
       overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
       OOthers = overloadOthers(Others,ODict,Rp1,Rpx) |
@@ -243,12 +243,12 @@ lo.comp.typecheck{
   private pickupVarType:(string,location,list[env],report,report) => tipe.
   pickupVarType(N,_,Env,Rp,Rp)=>Tp :-
     isVar(N,Env,vr(_,Tp)).
-  pickupVarType(N,Lc,_,Rp,Rpx) => newVar("_") :- 
+  pickupVarType(N,Lc,_,Rp,Rpx) => newVar("_") :-
     reportError("\(N) not declared",Lc,Rp,Rpx).
 
   private declareTypeVars:(list[(string,tipe)],location,list[env],list[env]){}.
   declareTypeVars([],_,Env,Env).
-  declareTypeVars([("this",_),..Vars],Lc,Env,Ex) :- 
+  declareTypeVars([("this",_),..Vars],Lc,Env,Ex) :-
     declareTypeVars(Vars,Lc,Env,Ex).
   declareTypeVars([(Nm,Tp),..Vars],Lc,Env,Ex) :-
     declareTypeVars(Vars,Lc,declareTypeExists(Nm,Lc,Tp,Env),Ex).
@@ -375,7 +375,7 @@ lo.comp.typecheck{
     isContract(Nm,Env,conEntry(_,CNm,FullSpec,ConFace)),
     -- We have to unify the implemented contract and the contract (spec)ification
     moveConQuants(FullSpec,_,conTract(ConNm,OArgs,ODeps)),
-    moveConQuants(Spec,_,ASpec),
+    moveConQuants(Spec,SQ,ASpec),
     moveConConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
     sameLength(OArgs,AArgs,Lc,Rp0,Rp1),
     sameLength(ODeps,ADeps,Lc,Rp1,Rp2),
@@ -383,8 +383,11 @@ lo.comp.typecheck{
     QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,[])),
     moveQuants(ConFace,_,CFace),
     (_,Face) = freshen(CFace,QQ),
+    moveQuants(FT,SQ,Face), -- construct the required type signature of the implementation
+    (IQ,Face) = skolemize(FT,[]),
+    declareTypeVars(pairs(IQ),Lc,pushScope(Env),SEnv),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
-    checkThetaTerm(Face,Lc,Els,pushScope(Env),ThDefs,Others,Types,ImplName,Rp0,Rpx),
+    checkThetaTerm(Face,Lc,Els,SEnv,ThDefs,Others,Types,ImplName,Rp0,Rpx),
     Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others),Face),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
@@ -488,18 +491,18 @@ lo.comp.typecheck{
   typeOfTerm(V,_,Env,Env,v(Lc,_str_gen("_")),Rp,Rp) :- isIden(V,Lc,"_").
   typeOfTerm(V,Tp,Env,Ev,Term,Rp,Rpx) :-
     isIden(V,Lc,Nm),
-    ( 
+    (
       isVar(Nm,Env,Spec) ?
       typeOfVar(Lc,Spec,Tp,Env,Term,Rp,Rpx), Env=Ev |
       isKeyword(Nm) ?
       reportError("unexpected keyword: \(Nm)",Lc,Rp,Rpx),
       Term = v(Lc,_str_gen("_")) |
       Ev = declareVar(Nm,vr(v(Lc,Nm),Tp),Env), Term=v(Lc,Nm), Rp=Rpx).
-  typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :- 
+  typeOfTerm(intg(Lc,Ix),Tp,Env,Env,int(Ix),Rp,Rpx) :-
     checkType(Lc,findType("integer",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
-  typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Dx),Rp,Rpx) :- 
+  typeOfTerm(flot(Lc,Dx),Tp,Env,Env,flt(Dx),Rp,Rpx) :-
     checkType(Lc,findType("float",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
-  typeOfTerm(strg(Lc,Sx),Tp,Env,Env,str(Sx),Rp,Rpx) :- 
+  typeOfTerm(strg(Lc,Sx),Tp,Env,Env,str(Sx),Rp,Rpx) :-
     checkType(Lc,findType("string",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBinary(Term,":",Lc,L,R),
@@ -507,7 +510,7 @@ lo.comp.typecheck{
         checkType(Lc,RT,Tp,Env,Rp0,Rp1),
         typeOfTerm(L,RT,Env,Ev,Exp,Rp1,Rpx) |
         reportError("cannot parse type \(R)",Lc,Rp0,Rp1),
-        typeOfTerm(L,Tp,Env,Ev,Exp,Rp1,Rpx)).  
+        typeOfTerm(L,Tp,Env,Ev,Exp,Rp1,Rpx)).
   typeOfTerm(Term,Tp,Env,Ev,Exp,Rp,Rpx) :-
     isBinary(Term,"::",Lc,L,R),
     typeOfTerm(binary(Lc,":",unary(Lc,"_coerce",L),R),Tp,Env,Ev,Exp,Rp,Rpx).
@@ -616,7 +619,7 @@ lo.comp.typecheck{
     isType("map",Env,_,MpTp),
     typeExp(MpOp,_) = deRef(Tp),
     deRef(MpOp)=MpTp.
- 
+
   -- Looks for ,.. at end, and no -> in the elements
   private isListSequence:(list[ast]){}.
   isListSequence([E,.._]) :-

@@ -102,8 +102,8 @@ lo.comp.code.analyse{
 
   pickRegisters:(list[(occForm,integer,integer)],integer,set[integer],set[integer]) => set[integer].
   pickRegisters([],_,_,SoFar) => SoFar.
-  pickRegisters([(hArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ pick(Used,Rg).
-  pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ pick(Used,Rg).
+  pickRegisters([(hArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
+  pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
   pickRegisters([_,..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,SoFar).
 
   conflict:(list[(occForm,integer,integer)]) => set[integer].

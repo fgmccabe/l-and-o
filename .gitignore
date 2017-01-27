@@ -10,3 +10,4 @@ HeaderGenerator/ops
 HeaderGenerator/genesc
 HeaderGenerator/opcodes
 HeaderGenerator/genins
+HeaderGenerator/mnem

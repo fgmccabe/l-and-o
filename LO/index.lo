@@ -6,7 +6,7 @@ lo.index{
   import lo.collection.
 
   public
-  type all k,v ~~ /* equality[k] |: */map[k,v] ::= 
+  type all k,v ~~ /* equality[k] |: */map[k,v] ::=
       trEmpty
     | trLeaf(integer,list[(k,v)])
     | trNode(integer,integer,map[k,v],map[k,v]).
@@ -101,7 +101,7 @@ lo.index{
 
   lookIn: all k,v ~~ equality[k] |: (integer,map[k,v],k,v){}.
   lookIn(H,trLeaf(H,Els),K,V) :- findMember(K,Els,V).
-  lookIn(H,trNode(Msk,Ln,Left,Right),K,V) :- 
+  lookIn(H,trNode(Msk,Ln,Left,Right),K,V) :-
     commonMask(H,Ln)==Msk,
     (nthBit(H,Ln) ? lookIn(H,Right,K,V) | lookIn(H,Left,K,V)).
 
@@ -132,7 +132,7 @@ lo.index{
 
   private mergePairs: all k,v ~~ equality[k] |: (list[(k,v)],list[(k,v)])=>list[(k,v)].
   mergePairs([],L) => L.
-  mergePairs([(K,V),..L1],L) => mergePairs(L1,L) :- isMember((K,_),L).
+  mergePairs([(K,V),..L1],L) => mergePairs(L1,L) :- listEl((K,_),L).
   mergePairs([E,..L],L1) => [E,..mergePairs(L,L1)].
 
   mergeNodes:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
@@ -157,7 +157,7 @@ lo.index{
         ( nthBit(Msk1,CML) ?
           trNode(CM,CML,L2,mergeNodes(R2,T1)) |
           trNode(CM,CML,mergeNodes(L2,T1),R2)
-          )) :-  
+          )) :-
       T1=trLeaf(Msk1,_),
       T2=trNode(Msk2,Ln2,L2,R2),
       CML = min(commonMaskLen(Msk1,Msk2,HashLen),Ln2),
@@ -263,9 +263,9 @@ lo.index{
 
   HashLen:integer.
   HashLen = 64.
-      
+
   commonMaskLen:(integer,integer,integer) => integer.
-  commonMaskLen(H1,H2,C) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1) :- 
+  commonMaskLen(H1,H2,C) => commonMaskLen(_blsr(H1,1),_blsr(H2,1),C-1) :-
     C>0, \+H1==H2.
   commonMaskLen(_,_,C) => C.
 

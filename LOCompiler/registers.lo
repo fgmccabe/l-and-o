@@ -1,6 +1,7 @@
 lo.comp.code.registers{
   import lo.
 
+  import lo.comp.code.instructions.
   import lo.comp.term.
 
   public type addr ::= voidAddr | aReg(integer) | yReg(integer,logical) | sReg | notAlloc.
@@ -23,13 +24,21 @@ lo.comp.code.registers{
   usedRegs(usdRegs(A,_,_)) => A.
 
   public resetUsed:(varSet) => varSet.
-  resetUsed(usdRegs(_,L,G)) => usdRegs(nullSet,L,G). 
+  resetUsed(usdRegs(_,L,G)) => usdRegs(set([]),L,G).
 
   public maxReg:(varSet) => integer.
-  maxReg(usdRegs(A,_,_)) => foldRight(A,max,0).
+  maxReg(usdRegs(A,_,_)) => foldRight(max,0,A).
 
   public freeAReg:(varSet,integer) => varSet.
   freeAReg(usdRegs(A,L,G),Rg) => usdRegs(delMem(A,Rg),L,G).
+
+  public pickAreg:(varSet,varSet,addr){}.
+  pickAreg(usdRegs(A,L,G),usdRegs(addMem(A,Rg),L,G),aReg(Rg)) :-
+    (inRange(1,numRegisters,Rg), \+Rg in A)!.
+
+  private inRange:(integer,integer,integer){}.
+  inRange(Lo,Hi,Lo).
+  inRange(Lo,Hi,El) :- inRange(Lo+1,Hi,El).
 
   public lclGc:(varSet,integer) => varSet.
   lclGc(usdRegs(A,L,G),Sz) => usdRegs(A,L,G+Sz).
@@ -41,25 +50,24 @@ lo.comp.code.registers{
   resetGc(usdRegs(A,L,_)) => usdRegs(A,L,0).
 
   public gcMap:(varSet,integer,list[instruction],instruction){}.
-  gcMap(usdRgs(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs)),Ins,iGcmap(Arity,Esize)) :-
-    Esize = foldRight(Locs,max,0).
+  gcMap(usdRegs(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
+    Esize = foldRight(max,0,Locs).
 
   clearYs:(integer,integer,set[integer]) => list[instruction].
   clearYs(Rg,Mx,_) => [] :- Rg>Mx.
-  clearYs(Rg,Mx,Locs) => [iClY(Rg),..clearYs(Rg+1,Mx,Locs)] :- \+ pick(Locs,Rg).
+  clearYs(Rg,Mx,Locs) => [iClY(Rg),..clearYs(Rg+1,Mx,Locs)] :- \+ Rg in Locs.
   clearYs(Rg,Mx,Locs) => clearYs(Rg+1,Mx,Locs).
 
   clearAs:(integer,integer,set[integer]) => list[instruction].
   clearAs(Rg,Mx,_) => [] :- Rg>Mx.
-  clearAs(Rg,Mx,Regs) => [iVdA(Rg),..clearAs(Rg+1,Mx,Regs)] :- \+ pick(Regs,Rg).
-  clearAs(Rg,Mx,Regs,Pre) => clearAs(Rg+1,Mx,Regs).
+  clearAs(Rg,Mx,Regs) => [iVdA(Rg),..clearAs(Rg+1,Mx,Regs)] :- \+ Rg in Regs.
+  clearAs(Rg,Mx,Regs) => clearAs(Rg+1,Mx,Regs).
 
   public usedLocals:(varSet) => set[integer].
   usedLocals(usdRegs(_,L,_)) => L.
 
   public maxLocals:(varSet) => integer.
   maxLocals(usdRegs(_,L,_)) => foldRight(max,0,L).
-
 
   public varSlotSz:integer.
   varSlotSz = 2.

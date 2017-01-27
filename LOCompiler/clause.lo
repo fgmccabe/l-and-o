@@ -31,7 +31,7 @@ lo.comp.code.clause{
 
   clearLocals:(set[integer],integer,integer) => list[instruction].
   clearLocals(Lcls,Rg,Max) => [] :- Rg>Max.
-  clearLocals(Lcls,Rg,Max) => [iClY(Rg),..clearLocals(Lcls,Rg+1,Max)] :- \+ pick(Lcls,Rg).
+  clearLocals(Lcls,Rg,Max) => [iClY(Rg),..clearLocals(Lcls,Rg+1,Max)] :- \+ Rg in Lcls.
   clearLocals(Lcls,Rg,Max) => clearLocals(Lcls,Rg+1,Max).
 
   compBodyParts:(list[list[pred]],integer,map[string,varDesc],list[litrl],varSet,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
@@ -73,14 +73,66 @@ lo.comp.code.clause{
       Code = [iCut,iSucc]).
   compGoal(next,_,D,Lt,Vs,false,_,[iCut],D,Lt,Vs).
   compGoal(ecall(Esc,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
-    callArgs(Args,1,Gp,D,Lt,Vs,Last,aCode,D0,Lt0,Vs0),
+    callArgs(Args,1,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     Arity = size(Args),
-    (Pre,Map) = gcMap(Vs,Arity),
-    
+    (Pre,MapIns) = gcMap(Vs,Arity),
+    (Last ?
+      ( (Alloc | maxLocals(Vs)>0) ?
+          Code = aCode<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0)] |
+          Code = aCode<>[iAlloc(Arity,0),iGcmap(Arity,0)]<>Pre<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0)]
+          ) |
+      Code = aCode<>Pre<>[iEscape(Arity,Esc),MapIns]).
+  compGoal(call(Prd,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    callArgs(Args,1,Gp,D,Lt,Vs,Last,aCode,Dx,Lt0,Vsx),
+    Arity = size(Args),
+    (Pre,MapIns) = gcMap(Vs,Arity),
+    accessLiteral(Prd,Lbl,Lt0,Ltx)!,
+    (Last ?
+      ( (Alloc | maxLocals(Vs)>0) ?
+          Code = aCode<>[iDlkawl(Arity,Lbl)] |
+          Code = aCode<>[iLkawl(Arity,Lbl),iGcmap(Arity,0)]
+          ) |
+      Code = aCode<>Pre<>[iKawl(Arity,Lbl),MapIns]).
+  compGoal(ocall(Cl,LbV,ThV),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    callArgs([Cl,LbV,ThV],1,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
+    (Pre,MapIns) = gcMap(Vs,3),
+    (Last ?
+      ((Alloc|maxLocals(Vs)>0) ?
+        Code = aCode<>[iDlkawlO(3,2)] |
+        Code = aCode<>[iLkawlO(3,2)]) |
+      Code = aCode<>Pre<>[iKawlO(3,2),MapIns]).
+  compGoal(unfy(varbl(Nm),R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    present(D,Nm,V),
+    (isInitialized(V) ?
+      aCode = unifyTerm(R,true,V,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
+      aCode = buildTerm(R,true,V,D,Dx,Vs,Vsx,Lt,Ltx,Last)),
+      (Last ?
+        ((Alloc|maxLocals(Vs)>0) ?
+          Code = aCode<>[iDealloc,iGcmap(0,0)] |
+          Code = aCode<>[iSucc]) |
+        Code = aCode<>bCode).
+  compGoal(unfy(L,varbl(Nm)),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    present(D,Nm,V),
+    (isInitialized(V) ?
+      aCode = unifyTerm(L,true,V,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
+      aCode = buildTerm(L,true,V,D,Dx,Vs,Vsx,Lt,Ltx,Last)),
+      (Last ?
+        ((Alloc|maxLocals(Vs)>0) ?
+          Code = aCode<>[iDealloc,iGcmap(0,0)] |
+          Code = aCode<>[iSucc]) |
+        Code = aCode<>bCode).
+  compGoal(unfy(L,R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    pickAreg(Vs,Vs0,V),
+    aCode = buildTerm(L,true,V,D,D0,Vs0,Vs1,Lt,Lt0,false),
+    bCode = unifyTerm(R,true,V,D0,Dx,Vs1,Vsx,Lt0,Ltx,Last),
+    (Last ?
+      ((Alloc|maxLocals(Vs)>0) ?
+        Code = aCode<>bCode<>[iDealloc,iGcmap(0,0)] |
+        Code = aCode<>bCode<>[iSucc]) |
+      Code = aCode<>bCode).
+  compGoal(except(E),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    aCode = buildTerm(E,true,aReg(0),D,Dx,Vs,Vsx,Lt,Ltx,Last),
+    Code = aCode<>[iExcept(0)].
 
-  call(term,list[term])
-                    | ecall(string,list[term])
-                    | ocall(term,term,term)
-                    | unfy(term,term)
-                    | except(term).
+
 }

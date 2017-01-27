@@ -8,7 +8,7 @@ escapeType("_command_opts",funType([],typeExp(tpFun("lo.core*list",1),[tupleType
 escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("var",univType(kVar("t"),predType([kVar("t")]))).
-escapeType("nonvar",univType(kVar("t"),predType([kVar("t")]))).
+escapeType("ground",univType(kVar("t"),predType([kVar("t")]))).
 escapeType("_int_plus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_minus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_times",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
@@ -152,7 +152,7 @@ isEscape("_command_opts").
 isEscape("_unify").
 isEscape("_identical").
 isEscape("var").
-isEscape("nonvar").
+isEscape("ground").
 isEscape("_int_plus").
 isEscape("_int_minus").
 isEscape("_int_times").

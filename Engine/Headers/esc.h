@@ -1,4 +1,4 @@
-/* 
+/*
   Interface to the escape management functions
   Copyright (c) 2016, 2017. Francis G. McCabe
 
@@ -31,5 +31,13 @@ void ScanEscapes(void);
 
 void showCall(processPo P,ptrI prog,ptrPo args,long arity);
 void showOCall(processPo P,ptrPo obj,ptrPo call,ptrPo this);
+
+
+#undef escape
+#define escape(name,secr,pr,spec,cmnt) \
+extern retCode g_##name(processPo,ptrPo);
+
+#include "escapes.h"
+#undef escape
 
 #endif

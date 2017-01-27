@@ -23,10 +23,10 @@ parseType(F,Env,B,C0,Cx,Tp) :-
   isBinary(F,"|:",L,R),!,
   parseConstraint(L,Env,B,C0,C1),
   parseType(R,Env,B,C1,Cx,Tp).
-parseType(Nm,Env,B,C0,Cx,Tp) :- 
-  isIden(Nm,Lc,Id), !, 
+parseType(Nm,Env,B,C0,Cx,Tp) :-
+  isIden(Nm,Lc,Id), !,
   parseTypeName(Lc,Id,Env,B,C0,Cx,Tp).
-parseType(Sq,Env,B,C0,Cx,Type) :- 
+parseType(Sq,Env,B,C0,Cx,Type) :-
   isSquare(Sq,Lc,N,Args),!,
   parseTypeSquare(Lc,N,Args,Env,B,C0,Cx,Type).
 parseType(F,Env,B,C0,Cx,funType(AT,RT)) :-
@@ -71,7 +71,7 @@ parseTypeName(_,"this",_,_,C,C,thisType).
 parseTypeName(_,Id,_,B,C,C,Tp) :- is_member((Id,Tp),B),!.
 parseTypeName(_,Id,Env,_,C,C,TpSpec) :-
   isType(Id,Env,tpDef(_,TpSpec,_)).
-parseTypeName(Lc,Id,_,_,C,C,anonType) :- 
+parseTypeName(Lc,Id,_,_,C,C,anonType) :-
   reportError("type %s not declared",[Id],Lc).
 
 parseTypeSquare(Lc,Id,Args,Env,B,C0,Cx,Tp) :-
@@ -91,12 +91,10 @@ validTypeOp(tpFun(_,Ar),Ar).
 
 bindAT([],_,Q,Q).
 bindAT(_,[],Q,Q).
-bindAT([kVar(N)|L1],[kVar(N)|L2],Q,Qx) :-
-  bindAT(L1,L2,Q,Qx).
 bindAT([kVar(V)|L],[Tp|TL],Q,Qx) :-
   bindAT(L,TL,[(V,Tp)|Q],Qx).
-bindAT([kFun(N,Ar)|L1],[kFun(N,Ar)|L2],Q,Qx) :-
-  bindAT(L1,L2,Q,Qx).
+bindAT([kFun(N,Ar)|L1],[kFun(N2,Ar)|L2],Q,Qx) :-
+  bindAT(L1,L2,[(N,kFun(N2,Ar))|Q],Qx).
 bindAT([kFun(V,Ar)|L],[tpFun(Nm,Ar)|TL],Q,Qx) :-
   bindAT(L,TL,[(V,tpFun(Nm,Ar))|Q],Qx).
 
@@ -136,7 +134,7 @@ parseConstraint(T,Env,B,C0,Cx) :-
   parseType(L,Env,B,C0,C1,TV),
   parseTypeFace(R,Env,B,C1,C2,faceType(AT)),
   addConstraint(implementsFace(TV,AT),C2,Cx).
-parseConstraint(Sq,Env,B,C0,Cx) :- 
+parseConstraint(Sq,Env,B,C0,Cx) :-
   isSquare(Sq,Lc,N,Args),
   parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps),
   ( parseContractName(Lc,N,Env,B,conTract(Op,_ATs,_Dps)) ->
@@ -312,5 +310,3 @@ parseHeadArgs([H|L],B,[V|Args]) :-
   isIden(H,Lc,Nm),
   (is_member((Nm,V),B) ; reportError("type argument %s not quantified ",[H],Lc)),
   parseHeadArgs(L,B,Args).
-
-

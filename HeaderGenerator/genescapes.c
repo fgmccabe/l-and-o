@@ -7,6 +7,7 @@
 #include "signature.h"
 #include "stringBuffer.h"
 #include "formio.h"
+#include "escodes.h"
 #include <ctype.h>
 
 enum {
@@ -38,6 +39,7 @@ static void prologEscapeTypes(FILE *);
 static void prologIsEscape(FILE *);
 static void loEscapeTypes(FILE *);
 static void loIsEscape(FILE *);
+static void genEscCodes(FILE *out);
 
 int main(int argc, char **argv) {
   int narg = getOptions(argc, argv);
@@ -65,6 +67,7 @@ int main(int argc, char **argv) {
         fprintf(out, "  import lo.comp.types.\n\n");
         loEscapeTypes(out);
         loIsEscape(out);
+        genEscCodes(out);
         fprintf(out, "\n}.\n");
         break;
     }
@@ -364,6 +367,30 @@ static void loEscapeTypes(FILE *out) {
   closeFile(O_IO(buffer));
 }
 
+
+#undef escape
+#define escape(name, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name);
+
+static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
+  outStr(O_IO(buffer), "isEscape(");
+  dumpStr(name, buffer);
+  outStr(O_IO(buffer), ").\n");
+
+  long len;
+  char *text = (char *) getTextFromBuffer(&len, buffer);
+  fprintf(out, "%s", text);
+  clearBuffer(buffer);
+}
+
+static void prologIsEscape(FILE *out) {
+  bufferPo buffer = newStringBuffer();
+
+#include "escapes.h"
+
+  closeFile(O_IO(buffer));
+}
+
+
 #undef escape
 #define escape(name, priv, secr, type, cmt) genLoIsEsc(out,buffer,#name);
 
@@ -412,13 +439,15 @@ static void prologEscapeTypes(FILE *out) {
   closeFile(O_IO(buffer));
 }
 
-#undef escape
-#define escape(name, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name);
+// Generate the encoding for escapes. Only generated for L&O compiler
 
-static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
-  outStr(O_IO(buffer), "isEscape(");
+#undef escape
+#define escape(name, priv, secr, type, cmt) genEscCode(out,buffer,#name,escapeOpCode(name));
+
+static void genEscCode(FILE *out, bufferPo buffer, char *name, int opCode) {
+  outStr(O_IO(buffer), "  escCode(");
   dumpStr(name, buffer);
-  outStr(O_IO(buffer), ").\n");
+  outMsg(O_IO(buffer), ") => %d.\n",opCode);
 
   long len;
   char *text = (char *) getTextFromBuffer(&len, buffer);
@@ -426,10 +455,11 @@ static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
   clearBuffer(buffer);
 }
 
-static void prologIsEscape(FILE *out) {
+static void genEscCodes(FILE *out){
   bufferPo buffer = newStringBuffer();
 
-#include "escapes.h"
+  fprintf(out,"\n  public escCode:(string)=>integer.\n");
+  #include "escapes.h"
 
-  closeFile(O_IO(buffer));
+    closeFile(O_IO(buffer));
 }

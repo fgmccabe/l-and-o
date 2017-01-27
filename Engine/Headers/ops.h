@@ -43,7 +43,6 @@ typedef enum {
  uYY= 51,
  uYS= 52,
  ucYS= 53,
- uYnil= 54,
  uSlit= 60,
  uScns= 63,
  uAcns0= 55,

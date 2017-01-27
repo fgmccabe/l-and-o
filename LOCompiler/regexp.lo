@@ -4,7 +4,7 @@ lo.comp.regexp{
   import lo.comp.lexer.
 
   public
-  type regExp ::= reChars(list[integer]) 
+  type regExp ::= reChars(list[integer])
          | reNegChars(list[integer])
          | reGroup(regExp,string)
          | reChoice(regExp,regExp)
@@ -57,7 +57,7 @@ lo.comp.regexp{
 
   charClass:(list[integer]) --> tokenState.
   charClass([]) --> "]"+.
-  charClass(Chrs) --> charRef(St), "-", charRef(En), charClass(More), { Chrs = mergeChars(More,charRange(St,End))}.
+  charClass(Chrs) --> charRef(St), "-", charRef(En), charClass(More), { Chrs = merge(More,charRange(St,End))}.
   charClass([Ch,..More]) --> charRef(Ch), charClass(More).
 
   reFollow:(regExp,regExp) --> tokenState.
@@ -69,9 +69,4 @@ lo.comp.regexp{
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].
   charRange(St,En) => [St,..charRange(St+1,En)] :-  St<En.
-
-  mergeChars:(list[integer],list[integer]) => list[integer].
-  mergeChars([],X) => X.
-  mergeChars([E,..X],Y) => mergeChars(X,Y) :-  isMember(E,Y).
-  mergeChars([E,..X],Y) => [E,..mergeChars(X,Y)]. 
 }

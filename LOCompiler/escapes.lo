@@ -12,7 +12,7 @@ lo.comp.escapes{
   escapeType("_unify") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
   escapeType("_identical") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
   escapeType("var") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
-  escapeType("nonvar") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
+  escapeType("ground") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
   escapeType("_int_plus") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int_minus") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int_times") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
@@ -158,7 +158,7 @@ lo.comp.escapes{
   isEscape("_unify").
   isEscape("_identical").
   isEscape("var").
-  isEscape("nonvar").
+  isEscape("ground").
   isEscape("_int_plus").
   isEscape("_int_minus").
   isEscape("_int_times").
@@ -296,5 +296,151 @@ lo.comp.escapes{
   isEscape("_str_split").
   isEscape("_str_concat").
   isEscape("_str_start").
+
+  public escCode:(string)=>integer.
+  escCode("_exit") => 0.
+  escCode("_command_line") => 1.
+  escCode("_command_opts") => 2.
+  escCode("_unify") => 3.
+  escCode("_identical") => 4.
+  escCode("var") => 5.
+  escCode("ground") => 6.
+  escCode("_int_plus") => 7.
+  escCode("_int_minus") => 8.
+  escCode("_int_times") => 9.
+  escCode("_int_div") => 10.
+  escCode("_int_mod") => 11.
+  escCode("_flt_plus") => 12.
+  escCode("_flt_minus") => 13.
+  escCode("_flt_times") => 14.
+  escCode("_flt_div") => 15.
+  escCode("_flt_mod") => 16.
+  escCode("_int_abs") => 17.
+  escCode("_flt_abs") => 18.
+  escCode("_int_lt") => 19.
+  escCode("_int_ge") => 20.
+  escCode("_flt_lt") => 21.
+  escCode("_flt_ge") => 22.
+  escCode("_int2flt") => 23.
+  escCode("_flt2int") => 24.
+  escCode("_flt_hash") => 25.
+  escCode("_pwr") => 26.
+  escCode("sqrt") => 27.
+  escCode("exp") => 28.
+  escCode("log") => 29.
+  escCode("log10") => 30.
+  escCode("pi") => 31.
+  escCode("sin") => 32.
+  escCode("cos") => 33.
+  escCode("tan") => 34.
+  escCode("asin") => 35.
+  escCode("acos") => 36.
+  escCode("atan") => 37.
+  escCode("trunc") => 38.
+  escCode("floor") => 39.
+  escCode("ceil") => 40.
+  escCode("integral") => 41.
+  escCode("srand") => 42.
+  escCode("rand") => 43.
+  escCode("irand") => 44.
+  escCode("_ldexp") => 45.
+  escCode("_frexp") => 46.
+  escCode("_modf") => 47.
+  escCode("_band") => 48.
+  escCode("_bor") => 49.
+  escCode("_bxor") => 50.
+  escCode("_blsl") => 51.
+  escCode("_blsr") => 52.
+  escCode("_basr") => 53.
+  escCode("_bnot") => 54.
+  escCode("_nthb") => 55.
+  escCode("_get_file") => 56.
+  escCode("_put_file") => 57.
+  escCode("_cwd") => 58.
+  escCode("_cd") => 59.
+  escCode("_rm") => 60.
+  escCode("_mv") => 61.
+  escCode("_mkdir") => 62.
+  escCode("_rmdir") => 63.
+  escCode("_chmod") => 64.
+  escCode("_ls") => 65.
+  escCode("_file_mode") => 66.
+  escCode("_file_present") => 67.
+  escCode("_file_type") => 68.
+  escCode("_file_size") => 69.
+  escCode("_file_modified") => 70.
+  escCode("_file_date") => 71.
+  escCode("_openInFile") => 72.
+  escCode("_openOutFile") => 73.
+  escCode("_openAppendFile") => 74.
+  escCode("_openAppendIOFile") => 75.
+  escCode("_close") => 76.
+  escCode("_end_of_file") => 77.
+  escCode("_ready") => 78.
+  escCode("_inchars") => 79.
+  escCode("_inbytes") => 80.
+  escCode("_inchar") => 81.
+  escCode("_inbyte") => 82.
+  escCode("_inline") => 83.
+  escCode("_intext") => 84.
+  escCode("_outch") => 85.
+  escCode("_outbyte") => 86.
+  escCode("_outtext") => 87.
+  escCode("_stdfile") => 88.
+  escCode("_fposition") => 89.
+  escCode("_fseek") => 90.
+  escCode("_flush") => 91.
+  escCode("_flushall") => 92.
+  escCode("_setfileencoding") => 93.
+  escCode("_logmsg") => 94.
+  escCode("_isCcChar") => 95.
+  escCode("_isCfChar") => 96.
+  escCode("_isCnChar") => 97.
+  escCode("_isCoChar") => 98.
+  escCode("_isCsChar") => 99.
+  escCode("_isLlChar") => 100.
+  escCode("_isLmChar") => 101.
+  escCode("_isLoChar") => 102.
+  escCode("_isLtChar") => 103.
+  escCode("_isLuChar") => 104.
+  escCode("_isMcChar") => 105.
+  escCode("_isMeChar") => 106.
+  escCode("_isMnChar") => 107.
+  escCode("_isNdChar") => 108.
+  escCode("_isNlChar") => 109.
+  escCode("_isNoChar") => 110.
+  escCode("_isPcChar") => 111.
+  escCode("_isPdChar") => 112.
+  escCode("_isPeChar") => 113.
+  escCode("_isPfChar") => 114.
+  escCode("_isPiChar") => 115.
+  escCode("_isPoChar") => 116.
+  escCode("_isPsChar") => 117.
+  escCode("_isScChar") => 118.
+  escCode("_isSkChar") => 119.
+  escCode("_isSmChar") => 120.
+  escCode("_isSoChar") => 121.
+  escCode("_isZlChar") => 122.
+  escCode("_isZpChar") => 123.
+  escCode("_isZsChar") => 124.
+  escCode("_isLetterChar") => 125.
+  escCode("_digitCode") => 126.
+  escCode("_int2str") => 127.
+  escCode("_flt2str") => 128.
+  escCode("_str2flt") => 129.
+  escCode("_str_lt") => 130.
+  escCode("_str_ge") => 131.
+  escCode("_str_hash") => 132.
+  escCode("_str_len") => 133.
+  escCode("_str_gen") => 134.
+  escCode("_stringOf") => 135.
+  escCode("_trim") => 136.
+  escCode("explode") => 137.
+  escCode("implode") => 138.
+  escCode("_str_find") => 139.
+  escCode("_sub_str") => 140.
+  escCode("_str_split") => 141.
+  escCode("_str_concat") => 142.
+  escCode("_str_start") => 143.
 
 }.
