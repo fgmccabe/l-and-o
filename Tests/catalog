@@ -2,6 +2,7 @@ catalog{
   content{
     test.a -> "a.lo".
     test.c -> "c.lo".
+    test.eq -> "eq.lo".
     test.gt -> "gt.lo".
     test.j -> "j.lo".
     test.l -> "l.lo".

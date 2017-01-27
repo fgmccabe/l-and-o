@@ -323,7 +323,7 @@ lo.comp.typecheck{
   checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,Rp,Rpx) :-
     splitGrHead(L,Nm,A,P),
     ElTp=newVar("_E"),
-    typeOfArg(A,AT,declareVar("stream\$X",vr(v(Lc,"stream\$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
+    typeOfArg(A,AT,declareVar("stream$X",vr(v(Lc,"stream$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
     checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
     typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E3,_,HDTL,Rp1,Rp2),
     checkTerminals(P,HDTL,PB,ElTp,E3,_,Rp2,Rpx).
@@ -382,13 +382,16 @@ lo.comp.typecheck{
     -- match up the type variables of the original contract with the actual implemented contract
     QQ = bindAT(ODeps,ADeps,bindAT(OArgs,AArgs,[])),
     moveQuants(ConFace,_,CFace),
-    (_,Face) = freshen(CFace,QQ),
-    moveQuants(FT,SQ,Face), -- construct the required type signature of the implementation
-    (IQ,Face) = skolemize(FT,[]),
-    declareTypeVars(pairs(IQ),Lc,pushScope(Env),SEnv),
+    (_,F) = freshen(CFace,QQ), -- rewrite the face to be consistent with our local types
+    moveConstraints(CF,AC,F),
+    moveQuants(FT,SQ,CF), -- construct the required type signature of the implementation
+    (IQ,SF) = skolemize(FT,[]),
+    moveConstraints(SF,SC,Face),
+    declareConstraints(SC,pushScope(Env),E0),
+    declareTypeVars(pairs(IQ),Lc,E0,SEnv),
     implementationName(conTract(CNm,AArgs,ADeps)) = ImplName,
     checkThetaTerm(Face,Lc,Els,SEnv,ThDefs,Others,Types,ImplName,Rp0,Rpx),
-    Impl = implDef(Lc,INm,ImplName,Spec,AC,tpl([]),theta(ThDefs,Others),Face),
+    Impl = implDef(Lc,INm,ImplName,Spec,SC,tpl([]),theta(ThDefs,Others),Face),
     Ex=declareImplementation(Nm,ImplName,implEntry(ImplName,Spec),Env).
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement \(Stmt)",Lc,Rp,Rpx).
