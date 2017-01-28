@@ -54,6 +54,7 @@ int main(int argc,char **argv)
 
   fprintf(out, "  import lo.\n");
   fprintf(out, "  import lo.comp.escapes.\n");
+  fprintf(out, "  import lo.comp.term.\n");
   fprintf(out, "  import lo.comp.code.instructions.\n");
   fprintf(out, "  import lo.comp.code.registers.\n\n");
 
@@ -151,19 +152,19 @@ static void genCode(FILE *out,int *V,opAndSpec A)
   case uLt:                             // small literal in upper slot (-128..127)
   case iLh:				/* input local variable, offset 0..255 */
   case oLh:				/* output local variable, offset 0..255 */
-    fprintf(out,".|.(V%d.<<.16)",(*V)++);
+    fprintf(out,".|.(V%d.<<.24)",(*V)++);
     return;
   case iAm:                             // input argument register in middle slot (0..255)
   case oAm:                             // output argument register in middle slot (0..255)
   case iLm:				/* input local variable, offset 0..255 */
   case oLm:				/* output local variable, offset 0..255 */
-  fprintf(out,".|.(V%d.<<.8)",(*V)++);
+  fprintf(out,".|.(V%d.<<.16)",(*V)++);
   return;
   case iAl:                             // input argument register in lower slot (0..255)
   case oAl:                             // output argument register in lower slot (0..255)
   case iLl:				/* input local variable, offset 0..255 */
   case oLl:				/* output local variable, offset 0..255 */
-    fprintf(out,"V%d",(*V)++);
+    fprintf(out,".|.(V%d.<<.8)",(*V)++);
     return;
   case iLc:                             // input local variable offset (0..65535)
   case oLc:                             // output local variable offset  (0..65535)
@@ -179,16 +180,16 @@ static void genCode(FILE *out,int *V,opAndSpec A)
   case oSt:                             // output to current structure pointer
     return;
   case Es:                              // escape code (0..65535)
-    fprintf(out,".|.escCode(V%d)",(*V)++);
+    fprintf(out,".|.(escCode(V%d).<<.8)",(*V)++);
     return;
   case pcr:                             // program counter relative offset (-32768..32767)
     fprintf(out,".|.(pcGap(pc,V%d,Lbls,65535).<<.8)",(*V)++);
     return;
   case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
-    fprintf(out,".|.(pcGap(pc,V%d,Lbls,16777215))",(*V)++);
+    fprintf(out,".|.(pcGap(pc,V%d,Lbls,16777215).<<.8)",(*V)++);
     return;
   case ltl:                             // literal number (0..65535)
-    fprintf(out,".|.ltOff(V%d,Lits)",(*V)++);
+    fprintf(out,".|.(ltOff(V%d,Lits).<<.8)",(*V)++);
     return;
   default:
     fprintf(stderr,"Unknown instruction type code\n");
@@ -223,7 +224,7 @@ static void genIns(FILE *out,char *mnem,int op,opAndSpec A1,opAndSpec A2,char *c
   else
     sep = "";
 
-  fprintf(out,"%s,..I],Lbls,Lits,pc) => [%ld",sep,(long)(op)<<24);
+  fprintf(out,"%s,..I],Lbls,Lits,pc) => [%d",sep,(unsigned char)(op));
 
   V = 0;
 

@@ -16,11 +16,11 @@ lo.comp.repository{
   openRepository(Root) => repo(Root,manifest([])).
 
   public locatePackage:(repository,string,version,version,list[integer]){}.
-  locatePackage(Repo,Pkg,V,ActV,Text) :-
-    findPkg(Repo,Pkg,V,ActV,Text)!.
+  locatePackage(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,parseUri(U)))) :-
+    locateVersion(Man,Pkg,V,ActV,_,U).
 
-  findPkg:(repository,string,version,version,list[integer]){}.
-  findPkg(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,parseUri(U)))) :-
+  public locatePrologPackage:(repository,string,version,version,list[integer]){}.
+  locatePrologPackage(repo(Root,Man),Pkg,V,ActV,getResource(resolveUri(Root,parseUri(U+".pl")))) :-
     locateVersion(Man,Pkg,V,ActV,_,U).
 
   public pkgSrcUri:(repository,string,version,version,uri){}.
@@ -38,6 +38,14 @@ lo.comp.repository{
     RepoUri = resolveUri(Root,parseUri("manifest")),
     flushManifest(RepoUri,NM).
 
+  public addPrologPackage:(repository,uri,pkg,list[integer]) => repository.
+  addPrologPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text) => repo(Root,NM) :-
+    Fn = Pkg+(packageHash(Pkg,Vers)::string),
+    putResource(resolveUri(Root,parseUri(Fn+".pl")),Text),
+    NM = addToManifest(Man,U,Pkg,Vers,Fn),
+    RepoUri = resolveUri(Root,parseUri("manifest")),
+    flushManifest(RepoUri,NM).
+
   packageHash:(string,version) => integer.
   packageHash(Pkg,defltVersion) => hash(Pkg).
   packageHash(Pkg,vers(V)) => ((37*hash(Pkg))+hash(V)).
@@ -46,6 +54,15 @@ lo.comp.repository{
   packagePresent(repo(Root,Man),pkg(Pkg,Vers)) :-
     locateVersion(Man,Pkg,Vers,_,S,U),
     CodeFile = resolveUri(Root,parseUri(U)),
+    SrcFile = resolveUri(Root,S),
+    resourcePresent(CodeFile),
+    (resourcePresent(SrcFile) ?
+        newerFile(CodeFile,SrcFile) | true).
+
+  public prologPackagePresent:(repository,pkg){}.
+  prologPackagePresent(repo(Root,Man),pkg(Pkg,Vers)) :-
+    locateVersion(Man,Pkg,Vers,_,S,U),
+    CodeFile = resolveUri(Root,parseUri(U+".pl")),
     SrcFile = resolveUri(Root,S),
     resourcePresent(CodeFile),
     (resourcePresent(SrcFile) ?

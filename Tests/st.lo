@@ -1,0 +1,6 @@
+test.st{
+  import lo.
+
+  X:set[integer].
+  X = nullSet.
+}

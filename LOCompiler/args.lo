@@ -9,6 +9,7 @@ lo.comp.args {
   public type compOption <~ {
     debugging : logical.
     profiling : logical.
+    prologOnly : logical.
     wDir : uri.
     repoDir : uri.
     version : version.
@@ -16,10 +17,11 @@ lo.comp.args {
     dependency : logical.
   }
 
-  private comp:(logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
-  comp(d,p,w,r,v,pk,dp) <= {
+  private comp:(logical,logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
+  comp(d,p,l,w,r,v,pk,dp) <= {
     debugging = d.
     profiling = p.
+    prologOnly = l.
     wDir = w.
     repoDir = r.
     version = v.
@@ -28,34 +30,38 @@ lo.comp.args {
   }
 
   updateDbg:(compOption,logical) => compOption.
-  updateDbg(comp(_,p,w,r,v,pk,dp),d) => comp(d,p,w,r,v,pk,dp).
+  updateDbg(comp(_,p,l,w,r,v,pk,dp),d) => comp(d,p,l,w,r,v,pk,dp).
+
+  updateProlog:(compOption,logical) => compOption.
+  updateProlog(comp(d,p,_,w,r,v,pk,dp),l) => comp(d,p,l,w,r,v,pk,dp).
 
   updateProf:(compOption,logical) => compOption.
-  updateProf(comp(d,_,w,r,v,pk,dp),p) => comp(d,p,w,r,v,pk,dp).
+  updateProf(comp(d,_,l,w,r,v,pk,dp),p) => comp(d,p,l,w,r,v,pk,dp).
 
   updateWd:(compOption,uri) => compOption.
-  updateWd(comp(d,p,_,r,v,pk,dp),w) => comp(d,p,w,r,v,pk,dp).
+  updateWd(comp(d,p,l,_,r,v,pk,dp),w) => comp(d,p,l,w,r,v,pk,dp).
 
   updateRepoD:(compOption,uri) => compOption.
-  updateRepoD(comp(d,p,w,_,v,pk,dp),r) => comp(d,p,w,r,v,pk,dp).
+  updateRepoD(comp(d,p,l,w,_,v,pk,dp),r) => comp(d,p,l,w,r,v,pk,dp).
 
   updatePk:(compOption,list[pkg]) => compOption.
-  updatePk(comp(d,p,w,r,v,_,dp),pk) => comp(d,p,w,r,v,pk,dp).
+  updatePk(comp(d,p,l,w,r,v,_,dp),pk) => comp(d,p,l,w,r,v,pk,dp).
 
   updateVers:(compOption,version) => compOption.
-  updateVers(comp(d,p,w,r,_,pk,dp),v) => comp(d,p,w,r,v,pk,dp).
+  updateVers(comp(d,p,l,w,r,_,pk,dp),v) => comp(d,p,l,w,r,v,pk,dp).
 
   updateDep:(compOption,logical) => compOption.
-  updateDep(comp(d,p,w,r,v,pk,_),dp) => comp(d,p,w,r,v,pk,dp).
+  updateDep(comp(d,p,l,w,r,v,pk,_),dp) => comp(d,p,l,w,r,v,pk,dp).
 
-  public parseFlags:(list[string]) => compOption.  
-  parseFlags(args) => parseFlgs(args,comp(false,false,W,W,defltVersion,[],true)) :- W=cwd().
+  public parseFlags:(list[string]) => compOption.
+  parseFlags(args) => parseFlgs(args,comp(false,false,false,W,W,defltVersion,[],true)) :- W=cwd().
 
   private parseFlgs:(list[string],compOption) => compOption.
   parseFlgs([],Opts) => Opts.
   parseFlgs(["--",..Pkgs],Opts) => updatePk(Opts,locatePkgs(Opts,Pkgs)).
   parseFlgs(["-g",..args],Opts) => parseFlgs(args,updateDbg(Opts,true)).
   parseFlgs(["-p",..args],Opts) => parseFlgs(args,updateProf(Opts,true)).
+  parseFlgs(["-l",..args],Opts) => parseFlgs(args,updateProlog(Opts,true)).
   parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,resolveUri(Opts.wDir,WD))) :- uriParse(WD) %% explode(W).
   parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,resolveUri(Opts.wDir,D))) :- uriParse(D) %% explode(W).
   parseFlgs(["-v",V,..args],Opts) => parseFlgs(args,updateVers(Opts,vers(V))).

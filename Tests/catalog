@@ -16,6 +16,7 @@ catalog{
     test.opts -> "opts.lo".
     test.parsetools -> "parsetools.lo".
     test.s -> "s.lo".
+    test.st -> "st.lo".
   }
   default: "../LO/catalog".
 }

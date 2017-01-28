@@ -27,6 +27,10 @@ lo.comp.term {
 
   public type prProg ::= prProg(pkgSpec,list[clse]).
 
+  public type codeSeg ::= codeSeg(term,list[integer],list[term]).
+
+  public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).
+
   public implementation display[prProg] <= {
     disp(Prog) => dispProg(Prog).
   }
@@ -82,6 +86,39 @@ lo.comp.term {
   private dispPreds:(string,string,list[pred]) => list[ss].
   dispPreds(_,_,[]) => [].
   dispPreds(Sep,Alt,[C,..L]) => [ss(Sep),displayPred(C),..dispPreds(Alt,Alt,L)].
+
+
+  public implementation equality[term] <= {
+    T1 == T2 :- eqTerm(T1,T2).
+    hash(T) => hashTerm(T).
+  }
+
+  eqTerm:(term,term){}.
+  eqTerm(anon,anon).
+  eqTerm(varbl(Nm1),varbl(Nm2)) :- Nm1==Nm2.
+  eqTerm(intgr(Ix),intgr(Ix)).
+  eqTerm(flot(Dx),flot(Dx)).
+  eqTerm(enum(N1),enum(N2)) :- N1==N2.
+  eqTerm(strct(N1,Ar),strct(N2,Ar)) :- N1==N2.
+  eqTerm(prg(N1,Ar),prg(N2,Ar)) :- N1==N2.
+  eqTerm(strng(S1),strng(S2)) :- S1==S2.
+  eqTerm(tuple(E1),tuple(E2)) :- eqEls(E1,E2).
+  eqTerm(cons(O1,E1),cons(O2,E2)) :- eqTerm(O1,O2), eqEls(E1,E2).
+
+  eqEls:(list[term],list[term]){}.
+  eqEls([E1,..L1],[E2,..L2]) :- eqTerm(E1,E2), eqEls(L1,L2).
+
+  hashTerm:(term)=>integer.
+  hashTerm(anon)=>0.
+  hashTerm(varbl(Nm1)) => hash(Nm1).
+  hashTerm(intgr(Ix)) => Ix.
+  hashTerm(flot(Dx)) => hash(Dx).
+  hashTerm(enum(N1)) => hash(N1)*37+hash("enum").
+  hashTerm(strct(N1,Ar)) => hash(N1)*37+Ar.
+  hashTerm(prg(N1,Ar)) => hash(N1)*41+Ar.
+  hashTerm(strng(S1)) => hash(S1).
+  hashTerm(tuple(Els)) => foldRight((T,H)=>H*37+hash(T),0,Els).
+  hashTerm(cons(O1,Els)) => foldRight((T,H)=>H*37+hash(T),hash(O1),Els).
 
   public genVr:(string) => term.
   genVr(Nm) => varbl(_str_gen(Nm)).

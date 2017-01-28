@@ -24,7 +24,7 @@ lo.comp.code.analyse{
   -- Usedto keep track of occurrences.
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
-  public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,list[integer],list[integer]).
+  public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
   varAnalysis(Q,Args,Parts) => allocateVars(usageTable(occurranceTable(Q,Args,Parts))).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
@@ -151,8 +151,8 @@ lo.comp.code.analyse{
     apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
   }
 
-  allocateVars:(list[usageMap]) => (map[string,varDesc],integer,list[integer],list[integer]).
-  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms),NumPerms,Used,FreeRgs) :-
+  allocateVars:(list[usageMap]) => (map[string,varDesc],integer,varSet).
+  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Used::set[integer],Lcls,0)) :-
     allocateHeadRegs(Table,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
 
   -- allocate registers based on occurrences in head
@@ -197,8 +197,8 @@ lo.comp.code.analyse{
   compPos(some((G1,_)),some((G2,_))) :- G1<G2.
   compPos(some((G,X1)),some((G,X2))) :- X1<X2.
 
-  allocPerms:(list[(string,option[(integer,integer)],addr,defined)],map[string,varDesc],integer) => map[string,varDesc].
-  allocPerms([],M,_) => M.
-  allocPerms([(Nm,U,yReg(_,Sfe),D),..T],M,vNo) =>
-    allocPerms(T,M[Nm->varDesc(Nm,notInited,D,yReg(vNo,Sfe),U)],vNo-1).
+  allocPerms:(list[(string,option[(integer,integer)],addr,defined)],map[string,varDesc],integer,set[integer],set[integer]) => map[string,varDesc].
+  allocPerms([],M,_,Lcls,Lcls) => M.
+  allocPerms([(Nm,U,yReg(_,Sfe),D),..T],M,vNo,Lc0,Lcx) =>
+    allocPerms(T,M[Nm->varDesc(Nm,notInited,D,yReg(vNo,Sfe),U)],vNo-1,addMem(Lc0,vNo),Lcx).
 }

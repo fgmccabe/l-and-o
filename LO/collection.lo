@@ -40,5 +40,4 @@ lo.collection{
     intersect : (k,k)=>k.
     difference : (k,k)=>k.
   }.
-
 }

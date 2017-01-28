@@ -20,16 +20,16 @@
 :- use_module(grapher).
 
 parseFlags([],CWD,CWD,[],[]).
-parseFlags(['-g'|More],CWD,Cx,[debugging|Opts],Files) :- 
+parseFlags(['-g'|More],CWD,Cx,[debugging|Opts],Files) :-
   parseFlags(More,CWD,Cx,Opts,Files).
-parseFlags(['-p'|More],CWD,Cx,[profiling|Opts],Files) :- 
+parseFlags(['-p'|More],CWD,Cx,[profiling|Opts],Files) :-
   parseFlags(More,CWD,Cx,Opts,Files).
 parseFlags(['-w',W|M],CW,Cx,Opts,Files) :-
   atom_string(W,WN),
   parseURI(WN,WU),
   resolveURI(CW,WU,CWD),
   parseFlags(M,CWD,Cx,Opts,Files).
-parseFlags(['-r', R|More],CWD,Cx,[repository(Repo)|Opts],Files) :- 
+parseFlags(['-r', R|More],CWD,Cx,[repository(Repo)|Opts],Files) :-
   atom_string(R,RN),
   parseURI(RN,RU),
   resolveURI(CWD,RU,Ruri),
@@ -42,11 +42,11 @@ parseFlags(['--'|More], CWD,CWD, [], Files) :- stringify(More,Files).
 parseFlags(More, CWD,CWD, [], Files) :- stringify(More,Files).
 
 stringify([],[]).
-stringify([Name|More],[Fn|Files]) :- 
+stringify([Name|More],[Fn|Files]) :-
   atom_string(Name,Fn),
   stringify(More,Files).
 
-main(Args) :- 
+main(Args) :-
   startCount,
   getCWDUri(CW),
   parseFlags(Args,CW,CWD,Opts,Pkgs),
@@ -103,7 +103,7 @@ processFile(SrcUri,Pkg,Repo,Rx,Opts) :-
   transformProg(Prog,Opts,Rules),!,
   noErrors,
   genRules(Rules,Text),
-  addPackage(Repo,SrcUri,Pkg,Text,Rx).
+  addPrologPackage(Repo,SrcUri,Pkg,Text,Rx).
 
 packageVersion(Opts,v(Vers)) :-
   is_member(version(Vers),Opts),!.
@@ -113,7 +113,7 @@ parseFile(Txt,Term) :-
   allTokens(Txt,Toks),
   parse(Toks,Term,_), !.
 
-test(Fl) :- 
+test(Fl) :-
   getCWDUri(CWD),
   processFile(Fl,CWD,[/*debugging*/]).
 

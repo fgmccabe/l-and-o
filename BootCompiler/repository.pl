@@ -1,8 +1,11 @@
 :- module(repository,[openRepository/2,
           locatePackage/5,
           openPackageAsStream/5,
+          openPrologPackageAsStream/5,
           addPackage/5,
-          packagePresent/6]).
+          addPrologPackage/5,
+          packagePresent/6,
+          prologPackagePresent/6]).
 
 % Implement a file-based repository.
 
@@ -36,6 +39,12 @@ openPackageAsStream(repo(Root,Man),Pkg,Act,U,Stream) :-
   resolveFile(Root,Fn,Fl),
   open(Fl,read,Stream).
 
+openPrologPackageAsStream(repo(Root,Man),Pkg,Act,U,Stream) :-
+  locateVersion(Man,Pkg,Act,U,fl(Fn)),
+  string_concat(Fn,".pl",PrFn),
+  resolveFile(Root,PrFn,Fl),
+  open(Fl,read,Stream).
+
 locateVersion(man(Entries),pkg(Pkg,Vers),Act,U,Fn) :-
   is_member(entry(Pkg,Versions),Entries),
   getVersion(Vers,Versions,Act,U,Fn).
@@ -51,6 +60,15 @@ addPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text,repo(Root,NM)) :-
   addToManifest(Man,U,Pkg,Vers,fl(Fn),NM),
   flushManifest(Root,NM).
 
+addPrologPackage(repo(Root,Man),U,pkg(Pkg,Vers),Text,repo(Root,NM)) :-
+  packageHash(Pkg,Vers,Hash),
+  string_concat(Pkg,Hash,Fn),
+  string_concat(Fn,".pl",PrFn),
+  resolveFile(Root,PrFn,FileNm),
+  writeFile(FileNm,Text),!,
+  addToManifest(Man,U,Pkg,Vers,fl(Fn),NM),
+  flushManifest(Root,NM).
+
 packageHash(Pkg,defltVersion,Hash) :-
   stringHash(0,Pkg,H),
   hashSixtyFour(H,Hash).
@@ -62,6 +80,15 @@ packageHash(Pkg,v(V),Hash) :-
 packagePresent(repo(Root,Man),Pkg,Act,U,SrcWhen,When) :-
   locateVersion(Man,Pkg,Act,U,fl(Fn)),
   resolveFile(Root,Fn,FileNm),
+  access_file(FileNm,read),
+  time_file(FileNm,When),
+  getUriPath(U,SrcFn),
+  time_file(SrcFn,SrcWhen).
+
+prologPackagePresent(repo(Root,Man),Pkg,Act,U,SrcWhen,When) :-
+  locateVersion(Man,Pkg,Act,U,fl(Fn)),
+  string_concat(Fn,".pl",PrFn),
+  resolveFile(Root,PrFn,FileNm),
   access_file(FileNm,read),
   time_file(FileNm,When),
   getUriPath(U,SrcFn),

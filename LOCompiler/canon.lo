@@ -34,7 +34,7 @@ lo.comp.canon {
              | grRule(location,string,canonTerm,canonNT,canonNT)
              | tpRule(location,tipe).
 
-  public type 
+  public type
   canonTerm ::= v(location,string)
             | int(integer)
             | flt(float)

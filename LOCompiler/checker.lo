@@ -909,7 +909,7 @@ lo.comp.typecheck{
   mkTypes(N) => [newVar("_"),..mkTypes(N-1)].
 
   private computeNewVars:(list[env]) => list[canonTerm].
-  computeNewVars(Env) => values(topVars(Env))//pickVar.
+  computeNewVars(Env) => (values(topVars(Env))//pickVar).
 
   private pickVar:(vr) => canonTerm.
   pickVar(vr(Trm,_)) => Trm.

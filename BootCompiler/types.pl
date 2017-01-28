@@ -1,7 +1,7 @@
-:- module(types,[isType/1,isConstraint/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2, 
+:- module(types,[isType/1,isConstraint/1,newTypeVar/2,newTypeVar/3,readOnlyTypeVar/2,deRef/2,
       typeArity/2,isFunctionType/2,isGrammarType/2,isPredType/1,isPredType/2,isClassType/2,
       dispType/1,showType/3,showConstraint/3,
-      occursIn/2,isUnbound/1,isBound/1, constraints/2, isIdenticalVar/2, 
+      occursIn/2,isUnbound/1,isBound/1, constraints/2, isIdenticalVar/2,
       bind/2, moveQuants/3,
       moveConstraints/3,moveConstraints/4,setConstraint/2,setConstraints/2, implementationName/2]).
 :- use_module(misc).
@@ -127,7 +127,7 @@ showConstraint(univType(V,B),O,Ox) :-
 showConstraint(conTract(Nm,Els,[]),O,Ox) :-!,
   appStr(Nm,O,O1), appStr("[",O1,O2),showTypeEls(Els,O2,O3),appStr("]",O3,Ox).
 showConstraint(conTract(Nm,Els,Deps),O,Ox) :-
-  appStr(Nm,O,O1), 
+  appStr(Nm,O,O1),
   appStr("[",O1,O2),
   showTypeEls(Els,O2,O3),
   appStr("->>",O3,O4),
@@ -172,6 +172,7 @@ typeArity(funType(A,_),Ar) :- length(A,Ar).
 typeArity(grammarType(A,_),Ar) :- length(A,Ar).
 typeArity(predType(A),Ar) :- length(A,Ar).
 typeArity(classType(A,_),Ar) :- length(A,Ar).
+typeArity(_,0).
 
 isFunctionType(univType(_,Tp),Ar) :- isFunctionType(Tp,Ar).
 isFunctionType(funType(A,_),Ar) :- length(A,Ar).

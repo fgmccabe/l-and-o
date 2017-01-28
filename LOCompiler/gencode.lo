@@ -1,0 +1,21 @@
+lo.comp.code.gencode{
+  import lo.
+
+  import lo.comp.base64.
+  import lo.comp.encode.
+  import lo.comp.package.
+  import lo.comp.term.
+  import lo.comp.types.
+
+  import lo.comp.code.pkg.
+
+  public implementation coercion[codeMdl,list[integer]] <= {
+    _coerce(P) => genCode(P,[]).
+  }
+
+
+
+
+
+
+}

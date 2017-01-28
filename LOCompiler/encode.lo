@@ -2,6 +2,7 @@ lo.comp.encode{
   import lo.
   import lo.comp.term.
   import lo.comp.base64.
+  import lo.comp.package.
   import lo.comp.types.
   import lo.comp.parseutils.
 
@@ -94,10 +95,79 @@ lo.comp.encode{
 
   public encodeConstraint:(constraint) => list[integer].
   encodeConstraint(Con) => encConstraint(Con,[]).
-            
+
   private encConstraint:(constraint,list[integer]) => list[integer].
   encConstraint(univCon(V,C),L) => [0c:,..encType(V,encConstraint(C,L))].
   encConstraint(conTract(Nm,Args,Deps),L) => [0cc,..encodeText(Nm,encType(tupleType(Args),encType(tupleType(Deps),L)))].
   encConstraint(implementsFace(Tp,Flds),L) => [0ca,..encType(Tp,encType(faceType(Flds),L))].
   encConstraint(conCon(C,E),L) => [0c|,..encConstraint(C,encConstraint(E,L))].
+
+  public genPkgSig:(pkgSpec) => term.
+  genPkgSig(pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports)) =>
+    cons(strct("#pkg",1),[strng(implode(encodeTerm(
+      tuple([fmtPkg(Pkg),fmtImports(Imports),
+        fmtTypes(Fields),fmtTypes(Types),fmtEnums(Enums),fmtContracts(Contracts),fmtImpls(Impls)]))))]).
+
+  fmtPkg:(pkg) => term.
+  fmtPkg(pkg(Nm,Vers)) => cons(strct("pkg",2),[strng(Nm),fmtVer(Vers)]).
+
+  fmtVer:(version) => term.
+  fmtVer(defltVersion) => enum("*").
+  fmtVer(vers(V)) => strng(fV).
+
+  fmtImports:(list[(visibility,pkg)]) => term.
+  fmtImports(Imports) => tuple(Imports//fmtImport).
+
+  fmtImport:((visibility,pkg)) => term.
+  fmtImport((Viz,Pkg)) => cons(strct("import",2),[fmtViz(Viz),fmtPkg(Pkg)]).
+
+  fmtViz:(visibility) => term.
+  fmtViz(priVate) => enum("private").
+  fmtViz(pUblic) => enum("public").
+
+  fmtTypes:(list[(string,tipe)]) => term.
+  fmtTypes(Fields) => fmtType(faceType(Fields)).
+
+  fmtEnums:(list[string]) => term.
+  fmtEnums(Enums) => tuple(Enums//fmtEnum).
+
+  fmtEnum:(string) => term.
+  fmtEnum(E) => strng(E).
+
+  fmtContracts:(list[conEntry]) => term.
+  fmtContracts(L) => tuple(L//fmtContract).
+
+  fmtContract:(conEntry) => term.
+  fmtContract(conEntry(Nm,ConNm,Con,Face)) => tuple([strng(Nm),strng(ConNm),fmtConstraint(Con),fmtType(Face)]).
+
+  fmtImpls:(list[implEntry]) => term.
+  fmtImpls(L) => tuple(L//fmtImpl).
+
+  fmtImpl:(implEntry) => term.
+  fmtImpl(implEntry(Nm,Con)) => tuple([strng(Nm),fmtConstraint(Con)]).
+
+  fmtType:(tipe) => term.
+  fmtType(T) => strng(implode(encodeType(T))).
+
+  fmtConstraint:(constraint) => term.
+  fmtConstraint(Con) => strng(implode(encodeConstraint(Con))).
+
+  -- Prepare instructions for base64 encoding
+  fmtIns:(list[integer]) => list[integer].
+  fmtIns([]) => [].
+  fmtIns([I,..L]) => [(I.>>.24).&.255,(I.>>.16).&.255,(I.>>.8).&.255,I.&.255,..fmtIns(L)].
+
+  -- Encode a code segment
+  encCodeSeg:(codeSeg,list[integer]) => list[integer].
+  encCodeSeg(codeSeg(Nm,Code,Lits),L) =>
+    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(Code),0c',encTerm(tuple(Lits),L))])))].
+
+  encSegs:(list[codeSeg],list[integer]) => list[integer].
+  encSegs([],L) => L.
+  encSegs([S,..R],L) => encCodeSeg(S,encSegs(R,L)).
+
+  -- encode a package
+  public encMdl:(codeMdl,list[integer]) => list[integer].
+  encMdl(codeMdl(Spec,Segs),L) =>
+    encTerm(genPkgSig(Spec),encSegs(Segs,L)).
 }

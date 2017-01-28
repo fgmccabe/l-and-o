@@ -1,7 +1,7 @@
-:- module(import, [importPkg/3,loadPkg/4]).
+:- module(import, [importPkg/3,loadPkg/4,loadPrologPkg/4]).
 
 % This is specific to the Prolog translation of L&O code
- 
+
 :- use_module(resource).
 :- use_module(types).
 :- use_module(misc).
@@ -11,7 +11,7 @@
 :- use_module(repository).
 
 importPkg(Pkg,Repo,spec(Act,Export,Types,Classes,Contracts,Implementations,Imports)) :-
-  openPackageAsStream(Repo,Pkg,Act,_,Strm),
+  openPrologPackageAsStream(Repo,Pkg,Act,_,Strm),
   read(Strm,SigTerm),
   close(Strm),
   pickupPkgSpec(SigTerm,Pkg,Imports,Export,Types,Classes,Contracts,Implementations).
@@ -69,8 +69,8 @@ pickupImplementations([tpl([strg(Nm),strg(Sig)])|M],[imp(Nm,Spec)|I],RI) :-
   decodeConstraint(Sig,Spec),
   pickupImplementations(M,I,RI).
 
-loadPkg(Pkg,Repo,Code,Imports) :-
-  openPackageAsStream(Repo,Pkg,_,_,Strm),
+loadPrologPkg(Pkg,Repo,Code,Imports) :-
+  openPrologPackageAsStream(Repo,Pkg,_,_,Strm),
   read(Strm,SigTerm),
   pickupPkgSpec(SigTerm,Pkg,Imports,_,_,_,_,_),
   loadCode(Strm,Code),
@@ -81,3 +81,10 @@ loadCode(Strm,[]) :-
 loadCode(Strm,[Term|M]) :-
   read(Strm,Term),
   loadCode(Strm,M).
+
+loadPkg(Pkg,Repo,Code,Imports) :-
+  openPackageAsStream(Repo,Pkg,_,_,Strm),
+  read(Strm,SigTerm),
+  pickupPkgSpec(SigTerm,Pkg,Imports,_,_,_,_,_),
+  loadCode(Strm,Code),
+  close(Strm).

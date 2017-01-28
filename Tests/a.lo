@@ -1,5 +1,5 @@
 test.a{
-  import lo.
+  -- import lo.
 
   -- Test predicates, backtracking and *>
 
@@ -25,4 +25,3 @@ test.a{
 
   assert \+ (gp(x,y) *> f(x)).
 }.
-

@@ -1,8 +1,9 @@
 lo.comp.location{
   import lo.
   import lo.array.
-  
-  public 
+  import lo.json.
+
+  public
   type location <~ {
     merge:(location)=>location.
   }.
@@ -24,7 +25,7 @@ lo.comp.location{
 
   locDisp:(location)=>ss.
   locDisp(std) => ss("<standard>").
-  locDisp(loc(Ln,Off,Col,Len,Pth)) => 
+  locDisp(loc(Ln,Off,Col,Len,Pth)) =>
         ssSeq([ss(Pth),ss("@"),disp(Ln),ss(":"),disp(Col),ss("("),disp(Len),ss(")")]).
 
   public lineOf:(location) => integer.
@@ -42,6 +43,19 @@ lo.comp.location{
 
     isEmpty(std).
   }
+
+  public implementation coercion[location,json] <= {
+    _coerce(lc) => loc2json(lc).
+  }
+
+  private loc2json:(location) => json.
+  loc2json(loc(Line,Off,Col,Len,Pth)) =>
+    jColl(["path"->jTxt(Pth),
+           "line"->jNum(Line::float),
+           "column"->jNum(Col::float),
+           "start"->jNum(Off::float),
+           "length"->jNum(Len::float)]).
+  loc2json(std) => jNull.
 
   public type hasLoc <~ { loc:location. }.
 

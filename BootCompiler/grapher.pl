@@ -29,7 +29,7 @@ scanPkgs([P|L],Repo,Cat,CWD,SoFar,Pkgs) :-
 scanPkg(Pkg,_,_,_,SoFar,SoFar) :-
   is_member((Pkg,_,_,_),SoFar),!.
 scanPkg(Pkg,Repo,Cat,CWD,SoFar,Pkgs) :-
-  packagePresent(Repo,Pkg,_,SrcFn,SrcWhen,CodeWhen),
+  prologPackagePresent(Repo,Pkg,_,SrcFn,SrcWhen,CodeWhen),
   ( CodeWhen>SrcWhen ->
     importPkg(Pkg,Repo,Spec),
     checkPkg(Spec,Repo,Cat,CWD,SrcFn,SoFar,Pkgs) ;
@@ -77,12 +77,12 @@ scanForImports(Term,Pkg,Imports) :-
 
 scanPackageName(Term,Nm) :- isIden(Term,Nm).
 scanPackageName(Term,Nm) :- isString(Term,Nm).
-scanPackageName(Term,Pk) :- isBinary(Term,".",L,R), 
-  scanPackageName(L,F), 
-  scanPackageName(R,B), 
+scanPackageName(Term,Pk) :- isBinary(Term,".",L,R),
+  scanPackageName(L,F),
+  scanPackageName(R,B),
   string_concat(F,".",FF),
   string_concat(FF,B,Pk).
-scanPackageName(Name,"") :- 
+scanPackageName(Name,"") :-
   locOfAst(Name,Lc),
   reportError("Package name %s not valid",[Name],Lc).
 
@@ -97,11 +97,11 @@ scanStmt(St,Imp,More) :-
 scanStmt(St,Imp,More) :-
   isUnary(St,"private",El),!,
   scanStmt(El,Imp,More).
-scanStmt(St,[pkg(Pk,defltVersion)|More],More) :- 
+scanStmt(St,[pkg(Pk,defltVersion)|More],More) :-
   isUnary(St,"import",P),
   scanPackageName(P,Pk).
 scanStmt(_,Imp,Imp).
 
 pkgOk(Pkg,Repo) :-
-  packagePresent(Repo,Pkg,_,_,SrcWhen,CodeWhen),
+  prologPackagePresent(Repo,Pkg,_,_,SrcWhen,CodeWhen),
   CodeWhen>SrcWhen.

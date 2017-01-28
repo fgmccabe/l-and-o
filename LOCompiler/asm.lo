@@ -3,6 +3,7 @@ lo.comp.code.asm{
 
   import lo.
   import lo.comp.escapes.
+  import lo.comp.term.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
 

@@ -35,7 +35,7 @@ lo.comp.grapher{
   scanPkg(Pkg,_,_,SoFar,Rp,Rp) => SoFar :-
     (Pkg,_) in SoFar.
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => checkPkg(Spec,Repo,Cat,SoFar,Rp0,Rpx) :-
-    packagePresent(Repo,Pkg),
+    prologPackagePresent(Repo,Pkg),
     importPkg(Pkg,Repo,Spec,Rp,Rp0).
   scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanFile(SrcUri,Repo,Cat,SoFar,Rp,Rpx) :-
     resolveCatalog(Cat,Pkg,SrcUri).
@@ -45,12 +45,12 @@ lo.comp.grapher{
   checkPkg:(pkgSpec,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imported,Repo,Cat,[(Pkg,Imported),..SoFar],Rp,Rpx) :-
     Imported = projectOutPkgs(Imports).
- 
+
   private projectOutPkgs:(list[(visibility,pkg)]) => list[pkg].
   projectOutPkgs([]) => [].
   projectOutPkgs([(_,Pkg),..L]) => [Pkg,..projectOutPkgs(L)].
 
-  scanFile:(uri,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])]. 
+  scanFile:(uri,repository,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   scanFile(Fl,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp0,Rpx) :-
     Term = parseFile(Fl,Rp,Rp0),
     scanTerm(Term,Pkg,Imps).

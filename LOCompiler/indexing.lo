@@ -153,14 +153,14 @@ lo.comp.code.indexing{
 
   mkHashTable:(list[(integer,list[(integer,string)])],list[(integer,string)],integer,integer,list[instruction]) => list[instruction].
   mkHashTable(IxT,VL,Pt,Max,Aux) => Aux :- Pt>=Max.
-  mkHashTable(IxT,VL,Pt,Max,Aux) => 
+  mkHashTable(IxT,VL,Pt,Max,Aux) =>
       mkHashEntry(sort(snip(IxT,RxT,Pt,[])<>VL,(((Cl1,_),(Cl2,_)) :- Cl1<Cl2)),Aux,Aux0)<>mkHashTable(RxT,VL,Pt+1,Max,Aux0).
 
   mkHashEntry:(list[(integer,string)],list[instruction],list[instruction]) => list[instruction].
   mkHashEntry([],Aux,Aux) => [iFayl].
   mkHashEntry([(_,Lbl)],Aux,Aux) => [iGo_to(Lbl)].
   mkHashEntry(Entries,Aux,Axx) => [iGo_to(Lbl)] :-
-    Lbl = _str_gen("Lbl"),
+    Lbl = _str_gen("L"),
     Axx = Aux<>[iLbl(Lbl),..genSequence(Entries,true)].
 
   snip:(list[(integer,list[(integer,string)])],list[(integer,list[(integer,string)])],integer,list[(integer,string)])=>list[(integer,string)].

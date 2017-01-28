@@ -81,7 +81,7 @@ overloadDefn(Lc,Nm,[],Cond,Tp,Exp,Dict,defn(Lc,Nm,[],RCond,Tp,RExp)) :-
   resolveCond(Cond,Dict,RCond),
   resolveTerm(Exp,Dict,RExp).
 overloadDefn(Lc,Nm,Cx,Cond,Tp,Exp,Dict,
-    function(Lc,Nm,funType([],Tp),[],[equation(Lc,Nm,CVars,RCond,RExp)])) :-
+    function(Lc,Nm,Tp,[],[equation(Lc,Nm,CVars,RCond,RExp)])) :-
   defineCVars(Lc,Cx,Dict,CVars,FDict),
   resolveCond(Cond,FDict,RCond),
   resolveTerm(Exp,FDict,RExp).
@@ -349,4 +349,3 @@ overloadClassRules([],_,_,[]).
 overloadClassRules([Rl|L],V,D,[ORl|M]) :-
   overloadClassRule(Rl,V,D,ORl),
   overloadClassRules(L,V,D,M).
-

@@ -41,7 +41,7 @@ lo.comp.genprolog{
   convertPred(neck,Ox) => [0c!,..Ox].
   convertPred(fail,Ox) => appStr("fail",Ox).
   convertPred(except(E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
-  
+
   convertTerm:(term,list[integer]) => list[integer].
   convertTerm(anon,Ox) => [0c_,..Ox].
   convertTerm(varbl(Nm),Ox) => [0cX,..appStr(Nm,Ox)].
@@ -70,54 +70,4 @@ lo.comp.genprolog{
   quoteConcat([0c",..L],Qt,Ox) => [0c\\,0c",..quoteConcat(L,Qt,Ox)].
   quoteConcat([0c\\,..L],Qt,Ox) => [0c\\,0c\\,..quoteConcat(L,Qt,Ox)].
   quoteConcat([C,..L],Qt,Ox) => [C,..quoteConcat(L,Qt,Ox)].
-
-  genPkgSig:(pkgSpec) => term.
-  genPkgSig(pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports)) =>
-    cons(strct("#pkg",1),[strng(implode(encodeTerm(
-      tuple([fmtPkg(Pkg),fmtImports(Imports),
-        fmtTypes(Fields),fmtTypes(Types),fmtEnums(Enums),fmtContracts(Contracts),fmtImpls(Impls)]))))]).
-
-  fmtPkg:(pkg) => term.
-  fmtPkg(pkg(Nm,Vers)) => cons(strct("pkg",2),[strng(Nm),fmtVer(Vers)]).
-
-  fmtVer:(version) => term.
-  fmtVer(defltVersion) => enum("*").
-  fmtVer(vers(V)) => strng(fV).
-
-  fmtImports:(list[(visibility,pkg)]) => term.
-  fmtImports(Imports) => tuple(Imports//fmtImport).
-
-  fmtImport:((visibility,pkg)) => term.
-  fmtImport((Viz,Pkg)) => cons(strct("import",2),[fmtViz(Viz),fmtPkg(Pkg)]).
-
-  fmtViz:(visibility) => term.
-  fmtViz(priVate) => enum("private").
-  fmtViz(pUblic) => enum("public").
-
-  fmtTypes:(list[(string,tipe)]) => term.
-  fmtTypes(Fields) => fmtType(faceType(Fields)).
-
-  fmtEnums:(list[string]) => term.
-  fmtEnums(Enums) => tuple(Enums//fmtEnum).
-
-  fmtEnum:(string) => term.
-  fmtEnum(E) => strng(E).
-
-  fmtContracts:(list[conEntry]) => term.
-  fmtContracts(L) => tuple(L//fmtContract).
-
-  fmtContract:(conEntry) => term.
-  fmtContract(conEntry(Nm,ConNm,Con,Face)) => tuple([strng(Nm),strng(ConNm),fmtConstraint(Con),fmtType(Face)]).
-
-  fmtImpls:(list[implEntry]) => term.
-  fmtImpls(L) => tuple(L//fmtImpl).
-
-  fmtImpl:(implEntry) => term.
-  fmtImpl(implEntry(Nm,Con)) => tuple([strng(Nm),fmtConstraint(Con)]).
-
-  fmtType:(tipe) => term.
-  fmtType(T) => strng(implode(encodeType(T))).
-
-  fmtConstraint:(constraint) => term.
-  fmtConstraint(Con) => strng(implode(encodeConstraint(Con))).
 }

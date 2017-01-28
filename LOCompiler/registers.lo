@@ -14,6 +14,12 @@ lo.comp.code.registers{
 
   public type varDesc ::= varDesc(string,initialized,defined,addr,option[(integer,integer)]).
 
+  public isInitialized:(varDesc){}.
+  isInitialized(varDesc(_,initialized,_,_,_)).
+
+  public varAddr:(varDesc)=>addr.
+  varAddr(varDesc(_,_,_,A,_))=>A.
+
   public locUsed:(varSet,integer) => varSet.
   locUsed(usdRegs(A,L,G),Lc) => usdRegs(A,addMem(L,Lc),G).
 
@@ -58,7 +64,7 @@ lo.comp.code.registers{
   clearYs(Rg,Mx,Locs) => [iClY(Rg),..clearYs(Rg+1,Mx,Locs)] :- \+ Rg in Locs.
   clearYs(Rg,Mx,Locs) => clearYs(Rg+1,Mx,Locs).
 
-  clearAs:(integer,integer,set[integer]) => list[instruction].
+  public clearAs:(integer,integer,set[integer]) => list[instruction].
   clearAs(Rg,Mx,_) => [] :- Rg>Mx.
   clearAs(Rg,Mx,Regs) => [iVdA(Rg),..clearAs(Rg+1,Mx,Regs)] :- \+ Rg in Regs.
   clearAs(Rg,Mx,Regs) => clearAs(Rg+1,Mx,Regs).

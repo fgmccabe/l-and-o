@@ -9,7 +9,7 @@
 :- use_module(misc).
 
 parseFlags([],_,[],[]).
-parseFlags(['-r', R|More],CWD,[repository(Repo)|Opts],Args) :- 
+parseFlags(['-r', R|More],CWD,[repository(Repo)|Opts],Args) :-
   atom_string(R,RN),
   parseURI(RN,RU),
   resolveURI(CWD,RU,Ruri),
@@ -25,11 +25,11 @@ openRepo(_,Repo) :-
   openRepository(CWD,Repo).
 
 stringify([],[]).
-stringify([Name|More],[Fn|Files]) :- 
+stringify([Name|More],[Fn|Files]) :-
   atom_string(Name,Fn),
   stringify(More,Files).
 
-main(Args) :- 
+main(Args) :-
   getCWDUri(CWD),
   parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
   openRepo(Opts,Repo),
@@ -38,7 +38,7 @@ main(Args) :-
   lookForMain(Pkg,LOArgs),!.
 
 processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
-  loadPkg(Pkg,Repo,Code,Imports),
+  loadPrologPkg(Pkg,Repo,Code,Imports),
   assertAll(Code,PrIn,Pr0),
   processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),!,
   initPkg(Pkg).
@@ -77,7 +77,7 @@ predOf(T,P/A) :-
 processImports([],Ld,Ld,_,Pr,Pr).
 processImports([import(_,pkg(Pkg,Vers))|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
   is_member(pkg(Pkg,LdVers),Loaded),
-  (LdVers \= Vers -> 
+  (LdVers \= Vers ->
       runTimeMsg("not permitted to load multiple versions of same package: %s@%s, %s already loaded",[Pkg,Vers,LdVers]);true),
   processImports(Imports,Loaded,Ldx,Repo,Pr,Prx).
 processImports([import(_,Pkg)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
@@ -95,4 +95,3 @@ getCWDUri(WD) :-
   atom_string(C,D),
   string_concat("file:",D,DT),
   parseURI(DT,WD).
-

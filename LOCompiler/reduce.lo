@@ -6,10 +6,7 @@ lo.comp.reduce{
   import lo.comp.misc.
   import lo.comp.term.
 
-  public reduceProg:(prProg) => prProg.
-  reduceProg(prProg(Spec,Clauses)) => prProg(Spec,Clauses//reduceClause).
-
-  reduceClause:(clse) => clse.
+  public reduceClause:(clse) => clse.
   reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     reduceArgs(Args,Q,NArgs,Pre,Post,Q1)!,
     reduceBody(Body,Q1,NBody,NQ).
@@ -30,6 +27,8 @@ lo.comp.reduce{
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceArg(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
+  reduceArg(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 
   reduceTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -49,6 +48,8 @@ lo.comp.reduce{
   reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(VV,cons(Op,NEls)),..Post],Psx,Qx) :-
     VV = genVr("$%"),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceTerm(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
+  reduceTerm(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 
   reduceBody:(list[pred],list[term],list[pred],list[term]){}.
   reduceBody([],Q,[],Q).
@@ -90,6 +91,8 @@ lo.comp.reduce{
     reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceBildArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
     reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  reduceBildArg(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
+  reduceBildArg(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 
   reduceBildTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -109,4 +112,6 @@ lo.comp.reduce{
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
     VV = genVr("$%"),
     reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
+  reduceBildTerm(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 }

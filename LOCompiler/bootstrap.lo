@@ -1,4 +1,4 @@
-lo.comp.driver{
+lo.comp.bootstrap{
   import lo.
   import lo.array.
   import lo.uri.
@@ -18,12 +18,12 @@ lo.comp.driver{
   import lo.comp.grapher.
   import lo.comp.transform.
   import lo.comp.term.
-  
+
   -- Hint to the run-time:
   main:(list[string]){}.
   main(Args) :-
     opts = parseFlags(Args),
-    (opts.dependency ? 
+    (opts.dependency ?
       processArgs(opts,opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)) |
       compilePkgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir),opts,reportBase,Rp),
       _logmsg(formatSS(fullReport(Rp)))).
@@ -57,7 +57,7 @@ lo.comp.driver{
   processPkg:(pkg,list[pkg],repository,repository,catalog,compOption,list[pkg],list[pkg],report,report){}.
   processPkg(P,Imps,Repo,Repo,_,_,CP,CP,Rp,Rp) :-
     importsOk(Imps,CP),
-    packagePresent(Repo,P),
+    prologPackagePresent(Repo,P),
     _logmsg("skipping package \(P)").
   processPkg(P,_,Repo,RepoX,Cat,Opts,CP,[P,..CP],Rp,Rpx) :-
     _logmsg("compiling package \(P)"),
@@ -76,7 +76,7 @@ lo.comp.driver{
         Prg = checkProgram(Term,V,Repo,Rp0,Rp1),
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rpx),
-          Repox = addPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
+          Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),

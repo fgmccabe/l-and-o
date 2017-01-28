@@ -1,4 +1,4 @@
-/* 
+/*
   This is where you define a new operator so that the compiler and
   the run-time system can see it
   Copyright (c) 2016, 2017. Francis G. McCabe
