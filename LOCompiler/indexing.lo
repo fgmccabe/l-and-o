@@ -104,6 +104,7 @@ lo.comp.code.indexing{
   mkIndex:(aoTr,integer,string) => list[instruction].
   mkIndex(oXN(L),Col,Deflt) => selectIndexStream(VarList,IntList,FltList,StrList,ConsList,TplList,Col,Deflt):-
     computeSubIxes(L,[],[],[],[],[],[],VarList,IntList,FltList,StrList,ConsList,TplList).
+  mkIndex(eTree,_,Deflt) => [].
 
   computeSubIxes:(list[(ix,aoTr)],
     list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],
