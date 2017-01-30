@@ -33,7 +33,7 @@ lo.comp.code.registers{
   resetUsed(usdRegs(_,L,G)) => usdRegs(set([]),L,G).
 
   public maxReg:(varSet) => integer.
-  maxReg(usdRegs(A,_,_)) => foldRight(max,0,A).
+  maxReg(usdRegs(A,_,_)) => foldRight((X,Y)=>max(X,Y),0,A).
 
   public freeAReg:(varSet,integer) => varSet.
   freeAReg(usdRegs(A,L,G),Rg) => usdRegs(delMem(A,Rg),L,G).
@@ -57,7 +57,7 @@ lo.comp.code.registers{
 
   public gcMap:(varSet,integer,list[instruction],instruction){}.
   gcMap(usdRegs(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
-    Esize = foldRight(max,0,Locs).
+    Esize = foldRight((X,Y)=>max(X,Y),0,Locs).
 
   clearYs:(integer,integer,set[integer]) => list[instruction].
   clearYs(Rg,Mx,_) => [] :- Rg>Mx.
@@ -73,7 +73,7 @@ lo.comp.code.registers{
   usedLocals(usdRegs(_,L,_)) => L.
 
   public maxLocals:(varSet) => integer.
-  maxLocals(usdRegs(_,L,_)) => foldRight(max,0,L).
+  maxLocals(usdRegs(_,L,_)) => foldRight((X,Y)=>max(X,Y),0,L).
 
   public varSlotSz:integer.
   varSlotSz = 2.

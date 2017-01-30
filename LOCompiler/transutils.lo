@@ -68,7 +68,7 @@ lo.comp.transutils {
       [(ImplNm,moduleImpl(ImplNm,LclNm)),..Mx],Mx,Ens,Enx) :-
     (isEmpty(Deps) ? LclNm=enum(ImplNm), Ens=[ImplNm,..Enx] | LclNm=strct(ImplNm,length(Deps)), Ens=Enx).
   makeMdlEntry(Pkg,_,Mx,Mx,Clx,Clx).
-  
+
   makeImportsMap:(list[pkgSpec],list[(string,mapEntry)],list[(string,mapEntry)]){}.
   makeImportsMap([Import,..Rest],Map,Mx) :-
     makeImportMap(Import,Map,M0),
@@ -214,6 +214,15 @@ lo.comp.transutils {
   public layerName:(list[lyr])=>string.
   layerName([lyr(Nm,_,_,_,_),.._]) => Nm.
 
+  public allLabelArgs:(list[lyr],list[term]) => list[term].
+  allLabelArgs([],SoF) => SoF.
+  allLabelArgs([lyr(_,Entries,_,_,_),..L],SoF) => labelArgs(Entries,allLabelArgs(L,SoF)).
+
+  labelArgs:(list[(string,mapEntry)],list[term]) => list[term].
+  labelArgs([],L) => L.
+  labelArgs([(_,labelArg(V,_,_)),..M],L) => labelArgs(M,[V,..L]).
+  labelArgs([_,..M],L) => labelArgs(M,L).
+
   public genVarbl:(string,term){}.
   genVarbl(Prefix,varbl(_str_gen(Prefix))).
 
@@ -232,7 +241,7 @@ lo.comp.transutils {
     genVarbl("V",V).
 
   public localName:(string,string,string) => string.
-  localName(Pkg,Glue,Nm) => Nm :- 
+  localName(Pkg,Glue,Nm) => Nm :-
     _str_start(Pkg,Nm),
     _str_find(Nm,Glue,0,_).
   localName(Pkg,Glue,Nm) => Pkg+Glue+Nm.

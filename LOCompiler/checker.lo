@@ -548,6 +548,12 @@ lo.comp.typecheck{
     ArgTps = genTpVars(A),
     checkType(Lc,tupleType(ArgTps),Tp,Env,Rp,Rp0),
     typeOfTerms(A,ArgTps,Env,Ev,Lc,Els,Rp0,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,int(-Ix),Rp,Rpx) :-
+    isUnary(Term,"-",Lc,intg(_,Ix)),
+    checkType(Lc,findType("integer",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
+  typeOfTerm(Term,Tp,Env,Env,flt(-Dx),Rp,Rpx) :-
+    isUnary(Term,"-",Lc,flot(_,Dx)),
+    checkType(Lc,findType("float",Lc,Env,Rp,Rp0),Tp,Env,Rp0,Rpx).
   typeOfTerm(Term,Tp,Env,Env,Exp,Rp,Rpx) :-
     isUnary(Term,"-",Lc,Arg),         -- handle unary minus
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).

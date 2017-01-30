@@ -58,6 +58,7 @@ lo.index{
   find(M,K) => V :- present(M,K,V).
 
   public foldMap:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (map[k,v],f,u) => u.
+  foldMap(trEmpty,_,u) => u.
   foldMap(trLeaf(_,Els),f,u) => foldLeafs(Els,f,u).
   foldMap(trNode(_,_,Left,Right),f,u) => foldMap(Right,f,foldMap(Left,f,u)).
 

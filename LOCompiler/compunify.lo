@@ -6,9 +6,16 @@ lo.comp.code.unify{
   import lo.comp.code.registers.
   import lo.comp.term.
 
-  public unifyArgs:(list[term],map[string,varDesc],list[litrl],varSet,logical,varSet,map[string,varDesc],list[litrl],list[instruction]){}.
-  unifyArgs(Args,D0,Refs,Used,Last,Usx,Dx,Rfx,Inx) :-
-    unifyEls(Args,true,D0,Dx,Used,Usx,Refs,Rfx) = Inx.
+  public unifyHead:(list[term],map[string,varDesc],list[litrl],varSet,logical,varSet,map[string,varDesc],list[litrl],list[instruction]){}.
+  unifyHead(Args,D0,Refs,Used,Last,Usx,Dx,Rfx,Inx) :-
+    unifyArgs(Args,1,D0,Dx,Used,Last,Usx,Refs,Rfx,Inx).
+
+  unifyArgs:(list[term],integer,map[string,varDesc],map[string,varDesc],varSet,logical,varSet,list[litrl],list[litrl],list[instruction]){}.
+  unifyArgs([],_,D,D,V,_,V,Lt,Lt,[]).
+  unifyArgs([e],Rg,D,Dx,V,Last,Vx,Lt,Ltx,unifyTerm(e,true,aReg(Rg),D,Dx,V,Vx,Lt,Ltx,Last)).
+  unifyArgs([e,..l],Rg,D,Dx,V,Last,Vx,Lt,Ltx,HCode<>RCode) :-
+    HCode = unifyTerm(e,true,aReg(Rg),D,D0,V,V0,Lt,Lt0,Last),
+    unifyArgs(l,Rg+1,D0,Dx,V0,Last,Vx,Lt0,Ltx,RCode).
 
   public unifyTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
         varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].
@@ -26,8 +33,8 @@ lo.comp.code.unify{
   unifyVar:(varDesc,addr,map[string,varDesc],map[string,varDesc],varSet,varSet,logical) => list[instruction].
   unifyVar(varDesc(_,_,_,voidAddr,_),sReg,D,D,V,V,_) => [iClS].
   unifyVar(varDesc(_,_,_,voidAddr,_),_,D,D,V,V,_) => [].
-  unifyVar(varDesc(_,initialized,_,Src,_),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
-  unifyVar(varDesc(Nm,notInited,Def,Src,Wh),Dst,D,D[Nm->varDesc(Nm,initialized,Def,Src,Wh)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
+  unifyVar(varDesc(_,inited,_,Src,_),Dst,D,D,V,Vx,Last) => Ins :- unifyVr(Src,Dst,V,Ins,Vx).
+  unifyVar(varDesc(Nm,notInited,Def,Src,Wh),Dst,D,D[Nm->varDesc(Nm,inited,Def,Src,Wh)],V,Vx,Last) => Ins :- moveVr(Src,Dst,V,Last,Ins,Vx).
 
   skipOver:(addr) => list[instruction].
   skipOver(voidAddr) => [].
@@ -104,7 +111,14 @@ lo.comp.code.unify{
 
   public callArgs:(list[term],integer,map[string,varDesc],list[litrl],varSet,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
   callArgs(Args,Gp,D,Lt,Vs,Last,Code,Dx,Ltx,Vsx) :-
-    Code = buildEls(Args,true,D,Dx,Vs,Vsx,Lt,Ltx).
+    buildArgs(Args,1,Gp,D,Dx,Vs,Last,Vsx,Lt,Ltx,Code).
+
+  buildArgs:(list[term],integer,integer,map[string,varDesc],map[string,varDesc],varSet,logical,varSet,list[litrl],list[litrl],list[instruction]){}.
+  buildArgs([],_,_,D,D,V,_,V,Lt,Lt,[]).
+  buildArgs([e,..l],Rg,Gp,D,Dx,V,Last,Vx,Lt,Ltx,Code) :-
+    ACode = buildTerm(e,true,aReg(Rg),D,D0,V,V0,Lt,Lt0,Last),
+    buildArgs(l,Rg+1,Gp,D0,Dx,V0,Last,Vx,Lt0,Ltx,BCode),
+    Code = ACode<>BCode.
 
   public buildTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
         varSet,varSet,list[litrl],list[litrl],logical) => list[instruction].

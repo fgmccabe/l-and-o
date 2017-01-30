@@ -572,8 +572,20 @@ typeOfTerm(tuple(Lc,"()",A),Tp,Env,Ev,tuple(Lc,Els)) :-
   typeOfTerms(A,ArgTps,Env,Ev,Lc,Els).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isUnary(Term,Lc,"-",Arg), % handle unary minus
+  (Arg=integer(_,Ix) ->
+    findType("integer",Lc,Env,IntTp),
+    checkType(Lc,IntTp,Tp,Env),
+    Env=Ev,
+    Ng is -Ix,
+    Exp = intLit(Ng) ;
+  Arg=float(_,Dx) ->
+    findType("float",Lc,Env,FltTp),
+    checkType(Lc,FltTp,Tp,Env),
+    Env=Ev,
+    Ng is -Dx,
+    Exp = floatLit(Ng) ;
   binary(Lc,"-",name(Lc,"zero"),Arg,Sub),
-  typeOfTerm(Sub,Tp,Env,Ev,Exp).
+  typeOfTerm(Sub,Tp,Env,Ev,Exp)).
 typeOfTerm(Term,Tp,Env,Ev,Exp) :-
   isRoundTerm(Term,Lc,F,A),
   newTypeVar("F",FnTp),

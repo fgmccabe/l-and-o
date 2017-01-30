@@ -24,8 +24,8 @@ lo.comp.code.pkg{
   pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->[Cl]]) :- Cl=clse(_,Nm,_,_).
 
   compRel:(term,list[clse]) => codeSeg.
-  compRel(Nm,Cls) => codeSeg(Nm,asm(IndexCode<>DefltCode,Lts),Lts//((litrl(_,T))=>T)) :-
-    Nm = prg(Prefix,_),
+  compRel(prg(Nm,Ar),Cls) => codeSeg(prg(Nm,Ar),asm(IndexCode<>DefltCode,Lts),Lts//((litrl(_,T))=>T)) :-
+    Prefix = Nm+"_",
     L0 = newLabel(Prefix),
     DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,[],Entries),
     IndexCode = genIndex(Entries,L0).

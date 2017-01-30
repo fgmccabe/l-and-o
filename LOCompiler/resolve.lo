@@ -44,7 +44,7 @@ lo.comp.resolve{
   overloadDefn(Lc,Nm,Tp,[],Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],RExp,RCond) :-
     RCond = resolveCond(Cond,Dict,Rp,Rp0),
     RExp = resolveTerm(Exp,Dict,Rp0,Rpx).
-  overloadDefn(Lc,Nm,Tp,Cx,Exp,Cond,Dict,Rp,Rpx) => funDef(Lc,Nm,Tp,[],[equation(Lc,Nm,tpl(CVars),RExp,RCond)]) :-
+  overloadDefn(Lc,Nm,Tp,Cx,Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],lambda(equation(Lc,Nm,tpl(CVars),RExp,trueCond)),RCond) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict),
     RCond = resolveCond(Cond,FDict,Rp,Rp0),
     RExp = resolveTerm(Exp,FDict,Rp0,Rpx).

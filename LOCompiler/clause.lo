@@ -16,7 +16,7 @@ lo.comp.code.clause{
   compCl(clse(Q,Nm,Args,Body),Lts) => (Code,Ltx):-
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
-    unifyArgs(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),
+    unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),
     heapSize = estimateArgSpace(Args,false),
     hSize = gcPredict(Vs0), -- heapSize should == hSize
     allocating = ((PermSize>0 | size(Parts)>1) ? true | false),
@@ -47,14 +47,14 @@ lo.comp.code.clause{
         Code = clearAs(1,Mx,usedRegs(Vs0)) <> [iGc(Mx,lSize)] <> fCode) |
       Code = fCode).
   compBodyParts([P,..Arts],Gp,D0,L0,Vs0,Allo,Code,Dx,Lx,Vsx) :-
-    compPart(P,Gp,D0,L0,resetGc(Vs0),false,false,fCode,D1,L2,V1),
+    compPart(P,Gp,D0,L0,resetGc(Vs0),false,false,fCode,D1,L1,V1),
     lSize = gcPredict(V1),
     Mx = maxReg(Vs0),
     gcMap(Vs0,Mx,Pre,_),
     (lSize>0 ?
       gCode = Pre<>[iGc(Mx,lSize)] |
       gCode = []),
-    compBodyParts(Args,Gp+1,D1,L1,resetUsed(V1),All,bCode,Dx,Lx,Vx),
+    compBodyParts(Arts,Gp+1,D1,L1,resetUsed(V1),Allo,bCode,Dx,Lx,Vx),
     Code = gCode<>fCode<>bCode.
 
   compPart:(list[pred],integer,map[string,varDesc],list[litrl],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
@@ -71,7 +71,7 @@ lo.comp.code.clause{
     ((Alloc | maxLocals(Vs)>0) ?
       Code = [iCut,iDealloc,iGcmap(0,0)] |
       Code = [iCut,iSucc]).
-  compGoal(next,_,D,Lt,Vs,false,_,[iCut],D,Lt,Vs).
+  compGoal(neck,_,D,Lt,Vs,false,_,[iCut],D,Lt,Vs).
   compGoal(ecall(Esc,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     Arity = size(Args),

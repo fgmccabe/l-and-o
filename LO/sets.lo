@@ -35,7 +35,7 @@ lo.sets {
   }
 
   public implementation all e ~~ equality[e] |: coercion[list[e],set[e]] <= {
-    _coerce(Els) => set(foldRight((E,M)=>M[E->()],[],Els)).
+    _coerce(Els) => set(foldLeft((M,E)=>M[E->()],[],Els)).
   }
 
   public implementation all e ~~ equality[e] |: additive[set[e]] <= {

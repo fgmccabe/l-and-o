@@ -1,0 +1,6 @@
+lo.comp.inline{
+  import lo.
+
+  import lo.comp.term.
+
+}

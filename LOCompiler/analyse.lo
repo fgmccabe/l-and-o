@@ -8,6 +8,7 @@ lo.comp.code.analyse{
   import lo.comp.term.
 
   public partitionGoals:(list[pred],list[pred]) => list[list[pred]].
+  partitionGoals([],[]) => [].
   partitionGoals([],P) => [reverse(P)].
   partitionGoals([G,..Rest],P) => partitionGoals(Rest,[G,..P]) :- isSafeGoal(G).
   partitionGoals([G,..Rest],P) => [reverse([G,..P]),..partitionGoals(Rest,[])].
@@ -19,13 +20,13 @@ lo.comp.code.analyse{
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
 
-  type occForm ::= hArg | hTerm | lTerm | oArg | oTerm.
+  type occForm ::= hArg | hTerm | lArg | lTerm | oArg | oTerm.
 
   -- Usedto keep track of occurrences.
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(occurranceTable(Q,Args,Parts))).
+  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(occurranceTable(Q,Args,Parts),size(Args),Parts)).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
   occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
@@ -36,7 +37,7 @@ lo.comp.code.analyse{
 
   -- Find occurrances of variables to help decide how to allocate them.
   findOccsInHead:(list[term],map[string,occMap]) => map[string,occMap].
-  findOccsInHead(Args,M) => findOccsInTerms(Args,N,1,1,hArg,hTerm).
+  findOccsInHead(Args,M) => findOccsInTerms(Args,M,1,1,hArg,hTerm).
 
   findOccsInParts:(list[list[pred]],map[string,occMap],integer) => map[string,occMap].
   findOccsInParts([P1,..P],M,Gno) => findOccsInParts(P,findOccsInPart(P1,M,Gno),Gno+1).
@@ -47,7 +48,7 @@ lo.comp.code.analyse{
   findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
 
   findOccsInGoal:(pred,map[string,occMap],integer) => map[string,occMap].
-  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,lArg,lTerm),Gp,1,oArg,oTerm).
+  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,oArg,oTerm),Gp,1,lArg,lTerm).
   findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInTerms(Args,M,Gp,1,lArg,lTerm).
   findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInTerms([C,L,T],M,Gp,1,lArg,lTerm).
   findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,0,oArg,oTerm),Gp,1,oArg,oTerm).
@@ -72,19 +73,24 @@ lo.comp.code.analyse{
   type usageMap ::= usage(string,occMap,addr,set[integer],set[integer],set[integer]).
 
   -- Analyse how variables are used.
-  usageTable:(map[string,occMap]) => list[usageMap].
-  usageTable(Occs) => foldMap(Occs,bildEntry(values(Occs)),[]).
+  usageTable:(map[string,occMap],integer,list[list[pred]]) => list[usageMap].
+  usageTable(Occs,Arity,Parts) => foldMap(Occs,bildEntry(values(Occs),Arity,Parts),[]).
 
   -- this should be a lambda
-  bildEntry:(list[occMap]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
-  bildEntry(T) <= {
+  bildEntry:(list[occMap],integer,list[list[pred]]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
+  bildEntry(T,Arity,Parts) <= {
     apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out] :-
       classifyVr(Occs,aReg(_),some(G)),
-      Use = occupiedRegisters(Occ),
+      Use = occupiedRegisters(Occs),
       Avoid = avoidRegisters(T,G,Use,nullSet),
-      Conflict = conflict(Occ).
+      Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
+      Conflict = conflict(Occs,Ar).
     apply(_,_,Out) => Out.
   }
+
+  maxArity:(list[pred]) => integer.
+  maxArity([]) => 0.
+  maxArity([C,..L]) => max(predArity(C),maxArity(L)).
 
   occupiedRegisters:(list[(occForm,integer,integer)]) => set[integer].
   occupiedRegisters(Occs) => foldRight(registerUsed,nullSet,Occs).
@@ -106,8 +112,8 @@ lo.comp.code.analyse{
   pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
   pickRegisters([_,..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,SoFar).
 
-  conflict:(list[(occForm,integer,integer)]) => set[integer].
-  conflict(Ocs) => nonArgUses(1,numRegisters,Ocs)+laterUses(Ocs,Ocs).
+  conflict:(list[(occForm,integer,integer)],integer) => set[integer].
+  conflict(Ocs,MaxAr) => nonArgUses(1,MaxAr,Ocs)+laterUses(Ocs,Ocs).
 
   nonArgUses:(integer,integer,list[(occForm,integer,integer)]) => set[integer].
   nonArgUses(Rg,Lim,_) => nullSet :- Rg>Lim.
@@ -123,7 +129,7 @@ lo.comp.code.analyse{
   classifyVr:(list[(occForm,integer,integer)],addr,option[integer]){}.
   classifyVr([],voidAddr,none). -- should never happen if our quantification is good.
   classifyVr([_],voidAddr,none). -- singleton variable
-  classifyVr([(_,Gp,_),..Rest],aReg(-1),some(G)) :- (_,G,_) in Rest *> G=Gp. -- -1 means not yet allocated
+  classifyVr([(_,Gp,_),..Rest],aReg(-1),some(Gp)) :- (_,G,_) in Rest *> G=Gp. -- -1 means not yet allocated
   classifyVr(Occs,yReg(-1,true),none) :- ((hTerm,_,_) in Occs | (hArg,_,_) in Occs | (oTerm,_,_) in Occs | (lTerm,_,_) in Occs)!.
   classifyVr(_,yReg(-1,false),none).
 
@@ -162,10 +168,10 @@ lo.comp.code.analyse{
   allocateHeadRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     ((hArg,_,Rg) in Occs ?
       ( Rg in Fr ?
-        D0 = D[Nm->varDesc(Nm,inited,defined,aReg(Rg),lastRgUsage(Occs,-1,-1))],
+        D0 = D[Nm->varDesc(Nm,inited,isDefined,aReg(Rg),lastRgUsage(Occs,-1,-1))],
         U0 = addMem(Ur,Rg),
         F0 = delMem(Fr,Rg) |
-        D0 = D[Nm->varDesc(Nm,notInited,defined,notAlloc,lastRgUsage(Occs,-1,-1))],
+        D0 = D[Nm->varDesc(Nm,notInited,isDefined,notAlloc,lastRgUsage(Occs,-1,-1))],
         U0=U,
         F0=Fr) |
         F0=F, U0=Ur,D0=D),
@@ -174,6 +180,7 @@ lo.comp.code.analyse{
   -- find last occurrence
   lastRgUsage:(list[(occForm,integer,integer)],integer,integer) => option[(integer,integer)].
   lastRgUsage([],-1,_) => none.
+  lastRgUsage([],Gp,Ix) => some((Gp,Ix)).
   lastRgUsage([(_,Gp,Ix),..U],G,I) => lastRgUsage(U,Gp,Ix) :- ( Gp>G | Gp=G, Ix>I).
   lastRgUsage([_,..U],G,I) => lastRgUsage(U,G,I).
 
@@ -191,7 +198,6 @@ lo.comp.code.analyse{
   definedInRegister([(hArg,_,_),.._]) => defined.
   definedInRegister([(lArg,_,_),.._]) => defined.
   definedInRegister([_,..O]) => definedInRegister(O).
-
 
   compPos:(option[(integer,integer)],option[(integer,integer)]){}.
   compPos(some((G1,_)),some((G2,_))) :- G1<G2.

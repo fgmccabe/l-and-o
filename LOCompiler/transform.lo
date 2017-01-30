@@ -115,6 +115,21 @@ lo.comp.transform{
     breakDebug(Nm,G3,G4,ClOpts).                          -- generate break point debugging
 
   transformDefn:(list[lyr],trOptions,location,string,canonCond,canonTerm,list[clse],list[clse],list[clse],list[clse],report,report){}.
+  transformDefn(Map,Opts,Lc,Nm,Cond,lambda(equation(_,_,tpl(CVars),Value,_)),
+        [clse(Q,LclPrg,Args,Body),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
+    extraVars(Map,Extra),
+    trPtns(CVars,Args,[Rep,..Extra],Extra,Q0,PreG,G0,G7,G8,Map,Opts,Ex,Ex0,Rp,Rp0), -- head args
+    LclPrg = prg(LclName,length(Extra)+1),
+    lookupVarName(Map,Nm,Reslt),
+    programAccess(Reslt,LclName,_,_,_),                    -- extra variables coming from labels
+    debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),          -- are we debugging?
+    trGoal(Cond,G4,[neck,..G5],Q0,Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1), -- condition goals
+    trExp(Value,Rep,Q2,Q3,G5,G6,G6,G7,Map,ClOpts,Ex1,Exx,Rp1,Rpx),         -- replacement expression
+    labelAccess(Q3,Q,Map,Body,PreG),                        -- generate label access goals
+    frameDebug(Nm,0,Q,G1,G2,ClOpts),                      -- generate frame entry debugging
+    lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
+    deframeDebug(Nm,0,G8,[],ClOpts),                      -- generate frame exit debugging
+    breakDebug(Nm,G3,G4,ClOpts).                          -- generate break point debugging
   transformDefn(Map,Opts,Lc,Nm,Cond,Value,
         [clse(Q,LclPrg,[Rep,..Extra],Body),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     extraVars(Map,Extra),
@@ -511,7 +526,7 @@ lo.comp.transform{
     Cl2 = clse(LQ,CondPr,[RRslt,..LQ],RG),
     Ex2 = [Cl1,Cl2,..Exx].
   trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trLambda(Rl,Rslt,Q,Map,Opts,Ex,Exx,Rp,Rpx).
+    trLambda(Rl,Rslt,merge(allLabelArgs(Map,[]),Q),Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(XX,anon,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rpx) :-
     reportError("internal: cannot transform \(XX) as expression",std,Rp,Rpx).
 

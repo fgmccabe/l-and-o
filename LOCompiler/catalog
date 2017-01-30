@@ -31,6 +31,7 @@ catalog{
     lo.comp.grammar -> "grammar.lo".
     lo.comp.grapher -> "grapher.lo".
     lo.comp.imports -> "imports.lo".
+    lo.comp.inline -> "inline.lo".
     lo.comp.keywords -> "keywords.lo".
     lo.comp.lexer -> "lexer.lo".
     lo.comp.location -> "location.lo".
