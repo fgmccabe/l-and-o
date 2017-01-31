@@ -435,7 +435,7 @@ lo.comp.transform{
   trPtn(dot(Rc,Fld),Exp,Q,Qx,Pre,Px,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("XV",X),
     trDotExp(Rc,cons(trCons(Fld,1),[X]),X,Exp,Q,Qx,Pre,Pi,Pi,Px,Map,Opts,Ex,Exx,Rp,Rpx).
-  trPtn(tpl(Ptns),tuple(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trPtn(tpl(Ptns),mkTpl(P),Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trPtns(Ptns,P,[],Q,Qx,Pre,Px,Post,Postx,Map,Opts,Ex,Exx,Rp,Rpx).
   trPtn(apply(_,v(_,Nm),tpl(A)),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trPtns(A,Args,[],Q,Q0,APre,AP0,APost,APs0,Map,Opts,Ex,Ex0,Rp,Rp0),
@@ -504,7 +504,7 @@ lo.comp.transform{
   trExp(int(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rp).
   trExp(flt(Ix),flot(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rp).
   trExp(str(Ix),strng(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rp).
-  trExp(tpl(A),tuple(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExp(tpl(A),mkTpl(TA),Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExps(A,TA,[],Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(apply(_,Op,tpl(A)),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExps(A,Args,[],Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0,Rp,Rp0),

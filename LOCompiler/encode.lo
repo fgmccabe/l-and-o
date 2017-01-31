@@ -5,6 +5,7 @@ lo.comp.encode{
   import lo.comp.package.
   import lo.comp.types.
   import lo.comp.parseutils.
+  import lo.comp.code.asm.
 
   public encodeTerm:(term) => list[integer].
   encodeTerm(T) => encTerm(T,[]).
@@ -17,9 +18,9 @@ lo.comp.encode{
   encTerm(strng(Sx),L) => [0cs,..encodeText(Sx,L)].
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
-  encTerm(tuple(Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))].
+  encTerm(cons(Op,Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))] :- isTupleSig(Op,size(Els)).
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
-  -- encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(tuple(Lits),encodeChars(encode64(Code),0c',L)))].
+  -- encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(mkTpl(Lits),encodeChars(encode64(Code),0c',L)))].
 
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.
@@ -105,7 +106,7 @@ lo.comp.encode{
   public packageSig:(pkgSpec) => term.
   packageSig(pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports)) =>
     strng(implode(encodeTerm(
-      tuple([fmtPkg(Pkg),fmtImports(Imports),
+      mkTpl([fmtPkg(Pkg),fmtImports(Imports),
         fmtTypes(Fields),fmtTypes(Types),fmtEnums(Enums),fmtContracts(Contracts),fmtImpls(Impls)])))).
 
   fmtPkg:(pkg) => term.
@@ -116,7 +117,7 @@ lo.comp.encode{
   fmtVer(vers(V)) => strng(fV).
 
   fmtImports:(list[(visibility,pkg)]) => term.
-  fmtImports(Imports) => tuple(Imports//fmtImport).
+  fmtImports(Imports) => mkTpl(Imports//fmtImport).
 
   fmtImport:((visibility,pkg)) => term.
   fmtImport((Viz,Pkg)) => cons(strct("import",2),[fmtViz(Viz),fmtPkg(Pkg)]).
@@ -129,22 +130,22 @@ lo.comp.encode{
   fmtTypes(Fields) => fmtType(faceType(Fields)).
 
   fmtEnums:(list[string]) => term.
-  fmtEnums(Enums) => tuple(Enums//fmtEnum).
+  fmtEnums(Enums) => mkTpl(Enums//fmtEnum).
 
   fmtEnum:(string) => term.
   fmtEnum(E) => strng(E).
 
   fmtContracts:(list[conEntry]) => term.
-  fmtContracts(L) => tuple(L//fmtContract).
+  fmtContracts(L) => mkTpl(L//fmtContract).
 
   fmtContract:(conEntry) => term.
-  fmtContract(conEntry(Nm,ConNm,Con,Face)) => tuple([strng(Nm),strng(ConNm),fmtConstraint(Con),fmtType(Face)]).
+  fmtContract(conEntry(Nm,ConNm,Con,Face)) => mkTpl([strng(Nm),strng(ConNm),fmtConstraint(Con),fmtType(Face)]).
 
   fmtImpls:(list[implEntry]) => term.
-  fmtImpls(L) => tuple(L//fmtImpl).
+  fmtImpls(L) => mkTpl(L//fmtImpl).
 
   fmtImpl:(implEntry) => term.
-  fmtImpl(implEntry(Nm,Con)) => tuple([strng(Nm),fmtConstraint(Con)]).
+  fmtImpl(implEntry(Nm,Con)) => mkTpl([strng(Nm),fmtConstraint(Con)]).
 
   fmtType:(tipe) => term.
   fmtType(T) => strng(implode(encodeType(T))).
@@ -160,7 +161,7 @@ lo.comp.encode{
   -- Encode a code segment
   encCodeSeg:(codeSeg,list[integer]) => list[integer].
   encCodeSeg(codeSeg(Nm,Code,Lits),L) =>
-    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(Code),0c',encTerm(tuple(Lits),L))])))].
+    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(Code),0c',encTerm(mkTpl(Lits),L))])))].
 
   encSegs:(list[codeSeg],list[integer]) => list[integer].
   encSegs([],L) => L.

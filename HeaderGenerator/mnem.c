@@ -54,12 +54,17 @@ int main(int argc,char **argv)
 
   fprintf(out, "  import lo.\n");
   fprintf(out, "  import lo.comp.escapes.\n");
+  fprintf(out, "  import lo.comp.package.\n");
   fprintf(out, "  import lo.comp.term.\n");
+  fprintf(out, "  import lo.comp.code.code.\n");
   fprintf(out, "  import lo.comp.code.instructions.\n");
   fprintf(out, "  import lo.comp.code.registers.\n\n");
 
-  fprintf(out, "  public asm:(list[instruction],list[litrl])=>list[integer].\n");
-  fprintf(out, "  asm(Ins,Lits) => mnem(Ins,genLblTbl(Ins,0,[]),genLitTbl(Lits,0,[]),0).\n\n");
+  fprintf(out, "  public type codeSeg ::= codeSeg(term,list[integer],list[term]).\n");
+  fprintf(out, "  public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).\n\n");
+
+  fprintf(out, "  public asm:(assem)=>codeSeg.\n");
+  fprintf(out, "  asm(assem(Nm,Ins,Lits)) => codeSeg(Nm,mnem(Ins,genLblTbl(Ins,0,[]),genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T)).\n\n");
 
   fprintf(out,"  private mnem:(list[instruction],map[string,integer],map[string,integer],integer)=>list[integer].\n");
   fprintf(out,"  mnem([],_,_,_) => [].\n");

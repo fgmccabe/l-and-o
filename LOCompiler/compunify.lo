@@ -2,6 +2,7 @@ lo.comp.code.unify{
   import lo.
 
   import lo.comp.errors.
+  import lo.comp.code.code.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
   import lo.comp.term.

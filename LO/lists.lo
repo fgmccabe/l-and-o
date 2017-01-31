@@ -39,7 +39,7 @@ lo.list{
   public subtract:all t ~~ (t,list[t])=>list[t].
   subtract(_,[]) => [].
   subtract(E,[E,..R]) => R.
-  subtract(E,[X,..R]) => [E,..subtract(E,R)].
+  subtract(E,[X,..R]) => [X,..subtract(E,R)] :- E\=X.
 
   public
   length:all t ~~ (list[t]) => integer.
@@ -49,13 +49,6 @@ lo.list{
   public implementation all c ~~ sizeable[list[c]] <= {
     size(L) => length(L).
     isEmpty([]).
-  }
-
-  public implementation all e ~~ membership[list[e]->>e] <= {
-    empty = [].
-    addMem(L,E) => [E,..L].
-    delMem(L,E) => subtract(E,L).
-    X in Y :- listEl(X,Y).
   }
 
   public implementation all e ~~ folding[list[e]->>e] <= {

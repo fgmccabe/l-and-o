@@ -11,7 +11,6 @@ lo.comp.code.estimate{
   estimateUnifySpace(varbl(_),true) => 2.
   estimateUnifySpace(varbl(_),false) => 0.
   estimateUnifySpace(T,_) => 0 :- isGroundTerm(T).
-  estimateUnifySpace(tuple(Els),_) => estimateEls(Els,false)+size(Els)+2.
   estimateUnifySpace(cons(Op,Els),_) => estimateEls(Els,false)+size(Els)+2.
 
   estimateEls:(list[term],logical) => integer.

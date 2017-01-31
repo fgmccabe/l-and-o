@@ -3,4 +3,51 @@ lo.comp.inline{
 
   import lo.comp.term.
 
+  -- resolve the head of C1 with the Ixth goal in C2, resulting in the new clause C3.
+  resolve:(clse,integer,clse,clse){}.
+  resolve(C1,clse(Q1,Nm,Args1,Body1),Ix,) :-
+    splitOverNeck(Body1,Q1,Q1a,Body2),
+    nthEl(Body2,Ix,call(N0,Ac)),
+    renameVars(C1,clse(Q0,N0,A0,B0),QM)
+    unify(A0,Args2,),
+    rebuildCl(Q1a,Nm,)
+
+
+  mkVars:(list[term]) => list[(term,term)].
+  mkVars([]) => [].
+  mkVars([V,..L]) => [(V,_),..mkVars(L)].
+
+  renameTerm:(term,list[(term,term)]) => term.
+  renameTerm(varbl(Nm),V) => VV :- (varbl(Nm),VV) in V.
+  renameTerm(anon,_) => anon.
+  renameTerm(intgr(Ix),_) => intgr(Ix).
+  renameTerm(flot(Ix),_) => flot(Ix).
+  renameTerm(enum(Ix),_) => enum(Ix).
+  renameTerm(strng(Ix),_) => strng(Ix).
+  renameTerm(strct(Nm,Ar),_) => strct(Nm,Ar).
+  renameTerm(prg(Nm,Ar),_) => prg(Nm,Ar).
+  renameTerm(cons(Op,Els),V) => cons(renameTerm(Op,V),renameEls(Els,V)).
+
+  renameEls:(list[term],list[(term,term)])=> list[term].
+  renameEls([],_) => [].
+  renameEls([T,..L],V) => [renameTerm(T,V),..renameEls(L,V)].
+
+  renamePred:(pred,list[(term,term)]) => pred.
+  renamePred(call(O,A),V) => call(renameTerm(O,V),renameEls(A,V)).
+  renamePred(ecall(O,A),V) => ecall(O,renameEls(A,V)).
+  renamePred(ocall(O,A,T),V) => ocall(renameTerm(O,V),renameTerm(A,V),renameTerm(T,V)).
+  renamePred(unfy(L,R),V) => unfy(renameTerm(L,V),renameTerm(R,V)).
+  renamePred(except(A),V) => except(renameTerm(A,V)).
+  renamePred(neck,_) => neck.
+  renamePred(fail,_) => fail.
+
+  renamePreds:(list[pred],list[(term,term)])=> list[pred].
+  renamePreds([],_) => [].
+  renamePreds([T,..L],V) => [renamePred(T,V),..renamePreds(L,V)].
+
+  renameClse:(clse,list[(term,term)]) => clse.
+  renameClse(clse(Q,Nm,A,B),V) => clse([],Nm,renameEls(A,V),renamePreds(B,V)).
+
+
+
 }

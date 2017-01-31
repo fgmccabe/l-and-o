@@ -26,7 +26,7 @@ lo.comp.code.analyse{
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(occurranceTable(Q,Args,Parts),size(Args),Parts)).
+  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(values(occurranceTable(Q,Args,Parts)),size(Args),Parts)).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
   occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
@@ -59,7 +59,6 @@ lo.comp.code.analyse{
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
   findOccsInTerm(T,M,_,_,_,_) => M :- isGroundTerm(T).
-  findOccsInTerm(tuple(Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
   findOccsInTerm(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
 
   findOccsInTerms:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
@@ -73,20 +72,19 @@ lo.comp.code.analyse{
   type usageMap ::= usage(string,occMap,addr,set[integer],set[integer],set[integer]).
 
   -- Analyse how variables are used.
-  usageTable:(map[string,occMap],integer,list[list[pred]]) => list[usageMap].
-  usageTable(Occs,Arity,Parts) => foldMap(Occs,bildEntry(values(Occs),Arity,Parts),[]).
+  usageTable:(list[occMap],integer,list[list[pred]]) => list[usageMap].
+  usageTable(Occs,Arity,Parts) => buildRegUsage(Occs,Occs,Parts,Arity,[]).
 
-  -- this should be a lambda
-  bildEntry:(list[occMap],integer,list[list[pred]]) <=> { apply:(string,occMap,list[usageMap]) => list[usageMap] }.
-  bildEntry(T,Arity,Parts) <= {
-    apply(Nm,occ(Nm,Occs),Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out] :-
+  buildRegUsage:(list[occMap],list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
+  buildRegUsage([],_,_,_,U) => U.
+  buildRegUsage([occ(Nm,Occs),..L],T,Parts,Arity,Out) =>
+    buildRegUsage(L,T,Parts,Arity,[usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out]) :-
       classifyVr(Occs,aReg(_),some(G)),
       Use = occupiedRegisters(Occs),
       Avoid = avoidRegisters(T,G,Use,nullSet),
       Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
       Conflict = conflict(Occs,Ar).
-    apply(_,_,Out) => Out.
-  }
+  buildRegUsage([_,..L],T,Parts,Arity,Out) => buildRegUsage(L,T,Parts,Arity,Out).
 
   maxArity:(list[pred]) => integer.
   maxArity([]) => 0.

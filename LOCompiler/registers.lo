@@ -80,6 +80,4 @@ lo.comp.code.registers{
 
   public numRegisters:integer.
   numRegisters = 64.
-
-  public type litrl ::= litrl(string,term).
 }

@@ -23,8 +23,6 @@ lo.comp.reduce{
   reduceArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
   reduceArg(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
   reduceArg(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
-  reduceArg(tuple(Els),Q,tuple(NEls),Pre,Prx,Post,Psx,Qx) :-
-    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceArg(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
@@ -42,9 +40,6 @@ lo.comp.reduce{
   reduceTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
   reduceTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
   reduceTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
-  reduceTerm(tuple(Els),Q,VV,Pre,Prx,[unfy(VV,tuple(NEls)),..Post],Psx,Qx) :-
-    VV = genVr("$%"),
-    reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(VV,cons(Op,NEls)),..Post],Psx,Qx) :-
     VV = genVr("$%"),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
@@ -87,8 +82,6 @@ lo.comp.reduce{
   reduceBildArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
   reduceBildArg(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
   reduceBildArg(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
-  reduceBildArg(tuple(Els),Q,tuple(NEls),Pre,Prx,Post,Psx,Qx) :-
-    reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceBildArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
     reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
   reduceBildArg(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
@@ -106,9 +99,6 @@ lo.comp.reduce{
   reduceBildTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
   reduceBildTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
   reduceBildTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(tuple(Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
-    VV = genVr("$%"),
-    reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,tuple(NEls)),..Prx],Post,Psx,Qx).
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
     VV = genVr("$%"),
     reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).

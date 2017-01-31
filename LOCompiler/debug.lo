@@ -31,8 +31,8 @@ lo.comp.debug{
   constructFrameList([]) =>enum("lo.list#[]").
   constructFrameList([varbl(V),..Vars]) => constructFrameList(Vars)  :-
     starts_with(V,"_").
-  constructFrameList([varbl(V),..Vars]) => 
-        cons(strct("lo.list#,..",2),[tuple([strng(V),varbl(V)]),constructFrameList(Vars)]).
+  constructFrameList([varbl(V),..Vars]) =>
+        cons(strct("lo.list#,..",2),[mkTpl([strng(V),varbl(V)]),constructFrameList(Vars)]).
 
   public breakDebug:(string,list[pred],list[pred],trOptions){}.
   breakDebug(Nm,[ocall(cons(trCons("break",1),[strng(Nm)]),DgVr,DgVr),..BG],BG,Opts) :-

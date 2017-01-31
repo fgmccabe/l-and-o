@@ -55,8 +55,6 @@ lo.comp.genprolog{
   convertTerm(strct(Nm,Ar),Ox) => appId(Nm,Ox).
   convertTerm(prg(Nm,Ar),Ox) => appId(Nm,Ox).
   convertTerm(cons(Op,Args),Ox) => convertTerm(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-  convertTerm(tuple([]),Ox) => appQuoted("()",0c',Ox).
-  convertTerm(tuple(Els),Ox) => [0c(,..convertArgs(Els,[0c),..Ox])].
 
   appStr:(string,list[integer]) => list[integer].
   appStr(S,Ox) => explode(S)<>Ox.

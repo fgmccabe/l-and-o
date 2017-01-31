@@ -10,21 +10,22 @@ lo.comp.code.pkg{
 
   import lo.comp.code.asm.
   import lo.comp.code.clause.
+  import lo.comp.code.code.
   import lo.comp.code.indexing.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
 
   public compileMdl:(prProg) => codeMdl.
   compileMdl(prProg(Spec,Clses)) =>
-    codeMdl(Spec,pairs(pickupDefs(Clses,[]))//(((Nm,Cls)) => compRel(Nm,Cls))).
+    codeMdl(Spec,pairs(pickupDefs(Clses,[]))//(((Nm,Cls)) => asm(compRel(Nm,Cls)))).
 
   pickupDefs:(list[clse],map[term,list[clse]]) => map[term,list[clse]].
   pickupDefs([],D)=>D.
   pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->Clses<>[Cl]]):- Cl=clse(_,Nm,_,_), present(D,Nm,Clses).
   pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->[Cl]]) :- Cl=clse(_,Nm,_,_).
 
-  compRel:(term,list[clse]) => codeSeg.
-  compRel(prg(Nm,Ar),Cls) => codeSeg(prg(Nm,Ar),asm(IndexCode<>DefltCode,Lts),Lts//((litrl(_,T))=>T)) :-
+  compRel:(term,list[clse]) => assem.
+  compRel(prg(Nm,Ar),Cls) => assem(prg(Nm,Ar),IndexCode<>DefltCode,Lts) :-
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),
     DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,[],Entries),
@@ -32,19 +33,19 @@ lo.comp.code.pkg{
 
   defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)]) => list[instruction].
   defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,Entries,[(Lb,Cl),..Entries]) => [iLbl(Lb),..ClCode] :-
-    compCl(reduceClause(Cl),Lts) = (ClCode,Ltx).
+    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
   defltSeq(Prefix,Lb,[Cl],false,Lts,Ltx,Entries,[(Lbx,Cl),..Entries]) => [iLbl(Lb),iTrustme,iLbl(Lbx),..ClCode] :-
     Lbx = newLabel(Prefix),
-    compCl(reduceClause(Cl),Lts) = (ClCode,Ltx).
+    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
   defltSeq(Prefix,Lb,[Cl,..Rest],true,Lts,Ltx,Entries,Enx) =>
       [iLbl(Lb),iTryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,[(Lbx,Cl),..Entries],Enx) :-
     Lbx = newLabel(Prefix),
     Lbnxt = newLabel(Prefix),
-    compCl(reduceClause(Cl),Lts) = (ClCode,Lt0).
+    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
   defltSeq(Prefix,Lb,[Cl,..Rest],false,Lts,Ltx,Entries,Enx) =>
       [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,[(Lbx,Cl),..Entries],Enx) :-
     Lbx = newLabel(Prefix),
     Lbnxt = newLabel(Prefix),
-    compCl(reduceClause(Cl),Lts) = (ClCode,Lt0).
+    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
   defltSeq(_,Lb,[],_,Lts,Lts,Entries,Entries) => [iLbl(Lb),iFayl].
 }

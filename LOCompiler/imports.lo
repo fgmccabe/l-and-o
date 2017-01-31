@@ -29,7 +29,7 @@ lo.comp.imports{
   pickupPkgSpec(Term,decodeImports(Is),Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
     isUnary(Term,"#pkg",_,E),
     isString(E,_,Enc),
-    tuple([P,tuple(Is),Ex,Tp,tuple(C),tuple(Co),tuple(Im)]) = decodeValue(Enc),
+    cons(_,[P,cons(_,Is),Ex,Tp,cons(_,C),cons(_,Co),cons(_,Im)]) = decodeValue(Enc),
     faceType(Fields) = decodeSignature(Ex),
     faceType(Types) = decodeSignature(Tp),
     pickupEnums(C,Enums,[]),
@@ -84,13 +84,13 @@ lo.comp.imports{
 
   findContracts:(list[term],list[conEntry],list[conEntry]){}.
   findContracts([],C,C).
-  findContracts([tuple([strng(Nm),strng(ConNm),strng(ConSig),FaceSig]),..M],[conEntry(Nm,ConNm,Con,decodeSignature(FaceSig)),..C],Cx) :-
+  findContracts([cons(_,[strng(Nm),strng(ConNm),strng(ConSig),FaceSig]),..M],[conEntry(Nm,ConNm,Con,decodeSignature(FaceSig)),..C],Cx) :-
     decodeConstraint(ConSig,Con),
     findContracts(M,C,Cx).
 
   pickupImplementations:(list[term],list[implEntry],list[implEntry]){}.
   pickupImplementations([],I,I).
-  pickupImplementations([tuple([strng(Nm),strng(Sig)]),..M],[implEntry(Nm,Spec),..I],RI) :-
+  pickupImplementations([cons(_,[strng(Nm),strng(Sig)]),..M],[implEntry(Nm,Spec),..I],RI) :-
     decodeConstraint(Sig,Spec),
     pickupImplementations(M,I,RI).
 

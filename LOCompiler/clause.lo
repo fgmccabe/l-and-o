@@ -3,6 +3,7 @@ lo.comp.code.clause{
 
   import lo.comp.errors.
   import lo.comp.code.analyse.
+  import lo.comp.code.code.
   import lo.comp.code.estimate.
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
@@ -12,8 +13,8 @@ lo.comp.code.clause{
   import lo.comp.errors.
   import lo.comp.term.
 
-  public compCl:(clse,list[litrl])=>(list[instruction],list[litrl]).
-  compCl(clse(Q,Nm,Args,Body),Lts) => (Code,Ltx):-
+  public compCl:(clse,list[litrl])=>assem.
+  compCl(clse(Q,Nm,Args,Body),Lts) => assem(Nm,Code,Ltx):-
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
     unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),

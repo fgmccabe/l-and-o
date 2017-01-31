@@ -28,7 +28,6 @@ lo.comp.code.indexing{
   genTree(flot(Dx),n) => oXN([(ix(flot(Dx),n),eTree)]).
   genTree(strng(Sx),n) => oXN([(ix(strng(Sx),n),eTree)]).
   genTree(enum(Id),n) => oXN([(ix(enum(Id),n),eTree)]).
-  genTree(tuple(Els),n) => oXN([(ix(tuple(Els),n),aXN(genTreeEls(Els,n)))]).
   genTree(cons(Op,Els),n) => oXN([(ix(cons(Op,Els),n),aXN(genTreeEls(Els,n)))]).
 
   genTreeEls:(list[term],list[(integer,string)]) => list[aoTr].
@@ -44,7 +43,6 @@ lo.comp.code.indexing{
 
   isSameCons:(term,term){}.
   isSameCons(cons(Op,E1),cons(Op,E2)) :- size(E1)==size(E2).
-  isSameCons(tuple(E1),tuple(E2)) :- size(E1)==size(E2).
 
   addInTriple:(list[(ix,aoTr)],term,list[(integer,string)],aoTr) => list[(ix,aoTr)].
   addInTriple([],C,N,S) => [(ix(C,N),S)].
@@ -99,43 +97,39 @@ lo.comp.code.indexing{
   checkEntries([(ix(strng(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
   checkEntries([(ix(enum(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
   checkEntries([(ix(cons(_,_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
-  checkEntries([(ix(tuple(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
 
   mkIndex:(aoTr,integer,string) => list[instruction].
-  mkIndex(oXN(L),Col,Deflt) => selectIndexStream(VarList,IntList,FltList,StrList,ConsList,TplList,Col,Deflt):-
-    computeSubIxes(L,[],[],[],[],[],[],VarList,IntList,FltList,StrList,ConsList,TplList).
+  mkIndex(oXN(L),Col,Deflt) => selectIndexStream(VarList,IntList,FltList,StrList,ConsList,Col,Deflt):-
+    computeSubIxes(L,[],[],[],[],[],VarList,IntList,FltList,StrList,ConsList).
   mkIndex(eTree,_,Deflt) => [].
 
   computeSubIxes:(list[(ix,aoTr)],
-    list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],
-    list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix]){}.
-  computeSubIxes([],VarList,IntList,FltList,StrList,ConsList,TplList,VarList,IntList,FltList,StrList,ConsList,TplList).
-  computeSubIxes([(ix(varbl(_),cl),_),..L],VL,IL,FL,SL,CL,TP,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,cl<>VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(intgr(Ix),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,[ix(intgr(Ix),cl),..IL],FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(flot(Dx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,[ix(flot(Dx),cl),..FL],SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(strng(Sx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,[ix(strng(Sx),cl),..SL],CL,TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(enum(Sx),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,SL,[ix(enum(Sx),cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(cons(Op,_),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,SL,[ix(Op,cl),..CL],TL,VLx,ILx,FLx,SLx,CLx,TLx).
-  computeSubIxes([(ix(tuple(Els),cl),_),..L],VL,IL,FL,SL,CL,TL,VLx,ILx,FLx,SLx,CLx,TLx) :-
-    computeSubIxes(L,VL,IL,FL,SL,CL,[ix(intgr(size(Els)),cl),..TL],VLx,ILx,FLx,SLx,CLx,TLx).
+    list[(integer,string)],list[ix],list[ix],list[ix],list[ix],
+    list[(integer,string)],list[ix],list[ix],list[ix],list[ix]){}.
+  computeSubIxes([],VarList,IntList,FltList,StrList,ConsList,VarList,IntList,FltList,StrList,ConsList).
+  computeSubIxes([(ix(varbl(_),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,cl<>VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(intgr(Ix),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,VL,[ix(intgr(Ix),cl),..IL],FL,SL,CL,VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(flot(Dx),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,VL,IL,[ix(flot(Dx),cl),..FL],SL,CL,VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(strng(Sx),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,VL,IL,FL,[ix(strng(Sx),cl),..SL],CL,VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(enum(Sx),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,VL,IL,FL,SL,[ix(enum(Sx),cl),..CL],VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(cons(Op,_),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,VL,IL,FL,SL,[ix(Op,cl),..CL],VLx,ILx,FLx,SLx,CLx).
 
   compClPt:((integer,list[(integer,string)]),(integer,list[(integer,string)])){}.
   compClPt((X,_),(Y,_)) :- X<Y.
 
-  selectIndexStream:(list[(integer,string)],list[ix],list[ix],list[ix],list[ix],list[ix],integer,string)=> list[instruction].
-  selectIndexStream(VL,_,_,_,_,_,_,_) => [] :- size(VL)>2.
-  selectIndexStream(VL,IL,_,_,_,_,Col,Deflt) => genHashSequence(IL,Deflt,VL,((A,M)=>[iIndexi(A,M)]),Col) :- IL\=[].
-  selectIndexStream(VL,_,FL,_,_,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexn(A,M)]),Col) :- FL\=[].
-  selectIndexStream(VL,_,_,SL,_,_,Col,Deflt) => genHashSequence(SL,Deflt,VL,((A,M)=>[iIndexs(A,M)]),Col) :- SL\=[].
-  selectIndexStream(VL,_,_,_,CL,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- CL\=[].
-  selectIndexStream(VL,_,_,_,_,TL,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- TL\=[].
-  selectIndexStream(_,_,_,_,_,_,_,_) => [].
+  selectIndexStream:(list[(integer,string)],list[ix],list[ix],list[ix],list[ix],integer,string)=> list[instruction].
+  selectIndexStream(VL,_,_,_,_,_,_) => [] :- size(VL)>2.
+  selectIndexStream(VL,IL,_,_,_,Col,Deflt) => genHashSequence(IL,Deflt,VL,((A,M)=>[iIndexi(A,M)]),Col) :- IL\=[].
+  selectIndexStream(VL,_,FL,_,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexn(A,M)]),Col) :- FL\=[].
+  selectIndexStream(VL,_,_,SL,_,Col,Deflt) => genHashSequence(SL,Deflt,VL,((A,M)=>[iIndexs(A,M)]),Col) :- SL\=[].
+  selectIndexStream(VL,_,_,_,CL,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- CL\=[].
+  selectIndexStream(_,_,_,_,_,_,_) => [].
 
   genHashSequence:(list[ix],string,list[(integer,string)],(integer,integer)=>list[instruction],integer) => list[instruction].
   genHashSequence(HL,Deflt,VL,ixFun,Col) => ixFun(Col,Max)<>[iGo_to(Deflt)]<>mkHashTable(IxT,VL,0,Max,[]) :- size(HL)>1,
@@ -149,7 +143,6 @@ lo.comp.code.indexing{
   computeHashes([ix(flot(Dx),cl),..L],Max) => [(hash(Dx)%Max,cl),..computeHashes(L,Max)].
   computeHashes([ix(strng(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
   computeHashes([ix(enum(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
-  computeHashes([ix(tuple(Els),cl),..L],Max) => [(size(Els)%Max,cl),..computeHashes(L,Max)].
   computeHashes([ix(cons(strct(Op,Ar),_),cl),..L],Max) => [(hash(Op)%Max,cl),..computeHashes(L,Max)].
 
   mkHashTable:(list[(integer,list[(integer,string)])],list[(integer,string)],integer,integer,list[instruction]) => list[instruction].

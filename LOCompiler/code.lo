@@ -1,0 +1,25 @@
+lo.comp.code.code{
+  import lo.
+
+  import lo.comp.code.instructions.
+  import lo.comp.code.registers.
+  import lo.comp.term.
+
+  public type assem ::= assem(term,list[instruction],list[litrl]).
+  public type litrl ::= litrl(string,term).
+
+  public implementation display[assem] <= {
+    disp(Seg) => dispCodeSeg(Seg).
+  }
+
+  dispCodeSeg:(assem) => ss.
+  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins)),ssSeq(dispLits(Lits))]).
+
+  dispIns:(list[instruction]) => list[ss].
+  dispIns([]) => [].
+  dispIns([I,..L]) => [disp(I),ss("\n"),..dispIns(L)].
+
+  dispLits:(list[litrl]) => list[ss].
+  dispLits([]) => [].
+  dispLits([litrl(Lbl,Term),..L]) => [ss(Lbl),ss(":"),disp(Term),ss("\n"),..dispLits(L)].
+}
