@@ -102,11 +102,11 @@ lo.comp.encode{
   encConstraint(implementsFace(Tp,Flds),L) => [0ca,..encType(Tp,encType(faceType(Flds),L))].
   encConstraint(conCon(C,E),L) => [0c|,..encConstraint(C,encConstraint(E,L))].
 
-  public genPkgSig:(pkgSpec) => term.
-  genPkgSig(pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports)) =>
-    cons(strct("#pkg",1),[strng(implode(encodeTerm(
+  public packageSig:(pkgSpec) => term.
+  packageSig(pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports)) =>
+    strng(implode(encodeTerm(
       tuple([fmtPkg(Pkg),fmtImports(Imports),
-        fmtTypes(Fields),fmtTypes(Types),fmtEnums(Enums),fmtContracts(Contracts),fmtImpls(Impls)]))))]).
+        fmtTypes(Fields),fmtTypes(Types),fmtEnums(Enums),fmtContracts(Contracts),fmtImpls(Impls)])))).
 
   fmtPkg:(pkg) => term.
   fmtPkg(pkg(Nm,Vers)) => cons(strct("pkg",2),[strng(Nm),fmtVer(Vers)]).
@@ -166,8 +166,8 @@ lo.comp.encode{
   encSegs([],L) => L.
   encSegs([S,..R],L) => encCodeSeg(S,encSegs(R,L)).
 
-  -- encode a package
-  public encMdl:(codeMdl,list[integer]) => list[integer].
-  encMdl(codeMdl(Spec,Segs),L) =>
-    encTerm(genPkgSig(Spec),encSegs(Segs,L)).
+  -- encode a complete code package
+  public encMdl:(codeMdl) => list[integer].
+  encMdl(codeMdl(Spec,Segs)) =>
+    encTerm(packageSig(Spec),encSegs(Segs,[])).
 }

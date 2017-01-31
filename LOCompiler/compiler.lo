@@ -83,7 +83,7 @@ lo.comp.compiler{
             (Opts.prologOnly ?
               Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
               Code = compileMdl(TrPrg),
-              Repox = addPackage(Repo1,U,pkg(P,V),encMdl(Code,[]))) |
+              Repox = addPackage(Repo1,U,pkg(P,V),encMdl(Code))) |
             Rpx = populateContext(Rp2,getUriPath(U),collectSrc(Src,1,emptyArray))) |
           Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |

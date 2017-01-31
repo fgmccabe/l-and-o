@@ -11,7 +11,10 @@ lo.comp.genprolog{
   }
 
   prog2code:(prProg,list[integer]) => list[integer].
-  prog2code(prProg(Spec,Clses),Ox) => convertTerm(genPkgSig(Spec),[0c.,0c\n,..foldRight(convertClause,Ox,Clses)]).
+  prog2code(prProg(Spec,Clses),Ox) => convertTerm(genPrologSig(Spec),[0c.,0c\n,..foldRight(convertClause,Ox,Clses)]).
+
+  genPrologSig:(pkgSpec) => term.
+  genPrologSig(Spec) => cons(strct("#pkg",1),[packageSig(Spec)]).
 
   convertClause:(clse,list[integer]) => list[integer].
   convertClause(clse(_,Nm,Args,[]),Ox) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
