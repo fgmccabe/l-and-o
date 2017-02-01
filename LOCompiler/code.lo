@@ -13,11 +13,16 @@ lo.comp.code.code{
   }
 
   dispCodeSeg:(assem) => ss.
-  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins)),ssSeq(dispLits(Lits))]).
+  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins)),ssSeq(anyLits(Lits))]).
 
   dispIns:(list[instruction]) => list[ss].
   dispIns([]) => [].
-  dispIns([I,..L]) => [disp(I),ss("\n"),..dispIns(L)].
+  dispIns([iLbl(Lb),..L]) => [ss(Lb),ss(":\n"),..dispIns(L)].
+  dispIns([I,..L]) => [ss("  "),disp(I),ss("\n"),..dispIns(L)].
+
+  anyLits:(list[litrl]) => list[ss].
+  anyLits([]) => [].
+  anyLits(L) => [ss("Literals:\n"),..dispLits(L)].
 
   dispLits:(list[litrl]) => list[ss].
   dispLits([]) => [].

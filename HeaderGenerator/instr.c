@@ -60,9 +60,9 @@ int main(int argc,char **argv)
   #include "instructions.h"
 
     dumpDisplay(out);
-      
-    fprintf(out, "\n}.\n");
-    
+
+    fprintf(out, "}.\n");
+
     exit(0);
   }
 }
@@ -114,16 +114,16 @@ static char *genOpAnd(FILE *f,char *sep,opAndSpec A)
   }
 }
 
-static char *capitalize(char *str); 
+static char *capitalize(char *str);
 static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt,char *term)
 {
   char *sep = "(";
-  
+
   fprintf(out,"   | i%s",capitalize(op));
-  
+
   sep = genOpAnd(out,sep,A1);
   sep = genOpAnd(out,sep,A2);
-  
+
   if(strcmp(sep,",")==0)
     fprintf(out,")%s\t\t-- %s\n",term,cmt);
   else
@@ -258,6 +258,7 @@ static void dumpDisplay(FILE *out){
   fprintf(out,"  }\n");
 
   fprintf(out,"\n  showIns:(instruction)=>ss.\n");
+  fprintf(out,"  showIns(iLbl(Lb)) => ssSeq([ss(Lb),ss(\":\")]).\n");
 
 #include "instructions.h"
 

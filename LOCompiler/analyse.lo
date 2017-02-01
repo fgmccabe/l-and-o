@@ -26,7 +26,8 @@ lo.comp.code.analyse{
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(values(occurranceTable(Q,Args,Parts)),size(Args),Parts)).
+  varAnalysis(Q,Args,Parts) => allocateVars(OccTble,usageTable(OccTble,size(Args),Parts)) :-
+    OccTble = values(occurranceTable(Q,Args,Parts)).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
   occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
@@ -155,9 +156,9 @@ lo.comp.code.analyse{
     apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
   }
 
-  allocateVars:(list[usageMap]) => (map[string,varDesc],integer,varSet).
-  allocateVars(Table) => (allocPerms(sort(findPerms(Table,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Used::set[integer],Lcls,0)) :-
-    allocateHeadRegs(Table,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
+  allocateVars:(list[occMap],list[usageMap]) => (map[string,varDesc],integer,varSet).
+  allocateVars(Table,Usage) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Used::set[integer],Lcls,0)) :-
+    allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
 
   -- allocate registers based on occurrences in head
   allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],

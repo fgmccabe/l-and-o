@@ -25,11 +25,13 @@ lo.comp.code.pkg{
   pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->[Cl]]) :- Cl=clse(_,Nm,_,_).
 
   compRel:(term,list[clse]) => assem.
-  compRel(prg(Nm,Ar),Cls) => assem(prg(Nm,Ar),IndexCode<>DefltCode,Lts) :-
+  compRel(prg(Nm,Ar),Cls) => Code :-
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),
     DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,[],Entries),
-    IndexCode = genIndex(Entries,L0).
+    IndexCode = genIndex(Entries,L0),
+    Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,Lts),
+    logMsg("Assembler output: \(Code)").
 
   defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)]) => list[instruction].
   defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,Entries,[(Lb,Cl),..Entries]) => [iLbl(Lb),..ClCode] :-
