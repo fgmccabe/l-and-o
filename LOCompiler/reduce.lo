@@ -18,6 +18,7 @@ lo.comp.reduce{
     reduceArgs(L,Q0,NL,Pr0,Po0,Qx).
 
   reduceArg:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceArg(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceArg(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceArg(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
   reduceArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
@@ -35,6 +36,7 @@ lo.comp.reduce{
     reduceTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
   reduceTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
   reduceTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
@@ -77,6 +79,7 @@ lo.comp.reduce{
     reduceBildArgs(L,Q0,NL,Pr0,Prx,Po0,Pox,Qx).
 
   reduceBildArg:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildArg(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceBildArg(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceBildArg(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
   reduceBildArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
@@ -94,6 +97,7 @@ lo.comp.reduce{
     reduceBildTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
   reduceBildTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  reduceBildTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceBildTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceBildTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
   reduceBildTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).

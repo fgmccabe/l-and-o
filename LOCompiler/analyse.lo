@@ -26,7 +26,7 @@ lo.comp.code.analyse{
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(OccTble,usageTable(OccTble,size(Args),Parts)) :-
+  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(OccTble,size(Args),Parts)) :-
     OccTble = values(occurranceTable(Q,Args,Parts)).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
@@ -59,6 +59,7 @@ lo.comp.code.analyse{
 
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
+  findOccsInTerm(anon,M,_,_,_,_) => M.
   findOccsInTerm(T,M,_,_,_,_) => M :- isGroundTerm(T).
   findOccsInTerm(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
 
@@ -85,7 +86,9 @@ lo.comp.code.analyse{
       Avoid = avoidRegisters(T,G,Use,nullSet),
       Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
       Conflict = conflict(Occs,Ar).
-  buildRegUsage([_,..L],T,Parts,Arity,Out) => buildRegUsage(L,T,Parts,Arity,Out).
+  buildRegUsage([occ(Nm,Occs),..L],T,Parts,Arity,Out) =>
+    buildRegUsage(L,T,Parts,Arity,[usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet,nullSet),..Out]) :-
+      classifyVr(Occs,Addr,_).
 
   maxArity:(list[pred]) => integer.
   maxArity([]) => 0.
@@ -156,9 +159,10 @@ lo.comp.code.analyse{
     apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
   }
 
-  allocateVars:(list[occMap],list[usageMap]) => (map[string,varDesc],integer,varSet).
-  allocateVars(Table,Usage) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Used::set[integer],Lcls,0)) :-
-    allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Used,FreeRgs,D0).
+  allocateVars:(list[usageMap]) => (map[string,varDesc],integer,varSet).
+  allocateVars(Usage) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Us1::set[integer],Lcls,0)) :-
+    allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr,D0),
+    findOccupiedRegs(Usage,Us0,Us1,Fr,_).
 
   -- allocate registers based on occurrences in head
   allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],
@@ -173,8 +177,20 @@ lo.comp.code.analyse{
         D0 = D[Nm->varDesc(Nm,notInited,isDefined,notAlloc,lastRgUsage(Occs,-1,-1))],
         U0=U,
         F0=Fr) |
-        F0=F, U0=Ur,D0=D),
+        F0=Fr, U0=Ur,D0=D),
     allocateHeadRegs(Tble,U0,F0,D0,Ux,Fx,Dx).
+  allocateHeadRegs([U,..L],Ur,Fr,D,Ux,Fx,Dx) :-
+    allocateHeadRegs(L,Ur,Fr,D,Ux,Fx,Dx).
+
+  compPerm:((string,option[(integer,integer)],addr,defined),(string,option[(integer,integer)],addr,defined)){}.
+  compPerm((_,some((G1,I1)),_,_),(_,some((G2,I2)),_,_)) :- (G2<G1 | G2=G1, I2<I1).
+
+  findOccupiedRegs:(list[usageMap],list[integer],list[integer],list[integer],list[integer]){}.
+  findOccupiedRegs([],Us,Us,Fr,Fr).
+  findOccupiedRegs([usage(_,occ(_,Occs),_,_,_,_),..Usage],Us0,Usx,Fr,Frx) :-
+    ((hArg,_,Rg) in Occs,Rg in Fr ?
+      findOccupiedRegs(Usage,addMem(Us0,Rg),Usx,delMem(Fr,Rg),Frx) |
+      findOccupiedRegs(Usage,Us0,Usx,Fr,Frx)).
 
   -- find last occurrence
   lastRgUsage:(list[(occForm,integer,integer)],integer,integer) => option[(integer,integer)].
@@ -194,8 +210,8 @@ lo.comp.code.analyse{
 
   definedInRegister:(list[(occForm,integer,integer)]) => defined.
   definedInRegister([]) => notDefined.
-  definedInRegister([(hArg,_,_),.._]) => defined.
-  definedInRegister([(lArg,_,_),.._]) => defined.
+  definedInRegister([(hArg,_,_),.._]) => isDefined.
+  definedInRegister([(lArg,_,_),.._]) => isDefined.
   definedInRegister([_,..O]) => definedInRegister(O).
 
   compPos:(option[(integer,integer)],option[(integer,integer)]){}.

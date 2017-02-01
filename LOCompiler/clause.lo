@@ -76,7 +76,7 @@ lo.comp.code.clause{
   compGoal(ecall(Esc,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     Arity = size(Args),
-    gcMap(Vs,Arity,Pre,MapIns),
+    gcMap(Vsx,Arity,Pre,MapIns),
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
           Code = aCode<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0)] |
@@ -86,7 +86,7 @@ lo.comp.code.clause{
   compGoal(call(Prd,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Lt0,Vsx),
     Arity = size(Args),
-    gcMap(Vs,Arity,Pre,MapIns),
+    gcMap(Vsx,Arity,Pre,MapIns),
     accessLiteral(Prd,Lbl,Lt0,Ltx)!,
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
@@ -96,7 +96,7 @@ lo.comp.code.clause{
       Code = aCode<>Pre<>[iKawl(Arity,Lbl),MapIns]).
   compGoal(ocall(Cl,LbV,ThV),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     callArgs([Cl,LbV,ThV],Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
-    gcMap(Vs,3,Pre,MapIns),
+    gcMap(Vsx,3,Pre,MapIns),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
         Code = aCode<>[iDlkawlO(3,2)] |
