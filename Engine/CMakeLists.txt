@@ -4,6 +4,11 @@ project(loEngine)
 find_package(BISON)
 find_package(FLEX)
 
+
+BISON_TARGET(ManifestParser mangrammar.y ${CMAKE_CURRENT_BINARY_DIR}/mangrammar.c)
+FLEX_TARGET(ManifestTokeniser mtoken.l ${CMAKE_CURRENT_BINARY_DIR}/mtoken.c)
+ADD_FLEX_BISON_DEPENDENCY(ManifestTokeniser ManifestParser)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
 
 include_directories("Headers" "../Headers" "../OOlib/Headers")
@@ -15,6 +20,9 @@ set(SOURCE_FILES
         misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c
         verify.c writef.c
         main.c
+        ${BISON_ManifestParser_OUTPUTS}
+        ${FLEX_ManifestTokeniser_OUTPUTS}
+
         Headers/word.h
         Headers/char.h Headers/clock.h
         Headers/code.h Headers/cons.h Headers/constants.h Headers/dbgflags.h Headers/debug.h Headers/disass.h
@@ -24,7 +32,8 @@ set(SOURCE_FILES
         Headers/fileio.h Headers/lo.h
         Headers/floats.h Headers/str.h Headers/symbols.h Headers/dll.h
         Headers/unix.h Headers/stats.h Headers/signals.h
-        )
+
+        Headers/manifest.h Headers/manifestP.h)
 
 add_executable(lo ${SOURCE_FILES})
 target_link_libraries(lo ooio)

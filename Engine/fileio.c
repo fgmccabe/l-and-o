@@ -576,7 +576,7 @@ retCode g__stdfile(processPo P, ptrPo a) {
  * This function reads character forward in order to position the EOF flag.
  * the character is then un-read by ungetc()
  */
-retCode g__eof(processPo P, ptrPo a) {
+retCode g__end_of_file(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
   objPo o1 = objV(t1);
 

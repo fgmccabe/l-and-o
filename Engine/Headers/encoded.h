@@ -23,9 +23,11 @@
 #ifndef _TERM_ENCODED_H_
 #define _TERM_ENCODED_H_
 
-typedef enum {trmVar=0x00, trmInt=0x10, trmFlt=0x20, trmNegFlt=0x30,
-              trmSym=0x40, trmString=0x60, trmCode=0x70,
-	      trmClass=0x80, trmObject=0x90, trmProgram=0xa0,
-	      trmTag=0xb0, trmRef=0xc0, trmShort=0xd0} trmElTag;
+typedef enum {
+  trmVar = 0x00, trmInt = 0x10, trmFlt = 0x20, trmNegFlt = 0x30,
+  trmSym = 0x40, trmString = 0x60, trmCode = 0x70,
+  trmClass = 0x80, trmObject = 0x90, trmProgram = 0xa0,
+  trmTag = 0xb0, trmRef = 0xc0, trmShort = 0xd0
+} trmElTag;
 
 #endif
