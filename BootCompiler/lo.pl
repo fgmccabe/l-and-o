@@ -34,7 +34,8 @@ main(Args) :-
   parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
   openRepo(Opts,Repo),
   parsePkgName(Entry,Pkg),
-  processPackage(Pkg,Repo,[],_Loaded,[],_),
+  processPackage(Pkg,Repo,[],_Loaded,[],All),
+  compile_predicates(All),
   lookForMain(Pkg,LOArgs),!.
 
 processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-

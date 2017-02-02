@@ -26,7 +26,7 @@ lo.comp.code.analyse{
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(OccTble,size(Args),Parts)) :-
+  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(OccTble,size(Args),Parts),maxHeadArity(Parts)) :-
     OccTble = values(occurranceTable(Q,Args,Parts)).
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
@@ -38,7 +38,11 @@ lo.comp.code.analyse{
 
   -- Find occurrances of variables to help decide how to allocate them.
   findOccsInHead:(list[term],map[string,occMap]) => map[string,occMap].
-  findOccsInHead(Args,M) => findOccsInTerms(Args,M,1,1,hArg,hTerm).
+  findOccsInHead(Args,M) => findOccsInArgs(Args,M,1,1,hArg,hTerm).
+
+  findOccsInArgs:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
+  findOccsInArgs([],M,_,_,_,_) => M.
+  findOccsInArgs([t,..l],M,Gp,Ix,Key,iKey) => findOccsInArgs(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).
 
   findOccsInParts:(list[list[pred]],map[string,occMap],integer) => map[string,occMap].
   findOccsInParts([P1,..P],M,Gno) => findOccsInParts(P,findOccsInPart(P1,M,Gno),Gno+1).
@@ -49,10 +53,10 @@ lo.comp.code.analyse{
   findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
 
   findOccsInGoal:(pred,map[string,occMap],integer) => map[string,occMap].
-  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInTerms(Args,findOccsInTerm(Op,M,Gp,0,oArg,oTerm),Gp,1,lArg,lTerm).
-  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInTerms(Args,M,Gp,1,lArg,lTerm).
-  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInTerms([C,L,T],M,Gp,1,lArg,lTerm).
-  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,0,oArg,oTerm),Gp,1,oArg,oTerm).
+  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInArgs(Args,findOccsInTerm(Op,M,Gp,0,oArg,oTerm),Gp,1,lArg,lTerm).
+  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInArgs([C,L,T],M,Gp,1,lArg,lTerm).
+  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
   findOccsInGoal(except(T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
   findOccsInGoal(neck,M,_) => M.
   findOccsInGoal(fail,M,_) => M.
@@ -65,7 +69,7 @@ lo.comp.code.analyse{
 
   findOccsInTerms:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerms([],M,_,_,_,_) => M.
-  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix+1,Key,iKey).
+  findOccsInTerms([t,..l],M,Gp,Ix,Key,iKey) => findOccsInTerms(l,findOccsInTerm(t,M,Gp,Ix,Key,iKey),Gp,Ix,Key,iKey).
 
   updateOccurrence:(string,map[string,occMap],occForm,integer,integer) => map[string,occMap].
   updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix),..Occs])] :- present(M,Nm,occ(Nm,Occs)).
@@ -93,6 +97,10 @@ lo.comp.code.analyse{
   maxArity:(list[pred]) => integer.
   maxArity([]) => 0.
   maxArity([C,..L]) => max(predArity(C),maxArity(L)).
+
+  maxHeadArity:(list[list[pred]]) => integer.
+  maxHeadArity([]) => 0.
+  maxHeadArity([P,.._]) => maxArity(P).
 
   occupiedRegisters:(list[(occForm,integer,integer)]) => set[integer].
   occupiedRegisters(Occs) => foldRight(registerUsed,nullSet,Occs).
@@ -159,10 +167,11 @@ lo.comp.code.analyse{
     apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
   }
 
-  allocateVars:(list[usageMap]) => (map[string,varDesc],integer,varSet).
-  allocateVars(Usage) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D0,D1),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Us1::set[integer],Lcls,0)) :-
-    allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr,D0),
-    findOccupiedRegs(Usage,Us0,Us1,Fr,_).
+  allocateVars:(list[usageMap],integer) => (map[string,varDesc],integer,varSet).
+  allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Us2::set[integer],Lcls,0)) :-
+    allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr0,D0),
+    findOccupiedRegs(Usage,Us0,Us1,Fr0,Fr1),
+    allocateRegs(Usage,Us1,avoidIota(Fr1,HeadArity),D0,Us2,_,D1).
 
   -- allocate registers based on occurrences in head
   allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],
@@ -171,16 +180,36 @@ lo.comp.code.analyse{
   allocateHeadRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     ((hArg,_,Rg) in Occs ?
       ( Rg in Fr ?
-        D0 = D[Nm->varDesc(Nm,inited,isDefined,aReg(Rg),lastRgUsage(Occs,-1,-1))],
+        D0 = D[Nm->varDesc(Nm,inited,isDefined,aReg(Rg),lastOcc(Occs))],
         U0 = addMem(Ur,Rg),
         F0 = delMem(Fr,Rg) |
-        D0 = D[Nm->varDesc(Nm,notInited,isDefined,notAlloc,lastRgUsage(Occs,-1,-1))],
-        U0=U,
+        D0 = D[Nm->varDesc(Nm,notInited,isDefined,notAlloc,lastOcc(Occs))],
+        U0=Ur,
         F0=Fr) |
-        F0=Fr, U0=Ur,D0=D),
+      D0=D,F0=Fr,U0=Ur),
     allocateHeadRegs(Tble,U0,F0,D0,Ux,Fx,Dx).
   allocateHeadRegs([U,..L],Ur,Fr,D,Ux,Fx,Dx) :-
     allocateHeadRegs(L,Ur,Fr,D,Ux,Fx,Dx).
+
+  avoidIota:(list[integer],integer) => list[integer].
+  avoidIota(Fr,0) => Fr.
+  avoidIota(Fr,Ix) => avoidIota(delMem(Fr,Ix),Ix-1).
+
+  -- allocate registers not already spoken for - based on body
+  allocateRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],
+        list[integer],list[integer],map[string,varDesc]){}.
+  allocateRegs([],UsedRgs,FreeRgs,Dict,UsedRgs,FreeRgs,Dict).
+  allocateRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
+    present(D,Nm,_), -- already allocated
+    allocateRegs(Tble,Ur,Fr,D,Ux,Fx,Dx).
+  allocateRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
+    (lArg,_,Rg) in Occs, Rg in Fr, \+ Rg in Avoid, \+Rg in Conflict,
+    allocateRegs(Tble,addMem(Ur,Rg),delMem(Fr,Rg),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
+  allocateRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
+    Rg in Fr, \+ Rg in Avoid, \+Rg in Conflict,
+    allocateRegs(Tble,addMem(Ur,Rg),delMem(Fr,Rg),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
+  allocateRegs([U,..L],Ur,Fr,D,Ux,Fx,Dx) :-
+    allocateRegs(L,Ur,Fr,D,Ux,Fx,Dx).
 
   compPerm:((string,option[(integer,integer)],addr,defined),(string,option[(integer,integer)],addr,defined)){}.
   compPerm((_,some((G1,I1)),_,_),(_,some((G2,I2)),_,_)) :- (G2<G1 | G2=G1, I2<I1).
@@ -193,6 +222,9 @@ lo.comp.code.analyse{
       findOccupiedRegs(Usage,Us0,Usx,Fr,Frx)).
 
   -- find last occurrence
+  lastOcc:(list[(occForm,integer,integer)]) => option[(integer,integer)].
+  lastOcc(O) => lastRgUsage(O,-1,-1).
+
   lastRgUsage:(list[(occForm,integer,integer)],integer,integer) => option[(integer,integer)].
   lastRgUsage([],-1,_) => none.
   lastRgUsage([],Gp,Ix) => some((Gp,Ix)).
@@ -203,7 +235,7 @@ lo.comp.code.analyse{
       list[(string,option[(integer,integer)],addr,defined)].
   findPerms([],PermNo,PermNo,D,D) => [].
   findPerms([usage(Nm,occ(_,Occs),yReg(_,Sfe),Use,Avoid,Conflict),..Tble],NoP,NoPx,D,Dx) =>
-    [(Nm,lastRgUsage(Occs,-1,-1),yReg(0,Sfe),definedInRegister(Occs)),..findPerms(Tble,NoP+1,NoPx,D,Dx)].
+    [(Nm,lastOcc(Occs),yReg(0,Sfe),definedInRegister(Occs)),..findPerms(Tble,NoP+1,NoPx,D,Dx)].
   findPerms([usage(Nm,occ(_,Occs),voidAddr,_,_,_),..Tble],NoP,NoPx,D,Dx) =>
     findPerms(Tble,NoP,NoPx,D[Nm->varDesc(Nm,inited,definedInRegister(Occs),voidAddr,none)],Dx).
   findPerms([_,..Tble],NoP,NoPx,D,Dx) => findPerms(Tble,NoP,NoPx,D,Dx).

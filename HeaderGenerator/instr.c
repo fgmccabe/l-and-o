@@ -16,7 +16,7 @@
 static void genIns(FILE *out,char *op,opAndSpec A1,opAndSpec A2,char *cmt,char *term);
 static void dumpDisplay(FILE *out);
 
-char *prefix = "";
+char *prefix = "lo.comp.code.instructions";
 
 int getOptions(int argc, char **argv) {
   int opt;
@@ -51,8 +51,8 @@ int main(int argc,char **argv)
     fprintf(out,"/* Automatically generated, do not edit */\n");
 
     fprintf(out, "%s{\n", prefix);
-    fprintf(out, "  import lo.\n");
-
+    fprintf(out, "  import lo.\n\n");
+    fprintf(out, "  import lo.comp.term.\n");
 
     fprintf(out,"  public type instruction ::=              -- type defining the opcodes\n");
     fprintf(out,"     iLbl(string)               -- label in code stream\n");
@@ -168,6 +168,8 @@ static char *dispOpAnd(FILE *f,char *sep,opAndSpec A,int ix){
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
     case cSz:             		            // Structure size
+      fprintf(f,"%sss(\" \"),disp(A%d)",sep,ix);
+      return ",";
     case Ltl:                             // 16 bit integer offset
       fprintf(f,"%sss(\" \"),disp(A%d)",sep,ix);
       return ",";
@@ -176,8 +178,10 @@ static char *dispOpAnd(FILE *f,char *sep,opAndSpec A,int ix){
       return ",";
     case pcr:                             // program counter relative offset (-32768..32767)
     case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
-    case ltl:                             // literal number (0..65535)
       fprintf(f,"%sss(\" \"),ss(A%d)",sep,ix);
+      return ",";
+    case ltl:                             // literal number (0..65535)
+      fprintf(f,"%sss(\" \"),showLit(A%d,Lits)",sep,ix);
       return ",";
     default:
       printf("Problem in generating opcode type\n");
@@ -236,9 +240,9 @@ static void genInsDisp(FILE *out,char *op,opAndSpec A1,opAndSpec A2)
   sep = opAndArg(out,sep,A2,2);
 
   if(strcmp(sep,"(")==0){
-    fprintf(out,") => ss(\"%s\").\n",op);
+    fprintf(out,",_) => ss(\"%s\").\n",op);
   }else{
-    fprintf(out,"%s) => ssSeq([ss(\"%s\")",(strcmp(sep,"(")==0?"":")"),op);
+    fprintf(out,"%s,Lits) => ssSeq([ss(\"%s\")",(strcmp(sep,"(")==0?"":")"),op);
     sep = ",";
     sep = dispOpAnd(out,sep,A1,1);
     dispOpAnd(out,sep,A2,2);
@@ -254,12 +258,15 @@ static void genInsDisp(FILE *out,char *op,opAndSpec A1,opAndSpec A2)
 
 static void dumpDisplay(FILE *out){
   fprintf(out,"\n\n  public implementation display[instruction] <= {\n");
-  fprintf(out,"    disp(I) => showIns(I).\n");
+  fprintf(out,"    disp(I) => showIns(I,[]).\n");
   fprintf(out,"  }\n");
 
-  fprintf(out,"\n  showIns:(instruction)=>ss.\n");
-  fprintf(out,"  showIns(iLbl(Lb)) => ssSeq([ss(Lb),ss(\":\")]).\n");
+  fprintf(out,"\n  public showIns:(instruction,map[string,term])=>ss.\n");
+  fprintf(out,"  showIns(iLbl(Lb),_) => ssSeq([ss(Lb),ss(\":\")]).\n");
 
 #include "instructions.h"
 
+  fprintf(out,"\n  showLit:(string,map[string,term]) => ss.\n");
+  fprintf(out,"  showLit(Lt,M) => disp(T) :- present(M,Lt,T).\n");
+  fprintf(out,"  showLit(Lt,_) => ss(Lt).\n");
 }

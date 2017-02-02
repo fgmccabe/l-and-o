@@ -1,4 +1,4 @@
-:- module(import, [importPkg/3,loadPkg/4,loadPrologPkg/4]).
+:- module(import, [importPkg/3,loadPkg/4,loadPrologPkg/4,consultPrologPkg/3]).
 
 % This is specific to the Prolog translation of L&O code
 
@@ -81,6 +81,17 @@ loadCode(Strm,[]) :-
 loadCode(Strm,[Term|M]) :-
   read(Strm,Term),
   loadCode(Strm,M).
+
+consultPrologPkg(Pkg,Repo,Imports) :-
+  openPrologPackageAsStream(Repo,Pkg,_,_,Strm),
+  packageName(Pkg,Nm),
+  read(Strm,SigTerm),
+  pickupPkgSpec(SigTerm,Pkg,Imports,_,_,_,_,_),
+  load_files(Nm,[stream(Strm)]),
+  close(Strm).
+
+packageName(pkg(Nm,_),N) :-
+  atom_string(N,Nm).
 
 loadPkg(Pkg,Repo,Code,Imports) :-
   openPackageAsStream(Repo,Pkg,_,_,Strm),

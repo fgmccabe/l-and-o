@@ -79,7 +79,8 @@ lo.comp.resolve{
 
   private overloadRule:(canonRule,list[implEntry],list[canonTerm],report,report) => canonRule.
   overloadRule(equation(Lc,Nm,Args,Rep,Cond),Dict,Ex,Rp,Rpx) =>
-      equation(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveTerm(Rep,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx)).
+      equation(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp0,Rp1)),resolveTerm(Rep,Dict,Rp1,Rpx),RCond) :-
+        resolveCond(Cond,Dict,Rp,Rp0) = RCond.
   overloadRule(clause(Lc,Nm,Args,Cond),Dict,Ex,Rp,Rpx) =>
       clause(Lc,Nm,addExtra(Ex,resolveTerm(Args,Dict,Rp,Rp0)),resolveCond(Cond,Dict,Rp0,Rpx)).
   overloadRule(grRule(Lc,Nm,Args,Hed,Body),Dict,Ex,Rp,Rpx) =>

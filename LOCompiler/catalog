@@ -15,7 +15,7 @@ catalog{
     lo.comp.code.gencode -> "gencode.lo".
     lo.comp.code.indexing -> "indexing.lo".
     lo.comp.code.instructions -> "instructions.lo".
-    lo.comp.code.pkg -> "pkgcomp.lo".
+    lo.comp.code.pkg -> "pkg.lo".
     lo.comp.code.registers -> "registers.lo".
     lo.comp.code.unify -> "compunify.lo".
     lo.comp.compiler -> "compiler.lo".

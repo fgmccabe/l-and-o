@@ -13,16 +13,16 @@ lo.comp.code.code{
   }
 
   dispCodeSeg:(assem) => ss.
-  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins)),ssSeq(anyLits(Lits))]).
+  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins,foldLeft((M,litrl(N,T))=>M[N->T],[],Lits))),ssSeq(anyLits(Lits))]).
 
-  dispIns:(list[instruction]) => list[ss].
-  dispIns([]) => [].
-  dispIns([iLbl(Lb),..L]) => [ss(Lb),ss(":\n"),..dispIns(L)].
-  dispIns([I,..L]) => [ss("  "),disp(I),ss("\n"),..dispIns(L)].
+  dispIns:(list[instruction],map[string,term]) => list[ss].
+  dispIns([],_) => [].
+  dispIns([iLbl(Lb),..L],Lits) => [ss(Lb),ss(":\n"),..dispIns(L,Lits)].
+  dispIns([I,..L],Lits) => [ss("  "),showIns(I,Lits),ss("\n"),..dispIns(L,Lits)].
 
   anyLits:(list[litrl]) => list[ss].
   anyLits([]) => [].
-  anyLits(L) => [ss("Literals:\n"),..dispLits(L)].
+  anyLits(L) => [disp(size(L)),ss(" literals\n")].
 
   dispLits:(list[litrl]) => list[ss].
   dispLits([]) => [].
