@@ -64,7 +64,7 @@ lo.comp.code.analyse{
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
   findOccsInTerm(anon,M,_,_,_,_) => M.
-  findOccsInTerm(T,M,_,_,_,_) => M :- isGroundTerm(T).
+  findOccsInTerm(T,M,Gp,Ix,Key,_) => updateOccurrence("",M,Key,Gp,Ix) :- isGroundTerm(T). -- special for ground
   findOccsInTerm(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
 
   findOccsInTerms:(list[term],map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
@@ -81,18 +81,22 @@ lo.comp.code.analyse{
   usageTable:(list[occMap],integer,list[list[pred]]) => list[usageMap].
   usageTable(Occs,Arity,Parts) => buildRegUsage(Occs,Occs,Parts,Arity,[]).
 
+  buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
+  buildRgUsage(occ("",_),_,_,_,Out) => Out.
+  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,conflict(Occs,Ar)),..Out] :-
+    Nm\="",
+    classifyVr(Occs,aReg(_),some(G)),
+    Use = occupiedRegisters(Occs),
+    Avoid = avoidRegisters(T,G,Use,nullSet),
+    Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity).
+  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
+      [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet,nullSet),..Out] :-
+    classifyVr(Occs,Addr,_).
+
   buildRegUsage:(list[occMap],list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
   buildRegUsage([],_,_,_,U) => U.
-  buildRegUsage([occ(Nm,Occs),..L],T,Parts,Arity,Out) =>
-    buildRegUsage(L,T,Parts,Arity,[usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid,Conflict),..Out]) :-
-      classifyVr(Occs,aReg(_),some(G)),
-      Use = occupiedRegisters(Occs),
-      Avoid = avoidRegisters(T,G,Use,nullSet),
-      Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
-      Conflict = conflict(Occs,Ar).
-  buildRegUsage([occ(Nm,Occs),..L],T,Parts,Arity,Out) =>
-    buildRegUsage(L,T,Parts,Arity,[usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet,nullSet),..Out]) :-
-      classifyVr(Occs,Addr,_).
+  buildRegUsage([O,..L],T,Parts,Arity,Out) =>
+    buildRegUsage(L,T,Parts,Arity,buildRgUsage(O,T,Parts,Arity,Out)).
 
   maxArity:(list[pred]) => integer.
   maxArity([]) => 0.
@@ -171,7 +175,7 @@ lo.comp.code.analyse{
   allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Us2::set[integer],Lcls,0)) :-
     allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr0,D0),
     findOccupiedRegs(Usage,Us0,Us1,Fr0,Fr1),
-    allocateRegs(Usage,Us1,avoidIota(Fr1,HeadArity),D0,Us2,_,D1).
+    allocateRegs(Usage,Us1,Fr1,D0,Us2,_,D1).
 
   -- allocate registers based on occurrences in head
   allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],

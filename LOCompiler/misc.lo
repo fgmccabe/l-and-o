@@ -60,6 +60,6 @@ lo.comp.misc{
     filter(Curr+2,Nxt,SoFar).
 
   filter:(integer,integer,list[integer]){}.
-  filter(Ix,Ix,L) :- E%Ix \= 0 *> E in L.
+  filter(Ix,Ix,L) :- E in L *> E%Ix \= 0.
   filter(Ix,Nx,L) :- filter(Ix+2,Nx,L).
 }

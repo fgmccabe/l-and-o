@@ -55,7 +55,7 @@ lo.comp.term {
   dispTerm(intgr(Ix)) => disp(Ix).
   dispTerm(flot(Dx)) => disp(Dx).
   dispTerm(enum(Nm)) => ss(Nm).
-  dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss("@"),disp(Ar)]).
+  dispTerm(strct(Nm,Ar)) => ssSeq([ss(Nm),ss(":"),disp(Ar)]).
   dispTerm(prg(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(strng(Sx)) => disp(Sx).
   dispTerm(cons(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",")",Args)]).

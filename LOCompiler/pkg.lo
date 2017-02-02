@@ -28,24 +28,24 @@ lo.comp.code.pkg{
   compRel(prg(Nm,Ar),Cls) => Code :-
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),
-    DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,[],Entries),
+    DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,Entries,[]),
     IndexCode = genIndex(Entries,L0),
     Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,Lts),
     logMsg("Assembler output: \(Code)").
 
   defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)]) => list[instruction].
-  defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,Entries,[(Lb,Cl),..Entries]) => [iLbl(Lb),..ClCode] :-
+  defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,[(Lb,Cl),..Entries],Entries) => [iLbl(Lb),..ClCode] :-
     compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
-  defltSeq(Prefix,Lb,[Cl],false,Lts,Ltx,Entries,[(Lbx,Cl),..Entries]) => [iLbl(Lb),iTrustme,iLbl(Lbx),..ClCode] :-
+  defltSeq(Prefix,Lb,[Cl],false,Lts,Ltx,[(Lbx,Cl),..Entries],Entries) => [iLbl(Lb),iTrustme,iLbl(Lbx),..ClCode] :-
     Lbx = newLabel(Prefix),
     compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
-  defltSeq(Prefix,Lb,[Cl,..Rest],true,Lts,Ltx,Entries,Enx) =>
-      [iLbl(Lb),iTryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,[(Lbx,Cl),..Entries],Enx) :-
+  defltSeq(Prefix,Lb,[Cl,..Rest],true,Lts,Ltx,[(Lbx,Cl),..Entries],Enx) =>
+      [iLbl(Lb),iTryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx) :-
     Lbx = newLabel(Prefix),
     Lbnxt = newLabel(Prefix),
     compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
-  defltSeq(Prefix,Lb,[Cl,..Rest],false,Lts,Ltx,Entries,Enx) =>
-      [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,[(Lbx,Cl),..Entries],Enx) :-
+  defltSeq(Prefix,Lb,[Cl,..Rest],false,Lts,Ltx,[(Lbx,Cl),..Entries],Enx) =>
+      [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx) :-
     Lbx = newLabel(Prefix),
     Lbnxt = newLabel(Prefix),
     compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
