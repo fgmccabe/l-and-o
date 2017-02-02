@@ -102,6 +102,7 @@ blockComment(St,NxSt) :- hedChar(St,'*'), hedHedChar(St,'/'), nxtNxtSt(St,NxSt).
 blockComment(St,NxSt) :- nxtSt(St,St1), blockComment(St1,NxSt).
 
 nxTok(St,NxSt,integerTok(Code,Lc)) :- lookingAt(St,St1,['0','c'],_), charRef(St1,NxSt,Ch), char_code(Ch,Code), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,integerTok(Hx,Lc)) :- lookingAt(St,St1,['0','x'],_), readHex(St1,NxSt,0,Hx), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :- hedChar(St,Ch), isDigit(Ch,_), readNumber(St,NxSt,Tk).
 nxTok(St,NxSt,idQTok(Id,Lc)) :- nextSt(St,St1,''''), readQuoted(St1,NxSt,Id), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Str) :- nextSt(St,St1,'"'), readString(St1,NxSt,Str).
@@ -121,7 +122,7 @@ nxTok(St,NxSt,term(Lc)) :- nextSt(St,NxSt,'.'), nextSt(NxSt,_,'}'), makeLoc(St,N
 nxTok(St,NxSt,regTok(Rg,Lc)) :- lookingAt(St,St0,['`'],_), readRegexp(St0,NxSt,Rg), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), followGraph(Ch,Id,St1,NxSt), !, makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :-
-  nextSt(St,St1,Ch), 
+  nextSt(St,St1,Ch),
   makeLoc(St,St1,Lc),
   reportError("invalid character: %s",[[Ch]],Lc),
   skipToNx(St1,St2),
@@ -147,6 +148,9 @@ readFraction(St,St,Fr,_,Fr).
 readExponent(St,NxSt,M,FP) :- nextSt(St,St1,'e'), readDecimal(St1,NxSt,E), FP is M*10**E.
 readExponent(St,St,M,M).
 
+readHex(St,NxSt,SF,Hx) :- nextSt(St,St1,D), isHexDigit(D,H), !, NF is SF*16+H, readHex(St1,NxSt,NF,Hx).
+readHex(St,St,SF,SF).
+
 charRef(St,Nxt,Chr) :- nextSt(St,St1,'\\'), nextSt(St1,St2,Ch), backslashRef(St2,Nxt,Ch,Chr).
 charRef(St,Nxt,Chr) :- nextSt(St,Nxt,Chr).
 
@@ -169,7 +173,7 @@ readUntil(St,NxSt,Stop,[Ch|Chrs]) :- charRef(St,St1,Ch), readUntil(St1,NxSt,Stop
 readString(St,NxSt,stringTok(Str,Lc)) :- readMoreString(St,St2,Str), makeLoc(St,St2,Lc), nextSt(St2,NxSt,'"').
 
 readMoreString(St,St,[]) :- hedChar(St,'"').
-readMoreString(St,NxSt,[Seg|Segments]) :- 
+readMoreString(St,NxSt,[Seg|Segments]) :-
       nextSt(St,St1,'\\'),
       hedChar(St1,'('),!,
       interpolation(St1,St2,Seg),
@@ -193,7 +197,7 @@ readStr(St,St1,[]) :- nextSt(St,St1,'\n'), !,
 readStr(St,NxSt,[Ch|Seg]) :- charRef(St,St1,Ch), readStr(St1,NxSt,Seg).
 
 interpolation(St,NxSt,interpolate(Text,Fmt,Lc)) :-
-    bracketCount(St,St1,[],Text), 
+    bracketCount(St,St1,[],Text),
     readFormat(St1,NxSt,FmtChars),
     string_chars(Fmt,FmtChars),
     makeLoc(St,NxSt,Lc).

@@ -158,10 +158,13 @@ lo.comp.encode{
   fmtIns([]) => [].
   fmtIns([I,..L]) => [(I.>>.24).&.255,(I.>>.16).&.255,(I.>>.8).&.255,I.&.255,..fmtIns(L)].
 
+  LOSig:integer.
+  LOSig = 0x01030507.
+
   -- Encode a code segment
   encCodeSeg:(codeSeg,list[integer]) => list[integer].
   encCodeSeg(codeSeg(Nm,Code,Lits),L) =>
-    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(Code),0c',encTerm(mkTpl(Lits),L))])))].
+    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(fmtIns([LOSig,..Code])),0c',encTerm(mkTpl(Lits),L))])))].
 
   encSegs:(list[codeSeg],list[integer]) => list[integer].
   encSegs([],L) => L.

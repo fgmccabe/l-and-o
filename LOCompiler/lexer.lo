@@ -42,7 +42,7 @@ lo.comp.lexer{
 
   private
   makeLocation:((integer,integer,integer,string),(integer,integer,integer,string)) => location.
-  makeLocation((StartLine,StartOff,StartCol,Pth),(_,EndOff,_,_)) => 
+  makeLocation((StartLine,StartOff,StartCol,Pth),(_,EndOff,_,_)) =>
       loc(StartLine,StartOff,StartCol,EndOff-StartOff,Pth).
 
   public
@@ -70,6 +70,7 @@ lo.comp.lexer{
 
   nxtTok:(tok) --> tokenState.
   nxtTok(intTok(Ch)) --> "0c", charRef(Ch).
+  nxtTok(intTok(Hx)) --> "0x", hexInt(0,Hx).
   nxtTok(Num) --> digit(_)+, readNumber(Num).
   nxtTok(lpar) --> [0c(].
   nxtTok(rpar) --> [0c)].
@@ -130,7 +131,7 @@ lo.comp.lexer{
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
   interpolation:(stringSegment) --> tokenState.
-  interpolation(interpolate(Lc,implode(Text),implode(Format))) --> 
+  interpolation(interpolate(Lc,implode(Text),implode(Format))) -->
     @currentLocation(Start),
     countBrackets(Text,[]),
     ([0c:],readFormat(Format) | Format=[]),
@@ -164,7 +165,7 @@ lo.comp.lexer{
   readNatural(SoFar,SoFar) --> \+digit(_).
 
   readMoreNumber:(tok,integer) --> tokenState.
-  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr), 
+  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,0.0,Fr),
       exponent(_int2flt(Decimal)+Fr,Fp).
   readMoreNumber(intTok(Ix),Ix) --> [].
 
@@ -205,6 +206,10 @@ lo.comp.lexer{
   hexChars:(integer,integer)-->tokenState.
   hexChars(SoFar,Ch) --> hexDigit(N), hexChars(SoFar*16+N,Ch).
   hexChars(SoFar,SoFar) --> [0c;].
+
+  hexInt:(integer,integer) --> tokenState.
+  hexInt(SoFar,Ch) --> hexDigit(N), hexInt(SoFar*16+N,Ch).
+  hexInt(SoFar,SoFar) --> \+hexDigit(_).
 
   hexDigit:(integer) --> tokenState.
   hexDigit(D) --> digit(D).
