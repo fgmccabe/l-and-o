@@ -9,7 +9,7 @@ static char codes[];
 static byte decByte(byte ch);
 
 // Decode a stream of characters as base64
-retCode decode64(ioPo src, ioPo dst) {
+retCode decode64(ioPo dst, ioPo src) {
   retCode ret = Ok;
 
   while (ret == Ok) {

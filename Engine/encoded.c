@@ -14,35 +14,19 @@
  */
 
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 #include <base64.h>
 
 #include "lo.h"
-#include "signature.h"
 #include "term.h"
-#include "encoded.h"             /* pick up the term encoding definitions */
+#include "encodedP.h"             /* pick up the term encoding definitions */
 
 /* Decode a term encoded message ... from a file stream */
 
-typedef struct _encoding_support_ {
-  ptrPo lbls;       /* The table of labels */
-  long maxlbl;      /* How big is our table */
-  ptrPo vars;       /* The table of variables */
-  long maxvar;      /* How big is the variable table */
-  string errorMsg;  /* Place to put error messages */
-  long msgSize;     /* How big is that buffer */
-  heapPo R;         /* Where should the roots go? */
-} EncodeSupport, *encodePo;
 
 /*
  * Decode a structure from an input stream
  */
-static retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo strBuffer);
-static retCode decInt(ioPo in, encodePo S, integer *ii);
-static retCode decFlt(ioPo in, encodePo S, double *dx);
-static retCode decodeText(ioPo in, encodePo S, bufferPo buffer);
-static retCode decodeName(ioPo in, encodePo S, bufferPo buffer);
 
 static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm);
 
@@ -108,7 +92,7 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                       res = decode(O_IO(buffer), &support, H, tgt, tmpBuffer);
 
                       closeFile(O_IO(buffer));
-                      closeFile(tmpBuffer);
+                      closeFile(O_IO(tmpBuffer));
 
                       if (support.lbls != NULL)
                         free(support.lbls);
@@ -164,7 +148,6 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
   codePoint ch;
   integer result = 0;
 
-  again:
   switch (inChar(in, &ch)) {
     case Ok:
       if (ch == '-') {
@@ -202,6 +185,17 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
       strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
       return Error;
   }
+}
+
+retCode decFlt(ioPo in, encodePo S, double *dx) {
+  bufferPo tmpBuffer = newStringBuffer();
+  retCode ret = decodeName(in, tmpBuffer);
+
+  if (ret == Ok) {
+    long len;
+    *dx = parseNumber(getTextFromBuffer(&len, tmpBuffer), len);
+  }
+  return ret;
 }
 
 static inline long mx(long a, long b) {
@@ -279,7 +273,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
     case trmSym: {
       clearBuffer(tmpBuffer);
-      if ((res = decodeName(in, S, O_IO(tmpBuffer))) == Ok) {
+      if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
         outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newUniSymbol(getTextFromBuffer(&len, tmpBuffer));
@@ -289,10 +283,10 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
     case trmString: { /* A literal string */
 
-      if ((res = decodeText(in, S, O_IO(tmpBuffer))) == Ok) {
-        uint64 len;
+      if ((res = decodeText(in, tmpBuffer)) == Ok) {
+        long len;
         string buff = getTextFromBuffer(&len, tmpBuffer);
-        *tgt = allocateString(H, buff, (long) len);
+        *tgt = allocateString(H, buff, len);
       }
       return res;
     }
@@ -303,8 +297,8 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
       if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      if ((res = decodeName(in, S, O_IO(tmpBuffer))) == Ok) {
-        uint64 len;
+      if ((res = decodeName(in, tmpBuffer)) == Ok) {
+        long len;
         outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newClassDef(getTextFromBuffer(&len, tmpBuffer), arity);
       }
@@ -317,8 +311,8 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
       if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      if ((res = decodeName(in, S, tmpBuffer)) == Ok) {
-        uint64 len;
+      if ((res = decodeName(in, tmpBuffer)) == Ok) {
+        long len;
         outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), arity);
       }
@@ -372,7 +366,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
   }
 }
 
-static retCode decodeName(ioPo in, encodePo S, bufferPo buffer) {
+retCode decodeName(ioPo in, bufferPo buffer) {
   codePoint delim;
   clearBuffer(buffer);
 
@@ -389,7 +383,7 @@ static retCode decodeName(ioPo in, encodePo S, bufferPo buffer) {
   }
 }
 
-static retCode decodeText(ioPo in, encodePo S, bufferPo buffer) {
+retCode decodeText(ioPo in, bufferPo buffer) {
   codePoint delim;
   clearBuffer(buffer);
 
@@ -399,7 +393,7 @@ static retCode decodeText(ioPo in, encodePo S, bufferPo buffer) {
     return ret;
   else {
     codePoint ch;
-    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
       if (ch == '\\')
         ret = inChar(in, &ch);
       outChar(O_IO(buffer), ch);
@@ -408,177 +402,9 @@ static retCode decodeText(ioPo in, encodePo S, bufferPo buffer) {
   }
 }
 
-
-
-
-/* swap bytes in the little endian game */
-static inline void SwapBytes(unsigned long *x) {
-  *x = ((*x & 0xff) << 8) | ((*x >> 8) & 0xff) | ((*x & 0x00ff0000L) << 8)
-       | ((*x & 0xff000000L) >> 8);
-}
-
-static inline void SwapWords(unsigned long *x) {
-  *x = (*x & 0x0000ffffL) << 16 | (*x & 0xffff0000L) >> 16;
-}
-
-// Decode a code segment.
-// Each segment consists of
-// a. The program structure object being defined
-// b. A string containing the code as a base64 encoded string.
-// c. A tuple of literals associated with the code segment
-// All wrapped up as a #code structure.
-
-retCode decodeCodeSegment(ioPo in,encodePo S,heapPo H,ptrPo tgt) {
-codePoint ch;
-
-  retCode ret = inChar(in,&ch);
-
-  if(ch==trmCns){
-    ptrI prg;
-    rootPo root = gcAddRoot(S->R, &prg);
-    bufferPo tmp = newStringBuffer();
-
-    ret = decode(in,S,H,&prg,tmp);
-
-
-
-
-  } else
-    return Error;
-
-
-
-
-  bufferPo in = fixedStringBuffer(buffer, buffLeng);
-  retCode ret = decode64(in, tmp);
-  rewindBuffer(tmp);
-
-  integer codeCount = (bufferSize(tmp) / SIZEOF_INT) - 1;
-  int32 signature = (inB(O_IO(tmp)) & 0xff) << 24 | (inB(O_IO(tmp)) & 0xff) << 16 | (inB(O_IO(tmp)) & 0xff) << 8 |
-              (inB(O_IO(tmp)) & 0xff); // verify correct code signature
-
-  heapPo H = &globalHeap;
-  ptrI pc = *tgt = permCode(codeCount, litCount);
-
-  long i;
-  insPo cd = FirstInstruction(pc);
-  ptrI el = kvoid;
-  rootPo root = gcAddRoot(S->R, &pc); /* in case of GC ... */
-
-  gcAddRoot(S->R, &el); /* we need a temporary pointer */
-
-  /* get the instructions */
-  for (i = 0; i < codeCount; i++)
-    cd[i] = (inB(O_IO(tmp))&0xff) << 24 | (inB(O_IO(tmp))&0xff) << 16
-            |(inB(O_IO(tmp))&0xff) << 8 | (inB(O_IO(tmp))&0xff);
-
-  /* Now convert the main code to handle little endians etc */
-  if (signature == SIGNATURE) {
-  } /* endian load same as endian save */
-  else if (signature == SIGNBSWAP) { /* swap bytes keep words */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = codeCount;
-    for (; cnt--; xx++)
-      SwapBytes(xx);
-  } else if (signature == SIGNWSWAP) { /* swap words keep bytes */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = codeCount;
-    for (; cnt--; xx++)
-      SwapWords(xx);
-  } else if (signature == SIGNBWSWP) { /* swap words and bytes */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = codeCount;
-    for (; cnt--; xx++) {
-      SwapWords(xx);
-      SwapBytes(xx);
-    }
-  }
-
-  codeV(pc)->arity = (unsigned short)arity; /* set the arity of the program */
-
-  // Pick up the literal table
-  for (i = 0; i < litCount; i++) {
-    res = decode(in, S, H, &el);
-    updateCodeLit(codeV(pc), i, el);
-  }
-
-  gcRemoveRoot(S->R, root); /* we're all done!! */
-  if (res == Ok && enableVerify) /* Except we have to verify ... */
-    res = verifyCode(pc);
-  return res;
-
-}
-
-static retCode decodeCode(ioPo in, encodePo S, unsigned long signature,
-                          ptrPo tgt) {
-  integer size;
-  retCode res;
-  integer arity;
-  heapPo H = &globalHeap;
-  integer litCount;
-
-  if ((res = decInt(in, S, &size, inB(in))) != Ok)
-    return res;
-
-  if ((res = decInt(in, S, &arity, inB(in))) != Ok)
-    return res;
-
-  if ((res = decInt(in, S, &litCount, inB(in))) != Ok)
-    return res;
-
-  ptrI pc = *tgt = permCode(size, litCount);
-  long i;
-  insPo cd = FirstInstruction(pc);
-  ptrI el = kvoid;
-  rootPo root = gcAddRoot(S->R, &pc); /* in case of GC ... */
-
-  gcAddRoot(S->R, &el); /* we need a temporary pointer */
-
-  /* get the instructions */
-  for (i = 0; i < size; i++)
-    cd[i] = (inB(in) & 0xff) << 24 | (inB(in) & 0xff) << 16
-            | (inB(in) & 0xff) << 8 | (inB(in) & 0xff);
-
-  /* Now convert the main code to handle little endians etc */
-  if (signature == SIGNATURE) {
-  } /* endian load same as endian save */
-  else if (signature == SIGNBSWAP) { /* swap bytes keep words */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = size;
-    for (; cnt--; xx++)
-      SwapBytes(xx);
-  } else if (signature == SIGNWSWAP) { /* swap words keep bytes */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = size;
-    for (; cnt--; xx++)
-      SwapWords(xx);
-  } else if (signature == SIGNBWSWP) { /* swap words and bytes */
-    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
-    long cnt = size;
-    for (; cnt--; xx++) {
-      SwapWords(xx);
-      SwapBytes(xx);
-    }
-  }
-
-  codeV(pc)->arity = arity; /* set the arity of the program */
-
-  // Pick up the literal table
-  for (i = 0; i < litCount; i++) {
-    res = decode(in, S, H, &el);
-    updateCodeLit(codeV(pc), i, el);
-  }
-
-  gcRemoveRoot(S->R, root); /* we're all done!! */
-  if (res == Ok && enableVerify) /* Except we have to verify ... */
-    res = verifyCode(pc);
-  return res;
-}
-
 /*
  Estimate amount of heap space needed
  */
-static retCode estimateCode(ioPo in, encodePo S, integer *amnt, integer *perm);
 static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm);
 
 static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
@@ -690,6 +516,7 @@ static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
       }
 
       (*amnt) += arity + 1;
+      gcRemoveRoot(S->R, root);
       return res;
     }
 
@@ -728,7 +555,7 @@ static retCode estimateText(ioPo in, long *length) {
     return ret;
   else {
     codePoint ch;
-    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
       len += codePointSize(ch);
       if (ch == '\\')
         ret = inChar(in, &ch);
@@ -864,6 +691,8 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
         if (res == Ok)
           res = outStr(out, ")");
       }
+
+      gcRemoveRoot(S->R, root);
       return res;
     }
 
@@ -912,7 +741,7 @@ static retCode displayText(ioPo in, ioPo out) {
   }
 }
 
-static retCode skipName(ioPo in, encodePo S) {
+static retCode skipName(ioPo in) {
   codePoint delim;
 
   retCode ret = inChar(in, &delim);
@@ -926,7 +755,7 @@ static retCode skipName(ioPo in, encodePo S) {
   }
 }
 
-static retCode skipText(ioPo in, encodePo S) {
+static retCode skipText(ioPo in) {
   codePoint delim;
 
   retCode ret = inChar(in, &delim);
@@ -943,7 +772,7 @@ static retCode skipText(ioPo in, encodePo S) {
   }
 }
 
-static retCode skipTrm(ioPo in, encodePo S) {
+retCode skipTrm(ioPo in, encodePo S) {
   codePoint ch;
   retCode res = inChar(in, &ch);
 
@@ -967,11 +796,11 @@ static retCode skipTrm(ioPo in, encodePo S) {
     }
 
     case trmSym: {
-      return skipName(in, S);
+      return skipName(in);
     }
 
     case trmString:
-      return skipText(in, S);
+      return skipText(in);
 
     case trmStrct: { /* We have a class definition structure */
       integer arity;
@@ -979,7 +808,7 @@ static retCode skipTrm(ioPo in, encodePo S) {
       if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      return skipName(in, S);
+      return skipName(in);
     }
 
     case trmPrg: { /* We have a program label */
@@ -988,7 +817,7 @@ static retCode skipTrm(ioPo in, encodePo S) {
       if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      return skipName(in, S);
+      return skipName(in);
     }
 
     case trmCns: {
@@ -1003,7 +832,7 @@ static retCode skipTrm(ioPo in, encodePo S) {
         integer i;
 
         for (i = 0; res == Ok && i < arity; i++)
-          res = skipText(in, S); /* skip each constructor element */
+          res = skipText(in); /* skip each constructor element */
       }
 
       return res;

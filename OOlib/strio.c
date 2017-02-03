@@ -92,7 +92,7 @@ static void StringInit(objectPo o, va_list *args) {
   setEncoding(O_IO(f), va_arg(*args, ioEncoding)); /* set up the encoding */
   f->string.buffer = va_arg(*args, string);
   f->string.len = va_arg(*args, long);   /* set up the buffer */
-  f->io.mode = va_arg(*args, ioState);   /* set up the access mode */
+  f->io.mode = va_arg(*args, ioDirection);   /* set up the access mode */
   f->string.resizeable = va_arg(*args, logical); /* is this string resizeable? */
 }
 

@@ -228,7 +228,7 @@ extern ptrI programOfClass(objPo o);
 extern ptrI programOfTerm(ptrI x);
 extern ptrI programByName(string name);
 extern void defineProg(ptrI sym, ptrI code);
-extern ptrI permCode(long size, long litCnt);
+extern ptrI permCode(unsigned long size, unsigned long litCnt);
 extern retCode verifyCode(ptrI prog);
 
 extern retCode classLoader(heapPo H, string path, ptrI request, ptrI version,

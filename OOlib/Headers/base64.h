@@ -9,7 +9,7 @@
 #include "formio.h"
 
 // Decode a stream of characters as base64
-retCode decode64(ioPo src,ioPo dst);
+retCode decode64(ioPo dst, ioPo src);
 
 // Encode a stream of bytes into base64 characters
 retCode encode64(ioPo src,ioPo dst);

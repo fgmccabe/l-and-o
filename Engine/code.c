@@ -85,7 +85,7 @@ static uinteger cdeHashFun(specialClassPo class, objPo o) {
   return hash;
 }
 
-ptrI permCode(long size, long litCnt) {
+ptrI permCode(unsigned long size, unsigned long litCnt) {
   codePo block = (codePo) permAllocate(CodeCellCount(size, litCnt));
 
   block->class = codeClass;

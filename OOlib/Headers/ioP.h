@@ -56,7 +56,7 @@ extern IoClassRec IoClass;              /* the standard pointer to an IO class r
 typedef struct _io_part_{
   byte filename[MAXFILELEN];            /* File name */
   retCode status;                       /* current status of the io object */
-  ioState mode;                         /* Mode that file is opened for */
+  ioDirection mode;                         /* Mode that file is opened for */
   ioEncoding encoding;			            /* What is the mode for string encoding */
   long inBpos;                          /* Byte in counter */
   long inCpos;                          /* Character in counter */

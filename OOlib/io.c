@@ -435,7 +435,7 @@ retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
 
 // Push a string back into the input channel.
 // String is assumed to be allocated in order of arrival, so its pushed back in reverse order
-retCode pushBack(ioPo f,  string str, integer from, integer len) {
+retCode pushBack(ioPo f,  string str, long from, long len) {
   if (f != NULL) {
     if(from<len){
       codePoint ch;

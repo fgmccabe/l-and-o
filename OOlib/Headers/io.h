@@ -59,7 +59,7 @@ retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term);
 retCode inBlock(ioPo f, byte *buffer, long len);
 retCode inBytes(ioPo f, byte *buffer, long len, long *act);
 
-retCode pushBack(ioPo f, string str, integer from, integer len);
+retCode pushBack(ioPo f, string str, long from, long len);
 retCode skipBlanks(ioPo f);
 
 retCode outByte(ioPo f, byte c);

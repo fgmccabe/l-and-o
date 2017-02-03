@@ -10,17 +10,16 @@
 %x string
 %x quoted
 
-%option header-file="catgrammar.h"
+%option header-file="mangrammar.h"
 
-                    %{
+%{
 
 #include "config.h"
 #include "unicode.h"
 #include "io.h"
 #include "formio.h"
 #include "file.h"
-#include "catalogP.h"
-#include "catgrammar.h"
+#include "mangrammar.h"
 
 #define MAX_STR_CONST 1024
 
@@ -93,19 +92,15 @@ ID ([a-zA-Z_.$@#][a-zA-Z_.$@0-9#]*)|"'"[^']*"'"
 <comment>"*"+[^*/\n]*
 <comment>"*"+"/"                BEGIN(INITIAL);
 
-"catalog"     RTN(CATALOG);
-"content"     RTN(CONTENT);
-"base"        RTN(BASE);
-"is"          RTN(IS);
-"hash"        RTN(HASH);
-"version"     RTN(VRSION);
+"manifest"    RTN(MANIFEST);
 
 "{"           RTN(LBRCE)
 "}"           RTN(RBRCE)
+"["           RTN(LBRA)
+"]"           RTN(RBRA)
 "="           RTN(EQUAL)
 ":"           RTN(COLON)
-";"           RTN(SEMI)
-"->"          RTN(THIN_ARROW)
+"*"           RTN(STAR)
 
 {ID}          { yylval->str = newStr(yytext); RTN(ID); }
 

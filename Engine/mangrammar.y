@@ -31,7 +31,7 @@
  }
 
 // Symbolic tokens
-%token LBRCE RBRCE STAR COLON EQUAL PERIOD
+%token LBRCE RBRCE LBRA RBRA STAR COLON EQUAL
 
  // Keywords
 %token MANIFEST
@@ -52,18 +52,16 @@
 
 topLevel: manifest { *result = $1; }
 
-manifest: MANIFEST { $<a>$ = newManifest(); } LBRCE catalogStmts RBRCE { $<a>$ = $<a>2; }
+manifest: MANIFEST { $<a>$ = newManifest(); } LBRCE manifestContents RBRCE { $<a>$ = $<a>2; }
 
-catalogStmts: CONTENT IS LBRCE catalogContents RBRCE { };
- | BASE IS STRING { setCatalogBase($<a>$,$3); }
- | VRSION IS STRING { setCatalogVersion($<a>$,$3); }
- ;
+manifestContents:
+| packageEntry
+| packageEntry SEMI manifestContents
+;
 
-catalogContents:
-| catEntry
-| catEntry SEMI catalogContents
+packageEntry: package COLON LBRCE { addCatalogEntry($<a>$,$1,$3); } versions RBRCE;
 
-catEntry: STRING THIN_ARROW STRING { addCatalogEntry($<a>$,$1,$3); }
+package: PKGNAME
 
 %%
 

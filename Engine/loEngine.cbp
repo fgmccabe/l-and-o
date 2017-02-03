@@ -89,6 +89,9 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/debug.h">
 			<Option target="lo"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/dict.h">
+			<Option target="lo"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/disass.h">
 			<Option target="lo"/>
 		</Unit>
@@ -126,6 +129,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/local.h">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/lock.h">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/manifest.h">
@@ -255,6 +261,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/lists.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/load.c">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/lockvar.c">

@@ -87,7 +87,7 @@ static void BufferInit(objectPo o, va_list *args) {
   f->buffer.bufferSize = va_arg(*args, long); /* set up the buffer */
   f->io.mode = va_arg(*args, ioDirection); /* set up the access mode */
   f->buffer.resizeable = va_arg(*args, logical); /* is this buffer resizeable? */
-  if(isReadingFile(f))
+  if(isReadingFile(O_IO(f)))
     f->buffer.size = f->buffer.bufferSize;
   else
     f->buffer.size = 0;
@@ -245,4 +245,5 @@ long bufferSize(bufferPo s) {
 retCode rewindBuffer(bufferPo in) {
   in->buffer.pos = 0;
   in->io.inBpos = in->io.inCpos = 0;
+  return Ok;
 }

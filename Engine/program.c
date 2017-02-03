@@ -57,7 +57,7 @@ static retCode pOutFun(specialClassPo class,ioPo out,objPo o)
 {
   programPo cl = (programPo)o;
 
-  return outMsg(out,"%U%%%d",cl->name,cl->arity);
+  return outMsg(out,"%U/%d",cl->name,cl->arity);
 }
 
 static retCode pScanFun(specialClassPo class,specialHelperFun helper,void *c,objPo o)
