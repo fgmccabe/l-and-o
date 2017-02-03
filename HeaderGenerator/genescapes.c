@@ -145,7 +145,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     }
 
-    case poly_sig:
+    case typeexp_sig:
       outStr(O_IO(out), "typeExp(");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), ",");
@@ -158,7 +158,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       sig = dSequence(sig, out);
       outStr(O_IO(out), ")");
       break;
-    case funct_sig:
+    case func_sig:
       switch (genMode) {
         case genProlog:
           outStr(O_IO(out), "funType(");
@@ -235,7 +235,7 @@ static char *dumpSig(char *sig, bufferPo out) {
       sig = dumpSig(sig, out);
       outStr(O_IO(out), "])");
       break;
-    case forall_sig:
+    case univ_sig:
       outStr(O_IO(out), "univType(");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), ",");

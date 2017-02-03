@@ -433,25 +433,28 @@ retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
     return Eof;
 }
 
-// Push a string back into the input channel
-retCode pushBack(ioPo f, string str, unsigned long len) {
+// Push a string back into the input channel.
+// String is assumed to be allocated in order of arrival, so its pushed back in reverse order
+retCode pushBack(ioPo f,  string str, integer from, integer len) {
   if (f != NULL) {
-    int i;
-    retCode ret = Ok;
-    long pos = 0;
-
-    while (pos < len && ret == Ok) {
+    if(from<len){
       codePoint ch;
-      ret = nxtPoint(str, &pos, len, &ch);
-      if (ret == Ok)
-        ret = unGetChar(f, ch);
+      retCode ret = nxtPoint(str,&from,len,&ch);
+      if(ret==Ok){
+        ret = pushBack(f,str,from,len);
+        if(ret==Ok)
+          ret = unGetChar(f,ch);
+      }
+      return ret;
     }
-
-    return ret;
+    else
+      return Ok;
   }
   else
     return Error;
 }
+
+
 
 /*
  * read a line ... up to a terminating character 

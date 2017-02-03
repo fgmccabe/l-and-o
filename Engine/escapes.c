@@ -105,7 +105,7 @@ static char *skipSig(char *tp) {
       return skipName(tp);
     case type_sig:
       return skipName(tp);
-    case poly_sig: {
+    case typeexp_sig: {
       tp = skipSig(tp);
       integer ar = scanInt(&tp);
       while (ar-- > 0)
@@ -114,7 +114,7 @@ static char *skipSig(char *tp) {
     }
     case list_sig:
       return skipSig(tp);
-    case funct_sig: {
+    case func_sig: {
       integer ar = scanInt(&tp);
 
       while (ar-- > 0)
@@ -142,7 +142,7 @@ static char *skipSig(char *tp) {
         tp = skipSig(tp);
       return tp;
     }
-    case forall_sig:
+    case univ_sig:
       return skipSig(skipSig(tp + 1));
 
     case face_sig: {
@@ -162,7 +162,7 @@ static char *skipSig(char *tp) {
 static int sigArity(char *spec) {
   integer ar;
   switch (*spec) {
-    case funct_sig:
+    case func_sig:
       ar = scanInt(&spec);
       return ar + 1;
     case pred_sig:
@@ -171,7 +171,7 @@ static int sigArity(char *spec) {
     case grammar_sig:
       ar = scanInt(&spec);
       return ar + 2;
-    case forall_sig:
+    case univ_sig:
       return sigArity(skipSig(spec + 2));
     default:
       assert(False);

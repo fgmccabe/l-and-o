@@ -4,6 +4,7 @@
 /* Type signatures for Logic and Objects types */
 typedef enum {
   anon_sig = '_', // Anonymous type
+  this_sig = 'h', // this type is a special type
   integer_sig = 'i', /* An integer */
   float_sig = 'f', /* A float */
   string_sig = 'S', /* String */
@@ -13,22 +14,17 @@ typedef enum {
   void_sig = 'v', /* Bottom type - no value has this type */
   type_sig = 't',                         /* A named type */
   tpfun_sig = 'z', /* A type function */
-  this_sig = 'h', // this type is a special type
 
-  /* Compound type signatures */
-    list_sig = 'L', /* List pair -- NULL = nil */
+  list_sig = 'L', /* List pair -- NULL = nil */
   tuple_sig = 'T', /* Tuple - followed by length byte */
-  forall_sig = ':', /* universally quantified formula */
+  univ_sig = ':', /* universally quantified formula */
   constrained_sig = '|',                /* A constrained type variable */
 
   /* Contract signatures */
-    implements_sig = 'a',
 
-/* signatures for user-defined types */
-    poly_sig = 'U',                       /* polymorphic user type */
+  typeexp_sig = 'U',                       /* polymorphic user type */
 
-/* Code signatures */
-    funct_sig = 'F', /* Function object signature */
+  func_sig = 'F', /* Function object signature */
   pred_sig = 'P', /* Predicate signature */
   grammar_sig = 'G', /* Grammar rule signature */
 
@@ -37,7 +33,15 @@ typedef enum {
   class_sig = 'C', /* class type constructor */
 } loTypeSig;
 
+typedef enum{
+  univ_con = ':',
+  contract_sig = 'c',
+  implements_sig = 'a',
+  constrained_constraint = '|'
+} constraintSig;
+
 /* First L&O version */
+// First four bytes of any code sequence must be this magic number
 #define SIGNATURE 0x01030507L  /* code signature */
 #define SIGNBSWAP 0x03010705L  /* signature when we must swap bytes not words */
 #define SIGNWSWAP 0x05070103L  /* signature to sap words only */
