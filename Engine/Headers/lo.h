@@ -24,6 +24,7 @@
 #include "iostr.h"
 #include "file.h"
 #include "formio.h"
+#include "stringBuffer.h"
 
 typedef struct _process_ *processPo;
 

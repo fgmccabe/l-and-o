@@ -770,9 +770,9 @@ retCode setBufferStatus(ioPo f, retCode status) {
   return status;
 }
 
-ioState fileMode(ioPo f) {
+ioDirection fileMode(ioPo f) {
   objectPo o = O_OBJECT(f);
-  ioState mode;
+  ioDirection mode;
 
   lock(O_LOCKED(o));
   mode = f->io.mode;
@@ -835,7 +835,7 @@ long outColumn(ioPo f) {
 }
 
 retCode isFileOpen(ioPo f) {
-  ioState mode = fileMode(f);
+  ioDirection mode = fileMode(f);
 
   if (mode != ioNULL)
     return Ok;

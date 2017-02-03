@@ -122,7 +122,7 @@ void FileInit(objectPo o, va_list *args) {
   f->file.in_len = 0;
   f->file.fno = va_arg(*args, int);             // set up the file number
   setEncoding(O_IO(f), va_arg(*args, ioEncoding));     // set up the encoding
-  f->io.mode = va_arg(*args, ioState);
+  f->io.mode = va_arg(*args, ioDirection);
 }
 
 // Implement class file functions
@@ -484,6 +484,20 @@ retCode fileFlush(filePo f, int count) {
 
 ioEncoding fileEncoding(filePo f) {
   return f->io.encoding;
+}
+
+logical isFileBlocking(filePo f){
+  int fno = f->file.fno;
+  long flag = fcntl(fno, F_GETFL);
+
+  return flag&O_NONBLOCK ? False : True;
+}
+
+logical isFileAsynch(filePo f){
+  int fno = f->file.fno;
+  long flag = fcntl(fno, F_GETFL);
+
+  return flag&O_ASYNC ? True : False;
 }
 
 retCode configureIo(filePo f, ioConfigOpt mode) {

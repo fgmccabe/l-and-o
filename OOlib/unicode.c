@@ -128,6 +128,17 @@ long countCodePoints(string src, long start, long end) {
   return count;
 }
 
+int codePointSize(codePoint ch) {
+  if (ch > 0 && ch <= 0x7f)
+    return 1;
+  else if (ch <= 0x7ff)
+    return 2;
+  else if (ch >= 0x800 && ch <= 0xffff)
+    return 3;
+  else
+    return 4;
+}
+
 long uniCodeCount(string src) {
   long end = uniByteLen(src);
 
@@ -436,8 +447,8 @@ long uniSearch(string src, long len, long start, string tgt) {
   long pos = start;
   long tgtLen = uniStrLen(tgt);
 
-  while(pos<len-tgtLen){
-    if(uniNCmp(&src[pos],tgt,tgtLen)==same)
+  while (pos < len - tgtLen) {
+    if (uniNCmp(&src[pos], tgt, tgtLen) == same)
       return pos;
     else
       pos++;

@@ -31,13 +31,11 @@ decodeTerm(enum(Nm)) --> ['e'], decodeText(Nm).
 decodeTerm(strg(Txt)) --> ['s'], decodeText(Txt).
 decodeTerm(strct(Nm,Ar)) --> ['o'], decInt(Ar), decodeText(Nm).
 decodeTerm(prg(Nm,Ar)) --> ['p'], decInt(Ar), decodeText(Nm).
-decodeTerm(tpl(Els)) --> ['u'], decInt(Len), decTerms(Len,Els).
-decodeTerm(cons(Con,Els)) --> ['n'], decInt(Len), decodeTerm(Con), decTerms(Len,Els).
-decodeTerm(code(Tp,Bytes,Lits)) --> ['#'],
-    decodeType(Tp), 
-    decodeTerm(Lits),
-    decodeText(B64),
-    { decode64(B64,Bytes,[])}.
+decodeTerm(Term) --> ['n'], decInt(Len), decodeTerm(Con), decTerms(Len,Els),
+   { isTupleSig(Con) -> Term = tpl(Els) | Term = cons(Con,Els)}.
+
+
+isTupleSig(strct(Nm,Ar)) :- string_concat("()",A,Nm),number_string(Ar,A).
 
 decTerms(0,[]) --> [].
 decTerms(Count,[D|M]) --> { Count>0}, decodeTerm(D), { C is Count-1}, decTerms(C,M).
@@ -113,4 +111,3 @@ digit(6) --> ['6'].
 digit(7) --> ['7'].
 digit(8) --> ['8'].
 digit(9) --> ['9'].
-

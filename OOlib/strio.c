@@ -110,8 +110,7 @@ static retCode stringSeek(ioPo io, long count) {
   if (count >= 0 && count < f->string.pos) {
     f->string.pos = count;
     return Ok;
-  }
-  else
+  } else
     return Fail;
 }
 
@@ -125,8 +124,7 @@ static retCode stringInBytes(ioPo io, byte *ch, long count, long *actual) {
       if (remaining == count)
         ret = Eof;
       break;
-    }
-    else {
+    } else {
       *ch++ = f->string.buffer[f->string.pos++];
       remaining--;
     }
@@ -146,11 +144,9 @@ static retCode stringOutBytes(ioPo io, byte *b, long count, long *actual) {
       if (nbuff != NULL) {
         f->string.buffer = nbuff;
         f->string.len = nlen;
-      }
-      else
+      } else
         syserr("could not allocate more space for string");
-    }
-    else {
+    } else {
       return Ok;      /* Silently drop actual output */
     }
   }
@@ -166,8 +162,7 @@ static retCode stringBackByte(ioPo io, byte b) {
   if (f->string.pos > 0) {
     f->string.buffer[--f->string.pos] = b;
     return Ok;
-  }
-  else
+  } else
     return Error;
 }
 
@@ -243,13 +238,19 @@ strBufPo openStrOutput(string name, ioEncoding encoding) {
   return O_STRING(newObject(strBufferClass, name, encoding, buffer, len, ioWRITE, True));
 }
 
+strBufPo openStrBuffer(string name, ioEncoding encoding) {
+  int len = 128;      /* initial length of buffer */
+  string buffer = (string) malloc(sizeof(byte) * len);
+  return O_STRING(newObject(strBufferClass, name, encoding, buffer, len, ioWRITE | ioREAD, True));
+}
+
 strBufPo openBufferStr(string buffer, long len) {
   byte strName[] = {'<', 's', 't', 'r', '>', 0};
 
   return O_STRING(newObject(strBufferClass, strName, utf8Encoding, buffer, len, ioWRITE, False));
 }
 
-strBufPo openByteBuffer(string buffer,long len){
+strBufPo openByteBuffer(string buffer, long len) {
   byte strName[] = {'<', 's', 't', 'r', '>', 0};
 
   return O_STRING(newObject(strBufferClass, strName, rawEncoding, buffer, len, ioWRITE, False));

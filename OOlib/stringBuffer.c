@@ -84,9 +84,13 @@ static void BufferInit(objectPo o, va_list *args) {
   f->buffer.pos = 0;
   setEncoding(O_IO(f), va_arg(*args, ioEncoding)); /* set up the encoding */
   f->buffer.buffer = va_arg(*args, string);
-  f->buffer.len = va_arg(*args, long); /* set up the buffer */
-  f->io.mode = va_arg(*args, ioState); /* set up the access mode */
+  f->buffer.bufferSize = va_arg(*args, long); /* set up the buffer */
+  f->io.mode = va_arg(*args, ioDirection); /* set up the access mode */
   f->buffer.resizeable = va_arg(*args, logical); /* is this buffer resizeable? */
+  if(isReadingFile(f))
+    f->buffer.size = f->buffer.bufferSize;
+  else
+    f->buffer.size = 0;
 }
 
 static void BufferDestroy(objectPo o) {
@@ -113,7 +117,7 @@ static retCode bufferInBytes(ioPo io, byte *ch, long count, long *actual) {
   bufferPo f = O_BUFFER(io);
 
   while (remaining > 0) {
-    if (f->buffer.pos >= f->buffer.len) {
+    if (f->buffer.pos >= f->buffer.size) {
       if (remaining == count)
         ret = Eof;
       break;
@@ -127,14 +131,14 @@ static retCode bufferInBytes(ioPo io, byte *ch, long count, long *actual) {
   return ret;
 }
 
-static retCode ensureSpace(bufferPo f,long count){
-  if (f->buffer.pos + count >= f->buffer.len) {
+static retCode ensureSpace(bufferPo f, long count) {
+  if (f->buffer.pos + count >= f->buffer.bufferSize) {
     if (f->buffer.resizeable) {
-      long nlen = f->buffer.len + (f->buffer.len >> 1) + count; /* allow for some growth */
+      long nlen = f->buffer.bufferSize + (f->buffer.bufferSize >> 1) + count; /* allow for some growth */
       byte *nbuff = realloc(f->buffer.buffer, sizeof(byte) * nlen);
       if (nbuff != NULL) {
         f->buffer.buffer = nbuff;
-        f->buffer.len = nlen;
+        f->buffer.bufferSize = nlen;
       } else
         syserr("could not allocate more space for buffer");
     } else {
@@ -147,10 +151,11 @@ static retCode ensureSpace(bufferPo f,long count){
 static retCode bufferOutBytes(ioPo io, byte *b, long count, long *actual) {
   bufferPo f = O_BUFFER(io);
 
-  retCode ret = ensureSpace(f,count);
+  retCode ret = ensureSpace(f, count);
 
   for (int ix = 0; ret == Ok && ix < count; ix++)
     f->buffer.buffer[f->buffer.pos++] = b[ix];
+  f->buffer.size = f->buffer.pos;
   *actual = count;
   return ret;
 }
@@ -168,7 +173,7 @@ static retCode bufferBackByte(ioPo io, byte b) {
 static retCode bufferAtEof(ioPo io) {
   bufferPo f = O_BUFFER(io);
 
-  if (f->buffer.pos < f->buffer.len)
+  if (f->buffer.pos < f->buffer.size)
     return Ok;
   else
     return Eof;
@@ -177,7 +182,7 @@ static retCode bufferAtEof(ioPo io) {
 static retCode bufferInReady(ioPo io) {
   bufferPo f = O_BUFFER(io);
 
-  if (f->buffer.pos < f->buffer.len)
+  if (f->buffer.pos < f->buffer.size)
     return Ok;
   else
     return Eof;
@@ -186,7 +191,7 @@ static retCode bufferInReady(ioPo io) {
 static retCode bufferOutReady(ioPo io) {
   bufferPo f = O_BUFFER(io);
 
-  if (f->buffer.pos < f->buffer.len)
+  if (f->buffer.pos < f->buffer.bufferSize)
     return Ok;
   else {
     if (f->buffer.resizeable)
@@ -208,6 +213,7 @@ static retCode bufferClose(ioPo io) {
 retCode clearBuffer(bufferPo in) {
   in->buffer.pos = 0;
   in->io.inBpos = in->io.inCpos = 0;
+  in->buffer.size = 0;
   return Ok;
 }
 
@@ -226,12 +232,17 @@ bufferPo fixedStringBuffer(string buffer, long len) {
 string getTextFromBuffer(long *actual, bufferPo s) {
   *actual = s->buffer.pos;
 
-  ensureSpace(s,1);
+  ensureSpace(s, 1);
   s->buffer.buffer[s->buffer.pos] = '\0';
 
   return s->buffer.buffer;
 }
 
 long bufferSize(bufferPo s) {
-  return s->buffer.pos;
+  return s->buffer.size;
+}
+
+retCode rewindBuffer(bufferPo in) {
+  in->buffer.pos = 0;
+  in->io.inBpos = in->io.inCpos = 0;
 }

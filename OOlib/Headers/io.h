@@ -29,7 +29,7 @@ typedef enum {
 } ioType;
 typedef enum {
   ioNULL = 000, ioREAD = 001, ioWRITE = 002
-} ioState;
+} ioDirection;
 
 typedef struct _io_object_ *ioPo;
 extern classPo ioClass;
@@ -86,7 +86,7 @@ retCode isFileAtEof(ioPo f);
 retCode fileStatus(ioPo f);
 
 string fileName(ioPo f);
-ioState fileMode(ioPo f);
+ioDirection fileMode(ioPo f);
 long inBPos(ioPo f);
 long inCPos(ioPo f);
 long outBPos(ioPo f);

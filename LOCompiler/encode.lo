@@ -18,7 +18,6 @@ lo.comp.encode{
   encTerm(strng(Sx),L) => [0cs,..encodeText(Sx,L)].
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
-  encTerm(cons(Op,Els),L) => [0cu,..encInt(length(Els),encEls(Els,L))] :- isTupleSig(Op,size(Els)).
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
   -- encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(mkTpl(Lits),encodeChars(encode64(Code),0c',L)))].
 

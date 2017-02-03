@@ -75,6 +75,8 @@ long advanceCodePoint(string src,long start,long end,long count);
 retCode nxtPoint(string src,long *start,long end,codePoint *code);
 retCode prevPoint(string src, long *pos, codePoint *code);
 
+int codePointSize(codePoint pt);
+
 logical isUniIdentifier(string id);
 
 unsigned long uniStrLen(const string s);

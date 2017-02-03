@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <base64.h>
 
 #include "lo.h"
 #include "signature.h"
@@ -37,17 +38,30 @@ typedef struct _encoding_support_ {
 /*
  * Decode a structure from an input stream
  */
-static retCode decode(ioPo in, encodePo S, heapPo H, integer lbl, ptrPo tgt);
+static retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo strBuffer);
 static retCode decInt(ioPo in, encodePo S, integer *ii);
+static retCode decFlt(ioPo in, encodePo S, double *dx);
+static retCode decodeText(ioPo in, encodePo S, bufferPo buffer);
+static retCode decodeName(ioPo in, encodePo S, bufferPo buffer);
+
 static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm);
 
 retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                    long msgSize) {
   EncodeSupport support = {NULL, 0, NULL, 0, errorMsg, msgSize, R};
-  byte ch;
+
+  logical isBlocking = (objectHasClass(O_OBJECT(in), fileClass) ? isFileBlocking(O_FILE(in)) : False);
+  logical isAsynch = (objectHasClass(O_OBJECT(in), fileClass) ? isFileAsynch(O_FILE(in)) : False);
+
+  if (!isBlocking)
+    configureIo(O_FILE(in), turnOnBlocking);
+  if (isAsynch)
+    configureIo(O_FILE(in), disableAsynch);
+
+  codePoint ch;
 
   again:
-  switch (inByte(in, &ch)) {
+  switch (inChar(in, &ch)) {
     case Eof:
       return Eof;
     default:
@@ -58,74 +72,84 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
     case Ok: {
       if (ch != trmString) {
         strMsg(errorMsg, msgSize, "invalid lead-in in code sequence");
-        return Error;
+        goto error_exit;
       } else {
-        integer len;
-        retCode res = decInt(in, &support, &len);
+        codePoint delim;
 
-        switch (res) {
-          case Eof:
-            strMsg(errorMsg, msgSize, "stream prematurely ended: %U", errorMsg);
-            return Error;
-          default:
-            strMsg(errorMsg, msgSize, "io error in decoding");
-            return Error;
+        switch (inChar(in, &delim)) {
           case Ok: {
-            byte buff[MAX_MSG_LEN * 10];
-            byte *buffer = buff;
-            long blen;
+            strBufPo buffer = openStrOutput((string) "", utf8Encoding);
+            while (True) {
+              switch (inChar(in, &ch)) {
+                case Ok:
+                  if (ch == delim) {
+                    rewindStr(buffer);
 
-            if (len > NumberOf(buff))
-              buffer = malloc(sizeof(byte) * len);
+                    integer amnt, perm = 0;
 
-            res = inBytes(in, buffer, len, &blen); /* read in a block of bytes */
+                    retCode res = codedEstimate(O_IO(buffer), &support, &amnt, &perm);
 
-            switch (res) {
-              case Ok: {
-                ioPo str = O_IO(openByteInput(buffer, len));
-                integer amnt, perm = 0;
+                    //logMsg(logFile,"Estimate of space requirements: %d heap, %d permanent",perm);
 
-                res = codedEstimate(str, &support, &amnt, &perm);
+                    if (perm > 0 || H == &globalHeap)
+                      lockGlobal(); /* lock access to the global heap */
+                    if (res == Ok) {
+                      if (H != &globalHeap) {
+                        res = reserveSpace(&globalHeap, (size_t) perm);
+                        if (res == Ok)
+                          res = reserveSpace(H, (size_t) amnt);
+                      } else
+                        res = reserveSpace(&globalHeap, (size_t) (perm + amnt));
+                    }
+                    if (res == Ok) {
+                      rewindStr(buffer); /* re-read from string buffer */
+                      bufferPo tmpBuffer = newStringBuffer();
 
-                //logMsg(logFile,"Estimate of space requirements: %d heap, %d permanent",perm);
+                      res = decode(O_IO(buffer), &support, H, tgt, tmpBuffer);
 
-                if (perm > 0 || H == &globalHeap)
-                  lockGlobal(); /* lock access to the global heap */
-                if (res == Ok) {
-                  if (H != &globalHeap) {
-                    res = reserveSpace(&globalHeap, (size_t) perm);
-                    if (res == Ok)
-                      res = reserveSpace(H, (size_t) amnt);
-                  } else
-                    res = reserveSpace(&globalHeap, (size_t) (perm + amnt));
-                }
-                if (res == Ok) {
-                  rewindStr(O_STRING(str)); /* re-read from string buffer */
+                      closeFile(O_IO(buffer));
+                      closeFile(tmpBuffer);
 
-                  res = decode(str, &support, H, -1, tgt);
+                      if (support.lbls != NULL)
+                        free(support.lbls);
+                      if (support.vars != NULL)
+                        free(support.vars);
+                    }
+                    if (perm > 0 || H == &globalHeap)
+                      unlockGlobal(); /* release access to the global heap */
 
-                  closeFile(str);
-
-                  if (buffer != buff)
-                    free(buffer);
-                  if (support.lbls != NULL)
-                    free(support.lbls);
-                  if (support.vars != NULL)
-                    free(support.vars);
-                }
-                if (perm > 0 || H == &globalHeap)
-                  unlockGlobal(); /* release access to the global heap */
-                return res;
+                    if (!isBlocking)
+                      configureIo(O_FILE(in), turnOffBlocking);
+                    if (isAsynch)
+                      configureIo(O_FILE(in), enableAsynch);
+                    return res;
+                  } else {
+                    outChar(O_IO(buffer), ch);
+                    continue;
+                  }
+                case Eof:
+                  strMsg(errorMsg, msgSize, "unexpected eof");
+                  goto error_exit;
+                case Error:
+                default:
+                  strMsg(errorMsg, msgSize, "stream prematurely ended");
+                  goto error_exit;
               }
-              default:
-                strMsg(errorMsg, msgSize, "error in decoding");
-                return Error;
             }
           }
+          default:
+            strMsg(errorMsg, msgSize, "stream prematurely ended");
+            goto error_exit;
         }
       }
     }
   }
+  error_exit:
+  if (!isBlocking)
+    configureIo(O_FILE(in), turnOffBlocking);
+  if (isAsynch)
+    configureIo(O_FILE(in), enableAsynch);
+  return Error;
 }
 
 static logical isDigit(codePoint ch) {
@@ -136,7 +160,6 @@ static int digitVal(codePoint ch) {
   return (int) (ch - '0');
 }
 
-// This is written in a way that allows for interrupt
 retCode decInt(ioPo in, encodePo S, integer *ii) {
   codePoint ch;
   integer result = 0;
@@ -146,15 +169,11 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
     case Ok:
       if (ch == '-') {
         retCode ret = decInt(in, S, ii);
-        if (ret == Ok) {
-          *ii = -(*ii);
-          return ret;
-        } else {
-          return ret;
-        }
+        *ii = -(*ii);
+        return ret;
       } else if (isDigit(ch)) {
-        result = digitVal(ch);
-        inner:
+        result = digitVal(ch); // First digit of number
+
         while (True) {
           switch (inChar(in, &ch)) {
             case Ok:
@@ -169,13 +188,6 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
               *ii = result;
               return Ok;
             }
-            case Interrupt:
-              if (checkForPause(getProcessOfThread()))
-                goto inner;
-              else {
-                *ii = result; // we may come back for more.
-                return Interrupt;
-              }
             default:
               strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
               return Error;
@@ -185,23 +197,12 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
         strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
         return Error;
       }
-    case Interrupt:
-      if (checkForPause(getProcessOfThread()))
-        goto again;
-      else
-        return Interrupt;
     case Eof:
     default:
       strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
       return Error;
   }
 }
-
-static retCode decodeCode(ioPo str, encodePo S, unsigned long signature,
-                          ptrPo tgt);
-static void updateLbls(encodePo S, ptrPo dst, ptrPo orig);
-static void setLabel(encodePo S, long lbl, ptrI tgt);
-static retCode decodeName(ioPo str, encodePo S, string buffer, long bufferLen);
 
 static inline long mx(long a, long b) {
   if (a > b)
@@ -213,18 +214,17 @@ static inline long mx(long a, long b) {
 /*
  Warning: caller assumes responsibility for ensuring that tgt is a valid root
  */
-retCode decode(ioPo in, encodePo S, heapPo H, long long lbl, ptrPo tgt) {
-  byte ch;
-  retCode res = inByte(in, &ch);
+retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
+  codePoint ch;
+  retCode res = inChar(in, &ch);
 
   if (res == Eof)
     return Eof;
-
-  switch (ch & TRM_TAG_MASK) {
+  switch (ch) {
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      if ((res = decInt(in, S, &vno, ch)) != Ok)
+      if ((res = decInt(in, S, &vno)) != Ok)
         return res;
 
       if (vno >= 0) {
@@ -264,240 +264,82 @@ retCode decode(ioPo in, encodePo S, heapPo H, long long lbl, ptrPo tgt) {
     }
     case trmInt: {
       integer i;
-      if ((res = decInt(in, S, &i, ch)) != Ok)
+      if ((res = decInt(in, S, &i)) != Ok)
         return res;
       *tgt = allocateInteger(H, i);
       return Ok;
     }
     case trmFlt: {
-      integer exp;
-      byte buff[16];
-      double f = 0.0;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
+      double dx;
+      if ((res = decFlt(in, S, &dx)) != Ok)
         return res;
-
-      for (i = 0; i < len; i++) {
-        if (inByte(in, &buff[i]) == Eof)
-          return Eof;
-      }
-
-      while (len--)
-        f = (f + (buff[len] & 0xff)) / 256;
-
-      f = ldexp(f, (int) exp);
-      *tgt = allocateFloat(H, f);
-      return Ok;
-    }
-
-    case trmNegFlt: {
-      integer exp;
-      byte buff[16];
-      double f = 0.0;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
-        return res;
-
-      for (i = 0; i < len; i++) {
-        if (inByte(in, &buff[i]) == Eof)
-          return Eof;
-      }
-      while (len--)
-        f = (f + (buff[len] & 0xff)) / 256;
-
-      f = ldexp(f, (int) exp);
-      *tgt = allocateFloat(H, -f);
+      *tgt = allocateFloat(H, dx);
       return Ok;
     }
 
     case trmSym: {
-      integer sLen;
-
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        byte buff[sLen + 1];
-        integer i;
-
-        for (i = 0; res == Ok && i < sLen; i++) {
-          byte b;
-
-          res = inByte(in, &b);
-
-          buff[i] = b;
-        };
-
-        buff[i] = '\0';
-
-        *tgt = newUniSymbol(buff);
-
-        return res;
+      clearBuffer(tmpBuffer);
+      if ((res = decodeName(in, S, O_IO(tmpBuffer))) == Ok) {
+        long len;
+        outByte(O_IO(tmpBuffer), 0); // terminate the name
+        *tgt = newUniSymbol(getTextFromBuffer(&len, tmpBuffer));
       }
+      return res;
     }
 
     case trmString: { /* A literal string */
-      integer sLen;
 
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        byte buff[sLen + 1];
-        integer i;
-
-        for (i = 0; res == Ok && i < sLen; i++) {
-          byte ch;
-
-          res = inByte(in, &ch);
-
-          buff[i] = ch;
-        };
-
-        buff[i] = '\0';
-
-        *tgt = allocateString(H, buff, i);
-
-        return res;
+      if ((res = decodeText(in, S, O_IO(tmpBuffer))) == Ok) {
+        uint64 len;
+        string buff = getTextFromBuffer(&len, tmpBuffer);
+        *tgt = allocateString(H, buff, (long) len);
       }
-    }
-
-    case trmCode: {
-      integer cLen;
-
-      if ((res = decInt(in, S, &cLen, ch)) != Ok)
-        return res;
-      else {
-        byte buffBlock[2048];
-        byte *buff = (
-          cLen < NumberOf(buffBlock) ?
-          buffBlock : (byte *) malloc(sizeof(byte) * cLen));
-        long len;
-
-        res = inBytes(in, buff, cLen, &len);
-
-        if (res == Ok) {
-          ioPo sub = O_IO(openInStr(buff, cLen, rawEncoding));
-
-          unsigned long signature = (unsigned long) ((inB(sub) & 0xff) << 24)
-                                    | (unsigned long) (inB(sub) & 0xff) << 16
-                                    | (unsigned long) (inB(sub) & 0xff) << 8
-                                    | (unsigned long) (inB(sub) & 0xff);
-
-          if (signature == SIGNATURE || signature == SIGNBSWAP
-              || signature == SIGNWSWAP || signature == SIGNBWSWP) {
-            ptrI Tgt = kvoid;
-            rootPo subRoot = gcAddRoot(S->R, &Tgt);
-            res = decodeCode(sub, S, signature, &Tgt);
-            gcRemoveRoot(S->R, subRoot);
-            *tgt = Tgt;
-          } else {
-            strMsg(S->errorMsg, S->msgSize, "invalid structure in object stream");
-            res = Error;
-          }
-
-          if (lbl >= 0)
-            setLabel(S, lbl, *tgt); /* Update the label table */
-
-          closeFile(sub);
-        }
-        if (buff != buffBlock)
-          free(buff);
-        return res;
-      }
-    }
-
-    case trmClass: { /* We have a class definition structure */
-      integer arity;
-      byte b;
-
-      if ((res = decInt(in, S, &arity, ch)) != Ok) /* How many arguments in the class */
-        return res;
-
-      if (res == Ok)
-        res = inByte(in, &b);
-
-      if (res == Ok && (b & TRM_TAG_MASK) != trmSym)
-        res = Error;
-
-      if (res == Ok) {
-        integer sLen;
-
-        if ((res = decInt(in, S, &sLen, ch)) == Ok) {
-          byte buff[sLen + 1];
-          integer i;
-
-          for (i = 0; res == Ok && i < sLen; i++) {
-            res = inByte(in, &b);
-
-            buff[i] = b;
-          };
-
-          buff[i] = '\0';
-
-          *tgt = newClassDef(buff, arity);
-        }
-      }
-
       return res;
     }
 
-    case trmProgram: { /* We have a program label */
+    case trmStrct: { /* We have a class definition structure */
       integer arity;
-      byte b;
 
-      if ((res = decInt(in, S, &arity, ch)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      if (res == Ok)
-        res = inByte(in, &b);
-
-      if (res == Ok && (b & TRM_TAG_MASK) != trmSym)
-        res = Error;
-
-      if (res == Ok) {
-        integer sLen;
-
-        if ((res = decInt(in, S, &sLen, ch)) == Ok) {
-          byte buff[sLen + 1];
-          integer i;
-
-          for (i = 0; res == Ok && i < sLen; i++) {
-            res = inByte(in, &b);
-
-            buff[i] = b;
-          };
-
-          buff[i] = '\0';
-
-          *tgt = newProgramLbl(buff, arity);
-        }
+      if ((res = decodeName(in, S, O_IO(tmpBuffer))) == Ok) {
+        uint64 len;
+        outByte(O_IO(tmpBuffer), 0); // terminate the name
+        *tgt = newClassDef(getTextFromBuffer(&len, tmpBuffer), arity);
       }
-
       return res;
     }
 
-    case trmObject: {
+    case trmPrg: { /* We have a program label */
+      integer arity;
+
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
+
+      if ((res = decodeName(in, S, tmpBuffer)) == Ok) {
+        uint64 len;
+        outByte(O_IO(tmpBuffer), 0); // terminate the name
+        *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), arity);
+      }
+      return res;
+    }
+
+    case trmCns: {
       ptrI class = kvoid;
       rootPo root = gcAddRoot(S->R, &class);
       integer arity;
 
-      res = decInt(in, S, &arity, ch); /* pick up the actual number of arg terms */
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
 
-      byte className[MAX_SYMB_LEN];
-      if (res == Ok) {
-        res = decodeName(in, S, className, NumberOf(className));
-
-        if (res == Ok)
-          class = newClassDef(className, arity);
-      }
+      if ((res = decode(in, S, H, &class, tmpBuffer)) != Ok)
+        return res;
 
       gcAddRoot(S->R, &class); /* Keep the pointer to the class */
 
       if (res == Ok) {
-        objPo obj = allocate(H, arity + 1);
+        objPo obj = allocate(H, (size_t) (arity + 1));
 
         obj->class = class;
 
@@ -508,16 +350,12 @@ retCode decode(ioPo in, encodePo S, heapPo H, long long lbl, ptrPo tgt) {
 
         gcAddRoot(S->R, &el);
 
-        if (lbl >= 0)
-          setLabel(S, lbl, class); /* Update the label table */
-
         for (i = 0; i < arity; i++) {
-          if ((res = decode(in, S, H, -1, &el)) != Ok) /* read each element of term */
+          if ((res = decode(in, S, H, &el, tmpBuffer)) != Ok) /* read each element of term */
             break; /* we might need to skip out early */
           else {
             ptrPo arg = nthArg(obj, i);
 
-            updateLbls(S, arg, &el); /* do this carefully */
             *arg = el; /* stuff in the new element */
           }
         }
@@ -527,44 +365,6 @@ retCode decode(ioPo in, encodePo S, heapPo H, long long lbl, ptrPo tgt) {
       return res;
     }
 
-    case trmTag: { /* A tagged structure */
-      assert(lbl == -1);
-
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      if (lbl >= S->maxlbl) {
-        if (S->lbls == NULL) {
-          long max = mx(128, lbl);
-          S->lbls = (ptrPo) malloc(sizeof(ptrI) * max);
-          S->maxlbl = max;
-        } else {
-          long newmax = lbl + (S->maxlbl >> 1); /* 50% growth */
-          long i;
-          ptrPo newlabels = (ptrPo) realloc(S->lbls, sizeof(ptrI) * newmax);
-
-          for (i = S->maxlbl; i < newmax; i++)
-            newlabels[i] = 0; /* clear off new section of the table */
-
-          S->lbls = newlabels;
-          S->maxlbl = newmax;
-        }
-      }
-
-      return decode(in, S, H, lbl, tgt); /* decode the defined structure */
-    }
-
-    case trmRef: {
-      long long lbl;
-
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      assert(lbl < S->maxlbl);
-      *tgt = S->lbls[lbl];
-      return Ok;
-    }
-
     default: {
       strMsg(S->errorMsg, S->msgSize, "invalid encoding");
       return Error;
@@ -572,59 +372,44 @@ retCode decode(ioPo in, encodePo S, heapPo H, long long lbl, ptrPo tgt) {
   }
 }
 
-static retCode decodeName(ioPo in, encodePo S, string buffer, long bufferLen) {
-  integer sLen;
-  byte b;
-  retCode ret = inByte(in, &b);
+static retCode decodeName(ioPo in, encodePo S, bufferPo buffer) {
+  codePoint delim;
+  clearBuffer(buffer);
 
-  if (ret != Ok || (ret = decInt(in, S, &sLen, b)) != Ok)
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
     return ret;
-  else if (sLen < bufferLen) {
-    integer i;
-
-    for (i = 0; ret == Ok && i < sLen; i++) {
-      ret = inByte(in, &b);
-
-      buffer[i] = b;
-    };
-
-    buffer[i] = '\0';
-
+  else {
+    codePoint ch;
+    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+      outChar(O_IO(buffer), ch);
+    }
     return ret;
-  } else
-    return Error;
-}
-
-static void updateLbls(encodePo S, ptrPo dst, ptrPo orig) {
-  int i;
-  for (i = 0; i < S->maxlbl; i++)
-    if (S->lbls[i] == (ptrI) orig) {
-      S->lbls[i] = (ptrI) dst; /* update the label table */
-      *orig = unBind(dst);
-      break;
-    }
-}
-
-static void setLabel(encodePo S, long lbl, ptrI tgt) {
-  if (lbl >= S->maxlbl) {
-    if (S->lbls == NULL) {
-      long max = mx(128, lbl);
-      S->lbls = (ptrPo) malloc(sizeof(ptrI) * max);
-      S->maxlbl = max;
-    } else {
-      long newmax = mx(lbl, S->maxlbl + (S->maxlbl >> 1)); /* 50% growth */
-      long i;
-      ptrPo newlabels = (ptrPo) realloc(S->lbls, sizeof(ptrI) * newmax);
-
-      for (i = S->maxlbl; i < newmax; i++)
-        newlabels[i] = 0; /* clear off new section of the table */
-
-      S->lbls = newlabels;
-      S->maxlbl = newmax;
-    }
   }
-  S->lbls[lbl] = tgt;
 }
+
+static retCode decodeText(ioPo in, encodePo S, bufferPo buffer) {
+  codePoint delim;
+  clearBuffer(buffer);
+
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+      if (ch == '\\')
+        ret = inChar(in, &ch);
+      outChar(O_IO(buffer), ch);
+    }
+    return ret;
+  }
+}
+
+
+
 
 /* swap bytes in the little endian game */
 static inline void SwapBytes(unsigned long *x) {
@@ -634,6 +419,94 @@ static inline void SwapBytes(unsigned long *x) {
 
 static inline void SwapWords(unsigned long *x) {
   *x = (*x & 0x0000ffffL) << 16 | (*x & 0xffff0000L) >> 16;
+}
+
+// Decode a code segment.
+// Each segment consists of
+// a. The program structure object being defined
+// b. A string containing the code as a base64 encoded string.
+// c. A tuple of literals associated with the code segment
+// All wrapped up as a #code structure.
+
+retCode decodeCodeSegment(ioPo in,encodePo S,heapPo H,ptrPo tgt) {
+codePoint ch;
+
+  retCode ret = inChar(in,&ch);
+
+  if(ch==trmCns){
+    ptrI prg;
+    rootPo root = gcAddRoot(S->R, &prg);
+    bufferPo tmp = newStringBuffer();
+
+    ret = decode(in,S,H,&prg,tmp);
+
+
+
+
+  } else
+    return Error;
+
+
+
+
+  bufferPo in = fixedStringBuffer(buffer, buffLeng);
+  retCode ret = decode64(in, tmp);
+  rewindBuffer(tmp);
+
+  integer codeCount = (bufferSize(tmp) / SIZEOF_INT) - 1;
+  int32 signature = (inB(O_IO(tmp)) & 0xff) << 24 | (inB(O_IO(tmp)) & 0xff) << 16 | (inB(O_IO(tmp)) & 0xff) << 8 |
+              (inB(O_IO(tmp)) & 0xff); // verify correct code signature
+
+  heapPo H = &globalHeap;
+  ptrI pc = *tgt = permCode(codeCount, litCount);
+
+  long i;
+  insPo cd = FirstInstruction(pc);
+  ptrI el = kvoid;
+  rootPo root = gcAddRoot(S->R, &pc); /* in case of GC ... */
+
+  gcAddRoot(S->R, &el); /* we need a temporary pointer */
+
+  /* get the instructions */
+  for (i = 0; i < codeCount; i++)
+    cd[i] = (inB(O_IO(tmp))&0xff) << 24 | (inB(O_IO(tmp))&0xff) << 16
+            |(inB(O_IO(tmp))&0xff) << 8 | (inB(O_IO(tmp))&0xff);
+
+  /* Now convert the main code to handle little endians etc */
+  if (signature == SIGNATURE) {
+  } /* endian load same as endian save */
+  else if (signature == SIGNBSWAP) { /* swap bytes keep words */
+    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
+    long cnt = codeCount;
+    for (; cnt--; xx++)
+      SwapBytes(xx);
+  } else if (signature == SIGNWSWAP) { /* swap words keep bytes */
+    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
+    long cnt = codeCount;
+    for (; cnt--; xx++)
+      SwapWords(xx);
+  } else if (signature == SIGNBWSWP) { /* swap words and bytes */
+    unsigned long *xx = (unsigned long *) FirstInstruction(pc);
+    long cnt = codeCount;
+    for (; cnt--; xx++) {
+      SwapWords(xx);
+      SwapBytes(xx);
+    }
+  }
+
+  codeV(pc)->arity = (unsigned short)arity; /* set the arity of the program */
+
+  // Pick up the literal table
+  for (i = 0; i < litCount; i++) {
+    res = decode(in, S, H, &el);
+    updateCodeLit(codeV(pc), i, el);
+  }
+
+  gcRemoveRoot(S->R, root); /* we're all done!! */
+  if (res == Ok && enableVerify) /* Except we have to verify ... */
+    res = verifyCode(pc);
+  return res;
+
 }
 
 static retCode decodeCode(ioPo in, encodePo S, unsigned long signature,
@@ -692,7 +565,7 @@ static retCode decodeCode(ioPo in, encodePo S, unsigned long signature,
 
   // Pick up the literal table
   for (i = 0; i < litCount; i++) {
-    res = decode(in, S, H, -1, &el);
+    res = decode(in, S, H, &el);
     updateCodeLit(codeV(pc), i, el);
   }
 
@@ -715,141 +588,96 @@ static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm) 
   return estimate(in, S, amnt, perm);
 }
 
+static retCode estimateName(ioPo in, long *len);
+static retCode estimateText(ioPo in, long *len);
+
 static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
-  byte ch;
-  retCode res = inByte(in, &ch);
+  codePoint ch;
+  retCode res = inChar(in, &ch);
 
-  if (res != Ok)
-    return res;
+  if (res == Eof)
+    return Eof;
+  switch (ch) {
+    case trmAnon:
+      (*amnt) += VariableCellCount;
 
-  switch (ch & TRM_TAG_MASK) {
+      return Ok;
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      if ((res = decInt(in, S, &vno, ch)) != Ok)
+      if ((res = decInt(in, S, &vno)) != Ok)
         return res;
 
       (*amnt) += VariableCellCount;
+
       return Ok;
     }
     case trmInt: {
       integer i;
-      if ((res = decInt(in, S, &i, ch)) != Ok)
+      if ((res = decInt(in, S, &i)) != Ok)
         return res;
       (*amnt) += CellCount(sizeof(integerRec));
       return Ok;
     }
-    case trmNegFlt:
     case trmFlt: {
-      integer exp;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
+      double dx;
+      if ((res = decFlt(in, S, &dx)) != Ok)
         return res;
-
-      for (i = 0; i < len; i++) {
-        byte b;
-        if (inByte(in, &b) == Eof)
-          return Eof;
-      }
-
       (*amnt) += CellCount(sizeof(floatRec));
       return Ok;
     }
 
     case trmSym: {
-      integer sLen;
-
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        integer i = 0;
-
-        for (i = 0; res == Ok && i < sLen; i++) {
-          res = inByte(in, &ch);
-        };
-        (*perm) += CellCount(sizeof(symbolRec) + (sLen + 1) * sizeof(byte));
-        return res;
+      long length;
+      if ((res = estimateName(in, &length)) == Ok) {
+        (*perm) += CellCount(sizeof(symbolRec) + (length) * sizeof(byte));
       }
+      return res;
     }
 
     case trmString: { /* A literal string */
-      integer sLen; /* The length of the utf8 encoded string */
+      long length;
 
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        integer i = 0;
-
-        for (i = 0; res == Ok && i < sLen; i++) {
-          res = inByte(in, &ch);
-        };
-        (*perm) += CellCount(sizeof(stringRec) + (sLen + 1) * sizeof(byte));
-        return res;
-
-        return res;
+      if ((res = estimateText(in, &length)) == Ok) {
+        (*perm) += CellCount(sizeof(stringRec) + (length + 1) * sizeof(byte));
       }
+      return res;
     }
 
-    case trmCode: {
-      integer cLen;
+    case trmStrct: { /* We have a class definition structure */
+      integer arity;
 
-      if ((res = decInt(in, S, &cLen, ch)) != Ok)
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
-      else {
-        byte buffBlock[2048];
-        byte *buff = (
-          cLen < NumberOf(buffBlock) ?
-          buffBlock : (byte *) malloc(sizeof(byte) * cLen));
-        long len;
 
-        res = inBytes(in, buff, cLen, &len);
-
-        if (res == Ok) {
-          ioPo sub = O_IO(openByteBuffer(buff, cLen));
-
-          unsigned long signature = (unsigned long) (inB(sub) & 0xff) << 24
-                                    | (unsigned long) (inB(sub) & 0xff) << 16
-                                    | (unsigned long) (inB(sub) & 0xff) << 8
-                                    | (unsigned long) (inB(sub) & 0xff);
-
-          if (signature == SIGNATURE || signature == SIGNBSWAP
-              || signature == SIGNWSWAP || signature == SIGNBWSWP)
-            res = estimateCode(sub, S, amnt, perm);
-          else
-            res = Error;
-
-          closeFile(sub);
-        }
-        if (buff != buffBlock)
-          free(buff);
-        return res;
+      long length;
+      if ((res = estimateName(in, &length)) == Ok) {
+        (*perm) += CellCount(sizeof(clssRec) + (length) * sizeof(byte));
       }
+
+      return res;
     }
 
-    case trmClass: { /* A constructor structure definition */
+    case trmPrg: { /* We have a program label */
       integer arity;
 
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      return estimate(in, S, amnt, perm); /* pick up the constructor name */
+      long length;
+      if ((res = estimateName(in, &length)) == Ok) {
+        (*perm) += CellCount(sizeof(programRec) + (length) * sizeof(byte));
+      }
+
+      return res;
     }
 
-    case trmProgram: { /* A program label definition */
+    case trmCns: {
+      ptrI class = kvoid;
+      rootPo root = gcAddRoot(S->R, &class);
       integer arity;
 
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
-        return res;
-
-      return estimate(in, S, amnt, perm); /* pick up the program name */
-    }
-
-    case trmObject: { /* A constructor object */
-      integer arity;
-
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       res = estimate(in, S, amnt, perm); /* pick up the class constructor */
@@ -865,74 +693,55 @@ static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
       return res;
     }
 
-    case trmTag: {
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      return estimate(in, S, amnt, perm); /* estimate the defined structure */
-    }
-
-    case trmRef: {
-      integer lbl;
-
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      return Ok;
-    }
-
-    case trmShort: { /* This probably isnt going to happen all that often */
-      integer lbl;
-
-      res = decInt(in, S, &lbl, ch);
-
-      if (res == Ok)
-        res = estimate(in, S, amnt, perm);
-
-      if (res == Ok)
-        res = estimate(in, S, amnt, perm);
-
-      return res;
-    }
-
-    default:
+    default: {
+      strMsg(S->errorMsg, S->msgSize, "invalid encoding");
       return Error;
+    }
   }
 }
 
-static retCode estimateCode(ioPo in, encodePo S, integer *amnt, integer *perm) {
-  integer size, arity, litCnt;
-  retCode res = decInt(in, S, &size, inB(in));
+static retCode estimateName(ioPo in, long *length) {
+  codePoint delim;
+  long len = 0;
 
-  if (res == Ok) {
-    res = decInt(in, S, &arity, inB(in));
+  retCode ret = inChar(in, &delim);
 
-    if (res == Ok) {
-      res = decInt(in, S, &litCnt, inB(in));
-
-      if (res == Ok) {
-        long i, l;
-        byte buff[4];
-
-        /* get the instructions */
-        for (i = 0; res == Ok && i < size; i++) {
-          res = inBytes(in, buff, NumberOf(buff), &l);
-        }
-
-        /* estimate the tuple of literals */
-        for (i = 0; res == Ok && i < litCnt; i++)
-          res = estimate(in, S, perm, perm);
-
-        (*perm) += CodeCellCount(size, litCnt);
-      }
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+      len += codePointSize(ch);
     }
+    *length = len;
+    return ret;
   }
-  return res;
+}
+
+static retCode estimateText(ioPo in, long *length) {
+  codePoint delim;
+  long len = 0;
+
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
+      len += codePointSize(ch);
+      if (ch == '\\')
+        ret = inChar(in, &ch);
+      len += codePointSize(ch);
+    }
+    *length = len;
+    return ret;
+  }
 }
 
 static retCode display(ioPo in, encodePo S, ioPo out);
-static retCode displayCode(ioPo in, encodePo S, ioPo out);
+static retCode displayName(ioPo in, ioPo out);
+static retCode displayText(ioPo in, ioPo out);
 
 retCode displayEncoded(ioPo out, byte *buffer, long len) {
   ioPo str = O_IO(openByteBuffer(buffer, len));
@@ -952,516 +761,258 @@ retCode sE(byte *buffer, long len) {
 }
 
 static retCode display(ioPo in, encodePo S, ioPo out) {
-  byte ch;
-  retCode res = inByte(in, &ch);
+  codePoint ch;
+  retCode res = inChar(in, &ch);
 
-  if (res != Ok)
-    return res;
-
-  switch (ch & TRM_TAG_MASK) {
+  if (res == Eof)
+    return Eof;
+  switch (ch) {
+    case trmAnon:
+      return outMsg(out, "_");
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      if ((res = decInt(in, S, &vno, ch)) != Ok)
+      if ((res = decInt(in, S, &vno)) != Ok)
         return res;
 
       return outMsg(out, "_%ld", vno);
     }
     case trmInt: {
       integer i;
-      if ((res = decInt(in, S, &i, ch)) != Ok)
+      if ((res = decInt(in, S, &i)) != Ok)
         return res;
       return outMsg(out, "%ld", i);
     }
     case trmFlt: {
-      integer exp;
-      byte buff[16];
-      double f = 0.0;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
+      double dx;
+      if ((res = decFlt(in, S, &dx)) != Ok)
         return res;
-
-      for (i = 0; i < len; i++)
-        if ((res = inByte(in, &buff[i])) != Ok)
-          return res;
-
-      while (len--)
-        f = (f + (buff[len] & 0xff)) / 256;
-
-      f = ldexp(f, (int) exp);
-
-      return outMsg(out, "%f", f);
-    }
-
-    case trmNegFlt: {
-      integer exp;
-      byte buff[16];
-      double f = 0.0;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
-        return res;
-
-      for (i = 0; i < len; i++)
-        if ((res = inByte(in, &buff[i])) != Ok)
-          return res;
-
-      while (len--)
-        f = (f + (buff[len] & 0xff)) / 256;
-
-      f = ldexp(f, (int) exp);
-      return outMsg(out, "%f", -f);
+      return outMsg(out, "%f", dx);
     }
 
     case trmSym: {
-      integer sLen;
-
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        byte buff[sLen + 1];
-        integer i;
-
-        for (i = 0; i < sLen; i++) {
-          res = inByte(in, &ch);
-
-          if (res == Eof)
-            return Eof;
-          else
-            buff[i] = ch;
-        };
-
-        buff[i] = '\0';
-
-        if (buff[0] == '\'')
-          return outMsg(out, "%U'", buff);
-        else
-          return outMsg(out, "%U", buff);
-      }
+      return displayName(in, out);
     }
 
     case trmString: { /* A literal string */
-      integer len; /* The length of the encoded string */
-
-      if ((res = decInt(in, S, &len, ch)) != Ok)
-        return res;
-      else {
-        byte bBuffBlock[2048];
-        byte *bData =
-          len < NumberOf(bBuffBlock) ?
-          bBuffBlock : (byte *) malloc(sizeof(byte) * len);
-        byte uBuffBlock[256];
-        string uData =
-          len < NumberOf(uBuffBlock) ?
-          uBuffBlock : (byte *) malloc(sizeof(byte) * len); /* This is the # of bytes in the block */
-        integer i;
-        long slen;
-
-        res = inBytes(in, bData, len, &slen);
-
-        if (len >= 2 && bData[0] == uniBOMhi && bData[1] == uniBOMlo) {
-          integer j;
-          for (i = 2, j = 0; i < len; i += 2, j++)
-            uData[j] = (byte) ((bData[i] & 0xff) << 8)
-                       | (byte) (bData[i + 1] & 0xff);
-          len = j;
-        } else if (len >= 2 && uData[1] == uniBOMhi && uData[0] == uniBOMlo) {
-          integer j;
-          for (i = 2, j = 0; i < len; i += 2, j++)
-            uData[j] = (byte) ((bData[i + 1] & 0xff) << 8)
-                       | (byte) (bData[i] & 0xff);
-          len = j;
-        } else {
-          for (i = 0; i < len; i++)
-            uData[i] = bData[i];
-        }
-
-        if (res == Ok) {
-          res = outStr(out, "\"");
-
-          if (res == Ok)
-            res = outText(out, uData, (uinteger) len);
-
-          if (res == Ok)
-            res = outStr(out, "\"");
-          return res;
-        }
-        if (uData != &uBuffBlock[0])
-          free(uData);
-        if (bData != &bBuffBlock[0])
-          free(bData);
-        return res;
-      }
-    }
-
-    case trmCode: {
-      integer cLen;
-
-      if ((res = decInt(in, S, &cLen, ch)) != Ok)
-        return res;
-      else {
-        byte buffBlock[2048];
-        byte *buff = (
-          cLen < NumberOf(buffBlock) ?
-          buffBlock : (byte *) malloc(sizeof(byte) * cLen));
-        long len;
-
-        res = inBytes(in, buff, cLen, &len);
-
-        if (res == Ok) {
-          ioPo sub = O_IO(openByteBuffer(buff, cLen));
-
-          unsigned long signature = (unsigned long) (inB(sub) & 0xff) << 24
-                                    | (unsigned long) (inB(sub) & 0xff) << 16
-                                    | (unsigned long) (inB(sub) & 0xff) << 8
-                                    | (unsigned long) (inB(sub) & 0xff);
-
-          if (signature == SIGNATURE || signature == SIGNBSWAP
-              || signature == SIGNWSWAP || signature == SIGNBWSWP)
-            res = displayCode(sub, S, out);
-          else
-            res = outMsg(out, "<opaque %x %ld bytes>", signature, cLen);
-
-          closeFile(sub);
-        }
-        if (buff != buffBlock)
-          free(buff);
-        return res;
-      }
-    }
-
-    case trmClass: { /* A class literal */
-      integer arity;
-
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
-        return res;
-
-      res = inByte(in, &ch);
-
-      if (res == Ok && (ch & TRM_TAG_MASK) != trmSym)
-        res = Error;
-
-      if (res == Ok) {
-        integer sLen;
-
-        if ((res = decInt(in, S, &sLen, ch)) == Ok) {
-          byte buff[sLen + 1];
-          integer i;
-
-          for (i = 0; res == Ok && i < sLen; i++) {
-            res = inByte(in, &ch);
-
-            buff[i] = ch;
-          };
-
-          buff[i] = '\0';
-
-          return outMsg(out, "%U/%d", buff, arity);
-        }
-      }
-
+      res = outChar(out, '\"');
+      if (res == Ok)
+        res = displayText(in, out);
+      if (res == Ok)
+        res = outChar(out, '\"');
       return res;
     }
 
-    case trmProgram: {
+    case trmStrct: { /* We have a class definition structure */
       integer arity;
 
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      res = inByte(in, &ch);
+      if (res == Ok)
+        res = displayName(in, out);
 
-      if (res == Ok && (ch & TRM_TAG_MASK) != trmSym)
-        res = Error;
+      if (res == Ok)
+        res = outChar(out, '/');
 
-      if (res == Ok) {
-        integer sLen;
-
-        if ((res = decInt(in, S, &sLen, ch)) == Ok) {
-          byte buff[sLen + 1];
-          integer i;
-
-          for (i = 0; res == Ok && i < sLen; i++) {
-            res = inByte(in, &ch);
-
-            buff[i] = ch;
-          };
-
-          buff[i] = '\0';
-
-          return outMsg(out, "%U/%d", buff, arity);
-        }
-      }
-
+      if (res == Ok)
+        res = outMsg(out, "%ld", arity);
       return res;
     }
 
-    case trmObject: { /* An object constructor */
+    case trmPrg: { /* We have a program label */
       integer arity;
 
-      res = decInt(in, S, &arity, ch);
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
+
+      if (res == Ok)
+        res = displayName(in, out);
+
+      if (res == Ok)
+        res = outChar(out, '%');
+
+      if (res == Ok)
+        res = outMsg(out, "%ld", arity);
+      return res;
+    }
+
+    case trmCns: {
+      ptrI class = kvoid;
+      rootPo root = gcAddRoot(S->R, &class);
+      integer arity;
+
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
 
       if (res == Ok)
         res = display(in, S, out);
 
       if (res == Ok)
-        res = outMsg(out, "/%d", arity);
-
-      if (arity > 0) {
-        long ix;
-        char *sep = "";
-
         res = outStr(out, "(");
 
-        for (ix = 0; res == Ok && ix < arity; ix++) {
-          res = outStr(out, sep);
-          if (res == Ok) {
-            sep = ", ";
-            res = display(in, S, out);
-          }
-        }
+      if (res == Ok) {
+        integer i;
+        char *sep = "";
 
+        for (i = 0; res == Ok && i < arity; i++) {
+          res = outStr(out, sep);
+          sep = ", ";
+          if (res == Ok)
+            res = display(in, S, out);
+        }
         if (res == Ok)
           res = outStr(out, ")");
       }
       return res;
     }
 
-    case trmTag: {
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      res = outMsg(out, "T:%ld", lbl);
-
-      if (res == Ok)
-        res = display(in, S, out); /* display the defined structure */
-      return res;
-    }
-
-    case trmRef: {
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      return outMsg(out, "R:%ld", lbl);
-    }
-
-    case trmShort: { /* This probably isnt going to happen all that often */
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      res = outMsg(out, "S:%ld", lbl);
-
-      if (res == Ok)
-        res = display(in, S, out); /* display the defined structure */
-      return res;
-    }
-
-    default:
-      syserr("invalid term");
+    default: {
+      strMsg(S->errorMsg, S->msgSize, "invalid encoding");
       return Error;
+    }
   }
 }
 
-static retCode displayCode(ioPo in, encodePo S, ioPo out) {
-  integer i, litCount, arity, size;
-  retCode res;
+static retCode displayName(ioPo in, ioPo out) {
+  codePoint delim;
 
-  if ((res = decInt(in, S, &size, inB(in))) != Ok)
-    return res;
+  retCode ret = inChar(in, &delim);
 
-  if ((res = decInt(in, S, &arity, inB(in))) != Ok)
-    return res;
-
-  if ((res = decInt(in, S, &litCount, inB(in))) != Ok)
-    return res;
-
-  res = outMsg(out, "<< arity:%ld %ld ins, ", arity, size);
-
-  /* get the instructions */
-  for (i = 0; res == Ok && i < size; i++) {
-    byte ins[4];
-    long ilen;
-    res = inBytes(in, ins, NumberOf(ins), &ilen);
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
+      ret = outChar(out, ch);
+    }
+    return ret;
   }
+}
 
-  /* display the tuple of literals */
-  for (i = 0; res == Ok && i < litCount; i++)
-    res = display(in, S, out);
+static retCode displayText(ioPo in, ioPo out) {
+  codePoint delim;
 
-  if (res == Ok)
-    res = outStr(out, ">>");
-  return res;
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
+      ret = outChar(out, ch);
+
+      if (ch == '\\') {
+        ret = inChar(in, &ch);
+        if (ret == Ok)
+          ret = outChar(out, ch);
+      }
+    }
+    return ret;
+  }
+}
+
+static retCode skipName(ioPo in, encodePo S) {
+  codePoint delim;
+
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while ((ret = inChar(in, &ch)) == Ok && ch != delim);
+    return ret;
+  }
+}
+
+static retCode skipText(ioPo in, encodePo S) {
+  codePoint delim;
+
+  retCode ret = inChar(in, &delim);
+
+  if (ret != Ok)
+    return ret;
+  else {
+    codePoint ch;
+    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
+      if (ch == '\\')
+        ret = inChar(in, &ch);
+    }
+    return ret;
+  }
 }
 
 static retCode skipTrm(ioPo in, encodePo S) {
-  byte ch;
-  retCode res = inByte(in, &ch);
+  codePoint ch;
+  retCode res = inChar(in, &ch);
 
   if (res == Eof)
     return Eof;
-
-  switch (ch & TRM_TAG_MASK) {
+  switch (ch) {
+    case trmAnon:
+      return Ok;
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      return decInt(in, S, &vno, ch);
+      return decInt(in, S, &vno);
     }
     case trmInt: {
       integer i;
-      return decInt(in, S, &i, ch);
+      return decInt(in, S, &i);
     }
     case trmFlt: {
-      integer exp;
-      int len = ch & TRM_VAL_MASK;
-      byte b;
-      long i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
-        return res;
-
-      for (i = 0; res == Ok && i < len; i++)
-        res = inByte(in, &b);
-
-      return res;
-    }
-
-    case trmNegFlt: {
-      integer exp;
-      int len = ch & TRM_VAL_MASK;
-      int i;
-
-      if ((res = decInt(in, S, &exp, inB(in))) != Ok)
-        return res;
-
-      for (i = 0; res == Ok && i < len; i++)
-        res = inByte(in, &ch);
-
-      return res;
+      double dx;
+      return decFlt(in, S, &dx);
     }
 
     case trmSym: {
-      integer sLen;
-
-      if ((res = decInt(in, S, &sLen, ch)) != Ok)
-        return res;
-      else {
-        integer i;
-
-        for (i = 0; res == Ok && i < sLen; i++)
-          res = inByte(in, &ch);
-
-        return res;
-      }
+      return skipName(in, S);
     }
 
-    case trmString: { /* A literal string */
-      integer len; /* The length of the encoded string */
+    case trmString:
+      return skipText(in, S);
 
-      if ((res = decInt(in, S, &len, ch)) != Ok)
-        return res;
-      else {
-        integer i;
-        byte dummy;
-
-        for (i = 0; res == Ok && i < len; i++)
-          res = inByte(in, &dummy);
-
-        return res;
-      }
-    }
-
-    case trmCode: {
-      integer cLen;
-
-      if ((res = decInt(in, S, &cLen, ch)) != Ok)
-        return res;
-      else {
-        byte dummy;
-        long i;
-
-        for (i = 0; res == Ok && i < cLen; i++)
-          res = inByte(in, &dummy);
-
-        return res;
-      }
-    }
-
-    case trmClass: { /* A class literal */
+    case trmStrct: { /* We have a class definition structure */
       integer arity;
-      byte b;
 
-      if ((res = decInt(in, S, &arity, ch)) != Ok)
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      res = inByte(in, &ch);
+      return skipName(in, S);
+    }
 
-      if (res == Ok && (ch & TRM_TAG_MASK) != trmSym)
-        res = Error;
+    case trmPrg: { /* We have a program label */
+      integer arity;
+
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
+
+      return skipName(in, S);
+    }
+
+    case trmCns: {
+      integer arity;
+
+      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+        return res;
+
+      res = skipTrm(in, S);
 
       if (res == Ok) {
-        integer sLen;
+        integer i;
 
-        if ((res = decInt(in, S, &sLen, ch)) == Ok) {
-          integer i;
-
-          for (i = 0; res == Ok && i < sLen; i++) {
-            res = inByte(in, &b);
-          };
-        }
+        for (i = 0; res == Ok && i < arity; i++)
+          res = skipText(in, S); /* skip each constructor element */
       }
+
       return res;
     }
 
-    case trmObject: { /* An object constructor */
-      integer arity;
-
-      res = decInt(in, S, &arity, ch);
-
-      if (res == Ok)
-        res = skipTrm(in, S);
-
-      if (arity > 0) {
-        long ix;
-
-        for (ix = 0; res == Ok && ix < arity; ix++) {
-          res = skipTrm(in, S);
-        }
-      }
-      return res;
-    }
-
-    case trmTag: {
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      return skipTrm(in, S);
-    }
-
-    case trmRef: {
-      integer lbl;
-
-      return decInt(in, S, &lbl, ch);
-    }
-
-    case trmShort: {
-      integer lbl;
-      if ((res = decInt(in, S, &lbl, ch)) != Ok)
-        return res;
-
-      if (res == Ok)
-        return skipTrm(in, S);
-      return res;
-    }
-
-    default:
+    default: {
+      strMsg(S->errorMsg, S->msgSize, "invalid encoding");
       return Error;
+    }
   }
 }
 

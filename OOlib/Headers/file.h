@@ -61,6 +61,8 @@ retCode rmFile(string name);
 retCode mvFile(string name,string to);
 
 retCode configureIo(filePo f,ioConfigOpt mode);
+logical isFileBlocking(filePo f);
+logical isFileAsynch(filePo f);
 
 void setup_stdin(void);
 void reset_stdin(void);

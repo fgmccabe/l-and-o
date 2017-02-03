@@ -34,6 +34,7 @@ bufferPo fixedStringBuffer(string buffer, long len);
 string getTextFromBuffer(long *len, bufferPo s);
 long bufferSize(bufferPo b);
 retCode clearBuffer(bufferPo b);
+retCode rewindBuffer(bufferPo b);
 
 #ifdef VERIFY_OBJECT
 objectPo checkCast(void *c,classPo class);

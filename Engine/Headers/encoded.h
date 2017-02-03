@@ -15,9 +15,8 @@ typedef enum {
   trmFlt = 'd',
   trmSym = 'e',
   trmString = 's',
-  trmClass = 'o',
+  trmStrct = 'o',
   trmPrg = 'p',
-  trmTpl = 'u',
   trmCns = 'n'
 } trmSig;
 
