@@ -27,7 +27,7 @@ lo.uri {
   absoluteUri(Scheme,Hier,Query) --> scheme(Scheme), ":", hierPart(Hier,Query).
 
   scheme:(string) --> list[integer].
-  scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+. 
+  scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+.
 
   grabScheme:(list[integer]) --> list[integer].
   grabScheme([C,..S]) --> alpha(C), alphaStar(S).
@@ -288,7 +288,7 @@ lo.uri {
   isDelim(0c").
 
   -- Resolve a url against a base. The base must be an absolute URI, either net or local.
-  public 
+  public
   resolveUri:(uri,uri) => uri.
   resolveUri(_,U) => U :- absUri(_,_,_)=U.
   resolveUri(absUri(Scheme,Base,_),relUri(Path,Query)) => absUri(Scheme,resolvePath(Base,Path),Query).
@@ -305,7 +305,7 @@ lo.uri {
   edit(["..",..Segs],[_,..R]) => edit(Segs,R).
   edit(Segs,R) => reverse(R)<>Segs.
 
-  public 
+  public
   implementation display[uri] <= {
     disp(absUri(Scheme,Rsrc,Query)) => ssSeq([ss(Scheme),ss(":"),dispRsrc(Rsrc),dispQuery(Query)]).
     disp(relUri(Rsrc,Query)) => ssSeq([dispRsrc(Rsrc),dispQuery(Query)]).
@@ -343,4 +343,8 @@ lo.uri {
   getUriPath:(uri)=>string.
   getUriPath(absUri(_,Pth,_)) => formatSS(dispRsrc(Pth)).
   getUriPath(relUri(Pth,_)) => formatSS(dispRsrc(Pth)).
+
+  public implementation coercion[uri,string] <= {
+    _coerce(U) => formatSS(disp(U)).
+  }
 }

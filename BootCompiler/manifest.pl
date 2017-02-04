@@ -1,60 +1,42 @@
-:- module(manifest,[readManifest/2,parseManifest/2,manifest//1,showManifest/3]).
+:- module(manifest,[readManifest/2,jsonManifest/2,showManifest/3,manifestJson/2,writeManifest/2]).
 
 :- use_module(parseUtils).
 :- use_module(uri).
 :- use_module(misc).
+:- use_module(json).
+:- use_module(resource).
 
 readManifest(Path,Manifest) :-
   readFile(Path,Chars),
-  parseManifest(Chars,Manifest).
+  phrase(parseJson(J),Chars),
+  jsonManifest(J,Manifest).
 
-parseManifest(Chrs,M) :-
-  phrase(manifest(M),Chrs).
+jsonManifest(jColl(L),man(M)) :-
+  jsonEntries(L,M).
 
-manifest(man(E)) --> manifst, lbrce, entries(E), rbrce,spaces.
+jsonEntries([],[]).
+jsonEntries([J|L],[Entry|More]) :-
+  jsonEntry(J,Entry),
+  jsonEntries(L,More).
 
-% An entry looks like:
-% packageName : { (version:file)* }
+jsonEntry((P,jColl(V)),entry(P,Versions)) :-
+  jsonVersions(P,V,Versions).
 
-entries([Entry|More]) --> entry(Entry), entries(More).
-entries([]) --> [].
+jsonVersions(_,[],[]).
+jsonVersions(P,[V|L],[Vers|More]) :-
+  jsonVersion(P,V,Vers),
+  jsonVersions(P,L,More).
 
-entry(entry(Pkg,Versions)) --> package(Pkg), colon, lbrce, versions(Pkg,Versions), rbrce.
+jsonVersion(P,("*",jColl(Dtl)),(pkg(P,defltVersion),SrcUri,fl(Code))) :-!,
+  is_member(("source",jTxt(Src)),Dtl),
+  is_member(("code",jTxt(Code)),Dtl),
+  parseURI(Src,SrcUri).
+jsonVersion(P,(V,jColl(Dtl)),(pkg(P,v(V)),SrcUri,fl(Code))) :-
+  is_member(("source",jTxt(Src)),Dtl),
+  is_member(("code",jTxt(Code)),Dtl),
+  parseURI(Src,SrcUri).
 
-manifst --> spaces, ['m','a','n','i','f','e','s','t'].
-
-colon --> spaces, [':'].
-
-lbrce --> spaces, ['{'].
-
-rbrce --> spaces, ['}'].
-
-equals --> spaces, ['='].
-
-package(Pkg) --> spaces, iden(Id), suffixes(Suf), { flatten([Id|Suf], P), string_chars(Pkg,P)}.
-
-suffixes([['.'|Id]|More]) --> ['.'], iden(Id), suffixes(More).
-suffixes([]) --> [].
-
-fileName(fl(Fn)) --> spaces, fileSeg(F), segments(Rest), { flatten([F|Rest],Fl), string_chars(Fn,Fl)}.
-
-fileSeg([Ch|Mo]) --> (alpha(Ch) ; digit(Ch) ; period(Ch)), fileSeg(Mo).
-fileSeg([]) --> [].
-
-segments([['/'|Seg]|More]) --> ['/'], fileSeg(Seg), segments(More).
-segments([]) --> \+['/'].
-
-period('.') --> ['.'].
-
-versions(Pkg,[V|More]) --> version(Pkg,V), versions(Pkg,More).
-versions(_,[]) --> [].
-
-version(Pkg,(pkg(Pkg,V),U,F)) --> versionName(V), equals, fileName(F), ['['], uri(U), [']'], !.
-
-versionName(defltVersion) --> spaces, ['*'].
-versionName(v(V)) --> spaces, fileSeg(S), { string_chars(V,S) }. %% do more later
-
-showManifest(man(E),O,Ox) :- 
+showManifest(man(E),O,Ox) :-
   appStr("manifest",O,O1),
   appStr("{\n",O1,O2),
   showEntries(E,O2,O3),
@@ -93,3 +75,31 @@ showV(defltVersion,O,Ox) :-
 
 showFileName(fl(Nm),O,Ox) :-
   appStr(Nm,O,Ox).
+
+manifestJson(man(M),jColl(C)) :-
+  manifestEntries(M,C).
+
+manifestEntries([],[]).
+manifestEntries([entry(Pkg,Versions)|L],[(Pkg,jColl(Entry))|M]) :-
+  manifestVersions(Versions,Entry),
+  manifestEntries(L,M).
+
+manifestVersions([],[]).
+manifestVersions([V|L],[J|M]) :-
+  manifestVersion(V,J),
+  manifestVersions(L,M).
+
+manifestVersion((pkg(_,defltVersion),Src,fl(CodeFn)), ("*",VV)) :-
+  manifestDetails(CodeFn,Src,VV).
+manifestVersion((pkg(_,v(Ver)),Src,fl(CodeFn)), (Ver,VV)) :-
+  manifestDetails(CodeFn,Src,VV).
+
+manifestDetails(Fn,Uri,jColl([("source",jTxt(U)),("code",jTxt(Fn))])) :-
+  showUri(Uri,C,[]),
+  string_chars(U,C).
+
+writeManifest(Fn,M) :-
+  manifestJson(M,Json),
+  dispJson(Json,Chars,[]),
+  string_chars(Text,Chars),
+  writeFile(Fn,Text).

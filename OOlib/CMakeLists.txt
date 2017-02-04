@@ -45,7 +45,7 @@ set(SOURCE_FILES
         ${BISON_CatalogParser_OUTPUTS}
         ${FLEX_CatalogTokeniser_OUTPUTS}
         base64.c Headers/base64.h
-        )
+        ../Engine/Headers/jsonEvent.h)
 
 add_library(ooio STATIC ${SOURCE_FILES})
 

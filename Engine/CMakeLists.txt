@@ -4,9 +4,9 @@ project(loEngine)
 find_package(BISON)
 find_package(FLEX)
 
-BISON_TARGET(ManifestParser mangrammar.y ${CMAKE_CURRENT_BINARY_DIR}/mangrammar.c)
-FLEX_TARGET(ManifestTokeniser mtoken.l ${CMAKE_CURRENT_BINARY_DIR}/mtoken.c)
-ADD_FLEX_BISON_DEPENDENCY(ManifestTokeniser ManifestParser)
+BISON_TARGET(JsonParser json.y ${CMAKE_CURRENT_BINARY_DIR}/jsonParser.c)
+FLEX_TARGET(JsonTokeniser jtoken.l ${CMAKE_CURRENT_BINARY_DIR}/jsontoken.c)
+ADD_FLEX_BISON_DEPENDENCY(JsonTokeniser JsonParser)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
 
@@ -19,8 +19,8 @@ set(SOURCE_FILES
         misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c
         verify.c writef.c
         main.c
- #       ${BISON_ManifestParser_OUTPUTS}
- #       ${FLEX_ManifestTokeniser_OUTPUTS}
+        ${BISON_JsonParser_OUTPUTS}
+        ${FLEX_JsonTokeniser_OUTPUTS}
 
         Headers/word.h
         Headers/char.h Headers/clock.h

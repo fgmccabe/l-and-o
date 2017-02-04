@@ -231,8 +231,8 @@ extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(unsigned long size, unsigned long litCnt);
 extern retCode verifyCode(ptrI prog);
 
-extern retCode classLoader(heapPo H, string path, ptrI request, ptrI version,
-                           ptrPo loaded, string errorMsg, long msgSize);
+extern retCode pkgLoader(heapPo H, string path, ptrI request, ptrI version,
+                         ptrPo loaded, string errorMsg, long msgSize);
 
 extern void initCodeClass(void);
 logical isLoaded(ptrI package);

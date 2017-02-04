@@ -173,8 +173,8 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
 
   rootPo gcRoot = gcAddRoot(&globalHeap,&loaded);
   
-  switch(classLoader(&root->proc.heap,classPath,bootProg,emptySymbol,&loaded,
-		     errorMsg,NumberOf(errorMsg))){
+  switch(pkgLoader(&root->proc.heap, classPath, bootProg, emptySymbol, &loaded,
+                   errorMsg, NumberOf(errorMsg))){
   default:
     logMsg(logFile,"corrupt or no boot file found in %U: %U",classPath,errorMsg);
     lo_exit(EXIT_FAIL);

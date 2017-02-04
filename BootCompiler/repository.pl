@@ -18,8 +18,7 @@
 openRepository(Root,repo(Root,Manifest)) :-
   resolveFile(Root,"manifest",MF),
   access_file(MF,read),
-  readFile(MF,Chrs),
-  parseManifest(Chrs,Manifest),!.
+  readManifest(MF,Manifest),!.
 openRepository(Root,repo(Root,man([]))) :-
   resolveFile(Root,"manifest",MF),
   access_file(MF,write),!.
@@ -95,10 +94,8 @@ prologPackagePresent(repo(Root,Man),Pkg,Act,U,SrcWhen,When) :-
   time_file(SrcFn,SrcWhen).
 
 flushManifest(Root,M) :-
-  showManifest(M,Chrs,[]),
   resolveFile(Root,"manifest",Fn),
-  string_chars(Text,Chrs),
-  writeFile(Fn,Text).
+  writeManifest(Fn,M).
 
 %% Each end-point directory has a manifest file in it.
 % The role of the manifest is to map URIs to files

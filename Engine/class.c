@@ -18,9 +18,8 @@
 #include <stdlib.h>
 
 #include "lo.h"
-#include "term.h"
-#include "hashTable.h"
-#include "unicode.h"
+#include "manifestP.h"
+#include <hashTable.h>
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048
@@ -58,11 +57,6 @@ ptrI threadClass;  //  The class of process identifiers
 
 static hashPo loadedPackages;  //  record the packages we have loaded
 
-typedef struct {
-  byte packageName[MAX_SYMB_LEN];
-  /* A package name */
-  byte version[MAX_SYMB_LEN];
-} PackageRec, *packagePo;
 
 static long clSizeFun(specialClassPo class, objPo o);
 static comparison clCompFun(specialClassPo class, objPo o1, objPo o2);
@@ -350,190 +344,6 @@ void markStandardClasses(globalGcPo G) {
 static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
     long fLen);
 
-retCode classLoader(heapPo H, string path, ptrI request, ptrI rqV, ptrPo loaded, string errorMsg,
-    long msgSize) {
-  packagePo ldFlag = (packagePo) hashGet(loadedPackages, SymVal(symbV(request)));
-
-  if (ldFlag != NULL) {
-    if (rqV != emptySymbol)
-      if (uniCmp(SymVal(symbV(rqV)), ldFlag->version) == 0)
-        return Ok;
-      else {
-        outMsg(logFile, "invalid version of package already loaded: %w:%U,"
-            "version %w expected\n", &request, ldFlag->version, &rqV);
-        return Error;
-      }
-    else
-      return Ok;
-  } else {
-    byte fbuffer[MAX_FILE_LEN];
-    string fn = computeClassFileName(path, uniStrLen(path), SymVal(symbV(request)), SymVal(symbV(rqV)),
-        fbuffer, NumberOf(fbuffer));
-    ioPo file = fn != NULL ? openInFile(fn, rawEncoding) : NULL;
-    byte ch;
-
-#ifdef EXECTRACE
-    if (debugging)
-      outMsg(logFile, "loading package %w from file %U\n", &request, fn);
-#endif
-
-    if (file != NULL) {
-      retCode ret = Ok;
-      ptrI scratch = kvoid;
-      ptrI package = kvoid;
-      ptrI version = kvoid; /* version of the loaded package */
-      ptrI imports = kvoid;
-      ptrI defined = kvoid;
-      rootPo root = gcAddRoot(H, &scratch);
-
-      gcAddRoot(H, &package);
-      gcAddRoot(H, &request);
-      gcAddRoot(H, &version);
-      gcAddRoot(H, &imports);
-      gcAddRoot(H, &defined);
-
-      if ((ch = inB(file)) == '#') { /* look for standard #!/.... header */
-        if ((ch = inB(file)) == '!') {
-          while (inByte(file, &ch) == Ok && ch != NEW_LINE)
-            ;                      // consume the interpreter statement
-        } else {
-          putBackByte(file, ch);
-          putBackByte(file, '#');
-        }
-      } else
-        putBackByte(file, ch);
-
-      if (fileStatus(file) == Ok) {
-        ret = decodeTerm(file, &globalHeap, H, &package, errorMsg, msgSize);
-
-        if (package != request) {
-          outMsg(logFile, "loaded package: %w not what was expected %w\n", &package, &request);
-          return Error;
-        }
-
-        ret = decodeTerm(file, &globalHeap, H, &version, errorMsg, msgSize);
-
-        //outMsg(logFile,"package is %w:%w\n",&package,&version);
-
-        if (version != rqV && rqV != emptySymbol && version != universal) {
-          outMsg(logFile, "invalid version of package: %w:%w,"
-              "version %w expected\n", &request, &version, &rqV);
-          return Error;
-        }
-
-        packagePo pkgInfo = malloc(sizeof(PackageRec));
-
-        uniCpy(pkgInfo->packageName, NumberOf(pkgInfo->packageName), SymVal(symbV(package)));
-        uniCpy(pkgInfo->version, NumberOf(pkgInfo->version), SymVal(symbV(version)));
-
-        hashPut(loadedPackages, pkgInfo->packageName, pkgInfo);
-
-        if (ret == Ok)
-          ret = skipEncoded(file, errorMsg, msgSize);
-
-        if (ret == Ok)
-          ret = skipEncoded(file, errorMsg, msgSize);
-
-        if (ret == Ok) {
-          ret = decodeTerm(file, &globalHeap, H, &imports, errorMsg, msgSize);
-          //	  outMsg(logFile,"Imported packages: %w\n",&imports);
-        }
-
-        if (ret == Ok) {
-          ret = decodeTerm(file, &globalHeap, H, &defined, errorMsg, msgSize); /* Locally defined programs */
-
-          //	  setProperty(H,package,kdefined,defined);
-        }
-
-        if (ret == Ok) {
-          if (IsList(imports)) {
-            ptrI imps = imports;
-            gcAddRoot(H, &imps);
-
-            while (IsList(imps)) {
-              ptrI entry = deRefI(listHead(objV(imps)));
-
-              if (HasClass(entry, commaClass)) {
-                ptrI import = deRefI(nthArg(objV(entry), 0));
-                ptrI vers = deRefI(nthArg(objV(entry), 1));
-                rootPo subRoot = gcAddRoot(H, &import);
-
-                gcAddRoot(H, &vers);
-                gcAddRoot(H, &import);
-
-                ret = classLoader(H, path, import, vers, loaded, errorMsg, msgSize);
-
-                gcRemoveRoot(H, subRoot);
-
-                switch (ret) {
-                case Ok:
-                  break;
-                default:
-                case Error:
-                  outMsg(logFile, "Failed to load package %U, "
-                      "[version: %U] requested by %U\n", SymVal(symbV(import)), SymVal(symbV(vers)),
-                      SymVal(symbV(request)));
-                  break;
-                case Space:
-                  outMsg(logFile, "Not enough heap space to load package %U, "
-                      "[version: %U] requested by %U\n", SymVal(symbV(import)), SymVal(symbV(vers)),
-                      SymVal(symbV(request)));
-                  break;
-                }
-              } else
-                outMsg(logFile, "invalid version info import package "
-                    "spec %w, requested by %w\n", &imports, &request);
-              imps = deRefI(listTail(objV(imps)));
-            }
-          } else if (!identical(imports, emptyList))
-            outMsg(logFile, "invalid import package spec %w, "
-                "requested by %w\n", &imports, &request);
-        }
-
-        while (ret == Ok) {
-          ret = decodeTerm(file, &globalHeap, H, &scratch, errorMsg, msgSize);
-
-          if (ret == Ok) {
-            if (HasClass(scratch, commaClass)) {
-              ptrI prog = deRefI(nthArg(objV(scratch), 1));
-              ptrI symb = deRefI(nthArg(objV(scratch), 0));
-              if (IsCode(prog) && IsProgLbl(symb)) {
-                defineProg(symb, prog);
-
-#ifdef EXECTRACE
-                if (debugging)
-                  outMsg(logFile, "program %w loaded\n", &symb);
-#endif
-              } else
-                outMsg(logFile, "code expected, not: %#,4w in code file", &scratch);
-            } else
-              outMsg(logFile, "invalid entry: %#,4w in code file", &scratch);
-          }
-        }
-      }
-
-      if (ret != Space)
-        *loaded = permLsPair(H, request, *loaded);
-
-      gcRemoveRoot(H, root);
-      closeFile(file);
-
-#ifdef EXECTRACE
-      if (debugging)
-        outMsg(logFile, "package %w loaded\n", &package);
-#endif
-
-      if (ret == Eof)
-        return Ok;
-      else
-        return ret;
-    } else {
-      strMsg(errorMsg, msgSize, "package %U not found", SymVal(symbV(request)));
-      return Eof;
-    }
-  }
-}
-
 retCode g__classload(processPo P, ptrPo a) {
   ptrI pname = deRefI(&a[2]);
 
@@ -557,8 +367,8 @@ retCode g__classload(processPo P, ptrPo a) {
 
         switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
-        retCode ret = classLoader(H, stringVal(stringV(A1)), pname, deRefI(&a[3]), &loaded, P->proc.errorMsg,
-            NumberOf(P->proc.errorMsg));
+        retCode ret = pkgLoader(H, stringVal(stringV(A1)), pname, deRefI(&a[3]), &loaded, P->proc.errorMsg,
+                                NumberOf(P->proc.errorMsg));
         setProcessRunnable(P);
 
         switch (ret) {

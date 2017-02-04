@@ -3,7 +3,7 @@ lo.comp.manifest{
   import lo.resources.
   import lo.uri.
   import lo.comp.package.
-  import lo.comp.parseutils.
+  import lo.json.
 
   public type manifest ::= manifest(list[manifestEntry]).
 
@@ -12,71 +12,39 @@ lo.comp.manifest{
 
   type manifestEntry ::= manifestEntry(string,list[(version,uri,string)]).
 
-  -- Tokenization and parsing manifest files
-
-  private type token ::= mAnifest | lbrce | rbrce | eqUals | stAr 
-    | pkgId(string) | utok(list[integer]).
-
-  tokens:(list[token]) --> list[integer].
-  tokens(Toks) --> spaces(), moreToks(Toks).
-
-  moreToks:(list[token]) --> list[integer].
-  moreToks([]) --> eof.
-  moreToks([Tok,..More]) --> token(Tok), tokens(More).
-
-  token:(token) --> list[integer].
-  token(mAnifest) --> "manifest".
-  token(lbrce) --> "{".
-  token(rbrce) --> "}".
-  token(start) --> "*".
-  token(colon) --> ":".
-  token(eqUals) --> "=".
-  token(utok(Seq)) --> "[", stringText(Seq), "]".
-  token(pkgId(Nm)) --> pkgIden(Nm).
-
-  stringText:(list[integer]) --> list[integer].
-  stringText([]) --> [].
-  stringText([C,..More]) --> "\\", quote(C), stringText(More).
-  stringText([C,..More]) --> [C], { C \= 0c] }, stringText(More).
-
-  quote:(integer) --> list[integer].
-  quote(0c\n) --> "n".
-  quote(0c") --> "\"".
-  quote(0c') --> "'".
-  quote(0c\t) --> "t".
-  quote(C) --> [C].
-
   public readManifest:(uri) => manifest.
-  readManifest(u) => m :- parseManifest(m) %% getResource(u).
+  readManifest(u) => m :- parseJson(j) %% getResource(u), jsonManifest(j,m).
 
   public flushManifest:(uri,manifest){}.
   flushManifest(Root,M) :-
-    putResource(Root,flatten(disp(M))).
+    putResource(Root,flatten(disp(manifestJson(M)))).
 
-  -- Parsing a manifest from tokens
-  public parseManifest:(manifest) --> list[integer].
-  parseManifest(M) --> tokens(TL), { pManifest(M) %% TL}.
+  jsonManifest:(json,manifest){}.
+  jsonManifest(jColl(L),manifest(M)) :-
+    jsonEntries(L,M).
 
-  pManifest:(manifest) --> list[token].
-  pManifest(manifest(E)) --> [mAnifest, lbrce], entries(E), [rbrce].
+  jsonEntries:(map[string,json],list[manifestEntry]){}.
+  jsonEntries(M,L) :- L=pairs(M)//(((K,V))=>jsonEntry(K,V)).
 
-  entries:(list[manifestEntry]) --> list[token].
-  entries([Entry,..More]) --> entry(Entry), entries(More).
-  entries([]) --> [].
+  jsonEntry:(string,json)=>manifestEntry.
+  jsonEntry(P,jColl(Vs)) => manifestEntry(P,pairs(Vs)//(((K,V))=>jsonVersion(P,K,V))).
 
-  entry:(manifestEntry) --> list[token].
-  entry(manifestEntry(Pk,Versions)) --> [pkgId(Pk), colon, lbrce], versions(Versions), [rbrce].
+  jsonVersion:(string,string,json) => (version,uri,string).
+  jsonVersion(P,"*",jColl(Dtl)) => (defltVersion,parseUri(Src),Code) :-
+    present(Dtl,"source",jTxt(Src)),
+    present(Dtl,"code",jTxt(Code)).
+  jsonVersion(P,V,jColl(Dtl)) => (vers(V),parseUri(Src),Code) :-
+    present(Dtl,"source",jTxt(Src)),
+    present(Dtl,"code",jTxt(Code)).
 
-  versions:(list[(version,uri,string)]) --> list[token].
-  versions([V,..More]) --> version(V), versions(More).
-  versions([]) --> [].
+  manifestJson:(manifest)=>json.
+  manifestJson(manifest(E)) => jColl(foldLeft(entryJson,[],E)).
 
-  version:((version,uri,string)) --> list[token].
-  version((V,Uri,Fn)) --> versionName(V), [equals, pkgId(Fn), utok(U)], { uriParse(Uri)%%U }.
+  entryJson:(map[string,json],manifestEntry) => map[string,json].
+  entryJson(M,manifestEntry(P,V)) => M[P->jColl(foldLeft(versionJson,[],V))].
 
-  versionName:(version) --> list[token].
-  versionName(defltVersion) --> [stAr].
-  versionName(vers(S)) --> [pkgId(S)].
+  versionJson:(map[string,json],(version,uri,string)) => map[string,json].
+  versionJson(M,(defltVersion,U,S)) => M["*"->jColl(["source"->jTxt(U::string),"code"->jTxt(S)])].
 
   -- Displaying a manifest
   public implementation display[manifest] <= {

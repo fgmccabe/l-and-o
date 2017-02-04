@@ -15,7 +15,6 @@
  's': String
  'o': Constructor specifier
  'p': Program specifier
- 'u': Tuple
  'n': Term
  '#': Code
 */
