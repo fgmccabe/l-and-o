@@ -20,12 +20,11 @@
 #include "lo.h"
 #include "clock.h"
 
-long timezone_offset;		// offset in seconds from GMT
+long timezone_offset;    // offset in seconds from GMT
 
 struct timeval initial_time;    // Time when the engine started
 
-void init_time(void)
-{
+void init_time(void) {
   time_t tloc;
   struct tm *tmptr;
 
@@ -44,131 +43,124 @@ void init_time(void)
  * reset the interval timer for the new period
  */
 
-retCode g_delay(processPo P, ptrPo a)
-{
+retCode g_delay(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
-  if(isvar(x))
-    return liberror(P,"delay",eINSUFARG);
-  else{
+  if (isvar(x))
+    return liberror(P, "delay", eINSUFARG);
+  else {
     objPo A1 = objV(x);
 
-    if(!IsNumber(A1))
-      return liberror(P,"delay",eNUMNEEDD);
-    else{
+    if (!IsFloat(A1))
+      return liberror(P, "delay", eNUMNEEDD);
+    else {
       struct timespec tm;
       double seconds;
-      double fraction = modf(FloatVal(A1),&seconds);
+      double fraction = modf(FloatVal(A1), &seconds);
 
 #define NANO (1000000000)
 
-      tm.tv_sec=(long)seconds;
-      tm.tv_nsec=(long)(fraction*NANO);	/* Convert microseconds to nanoseconds */
-      switchProcessState(P,wait_timer);
-      if(nanosleep(&tm,NULL)!=0){
-	setProcessRunnable(P);
-	switch(errno){
-	case EINTR:
-	  return liberror(P,"delay",eINTRUPT);
-	case EINVAL:
-	case ENOSYS:
-	default:
-	  return liberror(P,"delay",eINVAL);
-	}
-      }
-      else{
-	setProcessRunnable(P);
-	return Ok;
+      tm.tv_sec = (long) seconds;
+      tm.tv_nsec = (long) (fraction * NANO);  /* Convert microseconds to nanoseconds */
+      switchProcessState(P, wait_timer);
+      if (nanosleep(&tm, NULL) != 0) {
+        setProcessRunnable(P);
+        switch (errno) {
+          case EINTR:
+            return liberror(P, "delay", eINTRUPT);
+          case EINVAL:
+          case ENOSYS:
+          default:
+            return liberror(P, "delay", eINVAL);
+        }
+      } else {
+        setProcessRunnable(P);
+        return Ok;
       }
     }
   }
 }
 
-retCode g_sleep(processPo P, ptrPo a)
-{
+retCode g_sleep(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
-  if(isvar(x))
-    return liberror(P,"sleep",eINSUFARG);
-  else{
+  if (isvar(x))
+    return liberror(P, "sleep", eINSUFARG);
+  else {
     objPo A1 = objV(x);
 
-    if(!IsNumber(A1))
-      return liberror(P,"sleep",eNUMNEEDD);
-    else{
+    if (!IsFloat(A1))
+      return liberror(P, "sleep", eNUMNEEDD);
+    else {
       double f = FloatVal(A1);
       struct timeval now;
       double seconds;
-      double fraction = modf(f,&seconds);
+      double fraction = modf(f, &seconds);
 
       gettimeofday(&now, NULL);
 
-      if(seconds<now.tv_sec ||
-	 (seconds==now.tv_sec && (fraction*1000000)<now.tv_usec))
-	return Ok;
-      else{
-	struct timespec tm;
+      if (seconds < now.tv_sec ||
+          (seconds == now.tv_sec && (fraction * 1000000) < now.tv_usec))
+        return Ok;
+      else {
+        struct timespec tm;
 
-	tm.tv_sec=(long)seconds;
-	tm.tv_nsec=(long)(fraction*NANO);	/* Convert microseconds to nanoseconds */
+        tm.tv_sec = (long) seconds;
+        tm.tv_nsec = (long) (fraction * NANO);  /* Convert microseconds to nanoseconds */
 
-	tm.tv_sec=(long)seconds-now.tv_sec;
-	tm.tv_nsec=(long)(fraction*NANO)-now.tv_usec*1000; /* Convert microseconds to nanoseconds */
-	if(tm.tv_nsec>NANO){
-	  tm.tv_nsec-=NANO;
-	  tm.tv_sec++;
-	}
-	else if(tm.tv_nsec<0){
-	  tm.tv_nsec+=NANO;
-	  tm.tv_sec--;
-	}
+        tm.tv_sec = (long) seconds - now.tv_sec;
+        tm.tv_nsec = (long) (fraction * NANO) - now.tv_usec * 1000; /* Convert microseconds to nanoseconds */
+        if (tm.tv_nsec > NANO) {
+          tm.tv_nsec -= NANO;
+          tm.tv_sec++;
+        } else if (tm.tv_nsec < 0) {
+          tm.tv_nsec += NANO;
+          tm.tv_sec--;
+        }
 
-	switchProcessState(P,wait_timer);
-	if(nanosleep(&tm,NULL)!=0){
-	  setProcessRunnable(P);
-	  switch(errno){
-	  case EINTR:
-	    return liberror(P,"sleep",eINTRUPT);
-	  case EINVAL:
-	  case ENOSYS:
-	  default:
-	    return liberror(P,"sleep",eINVAL);
-	  }
-	}
-	else{
-	  setProcessRunnable(P);
-	  return Ok;
-	}
+        switchProcessState(P, wait_timer);
+        if (nanosleep(&tm, NULL) != 0) {
+          setProcessRunnable(P);
+          switch (errno) {
+            case EINTR:
+              return liberror(P, "sleep", eINTRUPT);
+            case EINVAL:
+            case ENOSYS:
+            default:
+              return liberror(P, "sleep", eINVAL);
+          }
+        } else {
+          setProcessRunnable(P);
+          return Ok;
+        }
       }
     }
   }
 }
 
 /* Return the current time */
-retCode g_now(processPo P, ptrPo a)
-{
+retCode g_now(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
-  if(!isvar(x))
-    return liberror(P,"now",eVARNEEDD);
-  else{
-    ptrI now = allocateFloat(&P->proc.heap,get_time());
+  if (!isvar(x))
+    return liberror(P, "now", eVARNEEDD);
+  else {
+    ptrI now = allocateFloat(&P->proc.heap, get_time());
 
-    return equal(P,&a[1],&now);
+    return equal(P, &a[1], &now);
   }
 }
 
 /* Return the time at midnight */
-retCode g_today(processPo P, ptrPo a)
-{
+retCode g_today(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
-  if(!isvar(x))
-    return liberror(P,"now",eVARNEEDD);
-  else{
-    ptrI now = allocateInteger(&P->proc.heap,get_date());
+  if (!isvar(x))
+    return liberror(P, "now", eVARNEEDD);
+  else {
+    ptrI now = allocateInteger(&P->proc.heap, get_date());
 
-    return equal(P,&a[1],&now);
+    return equal(P, &a[1], &now);
   }
 }
 
@@ -176,35 +168,31 @@ retCode g_today(processPo P, ptrPo a)
  *  returns the current ticks
  */
 
-double get_ticks(void)
-{
-  return ((double)clock())/CLOCKS_PER_SEC;
+double get_ticks(void) {
+  return ((double) clock()) / CLOCKS_PER_SEC;
 }
 
-retCode g_ticks(processPo p, ptrPo a)
-{
-  ptrI T=allocateFloat(&p->proc.heap,get_ticks());
+retCode g_ticks(processPo p, ptrPo a) {
+  ptrI T = allocateFloat(&p->proc.heap, get_ticks());
 
-  return equal(p,&T,&a[1]);
+  return equal(p, &T, &a[1]);
 }
 
 /*
  *  returns the current time
  */
-double get_time(void)
-{
+double get_time(void) {
   struct timeval t;
 
   gettimeofday(&t, NULL);
 
-  return t.tv_sec+t.tv_usec/1.0e6;
+  return t.tv_sec + t.tv_usec / 1.0e6;
 }
 
 /*
  *  returns the time at midnight this morning
  */
-integer get_date(void)
-{
+integer get_date(void) {
   struct timeval t;
 
   gettimeofday(&t, NULL);

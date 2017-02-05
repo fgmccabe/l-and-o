@@ -1,6 +1,6 @@
-#line 2 "/Users/fgm/Projects/LandO/Engine/jsontoken.c"
+#line 2 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"
 
-#line 4 "/Users/fgm/Projects/LandO/Engine/jsontoken.c"
+#line 4 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -538,10 +538,11 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "jtoken.l"
 /* Lexical scanner for JSON */
+/* %option debug */
 
 
 
-#line 12 "jtoken.l"
+#line 13 "jtoken.l"
 
 #include <config.h>
 #include <io.h>
@@ -605,7 +606,7 @@ static void putChar(ch) {
   text[pos++] = (ch);
 }
 
-#line 609 "/Users/fgm/Projects/LandO/Engine/jsontoken.c"
+#line 610 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"
 
 #define INITIAL 0
 #define comment 1
@@ -802,10 +803,10 @@ YY_DECL
     
         YYLTYPE * yylloc;
     
-#line 88 "jtoken.l"
+#line 89 "jtoken.l"
 
 
-#line 809 "/Users/fgm/Projects/LandO/Engine/jsontoken.c"
+#line 810 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"
 
     yylval = yylval_param;
 
@@ -905,94 +906,94 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 90 "jtoken.l"
+#line 91 "jtoken.l"
 
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 91 "jtoken.l"
+#line 92 "jtoken.l"
 /* ignore */
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 92 "jtoken.l"
+#line 93 "jtoken.l"
 /* line comment */
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 93 "jtoken.l"
+#line 94 "jtoken.l"
 BEGIN(comment);
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 94 "jtoken.l"
+#line 95 "jtoken.l"
 
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 95 "jtoken.l"
+#line 96 "jtoken.l"
 
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 96 "jtoken.l"
+#line 97 "jtoken.l"
 
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 97 "jtoken.l"
+#line 98 "jtoken.l"
 BEGIN(INITIAL);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 99 "jtoken.l"
+#line 100 "jtoken.l"
 RTN(LBRA)
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 100 "jtoken.l"
+#line 101 "jtoken.l"
 RTN(RBRA)
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 101 "jtoken.l"
+#line 102 "jtoken.l"
 RTN(COLON)
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 102 "jtoken.l"
+#line 103 "jtoken.l"
 RTN(COMMA)
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 103 "jtoken.l"
+#line 104 "jtoken.l"
 RTN(LBRCE)
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 104 "jtoken.l"
+#line 105 "jtoken.l"
 RTN(RBRCE)
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 106 "jtoken.l"
+#line 107 "jtoken.l"
 RTN(TRUE)
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 107 "jtoken.l"
+#line 108 "jtoken.l"
 RTN(FALSE)
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 108 "jtoken.l"
+#line 109 "jtoken.l"
 RTN(NuLL)
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 110 "jtoken.l"
+#line 111 "jtoken.l"
 {
   yylval->num = parseFloat(yytext); RTN(NUM);
 }
@@ -1005,13 +1006,13 @@ YY_RULE_SETUP
 
 case 19:
 YY_RULE_SETUP
-#line 123 "jtoken.l"
+#line 124 "jtoken.l"
 { restart(); BEGIN(string); }
 	YY_BREAK
 
 case 20:
 YY_RULE_SETUP
-#line 126 "jtoken.l"
+#line 127 "jtoken.l"
 { 
     BEGIN(INITIAL);
     putChar('\0');
@@ -1023,13 +1024,13 @@ YY_RULE_SETUP
 case 21:
 /* rule 21 can match eol */
 YY_RULE_SETUP
-#line 133 "jtoken.l"
+#line 134 "jtoken.l"
 { parseError("unterminated string",yylineno);
   }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 135 "jtoken.l"
+#line 136 "jtoken.l"
 {
     int octCode = octtoi(yytext);
     putChar(octCode);
@@ -1037,7 +1038,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 139 "jtoken.l"
+#line 140 "jtoken.l"
 {
     long hexCode = hextoi(yytext);
     putChar(hexCode);
@@ -1045,42 +1046,42 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 143 "jtoken.l"
+#line 144 "jtoken.l"
 putChar('\a');
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 144 "jtoken.l"
+#line 145 "jtoken.l"
 putChar('\b');
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 145 "jtoken.l"
+#line 146 "jtoken.l"
 putChar('\f');
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 146 "jtoken.l"
+#line 147 "jtoken.l"
 putChar('\n');
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 147 "jtoken.l"
+#line 148 "jtoken.l"
 putChar('\r');
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 148 "jtoken.l"
+#line 149 "jtoken.l"
 putChar('\t');
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 149 "jtoken.l"
+#line 150 "jtoken.l"
 putChar(yytext[1]);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 150 "jtoken.l"
+#line 151 "jtoken.l"
 {
     char *yptr = yytext;
     while(*yptr)
@@ -1090,10 +1091,10 @@ YY_RULE_SETUP
 
 case 32:
 YY_RULE_SETUP
-#line 157 "jtoken.l"
+#line 158 "jtoken.l"
 ECHO;
 	YY_BREAK
-#line 1097 "/Users/fgm/Projects/LandO/Engine/jsontoken.c"
+#line 1098 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(comment):
 case YY_STATE_EOF(string):
@@ -2064,7 +2065,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 157 "jtoken.l"
+#line 158 "jtoken.l"
 
 
 

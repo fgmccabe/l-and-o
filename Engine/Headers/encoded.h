@@ -20,4 +20,7 @@ typedef enum {
   trmCns = 'n'
 } trmSig;
 
+retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg, long msgSize);
+retCode skipEncoded(ioPo in, string errorMsg, long msgLen);
+
 #endif

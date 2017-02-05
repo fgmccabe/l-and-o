@@ -83,7 +83,7 @@ static inline logical isDefined(programPo p) {
 }
 
 static inline logical IsDefined(ptrI X) {
-  return (logical)(IsProgLbl(X) && isDefined((programPo) objV(X)));
+  return (logical) (IsProgLbl(X) && isDefined((programPo) objV(X)));
 }
 
 static inline codePo codeV(ptrI x) {
@@ -231,8 +231,7 @@ extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(unsigned long size, unsigned long litCnt);
 extern retCode verifyCode(ptrI prog);
 
-extern retCode pkgLoader(heapPo H, string path, ptrI request, ptrI version,
-                         ptrPo loaded, string errorMsg, long msgSize);
+extern retCode loadPkg(string pkg, string version, string errorMsg, long msgSize);
 
 extern void initCodeClass(void);
 logical isLoaded(ptrI package);

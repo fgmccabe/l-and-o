@@ -23,6 +23,7 @@
 #include "clock.h"
 #include "debug.h"
 #include "esc.h"
+#include "manifest.h"
 
 logical debugging = False;  // instruction tracing option 
 logical interactive = False;  // Whether it should be interactive 
@@ -40,6 +41,7 @@ logical traceX = False;			/* True if tracing X windows stuff */
 
 byte loSysPath[MAX_MSG_LEN] = {0};      // Pointer to L&O's installation point
 static byte loCWD[MAX_MSG_LEN] = {0};
+static byte repoDir[MAX_MSG_LEN] = {0};
 static byte classPath[MAX_MSG_LEN] = {0};  // Go class path string 
 static byte entryPoint[MAX_MSG_LEN] = {0};  // Go entry point class 
 static byte debugPkg[MAX_MSG_LEN] = {0};  // Standard debug package 
@@ -52,7 +54,7 @@ static int optCount = 0;                /* How many do we have? */
 
 #include "version.h"		/* Version ID for the evaluator */
 
-char copyRight[] = "(c) 2016 F.G.McCabe\nApache 2.0 licence";
+char copyRight[] = "(c) 2017 F.G.McCabe\nApache 2.0 licence";
 
 static long initHeapSize = 200 * 1024;
 long initStackHeapSize = 1024;
@@ -108,8 +110,7 @@ static void splitFirstArg(int argc, char **argv, int *newArgc, char ***newArgv) 
       if (q == NULL) {
         (*newArgv)[arg++] = p;
         break;
-      }
-      else {
+      } else {
         size_t len = (size_t) (q - p);
         char *data = (char *) malloc(len + 1);
 
@@ -130,13 +131,12 @@ int getOptions(int argc, char **argv) {
   splitFirstArg(argc, argv, &argc, &argv);
 
   for (; optCount < NumberOf(Options) &&
-         (opt = getopt(argc, argv, GNU_GETOPT_NOPERMUTE "n:m:M:D:P:d:gG:x:vVh:s:L:R:")) >= 0; optCount++) {
-    Options[optCount].option = (codePoint)opt;     /* store the option */
+         (opt = getopt(argc, argv, GNU_GETOPT_NOPERMUTE "n:m:M:D:P:d:gG:x:vVh:s:L:r:R:")) >= 0; optCount++) {
+    Options[optCount].option = (codePoint) opt;     /* store the option */
 
     if (optarg != NULL) {
       strncpy(Options[optCount].value, optarg, NumberOf(Options[optCount].value));
-    }
-    else
+    } else
       Options[optCount].value[0] = '\0';
 
     switch (opt) {
@@ -260,8 +260,7 @@ int getOptions(int argc, char **argv) {
             logMsg(logFile,"debugging not enabled\n");
             return -1;
 #endif
-            default:
-              ;
+            default:;
           }
         }
         break;
@@ -278,17 +277,13 @@ int getOptions(int argc, char **argv) {
         break;
       }
 
-      case 'P': {
-        byte buff[MAX_MSG_LEN];
-
-        strMsg(buff, NumberOf(buff), "%s:%U", optarg, classPath);
-        uniCpy(classPath, NumberOf(classPath), buff);
-
+      case 'm': {                          /* modify the entry point */
+        strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@%s", optarg);
         break;
       }
 
-      case 'm': {                          /* modify the entry point */
-        strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@%s", optarg);
+      case 'r': {
+        strMsg(repoDir, NumberOf(repoDir), "%s", optarg);
         break;
       }
 
@@ -304,7 +299,7 @@ int getOptions(int argc, char **argv) {
 
       case 'L': {
         byte fn[MAX_MSG_LEN];
-        strncpy((char*)fn, optarg, NumberOf(fn));
+        strncpy((char *) fn, optarg, NumberOf(fn));
 
         if (initLogfile(fn) != Ok) {
           logMsg(logFile, "log file %s not found", optarg);
@@ -354,24 +349,6 @@ int main(int argc, char **argv) {
 
   initLogfile((string) "-");
 
-  {
-    char *dir = getenv("LO_DIR"); /* pick up the installation directory */
-    char cbuff[MAXPATHLEN];
-    char *cwd = getcwd(cbuff, NumberOf(cbuff)); /* compute current starting directory */
-
-    if (dir == NULL)
-      dir = LODIR;                  /* Default installation path */
-
-    strMsg(loSysPath, NumberOf(loSysPath), "%s", dir);
-
-    if (cwd == NULL)
-      syserr("cant determine current directory");
-    else {
-      strMsg(loCWD, NumberOf(loCWD), "%s/", cwd);
-      strMsg(classPath, NumberOf(classPath), "%s:%s/", dir, cwd);
-    }
-  }
-
   strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__main"); /* standard entry point */
 
   if ((narg = getOptions(argc, argv)) < 0) {
@@ -381,6 +358,29 @@ int main(int argc, char **argv) {
 #endif
                         " [-h sizeK] [-s sizeK] [-d rootdir] args ...\n"), argv[0]);
     exit(1);
+  }
+
+  // Set up repository directory
+  if (uniIsLit(repoDir, "")) { // overridden?
+    char *dir = getenv("LO_DIR"); /* pick up the installation directory */
+    if (dir == NULL)
+      dir = LODIR;                  /* Default installation path */
+    uniCpy(repoDir, NumberOf(repoDir), (string) dir);
+  }
+
+  // set up working directory
+  if (uniIsLit(loCWD, "")) {
+    char cbuff[MAXPATHLEN];
+    char *cwd = getcwd(cbuff, NumberOf(cbuff)); /* compute current starting directory */
+    if (cwd == NULL)
+      syserr("cant determine current directory");
+    else
+      strMsg(loCWD, NumberOf(loCWD), "%s/", cwd);
+  }
+
+  if (loadManifest(repoDir) != Ok) {
+    outMsg(logFile, "error in loading repository from %s", repoDir);
+    exit(99);
   }
 
   /* IMPORTANT -- Keep the order of these set up calls */
@@ -396,7 +396,7 @@ int main(int argc, char **argv) {
 
   setupSignals();
 
-  bootstrap(entryPoint, SymbolDebug, classPath, loCWD);
+  bootstrap(entryPoint, classPath, NULL, loCWD);
 
   return EXIT_SUCCEED;          /* exit the lo system cleanly */
 }
@@ -417,7 +417,7 @@ ptrI cmdLineOptions(heapPo H) {
   for (i = 0; i < optCount; i++) {
     pair = objP(allocateObject(H, commaClass));  /* a new option pair */
 
-    tmp = allocateInteger(H,Options[i].option);
+    tmp = allocateInteger(H, Options[i].option);
     updateArg(objV(pair), 0, tmp);
 
     tmp = newSymbol(Options[i].value);

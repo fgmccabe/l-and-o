@@ -29,16 +29,21 @@ typedef retCode (*flushProc)(ioPo f,long count);
 typedef retCode (*seekProc)(ioPo f,long count);
 typedef retCode (*byteOutProc)(ioPo f,byte *cl,long count,long *actual);
 typedef retCode (*byteInProc)(ioPo f,byte *ch,long count,long *actual);
+typedef retCode (*markProc)(ioPo f,long *mark);
+typedef retCode (*resetProc)(ioPo f,long mark);
 
 typedef struct {
   byteInProc read;                      /* procedure to read a byte */
   byteOutProc write;                    /* procedure to write a byte */
-  retCode (*backByte)(ioPo io,byte b); /* procedure to put a byte back in the file */
+  retCode (*backByte)(ioPo io,byte b);  /* procedure to put a byte back in the file */
 
-  ioProc isAtEof;			/* Are we at the end of file? */
+  markProc mark;                        /* Attempt to place a backtrackable mark */
+  resetProc reset;                      /* Reset to previous mark */
 
-  ioProc inReady;                    /* Called to determine if file has input */
-  ioProc outReady;                  /* Called to determine if file can output */
+  ioProc isAtEof;			                  /* Are we at the end of file? */
+
+  ioProc inReady;                       /* Called to determine if file has input */
+  ioProc outReady;                      /* Called to determine if file can output */
 
   flushProc flush;                      /* Called when file is to be flushed */
   seekProc seek;                        /* called when seeking */

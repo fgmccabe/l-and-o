@@ -43,6 +43,10 @@ static retCode bufferSeek(ioPo f, long count);
 
 static retCode bufferClose(ioPo f);
 
+static retCode bufferMark(ioPo f, long *mark);
+
+static retCode bufferReset(ioPo f, long mark);
+
 BufferClassRec BufferClass = {
   {(classPo) &IoClass, /* parent class is io object */
     "buffer", /* this is the buffer class */
@@ -63,6 +67,8 @@ BufferClassRec BufferClass = {
   {bufferInBytes, /* inByte  */
     bufferOutBytes, /* outBytes  */
     bufferBackByte, /* backByte */
+    bufferMark,       /* Mark the buffer */
+    bufferReset,      /* Reset to a mark */
     bufferAtEof, /* at end of file? */
     bufferInReady, /* readyIn  */
     bufferOutReady, /* readyOut  */
@@ -87,7 +93,7 @@ static void BufferInit(objectPo o, va_list *args) {
   f->buffer.bufferSize = va_arg(*args, long); /* set up the buffer */
   f->io.mode = va_arg(*args, ioDirection); /* set up the access mode */
   f->buffer.resizeable = va_arg(*args, logical); /* is this buffer resizeable? */
-  if(isReadingFile(O_IO(f)))
+  if (isReadingFile(O_IO(f)))
     f->buffer.size = f->buffer.bufferSize;
   else
     f->buffer.size = 0;
@@ -170,6 +176,30 @@ static retCode bufferBackByte(ioPo io, byte b) {
     return Error;
 }
 
+static retCode bufferMark(ioPo io, long *mark) {
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos > 0) {
+    *mark = f->buffer.pos;
+    return Ok;
+  } else
+    return Error;
+}
+
+static retCode bufferReset(ioPo io, long mark){
+  bufferPo f = O_BUFFER(io);
+
+  if (f->buffer.pos > 0) {
+    if(mark>=0 && mark<f->buffer.size){
+      f->buffer.pos = mark;
+      return Ok;
+    }
+    else
+      return Fail;
+  } else
+    return Error;
+}
+
 static retCode bufferAtEof(ioPo io) {
   bufferPo f = O_BUFFER(io);
 
@@ -215,6 +245,14 @@ retCode clearBuffer(bufferPo in) {
   in->io.inBpos = in->io.inCpos = 0;
   in->buffer.size = 0;
   return Ok;
+}
+
+retCode bufferStepForward(bufferPo in, long cnt) {
+  if (in->buffer.pos + cnt < in->buffer.size) {
+    in->buffer.pos += cnt;
+    return Ok;
+  } else
+    return Error;
 }
 
 bufferPo newStringBuffer() {

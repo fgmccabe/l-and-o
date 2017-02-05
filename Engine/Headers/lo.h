@@ -21,7 +21,6 @@
 #include "local.h"		  /* localization */
 #include "retcode.h"
 #include "unicode.h"
-#include "iostr.h"
 #include "file.h"
 #include "formio.h"
 #include "stringBuffer.h"

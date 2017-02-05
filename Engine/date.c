@@ -37,7 +37,6 @@
 #define DATE_UTC 8
 #define DATE_ZONE 9
 #define DATE_LEN 9
-#define DATE_TIME 9
 
 retCode g__time2date(processPo P, ptrPo a) {
   ptrI T = deRefI(&a[1]);
@@ -212,7 +211,6 @@ retCode g__time2utc(processPo P, ptrPo a) {
 #define UTC_ARG 7
 #define TIME_ARG 8
 
-
 retCode g__date2time(processPo P, ptrPo a) {
   struct tm now;
   time_t when;
@@ -244,17 +242,12 @@ retCode g__date2time(processPo P, ptrPo a) {
   else
     return liberror(P, "__date2time", eINVAL);              /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[SEC_ARG]))) {
-    if (isInteger(objV(El)))
-      now.tm_sec = (int) integerVal(intV(El));           /* Extract the second */
-    else if (isFloat(objV(El))) {
-      double foo;
+  if (!isvar(El = deRefI(&a[SEC_ARG])) && isFloat(objV(El))) {
+    double foo;
 
-      fraction = modf(floatVal(floatV(El)), &foo);
-      now.tm_sec = (int) foo;
-    }
-  }
-  else
+    fraction = modf(floatVal(floatV(El)), &foo);
+    now.tm_sec = (int) foo;
+  } else
     return liberror(P, "__date2time", eINVAL);              /* Invalid inverse */
 
   if (!isvar(El = deRefI(&a[UTC_ARG])) && isInteger(objV(El)))
@@ -287,45 +280,40 @@ retCode g__utc2time(processPo P, ptrPo a) {
   ptrI El;
   double fraction = 0.0;
 
-  if (!isvar(El = deRefI(&a[DATE_YEAR + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_YEAR])) && isInteger(objV(El)))
     now.tm_year = (int) (integerVal(intV(El)) - 1900); /* Extract the year */
   else
     return liberror(P, "__utc2time", eINVAL); /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_MON + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_MON])) && isInteger(objV(El)))
     now.tm_mon = (int) integerVal(intV(El)) - 1; /* Extract the month */
   else
     return liberror(P, "__utc2time", eINVAL); /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_DAY + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_DAY])) && isInteger(objV(El)))
     now.tm_mday = (int) integerVal(intV(El));          /* Extract the day of the month */
   else
     return liberror(P, "__utc2time", eINVAL);              /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_HOUR + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_HOUR])) && isInteger(objV(El)))
     now.tm_hour = (int) integerVal(intV(El));           /* Extract the hour */
   else
     return liberror(P, "__utc2time", eINVAL);              /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_MIN + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_MIN])) && isInteger(objV(El)))
     now.tm_min = (int) integerVal(intV(El));           /* Extract the minute */
   else
     return liberror(P, "__utc2time", eINVAL);              /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_SEC + 1]))) {
-    if (isInteger(objV(El)))
-      now.tm_sec = (int) integerVal(intV(El));           /* Extract the second */
-    else if (isFloat(objV(El))) {
+  if (!isvar(El = deRefI(&a[DATE_SEC])) && isFloat(objV(El))) {
       double foo;
 
       fraction = modf(floatVal(floatV(El)), &foo);
       now.tm_sec = (int) foo;
-    }
-  }
-  else
+  } else
     return liberror(P, "__utc2time", eINVAL);              /* Invalid inverse */
 
-  if (!isvar(El = deRefI(&a[DATE_UTC + 1])) && isInteger(objV(El)))
+  if (!isvar(El = deRefI(&a[DATE_UTC])) && isInteger(objV(El)))
 #ifdef HAVE_TM_ZONE
     now.tm_gmtoff = integerVal(intV(El));           /* Extract the minute */
 #else
@@ -341,7 +329,7 @@ retCode g__utc2time(processPo P, ptrPo a) {
   {
     ptrI T = allocateFloat(&P->proc.heap, when + fraction);
 
-    return equal(P, &T, &a[DATE_LEN + 1]);
+    return equal(P, &T, &a[DATE_LEN]);
   }
 #else
   return liberror(P,"__utc2time",eNOTFND);

@@ -45,6 +45,10 @@ static retCode nullSeek(ioPo f, long count);
 
 static retCode nullClose(ioPo f);
 
+static retCode nullMark(ioPo f, long *mark);
+
+static retCode nullReset(ioPo f, long mark);
+
 IoClassRec IoClass = {
   {
     (classPo) &LockedClass,               /* parent class is object */
@@ -67,6 +71,8 @@ IoClassRec IoClass = {
     nullInBytes,          /* inByte, abstract for the io class  */
     nullOutBytes,         /* outByte, abstract for the io class  */
     nullOutByte,          /* putbackByte, abstract for the io class  */
+    nullMark,             /* empty mark - return Fail */
+    nullReset,            /* empty reset, returl Fail */
     nullEof,              /* are we at end of file? */
     nullReady,            /* readyIn, abstract for the io class  */
     nullReady,            /* readyOut, abstract for the io class  */
@@ -229,8 +235,7 @@ retCode inByte(ioPo f, byte *b) {
     if (act == 1) {
       *b = buff[0];
       return Ok;
-    }
-    else
+    } else
       return Fail;
   }
   return ret;
@@ -257,6 +262,28 @@ retCode putBackByte(ioPo f, byte b) {
 
   if (ret == Ok)
     f->io.inBpos--;
+
+  unlock(O_LOCKED(o));
+  return ret;
+}
+
+retCode markIo(ioPo f, long *mark) {          /* record a mark in the file, return Ok if allowed */
+  objectPo o = O_OBJECT(f);
+  retCode ret;
+
+  lock(O_LOCKED(o));
+  ret = ((IoClassRec *) f->object.class)->ioPart.mark(f, mark);
+
+  unlock(O_LOCKED(o));
+  return ret;
+}
+
+retCode resetToMark(ioPo f, long mark) {      /* Rewind file to mark point, if possible */
+  objectPo o = O_OBJECT(f);
+  retCode ret;
+
+  lock(O_LOCKED(o));
+  ret = ((IoClassRec *) f->object.class)->ioPart.reset(f, mark);
 
   unlock(O_LOCKED(o));
   return ret;
@@ -317,8 +344,7 @@ retCode inChar(ioPo io, codePoint *ch) {
         if (b <= 0x7f) {
           *ch = ((codePoint) b) & 0xff;
           return adjustCharInCount(io, *ch);
-        }
-        else if (UC80(b)) {
+        } else if (UC80(b)) {
           byte nb;
           ret = inByte(io, &nb);
 
@@ -326,13 +352,11 @@ retCode inChar(ioPo io, codePoint *ch) {
             codePoint c = (codePoint) (UX80(b) << 6 | UXR(nb));
             *ch = c;
             return adjustCharInCount(io, c);
-          }
-          else {
+          } else {
             putBackByte(io, b);         /* this will allow us to restart the inChar */
             return ret;
           }
-        }
-        else if (UC800(b)) {
+        } else if (UC800(b)) {
           byte up, md;
 
           ret = inByte(io, &md);
@@ -342,19 +366,16 @@ retCode inChar(ioPo io, codePoint *ch) {
             if (ret == Ok) {
               *ch = (codePoint) ((UX800(b) << 12) | (UXR(md) << 6) | (UXR(up)));
               return adjustCharInCount(io, *ch);
-            }
-            else {
+            } else {
               putBackByte(io, md);
               putBackByte(io, b);
               return ret;
             }
-          }
-          else {
+          } else {
             putBackByte(io, b);
             return ret;
           }
-        }
-        else if (UC1000(b)) {
+        } else if (UC1000(b)) {
           byte lo, md, hi;
 
           ret = inByte(io, &hi);
@@ -367,30 +388,25 @@ retCode inChar(ioPo io, codePoint *ch) {
               if (ret == Ok) {
                 *ch = (codePoint) ((UX1000(b) << 18) | (UXR(hi) << 12) | (UXR(md) << 6) | (UXR(lo)));
                 return adjustCharInCount(io, *ch);
-              }
-              else {
+              } else {
                 putBackByte(io, md);
                 putBackByte(io, hi);
                 putBackByte(io, b);
                 return ret;
               }
-            }
-            else {
+            } else {
               putBackByte(io, hi);
               putBackByte(io, b);
               return ret;
             }
-          }
-          else {
+          } else {
             putBackByte(io, b);
             return ret;
           }
-        }
-        else {
+        } else {
           return Error;
         }
-      }
-      else
+      } else
         return ret;
     }
 
@@ -428,33 +444,28 @@ retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
       ret = ((IoClassRec *) io->object.class)->ioPart.backByte(io, chbuff[len]);
     }
     return ret;
-  }
-  else
+  } else
     return Eof;
 }
 
 // Push a string back into the input channel.
 // String is assumed to be allocated in order of arrival, so its pushed back in reverse order
-retCode pushBack(ioPo f,  string str, long from, long len) {
+retCode pushBack(ioPo f, string str, long from, long len) {
   if (f != NULL) {
-    if(from<len){
+    if (from < len) {
       codePoint ch;
-      retCode ret = nxtPoint(str,&from,len,&ch);
-      if(ret==Ok){
-        ret = pushBack(f,str,from,len);
-        if(ret==Ok)
-          ret = unGetChar(f,ch);
+      retCode ret = nxtPoint(str, &from, len, &ch);
+      if (ret == Ok) {
+        ret = pushBack(f, str, from, len);
+        if (ret == Ok)
+          ret = unGetChar(f, ch);
       }
       return ret;
-    }
-    else
+    } else
       return Ok;
-  }
-  else
+  } else
     return Error;
 }
-
-
 
 /*
  * read a line ... up to a terminating character 
@@ -476,8 +487,7 @@ retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term) {
       if (ret == Ok) {
         if (uniIndexOf(term, tlen, 0, ch) >= 0) { /* have we found a terminating byte? */
           ret = appendCodePoint(buffer, &bPos, len, ch);
-        }
-        else
+        } else
           break;
       }
     }
@@ -487,8 +497,7 @@ retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term) {
     }
 
     *actual = bPos;
-  }
-  else
+  } else
     ret = Error;
 
   unlock(O_LOCKED(o));
@@ -519,7 +528,7 @@ retCode outChar(ioPo io, codePoint ch) {
     return ret;
 }
 
-retCode outText(ioPo f, byte *text, unsigned long len) {
+retCode outText(ioPo f, byte *text, long len) {
   long remaining = len;
   long pos = 0;
   retCode ret = Ok;
@@ -663,8 +672,9 @@ retCode outB(ioPo f, byte c) {
   long act;
   retCode ret = outBytes(f, &buff[0], NumberOf(buff), &act);
 
-  if (ret == Ok) if (act != 1)
-    return Fail;
+  if (ret == Ok)
+    if (act != 1)
+      return Fail;
   return ret;
 }
 
@@ -716,6 +726,14 @@ static retCode nullReady(ioPo f) {
   return Error;
 }
 
+static retCode nullMark(ioPo f, long *mark) {
+  return Fail;
+}
+
+static retCode nullReset(ioPo f, long mark) {
+  return Fail;
+}
+
 /* Access macros & functions */
 retCode wasFileAtEof(ioPo f)    /* Ok if at end of file */
 {
@@ -730,15 +748,14 @@ retCode wasFileAtEof(ioPo f)    /* Ok if at end of file */
 
     if (ret == Ok)
       unGetChar(f, ch);
-  }
-  else
+  } else
     ret = f->io.status;
 
   unlock(O_LOCKED(o));
   return ret;
 }
 
-retCode isFileAtEof(ioPo f)    /* Ok if at end of file */
+retCode isFileAtEof(ioPo f)    /* Eof if at end of file */
 {
   objectPo o = O_OBJECT(f);
 
@@ -893,4 +910,30 @@ retCode isOutReady(ioPo f) {
   ret = ((IoClassRec *) (f->object.class))->ioPart.outReady(f);
   unlock(O_LOCKED(o));
   return ret;
+}
+
+retCode isLookingAt(ioPo f, char *prefix) {
+  long mark;
+
+  retCode ret = markIo(f, &mark);
+
+  if (ret != Ok)
+    return Error;
+  else {
+    while (ret == Ok && *prefix != '\0') {
+      byte ch;
+      ret = inByte(O_IO(f), &ch);
+      if (ret == Ok) {
+        if (ch != *prefix++)
+          ret = Fail;
+      }
+    }
+
+    if (ret != Ok) {
+      ret = resetToMark(f, mark);
+      if (ret != Ok)
+        return Error;
+    }
+    return ret;
+  }
 }

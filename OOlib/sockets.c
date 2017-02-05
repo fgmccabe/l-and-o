@@ -15,7 +15,6 @@
 
 #include "fileP.h"
 #include "hosts.h"
-#include "iostr.h"
 #include "iosockP.h"
 #include "formio.h"
 #include <string.h>
@@ -68,6 +67,8 @@ FileClassRec SocketClass = {
     fileInBytes,                        /* inByte  */
     fileOutBytes,                       /* outBytes  */
     fileBackByte,                       //  put a byte back in the buffer
+    fileMark,
+    fileReset,
     fileAtEof,        //  Are we at end of file?
     fileInReady,                        //  readyIn
     fileOutReady,                       //  readyOut

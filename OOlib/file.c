@@ -65,6 +65,8 @@ FileClassRec FileClass = {
     fileInBytes,                        // inByte
     fileOutBytes,                       // outBytes
     fileBackByte,                       // put a byte back in the buffer
+    fileMark,                           // Mark the file
+    fileReset,                          // Reset to mark
     fileAtEof,                          // Are we at end of file?
     fileInReady,                        // readyIn
     fileOutReady,                       // readyOut
@@ -174,11 +176,9 @@ retCode fileBackByte(ioPo io, byte b) {
       f->file.in_len = (short) (f->file.in_len - f->file.in_pos + 1);
       f->file.in_pos = 0;
       f->io.status = Ok;
-    }
-    else
+    } else
       return Error;
-  }
-  else {
+  } else {
     f->file.in_pos--;
     f->file.in_line[f->file.in_pos] = b;
     f->io.status = Ok;
@@ -256,8 +256,7 @@ retCode fileInReady(ioPo io) {
         return Ok;
       else
         return Fail;
-    }
-    else
+    } else
       return ioErrorMsg(io, "%U does not permit read access", fileName(io));
   }
 }
@@ -285,8 +284,7 @@ retCode fileOutReady(ioPo io) {
         return Ok;
       else
         return Fail;
-    }
-    else
+    } else
       return ioErrorMsg(io, "%U does not permit write access", fileName(io));
   }
 }
@@ -344,14 +342,12 @@ retCode fileClose(ioPo io) {
             ret = ioErrorMsg(io, "problem %s (%d) in closing %U", strerror(errno), errno, fileName(io));
             break;
         }
-      }
-      else {
+      } else {
         f->file.fno = -1;
         destroyObject(O_OBJECT(io)); // this will get rid of all the file objects attributes
         ret = Ok;
       }
-    }
-    else
+    } else
       ret = Ok;        // probably already being closed
   }
 
@@ -419,22 +415,20 @@ retCode fileFill(filePo f) {
           f->file.in_pos = f->file.in_len = 0;
           return f->io.status = Eof;  // we have reach end of file
       }
-    }
-    else {
+    } else {
       f->file.in_pos = 0;
       f->file.in_len = (short) len;
+      f->file.bufferPos = f->io.inBpos;
 
       if (len == 0) {
         //	logMsg(logFile,"IO (%d) ended",f->file.fno);
         return f->io.status = Eof;
-      }
-      else {
+      } else {
         // logMsg(logFile,"read %d bytes from %d",len,f->file.fno);
         return f->io.status = Ok;
       }
     }
-  }
-  else
+  } else
     return Ok;        // Already got stuff in there
 }
 
@@ -470,8 +464,7 @@ retCode fileFlush(filePo f, int count) {
                             "Problem %s (%d) in writing to %U", strerror(errno), errno,
                             fileName(O_IO(f)));
       }
-    }
-    else {
+    } else {
       cp += written;
       writeGap += written;
       remaining -= written;
@@ -482,22 +475,46 @@ retCode fileFlush(filePo f, int count) {
   return Ok;
 }
 
+retCode fileMark(ioPo f, long *mark) {
+  if ((fileMode(f) & ioREAD) != ioREAD)
+    return Error;
+  else {
+    *mark = f->io.inBpos;
+    return Ok;
+  }
+}
+
+retCode fileReset(ioPo f, long mark) {
+  if ((fileMode(f) & ioREAD) != ioREAD)
+    return Error;
+  else {
+    filePo ff = O_FILE(f);
+    if (mark < ff->file.bufferPos || mark > ff->file.in_len)
+      return Fail;
+    else {
+      ff->io.inBpos = mark;
+      ff->file.in_pos = (short) (mark - ff->file.bufferPos);
+      return Ok;
+    }
+  }
+}
+
 ioEncoding fileEncoding(filePo f) {
   return f->io.encoding;
 }
 
-logical isFileBlocking(filePo f){
+logical isFileBlocking(filePo f) {
   int fno = f->file.fno;
   long flag = fcntl(fno, F_GETFL);
 
-  return flag&O_NONBLOCK ? False : True;
+  return flag & O_NONBLOCK ? False : True;
 }
 
-logical isFileAsynch(filePo f){
+logical isFileAsynch(filePo f) {
   int fno = f->file.fno;
   long flag = fcntl(fno, F_GETFL);
 
-  return flag&O_ASYNC ? True : False;
+  return flag & O_ASYNC ? True : False;
 }
 
 retCode configureIo(filePo f, ioConfigOpt mode) {
@@ -570,8 +587,7 @@ ioPo openInFile(string name, ioEncoding encoding) {
       return NULL;
     else
       return O_IO(newObject(fileClass, name, inFileRefNum, encoding, ioREAD));
-  }
-  else
+  } else
     return NULL;
 }
 
@@ -758,8 +774,7 @@ retCode initLogfile(string name) {
     OpenStdin();    // open standard files
     OpenStdout();
     return Ok;
-  }
-  else
+  } else
     return Error;
 }
 

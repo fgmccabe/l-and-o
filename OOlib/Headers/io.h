@@ -52,6 +52,11 @@ retCode inByte(ioPo f, byte *ch);      /* read a single byte -- with status */
 retCode inBytes(ioPo f, byte *buffer, long len, long *actual); /* read a block of bytes */
 retCode putBackByte(ioPo f, byte b);
 
+retCode markIo(ioPo f, long *mark);          /* record a mark in the file, return Ok if allowed */
+retCode resetToMark(ioPo f, long mark);      /* Rewind file to mark point, if possible */
+
+retCode isLookingAt(ioPo f, char *prefix);    /* Is prefix the first thing in the file? */
+
 retCode inChar(ioPo f, codePoint *ch);     /* read a character */
 retCode unGetChar(ioPo f, codePoint ch);   /* put a single character back */
 retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term);
@@ -67,7 +72,7 @@ retCode outChar(ioPo f, codePoint ch);
 retCode outBlock(ioPo f, byte *data, long len);
 retCode outBytes(ioPo f, byte *data, long len, long *actual);
 
-retCode outText(ioPo f, string text, unsigned long len);
+retCode outText(ioPo f, string text, long len);
 retCode outStr(ioPo f, char *str);
 long outColumn(ioPo f);                 /* return number of chars since lf */
 

@@ -234,14 +234,14 @@ retCode processProcesses(procProc proc, void *cl) {
   return processAll(processClass, (manageProc) proc, cl);
 }
 
-processPo rootProcess(ptrI thread, ptrI boot, string classPath) {
+processPo rootProcess(ptrI thread, ptrI boot, string pkg) {
   processPo P = O_PROCESS(newObject(processClass, thread));
   heapPo H = &P->proc.heap;
   rootPo root = gcAddRoot(H, &thread);
 
   gcAddRoot(H, &boot);
 
-  P->proc.A[1] = allocateString(H, classPath, uniStrLen(classPath)); /* class path */
+  P->proc.A[1] = allocateString(H, pkg, uniStrLen(pkg)); /* class path */
   P->proc.A[2] = cmdLineOptions(H);  /* The command line options */
   P->proc.A[3] = commandLine(H);  /* Command line arguments */
 

@@ -11,6 +11,8 @@
 #include "formio.h"
 #include "file.h"
 #include "jsonEvent.h"
+
+// #define YY DEBUG 1
 %}
 
 %locations

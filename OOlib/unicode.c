@@ -485,7 +485,7 @@ uinteger uniHash(const string name) {
   register uinteger hash = 0;
   byte *s = name;
 
-  while (*name) {
+  while (*s) {
     hash = hash * 37 + *s++;
   }
 

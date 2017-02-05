@@ -96,6 +96,7 @@ escapeType("_fseek",predType([type("lo.io#file"),type("lo.core*integer")])).
 escapeType("_flush",predType([type("lo.io#file")])).
 escapeType("_flushall",predType([])).
 escapeType("_setfileencoding",predType([type("lo.io#file"),type("lo.core*integer")])).
+escapeType("_ensure_loaded",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
 escapeType("_isCcChar",predType([type("lo.core*integer")])).
 escapeType("_isCfChar",predType([type("lo.core*integer")])).
@@ -240,6 +241,7 @@ isEscape("_fseek").
 isEscape("_flush").
 isEscape("_flushall").
 isEscape("_setfileencoding").
+isEscape("_ensure_loaded").
 isEscape("_logmsg").
 isEscape("_isCcChar").
 isEscape("_isCfChar").

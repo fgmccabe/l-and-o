@@ -29,12 +29,14 @@ typedef struct _buffer_ *bufferPo;
 extern classPo bufferClass;
 
 bufferPo newStringBuffer();
+bufferPo openStringBuffer(string buffer,long len);
 bufferPo fixedStringBuffer(string buffer, long len);
 
 string getTextFromBuffer(long *len, bufferPo s);
 long bufferSize(bufferPo b);
 retCode clearBuffer(bufferPo b);
 retCode rewindBuffer(bufferPo b);
+retCode bufferStepForward(bufferPo in,long cnt);
 
 #ifdef VERIFY_OBJECT
 objectPo checkCast(void *c,classPo class);

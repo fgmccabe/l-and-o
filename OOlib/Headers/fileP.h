@@ -45,12 +45,15 @@ typedef struct _file_part_ {
   short in_pos;
   short in_len;
 
+  long bufferPos;                       // Mark at beginning of this buffer
+
   byte out_line[MAXLINE];               // The output buffer
   short out_pos;                        // Current position within the output buffer
 } FilePart;
 
 typedef struct _file_object_ {
   ObjectRec object;                     // object level of the io structure */
+  LockObjectRec lock;
   IoPart io;                            // Io level of io object */
   FilePart file;                        // File level of file object
 } FileObject;
@@ -65,6 +68,8 @@ void FileInit(objectPo o, va_list *args);
 retCode fileInBytes(ioPo f, byte *ch, long count, long *actual);
 retCode fileOutBytes(ioPo f, byte *b, long count, long *actual);
 retCode fileBackByte(ioPo f, byte b);
+retCode fileMark(ioPo f,long *mark);
+retCode fileReset(ioPo f,long mark);
 retCode fileAtEof(ioPo f);
 retCode fileInReady(ioPo f);
 retCode fileOutReady(ioPo f);

@@ -191,7 +191,7 @@ retCode g__univ(processPo P, ptrPo a) {
 void showCall(processPo P, ptrI prog, ptrPo args, long arity) {
   int i;
   byte buffer[1024];
-  ioPo out = O_IO(openByteBuffer(buffer, NumberOf(buffer)));
+  ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
   outMsg(out, "%w: %w(", &P->proc.thread, &prog);
 
@@ -200,8 +200,8 @@ void showCall(processPo P, ptrI prog, ptrPo args, long arity) {
 
   outMsg(out, ")\n%_");
 
-  uinteger len;
-  string text = getStrText(O_STRING(out), &len);
+  long len;
+  string text = getTextFromBuffer(&len,O_BUFFER(out));
 
   outText(logFile, text, len);
   closeFile(out);

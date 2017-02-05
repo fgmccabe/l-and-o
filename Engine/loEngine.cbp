@@ -270,6 +270,9 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/main.c">
 			<Option target="lo"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/manifest.c">
+			<Option target="lo"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/misc.c">
 			<Option target="lo"/>
 		</Unit>
@@ -309,7 +312,19 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/writef.c">
 			<Option target="lo"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/config.h">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/escapes.h">
+			<Option target="lo"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Headers/escodes.h">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/instructions.h">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/version.h">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/CMakeLists.txt">

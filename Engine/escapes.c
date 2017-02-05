@@ -221,7 +221,7 @@ logical validEscape(unsigned int code, int arity) {
 void showEscape(processPo P, int code, ptrPo args, long arity) {
   int i;
   byte buffer[1024];
-  ioPo out = O_IO(openBufferStr(buffer, NumberOf(buffer)));
+  ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
   outMsg(out, "%w: ", &P->proc.thread);
   outMsg(out, "%s(", escapeName(code));
@@ -231,8 +231,8 @@ void showEscape(processPo P, int code, ptrPo args, long arity) {
 
   outMsg(out, ")\n%_");
 
-  uint64 len;
-  string text = getStrText(O_STRING(out), &len);
+  long len;
+  string text = getTextFromBuffer(&len,O_BUFFER(out));
 
   outText(logFile, text, len);
   closeFile(out);

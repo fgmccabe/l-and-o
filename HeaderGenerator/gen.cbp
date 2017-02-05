@@ -289,6 +289,16 @@
 		<Unit filename="/Users/fgm/Projects/LandO/HeaderGenerator/trie.h">
 			<Option target="ops"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/escapes.h">
+			<Option target="genesc"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/instructions.h">
+			<Option target="genins"/>
+			<Option target="opcodes"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Headers/operators.h">
+			<Option target="ops"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>

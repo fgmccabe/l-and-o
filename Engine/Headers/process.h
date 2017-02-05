@@ -160,8 +160,8 @@ process_state ps_state(processPo p);
 
 processPo runerr(processPo); /* non-fatal error */
 
-processPo rootProcess(ptrI thread,ptrI boot,string classPath);
-void bootstrap(string entry,logical debug,string bootfile,string cwd);
+processPo rootProcess(ptrI thread,ptrI boot,string pkg);
+void bootstrap(string entry, string bootPkg, string version, string cwd);
 	       
 void displayProcesses(void);
 void displayProcess(processPo p);

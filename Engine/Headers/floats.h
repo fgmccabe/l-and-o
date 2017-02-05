@@ -30,6 +30,9 @@ typedef struct _integer_record_ {
   integer i;
 } integerRec, *integerPo;
 
+#define IntegerCellCount CellCount(sizeof(integerRec))
+
+
 extern ptrI integerClass;    /* integerClass is a specialClass */
 
 static inline ptrI allocateInteger(heapPo P, integer i) {
@@ -75,6 +78,9 @@ typedef struct _float_record_ {
   double f;
 } floatRec, *floatPo;
 
+#define FloatCellCount CellCount(sizeof(floatRec))
+
+
 extern ptrI floatClass;
 
 static inline logical isFloat(objPo p) {
@@ -98,7 +104,7 @@ static inline double floatVal(floatPo p) {
 #endif
 }
 
-static inline logical IsNumber(objPo p) {
+static inline logical IsFloat(objPo p) {
   return (logical) (isFloat(p) || isInteger(p));
 }
 

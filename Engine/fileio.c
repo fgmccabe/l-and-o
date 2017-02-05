@@ -798,7 +798,7 @@ retCode g__get_file(processPo P, ptrPo a) {
   if (isReadingFile(file) != Ok)
     return liberror(P, "_get_file", eNOPERM);
 
-  ioPo outBuff = O_IO(openStrOutput((string) "", utf8Encoding));
+  ioPo outBuff = O_IO(newStringBuffer());
   byte buffer[1024];
 
   retCode ret = Ok;
@@ -846,8 +846,8 @@ retCode g__get_file(processPo P, ptrPo a) {
   }
 
   /* grab the result */
-  uinteger length;
-  string text = getStrText(O_STRING(outBuff), &length);
+  long length;
+  string text = getTextFromBuffer(&length,O_BUFFER(outBuff));
   ptrI reslt = allocateString(&P->proc.heap, text, length);
 
   closeFile(file);
@@ -1082,7 +1082,7 @@ retCode g__inline(processPo P, ptrPo a) {
 
     strncpy((char *) term, (char *) stringVal(stringV(a[2])), tlen);
 
-    ioPo str = O_IO(openStrOutput((string) "", utf8Encoding));
+    ioPo str = O_IO(newStringBuffer());
 
     while (True) {
       switchProcessState(P, wait_io);
@@ -1091,12 +1091,12 @@ retCode g__inline(processPo P, ptrPo a) {
 
       switch (ret) {
         case Eof:
-          if (emptyOutStr(O_STRING(str)) == Ok) {
+          if (bufferSize(O_BUFFER(str)) == 0) {
             closeFile(str);
             return liberror(P, "__inline", eEOF);    /* cant read past the end of the file */
           } else {
-            uint64 len;
-            string buff = getStrText(O_STRING(str), &len);
+            long len;
+            string buff = getTextFromBuffer(&len,O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, (long) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1114,9 +1114,9 @@ retCode g__inline(processPo P, ptrPo a) {
               ret = equal(P, &RR, &a[3]);
             gcRemoveRoot(&P->proc.heap, root);
             return ret;
-          } else if (chr == EOF_CHAR && emptyOutStr(O_STRING(str)) != Ok) {
-            uint64 len;
-            string buff = getStrText(O_STRING(str), &len);
+          } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str)) != Ok) {
+            long len;
+            string buff = getTextFromBuffer(&len,O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, (size_t) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1165,7 +1165,7 @@ retCode g__intext(processPo P, ptrPo a) {
     if (isReadingFile(file) != Ok)
       return liberror(P, "__intext", eNOPERM);
 
-    ioPo str = O_IO(openStrOutput((string) "", utf8Encoding));
+    ioPo str = O_IO(newStringBuffer());
 
     while (True) {
       switchProcessState(P, wait_io);
@@ -1174,12 +1174,12 @@ retCode g__intext(processPo P, ptrPo a) {
 
       switch (ret) {
         case Eof:
-          if (emptyOutStr(O_STRING(str)) == Ok) {
+          if (bufferSize(O_BUFFER(str)) == 0) {
             closeFile(str);
             return liberror(P, "__intext", eEOF);    /* cant read past the end of the file */
           } else {
-            uint64 len;
-            string buff = getStrText(O_STRING(str), &len);
+            long len;
+            string buff = getTextFromBuffer(&len,O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, (size_t) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1195,9 +1195,9 @@ retCode g__intext(processPo P, ptrPo a) {
               ret = equal(P, &RR, &a[3]);
             gcRemoveRoot(&P->proc.heap, root);
             return ret;
-          } else if (chr == EOF_CHAR && emptyOutStr(O_STRING(str)) != Ok) {
-            uint64 len;
-            string buff = getStrText(O_STRING(str), &len);
+          } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str))==0) {
+            long len;
+            string buff = getTextFromBuffer(&len,O_BUFFER(str));
             ptrI result = allocateString(&P->proc.heap, buff, (long) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */

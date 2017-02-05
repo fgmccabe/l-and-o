@@ -173,10 +173,9 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_flush,True,False,"P1"fileType,"flush the I/O buffer")
   escape(_flushall,True,False,"P0","flush all files")
   escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
-/*
-  escape(_classload,True,False,"p4SssLs","load class file")
 
-*/
+  escape(_ensure_loaded,True,False,"P2SS","load class file")
+
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
 
   /*
@@ -191,20 +190,18 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(iptohost,False,False,"F1SS","host name from IP")
 */
 
-  /*
 
 // Timing and delaying
-  escape(delay,False,False,"p1N","delay for period of time")
-  escape(sleep,False,False,"p1N","sleep until a definite time")
+  escape(delay,False,False,"P1f","delay for period of time")
+  escape(sleep,False,False,"P1f","sleep until a definite time")
   escape(now,False,False,"F0f","current time")
   escape(today,False,False,"F0i","time at midnight")
   escape(ticks,False,False,"F0f","used CPU time")
-  escape(_time2date,False,False,"P012NiiiiiiffS", "convert a time to a date")
-  escape(_time2utc,False,False,"P012NiiiiiiffS", "convert a time to UTC date")
-  escape(_date2time,False,False,"F007iiiiiNNf", "convert a date to a time")
-  escape(_utc2time,False,False,"F010NNNNNNNNf", "convert a UTC date to a time")
+  //escape(_time2date,False,False,"P10fiiiiiiffS", "convert a time to a date")
+  //escape(_time2utc,False,False,"P10fiiiiiiffS", "convert a time to UTC date")
+  //escape(_date2time,False,False,"F7iiiiifif", "convert a date to a time")
+  // escape(_utc2time,False,False,"F9iiiiiiff", "convert a UTC date to a time")
 
-*/
  // Character class escapes
 
   escape(_isCcChar,False,False,"P1i","is Other, control char")

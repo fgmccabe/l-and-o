@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <base64.h>
-
 #include "lo.h"
 #include "term.h"
 #include "encodedP.h"             /* pick up the term encoding definitions */
@@ -28,11 +27,11 @@
  * Decode a structure from an input stream
  */
 
-static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm);
+static retCode estimate(ioPo in, integer *amnt, integer *perm);
 
 retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                    long msgSize) {
-  EncodeSupport support = {NULL, 0, NULL, 0, errorMsg, msgSize, R};
+  EncodeSupport support = {NULL, 0, errorMsg, msgSize, R};
 
   logical isBlocking = (objectHasClass(O_OBJECT(in), fileClass) ? isFileBlocking(O_FILE(in)) : False);
   logical isAsynch = (objectHasClass(O_OBJECT(in), fileClass) ? isFileAsynch(O_FILE(in)) : False);
@@ -62,16 +61,16 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
 
         switch (inChar(in, &delim)) {
           case Ok: {
-            strBufPo buffer = openStrOutput((string) "", utf8Encoding);
+            bufferPo buffer = newStringBuffer();
             while (True) {
               switch (inChar(in, &ch)) {
                 case Ok:
                   if (ch == delim) {
-                    rewindStr(buffer);
+                    rewindBuffer(buffer);
 
                     integer amnt, perm = 0;
 
-                    retCode res = codedEstimate(O_IO(buffer), &support, &amnt, &perm);
+                    retCode res = estimate(O_IO(buffer), &amnt, &perm);
 
                     //logMsg(logFile,"Estimate of space requirements: %d heap, %d permanent",perm);
 
@@ -86,7 +85,7 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                         res = reserveSpace(&globalHeap, (size_t) (perm + amnt));
                     }
                     if (res == Ok) {
-                      rewindStr(buffer); /* re-read from string buffer */
+                      rewindBuffer(buffer); /* re-read from string buffer */
                       bufferPo tmpBuffer = newStringBuffer();
 
                       res = decode(O_IO(buffer), &support, H, tgt, tmpBuffer);
@@ -94,8 +93,6 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                       closeFile(O_IO(buffer));
                       closeFile(O_IO(tmpBuffer));
 
-                      if (support.lbls != NULL)
-                        free(support.lbls);
                       if (support.vars != NULL)
                         free(support.vars);
                     }
@@ -144,14 +141,14 @@ static int digitVal(codePoint ch) {
   return (int) (ch - '0');
 }
 
-retCode decInt(ioPo in, encodePo S, integer *ii) {
+retCode decInt(ioPo in, integer *ii) {
   codePoint ch;
   integer result = 0;
 
   switch (inChar(in, &ch)) {
     case Ok:
       if (ch == '-') {
-        retCode ret = decInt(in, S, ii);
+        retCode ret = decInt(in, ii);
         *ii = -(*ii);
         return ret;
       } else if (isDigit(ch)) {
@@ -172,22 +169,19 @@ retCode decInt(ioPo in, encodePo S, integer *ii) {
               return Ok;
             }
             default:
-              strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
-              return Error;
+              return Eof;
           }
         }
       } else {
-        strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
-        return Error;
+        return Eof;
       }
     case Eof:
     default:
-      strMsg(S->errorMsg, S->msgSize, "stream prematurely ended");
-      return Error;
+      return Eof;
   }
 }
 
-retCode decFlt(ioPo in, encodePo S, double *dx) {
+retCode decFlt(ioPo in, double *dx) {
   bufferPo tmpBuffer = newStringBuffer();
   retCode ret = decodeName(in, tmpBuffer);
 
@@ -218,7 +212,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      if ((res = decInt(in, S, &vno)) != Ok)
+      if ((res = decInt(in, &vno)) != Ok)
         return res;
 
       if (vno >= 0) {
@@ -258,21 +252,20 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     }
     case trmInt: {
       integer i;
-      if ((res = decInt(in, S, &i)) != Ok)
+      if ((res = decInt(in, &i)) != Ok)
         return res;
       *tgt = allocateInteger(H, i);
       return Ok;
     }
     case trmFlt: {
       double dx;
-      if ((res = decFlt(in, S, &dx)) != Ok)
+      if ((res = decFlt(in, &dx)) != Ok)
         return res;
       *tgt = allocateFloat(H, dx);
       return Ok;
     }
 
     case trmSym: {
-      clearBuffer(tmpBuffer);
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
         outByte(O_IO(tmpBuffer), 0); // terminate the name
@@ -282,7 +275,6 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     }
 
     case trmString: { /* A literal string */
-
       if ((res = decodeText(in, tmpBuffer)) == Ok) {
         long len;
         string buff = getTextFromBuffer(&len, tmpBuffer);
@@ -294,7 +286,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmStrct: { /* We have a class definition structure */
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
@@ -308,7 +300,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmPrg: { /* We have a program label */
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
@@ -324,7 +316,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
       rootPo root = gcAddRoot(S->R, &class);
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if ((res = decode(in, S, H, &class, tmpBuffer)) != Ok)
@@ -405,165 +397,105 @@ retCode decodeText(ioPo in, bufferPo buffer) {
 /*
  Estimate amount of heap space needed
  */
-static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm);
 
-static retCode codedEstimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
-  *amnt = 0;
-  *perm = 0;
 
-  return estimate(in, S, amnt, perm);
+typedef struct {
+  integer amnt;
+  integer perm;
+} Estimation;
+
+static retCode nullEstimate(void *cl) {
+  return Ok;
 }
 
-static retCode estimateName(ioPo in, long *len);
-static retCode estimateText(ioPo in, long *len);
-
-static retCode estimate(ioPo in, encodePo S, integer *amnt, integer *perm) {
-  codePoint ch;
-  retCode res = inChar(in, &ch);
-
-  if (res == Eof)
-    return Eof;
-  switch (ch) {
-    case trmAnon:
-      (*amnt) += VariableCellCount;
-
-      return Ok;
-    case trmVar: { /* an unbound variable */
-      integer vno;
-
-      if ((res = decInt(in, S, &vno)) != Ok)
-        return res;
-
-      (*amnt) += VariableCellCount;
-
-      return Ok;
-    }
-    case trmInt: {
-      integer i;
-      if ((res = decInt(in, S, &i)) != Ok)
-        return res;
-      (*amnt) += CellCount(sizeof(integerRec));
-      return Ok;
-    }
-    case trmFlt: {
-      double dx;
-      if ((res = decFlt(in, S, &dx)) != Ok)
-        return res;
-      (*amnt) += CellCount(sizeof(floatRec));
-      return Ok;
-    }
-
-    case trmSym: {
-      long length;
-      if ((res = estimateName(in, &length)) == Ok) {
-        (*perm) += CellCount(sizeof(symbolRec) + (length) * sizeof(byte));
-      }
-      return res;
-    }
-
-    case trmString: { /* A literal string */
-      long length;
-
-      if ((res = estimateText(in, &length)) == Ok) {
-        (*perm) += CellCount(sizeof(stringRec) + (length + 1) * sizeof(byte));
-      }
-      return res;
-    }
-
-    case trmStrct: { /* We have a class definition structure */
-      integer arity;
-
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
-        return res;
-
-      long length;
-      if ((res = estimateName(in, &length)) == Ok) {
-        (*perm) += CellCount(sizeof(clssRec) + (length) * sizeof(byte));
-      }
-
-      return res;
-    }
-
-    case trmPrg: { /* We have a program label */
-      integer arity;
-
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
-        return res;
-
-      long length;
-      if ((res = estimateName(in, &length)) == Ok) {
-        (*perm) += CellCount(sizeof(programRec) + (length) * sizeof(byte));
-      }
-
-      return res;
-    }
-
-    case trmCns: {
-      ptrI class = kvoid;
-      rootPo root = gcAddRoot(S->R, &class);
-      integer arity;
-
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
-        return res;
-
-      res = estimate(in, S, amnt, perm); /* pick up the class constructor */
-
-      if (res == Ok) {
-        integer i;
-
-        for (i = 0; res == Ok && i < arity; i++)
-          res = estimate(in, S, amnt, perm); /* read each constructor element */
-      }
-
-      (*amnt) += arity + 1;
-      gcRemoveRoot(S->R, root);
-      return res;
-    }
-
-    default: {
-      strMsg(S->errorMsg, S->msgSize, "invalid encoding");
-      return Error;
-    }
-  }
+static retCode estimateVar(integer vno, void *cl) {
+  Estimation *info = (Estimation *) cl;
+  info->perm += VariableCellCount;
+  return Ok;
 }
 
-static retCode estimateName(ioPo in, long *length) {
-  codePoint delim;
-  long len = 0;
-
-  retCode ret = inChar(in, &delim);
-
-  if (ret != Ok)
-    return ret;
-  else {
-    codePoint ch;
-    while ((ret = inChar(in, &ch)) == Ok && ch != delim) {
-      len += codePointSize(ch);
-    }
-    *length = len;
-    return ret;
-  }
+static retCode estimateInt(integer vno, void *cl) {
+  Estimation *info = (Estimation *) cl;
+  info->perm += IntegerCellCount;
+  return Ok;
 }
 
-static retCode estimateText(ioPo in, long *length) {
-  codePoint delim;
-  long len = 0;
+static retCode estimateFlt(double dx, void *cl) {
+  Estimation *info = (Estimation *) cl;
+  info->perm += FloatCellCount;
+  return Ok;
+}
 
-  retCode ret = inChar(in, &delim);
+static retCode estimateName(string nm, void *cl) {
+  Estimation *info = (Estimation *) cl;
 
-  if (ret != Ok)
-    return ret;
-  else {
-    codePoint ch;
-    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
-      len += codePointSize(ch);
-      if (ch == '\\')
-        ret = inChar(in, &ch);
-      len += codePointSize(ch);
-    }
-    *length = len;
-    return ret;
+  long length = uniStrLen(nm);
+
+  info->perm += CellCount(sizeof(symbolRec) + (length + 1) * sizeof(byte));
+  return Ok;
+}
+
+static retCode estimateString(string nm, void *cl) {
+  Estimation *info = (Estimation *) cl;
+
+  long length = uniStrLen(nm);
+
+  info->perm += CellCount(sizeof(stringRec) + (length + 1) * sizeof(byte));
+  return Ok;
+}
+
+static retCode estimateStrct(string nm, integer arity, void *cl) {
+  Estimation *info = (Estimation *) cl;
+
+  long length = uniStrLen(nm);
+
+  info->perm += CellCount(sizeof(clssRec) + (length + 1) * sizeof(byte));
+  return Ok;
+}
+
+static retCode estimatePrg(string nm, integer arity, void *cl) {
+  Estimation *info = (Estimation *) cl;
+
+  long length = uniStrLen(nm);
+
+  info->perm += CellCount(sizeof(programRec) + (length + 1) * sizeof(byte));
+  return Ok;
+}
+
+static retCode estimateCns(integer arity, void *cl) {
+  Estimation *info = (Estimation *) cl;
+
+  info->amnt += arity + 1;
+  return Ok;
+}
+
+/*
+ Estimate amount of heap space needed
+ */
+retCode estimate(ioPo in, integer *amnt, integer *perm) {
+  Estimation info = {0, 0};
+
+  DecodeCallBacks estimateCB = {
+    nullEstimate,           // startDecoding
+    nullEstimate,           // endDecoding
+    estimateVar,            // decVar
+    estimateInt,            // decInt
+    estimateFlt,            // decFlt
+    estimateName,           // decEnum
+    estimateString,         // decString
+    estimateStrct,          // decStruct
+    estimatePrg,            // decPrg
+    estimateCns             // decCon
+  };
+
+  retCode ret = streamDecode(in, &estimateCB, &info);
+
+  if (ret == Ok) {
+    *amnt = info.amnt;
+    *perm = info.perm;
   }
+
+  return ret;
 }
 
 static retCode display(ioPo in, encodePo S, ioPo out);
@@ -571,10 +503,10 @@ static retCode displayName(ioPo in, ioPo out);
 static retCode displayText(ioPo in, ioPo out);
 
 retCode displayEncoded(ioPo out, byte *buffer, long len) {
-  ioPo str = O_IO(openByteBuffer(buffer, len));
+  ioPo str = O_IO(fixedStringBuffer(buffer, len));
   byte errorMsg[1024];
   long msgSize = NumberOf(errorMsg);
-  EncodeSupport support = {NULL, 0, NULL, 0, errorMsg, msgSize};
+  EncodeSupport support = {NULL, 0, errorMsg, msgSize, &globalHeap};
   retCode ret = display(str, &support, out);
 
   flushFile(out);
@@ -599,20 +531,20 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      if ((res = decInt(in, S, &vno)) != Ok)
+      if ((res = decInt(in, &vno)) != Ok)
         return res;
 
       return outMsg(out, "_%ld", vno);
     }
     case trmInt: {
       integer i;
-      if ((res = decInt(in, S, &i)) != Ok)
+      if ((res = decInt(in, &i)) != Ok)
         return res;
       return outMsg(out, "%ld", i);
     }
     case trmFlt: {
       double dx;
-      if ((res = decFlt(in, S, &dx)) != Ok)
+      if ((res = decFlt(in, &dx)) != Ok)
         return res;
       return outMsg(out, "%f", dx);
     }
@@ -633,7 +565,7 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
     case trmStrct: { /* We have a class definition structure */
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if (res == Ok)
@@ -650,7 +582,7 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
     case trmPrg: { /* We have a program label */
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if (res == Ok)
@@ -669,7 +601,7 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
       rootPo root = gcAddRoot(S->R, &class);
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
       if (res == Ok)
@@ -741,38 +673,23 @@ static retCode displayText(ioPo in, ioPo out) {
   }
 }
 
-static retCode skipName(ioPo in) {
-  codePoint delim;
+static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buff);
 
-  retCode ret = inChar(in, &delim);
+retCode streamDecode(ioPo in, decodeCallBackPo cb, void *cl) {
+  bufferPo strBuffer = newStringBuffer();
+  retCode ret = cb->startDecoding(cl);
 
-  if (ret != Ok)
-    return ret;
-  else {
-    codePoint ch;
-    while ((ret = inChar(in, &ch)) == Ok && ch != delim);
-    return ret;
-  }
+  if (ret == Ok)
+    ret = decodeStream(in, cb, cl, strBuffer);
+
+  if (ret == Ok)
+    cb->endDecoding(cl);
+
+  closeFile(O_IO(strBuffer));
+  return ret;
 }
 
-static retCode skipText(ioPo in) {
-  codePoint delim;
-
-  retCode ret = inChar(in, &delim);
-
-  if (ret != Ok)
-    return ret;
-  else {
-    codePoint ch;
-    while (ret == Ok && (ret = inChar(in, &ch)) == Ok && ch != delim) {
-      if (ch == '\\')
-        ret = inChar(in, &ch);
-    }
-    return ret;
-  }
-}
-
-retCode skipTrm(ioPo in, encodePo S) {
+static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buff) {
   codePoint ch;
   retCode res = inChar(in, &ch);
 
@@ -780,73 +697,160 @@ retCode skipTrm(ioPo in, encodePo S) {
     return Eof;
   switch (ch) {
     case trmAnon:
-      return Ok;
+      return cb->decVar(0, cl);
     case trmVar: { /* an unbound variable */
       integer vno;
 
-      return decInt(in, S, &vno);
+      res = decInt(in, &vno);
+      if (res == Ok)
+        res = cb->decVar(vno, cl);
+      return res;
     }
     case trmInt: {
       integer i;
-      return decInt(in, S, &i);
+      res = decInt(in, &i);
+      if (res == Ok)
+        res = cb->decInt(i, cl);
+      return res;
     }
     case trmFlt: {
       double dx;
-      return decFlt(in, S, &dx);
+      res = decFlt(in, &dx);
+      if (res == Ok)
+        res = cb->decFlt(dx, cl);
+      return res;
     }
 
     case trmSym: {
-      return skipName(in);
+      clearBuffer(buff);
+      res = decodeName(in, buff);
+
+      if (res == Ok) {
+        long len;
+        string nm = getTextFromBuffer(&len, buff);
+        res = cb->decEnum(nm, cl);
+      }
+      return res;
     }
 
-    case trmString:
-      return skipText(in);
+    case trmString: {
+      clearBuffer(buff);
+      res = decodeName(in, buff);
+
+      if (res == Ok) {
+        long len;
+        string nm = getTextFromBuffer(&len, buff);
+        res = cb->decString(nm, cl);
+      }
+      return res;
+    }
 
     case trmStrct: { /* We have a class definition structure */
       integer arity;
+      clearBuffer(buff);
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      return skipName(in);
+      res = decodeName(in, buff);
+
+      if (res == Ok) {
+        long len;
+        string nm = getTextFromBuffer(&len, buff);
+        res = cb->decStruct(nm, arity, cl);
+      }
+      return res;
     }
 
     case trmPrg: { /* We have a program label */
       integer arity;
+      clearBuffer(buff);
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      return skipName(in);
+      res = decodeName(in, buff);
+
+      if (res == Ok) {
+        long len;
+        string nm = getTextFromBuffer(&len, buff);
+        res = cb->decPrg(nm, arity, cl);
+      }
+      return res;
     }
 
     case trmCns: {
       integer arity;
 
-      if ((res = decInt(in, S, &arity)) != Ok) /* How many arguments in the class */
+      if ((res = decInt(in, &arity)) != Ok) /* How many arguments in the class */
         return res;
 
-      res = skipTrm(in, S);
+      if (res == Ok)
+        res = cb->decCons(arity, cl);
+
+      if (res == Ok)
+        res = decodeStream(in, cb, cl, buff); // Handle the operator of the cons
 
       if (res == Ok) {
         integer i;
 
         for (i = 0; res == Ok && i < arity; i++)
-          res = skipText(in); /* skip each constructor element */
+          res = decodeStream(in, cb, cl, buff);
       }
 
       return res;
     }
 
-    default: {
-      strMsg(S->errorMsg, S->msgSize, "invalid encoding");
+    default:
       return Error;
-    }
   }
 }
 
-retCode skipEncoded(ioPo in, string errorMsg, long msgLen) {
-  EncodeSupport support = {NULL, 0, NULL, 0, errorMsg, msgLen, NULL};
+static retCode skipFlag(void *cl) {
+  return Ok;
+}
 
-  return skipTrm(in, &support);
+static retCode skipInt(integer ix, void *cl) {
+  return Ok;
+}
+
+static retCode skipFlt(double dx, void *cl) {
+  return Ok;
+}
+
+static retCode skipString(string sx, void *cl) {
+  return Ok;
+}
+
+static retCode skipStrct(string nm, integer ar, void *cl) {
+  return Ok;
+}
+
+static DecodeCallBacks skipCB = {
+  skipFlag,           // startDecoding
+  skipFlag,           // endDecoding
+  skipInt,            // decVar
+  skipInt,            // decInt
+  skipFlt,            // decFlt
+  skipString,         // decEnum
+  skipString,         // decString
+  skipStrct,          // decStruct
+  skipStrct,          // decPrg
+  skipInt             // decCons
+};
+
+retCode skipEncoded(ioPo in, string errorMsg, long msgLen) {
+  switch (streamDecode(in, &skipCB, NULL)) {
+    case Ok:
+      return Ok;
+    case Error:
+      strMsg(errorMsg, msgLen, "problem in decoding");
+      return Error;
+    case Eof:
+      strMsg(errorMsg, msgLen, "unexpected EOF");
+      return Error;
+    default:
+      strMsg(errorMsg, msgLen, "problem in decoding");
+      return Error;
+  }
 }

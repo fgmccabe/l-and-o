@@ -118,7 +118,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
     string buffer = (prec < 0 ?
                      (byte *) malloc(sizeof(byte) * (-prec + 1))
                               : NULL);
-    ioPo str = O_IO(openStrOutput((string) "", utf8Encoding));
+    ioPo str = O_IO(newStringBuffer());
     retCode ret = outCell(str, &Data, prec == 0 ? INT_MAX / 4 : prec, 0, False);
 
     if (ret != Ok) {
@@ -126,8 +126,8 @@ retCode g__stringOf(processPo P, ptrPo a) {
         free(buffer);
       return liberror(P, "__stringOf", eINVAL);
     } else {
-      uint64 len;
-      string txt = getStrText(O_STRING(str), &len);
+      long len;
+      string txt = getTextFromBuffer(&len,O_BUFFER(str));
 
       if (width != 0) {
         long sLen = labs(width) + 1;
@@ -296,14 +296,14 @@ retCode g__flt2str(processPo P, ptrPo a) {
     integer prec = integerVal(intV(a3));
     logical left = (logical) (width > 0);
     byte buffer[128];
-    ioPo out = O_IO(openBufferStr(buffer, NumberOf(buffer)));
+    ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
     retCode res = outDouble(out, FloatVal(objV(a1)),
                             (char) (identical(a5, trueClass) ? 'g' : 'f'),
                             abs((int) width), (int) prec, ' ', left, (string) "", identical(a4, trueClass));
 
     if (res == Ok) {
-      uint64 len;
-      string text = getStrText(O_STRING(out), &len);
+      long len;
+      string text = getTextFromBuffer(&len,O_BUFFER(out));
       ptrI rslt = allocateString(&P->proc.heap, text, (long) len);
       closeFile(out);
 
@@ -693,8 +693,8 @@ retCode g__str_gen(processPo P, ptrPo a) {
 }
 
 retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
-  uint64 len;
-  string buff = getStrText(O_STRING(f), &len);
+  long len;
+  string buff = getTextFromBuffer(&len,O_BUFFER(f));
   ptrI str = allocateString(H, buff, (size_t) len);
 
   *deRef(tgt) = str;

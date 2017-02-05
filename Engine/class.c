@@ -1,6 +1,6 @@
 /* 
  Class management module
- (c) 2000-2007 F.G. McCabe
+ (c) 2000-2017 F.G. McCabe
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  except in compliance with the License. You may obtain a copy of the License at
@@ -19,7 +19,9 @@
 
 #include "lo.h"
 #include "manifestP.h"
+#include "encoded.h"
 #include <hashTable.h>
+#include <process.h>
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048
@@ -55,7 +57,6 @@ ptrI trueClass, falseClass;  //  True and False
 
 ptrI threadClass;  //  The class of process identifiers
 
-static hashPo loadedPackages;  //  record the packages we have loaded
 
 
 static long clSizeFun(specialClassPo class, objPo o);
@@ -75,7 +76,6 @@ static uinteger spHashFun(specialClassPo class, objPo o);
 void initClass() {
   classes = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
   specialClasses = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
-  loadedPackages = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
 
   // The first class record has to be created carefully
   specialClass = newSpecialClass("#special", spSizeFun, spCompFun, spOutFun, spCopyFun, spScanFun, spHashFun);
@@ -116,7 +116,7 @@ static retCode clScanFun(specialClassPo class, specialHelperFun helper, void *c,
 
 static objPo clCopyFun(specialClassPo class, objPo dst, objPo src) {
   long size = clSizeFun(class, src);
-  memmove((void * ) dst, (void * ) src, size * sizeof(ptrI));
+  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
 
   return (objPo) (((ptrPo) dst) + size);
 }
@@ -132,7 +132,7 @@ static long spSizeFun(specialClassPo class, objPo o) {
 
   specialClassPo cl = (specialClassPo) o;
 
-  return CellCount(sizeof(specialClassRec) + sizeof(byte) * (strlen((char * ) cl->name) + 1));
+  return CellCount(sizeof(specialClassRec) + sizeof(byte) * (strlen((char *) cl->name) + 1));
 }
 
 static comparison spCompFun(specialClassPo class, objPo o1, objPo o2) {
@@ -154,7 +154,7 @@ static retCode spScanFun(specialClassPo class, specialHelperFun helper, void *c,
 
 static objPo spCopyFun(specialClassPo class, objPo dst, objPo src) {
   long size = spSizeFun(class, src);
-  memmove((void * ) dst, (void * ) src, size * sizeof(ptrI));
+  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
 
   return (objPo) (((ptrPo) dst) + size);
 }
@@ -245,14 +245,14 @@ ptrI newEnumSymbol(const string fun) {
 }
 
 ptrI newSpecialClass(const char *name, classSizeFun sizeFun, classCompFun compFun, classOutFun outFun,
-    classCpyFun copyFun, classScanFun scanFun, classHashFun hashFun) {
+                     classCpyFun copyFun, classScanFun scanFun, classHashFun hashFun) {
   size_t slen = strlen(name);
   byte buff[slen + 1];
 
-  strncpy((char * ) buff, name, slen);
+  strncpy((char *) buff, name, slen);
 
   specialClassPo new = (specialClassPo) malloc(
-      sizeof(specialClassRec) + (uniStrLen(buff) + 1) * sizeof(byte));
+    sizeof(specialClassRec) + (uniStrLen(buff) + 1) * sizeof(byte));
 
   new->class = specialClass;
   new->sizeFun = sizeFun;
@@ -307,7 +307,7 @@ static retCode markSpecialClass(void *n, void *r, void *c) {
 }
 
 void markStandardClasses(globalGcPo G) {
-  DInfoRec help = { G, NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL) };
+  DInfoRec help = {G, NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL)};
   hashPo currClassTable = classes;
 
   classes = help.newDict;
@@ -342,10 +342,10 @@ void markStandardClasses(globalGcPo G) {
 }
 
 static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
-    long fLen);
+                                   long fLen);
 
-retCode g__classload(processPo P, ptrPo a) {
-  ptrI pname = deRefI(&a[2]);
+retCode g__ensure_loaded(processPo P, ptrPo a) {
+  ptrI pname = deRefI(&a[1]);
 
   if (isvar(pname))
     return liberror(P, "__ensure_loaded", eINSUFARG);
@@ -355,23 +355,13 @@ retCode g__classload(processPo P, ptrPo a) {
     if (isLoaded(pname))
       return Ok;
     else {
-      ptrI A1 = deRefI(&a[1]);
+      switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
-      if (IsString(A1))
-        return liberror(P, "__ensure_loaded", eSTRNEEDD);
-      else {
-        ptrI loaded = emptyList;
-        heapPo H = &P->proc.heap;
+      retCode ret = loadPkg(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
+                            NumberOf(P->proc.errorMsg));
+      setProcessRunnable(P);
 
-        gcAddRoot(H, &loaded);
-
-        switchProcessState(P, wait_io); /* Potentially nec. to wait */
-
-        retCode ret = pkgLoader(H, stringVal(stringV(A1)), pname, deRefI(&a[3]), &loaded, P->proc.errorMsg,
-                                NumberOf(P->proc.errorMsg));
-        setProcessRunnable(P);
-
-        switch (ret) {
+      switch (ret) {
         case Error: {
           byte msg[MAX_MSG_LEN];
 
@@ -385,7 +375,7 @@ retCode g__classload(processPo P, ptrPo a) {
           return raiseError(P, msg, eNOFILE);
         }
         case Ok:
-          return equal(P, &a[4], &loaded);
+          return Ok;
         case Fail:
           return Fail;
         case Space:
@@ -393,184 +383,9 @@ retCode g__classload(processPo P, ptrPo a) {
           return liberror(P, "__ensure_loaded", eSPACE);
         default:
           return liberror(P, "__ensure_loaded", eINVAL);
-        }
       }
     }
   }
 }
 
-logical isLoaded(ptrI pkg) {
-  if ((packagePo) hashGet(loadedPackages, SymVal(symbV(pkg))) != NULL)
-    return True;
-  else
-    return False;
-}
 
-static retCode showPkg(void *n, void *r, void *c) {
-  return outMsg(logFile, "%U loaded\n", n);
-}
-
-void showPackages(void) {
-  ProcessTable(showPkg, loadedPackages, NULL);
-  flushOut();
-}
-
-static logical trimDirs(string path, string request, string buffer, long len, string suffix);
-
-// Attempt to compute a file name to load a package from, based on a list of paths to try
-static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
-    long fLen) {
-  long len = pathLen;
-  int16 bLen = (int16) (fLen - strlen(".loc") - 1);
-  byte buffer[MAX_FILE_LEN];
-  byte pthBuffer[MAX_FILE_LEN];
-  long p = 0;
-
-  while (p < pathLen) {
-    long next = uniIndexOf(path, len, p, ':');
-    long i = 0;
-    string c = className;
-
-    if (next >= 0) {
-      for (; p < next && i < bLen; i++)
-        pthBuffer[i] = buffer[i] = path[p++];
-
-      pthBuffer[i] = '\0';
-
-      if (buffer[i - 1] != '/') {
-        pthBuffer[i] = buffer[i] = '/';
-        i++;
-        pthBuffer[i] = '\0';
-      }
-      p = next + 1;
-    } else {
-      for (i = 0; p < pathLen && i < bLen; i++)
-        pthBuffer[i] = buffer[i] = path[p++];
-      pthBuffer[i] = '\0';
-      if (buffer[i] != '/')
-        buffer[i++] = '/';
-      else
-        i++;
-      p = pathLen;
-    }
-
-    if (buffer[i - 1] != '/')
-      buffer[i++] = '/'; /* Join the path segment with a / */
-
-    for (; *c != '\0' && i < bLen; i++, c++) {
-      if (*c == '.')
-        buffer[i] = '/';
-      else
-        buffer[i] = *c;
-    }
-
-    if (uniStrLen(version) > 0)
-      strMsg(&buffer[i], fLen - i, ".%U.loc", version);
-    else
-      strMsg(&buffer[i], fLen - i, ".loc"); /* we drop through if no version */
-
-    if (filePresent(buffer)) {
-      uniCpy(fn, fLen, buffer);
-      return fn;
-    } else {
-      byte fBuffer[MAX_FILE_LEN];
-      byte suffix[MAX_FILE_LEN];
-
-      if (uniStrLen(version) > 0)
-        strMsg(suffix, NumberOf(suffix), ".%U.loc", version);
-      else
-        strMsg(suffix, NumberOf(suffix), ".loc");
-
-      if (trimDirs(pthBuffer, className, fBuffer, NumberOf(fBuffer), suffix)) {
-        if (filePresent(fBuffer)) {
-          uniCpy(fn, fLen, fBuffer);
-          return fn;
-        }
-      }
-    }
-  }
-  return NULL;
-}
-
-// map the path foo/bar/gamma and the request bar.gamma.delta
-// to a 'real' path of foo/bar/gamma/delta
-
-static void reverse(string str);
-
-static logical trimDirs(string path, string request, string buffer, long len, string suffix) {
-  byte pathBrks[MAX_FILE_LEN];
-  byte reqBrks[MAX_FILE_LEN];
-  long pCount = 0, rCount = 0;
-
-  long i = 0, mx = uniStrLen(path);
-  string pth = &pathBrks[NumberOf(pathBrks) - 1];
-  *--pth = '\0'; /* We are going to reverse this */
-
-  for (i = 0; i < mx; i++) { /* We split the path into a sequence */
-    if (path[i] != '/') /* of segments */
-      *--pth = path[i];
-    else {
-      reverse(pth);
-      if (uniStrLen(pth) != 0) {
-        *--pth = '\0';
-        pCount++;
-      }
-    }
-  }
-  reverse(pth);
-  if (uniStrLen(pth) != 0)
-    pCount++;
-  else
-    pth++; /* remove the empty chunk */
-
-  mx = uniStrLen(request);
-
-  for (i = 0; i < mx; i++) {
-    if (request[i] == '.') {
-      reqBrks[i] = '\0';
-      rCount++;
-    } else
-      reqBrks[i] = request[i];
-  }
-  reqBrks[i] = '\0';
-
-  if (pCount > 0 && rCount > 0) { /* look for an overlapping segments */
-    string p = pth;
-    string r = reqBrks;
-    for (i = 0; i < rCount; i++) {
-      long j;
-      for (j = 0; j <= i; j++) {
-        if (uniCmp(p, r) != 0)
-          goto exLoop;
-        p += uniStrLen(p) + 1;
-        r += uniStrLen(r) + 1; /* step on to the next string */
-      }
-    }
-    exLoop: if (p != pth) { /* We had a sucessful match */
-      long preSeg = &pathBrks[NumberOf(pathBrks)] - p;
-
-      uniNCpy(buffer, len, path, preSeg);
-      string r = reqBrks;
-      for (i = 0; i < rCount; i++) {
-        uniAppend(buffer, &preSeg, len, r);
-        uniTack(buffer, len, "/");
-        r += uniStrLen(r) + 1; /* step on to the next string */
-      }
-      uniAppend(buffer, &preSeg, len, r);
-      uniAppend(buffer, &preSeg, len, suffix);
-
-      return True;
-    }
-  }
-  return False;
-}
-
-static void reverse(string str) {
-  long mx = uniStrLen(str);
-  long i;
-  for (i = 0; i < mx / 2; i++) {
-    byte ch = str[i];
-    str[i] = str[mx - i - 1];
-    str[mx - i - 1] = ch;
-  }
-}

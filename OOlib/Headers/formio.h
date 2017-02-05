@@ -36,4 +36,7 @@ retCode int2Str(integer i, int base, byte *buff, long len);
 integer parseInteger(string s, long len);
 double parseNumber(string s, long len);
 
+string strMsg(byte *buffer,long len,char *fmt,...);
+string strAppend(byte *buffer,long len,char *fmt,...);
+
 #endif

@@ -1263,7 +1263,7 @@ void runGo(register processPo P) {
 
         testA(op_h_val(PCX));
 
-        if (!isvar(vx) && IsNumber(vl)) {
+        if (!isvar(vx) && IsFloat(vl)) {
           integer val = (integer) FloatVal(vl);
 
           PC += val % max + 1;

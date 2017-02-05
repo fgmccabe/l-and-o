@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(loEngine)
 
-find_package(BISON)
-find_package(FLEX)
-
-BISON_TARGET(JsonParser json.y ${CMAKE_CURRENT_BINARY_DIR}/jsonParser.c)
-FLEX_TARGET(JsonTokeniser jtoken.l ${CMAKE_CURRENT_BINARY_DIR}/jsontoken.c)
-ADD_FLEX_BISON_DEPENDENCY(JsonTokeniser JsonParser)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
 
 include_directories("Headers" "../Headers" "../OOlib/Headers")
@@ -19,8 +12,6 @@ set(SOURCE_FILES
         misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c
         verify.c writef.c
         main.c
-        ${BISON_JsonParser_OUTPUTS}
-        ${FLEX_JsonTokeniser_OUTPUTS}
 
         Headers/word.h
         Headers/char.h Headers/clock.h
@@ -32,7 +23,9 @@ set(SOURCE_FILES
         Headers/floats.h Headers/str.h Headers/symbols.h Headers/dll.h
         Headers/unix.h Headers/stats.h Headers/signals.h
 
-        Headers/manifest.h Headers/manifestP.h load.c)
+        ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h
+
+        Headers/manifest.h Headers/manifestP.h load.c manifest.c)
 
 add_executable(lo ${SOURCE_FILES})
 target_link_libraries(lo ooio)

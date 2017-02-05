@@ -241,7 +241,7 @@ retCode g__acquireLock(processPo P, ptrPo a) {
 
   if (isvar(A2))
     return liberror(P, "__acquireLock", eINSUFARG);
-  else if (!IsNumber(o2))
+  else if (!IsFloat(o2))
     return liberror(P, "__acquireLock", eNUMNEEDD);
   else {
     double tmOut = FloatVal(o2);
@@ -301,7 +301,7 @@ retCode g__waitLock(processPo P, ptrPo a) {
 
   if (isvar(A2))
     return liberror(P, "__waitLock", eINSUFARG);
-  else if (!IsNumber(o2))
+  else if (!IsFloat(o2))
     return liberror(P, "__waitLock", eNUMNEEDD);
   else {
     double tmOut = FloatVal(o2);

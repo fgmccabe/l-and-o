@@ -8,8 +8,6 @@
 #include "encoded.h"
 
 typedef struct _encoding_support_ {
-  ptrPo lbls;       /* The table of labels */
-  long maxlbl;      /* How big is our table */
   ptrPo vars;       /* The table of variables */
   long maxvar;      /* How big is the variable table */
   string errorMsg;  /* Place to put error messages */
@@ -19,11 +17,30 @@ typedef struct _encoding_support_ {
 
 retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo strBuffer);
 
-retCode decInt(ioPo in, encodePo S, integer *ii);
-retCode decFlt(ioPo in, encodePo S, double *dx);
+retCode decInt(ioPo in, integer *ii);
+retCode decFlt(ioPo in, double *dx);
 retCode decodeText(ioPo in, bufferPo buffer);
 retCode decodeName(ioPo in, bufferPo buffer);
 
-retCode skipTrm(ioPo in, encodePo S);
+typedef retCode (*intProc)(integer ix, void *cl);
+typedef retCode (*fltProc)(double dx, void *cl);
+typedef retCode (*stringProc)(string sx,void*cl);
+typedef retCode (*strctProc)(string nm,integer ar,void*cl);
+typedef retCode (*flagProc)(void *cl);
+
+typedef struct {
+  flagProc startDecoding;
+  flagProc endDecoding;
+  intProc decVar;
+  intProc decInt;
+  fltProc decFlt;
+  stringProc decEnum;
+  stringProc decString;
+  strctProc decStruct;
+  strctProc decPrg;
+  intProc decCons;
+} DecodeCallBacks, *decodeCallBackPo;
+
+retCode streamDecode(ioPo in,decodeCallBackPo cb,void *cl);
 
 #endif //LANDO_ENCODEDP_H

@@ -106,6 +106,8 @@
 #include "file.h"
 #include "jsonEvent.h"
 
+// #define YY DEBUG 1
+
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -127,13 +129,13 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 31 "json.y"
+#line 33 "json.y"
 {
   char *str;
   double num;
  }
 /* Line 193 of yacc.c.  */
-#line 137 "/Users/fgm/Projects/LandO/Engine/jsonParser.c"
+#line 139 "/Users/fgm/Projects/LandO/OOlib/jsonParser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -155,14 +157,14 @@ typedef struct YYLTYPE
 
 
 /* Copy the second part of user declarations.  */
-#line 46 "json.y"
+#line 48 "json.y"
 
   static void yyerror(YYLTYPE *loc,ioPo yyFile,jsonCallBackPo l, void *client, char const *errmsg);
   extern int yylex (YYSTYPE * yylval_param,YYLTYPE * yylloc_param, ioPo yyFile);
 
 
 /* Line 216 of yacc.c.  */
-#line 166 "/Users/fgm/Projects/LandO/Engine/jsonParser.c"
+#line 168 "/Users/fgm/Projects/LandO/OOlib/jsonParser.c"
 
 #ifdef short
 # undef short
@@ -454,9 +456,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    53,    53,    53,    55,    56,    57,    58,    59,    60,
-      63,    63,    65,    66,    67,    70,    70,    72,    73,    74,
-      77,    77,    79,    81,    83,    84,    87
+       0,    55,    55,    55,    57,    58,    59,    60,    61,    62,
+      65,    65,    67,    68,    69,    72,    72,    74,    75,    76,
+      79,    79,    81,    83,    85,    86,    89
 };
 #endif
 
@@ -1418,73 +1420,73 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 53 "json.y"
+#line 55 "json.y"
     { cb->startJson(client); ;}
     break;
 
   case 3:
-#line 53 "json.y"
+#line 55 "json.y"
     { cb->endJson(client); ;}
     break;
 
   case 10:
-#line 63 "json.y"
+#line 65 "json.y"
     { cb->startArray(client); ;}
     break;
 
   case 11:
-#line 63 "json.y"
+#line 65 "json.y"
     { cb->endArray(client); ;}
     break;
 
   case 15:
-#line 70 "json.y"
+#line 72 "json.y"
     { cb->startCollection(client); ;}
     break;
 
   case 16:
-#line 70 "json.y"
+#line 72 "json.y"
     { cb->endCollection(client); ;}
     break;
 
   case 20:
-#line 77 "json.y"
+#line 79 "json.y"
     { cb->startEntry((yyvsp[(1) - (2)].str),client); ;}
     break;
 
   case 21:
-#line 77 "json.y"
+#line 79 "json.y"
     {cb->endEntry((yyvsp[(1) - (4)].str),client); ;}
     break;
 
   case 22:
-#line 79 "json.y"
+#line 81 "json.y"
     { cb->numEntry((yyvsp[(1) - (1)].num),client); ;}
     break;
 
   case 23:
-#line 81 "json.y"
+#line 83 "json.y"
     { cb->stringEntry((yyvsp[(1) - (1)].str),client); ;}
     break;
 
   case 24:
-#line 83 "json.y"
+#line 85 "json.y"
     { cb->logicalEntry(True,client); ;}
     break;
 
   case 25:
-#line 84 "json.y"
+#line 86 "json.y"
     { cb->logicalEntry(False,client); ;}
     break;
 
   case 26:
-#line 87 "json.y"
+#line 89 "json.y"
     { cb->nullEntry(client); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1488 "/Users/fgm/Projects/LandO/Engine/jsonParser.c"
+#line 1490 "/Users/fgm/Projects/LandO/OOlib/jsonParser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1704,7 +1706,7 @@ yyreturn:
 }
 
 
-#line 89 "json.y"
+#line 91 "json.y"
 
 
 static void yyerror(YYLTYPE *loc,ioPo yyFile,jsonCallBackPo cb, void *client,char const *errmsg)

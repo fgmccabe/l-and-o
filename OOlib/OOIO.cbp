@@ -64,10 +64,115 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/jsonEvent.h">
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/base64.h">
 			<Option target="ooio"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/base64.h">
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/file.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/fileP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/formio.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/formioP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/hashTable.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/hosts.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/hostsP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/integer.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/io.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/ioP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/ioTcp.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/iosockP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/iterate.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/ixTree.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/ixTreeP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/jsonEvent.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/lists.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/listsP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/lockable.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/lockableP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/logical.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/managed.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/managedP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/object.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/objectP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/pipe.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/pipeP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/pool.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/retcode.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/stringBuffer.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/stringBufferP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/timer.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/unicode.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/unicodeP.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/uri.h">
+			<Option target="ooio"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/utils.h">
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/base64.c">
@@ -128,9 +233,6 @@
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/stringBuffer.c">
-			<Option target="ooio"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/stringReader.c">
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/strio.c">

@@ -16,40 +16,36 @@
 #include "lo.h"			/* Main L&O header file */
 #include "escodes.h"
 
-
 /* An initial bootstrap sequence */
 
-static ptrI buildCode(insPo cd,unsigned short arity,long cdlen,long litCnt)
-{
-  ptrI code =  permCode(cdlen,litCnt);
+static ptrI buildCode(insPo cd, unsigned short arity, unsigned long cdlen, unsigned long litCnt) {
+  ptrI code = permCode(cdlen, litCnt);
   codePo pc = codeV(code);
 
-  memcpy(pc->data,cd,cdlen*sizeof(insWord));
+  memcpy(pc->data, cd, cdlen * sizeof(insWord));
   pc->arity = arity;
   return code;
 }
 
 /* This code is associated with all symbols which have no definition */
-static void defineDieProg(void)
-{
+static void defineDieProg(void) {
   static insWord proc_exit_seq[] = {
-    instrhb(gcmap,0,0),
+    instrhb(gcmap, 0, 0),
     instr(die)                  /* Then we expire */
   };
 
-  dieProg=buildCode(proc_exit_seq,0,NumberOf(proc_exit_seq),0);
+  dieProg = buildCode(proc_exit_seq, 0, NumberOf(proc_exit_seq), 0);
 }
 
 /* This code is executed when a process terminates */
 
-static void defineExitProg(void)
-{
+static void defineExitProg(void) {
   static insWord proc_exit_seq[] = {
-    instrhb(gcmap,0,0),
+    instrhb(gcmap, 0, 0),
     instr(die)                  /* Then we expire */
   };
 
-  exitProg=buildCode(proc_exit_seq,0,NumberOf(proc_exit_seq),0);
+  exitProg = buildCode(proc_exit_seq, 0, NumberOf(proc_exit_seq), 0);
 }
 
 //
@@ -110,55 +106,50 @@ static void defineExitProg(void)
  * L&O programs
  * This program is only safe before the first GC
  */
-ptrI defineSpecialProg(const char *name)
-{
+ptrI defineSpecialProg(const char *name) {
 #ifdef MEMTRACE
   extern long gcCount;
   long gCount = gcCount;
 #endif
 
-  insWord proc_seq[] = {	     // (gVar,_,tVar) :- name%3(gVar,name,tVar) 
-    instrhb(mAlit,2,0),			/* name */
-    instrhb(lkawl,3,1),			/* name%3 */
+  insWord proc_seq[] = {       // (gVar,_,tVar) :- name%3(gVar,name,tVar)
+    instrhb(mAlit, 2, 0),      /* name */
+    instrhb(lkawl, 3, 1),      /* name%3 */
   };
-  ptrI obj = buildCode(proc_seq,3,NumberOf(proc_seq),2);
+  ptrI obj = buildCode(proc_seq, 3, NumberOf(proc_seq), 2);
   ptrI nameEnum = newEnumSym(name);
 
-  updateCodeLit(codeV(obj),0,nameEnum);	/* name */
+  updateCodeLit(codeV(obj), 0, nameEnum);  /* name */
 
-  ptrI nameProg = newProgLbl(name,3);	/* name%3 */
+  ptrI nameProg = newProgLbl(name, 3);  /* name%3 */
 
-  defineProg(nameProg,obj);
-  updateCodeLit(codeV(obj),1,nameProg);
+  defineProg(nameProg, obj);
+  updateCodeLit(codeV(obj), 1, nameProg);
 
 #ifdef MEMTRACE
-  assert(gcCount==gCount);
+  assert(gcCount == gCount);
 #endif
   return obj;
 }
 
-static void defineResumeProgs(void)
-{
+static void defineResumeProgs(void) {
   int ar;
 
-  for(ar=0;ar<NumberOf(doResume);ar++){
-    insWord seq[] = {	       /* Y[arity] = interrupted code, Y[i] arguments */
-      instrhb(gcmap,0,ar),
-      instrh(resume,ar),		/* this resumes the execution */
+  for (ar = 0; ar < NumberOf(doResume); ar++) {
+    insWord seq[] = {         /* Y[arity] = interrupted code, Y[i] arguments */
+      instrhb(gcmap, 0, ar),
+      instrh(resume, ar),    /* this resumes the execution */
       instr(succ)
     };
-    ptrI cde = buildCode(seq,1,NumberOf(seq),0);
+    ptrI cde = buildCode(seq, 1, NumberOf(seq), 0);
 
     doResume[ar] = cde;
   }
 }
 
-
 /* Top-level bootstrap sequence, load the initial boot program and enter with standard entry point */
 
-void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
-{
-  ptrI loaded = emptyList;
+void bootstrap(string entry, string bootPkg, string version, string cwd) {
   byte errorMsg[1024];
 
   defineExitProg();
@@ -167,38 +158,32 @@ void bootstrap(string bootEntry,logical debug,string classPath,string cwd)
 //  defineObjectProg(kmain);
   defineResumeProgs();                  /* define the resume entry points */
 
-  ptrI mainThread = loObject(&globalHeap,objP(permObject(&globalHeap,threadClass)));
+  ptrI mainThread = loObject(&globalHeap, objP(permObject(&globalHeap, threadClass)));
 
-  processPo root = rootProcess(mainThread,kmain,classPath);
+  processPo root = rootProcess(mainThread, kmain, bootPkg);
 
-  rootPo gcRoot = gcAddRoot(&globalHeap,&loaded);
-  
-  switch(pkgLoader(&root->proc.heap, classPath, bootProg, emptySymbol, &loaded,
-                   errorMsg, NumberOf(errorMsg))){
-  default:
-    logMsg(logFile,"corrupt or no boot file found in %U: %U",classPath,errorMsg);
-    lo_exit(EXIT_FAIL);
-    return;
-  case Eof:
-    logMsg(logFile,"no boot file found in path %U",classPath);
-    lo_exit(EXIT_FAIL);
-    return;
-  case Ok:{
-    gcRemoveRoot(&globalHeap,gcRoot);
-
-    ptrI prog = newProgramLbl(bootEntry,3);
-
-    if(!IsProgram(prog)){
-      logMsg(logFile,"%U entry point not found",bootEntry);
+  switch (loadPkg(bootPkg, version, errorMsg, NumberOf(errorMsg))) {
+    default:
+      logMsg(logFile, "corrupt or no boot file found in %U: %U", bootPkg, errorMsg);
       lo_exit(EXIT_FAIL);
-    }
-    else{
-      root->proc.PROG = ProgramOf(prog); /* this is where we establish the program */
-      root->proc.PC = FirstInstruction(root->proc.PROG);
-      root->proc.thread = kmainThread;
+      return;
+    case Eof:
+      logMsg(logFile, "no boot file found in path %U", bootPkg);
+      lo_exit(EXIT_FAIL);
+      return;
+    case Ok: {
+      ptrI prog = newProgramLbl(entry, 3);
 
-      runGo(root);
+      if (!IsProgram(prog)) {
+        logMsg(logFile, "%U entry point not found", entry);
+        lo_exit(EXIT_FAIL);
+      } else {
+        root->proc.PROG = ProgramOf(prog); /* this is where we establish the program */
+        root->proc.PC = FirstInstruction(root->proc.PROG);
+        root->proc.thread = kmainThread;
+
+        runGo(root);
+      }
     }
-  }
   }
 }

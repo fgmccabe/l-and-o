@@ -15,7 +15,6 @@
 
 #include "fileP.h"
 #include "uri.h"
-#include "iostr.h"
 #include "hashTable.h"
 
 #include <assert.h>
@@ -24,6 +23,7 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <formio.h>
+#include "stringBuffer.h"
 
 static hashPo transducers = NULL;
 
@@ -395,15 +395,15 @@ retCode mvURL(string sys, string url, string nurl) {
 
 string grabURI(string url) {
   ioPo in = openURI(url, utf8Encoding);
-  ioPo str = O_IO(openStrOutput(url, utf8Encoding));
-  uint64 len;
+  ioPo str = O_IO(newStringBuffer());
+  long len;
   string text;
 
   while (isFileAtEof(in) != Eof)
     outChar(str, inCh(in));
   outChar(str, 0);
 
-  text = getStrText(O_STRING(str), &len);
+  text = getTextFromBuffer(&len,O_BUFFER(str));
 
   text = uniDuplicate(text);
 

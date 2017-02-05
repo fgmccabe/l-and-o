@@ -70,7 +70,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 31 "json.y"
+#line 33 "json.y"
 {
   char *str;
   double num;

@@ -7,21 +7,22 @@
 
 #include <unicode.h>
 #include "manifest.h"
-#include "pool.h"
 #include "hashTable.h"
-
-
-typedef struct {
-  byte packageName[MAX_SYMB_LEN];
-  byte version[MAX_SYMB_LEN];
-} PackageRec, *packagePo;
+#include "lo.h"
 
 typedef struct _manifest_entry_ {
-  PackageRec package;
-  byte source[MAX_SYMB_LEN]; // File name of source of package
-  byte code[MAX_SYMB_LEN];   // File name of package code
+  byte package[MAX_SYMB_LEN];
+  hashPo versions;
+  manifestVersionPo deflt;
+  manifestVersionPo loaded;
 } ManifestEntryRecord;
 
+typedef struct _manifest_version_ {
+  byte version[MAXFILELEN];
+  logical isDefault;
+  byte source[MAX_SYMB_LEN]; // File name of source of package
+  byte code[MAX_SYMB_LEN];   // File name of package code
+} ManifestVersionRecord;
 
 
 #endif //LANDO_MANIFESTP_H
