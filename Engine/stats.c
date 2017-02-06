@@ -18,11 +18,12 @@
 #include "lo.h"			/* main header file */
 #include "escodes.h"
 
-#ifdef STATSTRACE
 
 long pcCount = 0;
 long insCount[256];
 long escCount[256];
+
+#ifdef STATSTRACE
 /* A count of the escapes executed */
 
 logical traceCount = False;
@@ -34,7 +35,7 @@ void countEscape(insWord PCX) {
 }
 
 void countIns(insWord PCX) {
-  insCount[op_cde(PCX)]++;
+  insCount[op_code(PCX)]++;
 }
 
 

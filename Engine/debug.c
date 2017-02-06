@@ -87,7 +87,7 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
       cmdCounter--;
       break;
     case nextSucc:
-      switch (op_cde(*pc)) {
+      switch (op_code(*pc)) {
       case succ:
         cmdCounter--;
         break;
@@ -154,7 +154,7 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
           break;
         case 'N':
           cmdCounter = cmdCount(cmdLine + 1);
-          switch (op_cde(*pc)) {
+          switch (op_code(*pc)) {
           case kawlO:
           case kawl:
           case lkawlO:
@@ -308,6 +308,11 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
   }
   pthread_mutex_unlock(&debugMutex);
   return Ok;
+}
+
+void dC(ptrI w){
+  outMsg(logFile,"%w\n",&w);
+  flushOut();
 }
 
 #endif /* EXECTRACE */

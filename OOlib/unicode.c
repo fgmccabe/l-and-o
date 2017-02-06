@@ -389,9 +389,10 @@ long uniIndexOf(string s, long len, long from, codePoint c) {
 
   while (pos < len) {
     codePoint ch;
+    from = pos;
     if (nxtPoint(s, &pos, len, &ch) == Ok) {
       if (ch == c)
-        return pos;
+        return from;
     }
   }
   return -1;

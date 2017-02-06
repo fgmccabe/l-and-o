@@ -81,13 +81,13 @@ static inline ptrI unBind(ptrPo x)
 
 static inline short int envSize(insPo pc)
 {
-  assert(op_cde(*pc)==gcmap);
+  assert(op_code(*pc)==gcmap);
   return op_o_val(*pc);
 }
 
 static inline short int carefulEnv(insPo pc)
 {
-  switch(op_cde(*pc)){
+  switch(op_code(*pc)){
   case escape:
   case kawl:
   case kawlO:
@@ -100,7 +100,7 @@ static inline short int carefulEnv(insPo pc)
 
 static inline short int argArity(insPo pc)
 {
-  assert(op_cde(*pc)==gcmap||op_cde(*pc)==escape||op_cde(*pc)==kawl||op_cde(*pc)==kawlO||op_cde(*pc)==trycl||op_cde(*pc)==tryme || op_cde(*pc)==gc || op_cde(*pc)==alloc);
+  assert(op_code(*pc)==gcmap||op_code(*pc)==escape||op_code(*pc)==kawl||op_code(*pc)==kawlO||op_code(*pc)==trycl||op_code(*pc)==tryme || op_code(*pc)==gc || op_code(*pc)==alloc);
   return (short)(op_h_val(*pc));
 }
 

@@ -205,6 +205,7 @@ void showCall(processPo P, ptrI prog, ptrPo args, long arity) {
 
   outText(logFile, text, len);
   closeFile(out);
+  flushOut();
 }
 
 void showOCall(processPo P, ptrPo obj, ptrPo call, ptrPo this) {

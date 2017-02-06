@@ -557,7 +557,7 @@ void verifyProc(processPo p) {
 
         assert(B->trail >= (trailPo) p->proc.sBase &&
                B->trail <= p->proc.trail);
-        assert(op_cde(*B->cPC) == gcmap);
+        assert(op_code(*B->cPC) == gcmap);
         assert(B->H >= (ptrPo) p->proc.heap.base && B->H <= (ptrPo) p->proc.heap.create);
         assert(B->H <= heapMark);
         assert((ptrPo) T >= (ptrPo) B);
@@ -583,7 +583,7 @@ void verifyProc(processPo p) {
 
         assert(C->cSB <= (choicePo) p->proc.sTop);
         assert(C->cC <= (callPo) p->proc.sTop);
-        assert(op_cde(*C->cPC) == gcmap);
+        assert(op_code(*C->cPC) == gcmap);
         assert(C->cPC - FirstInstruction(C->cPROG) >= 0);
 
         len = envSize(C->cPC);  /* do this before the next step */

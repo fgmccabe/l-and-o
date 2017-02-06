@@ -353,7 +353,7 @@ void stackTrace(processPo p) {
 
       assert((ptrPo) B >= p->proc.sBase && (ptrPo) B <= p->proc.sTop &&
              (ptrPo) C >= p->proc.sBase && (ptrPo) C <= p->proc.sTop);
-      assert(op_cde(*cPC) == gcmap);
+      assert(op_code(*cPC) == gcmap);
 
       if ((ptrPo) B < (ptrPo) C) {  /* show a choice point */
         register integer ar = B->AX, i;

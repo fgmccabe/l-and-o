@@ -910,7 +910,7 @@ static void dumpIns(genPo S, iPo ins) {
   long pc = 0;
 
   while (ins != NULL) {
-    switch (op_cde(ins->code)) {
+    switch (op_code(ins->code)) {
 #include "instructions.h"
 
       default:

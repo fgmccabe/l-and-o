@@ -121,7 +121,7 @@ static char *splitPhase(insPo pc, long length, segPo seg) {
 
   while (ret == NULL && pc < limit) {
     insWord pcx = *pc++;
-    switch (op_cde(pcx)) {
+    switch (op_code(pcx)) {
 #include "instructions.h"
 
       default:
@@ -329,7 +329,7 @@ static char *checkSegment(segPo seg) {
     insPo oPc = pc;
     insWord pcx = *pc++;
 
-    switch (op_cde(pcx)) {
+    switch (op_code(pcx)) {
 #include "instructions.h"
 
       default:
@@ -724,7 +724,7 @@ static char *checkInstruction(segPo seg, insPo opc, insPo pc, insWord pcx, opAnd
     ret = checkOutOperand(seg, pc, pcx, A2);
 
   // We have to hack the special aspects for now
-  switch (op_cde(pcx)) {
+  switch (op_code(pcx)) {
     case dealloc:
     case dlkawlO:
     case dlkawl:

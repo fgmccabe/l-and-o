@@ -26,6 +26,10 @@ extern long pcCount;		/* number of instructions executed */
 extern void countEscape(insWord PCX);
 void dumpInsCount(void);
 
+extern long pcCount;
+extern long insCount[256];
+extern long escCount[256];
+
 
 #endif /* _STATS_COLLECT_H_ */
 
