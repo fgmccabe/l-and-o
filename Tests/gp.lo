@@ -1,0 +1,12 @@
+test.gp{
+  p:(string,string){}.
+  p("a","b").
+  p("c","b").
+  p("b","d").
+  p("g","d").
+
+  gp:(string,string){}.
+  gp(x,y) :- p(x,z), p(z,y).
+
+  assert gp("a","d").
+}

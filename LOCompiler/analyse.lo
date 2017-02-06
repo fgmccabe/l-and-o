@@ -77,6 +77,14 @@ lo.comp.code.analyse{
 
   type usageMap ::= usage(string,occMap,addr,set[integer],set[integer],set[integer]).
 
+  implementation display[usageMap] <= {
+    disp(U) => dispUsage(U).
+  }
+
+  dispUsage:(usageMap) => ss.
+  dispUsage(usage(Nm,Occs,Addr,In,Avoid,Conflict)) =>
+      ssSeq([ss("usage for "),ss(Nm),ss(":"),disp(Addr),ss(", inset="),disp(In),ss(", avoid set="),disp(Avoid),ss(" conflict set="),disp(Conflict)]).
+
   -- Analyse how variables are used.
   usageTable:(list[occMap],integer,list[list[pred]]) => list[usageMap].
   usageTable(Occs,Arity,Parts) => buildRegUsage(Occs,Occs,Parts,Arity,[]).

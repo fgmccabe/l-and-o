@@ -80,4 +80,15 @@ lo.comp.code.registers{
 
   public numRegisters:integer.
   numRegisters = 64.
+
+  public implementation display[addr] <= {
+    disp(A) => dispAdd(A).
+  }
+
+  dispAdd:(addr) => ss.
+  dispAdd(voidAddr) => ss("void").
+  dispAdd(aReg(R)) => ssSeq([ss("A["),disp(R),ss("]")]).
+  dispAdd(yReg(Lc,Sf)) => ssSeq([ss("Y["),disp(Lc), ss((Sf?"/safe"|"/not safe")),ss("]")]).
+  dispAdd(sReg) => ss("S").
+  dispAdd(notAlloc) => ss("not allocated").
 }

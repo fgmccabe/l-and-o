@@ -74,4 +74,11 @@ lo.sets {
   private foldRightEls:all f,e,x ~~ ((e,x)=>x,x,list[e]) => x.
   foldRightEls(F,X,S) => foldRight(F,X,S).
 
+  public implementation all e ~~ display[e] |: display[set[e]] <= {
+    disp(set(Els)) => ssSeq([ss("{"),ssSeq(dispEls(keys(Els),"")),ss("}")]).
+  }
+
+  dispEls:all e ~~ display[e] |: (list[e],string) => list[ss].
+  dispEls([],_) => [].
+  dispEls([E,..L],Sep) => [ss(Sep),disp(E),..dispEls(L,", ")].
 }
