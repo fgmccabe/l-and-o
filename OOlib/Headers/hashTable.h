@@ -22,7 +22,7 @@
 typedef struct _hashtable_ *hashPo;
 
 typedef uinteger (*hashFun)(void *); /* Hashing function */
-typedef int (*compFun)(void *, void *); /* Comparison function */
+typedef comparison (*compFun)(void *, void *); /* Comparison function */
 typedef retCode (*destFun)(void *, void *); /* Destroy function */
 typedef retCode (*procFun)(void *n, void *r, void *c); /* Processing func */
 
@@ -41,6 +41,6 @@ void lockHash(hashPo tbl);
 void unlockHash(hashPo tbl);
 
 uinteger strhash(void *name);
-int strcomp(void *n1,void *n2);
+comparison strcomp(void *n1,void *n2);
 
 #endif

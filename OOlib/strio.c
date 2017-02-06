@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include "stringBuffer.h"
 
-
 string strMsg(string buffer, long len, char *fmt, ...) {
   bufferPo f = fixedStringBuffer(buffer, len);
 
@@ -31,7 +30,7 @@ string strMsg(string buffer, long len, char *fmt, ...) {
   __voutMsg(O_IO(f), (unsigned char *) fmt, args);  /* Display into the string buffer */
 
   va_end(args);
-  outChar(O_IO(f), '\0');                /* Terminate the string */
+  outByte(O_IO(f), 0);                /* Terminate the string */
 
   closeFile(O_IO(f));
   return buffer;
@@ -42,7 +41,7 @@ string strAppend(string buffer, long len, char *fmt, ...) {
   long blen = len - (buff - buffer);
 
   bufferPo f = fixedStringBuffer(buffer, len);
-  bufferStepForward(f,blen);
+  bufferStepForward(f, blen);
 
   va_list args;      /* access the generic arguments */
   va_start(args, fmt);    /* start the variable argument sequence */

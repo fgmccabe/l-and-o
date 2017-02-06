@@ -42,7 +42,8 @@ logical traceX = False;			/* True if tracing X windows stuff */
 byte loSysPath[MAX_MSG_LEN] = {0};      // Pointer to L&O's installation point
 static byte loCWD[MAX_MSG_LEN] = {0};
 static byte repoDir[MAX_MSG_LEN] = {0};
-static byte classPath[MAX_MSG_LEN] = {0};  // Go class path string 
+static byte bootPkg[MAX_MSG_LEN] = {'l', 'o', '.', 'b', 'o', 'o', 't', 0};  // boot package
+static byte bootVer[MAX_SYMB_LEN] = {'*', 0};
 static byte entryPoint[MAX_MSG_LEN] = {0};  // Go entry point class 
 static byte debugPkg[MAX_MSG_LEN] = {0};  // Standard debug package 
 
@@ -123,6 +124,18 @@ static void splitFirstArg(int argc, char **argv, int *newArgc, char ***newArgv) 
   }
 }
 
+static void parsePkgOpt(char *opt, byte pkg[], long pkgLen, byte ver[], long verLen) {
+  long colonPos = uniIndexOf((string) opt, strlen(opt), 0, ':');
+
+  if (colonPos > 0) {
+    uniNCpy(pkg, pkgLen, (string) opt, colonPos);
+    uniCpy(ver, verLen, (string) &opt[colonPos + 1]);
+  } else {
+    uniCpy(pkg, pkgLen, (string) opt);
+    uniCpy(ver, verLen, (string) "*");
+  }
+}
+
 int getOptions(int argc, char **argv) {
   int opt;
   extern char *optarg;
@@ -131,7 +144,7 @@ int getOptions(int argc, char **argv) {
   splitFirstArg(argc, argv, &argc, &argv);
 
   for (; optCount < NumberOf(Options) &&
-         (opt = getopt(argc, argv, GNU_GETOPT_NOPERMUTE "n:m:M:D:P:d:gG:x:vVh:s:L:r:R:")) >= 0; optCount++) {
+         (opt = getopt(argc, argv, GNU_GETOPT_NOPERMUTE "m:D:d:gG:vVh:s:L:r:b:R:")) >= 0; optCount++) {
     Options[optCount].option = (codePoint) opt;     /* store the option */
 
     if (optarg != NULL) {
@@ -278,7 +291,7 @@ int getOptions(int argc, char **argv) {
       }
 
       case 'm': {                          /* modify the entry point */
-        strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@%s", optarg);
+        uniCpy(entryPoint,NumberOf(entryPoint),(string)optarg);
         break;
       }
 
@@ -289,6 +302,11 @@ int getOptions(int argc, char **argv) {
 
       case 'd': {                      /* non-standard initial working directory */
         strMsg(loCWD, NumberOf(loCWD), "%s", optarg);
+        break;
+      }
+
+      case 'b': {
+        parsePkgOpt(optarg, bootPkg, NumberOf(bootPkg), bootVer, NumberOf(bootVer));
         break;
       }
 
@@ -348,14 +366,12 @@ int main(int argc, char **argv) {
 #endif
 
   initLogfile((string) "-");
+  initFileIo();        /* Set up special file handling */
 
   strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__main"); /* standard entry point */
 
   if ((narg = getOptions(argc, argv)) < 0) {
-    outMsg(logFile, _("usage: %s [-v] [-m mainclass] [-L log] [-g host:port] [-V] [-P classpath]"
-#ifdef ALLTRACE
-                        " [-D debugopts]"
-#endif
+    outMsg(logFile, _("usage: %s [-v] [-L log] [-g host:port] [-V] [-b boot:ver] [-m entry] [-r repo] [-d wd]"
                         " [-h sizeK] [-s sizeK] [-d rootdir] args ...\n"), argv[0]);
     exit(1);
   }
@@ -384,7 +400,6 @@ int main(int argc, char **argv) {
   }
 
   /* IMPORTANT -- Keep the order of these set up calls */
-  initFileIo();        /* Set up special file handling */
   initGlobal(initHeapSize);    /* start up the global space */
   initClass();        /* Initialize the class handlers */
   initPrograms();      /* Initialize program handling */
@@ -396,7 +411,7 @@ int main(int argc, char **argv) {
 
   setupSignals();
 
-  bootstrap(entryPoint, classPath, NULL, loCWD);
+  bootstrap(entryPoint, bootPkg, bootVer);
 
   return EXIT_SUCCEED;          /* exit the lo system cleanly */
 }

@@ -19,9 +19,7 @@
 
 #include "lo.h"
 #include "manifestP.h"
-#include "encoded.h"
-#include <hashTable.h>
-#include <process.h>
+#include "thread.h"
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048
@@ -54,10 +52,6 @@ ptrI symbolClass;  //  Standard symbol class
 ptrI stringClass;
 
 ptrI trueClass, falseClass;  //  True and False
-
-ptrI threadClass;  //  The class of process identifiers
-
-
 
 static long clSizeFun(specialClassPo class, objPo o);
 static comparison clCompFun(specialClassPo class, objPo o1, objPo o2);
@@ -190,6 +184,7 @@ void standardClasses(void) {
   initIntegerClass();
   initFloatClass();
   initThreadClass();
+  initProcessClss();
 }
 
 ptrI newClassDef(const string name, long arity) {
@@ -355,6 +350,8 @@ retCode g__ensure_loaded(processPo P, ptrPo a) {
     if (isLoaded(pname))
       return Ok;
     else {
+      heapPo H = &P->proc.heap;
+
       switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
       retCode ret = loadPkg(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,

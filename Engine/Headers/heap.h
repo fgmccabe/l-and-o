@@ -70,7 +70,6 @@ static inline logical inHeap(heapPo P, const objPo x) {
 extern void growRoots(heapPo H);
 
 static inline rootPo gcAddRoot(heapPo H, ptrPo ptr) {
-  assert(H != &globalHeap);
   if (H->topRoot == H->maxRoot)
     growRoots(H);
 

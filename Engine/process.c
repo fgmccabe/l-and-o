@@ -19,6 +19,7 @@
 #include <pthread.h>
 
 #include "lo.h"			/* Main april header file */
+#include "thread.h"
 
 #ifndef DEFSTACK
 #define DEFSTACK 1024    /* default initial size of process stack */
@@ -29,8 +30,7 @@
 #endif
 
 typedef struct {
-  ptrI class;
-  /* == procClass */
+  ptrI class;             /* == procClass */
   processPo process;      /* the process itself */
 } procRec, *prPo;
 
@@ -86,10 +86,6 @@ static void inheritProcess(classPo class, classPo request) {
   //  ProcessClassRec *req = (ProcessClassRec*)request;
   //  ProcessClassRec *template = (ProcessClassRec*)class;
 }
-
-static void clearProcess(ptrI P);
-
-static processPo getProcessVal(ptrI P);
 
 static void initProcessClass(classPo class, classPo request) {
   ProcessClassRec *rqClass = (ProcessClassRec *) request;
@@ -162,10 +158,8 @@ static void processInit(objectPo o, va_list *args) {
   pClass->proc.liveProcesses++;
 
   assert(getProcessVal(p->proc.thread) == NULL);
-}
 
-processPo getProcessOfThread(void) {
-  return (processPo) pthread_getspecific(ProcessClass.proc.processKey);
+  setProcess(p->proc.thread, p);
 }
 
 pthread_t ps_threadID(processPo P) {
@@ -193,11 +187,9 @@ static retCode prScanFun(specialClassPo class, specialHelperFun helper, void *c,
 static objPo prCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger prHashFun(specialClassPo class, objPo o);
 
-void initThreadClass(void) {
+void initProcessClss(void) {
   procClass = newSpecialClass("#process", prSizeFun, prCompFun,
                               prOutFun, prCopyFun, prScanFun, prHashFun);
-
-  threadClass = newClassDf("lo.stdlib#thread", 0);
 }
 
 static long prSizeFun(specialClassPo class, objPo o) {
@@ -227,25 +219,23 @@ static objPo prCopyFun(specialClassPo class, objPo dst, objPo src) {
 }
 
 static uinteger prHashFun(specialClassPo class, objPo o) {
-  return 0;
+  return (uinteger) o;
 }
 
 retCode processProcesses(procProc proc, void *cl) {
   return processAll(processClass, (manageProc) proc, cl);
 }
 
-processPo rootProcess(ptrI thread, ptrI boot, string pkg) {
+processPo rootProcess(ptrI thread, string pkg) {
   processPo P = O_PROCESS(newObject(processClass, thread));
   heapPo H = &P->proc.heap;
   rootPo root = gcAddRoot(H, &thread);
-
-  gcAddRoot(H, &boot);
 
   P->proc.A[1] = allocateString(H, pkg, uniStrLen(pkg)); /* class path */
   P->proc.A[2] = cmdLineOptions(H);  /* The command line options */
   P->proc.A[3] = commandLine(H);  /* Command line arguments */
 
-  P->proc.PROG = ProgramOf(boot);   /* this is where we establish the program */
+  P->proc.PROG = dieProg;  // Is updated outside for the root process
   P->proc.PC = FirstInstruction(P->proc.PROG);
 
   gcRemoveRoot(H, root);
@@ -344,8 +334,7 @@ void stackTrace(processPo p) {
           Cx = Bx->C;
         }
         Bx = Bx->B;
-      }
-      else {        /* show a call entry */
+      } else {        /* show a call entry */
         if (Cix < NumberOf(callPoints))
           callPoints[Cix++] = Cx;
         lastCx = Cx;
@@ -375,8 +364,7 @@ void stackTrace(processPo p) {
           outMsg(logFile, "\ntrap point:%d @ %w[%d]",
                  bLevel++, &B->PROG, B->PC - FirstInstruction(B->PROG));
           T = T->T;
-        }
-        else {
+        } else {
           outMsg(logFile, "\nchoice point:%d @ %w[%d]",
                  bLevel++, &B->PROG, B->PC - FirstInstruction(B->PROG));
         }
@@ -402,8 +390,7 @@ void stackTrace(processPo p) {
           len = envSize(B->cPC);  /* do this before the next step */
         }
         B = B->B;
-      }
-      else {        /* show a call entry */
+      } else {        /* show a call entry */
         register int i;
         register ptrPo Y = (ptrPo) C;
 
@@ -536,8 +523,7 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
 
         oH += size;
         nH += size;
-      }
-      else {
+      } else {
         ptrPo a = objectArgs(oH);
         long arity = objectArity(oH);
         long ix;
@@ -608,8 +594,7 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
 
       B = B->B;
       nB = nB->B;                     /* look at the next choice point */
-    }
-    else {        /* call is the most recent entry */
+    } else {        /* call is the most recent entry */
       register int i;
       register ptrPo nY = (ptrPo) nC;
       register ptrPo Y = (ptrPo) C;
@@ -704,14 +689,16 @@ void *forkThread(void *arg) {
 }
 
 retCode g__fork(processPo P, ptrPo a) {
-  ptrI as = deRefI(&a[1]);        /* the thread to use in this sub-thread */
-
-  assert(IsGoObject(as));    /* must be a stateful entity */
+  ptrI as = deRefI(&a[1]);        /* the code to use in this sub-thread */
 
   if (isvar(as))
     return liberror(P, "__fork", eINSUFARG);
   else {
-    processPo new = O_PROCESS(newObject(processClass, as));
+    ptrI thread = newThread();
+    heapPo H = &P->proc.heap;
+    rootPo root = gcAddRoot(H, &thread);
+
+    processPo new = O_PROCESS(newObject(processClass, thread));
 
     objPo p = objV(as);
 
@@ -758,8 +745,7 @@ retCode g_kill(processPo P, ptrPo a) {
     if (tgt != NULL && tgt != P) {
       ps_kill(tgt);
       return Ok;
-    }
-    else
+    } else
       return liberror(P, "kill", eINVAL);
   }
 }
@@ -805,8 +791,7 @@ retCode g_waitfor(processPo P, ptrPo a) {
       if (pthread_join(thread, &result) == 0) {
         setProcessRunnable(P);
         return Ok;
-      }
-      else {
+      } else {
         setProcessRunnable(P);
         switch (errno) {
           case EINVAL:
@@ -819,8 +804,7 @@ retCode g_waitfor(processPo P, ptrPo a) {
             return Ok;
         }
       }
-    }
-    else
+    } else
       return liberror(P, "waitfor", eDEAD);
   }
 }
@@ -840,18 +824,4 @@ retCode g__assoc(processPo P, ptrPo a) {
 
 retCode g__thread(processPo P, ptrPo a) {
   return equal(P, &P->proc.thread, &a[1]);
-}
-
-processPo getProcessVal(ptrI P) {
-  objPo p = objV(P);
-  assert(hasClass(p, procClass));
-
-  return ((prPo) p)->process;
-}
-
-static void clearProcess(ptrI P) {
-  objPo p = objV(P);
-  assert(hasClass(p, procClass));
-
-  ((prPo) p)->process = NULL;
 }

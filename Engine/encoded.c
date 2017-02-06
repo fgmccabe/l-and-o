@@ -155,14 +155,15 @@ retCode decInt(ioPo in, integer *ii) {
         result = digitVal(ch); // First digit of number
 
         while (True) {
-          switch (inChar(in, &ch)) {
+          byte chb;
+          switch (inByte(in, &chb)) {
             case Ok:
-              if (isDigit(ch)) {
-                result = result * 10 + digitVal(ch);
+              if (isDigit(chb)) {
+                result = result * 10 + digitVal(chb);
                 continue;
               } else {
                 *ii = result;
-                return Ok;
+                return putBackByte(in,chb);
               }
             case Eof: {
               *ii = result;
@@ -268,7 +269,6 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmSym: {
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newUniSymbol(getTextFromBuffer(&len, tmpBuffer));
       }
       return res;
@@ -291,7 +291,6 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newClassDef(getTextFromBuffer(&len, tmpBuffer), arity);
       }
       return res;
@@ -305,7 +304,6 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        outByte(O_IO(tmpBuffer), 0); // terminate the name
         *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), arity);
       }
       return res;

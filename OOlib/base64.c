@@ -17,7 +17,9 @@ retCode decode64(ioPo dst, ioPo src) {
 
     ret = inByte(src, &u);
 
-    if (ret == Ok) {
+    if (ret == Eof)           // Eof allowed on first character
+      return Ok;
+    else if (ret == Ok) {
       byte h;
 
       ret = inByte(src, &h);

@@ -159,20 +159,20 @@ static char *skipSig(char *tp) {
   }
 }
 
-static int sigArity(char *spec) {
+static short sigArity(char *spec) {
   integer ar;
-  switch (*spec) {
+  switch (*spec++) {
     case func_sig:
       ar = scanInt(&spec);
-      return ar + 1;
+      return (short)(ar + 1);
     case pred_sig:
       ar = scanInt(&spec);
       return ar;
     case grammar_sig:
       ar = scanInt(&spec);
-      return ar + 2;
+      return (short)(ar + 2);
     case univ_sig:
-      return sigArity(skipSig(spec + 2));
+      return sigArity(skipSig(spec));
     default:
       assert(False);
       return 0;

@@ -28,7 +28,7 @@ static objPo strCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger strHashFun(specialClassPo class, objPo o);
 
 void initStringClass(void) {
-  stringClass = newSpecialClass("lo.stdlib#string", strSizeFun, strCompFun,
+  stringClass = newSpecialClass("lo.core#string", strSizeFun, strCompFun,
                                 strOutFun, strCopyFun, strScanFun, strHashFun);
 }
 

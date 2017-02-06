@@ -143,7 +143,7 @@ void *hashGet(hashPo htbl, void *name) {
     register bucketPo b = htbl->table[(htbl->hash)(name) % htbl->size];
 
     while (b != NULL) {
-      if ((htbl->compare)(b->nme, name) == 0) { /* we have found the entry */
+      if ((htbl->compare)(b->nme, name) == same) { /* we have found the entry */
         result = b->r;
         break;
       }
@@ -434,7 +434,7 @@ uinteger strhash(void *n) {
   return hash;
 }
 
-int strcomp(void *n1, void *n2) {
-  return strcmp(n1, n2);
+comparison strcomp(void *n1, void *n2) {
+  return uniCmp((string)n1,(string)n2);
 }
 

@@ -179,7 +179,7 @@ static retCode bufferBackByte(ioPo io, byte b) {
 static retCode bufferMark(ioPo io, long *mark) {
   bufferPo f = O_BUFFER(io);
 
-  if (f->buffer.pos > 0) {
+  if (f->buffer.pos >= 0) {
     *mark = f->buffer.pos;
     return Ok;
   } else
@@ -232,6 +232,9 @@ static retCode bufferOutReady(ioPo io) {
 }
 
 static retCode bufferFlusher(ioPo io, long count) {
+  bufferPo s = O_BUFFER(io);
+  ensureSpace(s, 1);
+  s->buffer.buffer[s->buffer.pos] = '\0';
   return Ok;
 }
 

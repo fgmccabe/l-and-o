@@ -14,6 +14,7 @@
 */
 
 #include "lo.h"			/* Main L&O header file */
+#include "thread.h"
 #include "escodes.h"
 
 /* An initial bootstrap sequence */
@@ -74,7 +75,7 @@ static void defineExitProg(void) {
 //  trapProg=trap;
 //}
 
-//
+
 //static void defineObjectProg(ptrI sym)
 //{
 //  insWord proc_seq[] = {                /* (gVar,_,tVar) :- _getProp(tVar,"$label",T),
@@ -149,8 +150,8 @@ static void defineResumeProgs(void) {
 
 /* Top-level bootstrap sequence, load the initial boot program and enter with standard entry point */
 
-void bootstrap(string entry, string bootPkg, string version, string cwd) {
-  byte errorMsg[1024];
+void bootstrap(string entry, string bootPkg, string version) {
+  byte errorMsg[MAX_MSG_LEN];
 
   defineExitProg();
   defineDieProg();
@@ -158,21 +159,21 @@ void bootstrap(string entry, string bootPkg, string version, string cwd) {
 //  defineObjectProg(kmain);
   defineResumeProgs();                  /* define the resume entry points */
 
-  ptrI mainThread = loObject(&globalHeap, objP(permObject(&globalHeap, threadClass)));
+  ptrI mainThread = newThread();
 
-  processPo root = rootProcess(mainThread, kmain, bootPkg);
+  processPo root = rootProcess(mainThread, bootPkg); // We create the root with a early death code - updated later
 
   switch (loadPkg(bootPkg, version, errorMsg, NumberOf(errorMsg))) {
     default:
-      logMsg(logFile, "corrupt or no boot file found in %U: %U", bootPkg, errorMsg);
+      logMsg(logFile, "corrupt or no boot package found in %s:%s", bootPkg, errorMsg);
       lo_exit(EXIT_FAIL);
       return;
     case Eof:
-      logMsg(logFile, "no boot file found in path %U", bootPkg);
+      logMsg(logFile, "short boot package %s", bootPkg);
       lo_exit(EXIT_FAIL);
       return;
     case Ok: {
-      ptrI prog = newProgramLbl(entry, 3);
+      ptrI prog = newProgramLbl(entry, 0);
 
       if (!IsProgram(prog)) {
         logMsg(logFile, "%U entry point not found", entry);

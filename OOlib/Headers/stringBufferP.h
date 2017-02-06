@@ -33,6 +33,7 @@ typedef struct _buffer_part_{
 
 typedef struct _buffer_ {
   ObjectRec object;                     /* object level of the io structure */
+  LockObjectRec lock;
   IoPart io;                            /* Io level of io object */
   BufferPart buffer;
 } BufferObject;

@@ -39,21 +39,17 @@ JsonCallBacks manEvents = {
 
 static poolPo manifestPool = NULL;
 static poolPo versionPool = NULL;
-static pthread_once_t once = PTHREAD_ONCE_INIT;
 
 static hashPo manifest;
 
-static void initManifest(void) {
-  if (manifestPool == NULL) {
-    manifestPool = newPool(sizeof(ManifestEntryRecord), 128);
-    versionPool = newPool(sizeof(ManifestVersionRecord), 128);
-    manifest = NewHash(128, (hashFun) uniHash, (compFun) uniCmp, NULL);
-  }
+static byte repoDir[MAXFILELEN];
+
+void initManifest() {
+  manifestPool = newPool(sizeof(ManifestEntryRecord), 128);
+  versionPool = newPool(sizeof(ManifestVersionRecord), 128);
+  manifest = NewHash(128, (hashFun) uniHash, (compFun) uniCmp, NULL);
 }
 
-static void init() {
-  pthread_once(&once, initManifest);
-}
 
 // Manage the manifest
 
@@ -68,7 +64,6 @@ manifestEntryPo newManifestEntry(string name) {
 }
 
 manifestEntryPo manifestEntry(string package) {
-  init();
   return (manifestEntryPo) hashGet(manifest, package);
 }
 
@@ -93,11 +88,13 @@ manifestVersionPo manifestVersion(string package, string version) {
     return NULL;
 }
 
-string packageCodeFile(string package, string version) {
+string packageCodeFile(string package, string version, byte *flNm, long flLen) {
   manifestVersionPo entry = manifestVersion(package, version);
 
-  if (entry != NULL)
-    return (string) &entry->code;
+  if (entry != NULL) {
+    strMsg(flNm,flLen,"%s/%s",repoDir,(string) &entry->code);
+    return flNm;
+  }
   else
     return NULL;
 }
@@ -152,12 +149,13 @@ typedef struct {
   ParseState state;
 } ParsingState, *statePo;
 
-retCode loadManifest(string repoDir) {
-  init();
+retCode loadManifest(string dir) {
+  uniCpy(repoDir, NumberOf(repoDir), dir);
+  initManifest();
 
   byte manifestName[MAX_MSG_LEN];
 
-  strMsg(manifestName, NumberOf(manifestName), "%s/manifest", repoDir);
+  strMsg(manifestName, NumberOf(manifestName), "%s/manifest", dir);
 
   ioPo inFile = openInFile(manifestName, utf8Encoding);
 
@@ -167,7 +165,6 @@ retCode loadManifest(string repoDir) {
     return Ok;
   } else
     return Error;
-
 }
 
 retCode startManifest(void *cl) {

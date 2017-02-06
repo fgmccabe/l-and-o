@@ -21,15 +21,15 @@
 #include <pthread.h>
 
 typedef enum {
-  quiescent,				/* process has yet to execute */
-  runnable,			    /* process is running or available to run */
-  wait_io,				/* process is waiting for I/O */
-  wait_term,		/* process is waiting for another thread to terminate */
-  wait_timer,				/* waiting for an interval times */
-  wait_lock,				// Waiting for a lock to be released
+  quiescent,        /* process has yet to execute */
+  runnable,          /* process is running or available to run */
+  wait_io,        /* process is waiting for I/O */
+  wait_term,    /* process is waiting for another thread to terminate */
+  wait_timer,        /* waiting for an interval times */
+  wait_lock,        // Waiting for a lock to be released
   wait_child,                           // Wait for a child process
-  wait_rendezvous,		       /* Waiting for a rendezvous to release */
-  in_exclusion,				/* In an exclusion zone */
+  wait_rendezvous,           /* Waiting for a rendezvous to release */
+  in_exclusion,        /* In an exclusion zone */
   dead                                  /* process has died */
 } process_state;
 
@@ -40,14 +40,14 @@ typedef struct _choice_rec_ *choicePo;
 typedef struct _call_rec_ *callPo;
 
 typedef struct _call_rec_ {
-  insPo cPC;				/* parent program counter */
+  insPo cPC;        /* parent program counter */
   ptrI cPROG;                           /* continuation program  */
   callPo cC;                            /* parent environment */
   choicePo cSB;                         /* where to cut to in parent */
 } CallRec;
 
 /* definition of a choice point record */
- 
+
 typedef struct _trail_rec_ {
   ptrPo var;                            /* variable that was bound */
   ptrI val;                             /* last value held by the variable */
@@ -63,17 +63,16 @@ typedef struct _choice_rec_ {
   ptrI cPROG;                           /* continuation program  */
   ptrI PROG;                            /* current program  */
   trailPo trail;                        /* current trail level */
-  choicePo T;				                    /* error recovery trap */
+  choicePo T;                            /* error recovery trap */
   ptrPo H;                              /* value of the heap stack at choice point */
 } ChoiceRec;
 
 /* Object and class interface */
 
-typedef struct{
-  long liveProcesses;			              /* Number of live processes */
-  pthread_key_t processKey;		          /* Special key for thread specific */
+typedef struct {
+  long liveProcesses;                    /* Number of live processes */
+  pthread_key_t processKey;              /* Special key for thread specific */
 } ProcessClassPartRec;
-
 
 typedef struct {
   ptrPo sBase;                          /* Base of on-board stack */
@@ -83,7 +82,7 @@ typedef struct {
   choicePo B;                           /* Current choice point */
   choicePo SB;                          /* Where to cut to */
   choicePo cSB;                         /* Continuation slashback point */
-  choicePo T;				/* Trap recovery */
+  choicePo T;        /* Trap recovery */
   trailPo trail;                        /* Current trail point */
   callPo C;                             /* Current call frame */
   callPo cC;                            /* Continuation call frame */
@@ -92,18 +91,18 @@ typedef struct {
   ptrI cPROG;                           /* continuation program  */
   ptrI PROG;                            /* current program  */
   ptrI trigger;                         /* triggered variables */
-  unsigned short F;			/* Trigger flag */
+  unsigned short F;      /* Trigger flag */
 
-  byte errorMsg[1024];		// Current error message
-  ptrI errorCode;			/* Error code of this process */
+  byte errorMsg[1024];    // Current error message
+  ptrI errorCode;      /* Error code of this process */
 
-  pthread_t threadID;			/* What is the posix thread ID? */
-  pthread_cond_t cond;			/* Condition variable attached  */
+  pthread_t threadID;      /* What is the posix thread ID? */
+  pthread_cond_t cond;      /* Condition variable attached  */
   ptrI thread;                          /* The thread structure of this process */
   void *cl;                             /* Client specific data */
   process_state state;                 /* What is the status of this process? */
-  logical pauseRequest;	       /* Has a pause of this process been requested? */
-  process_state savedState;		/* Saved state of this process? */
+  logical pauseRequest;         /* Has a pause of this process been requested? */
+  process_state savedState;    /* Saved state of this process? */
 } ProcessRec;
 
 /*
@@ -130,44 +129,44 @@ extern classPo processClass;
 #else
 #define O_PROCESS(c) ((processPoPo)(c))
 #endif
-  
+
 extern long LiveProcesses;              /* Number of executing processes */
 
-typedef retCode (*procProc)(processPo p,void *cl);
+typedef retCode (*procProc)(processPo p, void *cl);
 
 extern ptrI commandLine(heapPo H);      /* command line arguments */
 extern ptrI cmdLineOptions(heapPo H);
 
-retCode processProcesses(procProc p,void *cl);
+retCode processProcesses(procProc p, void *cl);
 processPo getProcessOfThread(void);
 
 pthread_t ps_threadID(processPo p);
-processPo ps_suspend(processPo p,process_state reason);
+processPo ps_suspend(processPo p, process_state reason);
 processPo ps_resume(register processPo p, register logical fr); /* resume process */
-void ps_kill(processPo p);		  /* kill process */
+void ps_kill(processPo p);      /* kill process */
 
-void switchProcessState(processPo P,process_state state);
+void switchProcessState(processPo P, process_state state);
 void setProcessRunnable(processPo P);
 
 void pauseAllThreads(pthread_t except);
 void resumeAllThreads(pthread_t except);
 logical checkForPause(processPo P);
 
-void *ps_client(processPo p);	/* Get the process's client information */
-void *ps_set_client(processPo p,void *cl);
+void *ps_client(processPo p);  /* Get the process's client information */
+void *ps_set_client(processPo p, void *cl);
 
 process_state ps_state(processPo p);
 
 processPo runerr(processPo); /* non-fatal error */
 
-processPo rootProcess(ptrI thread,ptrI boot,string pkg);
-void bootstrap(string entry, string bootPkg, string version, string cwd);
-	       
+processPo rootProcess(ptrI thread, string pkg);
+void bootstrap(string entry, string bootPkg, string version);
+
 void displayProcesses(void);
 void displayProcess(processPo p);
 void stackTrace(processPo p);
 
-retCode extendStack(processPo p,int sfactor,int hfactor,long hmin);
+retCode extendStack(processPo p, int sfactor, int hfactor, long hmin);
 
 ptrI buildDieEnv(void);
 ptrI buildRootEnv(void);
@@ -175,6 +174,6 @@ ptrI buildExitEnv(void);
 ptrI buildLoaderEnv(void);
 
 void verifyProc(processPo p);
-void initThreadClass(void);
+void initProcessClss(void);
 
 #endif

@@ -33,7 +33,8 @@ retCode loadPkg(string pkg, string vers, string errorMsg, long msgSize) {
     } else
       return Ok; // already loaded correct version
   } else {
-    string fn = packageCodeFile(pkg, vers);
+    byte flNm[MAXFILELEN];
+    string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
 
     if (fn == NULL) {
       outMsg(logFile, "cannot determine code for %s:%s", pkg, version);
@@ -79,7 +80,7 @@ retCode loadPkg(string pkg, string vers, string errorMsg, long msgSize) {
 
 #ifdef EXECTRACE
       if (debugging)
-        outMsg(logFile, "package %s loaded\n", pkg);
+        logMsg(logFile, "package %s loaded\n", pkg);
 #endif
 
       if (ret == Eof)
@@ -137,14 +138,22 @@ retCode decodePkgSignature(ioPo in, byte *pkgNm, long nmLen, byte *vrNm, long vr
 }
 
 retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen) {
-  if (isLookingAt(in, "n2o2'pkg'") == Ok) {
+  if (isLookingAt(in, "n2o2'pkg's") == Ok) {
     bufferPo pkgB = fixedStringBuffer(nm, nmLen);
     bufferPo vrB = fixedStringBuffer(v, vLen);
 
     retCode ret = decodeName(O_IO(in), pkgB);
 
-    if (ret == Ok)
-      ret = decodeName(O_IO(in), vrB);
+    if (ret == Ok) {
+      if (isLookingAt(in, "e'*'") == Ok)
+        outStr(O_IO(vrB), "*");
+      else if (isLookingAt(in, "s") == Ok) {
+        ret = decodeText(O_IO(in), vrB);
+      }
+    }
+
+    outByte(O_IO(pkgB), 0);
+    outByte(O_IO(vrB), 0);
 
     closeFile(O_IO(pkgB));
     closeFile(O_IO(vrB));
@@ -162,6 +171,7 @@ retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity) {
     else {
       bufferPo pkgB = fixedStringBuffer(nm, nmLen);
       ret = decodeName(O_IO(in), pkgB);
+      outByte(O_IO(pkgB),0);
       closeFile(O_IO(pkgB));
       return ret;
     }
@@ -260,12 +270,19 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
 
     ret = decodePrgName(in, prgName, NumberOf(prgName), &arity);
 
-    if (ret == Ok && isLookingAt(in,"s")==Ok) {
+#ifdef EXECTRACE
+    if (debugging) {
+      outMsg(logFile, "loading segment %s:%d\n", prgName, arity);
+      flushOut();
+    }
+#endif
+
+    if (ret == Ok && isLookingAt(in, "s") == Ok) {
       bufferPo buff = newStringBuffer();
 
-      ret = decodeText(in,buff); // Pick up the code - as base64 string
+      ret = decodeText(in, buff); // Pick up the code - as base64 string
 
-      if(ret!=Ok || isLookingAt(in,"c")!=Ok) { // Look for the tuple of literals
+      if (ret != Ok || isLookingAt(in, "n") != Ok) { // Look for the tuple of literals
         closeFile(O_IO(buff));
         return ret;
       }
@@ -276,13 +293,13 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
 
       ret = decInt(in, &litCount);
 
-      if(ret==Ok)
-        ret = skipEncoded(in,errorMsg,msgSize); // we know this is a tuple structure marker
+      if (ret == Ok)
+        ret = skipEncoded(in, errorMsg, msgSize); // we know this is a tuple structure marker
 
-      if(ret!=Ok){
+      if (ret != Ok) {
         closeFile(O_IO(buff));
         return ret;
-      }else {
+      } else {
         // Decode the base64 text
         bufferPo cdeBuffer = newStringBuffer();
 
@@ -300,7 +317,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
           ret = in32(O_IO(cdeBuffer), &signature); // verify correct code signature
 
           heapPo GH = &globalHeap;
-          ptrI pc = permCode((unsigned long)codeCount, (unsigned long)litCount);
+          ptrI pc = permCode((unsigned long) codeCount, (unsigned long) litCount);
 
           insPo cd = FirstInstruction(pc);
           ptrI el = kvoid;
@@ -343,7 +360,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
               }
             }
 
-            codeV(pc)->arity = (unsigned short)arity; /* set the arity of the program */
+            codeV(pc)->arity = (unsigned short) arity; /* set the arity of the program */
 
             // Now we find the literals
 
@@ -356,15 +373,13 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
             }
             gcRemoveRoot(GH, root); /* clear the GC root */
 
-            if (ret != Ok) {
-              closeFile(O_IO(buff));
-              closeFile((O_IO(cdeBuffer)));
-              return ret;
-            } else {
+            closeFile(O_IO(buff));
+            closeFile((O_IO(cdeBuffer)));
+
+            if (ret == Ok)
               defineProg(prg, pc);
 
-              return ret;
-            }
+            return ret;
           }
         }
       }

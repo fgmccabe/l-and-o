@@ -17,7 +17,7 @@ typedef struct _manifest_version_ *manifestVersionPo;
 
 manifestEntryPo manifestEntry(string package);
 
-string packageCodeFile(string package,string version);
+string packageCodeFile(string package, string version, byte *flNm, long flLen);
 
 string loadedVersion(string package);
 

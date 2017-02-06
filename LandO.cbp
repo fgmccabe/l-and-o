@@ -524,6 +524,9 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/term.h">
 			<Option target="lo"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/thread.h">
+			<Option target="lo"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/unix.h">
 			<Option target="lo"/>
 		</Unit>
@@ -660,6 +663,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/suspend.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/thread.c">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/verify.c">

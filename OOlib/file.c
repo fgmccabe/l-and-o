@@ -344,7 +344,6 @@ retCode fileClose(ioPo io) {
         }
       } else {
         f->file.fno = -1;
-        destroyObject(O_OBJECT(io)); // this will get rid of all the file objects attributes
         ret = Ok;
       }
     } else
@@ -352,6 +351,7 @@ retCode fileClose(ioPo io) {
   }
 
   unlock(O_LOCKED(o));
+  destroyObject(O_OBJECT(o)); // this will get rid of all the file objects attributes
   return ret;
 }
 

@@ -26,7 +26,6 @@ extern ptrI thingProg;
 extern ptrI classClass;
 
 extern ptrI errorClass;
-extern ptrI threadClass;
 extern ptrI procClass;
 extern ptrI filePtrClass;
 
