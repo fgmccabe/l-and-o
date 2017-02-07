@@ -24,11 +24,17 @@
 /*
  * A program label structure
  */
+
+typedef struct _program_label_ {
+  long arity;                   // Arity of program
+  byte name[ZEROARRAYSIZE];     // Program's print name
+} PrgLabel;
+
 typedef struct _program_record_ {
   ptrI class;                   // == programClass
   ptrI code;                    // Code to execute
-  long arity;                   // Arity of program
-  byte name[ZEROARRAYSIZE];     // Program's print name
+  uinteger hash;                // Hash code of the program name
+  PrgLabel lbl;
 } programRec;
 
 /*
@@ -153,13 +159,13 @@ static inline logical IsProgram(ptrI x) {
 static inline long programArity(objPo p) {
   assert(isProgLbl(p));
 
-  return ((programPo) p)->arity;
+  return ((programPo) p)->lbl.arity;
 }
 
-static inline string programName(objPo p) {
+static inline PrgLabel *programName(objPo p) {
   assert(isProgLbl(p));
 
-  return ((programPo) p)->name;
+  return &((programPo) p)->lbl;
 }
 
 static inline codePo programCode(objPo p) {
@@ -221,12 +227,11 @@ extern ptrI loObject(heapPo H, ptrI T);
 /* create a L&O object */
 
 extern void initPrograms(void);
-extern ptrI newProgLbl(const char *name, long arity);
-extern ptrI newProgramLbl(string name, long arity);
+extern ptrI newProgLbl(const char *name, short arity);
+extern ptrI newProgramLbl(string name, short arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
 extern ptrI programOfTerm(ptrI x);
-extern ptrI programByName(string name);
 extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(unsigned long size, unsigned long litCnt);
 extern retCode verifyCode(ptrI prog);
