@@ -132,7 +132,7 @@ lo.comp.term {
   isGroundTerm(strng(_)).
   isGroundTerm(cons(Op,Els)) :-
     isGroundTerm(Op),
-    isGroundTerm(E) *> E in Els.
+    E in Els *> isGroundTerm(E).
 
   public tupleSig:(integer) => term.
   tupleSig(Ar) => strct("()\(Ar)",Ar).

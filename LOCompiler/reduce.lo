@@ -7,8 +7,8 @@ lo.comp.reduce{
   import lo.comp.term.
 
   public reduceClause:(clse) => clse.
-  reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
-    reduceArgs(Args,Q,NArgs,Pre,Post,Q1)!,
+  reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody<>Post) :-
+    reduceArgs(Args,Q,NArgs,Guard,Post,Q1)!,
     reduceBody(Body,Q1,NBody,NQ).
 
   reduceArgs:(list[term],list[term],list[term],list[pred],list[pred],list[term]){}.
@@ -60,7 +60,7 @@ lo.comp.reduce{
     reduceBildArgs(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
   reducePred(ecall(Op,Args),Q,ecall(Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
     reduceBildArgs(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
-  reducePred(ocall(Cl,Lb,Th),Q,ocall(NCl,NLb,NTh),Pre,Prx,Pos,Psx,Qx) :-
+  reducePred(ocall(Cl,Lb,Th),Q,ocall(NCl,NLb,NTh),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
     reduceBildArg(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
@@ -92,7 +92,7 @@ lo.comp.reduce{
 
   reduceBildTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildTerms([],Q,[],Pre,Pre,Post,Post,Q).
-  reduceBildTerms([A,..L],Q,[NA,..NL],Pr,Rpx,Po,Psx,Qx) :-
+  reduceBildTerms([A,..L],Q,[NA,..NL],Pr,Prx,Po,Psx,Qx) :-
     reduceBildTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
     reduceBildTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
