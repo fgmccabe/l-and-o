@@ -21,7 +21,7 @@
 #include <string.h>			/* access template for memcpy */
 
 #ifndef PI
-// Define PI to 50 decimal places ....
+// Define PI to 50 binary places ....
 #define  PI  3.14159265358979323846264338327950288419716939937510
 #endif
 

@@ -20,7 +20,7 @@
 #include "word.h"
 
 void install_escapes(void);
-funpo escapeCode(unsigned int code);
+funpo escapeCode(unsigned short code);
 char *escapeName(int code);
 int escapeOpcode(unsigned int code);
 funpo getescape(int code);

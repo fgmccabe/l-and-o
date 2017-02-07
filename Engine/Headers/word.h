@@ -246,7 +246,7 @@ static inline clssPo ClassOf(ptrI X) {
 
 static inline logical hasClass(objPo p,ptrI class)
 {
-  return p->class==class;
+  return (logical)(p->class==class);
 }
 
 static inline logical HasClass(ptrI x,ptrI class)
@@ -345,7 +345,7 @@ extern ptrI classPresent(string name);
 #include "heap.h"
 #include "list.h"
 #include "vars.h"
-#include "floats.h"
+#include "arith.h"
 #include "symbols.h"
 #include "char.h"
 #include "code.h"

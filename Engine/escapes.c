@@ -12,7 +12,6 @@
   KIND, either express or implied. See the License for the specific language governing
   permissions and limitations under the License.
  */
-#include "config.h"		/* pick up standard configuration header */
 #include <string.h>		/* String functions */
 #include "lo.h"
 #include "signature.h"          // Access the signature definitions
@@ -167,7 +166,7 @@ static short sigArity(char *spec) {
       return (short)(ar + 1);
     case pred_sig:
       ar = scanInt(&spec);
-      return ar;
+      return (short)ar;
     case grammar_sig:
       ar = scanInt(&spec);
       return (short)(ar + 2);
@@ -191,7 +190,7 @@ static void install_escape(char *escape_fn, funpo escape_code, int code,
   e->arity = sigArity(spec);
 }
 
-funpo escapeCode(unsigned int code) {
+funpo escapeCode(unsigned short code) {
   assert(code >= 0 && code < NumberOf(escFuns));
   return escFuns[code].escape_code;
 }
@@ -200,13 +199,6 @@ char *escapeName(int code) {
   assert(code >= 0 && code < NumberOf(escFuns));
 
   return escFuns[code].name;
-}
-
-funpo getescape(int code) {
-  assert(code >= 0 && code < NumberOf(escFuns));
-
-  escpo e = &escFuns[code];
-  return e->escape_code;
 }
 
 logical validEscape(unsigned int code, int arity) {
@@ -236,11 +228,4 @@ void showEscape(processPo P, int code, ptrPo args, long arity) {
 
   outText(logFile, text, len);
   closeFile(out);
-}
-
-/* garbage collection function to handle type structures of escape funs */
-void ScanEscapes(void) {
-}
-
-void markEscapes(void) {
 }

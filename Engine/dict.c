@@ -22,9 +22,6 @@
 /* standard symbols */
 ptrI kvoid;			    		/* void value marker */
 
-ptrI emptySymbol;				/* the null symbol */
-ptrI zero;              		/* the 0 number */
-
 ptrI kmain;				/* Main entry point */
 ptrI kmainThread;			/* The main thread name */
 
@@ -181,9 +178,6 @@ void initDict()				/* Initialize the dictionary */
 
   initErrorSymbols();
 
-  emptySymbol=newSymbol("");
-  zero = permInteger(0);
-
   kmain = newProgLbl("main",1);
   kmainThread = newEnumSym("lo.core#rootThread");
   bootProg = newSymbol("lo.boot");
@@ -257,8 +251,6 @@ void restartDictionary(globalGcPo G)
   kprocessFlag = scanPtr(G,kprocessFlag);
 
   kvoid = scanPtr(G,kvoid);		/* void value marker */
-  emptySymbol = scanPtr(G,emptySymbol);
-  zero = scanPtr(G,zero);
 
   kfifo = scanPtr(G,kfifo);
   kdir = scanPtr(G,kdir);

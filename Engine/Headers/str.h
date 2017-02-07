@@ -52,9 +52,18 @@ static inline string StringVal(stringPo p) {
   return p->data;
 }
 
-static inline uint64 StringLen(stringPo p) {
+static inline long StringLen(stringPo p) {
   assert(isString((objPo) p));
   return p->size;
+}
+
+static inline uinteger stringHash(objPo p) {
+  clssPo class = classOf(p);
+
+  assert(hasClass(p,stringClass));
+
+  specialClassPo sClass = (specialClassPo) class;
+  return sClass->hashFun(sClass, p);
 }
 
 extern ptrI allocateString(heapPo H, string buff, long len);

@@ -250,7 +250,6 @@ void runGo(register processPo P) {
 
 #ifdef EXECTRACE
     pcCount++;
-    insWord Ins = *PC;
     insCount[op_code(*PC)]++;
 
     if (debugging) {
@@ -683,7 +682,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode(op_o_val(PCX));
+          funpo ef = escapeCode((unsigned short)op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -1236,7 +1235,7 @@ void runGo(register processPo P) {
 
 
 
-        /* An indexs instruction indexes on constant symbols.
+        /* An indexs instruction indexes on strings.
        The first instruction that follows is taken for the variable case,
        after that is a hash table in the form of a jump table.
        It is an error for the argument not to be a symbol.
@@ -1249,14 +1248,14 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         if (IsString(vx)) {
-          integer ix = (uniHash(StringVal(stringV(vx))) % max);
+          uinteger ix = stringHash(objV(vx)) % max;
 
           PC += ix + 1;
         }
         continue;
       }
 
-        /* An indexn instruction indexes on number.
+        /* An indexn instruction indexes on floating point numbers.
        The first instruction that follows is taken for the variable case,
        after that is a hash table in the form of a jump table.
        It is an error for the argument not to be a number.

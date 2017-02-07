@@ -32,7 +32,7 @@ retCode g__isCcChar(processPo P, ptrPo a) /* Other, Control */
   if (isvar(x))
     return liberror(P, "__isCcChar", eINSUFARG);
   else {
-    if (isCcChar(IntVal(x)))
+    if (isCcChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -46,7 +46,7 @@ retCode g__isCfChar(processPo P, ptrPo a) /* Other, Format */
   if (isvar(x))
     return liberror(P, "__isCfChar", eINSUFARG);
   else {
-    if (isCfChar(IntVal(x)))
+    if (isCfChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -60,7 +60,7 @@ retCode g__isCnChar(processPo P, ptrPo a) /* Other, Unassigned */
   if (isvar(x))
     return liberror(P, "__isCnChar", eINSUFARG);
   else {
-    if (isCnChar(IntVal(x)))
+    if (isCnChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -74,7 +74,7 @@ retCode g__isCoChar(processPo P, ptrPo a) /* Other, Private */
   if (isvar(x))
     return liberror(P, "__isCoChar", eINSUFARG);
   else {
-    if (isCoChar(IntVal(x)))
+    if (isCoChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -88,7 +88,7 @@ retCode g__isCsChar(processPo P, ptrPo a) /* Other, surrogate */
   if (isvar(x))
     return liberror(P, "__isCsChar", eINSUFARG);
   else {
-    if (isCsChar(IntVal(x)))
+    if (isCsChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -101,7 +101,7 @@ retCode g__isLlChar(processPo P, ptrPo a) {
   if (isvar(x))
     return liberror(P, "__isLlChar", eINSUFARG);
   else {
-    if (isLlChar(IntVal(x)))
+    if (isLlChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -115,7 +115,7 @@ retCode g__isLmChar(processPo P, ptrPo a) /* Letter, modifier */
   if (isvar(x))
     return liberror(P, "__isLmChar", eINSUFARG);
   else {
-    if (isLmChar(IntVal(x)))
+    if (isLmChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -129,7 +129,7 @@ retCode g__isLoChar(processPo P, ptrPo a) /* Letter, other */
   if (isvar(x))
     return liberror(P, "__isLoChar", eINSUFARG);
   else {
-    if (isLoChar(IntVal(x)))
+    if (isLoChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -143,7 +143,7 @@ retCode g__isLtChar(processPo P, ptrPo a) /* Letter, titlecase */
   if (isvar(x))
     return liberror(P, "__isLtChar", eINSUFARG);
   else {
-    if (isLtChar(IntVal(x)))
+    if (isLtChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -157,7 +157,7 @@ retCode g__isLuChar(processPo P, ptrPo a) /* Letter, uppercase */
   if (isvar(x))
     return liberror(P, "__isLuChar", eINSUFARG);
   else {
-    if (isLuChar(IntVal(x)))
+    if (isLuChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -171,7 +171,7 @@ retCode g__isMcChar(processPo P, ptrPo a) /* Mark, spacing combining */
   if (isvar(x))
     return liberror(P, "__isMcChar", eINSUFARG);
   else {
-    if (isMcChar(IntVal(x)))
+    if (isMcChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -185,7 +185,7 @@ retCode g__isMeChar(processPo P, ptrPo a) /* Mark, enclosing */
   if (isvar(x))
     return liberror(P, "__isMeChar", eINSUFARG);
   else {
-    if (isMeChar(IntVal(x)))
+    if (isMeChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -199,7 +199,7 @@ retCode g__isMnChar(processPo P, ptrPo a) /* Mark, non spacing */
   if (isvar(x))
     return liberror(P, "__isMnChar", eINSUFARG);
   else {
-    if (isMnChar(IntVal(x)))
+    if (isMnChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -213,7 +213,7 @@ retCode g__isNdChar(processPo P, ptrPo a) /* Number, decimal digit */
   if (isvar(x))
     return liberror(P, "__isNdChar", eINSUFARG);
   else {
-    if (isNdChar(IntVal(x)))
+    if (isNdChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -227,7 +227,7 @@ retCode g__isNlChar(processPo P, ptrPo a) /* Number, letter */
   if (isvar(x))
     return liberror(P, "__isNlChar", eINSUFARG);
   else {
-    if (isNlChar(IntVal(x)))
+    if (isNlChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -241,7 +241,7 @@ retCode g__isNoChar(processPo P, ptrPo a) /* Number, other */
   if (isvar(x))
     return liberror(P, "__isNoChar", eINSUFARG);
   else {
-    if (isNoChar(IntVal(x)))
+    if (isNoChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -255,7 +255,7 @@ retCode g__isPcChar(processPo P, ptrPo a) /* Punctuation, connector */
   if (isvar(x))
     return liberror(P, "__isPcChar", eINSUFARG);
   else {
-    if (isPcChar(IntVal(x)))
+    if (isPcChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -269,7 +269,7 @@ retCode g__isPdChar(processPo P, ptrPo a) /* Punctuation, dash */
   if (isvar(x))
     return liberror(P, "__isPdChar", eINSUFARG);
   else {
-    if (isPdChar(IntVal(x)))
+    if (isPdChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -283,7 +283,7 @@ retCode g__isPeChar(processPo P, ptrPo a) /* Punctuation, close */
   if (isvar(x))
     return liberror(P, "__isPeChar", eINSUFARG);
   else {
-    if (isPeChar(IntVal(x)))
+    if (isPeChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -297,7 +297,7 @@ retCode g__isPfChar(processPo P, ptrPo a) /* Punctuation, final quote */
   if (isvar(x))
     return liberror(P, "__isPfChar", eINSUFARG);
   else {
-    if (isPfChar(IntVal(x)))
+    if (isPfChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -311,7 +311,7 @@ retCode g__isPiChar(processPo P, ptrPo a) /* Punctuation, initial quote */
   if (isvar(x))
     return liberror(P, "__isPiChar", eINSUFARG);
   else {
-    if (isPiChar(IntVal(x)))
+    if (isPiChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -325,7 +325,7 @@ retCode g__isPoChar(processPo P, ptrPo a) /* Punctuation, other */
   if (isvar(x))
     return liberror(P, "__isPoChar", eINSUFARG);
   else {
-    if (isPoChar(IntVal(x)))
+    if (isPoChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -339,7 +339,7 @@ retCode g__isPsChar(processPo P, ptrPo a) /* Punctution, open */
   if (isvar(x))
     return liberror(P, "__isPsChar", eINSUFARG);
   else {
-    if (isPsChar(IntVal(x)))
+    if (isPsChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -353,7 +353,7 @@ retCode g__isScChar(processPo P, ptrPo a) /* Symbol, currency */
   if (isvar(x))
     return liberror(P, "__isScChar", eINSUFARG);
   else {
-    if (isScChar(IntVal(x)))
+    if (isScChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -367,7 +367,7 @@ retCode g__isSkChar(processPo P, ptrPo a) /* Symbol, modifier */
   if (isvar(x))
     return liberror(P, "__isSkChar", eINSUFARG);
   else {
-    if (isSkChar(IntVal(x)))
+    if (isSkChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -381,7 +381,7 @@ retCode g__isSmChar(processPo P, ptrPo a) /* Symbol, math */
   if (isvar(x))
     return liberror(P, "__isSmChar", eINSUFARG);
   else {
-    if (isSmChar(IntVal(x)))
+    if (isSmChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -395,7 +395,7 @@ retCode g__isSoChar(processPo P, ptrPo a) /* Symbol, other */
   if (isvar(x))
     return liberror(P, "__isSoChar", eINSUFARG);
   else {
-    if (isSoChar(IntVal(x)))
+    if (isSoChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -409,7 +409,7 @@ retCode g__isZlChar(processPo P, ptrPo a) /* Separator, line */
   if (isvar(x))
     return liberror(P, "__isZlChar", eINSUFARG);
   else {
-    if (isZlChar(IntVal(x)))
+    if (isZlChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -423,7 +423,7 @@ retCode g__isZpChar(processPo P, ptrPo a) /* Separator, paragraph */
   if (isvar(x))
     return liberror(P, "__isZpChar", eINSUFARG);
   else {
-    if (isZpChar(IntVal(x)))
+    if (isZpChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -437,7 +437,7 @@ retCode g__isZsChar(processPo P, ptrPo a) /* Separator, space */
   if (isvar(x))
     return liberror(P, "__isZsChar", eINSUFARG);
   else {
-    if (isZsChar(IntVal(x)))
+    if (isZsChar((codePoint)IntVal(x)))
       return Ok;
     else
       return Fail;
@@ -450,7 +450,7 @@ retCode g__isLetterChar(processPo P, ptrPo a) {
   if (isvar(x))
     return liberror(P, "__isLetterChar", eINSUFARG);
   else {
-    codePoint ch = IntVal(x);
+    codePoint ch = (codePoint)IntVal(x);
 
     if (isLetterChar(ch))
       return Ok;
@@ -465,7 +465,7 @@ retCode g__digitCode(processPo P, ptrPo a) {
   if (isvar(x))
     return liberror(P, "__digitCode", eINSUFARG);
   else {
-    codePoint ch = IntVal(x);
+    codePoint ch = (codePoint)IntVal(x);
 
     if (isNdChar(ch)) {
       ptrI ans = allocateInteger(&P->proc.heap, digitValue(ch));

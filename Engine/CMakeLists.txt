@@ -8,7 +8,7 @@ include_directories("Headers" "../Headers" "../OOlib/Headers")
 set(SOURCE_FILES
         args.c fltArith.c intArith.c boot.c call.c char.c class.c clock.c code.c date.c debug.c dict.c dir.c disass.c dynamic.c
         hash.c
-        encoded.c envir.c error.c escapes.c eval.c exec.c fileio.c float.c gc.c global.c heap.c lists.c lockvar.c
+        encoded.c envir.c error.c escapes.c eval.c exec.c fileio.c gc.c global.c heap.c lists.c lockvar.c
         misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c
         verify.c writef.c
         main.c
@@ -20,7 +20,7 @@ set(SOURCE_FILES
         Headers/errors.h Headers/esc.h ../Headers/escodes.h Headers/eval.h Headers/lock.h Headers/process.h Headers/ops.h Headers/opcodes.h
         Headers/global.h Headers/heap.h Headers/list.h Headers/local.h Headers/perms.h Headers/vars.h
         Headers/fileio.h Headers/lo.h
-        Headers/floats.h Headers/str.h Headers/symbols.h Headers/dll.h
+        Headers/arith.h Headers/str.h Headers/symbols.h Headers/dll.h
         Headers/unix.h Headers/stats.h Headers/signals.h
 
         ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h

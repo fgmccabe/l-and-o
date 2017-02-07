@@ -34,7 +34,7 @@ extern ptrI commaClass;
 /* Standard symbols */
 
 extern ptrI kvoid;
-extern ptrI emptyList,emptySymbol,zero;
+extern ptrI emptyList,emptySymbol;
 
 extern ptrI bootProg;
 extern ptrI dieProg;                   /* program just dies */
