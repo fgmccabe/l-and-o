@@ -4,6 +4,7 @@ lo.comp.code.analyse{
 
   import lo.comp.code.registers.
 
+  import lo.comp.errors.
   import lo.comp.escapes.
   import lo.comp.term.
 
@@ -26,8 +27,10 @@ lo.comp.code.analyse{
   type occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
-  varAnalysis(Q,Args,Parts) => allocateVars(usageTable(OccTble,size(Args),Parts),maxHeadArity(Parts)) :-
-    OccTble = values(occurranceTable(Q,Args,Parts)).
+  varAnalysis(Q,Args,Parts) => allocateVars(Usage,maxHeadArity(Parts)) :-
+    OccTble = values(occurranceTable(Q,Args,Parts)),
+    Usage = usageTable(OccTble,size(Args),Parts),
+    logMsg("usage is \(Usage)").
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
   occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).

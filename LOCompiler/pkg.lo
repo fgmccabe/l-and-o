@@ -30,7 +30,7 @@ lo.comp.code.pkg{
     L0 = newLabel(Prefix),
     DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,Entries,[]),
     IndexCode = genIndex(Entries,L0),
-    Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,Lts),
+    Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,[litrl(newLabel(Prefix),prg(Nm,Ar)),..Lts]),
     logMsg("Assembler output: \(Code)").
 
   defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)]) => list[instruction].

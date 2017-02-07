@@ -790,6 +790,16 @@ void runGo(register processPo P) {
 
         Y = (ptrPo) C;    /* negative values used for local variables */
 
+
+#ifdef EXECTRACE
+        {
+          short newEnvLen = op_o_val(PCX);
+          for (short i = 1; i <= newEnvLen; i++) {
+            *Yreg(-i) = kvoid;
+          }
+        }
+#endif
+
         cPC = PC;  /* this'll be overridden, but cPC must point to valid envSize */
         cPROG = PROG;      /* in case of G/C */
         assert(op_code(*PC) == gcmap);
@@ -1233,13 +1243,13 @@ void runGo(register processPo P) {
     */
 
       case indexs: {    /* Ai,max index symbol access */
-        int max = op_o_val(PCX);
+        short max = op_o_val(PCX);
         register ptrI vx = deRefI(&A[op_h_val(PCX)]);
 
         testA(op_h_val(PCX));
 
-        if (IsSymb(vx)) {
-          integer ix = (uniHash(SymVal(symbV(vx))) % max);
+        if (IsString(vx)) {
+          integer ix = (uniHash(StringVal(stringV(vx))) % max);
 
           PC += ix + 1;
         }
@@ -1887,10 +1897,9 @@ void runGo(register processPo P) {
       }
 
       case mYA: {      /* move Y[X],A[h] */
-        register ptrPo yVar = Yreg(-((short)(op_o_val(PCX))));
+        register ptrPo yVar = Yreg(-((short) (op_o_val(PCX))));
 
-  //      bind(P,B,H,yVar,deRefI(&A[op_h_val(PCX)]));/* we need to bind, 'cos we may need to undo this move*/
-        bindVr(yVar,deRefI(&A[op_h_val(PCX)]));  /* we need to bind, 'cos we may need to undo this move*/
+        bindVr(yVar, deRefI(&A[op_h_val(PCX)]));  /* we need to bind, 'cos we may need to undo this move*/
 
         testA(op_h_val(PCX));
         continue;

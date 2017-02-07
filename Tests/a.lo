@@ -19,7 +19,7 @@ test.a{
   gp:(string,string){}.
   gp(x,y) :- p(x,z), p(z,y).
 
-  assert p("a","b"), gp("a","d").
+  assert p(_,"d"), gp("a","d").
 
   assert gp(x,y) *> m(y).
 

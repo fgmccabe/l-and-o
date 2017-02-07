@@ -290,8 +290,9 @@ retCode endEntry(const char *name, void *cl) {
           uniCpy((string) &version->code, NumberOf(version->code), (string) info->code);
         }
       }
-      info->state = inPackage;
       break;
+    case inPackage:
+
     default:
       break;
   }

@@ -135,7 +135,7 @@ lo.comp.code.asm{
   private pcGap:(integer,string,map[string,integer],integer) => integer.
   pcGap(pc,Lb,Lbls,mx) => Gap :-
     present(Lbls,Lb,Tgt),
-    Gap = Tgt-pc,
+    Gap = Tgt-pc-1,
     Gap=<mx.
 
 }               -- end of generated module

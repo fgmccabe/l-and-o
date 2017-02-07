@@ -90,7 +90,7 @@ int main(int argc,char **argv)
   fprintf(out,"  private pcGap:(integer,string,map[string,integer],integer) => integer.\n");
   fprintf(out,"  pcGap(pc,Lb,Lbls,mx) => Gap :-\n");
   fprintf(out,"    present(Lbls,Lb,Tgt),\n");
-  fprintf(out,"    Gap = Tgt-pc,\n");
+  fprintf(out,"    Gap = Tgt-pc-1,\n");
   fprintf(out,"    Gap=<mx.\n\n");
 
   fprintf(out,"}               -- end of generated module\n");

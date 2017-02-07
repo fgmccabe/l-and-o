@@ -2,6 +2,7 @@ lo.comp.code.indexing{
   import lo.
   import lo.sort.
 
+  import lo.comp.errors.
   import lo.comp.misc.
   import lo.comp.term.
   import lo.comp.types.
@@ -9,6 +10,13 @@ lo.comp.code.indexing{
   import lo.comp.code.instructions.
 
   private type ix ::= ix(term,list[(integer,string)]).
+
+  implementation display[ix] <= {
+    disp(Ix) => dispIx(Ix).
+  }
+
+  dispIx:(ix) => ss.
+  dispIx(ix(T,Ocss)) => ssSeq([ss("ix: "),disp(T),ss("->"),disp(Ocss)]).
 
   private type aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
 
@@ -134,7 +142,8 @@ lo.comp.code.indexing{
   genHashSequence:(list[ix],string,list[(integer,string)],(integer,integer)=>list[instruction],integer) => list[instruction].
   genHashSequence(HL,Deflt,VL,ixFun,Col) => ixFun(Col,Max)<>[iGo_to(Deflt)]<>mkHashTable(IxT,VL,0,Max,[]) :- size(HL)>1,
     Max = nextPrime(size(HL)+1),
-    IxT = sort(computeHashes(HL,Max),compClPt).
+    IxT = sort(computeHashes(HL,Max),compClPt),
+    logMsg("hashes of \(HL) are \(computeHashes(HL,Max))").
   genHashSequence(_,_,_,_,_) => [].
 
   computeHashes:(list[ix],integer) => list[(integer,list[(integer,string)])].
