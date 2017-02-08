@@ -40,7 +40,6 @@ lo.comp.code.asm{
   mnem([iFayl,..I],Lbls,Lits,pc) => [24,..mnem(I,Lbls,Lits,pc+1)].
   mnem([iCut,..I],Lbls,Lits,pc) => [25,..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexi(V0,V1),..I],Lbls,Lits,pc) => [26.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iIndexl(V0),..I],Lbls,Lits,pc) => [27.|.(V0.<<.24),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexs(V0,V1),..I],Lbls,Lits,pc) => [28.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexn(V0,V1),..I],Lbls,Lits,pc) => [29.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexx(V0,V1),..I],Lbls,Lits,pc) => [30.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
@@ -63,11 +62,6 @@ lo.comp.code.asm{
   mnem([iUcYS(V0),..I],Lbls,Lits,pc) => [53.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iUSlit(V0),..I],Lbls,Lits,pc) => [60.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iUScns(V0),..I],Lbls,Lits,pc) => [63.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iUAcns0(V0),..I],Lbls,Lits,pc) => [55.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iUAcns1(V0),..I],Lbls,Lits,pc) => [56.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iUAcns2(V0),..I],Lbls,Lits,pc) => [57.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iUAcns3(V0),..I],Lbls,Lits,pc) => [58.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iUAcns4(V0),..I],Lbls,Lits,pc) => [59.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iMAA(V0,V1),..I],Lbls,Lits,pc) => [70.|.(V0.<<.24).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iMAY(V0,V1),..I],Lbls,Lits,pc) => [71.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iMuAY(V0,V1),..I],Lbls,Lits,pc) => [72.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
@@ -96,11 +90,6 @@ lo.comp.code.asm{
   mnem([iCSY(V0),..I],Lbls,Lits,pc) => [122.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iCSlit(V0),..I],Lbls,Lits,pc) => [123.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iCScns(V0),..I],Lbls,Lits,pc) => [126.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iCAcns0(V0),..I],Lbls,Lits,pc) => [128.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iCAcns1(V0),..I],Lbls,Lits,pc) => [129.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iCAcns2(V0),..I],Lbls,Lits,pc) => [130.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iCAcns3(V0),..I],Lbls,Lits,pc) => [131.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iCAcns4(V0),..I],Lbls,Lits,pc) => [132.|.(ltOff(V0,Lits).<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iClAA(V0,V1),..I],Lbls,Lits,pc) => [160.|.(V0.<<.24).|.(V1.<<.16),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iClAY(V0,V1),..I],Lbls,Lits,pc) => [161.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iClAS(V0),..I],Lbls,Lits,pc) => [163.|.(V0.<<.24),..mnem(I,Lbls,Lits,pc+1)].

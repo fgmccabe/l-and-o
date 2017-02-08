@@ -193,12 +193,6 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
       else if (IsTermClass(class)) {
         string name = objectClassName(p);
 
-        if (uniIndexOf(name, uniStrLen(name), 0, '#') >= 0) {
-          long hashIndex = uniIndexOf(name, uniStrLen(name), 0, '#');
-
-          name = &name[hashIndex + 1];
-        }
-
         r = outMsg(f, "%U", name);
 
         if (depth > 0) {

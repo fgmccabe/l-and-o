@@ -411,6 +411,12 @@ int main(int argc, char **argv) {
 
   setupSignals();
 
+
+#ifdef EXECTRACE
+  if(traceCount)
+    atexit(dumpInsCount);
+#endif
+
   bootstrap(entryPoint, bootPkg, bootVer);
 
   return EXIT_SUCCEED;          /* exit the lo system cleanly */

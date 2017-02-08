@@ -37,11 +37,16 @@ static uinteger charHash(void *data) {
   return (uinteger) ch;
 }
 
-static int charComp(void *l, void *r) {
+static comparison charComp(void *l, void *r) {
   char left = (char) l;
   char right = (char) r;
 
-  return left != right;
+  if(left<right)
+    return smaller;
+  else if(left==right)
+    return bigger;
+  else
+    return same;
 }
 
 static void addToTr(char *full, char *key, void *value, triePo trie) {

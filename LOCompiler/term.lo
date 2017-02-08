@@ -72,7 +72,7 @@ lo.comp.term {
   displayPred(neck) => ss("!").
   displayPred(call(Op,Args)) => ssSeq([dispTerm(Op),ss("("),..dispEls("",")",Args)]).
   displayPred(ecall(Op,Args)) => ssSeq([disp(Op),ss("("),..dispEls("",")",Args)]).
-  displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("/"),dispTerm(Th),ss("."),dispTerm(Rc)]).
+  displayPred(ocall(Rc,Lb,Th)) => ssSeq([dispTerm(Lb),ss("."),dispTerm(Rc)]).
   displayPred(unfy(L,R)) => ssSeq([dispTerm(L),ss("="),dispTerm(R)]).
   displayPred(fail) => ss("fail").
   displayPred(except(T)) => ssSeq([ss("raise "),disp(T)]).

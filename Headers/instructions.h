@@ -42,7 +42,6 @@ instruction(trust,23,pcl,nOp,"last clause")
 instruction(fayl,24,nOp,nOp,"fail current execution")
 instruction(cut,25,nOp,nOp,"cut choice point")
 instruction(indexi,26,iAh,Ltl,"integer index jump")
-instruction(indexl,27,iAh,nOp,"list index")
 instruction(indexs,28,iAh,Ltl,"symbol index jump")
 instruction(indexn,29,iAh,Ltl,"numerical index jump")
 instruction(indexx,30,iAh,Ltl,"constructor index jump")
@@ -67,13 +66,6 @@ instruction(uYS,52,iLc,iSt,"Unify")
 instruction(ucYS,53,iLc,iSt,"Unify with occurs check")
 instruction(uSlit,60,iSt,ltl,"Unify literal")
 instruction(uScns,63,iSt,ltl,"Unify constructor")
-
-instruction(uAcns0,55,ltl,nOp,"Unify A[0] with constructor")
-instruction(uAcns1,56,ltl,nOp,"Unify A[1] with constructor")
-instruction(uAcns2,57,ltl,nOp,"Unify A[2] with constructor")
-instruction(uAcns3,58,ltl,nOp,"Unify A[3] with constructor")
-instruction(uAcns4,59,ltl,nOp,"Unify A[4] with constructor")
-
 
 // build instructions
 instruction(mAA,70,oAh,iAm,"Move")
@@ -108,12 +100,6 @@ instruction(cSA,121,iSt,iAm,"Match")
 instruction(cSY,122,iSt,iLc,"Match")
 instruction(cSlit,123,iSt,ltl,"Match literal")
 instruction(cScns,126,iSt,ltl,"Match constructor")
-
-instruction(cAcns0,128,ltl,nOp,"Match constructor in A[0]")
-instruction(cAcns1,129,ltl,nOp,"Match constructor in A[1]")
-instruction(cAcns2,130,ltl,nOp,"Match constructor in A[2]")
-instruction(cAcns3,131,ltl,nOp,"Match constructor in A[3]")
-instruction(cAcns4,132,ltl,nOp,"Match constructor in A[4]")
 
 /* First time initialization/clear registers */
 instruction(clAA,160,oAh,oAm,"First/clear")

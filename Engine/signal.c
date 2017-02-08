@@ -82,7 +82,6 @@ static void interruptMe(int sig) /* This one is invoked when user presses ^C */
   lo_exit(EXIT_FAIL);		/* We just abort everything */
 }
 
-
 void lo_exit(int code)
 {
   if(code!=0)
@@ -95,4 +94,5 @@ void lo_exit(int code)
 
   exit(code);
 }
+
 

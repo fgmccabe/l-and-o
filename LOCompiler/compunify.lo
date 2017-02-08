@@ -57,17 +57,9 @@ lo.comp.code.unify{
   accessLiteral(T,Lb,Lts,[litrl(Lb,T),..Lts]) :- Lb = _str_gen("L").
 
   unifyOp:(string,addr,logical,varSet,varSet) => list[instruction].
-  unifyOp(Lb,aReg(1),true,V,freeAReg(V,1)) => [iUAcns1(Lb)].
-  unifyOp(Lb,aReg(1),false,V,V) =>  [iUAcns1(Lb)].
-  unifyOp(Lb,aReg(2),true,V,freeAReg(V,2)) => [iUAcns2(Lb)].
-  unifyOp(Lb,aReg(2),false,V,V) =>  [iUAcns2(Lb)].
-  unifyOp(Lb,aReg(3),true,V,freeAReg(V,3)) => [iUAcns3(Lb)].
-  unifyOp(Lb,aReg(3),false,V,V) =>  [iUAcns3(Lb)].
-  unifyOp(Lb,aReg(4),true,V,freeAReg(V,4)) => [iUAcns4(Lb)].
-  unifyOp(Lb,aReg(4),false,V,V) =>  [iUAcns4(Lb)].
   unifyOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iUAcns(Rg,Lb)].
   unifyOp(Lb,aReg(Rg),false,V,V) =>  [iUAcns(Rg,Lb)].
-  unifyOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iUAcns0(Lb)].
+  unifyOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iUAcns(0,Lb)].
   unifyOp(Lb,sReg,_,V,V) =>  [iUScns(Lb)].
 
   public matchTerm:(term,logical,addr,map[string,varDesc],map[string,varDesc],
@@ -97,17 +89,9 @@ lo.comp.code.unify{
   matchLit(Lb,_,sReg,VS,VS) => [iCSlit(Lcb)].
 
   matchOp:(string,addr,logical,varSet,varSet) => list[instruction].
-  matchOp(Lb,aReg(1),true,V,freeAReg(V,1)) => [iCAcns1(Lb)].
-  matchOp(Lb,aReg(1),false,V,V) =>  [iCAcns1(Lb)].
-  matchOp(Lb,aReg(2),true,V,freeAReg(V,2)) => [iCAcns2(Lb)].
-  matchOp(Lb,aReg(2),false,V,V) =>  [iCAcns2(Lb)].
-  matchOp(Lb,aReg(3),true,V,freeAReg(V,3)) => [iCAcns3(Lb)].
-  matchOp(Lb,aReg(3),false,V,V) =>  [iCAcns3(Lb)].
-  matchOp(Lb,aReg(4),true,V,freeAReg(V,4)) => [iCAcns4(Lb)].
-  matchOp(Lb,aReg(4),false,V,V) =>  [iCAcns4(Lb)].
   matchOp(Lb,aReg(Rg),true,V,freeAReg(V,Rg)) => [iCAcns(Rg,Lb)].
   matchOp(Lb,aReg(Rg),false,V,V) =>  [iCAcns(Rg,Lb)].
-  matchOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iCAcns0(Lb)].
+  matchOp(Lb,yReg(Lc,_),_,V,V) =>  [iMAY(0,Lc),iCAcns(0,Lb)].
   matchOp(Lb,sReg,_,V,V) =>  [iCScns(Lb)].
 
   public callArgs:(list[term],integer,map[string,varDesc],list[litrl],varSet,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.

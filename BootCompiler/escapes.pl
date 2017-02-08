@@ -98,6 +98,11 @@ escapeType("_flushall",predType([])).
 escapeType("_setfileencoding",predType([type("lo.io#file"),type("lo.core*integer")])).
 escapeType("_ensure_loaded",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
+escapeType("delay",predType([type("lo.core*float")])).
+escapeType("sleep",predType([type("lo.core*float")])).
+escapeType("now",funType([],type("lo.core*float"))).
+escapeType("today",funType([],type("lo.core*integer"))).
+escapeType("ticks",funType([],type("lo.core*float"))).
 escapeType("_isCcChar",predType([type("lo.core*integer")])).
 escapeType("_isCfChar",predType([type("lo.core*integer")])).
 escapeType("_isCnChar",predType([type("lo.core*integer")])).
@@ -243,6 +248,11 @@ isEscape("_flushall").
 isEscape("_setfileencoding").
 isEscape("_ensure_loaded").
 isEscape("_logmsg").
+isEscape("delay").
+isEscape("sleep").
+isEscape("now").
+isEscape("today").
+isEscape("ticks").
 isEscape("_isCcChar").
 isEscape("_isCfChar").
 isEscape("_isCnChar").

@@ -15,6 +15,7 @@ lo.comp.code.clause{
 
   public compCl:(clse,list[litrl])=>assem.
   compCl(clse(Q,Nm,Args,Body),Lts) => assem(Nm,Code,Ltx):-
+    -- logMsg("compiling \(clse(Q,Nm,Args,Body))"),
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
     unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),

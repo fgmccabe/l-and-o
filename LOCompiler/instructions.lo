@@ -27,7 +27,6 @@ lo.comp.code.instructions{
    | iFayl		-- fail current execution
    | iCut		-- cut choice point
    | iIndexi(integer,integer)		-- integer index jump
-   | iIndexl(integer)		-- list index
    | iIndexs(integer,integer)		-- symbol index jump
    | iIndexn(integer,integer)		-- numerical index jump
    | iIndexx(integer,integer)		-- constructor index jump
@@ -50,11 +49,6 @@ lo.comp.code.instructions{
    | iUcYS(integer)		-- Unify with occurs check
    | iUSlit(string)		-- Unify literal
    | iUScns(string)		-- Unify constructor
-   | iUAcns0(string)		-- Unify A[0] with constructor
-   | iUAcns1(string)		-- Unify A[1] with constructor
-   | iUAcns2(string)		-- Unify A[2] with constructor
-   | iUAcns3(string)		-- Unify A[3] with constructor
-   | iUAcns4(string)		-- Unify A[4] with constructor
    | iMAA(integer,integer)		-- Move
    | iMAY(integer,integer)		-- Move
    | iMuAY(integer,integer)		-- Move unsafe
@@ -83,11 +77,6 @@ lo.comp.code.instructions{
    | iCSY(integer)		-- Match
    | iCSlit(string)		-- Match literal
    | iCScns(string)		-- Match constructor
-   | iCAcns0(string)		-- Match constructor in A[0]
-   | iCAcns1(string)		-- Match constructor in A[1]
-   | iCAcns2(string)		-- Match constructor in A[2]
-   | iCAcns3(string)		-- Match constructor in A[3]
-   | iCAcns4(string)		-- Match constructor in A[4]
    | iClAA(integer,integer)		-- First/clear
    | iClAY(integer,integer)		-- First/clear
    | iClAS(integer)		-- First/clear
@@ -135,7 +124,6 @@ lo.comp.code.instructions{
   showIns(iFayl,_) => ss("fayl").
   showIns(iCut,_) => ss("cut").
   showIns(iIndexi(A1,A2),Lits) => ssSeq([ss("indexi"),ss(" "),disp(A1),ss(" "),disp(A2)]).
-  showIns(iIndexl(A1),Lits) => ssSeq([ss("indexl"),ss(" "),disp(A1)]).
   showIns(iIndexs(A1,A2),Lits) => ssSeq([ss("indexs"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iIndexn(A1,A2),Lits) => ssSeq([ss("indexn"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iIndexx(A1,A2),Lits) => ssSeq([ss("indexx"),ss(" "),disp(A1),ss(" "),disp(A2)]).
@@ -158,11 +146,6 @@ lo.comp.code.instructions{
   showIns(iUcYS(A1),Lits) => ssSeq([ss("ucYS"),ss(" "),disp(A1)]).
   showIns(iUSlit(A2),Lits) => ssSeq([ss("uSlit"),ss(" "),showLit(A2,Lits)]).
   showIns(iUScns(A2),Lits) => ssSeq([ss("uScns"),ss(" "),showLit(A2,Lits)]).
-  showIns(iUAcns0(A1),Lits) => ssSeq([ss("uAcns0"),ss(" "),showLit(A1,Lits)]).
-  showIns(iUAcns1(A1),Lits) => ssSeq([ss("uAcns1"),ss(" "),showLit(A1,Lits)]).
-  showIns(iUAcns2(A1),Lits) => ssSeq([ss("uAcns2"),ss(" "),showLit(A1,Lits)]).
-  showIns(iUAcns3(A1),Lits) => ssSeq([ss("uAcns3"),ss(" "),showLit(A1,Lits)]).
-  showIns(iUAcns4(A1),Lits) => ssSeq([ss("uAcns4"),ss(" "),showLit(A1,Lits)]).
   showIns(iMAA(A1,A2),Lits) => ssSeq([ss("mAA"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iMAY(A1,A2),Lits) => ssSeq([ss("mAY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iMuAY(A1,A2),Lits) => ssSeq([ss("muAY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
@@ -191,11 +174,6 @@ lo.comp.code.instructions{
   showIns(iCSY(A2),Lits) => ssSeq([ss("cSY"),ss(" "),disp(A2)]).
   showIns(iCSlit(A2),Lits) => ssSeq([ss("cSlit"),ss(" "),showLit(A2,Lits)]).
   showIns(iCScns(A2),Lits) => ssSeq([ss("cScns"),ss(" "),showLit(A2,Lits)]).
-  showIns(iCAcns0(A1),Lits) => ssSeq([ss("cAcns0"),ss(" "),showLit(A1,Lits)]).
-  showIns(iCAcns1(A1),Lits) => ssSeq([ss("cAcns1"),ss(" "),showLit(A1,Lits)]).
-  showIns(iCAcns2(A1),Lits) => ssSeq([ss("cAcns2"),ss(" "),showLit(A1,Lits)]).
-  showIns(iCAcns3(A1),Lits) => ssSeq([ss("cAcns3"),ss(" "),showLit(A1,Lits)]).
-  showIns(iCAcns4(A1),Lits) => ssSeq([ss("cAcns4"),ss(" "),showLit(A1,Lits)]).
   showIns(iClAA(A1,A2),Lits) => ssSeq([ss("clAA"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iClAY(A1,A2),Lits) => ssSeq([ss("clAY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iClAS(A1),Lits) => ssSeq([ss("clAS"),ss(" "),disp(A1)]).

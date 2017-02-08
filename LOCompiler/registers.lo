@@ -91,4 +91,21 @@ lo.comp.code.registers{
   dispAdd(yReg(Lc,Sf)) => ssSeq([ss("Y["),disp(Lc), ss((Sf?"/safe"|"/not safe")),ss("]")]).
   dispAdd(sReg) => ss("S").
   dispAdd(notAlloc) => ss("not allocated").
+
+  public implementation display[varDesc] <= {
+    disp(V) => dispVarDesc(V).
+  }
+
+  dispVarDesc:(varDesc) => ss.
+  dispVarDesc(varDesc(Nm,I,D,A,_)) => ssSeq([ss(Nm),ss(" "),disp(I),ss(" "),disp(D),ss(" "),disp(A)]).
+
+  public implementation display[initialized] <= {
+    disp(notInited) => ss("not inited").
+    disp(inited) => ss("inited").
+  }
+
+  public implementation display[defined] <= {
+    disp(notDefined) => ss("not defined").
+    disp(isDefined) => ss("defined").
+  }
 }

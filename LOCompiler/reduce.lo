@@ -51,7 +51,7 @@ lo.comp.reduce{
   reduceBody:(list[pred],list[term],list[pred],list[term]){}.
   reduceBody([],Q,[],Q).
   reduceBody([P,..L],Q,Pre,NQ) :-
-    reducePred(P,Q,NP,Pre,[NP,..Ps],Ps,Psx,Q1),
+    reducePred(P,Q,NP,Pre,Ps,Ps,[NP,..Psx],Q1),
     reduceBody(L,Q1,Psx,NQ).
 
   reducePred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
@@ -64,7 +64,7 @@ lo.comp.reduce{
     reduceBildArg(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
     reduceBildArg(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
-  reducePred(unfy(L,R),Q,unfy(NL,NR),Pre,Prx,Pos,Psx,Qx) :-
+  reducePred(unfy(L,R),Q,unfy(NL,NR),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(L,Q,NL,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(R,Q0,NR,Pr0,Prx,Ps0,Psx,Qx).
   reducePred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).

@@ -26,6 +26,7 @@ lo.comp.code.pkg{
 
   compRel:(term,list[clse]) => assem.
   compRel(prg(Nm,Ar),Cls) => Code :-
+    logMsg("Compiling \(Cls)"),
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),
     DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,Entries,[]),

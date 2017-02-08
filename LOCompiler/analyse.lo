@@ -29,8 +29,8 @@ lo.comp.code.analyse{
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
   varAnalysis(Q,Args,Parts) => allocateVars(Usage,maxHeadArity(Parts)) :-
     OccTble = values(occurranceTable(Q,Args,Parts)),
-    Usage = usageTable(OccTble,size(Args),Parts),
-    logMsg("usage is \(Usage)").
+    Usage = usageTable(OccTble,size(Args),Parts).
+    -- logMsg("usage is \(Usage)").
 
   occurranceTable:(list[term],list[term],list[list[pred]]) => map[string,occMap].
   occurranceTable(Q,Args,Parts) => findOccsInParts(Parts,findOccsInHead(Args,occMap(Q,[])),1).
@@ -66,7 +66,7 @@ lo.comp.code.analyse{
 
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
-  findOccsInTerm(anon,M,_,_,_,_) => M.
+  findOccsInTerm(anon,M,Gp,Ix,Key,_) => M.
   findOccsInTerm(T,M,Gp,Ix,Key,_) => updateOccurrence("",M,Key,Gp,Ix) :- isGroundTerm(T). -- special for ground
   findOccsInTerm(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).
 
@@ -98,7 +98,7 @@ lo.comp.code.analyse{
     Nm\="",
     classifyVr(Occs,aReg(_),some(G)),
     Use = occupiedRegisters(Occs),
-    Avoid = avoidRegisters(T,G,Use,nullSet),
+    Avoid = nonRegisterUse(T,G,Use,nullSet),
     Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet,nullSet),..Out] :-
@@ -126,10 +126,10 @@ lo.comp.code.analyse{
   registerUsed(_,Regs) => Regs.
 
   -- This would be better with lambdas
-  avoidRegisters:(list[occMap],integer,set[integer],set[integer]) => set[integer].
-  avoidRegisters([],Gp,Used,SoFar) => SoFar.
-  avoidRegisters([occ(_,Occs),..O],Gp,Used,SoFar) =>
-    avoidRegisters(O,Gp,Used,pickRegisters(Occs,Gp,Used,SoFar)).
+  nonRegisterUse:(list[occMap],integer,set[integer],set[integer]) => set[integer].
+  nonRegisterUse([],Gp,Used,SoFar) => SoFar.
+  nonRegisterUse([occ(_,Occs),..O],Gp,Used,SoFar) =>
+    nonRegisterUse(O,Gp,Used,pickRegisters(Occs,Gp,Used,SoFar)).
 
   pickRegisters:(list[(occForm,integer,integer)],integer,set[integer],set[integer]) => set[integer].
   pickRegisters([],_,_,SoFar) => SoFar.
@@ -147,6 +147,7 @@ lo.comp.code.analyse{
 
   laterUses:(list[(occForm,integer,integer)],list[(occForm,integer,integer)]) => set[integer].
   laterUses([],_) => nullSet.
+  laterUses([(hTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),OR) :- (lArg,_,OR) in Ocs, OR>Rg, \+ (hArg,_,OR) in Ocs.
   laterUses([(lTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),Rg) :- (lTerm,_,GG) in Ocs, GG>Rg.
   laterUses([(oTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),Rg) :- (oTerm,_,GG) in Ocs, GG>Rg.
   laterUses([_,..O],Ocs) => laterUses(O,Ocs).
@@ -187,6 +188,7 @@ lo.comp.code.analyse{
     allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr0,D0),
     findOccupiedRegs(Usage,Us0,Us1,Fr0,Fr1),
     allocateRegs(Usage,Us1,Fr1,D0,Us2,_,D1).
+    -- logMsg("allocation: \(D1)").
 
   -- allocate registers based on occurrences in head
   allocateHeadRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],
