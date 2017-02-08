@@ -239,8 +239,8 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
           for (i = 1; i <= B->AX; i++)
             outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
 
-          for (i = 1; i <= Ylen; i++)
-            outMsg(logFile, "%Y[%d]=%w\n", i, &y[-i]);
+//          for (i = 1; i <= Ylen; i++)
+//            outMsg(logFile, "%Y[%d]=%w\n", i, &y[-i]);
 
           strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
           continue;

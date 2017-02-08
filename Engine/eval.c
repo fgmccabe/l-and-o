@@ -682,7 +682,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode((unsigned short)op_o_val(PCX));
+          funpo ef = escapeCode((unsigned short) op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -1208,33 +1208,6 @@ void runGo(register processPo P) {
         continue;
       }
 
-        /* The indexl instruction is used to differentiate nil from non-empty lists.
-       You might call it a naive reverse instruction.
-       The first instruction that follows is taken for the variable case,
-       after is the instruction for the empty list, and after that the instruction
-       for the non-empty list
-    */
-
-      case indexl: {    /* Ai */
-        register ptrI vx = deRefI(&A[op_h_val(PCX)]);
-
-        testA(op_h_val(PCX));
-
-        if (!isvar(vx)) {
-          register objPo vl = objV(vx);
-
-          if (vl->class == nilClass)
-            PC++;
-          else {
-            //	  assert(vl->class==listClass);
-            PC += 2;
-          }
-        }
-        continue;
-      }
-
-
-
         /* An indexs instruction indexes on strings.
        The first instruction that follows is taken for the variable case,
        after that is a hash table in the form of a jump table.
@@ -1513,6 +1486,12 @@ void runGo(register processPo P) {
 
           mode = writeMode;  /* we are now in writing mode... */
           validateS(-1);
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < class->arity; hx++)
+            H[hx] = kvoid;
+#endif
+
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
@@ -1579,6 +1558,12 @@ void runGo(register processPo P) {
 
           mode = writeMode;  /* we are now in writing mode... */
           validateS(-1);
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < class->arity; hx++)
+            H[hx] = kvoid;
+#endif
+
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
@@ -1612,6 +1597,11 @@ void runGo(register processPo P) {
 
           mode = writeMode;  /* we are now in writing mode... */
           validateS(-1);
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < class->arity; hx++)
+            H[hx] = kvoid;
+#endif
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
@@ -1645,6 +1635,12 @@ void runGo(register processPo P) {
 
           mode = writeMode;  /* we are now in writing mode... */
           validateS(-1);
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < class->arity; hx++)
+            H[hx] = kvoid;
+#endif
+
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
@@ -1678,6 +1674,12 @@ void runGo(register processPo P) {
 
           mode = writeMode;  /* we are now in writing mode... */
           validateS(-1);
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < class->arity; hx++)
+            H[hx] = kvoid;
+#endif
+
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
