@@ -27,7 +27,7 @@ lo.comp.code.indexing{
   showTree:(aoTr) => ss.
   showTree(eTree) => ss("{}").
   showTree(aXN(L)) => ssSeq([ss("("),ssSeq(L//showTree),ss(")")]).
-  showTree(oXN(L)) => ssSeq([ss("{"),ssSeq(L//(((ix(T,N),ST))=>ssSeq([dispTerm(T),ss(":"),disp(N),ss(" "),showTree(ST)]))),ss("}")]).
+  showTree(oXN(L)) => ssSeq([ss("{"),ssSeq(L//(((ix(T,N),ST))=>ssSeq([disp(T),ss(":"),disp(N),ss(" "),showTree(ST)]))),ss("}")]).
 
   private genTree:(term,list[(integer,string)])=>aoTr.
   genTree(anon,n) => oXN([(ix(anon,n),eTree)]).
@@ -36,6 +36,7 @@ lo.comp.code.indexing{
   genTree(flot(Dx),n) => oXN([(ix(flot(Dx),n),eTree)]).
   genTree(strng(Sx),n) => oXN([(ix(strng(Sx),n),eTree)]).
   genTree(enum(Id),n) => oXN([(ix(enum(Id),n),eTree)]).
+  genTree(strct(Nm,Ar),n) => oXN([(ix(enum(Nm),n),eTree)]).
   genTree(cons(Op,Els),n) => oXN([(ix(cons(Op,Els),n),aXN(genTreeEls(Els,n)))]).
 
   genTreeEls:(list[term],list[(integer,string)]) => list[aoTr].

@@ -48,7 +48,7 @@ lo.comp.code.unify{
   unifyLit(Lb,true,aReg(Rg),VS,freeAReg(VS,Rg)) => [iUAlit(Rg,Lb)].
   unifyLit(Lb,false,aReg(Rg),VS,VS) => [iUAlit(Rg,Lb)].
   unifyLit(Lb,_,yReg(Lc,_),VS,VS) => [iMAY(0,Lc),iUAlit(0,Lb)].
-  unifyLit(Lb,_,sReg,VS,VS) => [iUSlit(Lcb)].
+  unifyLit(Lb,_,sReg,VS,VS) => [iUSlit(Lb)].
 
   public accessLiteral:(term,string,list[litrl],list[litrl]){}.
   accessLiteral(T,Lb,Lt,Lt) :- litrl(Lb,T) in Lt.

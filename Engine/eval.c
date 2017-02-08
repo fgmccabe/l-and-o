@@ -502,8 +502,8 @@ void runGo(register processPo P) {
               else if (isObjct(p))
                 prog = ProgramOf(programOfClass(objV(p->class)));
               else {
-                assert(isSpecialObject(p));
-                prog = specialProgram(p);
+                assert(isSymb(p));
+                prog = ProgramOf(programOfSymbol(p));
               }
               break;
             }
@@ -559,8 +559,8 @@ void runGo(register processPo P) {
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
             else {
-              assert(isSpecialObject(p));
-              prog = specialProgram(p);
+              assert(isSymb(p));
+              prog = ProgramOf(programOfSymbol(p));
             }
             break;
           }
@@ -612,8 +612,8 @@ void runGo(register processPo P) {
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
             else {
-              assert(isSpecialObject(p));
-              prog = specialProgram(p);
+              assert(isSymb(p));
+              prog = ProgramOf(programOfSymbol(p));
             }
             break;
           }

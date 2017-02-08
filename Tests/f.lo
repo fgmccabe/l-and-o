@@ -1,7 +1,7 @@
-f{
+test.f{
   type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
-  public 
+  public
   contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.

@@ -64,6 +64,16 @@ typedef struct _code_record_ {
   insWord data[ZEROARRAYSIZE];  // Instruction words
 } codeRec, *codePo;
 
+extern void initPrograms(void);
+extern ptrI newProgLbl(const char *name, short arity);
+extern ptrI newProgramLbl(string name, short arity);
+extern ptrI programLbl(string name, short arity);
+extern ptrI defineSpecialProg(const char *name);
+extern ptrI programOfClass(objPo o);
+extern ptrI programOfSymbol(objPo o);
+extern ptrI programOfTerm(ptrI x);
+extern void defineProg(ptrI sym, ptrI code);
+
 /*
  Each entry in the break table consists of two program counters
  the first is the last pc address an onerror may apply to this break
@@ -200,6 +210,8 @@ static inline ptrI ProgramOf(ptrI x) {
     return ((programPo) p)->code;
   else if (isGoObject(p))
     return objectCode((dynPo) p);
+  else if (isSymb(p))
+    return programOfSymbol(p);
   else {
     assert(isSpecialObject(p));
     p = objV(((specialClassPo) objV(p->class))->program);
@@ -231,6 +243,7 @@ extern ptrI newProgLbl(const char *name, short arity);
 extern ptrI newProgramLbl(string name, short arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
+extern ptrI programOfSymbol(objPo o);
 extern ptrI programOfTerm(ptrI x);
 extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(unsigned long size, unsigned long litCnt);

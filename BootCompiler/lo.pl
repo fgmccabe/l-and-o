@@ -56,6 +56,7 @@ lookForMain(pkg(Top,_),Args) :-
   atom_string(Main,M),
   current_predicate(Main/1),!,
   listify(Args,LArgs),
+  writef("starting...\n",[]),
   call(Main,LArgs).
 lookForMain(_,_).
 

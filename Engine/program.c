@@ -127,6 +127,18 @@ ptrI newProgramLbl(string name, short arity) {
   }
 }
 
+ptrI programLbl(string name, short arity) {
+  struct {
+    long arity;
+    byte nm[MAX_SYMB_LEN];
+  } lbl;
+
+  lbl.arity = arity;
+  uniCpy((string) &lbl.nm, NumberOf(lbl.nm), name);
+
+  return (ptrI) hashGet(programs, (void *) &lbl);
+}
+
 ptrI newProgLbl(const char *name, short arity) {
   return newProgramLbl((string) name, arity);
 }
@@ -154,6 +166,12 @@ ptrI programOfClass(objPo o) {
     return newProgramLbl(buff, OBJECT_ARITY);
   } else
     return pr;
+}
+
+ptrI programOfSymbol(objPo o) {
+  assert(isSymb(o));
+
+  return programLbl(SymVal((symbPo) o), OBJECT_ARITY);
 }
 
 ptrI programOfTerm(ptrI x) {
