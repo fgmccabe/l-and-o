@@ -45,7 +45,7 @@ static void install_escape(char *escape_fn, funpo escape_code, int code,
 
 #undef escape
 #define escape(name, secr, pr, spec, cmnt) {\
-  install_escape("##name##",g_##name,Esc##name,pr,spec);\
+  install_escape(#name,g_##name,Esc##name,pr,spec);\
 };
 
 /* Set up the escape table */

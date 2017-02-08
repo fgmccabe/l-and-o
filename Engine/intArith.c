@@ -94,7 +94,7 @@ retCode g__int_plus(processPo P, ptrPo a) {
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, rslt);
 
-        bindVar(P, deRef(&a[4]), R);
+        bindVar(P, deRef(&a[3]), R);
         return Ok;
       } else if (integerVal(intV(z)) == rslt)
         return Ok;
@@ -123,7 +123,7 @@ retCode g__int_minus(processPo P, ptrPo a) {
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, rslt);
 
-        bindVar(P, deRef(&a[4]), R);
+        bindVar(P, deRef(&a[3]), R);
         return Ok;
       } else if (integerVal(intV(z)) == rslt)
         return Ok;
@@ -152,7 +152,7 @@ retCode g__int_times(processPo P, ptrPo a) {
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, rslt);
 
-        bindVar(P, deRef(&a[4]), R);
+        bindVar(P, deRef(&a[3]), R);
         return Ok;
       } else if (integerVal(intV(z)) == rslt)
         return Ok;
@@ -183,7 +183,7 @@ retCode g__int_div(processPo P, ptrPo a) {
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, rslt);
 
-        bindVar(P, deRef(&a[4]), R);
+        bindVar(P, deRef(&a[3]), R);
         return Ok;
       } else if (integerVal(intV(z)) == rslt)
         return Ok;
@@ -314,8 +314,6 @@ retCode g__int2flt(processPo P, ptrPo a) {
   }
 }
 
-
-
 /* irand(X) => Random integer in range [0..X) */
 
 retCode g_irand(processPo P, ptrPo a) {
@@ -326,7 +324,7 @@ retCode g_irand(processPo P, ptrPo a) {
     objPo A1 = objV(x);
 
     if (isInteger(A1)) {
-      double num1 = (double)integerVal((integerPo)A1);
+      double num1 = (double) integerVal((integerPo) A1);
 
       if (roundNumber(num1) == num1 && num1 > 0) {
         integer ans = (integer) (num1 * ((double) rand()) / (RAND_MAX + 1.0));
@@ -464,8 +462,7 @@ retCode g__blsr(processPo P, ptrPo a) {
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_blsr", eINTNEEDD);
     else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap,
-                               ((unsigned long long) integerVal((integerPo) A1)) >> integerVal((integerPo) A2));
+      ptrI R = allocateInteger(&P->proc.heap, ((uinteger) integerVal((integerPo) A1)) >> integerVal((integerPo) A2));
 
       bindVar(P, deRef(&a[3]), R);
       return Ok;
