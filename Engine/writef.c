@@ -17,6 +17,7 @@
 
 #include "lo.h"
 #include "term.h"
+#include "tuples.h"
 
 /*
  * write a cell in a basic format
@@ -85,7 +86,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
       }
 
       if (class == integerClass)
-        r = outInteger(f, integerVal((integerPo) p), 10, 0, prec, ' ', False, (string)"", False);
+        r = outInteger(f, integerVal((integerPo) p), 10, 0, prec, ' ', False, (string) "", False);
       else if (class == floatClass)
         r = outFloat(f, floatVal((floatPo) p));
       else if (class == symbolClass) {
@@ -98,9 +99,8 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
           r = wStringChr(f, *sym++);
         if (r == Ok)
           r = outChar(f, '\'');
-      }
-      else if (class == stringClass) {
-        string src = stringVal((stringPo)p);
+      } else if (class == stringClass) {
+        string src = stringVal((stringPo) p);
 
         long pos = 0;
         long end = uniStrLen(src);
@@ -116,8 +116,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
 
         if (r == Ok)
           r = outChar(f, '\"');
-      }
-      else if (class == classClass) {
+      } else if (class == classClass) {
         clssPo cl = (clssPo) p;
         string clName = className(cl);
 
@@ -125,9 +124,8 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
         if (r == Ok)
           r = outChar(f, '/');
         if (r == Ok)
-          r = outInteger(f, cl->arity, 10, 0, prec, ' ', False, (string)"", False);
-      }
-      else if (class == listClass) {
+          r = outInteger(f, cl->arity, 10, 0, prec, ' ', False, (string) "", False);
+      } else if (class == listClass) {
         if (depth > 0) {
           long maxLen = (prec != 0 ? prec * 2 : INT_MAX); /* How many elements to show */
 
@@ -145,8 +143,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
                 r = outStr(f, "...");        /* only show a certain length */
 
                 goto exit_list;  /* what a hack, need a double break */
-              }
-              else
+              } else
                 r = outChar(f, ',');
             }
           }
@@ -159,38 +156,28 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
           exit_list:
           if (r == Ok)
             r = outStr(f, "]");
-        }
-        else
+        } else
           r = outStr(f, "[...]");
-      }
-      else if (class == commaClass) {    /* show comma structures as tuples */
+      } else if (isTupleClass(class)) {
         if (depth > 0) {
           char *sep = "";
-          ptrI h, t;
 
           outChar(f, '(');
 
-          while (r == Ok && IsBinOp(x, commaClass, &h, &t)) {
+          long arity = tupleArity(p);
+
+          for (long ix = 0; ix < arity; ix++) {
             r = outStr(f, sep);
             sep = ", ";
             if (r == Ok)
-              r = outC(f, &h, depth - 1, prec, alt);
-            x = &t;
+              r = outC(f, nthArg(p, ix), depth - 1, prec, alt);
           }
 
           if (r == Ok)
-            r = outStr(f, sep);
-
-          if (r == Ok)
-            r = outC(f, x, depth - 1, prec, alt);
-
-          if (r == Ok)
             r = outChar(f, ')');
-        }
-        else
+        } else
           r = outStr(f, "(...)");
-      }
-      else if (IsTermClass(class)) {
+      } else if (IsTermClass(class)) {
         string name = objectClassName(p);
 
         r = outMsg(f, "%U", name);
@@ -214,11 +201,9 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
             if (r == Ok)
               r = outChar(f, ')');
           }
-        }
-        else
+        } else
           r = outStr(f, "(...)");
-      }
-      else if (IsSpecialClass(class)) {
+      } else if (IsSpecialClass(class)) {
         specialClassPo sClass = (specialClassPo) objV(class);
         r = sClass->outFun(sClass, f, p);
       }

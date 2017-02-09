@@ -448,9 +448,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/code.h">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/cons.h">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/constants.h">
 			<Option target="lo"/>
 		</Unit>
@@ -470,6 +467,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/encoded.h">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/encodedP.h">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/errors.h">
@@ -677,6 +677,9 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/thread.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/tuples.c">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/verify.c">

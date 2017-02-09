@@ -15,8 +15,8 @@ set(SOURCE_FILES
 
         Headers/word.h
         Headers/char.h Headers/clock.h
-        Headers/code.h Headers/cons.h Headers/constants.h Headers/dbgflags.h Headers/debug.h Headers/dict.h Headers/disass.h
-        Headers/encoded.h Headers/signature.h Headers/term.h
+        Headers/code.h Headers/constants.h Headers/dbgflags.h Headers/debug.h Headers/dict.h Headers/disass.h
+        Headers/encoded.h Headers/encodedP.h Headers/signature.h Headers/term.h
         Headers/errors.h Headers/esc.h ../Headers/escodes.h Headers/eval.h Headers/lock.h Headers/process.h Headers/ops.h Headers/opcodes.h
         Headers/global.h Headers/heap.h Headers/list.h Headers/local.h Headers/perms.h Headers/vars.h
         Headers/fileio.h Headers/lo.h
@@ -25,7 +25,7 @@ set(SOURCE_FILES
 
         ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h
 
-        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h)
+        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h tuples.c)
 
 add_executable(lo ${SOURCE_FILES})
 target_link_libraries(lo ooio)

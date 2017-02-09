@@ -20,6 +20,7 @@
 
 #include <sys/stat.h>
 #include <limits.h>
+#include <tuples.h>
 
 #include "lo.h"
 #include "fileio.h"
@@ -449,7 +450,7 @@ retCode g__popen(processPo P, ptrPo a) {
         ptrPo l = listHead(objV(Env));
         ptrI envKey;
         ptrI envVal;
-        if (!IsBinOp(l, commaClass, &envKey, &envVal) || !IsString(envKey)) {
+        if (!isTuplePair(l, &envKey, &envVal) || !IsString(envKey)) {
           setProcessRunnable(P);
           return liberror(P, "__popen", eINVAL);
         } else {

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include "lo.h"		/* Main header file */
 #include "fileio.h"
+#include "tuples.h"
 #include "clock.h"
 #include "debug.h"
 #include "esc.h"
@@ -429,20 +430,19 @@ ptrI cmdLineOptions(heapPo H) {
   ptrI options = emptyList;
   rootPo root = gcAddRoot(H, &options);
   ptrI pair = kvoid;
-  ptrI tmp = kvoid;
+  ptrI key = kvoid;
+  ptrI val = kvoid;
   int i;
 
   gcAddRoot(H, &pair);
-  gcAddRoot(H, &tmp);
+  gcAddRoot(H, &key);
+  gcAddRoot(H,&val);
 
   for (i = 0; i < optCount; i++) {
-    pair = objP(allocateObject(H, commaClass));  /* a new option pair */
+    key = allocateInteger(H, Options[i].option);
+    val = newSymbol(Options[i].value);
 
-    tmp = allocateInteger(H, Options[i].option);
-    updateArg(objV(pair), 0, tmp);
-
-    tmp = newSymbol(Options[i].value);
-    updateArg(objV(pair), 1, tmp);
+    pair = tuplePair(H,key,val);
 
     options = consLsPair(H, pair, options);
   }

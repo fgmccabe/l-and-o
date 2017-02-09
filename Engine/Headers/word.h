@@ -149,7 +149,7 @@ typedef struct _class_record_ {
   /* == classClass */
   uinteger hash;
   /* the hash code for this class */
-  long arity;
+  integer arity;
   /* how many term args */
   byte name[ZEROARRAYSIZE];    /* the class's print name */
 } clssRec;

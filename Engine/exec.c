@@ -20,6 +20,7 @@
 #include <errno.h>		/* system error numbers */
 #include "lo.h"
 #include "fileio.h"
+#include "tuples.h"
 
 retCode g__exit(processPo P, ptrPo a) {
   exit((long) FloatVal(objV(deRefI(&a[1]))));
@@ -50,12 +51,10 @@ retCode g__shell(processPo P, ptrPo a) {
     if (access((char *) cmd, F_OK | R_OK | X_OK) != 0) {
       setProcessRunnable(P);
       return liberror(P, "__shell", eNOTFND);
-    }
-    else if (!executableFile((char *) cmd)) {
+    } else if (!executableFile((char *) cmd)) {
       setProcessRunnable(P);
       return liberror(P, "__shell", eNOPERM);
-    }
-    else {
+    } else {
       char **argv = (char **) calloc((size_t) (aLen + 2), sizeof(char *));
       char **envp = (char **) calloc((size_t) (eLen + 1), sizeof(char *));
       int pid;
@@ -83,7 +82,7 @@ retCode g__shell(processPo P, ptrPo a) {
         ptrI var, val;
         long al;
 
-        if (!IsBinOp(&El, commaClass, &var, &val) || !IsString(deRefI(&val)) || !IsString(deRefI(&var)))
+        if (!isTuplePair(&El, &var, &val) || !IsString(deRefI(&val)) || !IsString(deRefI(&var)))
           return liberror(P, "__shell", eINSUFARG);
         else {
           string k = stringVal(stringV(deRefI(&var)));
@@ -106,8 +105,7 @@ retCode g__shell(processPo P, ptrPo a) {
         execve((char *) cmd, argv, envp);
         // abnormal termination -- should never get here
         _exit(127);
-      }
-      else {
+      } else {
         // parent process (agent)
         for (i = 1; argv[i] != NULL; i++)  // argv[0] is a local string
           free(argv[i]);
@@ -134,14 +132,12 @@ retCode g__shell(processPo P, ptrPo a) {
               default:
                 continue;
             }
-          }
-          else if (WIFEXITED(childStatus)) { /* exited normally */
+          } else if (WIFEXITED(childStatus)) { /* exited normally */
             ptrI r = allocateInteger(&P->proc.heap,
                                      WEXITSTATUS(childStatus));
 
             return equal(P, &a[4], &r);
-          }
-          else if (WIFSIGNALED(childStatus))
+          } else if (WIFSIGNALED(childStatus))
             return liberror(P, "__shell", eINTRUPT);
         } while (True);
       }

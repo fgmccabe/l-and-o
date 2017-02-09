@@ -17,6 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "lo.h"			/* main header file */
+#include "tuples.h"
 
 retCode g_getenv(processPo P, ptrPo a) {
   ptrI k = deRefI(&a[1]);
@@ -82,10 +83,7 @@ retCode g_envir(processPo P, ptrPo a) {
 
       ky = allocateCString(H, environ[i]);
       vl = allocateCString(H, pt + 1);
-      el = objP(allocateObject(H, commaClass));
-
-      updateArg(objV(el), 0, ky);
-      updateArg(objV(el), 1, vl);
+      el = tuplePair(H,ky,vl);
 
       lst = consLsPair(H, el, lst);
       *pt = '=';          /* restore the value */

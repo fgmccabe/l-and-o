@@ -41,7 +41,6 @@ ptrI programClass;
 ptrI emptyList;  //  the empty list
 ptrI nilClass;  //  The empty list class
 ptrI listClass;  //  the non-empty list
-ptrI commaClass;  //  the tupling constructor
 
 ptrI thingClass;  //  root type/class
 ptrI thingProg;  //  The thing program label
@@ -169,7 +168,6 @@ void standardClasses(void) {
   emptyList = newEnumSym("lo.core#[]");
   nilClass = newClassDf("lo.core#[]", 0);
   listClass = newClassDf("lo.core#,..", 2);
-  commaClass = newClassDf("lo.core#,", 2);
 
   suspClass = newClassDf("#suspension", 3);
   varClass = newClassDf("#var", 1);
@@ -313,7 +311,6 @@ void markStandardClasses(globalGcPo G) {
   emptyList = scanPtr(G, emptyList);
   nilClass = scanPtr(G, nilClass);
   listClass = scanPtr(G, listClass);
-  commaClass = scanPtr(G, commaClass);
   errorClass = scanPtr(G, errorClass);
 
   /*
