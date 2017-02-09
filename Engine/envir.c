@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "lo.h"			/* main header file */
-#include "tuples.h"
+#include "tpl.h"
 
 retCode g_getenv(processPo P, ptrPo a) {
   ptrI k = deRefI(&a[1]);

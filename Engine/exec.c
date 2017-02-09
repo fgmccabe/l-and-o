@@ -20,7 +20,7 @@
 #include <errno.h>		/* system error numbers */
 #include "lo.h"
 #include "fileio.h"
-#include "tuples.h"
+#include "tpl.h"
 
 retCode g__exit(processPo P, ptrPo a) {
   exit((long) FloatVal(objV(deRefI(&a[1]))));

@@ -20,7 +20,6 @@
 
 #include <sys/stat.h>
 #include <limits.h>
-#include <tuples.h>
 
 #include "lo.h"
 #include "fileio.h"
@@ -28,6 +27,7 @@
 #include "formioP.h"
 #include "uri.h"
 #include "pipe.h"
+#include "tpl.h"
 
 ptrI filePtrClass;              // The file class structure
 

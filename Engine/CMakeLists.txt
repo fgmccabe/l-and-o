@@ -25,7 +25,7 @@ set(SOURCE_FILES
 
         ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h
 
-        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h tuples.c)
+        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h tpl.c)
 
 add_executable(lo ${SOURCE_FILES})
 target_link_libraries(lo ooio)

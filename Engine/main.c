@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "lo.h"		/* Main header file */
 #include "fileio.h"
-#include "tuples.h"
+#include "tpl.h"
 #include "clock.h"
 #include "debug.h"
 #include "esc.h"

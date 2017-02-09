@@ -3,7 +3,7 @@
 //
 
 #include "lo.h"
-#include "tuples.h"
+#include "tpl.h"
 
 ptrI tupleClass(integer arity) {
   byte lbl[MAX_SYMB_LEN];
