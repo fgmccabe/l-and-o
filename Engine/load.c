@@ -8,6 +8,7 @@
 #include "signature.h"
 #include "encodedP.h"             /* pick up the term encoding definitions */
 #include "manifestP.h"
+#include "tpl.h"
 #include "hashTable.h"
 
 logical isLoaded(ptrI pkg) {
@@ -18,16 +19,16 @@ static logical compatiblVersion(string rqVer, string ver) {
   return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
 }
 
-typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen);
+typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen, void *cl);
 
 static retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen);
 static retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity);
 static retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer);
-static retCode decodeImportsSig(bufferPo sigBuffer, pickupPkg proc, string errorMsg, long msgLen);
+static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen, pickupPkg pickup, void *cl);
 
 retCode loadSegments(ioPo file, string errorMsg, long msgLen);
 
-static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup) {
+static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
   byte flNm[MAXFILELEN];
   string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
 
@@ -73,7 +74,7 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
         return Error;
       }
 
-      ret = decodeImportsSig(sigBuffer, pickup, errorMsg, msgSize);
+      ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
       if (ret == Ok)
         ret = loadSegments(file, errorMsg, msgSize);
@@ -96,7 +97,7 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
   }
 }
 
-retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize) {
+retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize, void *cl) {
   string version = loadedVersion(pkg);
 
   if (version != NULL) {
@@ -107,7 +108,7 @@ retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize) {
     } else
       return Ok; // already loaded correct version
   } else
-    return ldPackage(pkg,vers,errorMsg,msgSize,loadPackage);
+    return ldPackage(pkg, vers, errorMsg, msgSize, loadPackage, cl);
 }
 
 /*
@@ -126,7 +127,7 @@ retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferP
     return Error;
 }
 
-static retCode decodeImportsSig(bufferPo sigBuffer, pickupPkg proc, string errorMsg, long msgLen) {
+static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen, pickupPkg pickup, void *cl) {
   rewindBuffer(sigBuffer);
   ioPo in = O_IO(sigBuffer);
 
@@ -148,7 +149,7 @@ static retCode decodeImportsSig(bufferPo sigBuffer, pickupPkg proc, string error
         ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
 
         if (ret == Ok)
-          ret = proc(pkgNm, vrNm, errorMsg, msgLen);
+          ret = pickup(pkgNm, vrNm, errorMsg, msgLen, cl);
       }
       return ret;
     } else
@@ -388,6 +389,24 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
   }
 }
 
+typedef struct {
+  heapPo H;
+  ptrPo lst;
+  ptrPo el;
+  ptrPo pk;
+  ptrPo vr;
+} BuildSupportRec;
+
+static retCode buildImport(string pkg, string ver, string errorMsg, long msgLen, void *cl) {
+  BuildSupportRec *x = (BuildSupportRec *) cl;
+
+  *x->pk = allocateCString(x->H, (char *) pkg);
+  *x->vr = allocateCString(x->H, (char *) ver);
+  *x->el = tuplePair(x->H, *x->pk, *x->vr);
+  *x->lst = consLsPair(x->H, *x->el, *x->lst);
+  return Ok;
+}
+
 retCode g__ensure_loaded(processPo P, ptrPo a) {
   ptrI pname = deRefI(&a[1]);
 
@@ -399,13 +418,32 @@ retCode g__ensure_loaded(processPo P, ptrPo a) {
     if (isLoaded(pname))
       return Ok;
     else {
-      heapPo H = &P->proc.heap;
-
       switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
-      retCode ret = loadPackage(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
-                                  NumberOf(P->proc.errorMsg));
+      heapPo H = &P->proc.heap;
+      ptrI lst = emptyList;
+      ptrI el = kvoid;
+      ptrI ky = kvoid;
+      ptrI vl = kvoid;
+      rootPo root = gcAddRoot(H, &lst);
+
+      gcAddRoot(H, &el);
+      gcAddRoot(H, &ky);
+      gcAddRoot(H, &vl);
+
+      BuildSupportRec x = {
+        H,
+        &lst,
+        &el,
+        &ky,
+        &vl
+      };
+
+      retCode ret = ldPackage(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
+                              NumberOf(P->proc.errorMsg), buildImport, &x);
       setProcessRunnable(P);
+
+      gcRemoveRoot(H, root);
 
       switch (ret) {
         case Error: {
@@ -421,7 +459,7 @@ retCode g__ensure_loaded(processPo P, ptrPo a) {
           return raiseError(P, msg, eNOFILE);
         }
         case Ok:
-          return Ok;
+          return equal(P, &lst, &a[3]);
         case Fail:
           return Fail;
         case Space:

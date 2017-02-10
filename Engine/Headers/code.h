@@ -250,7 +250,7 @@ extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(unsigned long size, unsigned long litCnt);
 extern retCode verifyCode(ptrI prog);
 
-extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize);
+extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize, void *cl);
 
 extern void initCodeClass(void);
 logical isLoaded(ptrI package);

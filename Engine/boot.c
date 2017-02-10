@@ -163,7 +163,7 @@ void bootstrap(string entry, string bootPkg, string version) {
 
   processPo root = rootProcess(mainThread, bootPkg); // We create the root with a early death code - updated later
 
-  switch (loadPackage(bootPkg, version, errorMsg, NumberOf(errorMsg))) {
+  switch (loadPackage(bootPkg, version, errorMsg, NumberOf(errorMsg), NULL)) {
     default:
       logMsg(logFile, "corrupt or no boot package found in %s:%s", bootPkg, errorMsg);
       lo_exit(EXIT_FAIL);
