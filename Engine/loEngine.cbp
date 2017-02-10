@@ -30,6 +30,7 @@
 					<Add directory="/usr/local/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
@@ -54,6 +55,7 @@
 					<Add directory="/usr/local/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
@@ -186,6 +188,12 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/args.c">
 			<Option target="lo"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/arith4flt.c">
+			<Option target="lo"/>
+		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/Engine/arith4int.c">
+			<Option target="lo"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/boot.c">
 			<Option target="lo"/>
 		</Unit>
@@ -243,9 +251,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/fileio.c">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/fltArith.c">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/gc.c">
 			<Option target="lo"/>
 		</Unit>
@@ -253,9 +258,6 @@
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/heap.c">
-			<Option target="lo"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/intArith.c">
 			<Option target="lo"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/lists.c">

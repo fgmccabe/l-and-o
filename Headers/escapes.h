@@ -174,7 +174,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_flushall,True,False,"P0","flush all files")
   escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
 
-  escape(_ensure_loaded,True,False,"P2SS","load class file")
+  escape(_ensure_loaded,True,False,"F2SSLT2SS","load class file")
 
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
 

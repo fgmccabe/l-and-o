@@ -18,11 +18,85 @@ static logical compatiblVersion(string rqVer, string ver) {
   return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
 }
 
-static retCode decodePkgSignature(ioPo in, byte *pkgNm, long nmLen, byte *vrNm, long vrLen);
+typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen);
+
+static retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen);
+static retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity);
+static retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer);
+static retCode decodeImportsSig(bufferPo sigBuffer, pickupPkg proc, string errorMsg, long msgLen);
 
 retCode loadSegments(ioPo file, string errorMsg, long msgLen);
 
-retCode loadPkg(string pkg, string vers, string errorMsg, long msgSize) {
+static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup) {
+  byte flNm[MAXFILELEN];
+  string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
+
+  if (fn == NULL) {
+    outMsg(logFile, "cannot determine code for %s:%s", pkg, vers);
+    return Error;
+  }
+
+  ioPo file = openInFile(fn, utf8Encoding);
+
+#ifdef EXECTRACE
+  if (debugging)
+    outMsg(logFile, "loading package %s:%s from file %s\n", pkg, vers, fn);
+#endif
+
+  if (file != NULL) {
+    retCode ret = Ok;
+
+    byte ch;
+
+    if ((ch = inB(file)) == '#') { /* look for standard #!/.... header */
+      if ((ch = inB(file)) == '!') {
+        while (inByte(file, &ch) == Ok && ch != NEW_LINE);                      // consume the interpreter statement
+      } else {
+        putBackByte(file, ch);
+        putBackByte(file, '#');
+      }
+    } else
+      putBackByte(file, ch);
+
+    if (fileStatus(file) == Ok) {
+      byte pkgNm[MAX_SYMB_LEN];
+      byte vrNm[MAX_SYMB_LEN];
+      bufferPo sigBuffer = newStringBuffer();
+
+      ret = decodeText(file, sigBuffer);
+
+      if (ret == Ok)
+        ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
+
+      if (ret == Ok && uniCmp((string) pkgNm, pkg) != same) {
+        outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkg);
+        return Error;
+      }
+
+      ret = decodeImportsSig(sigBuffer, pickup, errorMsg, msgSize);
+
+      if (ret == Ok)
+        ret = loadSegments(file, errorMsg, msgSize);
+    }
+
+    closeFile(file);
+
+#ifdef EXECTRACE
+    if (debugging)
+      logMsg(logFile, "package %s loaded\n", pkg);
+#endif
+
+    if (ret == Eof)
+      return Ok;
+    else
+      return ret;
+  } else {
+    strMsg(errorMsg, msgSize, "package %s not found", pkg);
+    return Eof;
+  }
+}
+
+retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize) {
   string version = loadedVersion(pkg);
 
   if (version != NULL) {
@@ -32,66 +106,8 @@ retCode loadPkg(string pkg, string vers, string errorMsg, long msgSize) {
       return Error;
     } else
       return Ok; // already loaded correct version
-  } else {
-    byte flNm[MAXFILELEN];
-    string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
-
-    if (fn == NULL) {
-      outMsg(logFile, "cannot determine code for %s:%s", pkg, version);
-      return Error;
-    }
-
-    ioPo file = openInFile(fn, utf8Encoding);
-
-#ifdef EXECTRACE
-    if (debugging)
-      outMsg(logFile, "loading package %s:%s from file %s\n", pkg, vers, fn);
-#endif
-
-    if (file != NULL) {
-      retCode ret = Ok;
-
-      byte ch;
-
-      if ((ch = inB(file)) == '#') { /* look for standard #!/.... header */
-        if ((ch = inB(file)) == '!') {
-          while (inByte(file, &ch) == Ok && ch != NEW_LINE);                      // consume the interpreter statement
-        } else {
-          putBackByte(file, ch);
-          putBackByte(file, '#');
-        }
-      } else
-        putBackByte(file, ch);
-
-      if (fileStatus(file) == Ok) {
-        byte pkgNm[MAX_SYMB_LEN];
-        byte vrNm[MAX_SYMB_LEN];
-        ret = decodePkgSignature(file, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
-
-        if (ret == Ok && uniCmp((string) pkgNm, pkg) != same) {
-          outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkg);
-          return Error;
-        }
-
-        ret = loadSegments(file, errorMsg, msgSize);
-      }
-
-      closeFile(file);
-
-#ifdef EXECTRACE
-      if (debugging)
-        logMsg(logFile, "package %s loaded\n", pkg);
-#endif
-
-      if (ret == Eof)
-        return Ok;
-      else
-        return ret;
-    } else {
-      strMsg(errorMsg, msgSize, "package %s not found", pkg);
-      return Eof;
-    }
-  }
+  } else
+    return ldPackage(pkg,vers,errorMsg,msgSize,loadPackage);
 }
 
 /*
@@ -101,40 +117,44 @@ retCode loadPkg(string pkg, string vers, string errorMsg, long msgSize) {
  * We are only interested in the first two the pkg and the imports.
  */
 
-static retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen);
-static retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity);
+retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer) {
+  rewindBuffer(sigBuffer);
 
-static retCode decodeImports(ioPo in, string errorMsg, long msgLen);
-
-retCode decodePkgSignature(ioPo in, byte *pkgNm, long nmLen, byte *vrNm, long vrLen) {
-  byte ch;
-  retCode ret = inByte(in, &ch);
-
-  if (ret != Ok)
-    return ret;
-  else if (ch != trmString)
+  if (isLookingAt(O_IO(sigBuffer), "n7o7'()7'") == Ok)
+    return decodePkgName(O_IO(sigBuffer), pkgNm, nmLen, vrNm, vrLen);
+  else
     return Error;
-  else {
-    bufferPo buffer = newStringBuffer();
-    ret = decodeText(in, buffer);
+}
 
-    // The first characters should be fixed by the encoding
-    rewindBuffer(buffer);
+static retCode decodeImportsSig(bufferPo sigBuffer, pickupPkg proc, string errorMsg, long msgLen) {
+  rewindBuffer(sigBuffer);
+  ioPo in = O_IO(sigBuffer);
 
-    if (ret == Ok && isLookingAt(O_IO(buffer), "n7o7'()7'") == Ok) {
-      if ((ret = decodePkgName(O_IO(buffer), pkgNm, nmLen, vrNm, vrLen)) == Ok) {
-        ret = packageIsLoaded((string) pkgNm, (string) vrNm);
+  if (isLookingAt(in, "n7o7'()7'") == Ok) {
+    retCode ret = skipEncoded(in, errorMsg, msgLen);
+    if (ret != Ok)
+      return ret;
+
+    if (isLookingAt(in, "n") == Ok) {
+      integer len;
+      ret = decInt(in, &len);
+
+      // The imports are next in the signature
+      if (ret == Ok)
+        ret = skipEncoded(in, errorMsg, msgLen); // Move over the tuple constructor
+      for (integer ix = 0; ret == Ok && ix < len; ix++) {
+        byte pkgNm[MAX_SYMB_LEN];
+        byte vrNm[MAX_SYMB_LEN];
+        ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
 
         if (ret == Ok)
-          ret = decodeImports(O_IO(buffer), NULL, 0);
+          ret = proc(pkgNm, vrNm, errorMsg, msgLen);
       }
-
+      return ret;
     } else
-      ret = Error;
-
-    closeFile(O_IO(buffer));
-    return ret;
-  }
+      return Error;
+  } else
+    return Error;
 }
 
 retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen) {
@@ -171,30 +191,10 @@ retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity) {
     else {
       bufferPo pkgB = fixedStringBuffer(nm, nmLen);
       ret = decodeName(O_IO(in), pkgB);
-      outByte(O_IO(pkgB),0);
+      outByte(O_IO(pkgB), 0);
       closeFile(O_IO(pkgB));
       return ret;
     }
-  } else
-    return Error;
-}
-
-retCode decodeImports(ioPo in, string errorMsg, long msgLen) {
-  if (isLookingAt(in, "n") == Ok) {
-    integer len;
-    retCode ret = decInt(in, &len);
-
-    if (ret == Ok)
-      ret = skipEncoded(in, errorMsg, msgLen); // Move over the tuple constructor
-    for (integer ix = 0; ret == Ok && ix < len; ix++) {
-      byte pkgNm[MAX_SYMB_LEN];
-      byte vrNm[MAX_SYMB_LEN];
-      ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
-
-      if (ret == Ok)
-        ret = loadPkg((string) pkgNm, (string) vrNm, errorMsg, msgLen);
-    }
-    return ret;
   } else
     return Error;
 }
@@ -385,6 +385,52 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
       }
     }
     return ret;
+  }
+}
+
+retCode g__ensure_loaded(processPo P, ptrPo a) {
+  ptrI pname = deRefI(&a[1]);
+
+  if (isvar(pname))
+    return liberror(P, "__ensure_loaded", eINSUFARG);
+  else if (!IsSymb(pname))
+    return liberror(P, "__ensure_loaded", eINVAL);
+  else {
+    if (isLoaded(pname))
+      return Ok;
+    else {
+      heapPo H = &P->proc.heap;
+
+      switchProcessState(P, wait_io); /* Potentially nec. to wait */
+
+      retCode ret = loadPackage(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
+                                  NumberOf(P->proc.errorMsg));
+      setProcessRunnable(P);
+
+      switch (ret) {
+        case Error: {
+          byte msg[MAX_MSG_LEN];
+
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          return raiseError(P, msg, eNOTFND);
+        }
+        case Eof: {
+          byte msg[MAX_MSG_LEN];
+
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          return raiseError(P, msg, eNOFILE);
+        }
+        case Ok:
+          return Ok;
+        case Fail:
+          return Fail;
+        case Space:
+          outMsg(logFile, "Out of heap space, increase and try again\n%_");
+          return liberror(P, "__ensure_loaded", eSPACE);
+        default:
+          return liberror(P, "__ensure_loaded", eINVAL);
+      }
+    }
   }
 }
 
