@@ -252,9 +252,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/global.c">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/hash.c">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/heap.c">
 			<Option target="lo"/>
 		</Unit>
