@@ -196,7 +196,7 @@ lo.comp.code.analyse{
   }
 
   allocateVars:(list[usageMap],integer) => (map[string,varDesc],integer,varSet).
-  allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,usdRegs(Us2::set[integer],Lcls,0)) :-
+  allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,varSet(Us2::set[integer],Lcls,0)) :-
     allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr0,D0),
     findOccupiedRegs(Usage,Us0,Us1,Fr0,Fr1),
     allocateRegs(Usage,Us1,Fr1,D0,Us2,_,D1).

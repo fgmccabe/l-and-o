@@ -6,7 +6,7 @@ lo.comp.code.registers{
 
   public type addr ::= voidAddr | aReg(integer) | yReg(integer,logical) | sReg | notAlloc.
 
-  public type varSet ::= usdRegs(set[integer],set[integer],integer).
+  public type varSet ::= varSet(set[integer],set[integer],integer).
 
   public type initialized ::= notInited | inited.
 
@@ -21,25 +21,25 @@ lo.comp.code.registers{
   varAddr(varDesc(_,_,_,A,_))=>A.
 
   public locUsed:(varSet,integer) => varSet.
-  locUsed(usdRegs(A,L,G),Lc) => usdRegs(A,addMem(L,Lc),G).
+  locUsed(varSet(A,L,G),Lc) => varSet(A,addMem(L,Lc),G).
 
   public regUsed:(varSet,integer) => varSet.
-  regUsed(usdRegs(A,L,G),Rg) => usdRegs(addMem(A,Rg),L,G).
+  regUsed(varSet(A,L,G),Rg) => varSet(addMem(A,Rg),L,G).
 
   public usedRegs:(varSet) => set[integer].
-  usedRegs(usdRegs(A,_,_)) => A.
+  usedRegs(varSet(A,_,_)) => A.
 
   public resetUsed:(varSet) => varSet.
-  resetUsed(usdRegs(_,L,G)) => usdRegs(set([]),L,G).
+  resetUsed(varSet(_,L,G)) => varSet(set([]),L,G).
 
   public maxReg:(varSet) => integer.
-  maxReg(usdRegs(A,_,_)) => foldRight((X,Y)=>max(X,Y),0,A).
+  maxReg(varSet(A,_,_)) => foldRight((X,Y)=>max(X,Y),0,A).
 
   public freeAReg:(varSet,integer) => varSet.
-  freeAReg(usdRegs(A,L,G),Rg) => usdRegs(delMem(A,Rg),L,G).
+  freeAReg(varSet(A,L,G),Rg) => varSet(delMem(A,Rg),L,G).
 
   public pickAreg:(varSet,varSet,addr){}.
-  pickAreg(usdRegs(A,L,G),usdRegs(addMem(A,Rg),L,G),aReg(Rg)) :-
+  pickAreg(varSet(A,L,G),varSet(addMem(A,Rg),L,G),aReg(Rg)) :-
     (inRange(1,numRegisters,Rg), \+Rg in A)!.
 
   private inRange:(integer,integer,integer){}.
@@ -47,16 +47,16 @@ lo.comp.code.registers{
   inRange(Lo,Hi,El) :- inRange(Lo+1,Hi,El).
 
   public lclGc:(varSet,integer) => varSet.
-  lclGc(usdRegs(A,L,G),Sz) => usdRegs(A,L,G+Sz).
+  lclGc(varSet(A,L,G),Sz) => varSet(A,L,G+Sz).
 
   public gcPredict:(varSet) => integer.
-  gcPredict(usdRegs(_,_,G)) => G.
+  gcPredict(varSet(_,_,G)) => G.
 
   public resetGc:(varSet) => varSet.
-  resetGc(usdRegs(A,L,_)) => usdRegs(A,L,0).
+  resetGc(varSet(A,L,_)) => varSet(A,L,0).
 
   public gcMap:(varSet,integer,list[instruction],instruction){}.
-  gcMap(usdRegs(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
+  gcMap(varSet(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
     Esize = foldRight((X,Y)=>max(X,Y),0,Locs).
 
   clearYs:(integer,integer,set[integer]) => list[instruction].
@@ -70,10 +70,10 @@ lo.comp.code.registers{
   clearAs(Rg,Mx,Regs) => clearAs(Rg+1,Mx,Regs).
 
   public usedLocals:(varSet) => set[integer].
-  usedLocals(usdRegs(_,L,_)) => L.
+  usedLocals(varSet(_,L,_)) => L.
 
   public maxLocals:(varSet) => integer.
-  maxLocals(usdRegs(_,L,_)) => foldRight((X,Y)=>max(X,Y),0,L).
+  maxLocals(varSet(_,L,_)) => foldRight((X,Y)=>max(X,Y),0,L).
 
   public varSlotSz:integer.
   varSlotSz = 2.

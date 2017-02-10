@@ -23,8 +23,13 @@ lo.comp.code.unify{
   unifyTerm(anon,_,Src,D,D,VS,VS,Lts,Lts,_) => skipOver(Src).
   unifyTerm(T,Top,Src,D,D,VS,VSx,Lt,Ltx,_) => unifyLit(Lb,Top,Src,VS,VSx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
   unifyTerm(varbl(Nm),_,Src,D,Dx,VS,Vx,Lt,Lt,last) => unifyVar(Entry,Src,D,Dx,VS,Vx,last) :- present(D,Nm,Entry).
-  unifyTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => unifyOp(Lb,Src,Top,V,V0) <> unifyEls(Els,false,D,Dx,V,Vx,Lt0,Ltx) :-
-      accessLiteral(Op,Lb,Lt,Lt0).
+  unifyTerm(cons(Op,Els),Top,Src,D,Dx,V,Vx,Lt,Ltx,Last) => HdCode <> unifyEls(Els,false,D,Dx,V2,Vx,Lt0,Ltx) :-
+      accessLiteral(Op,Lb,Lt,Lt0),
+      HdCode = unifyOp(Lb,Src,Top,V,V0),
+      (Top,Src=aReg(Rg) ?
+        V1 = freeAReg(V0,Rg) |
+        V1 = V0),
+      V2 = lclGc(V1,size(Els)+2).
 
   unifyEls:(list[term],logical,map[string,varDesc],map[string,varDesc],varSet,varSet,list[litrl],list[litrl]) => list[instruction].
   unifyEls([],_,D,D,V,V,Lt,Lt) => [].
@@ -110,8 +115,9 @@ lo.comp.code.unify{
   buildTerm(anon,_,Dst,D,D,V,Vx,Lts,Lts,_) => clearTrm(Dst,V,Vx).
   buildTerm(T,Top,Dst,D,D,V,Vx,Lt,Ltx,_) => buildLit(Lb,Top,Dst,V,Vx) :- isGroundTerm(T), accessLiteral(T,Lb,Lt,Ltx).
   buildTerm(varbl(Nm),_,Dst,D,Dx,V,Vx,Lt,Lt,last) => buildVar(Entry,Dst,D,Dx,V,Vx,last) :- present(D,Nm,Entry).
-  buildTerm(cons(Op,Els),Top,Dst,D,Dx,V,Vx,Lt,Ltx,Last) => buildOp(Lb,Dst,Top,V,V0) <> buildEls(Els,false,D,Dx,V0,Vx,Lt0,Ltx) :-
-      accessLiteral(Op,Lb,Lt,Lt0).
+  buildTerm(cons(Op,Els),Top,Dst,D,Dx,V,Vx,Lt,Ltx,Last) => buildOp(Lb,Dst,Top,V0,V1) <> buildEls(Els,false,D,Dx,V1,Vx,Lt0,Ltx) :-
+      accessLiteral(Op,Lb,Lt,Lt0),
+      V0 = lclGc(V,size(Els)+2).
 
   public clearTrm:(addr,varSet,varSet) => list[instruction].
   clearTrm(voidAddr,V,V)=>[].

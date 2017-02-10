@@ -98,7 +98,7 @@ void initGlobal(long size) {
   leftBase = globalSpace = (objPo) malloc(sizeof(ptrI) * globalSize);
   rightBase = &leftBase[size];
   greySize = globalSize >> CARDSHIFT;
-  grey = (cardMap *) calloc(greySize, sizeof(cardMap));
+  grey = (cardMap *) calloc((size_t)greySize, sizeof(cardMap));
 
   globalHeap.base = globalHeap.create = leftBase;
   globalHeap.end = rightBase;

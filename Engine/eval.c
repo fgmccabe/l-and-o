@@ -1027,7 +1027,7 @@ void runGo(register processPo P) {
 
       case trycl: {      /* ARITY,LBL try a clause */
         register int len = envSize(cPC);
-        register integer arity = codeArity(codeV(PROG));
+        register short arity = (short)codeArity(codeV(PROG));
 
         register choicePo back;
         register int i;
