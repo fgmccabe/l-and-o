@@ -21,7 +21,7 @@ set(SOURCE_FILES
         Headers/global.h Headers/heap.h Headers/list.h Headers/local.h Headers/perms.h Headers/vars.h
         Headers/fileio.h Headers/lo.h
         Headers/arith.h Headers/str.h Headers/symbols.h Headers/dll.h
-        Headers/unix.h Headers/stats.h Headers/signals.h
+        Headers/unix.h Headers/stats.h Headers/signals.h Headers/tpl.h
 
         ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h
 

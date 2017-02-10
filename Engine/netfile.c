@@ -1,5 +1,5 @@
 /* 
-   Socket and TCP handling functions
+  Socket and TCP handling functions
   Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -123,7 +123,7 @@ retCode g__connect(processPo P, ptrPo a) {
   else if (isvar(deRefI(&a[3])))
     return liberror(P, "__connect", eINVAL);
   else {
-    short port = (short)integerVal(intV(Port));
+    short port = (short) integerVal(intV(Port));
     retCode ret;
 
     if (port == 0 || !IsString(Host))
@@ -282,7 +282,6 @@ retCode g_hosttoip(processPo P, ptrPo a) {
     rootPo root = gcAddRoot(&P->proc.heap, &l);
     string host = stringVal(stringV(Host));
 
-
     gcAddRoot(&P->proc.heap, &el);
 
     for (i = 0; getNthHostIP(host, i, ip, NumberOf(ip)) != NULL; i++) {
@@ -309,9 +308,7 @@ retCode g_iptohost(processPo P, ptrPo a) {
     if (host != NULL) {
       ptrI Host = allocateString(&P->proc.heap, host, uniStrLen(host));
       return equal(P, &Host, &a[2]);
-    }
-    else
+    } else
       return liberror(P, "iptohost", eNOTFND);
   }
 }
-

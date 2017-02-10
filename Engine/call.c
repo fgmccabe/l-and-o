@@ -35,12 +35,12 @@ retCode g__call(processPo P, ptrPo a) {
   }
   else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
-    long arity = integerVal((integerPo) objV(Arity));
+    integer arity = integerVal((integerPo) objV(Arity));
 
     strMsg(resolved, NumberOf(resolved), "%U@%U", SymVal(symbV(pkg)), SymVal(symbV(entry)));
 
     switchProcessState(P, in_exclusion);
-    ptrI prog = newProgramLbl(resolved, arity);
+    ptrI prog = newProgramLbl(resolved, (short)arity);
     setProcessRunnable(P);
 
     if (!IsProgram(prog)) {
@@ -106,17 +106,17 @@ retCode g__defined(processPo P, ptrPo a) {
 
   if (isvar(entry) || isvar(pkg) || isvar(Ar))
     return liberror(P, "__defined", eINSUFARG);
-  else if (!IsSymb(entry) || !IsSymb(pkg) || !IsInt(Ar))
+  else if (!IsString(entry) || !IsString(pkg) || !IsInt(Ar))
     return liberror(P, "__defined", eINVAL);
   else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
-    long arity = IntVal(Ar);
+    integer arity = IntVal(Ar);
 
-    strMsg(resolved, NumberOf(resolved), "%U@%U", SymVal(symbV(pkg)), SymVal(symbV(entry)));
+    strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
 
     switchProcessState(P, in_exclusion);
 
-    ptrI sym = newProgramLbl(resolved, arity);
+    ptrI sym = newProgramLbl(resolved, (short)arity);
 
     setProcessRunnable(P);
 
@@ -124,64 +124,6 @@ retCode g__defined(processPo P, ptrPo a) {
       return Ok;
     else
       return Fail;
-  }
-}
-
-
-// This function is the analogy to Prolog's univ function (which is of course written ,..)
-
-retCode g__univ(processPo P, ptrPo a) {
-  ptrI Sym = deRefI(&a[1]);
-
-  if (isvar(Sym))
-    return liberror(P, "__univ", eINSUFARG);
-  else if (!IsSymb(Sym))
-    return liberror(P, "__univ", eINVAL);
-  else {
-    long arity = ListLen(deRefI(&a[2]));
-
-    if (arity < 0)
-      return liberror(P, "__univ", eINSUFARG);
-    else {
-      symbPo sym = symbV(Sym);            // We copy the symbol's text out in case of GC during string creation
-      long sLen = SymLen(sym);
-      byte text[sLen + 1];
-      heapPo H = &P->proc.heap;
-      rootPo root = gcAddRoot(H, &Sym);
-      ptrI cons = kvoid;
-
-      gcAddRoot(H, &cons);
-
-      switchProcessState(P, in_exclusion);
-      uniCpy(text, sLen, SymVal(sym));
-
-      if (text[0] == '\'') {
-        memmove(&text[0], &text[1], (uniStrLen(text) - 1) * sizeof(byte));
-        Sym = newClassDef(text, arity);
-      }
-
-      setProcessRunnable(P);
-      cons = objP(allocateObject(H, Sym));
-
-      {
-        ptrI xx = deRefI(&a[2]);
-        long ix = 0;
-
-        while (IsList(xx)) {
-          ptrPo el = listHead(objV(xx));
-          updateArg(objV(cons), ix++, deRefI(el));
-          xx = deRefI(el + 1);
-        }
-      }
-
-      {
-        retCode ret = equal(P, &cons, &a[3]);
-
-        gcRemoveRoot(H, root);
-
-        return ret;
-      }
-    }
   }
 }
 

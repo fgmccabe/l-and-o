@@ -76,7 +76,7 @@ static void sortCounts(long count, long base[], long sorted[]) {
 #undef escape
 #define escape(Nm, Sc, Priv, Tp, Cmt) \
     case Esc##Nm:                      /* Cmt */\
-      outMsg(logFile,"##name##: %d " Cmt "\n",escCount[Esc##Nm]);\
+      outMsg(logFile,#Nm ": %d " Cmt "\n",escCount[Esc##Nm]);\
       break;
 #undef constr
 #define constr(Nm, Tp, T)

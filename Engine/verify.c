@@ -141,8 +141,7 @@ static segPo findSeg(segPo seg, insPo pc) {
   if (pc < seg->pc) {
     while (seg != NULL && pc < seg->pc)
       seg = seg->prev;
-  }
-  else {
+  } else {
     while (seg != NULL && pc >= seg->pc + seg->insCount)
       seg = seg->next;
   }
@@ -164,8 +163,7 @@ static segPo splitSeg(segPo root, insPo pc, insPo tgt, logical isAlt) {
     }
 
     return seg;                  // Nothing to do here
-  }
-  else {
+  } else {
     segPo new = (segPo) allocPool(segpool);
     segPo next = seg->next;
     unsigned int i;
@@ -221,8 +219,7 @@ static void showSegs(segPo root) {
 
       outMsg(logFile, "%d (%d) [0x%x-0x%x](%d), alt=%d [0x%x]\n",
              segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount, seg->insCount, sN, s->pc);
-    }
-    else
+    } else
       outMsg(logFile, "%d (%d) [0x%x-0x%x](%d):\n", segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount,
              seg->insCount);
     segNo++;
@@ -362,8 +359,7 @@ static char *mergeSegVars(segPo seg, segPo next) {
 
     for (i = 0; i <= next->lCount; i++)
       next->locals[i] = seg->locals[i];
-  }
-  else if (next->lCount > seg->lCount)
+  } else if (next->lCount > seg->lCount)
     return "improper reallocation of locals";
   else if (seg->locals != NULL) {
     for (i = 0; i <= next->lCount; i++) {

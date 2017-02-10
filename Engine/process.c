@@ -36,16 +36,16 @@ typedef struct {
 
 ptrI procClass;
 
-static const char *state_names[] = {"lo.stdlib#quiescent",
-                                    "lo.stdlib#runnable",
-                                    "lo.stdlib#wait_io",
-                                    "lo.stdlib#wait_term",
-                                    "lo.stdlib#wait_timer",
-                                    "lo.stdlib#wait_lock",
-                                    "lo.stdlib#wait_child",
-                                    "lo.stdlib#wait_rendezvous",
-                                    "lo.stdlib#in_exclusion",
-                                    "lo.stdlib#dead"};
+static const char *state_names[] = {"lo.thread#quiescent",
+                                    "lo.thread#runnable",
+                                    "lo.thread#wait_io",
+                                    "lo.thread#wait_term",
+                                    "lo.thread#wait_timer",
+                                    "lo.thread#wait_lock",
+                                    "lo.thread#wait_child",
+                                    "lo.thread#wait_rendezvous",
+                                    "lo.thread#in_exclusion",
+                                    "lo.thread#dead"};
 
 static void inheritProcess(classPo class, classPo request);
 static void initProcessClass(classPo class, classPo request);
