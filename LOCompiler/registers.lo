@@ -15,7 +15,7 @@ lo.comp.code.registers{
   public type varDesc ::= varDesc(string,initialized,defined,addr,option[(integer,integer)]).
 
   public isInitialized:(varDesc){}.
-  isInitialized(varDesc(_,initialized,_,_,_)).
+  isInitialized(varDesc(_,inited,_,_,_)).
 
   public varAddr:(varDesc)=>addr.
   varAddr(varDesc(_,_,_,A,_))=>A.

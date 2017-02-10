@@ -1,0 +1,10 @@
+test.r{
+  type foo ::= foo(integer).
+
+  moveR:(integer,integer,foo){}.
+  moveR(X,Y,Z) :- Z=foo(U),
+    moveRR(U,X,Y).
+
+  moveRR:(integer,integer,integer){}.
+  moveRR(_,_,_).
+}

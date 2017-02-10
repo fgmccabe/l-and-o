@@ -166,7 +166,7 @@ read_until_eof(Str,[Ch|M]) :- get_code(Str,Ch), read_until_eof(Str,M).
   string_codes(Text,Codes),
   open(Fl,write,Stream),
   writeCodes(Stream,Codes),
-  close(Stream).   
+  close(Stream).
 
 writeCodes(_,[]).
 writeCodes(Str,[Code|More]) :-
@@ -187,7 +187,7 @@ stringHash(H,Str,Hx) :-
 
 hashCodes([],H,H).
 hashCodes([C|More],H0,Hx) :-
-  H1 is 47*H0+C,
+  H1 is 37*H0+C,
   hashCodes(More,H1,Hx).
 
 '_flt_hash'(F,H) :- H is truncate(F).

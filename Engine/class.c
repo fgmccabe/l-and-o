@@ -20,6 +20,7 @@
 #include "lo.h"
 #include "manifestP.h"
 #include "thread.h"
+#include "code.h"
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048
@@ -194,7 +195,7 @@ ptrI newClassDef(const string name, long arity) {
     clssPo new = (clssPo) permAllocate(len);
 
     new->class = classClass;
-    new->hash = uniHash(name);
+    new->hash = uniHash(name)*37+arity;
     new->arity = arity;
 
     memcpy(new->name, name, (symlen + 1) * sizeof(byte));
@@ -331,55 +332,6 @@ void markStandardClasses(globalGcPo G) {
   falseClass = scanPtr(G, falseClass);
 
   ProcessTable(markSpecialClass, specialClasses, &help);
-}
-
-static string computeClassFileName(string path, long pathLen, string className, string version, string fn,
-                                   long fLen);
-
-retCode g__ensure_loaded(processPo P, ptrPo a) {
-  ptrI pname = deRefI(&a[1]);
-
-  if (isvar(pname))
-    return liberror(P, "__ensure_loaded", eINSUFARG);
-  else if (!IsSymb(pname))
-    return liberror(P, "__ensure_loaded", eINVAL);
-  else {
-    if (isLoaded(pname))
-      return Ok;
-    else {
-      heapPo H = &P->proc.heap;
-
-      switchProcessState(P, wait_io); /* Potentially nec. to wait */
-
-      retCode ret = loadPkg(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
-                            NumberOf(P->proc.errorMsg));
-      setProcessRunnable(P);
-
-      switch (ret) {
-        case Error: {
-          byte msg[MAX_MSG_LEN];
-
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
-          return raiseError(P, msg, eNOTFND);
-        }
-        case Eof: {
-          byte msg[MAX_MSG_LEN];
-
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
-          return raiseError(P, msg, eNOFILE);
-        }
-        case Ok:
-          return Ok;
-        case Fail:
-          return Fail;
-        case Space:
-          outMsg(logFile, "Out of heap space, increase and try again\n%_");
-          return liberror(P, "__ensure_loaded", eSPACE);
-        default:
-          return liberror(P, "__ensure_loaded", eINVAL);
-      }
-    }
-  }
 }
 
 

@@ -1262,11 +1262,15 @@ void runGo(register processPo P) {
 
         testA(op_h_val(PCX));
 
-        if (!isvar(vx)) {
-          assert(isObjct(vl));
+        if (!isvar(vx)) {integer ix;
+          if(isObjct(vl)) {
+            clssPo class = ((clssPo) objV(vl->class));
 
-          integer ix = ((clssPo) objV(vl->class))->hash % max;
-
+            ix = class->hash % max;
+          } else {
+            assert(isSymb(vl));
+            ix = SymHash((symbPo)vl) % max;
+          }
           PC += ix + 1;
         }
         continue;

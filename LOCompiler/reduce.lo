@@ -38,15 +38,10 @@ lo.comp.reduce{
   reduceTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
-  reduceTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
-  reduceTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
-  reduceTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
-  reduceTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(VV,cons(Op,NEls)),..Post],Psx,Qx) :-
     VV = genVr("$%"),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
-  reduceTerm(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
-  reduceTerm(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 
   reduceBody:(list[pred],list[term],list[pred],list[term]){}.
   reduceBody([],Q,[],Q).
@@ -81,14 +76,9 @@ lo.comp.reduce{
   reduceBildArg:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildArg(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceBildArg(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
-  reduceBildArg(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
-  reduceBildArg(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
-  reduceBildArg(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
-  reduceBildArg(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceBildArg(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceBildArg(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
     reduceBildTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
-  reduceBildArg(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
-  reduceBildArg(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 
   reduceBildTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -99,13 +89,8 @@ lo.comp.reduce{
   reduceBildTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceBildTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(intgr(Ix),Q,intgr(Ix),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(flot(Dx),Q,flot(Dx),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(enum(Id),Q,enum(Id),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(strng(Sx),Q,strng(Sx),Pre,Pre,Post,Post,Q).
+  reduceBildTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
     VV = genVr("$%"),
     reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
-  reduceBildTerm(prg(Nm,Ar),Q,prg(Nm,Ar),Pre,Pre,Post,Post,Q).
-  reduceBildTerm(strct(Nm,Ar),Q,strct(Nm,Ar),Pre,Pre,Post,Post,Q).
 }

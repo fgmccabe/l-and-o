@@ -132,6 +132,7 @@ ptrI permUniSymbol(const string txt)
   symbPo new = (symbPo)permAllocate(len);
 
   new->class = symbolClass;
+  new->hash = uniHash(txt);
   memcpy(new->data,txt,(symlen+1)*sizeof(byte)); /* copy symbol's text */
   return objP(new);
 }

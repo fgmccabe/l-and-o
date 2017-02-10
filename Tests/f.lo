@@ -7,12 +7,13 @@ test.f{
     (-): (t,t)=>t.
   }
 
-  fib:(integer)=>integer.
+  /*fib:(integer)=>integer.
   fib(0) => 0.
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
-  assert fib(3) = 2.
+  assert fib(2) = 1.
+  */
 
   public
   implementation additive[integer] <= {
@@ -23,9 +24,10 @@ test.f{
   plus:all t ~~ additive[t] |: (t,t)=>t.
   plus(X,Y) => X+Y.
 
+  /*
   double:all t ~~ additive[t] |: (t)=>t.
   double(X) => plus(X,X).
-
+*/
   -- assert double(fib(10)) = 110.
 
   public

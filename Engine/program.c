@@ -151,7 +151,7 @@ comparison compPrgLabel(PrgLabel *p1, PrgLabel *p2) {
 }
 
 uinteger hashPrgLabel(PrgLabel *p) {
-  return uniHash(p->name) * 17 + p->arity;
+  return uniHash(p->name) * 37 + p->arity;
 }
 
 ptrI programOfClass(objPo o) {

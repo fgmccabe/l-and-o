@@ -62,6 +62,7 @@ extern ptrI doResume[LO_REGS];          /* array of resume exit points */
 /* Symbol structure */
 typedef struct _symb_record_ {
   ptrI class;                            /* == symbolClass */
+  uinteger hash;
   byte data[ZEROARRAYSIZE];		           /* The symbol's print name */
 } symbolRec, *symbPo;
 
@@ -88,6 +89,12 @@ static inline string SymVal(symbPo p)
   assert(isSymb((objPo)p));
 
   return p->data;
+}
+
+static inline uinteger SymHash(symbPo p){
+  assert(isSymb((objPo)p));
+
+  return p->hash;
 }
 
 static inline logical isSymSym(symbPo p)

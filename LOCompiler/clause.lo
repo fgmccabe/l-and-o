@@ -15,7 +15,7 @@ lo.comp.code.clause{
 
   public compCl:(clse,list[litrl])=>assem.
   compCl(clse(Q,Nm,Args,Body),Lts) => assem(Nm,Code,Ltx):-
-    -- logMsg("compiling \(clse(Q,Nm,Args,Body))"),
+    logMsg("compiling \(clse(Q,Nm,Args,Body))"),
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
     unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),
@@ -101,7 +101,7 @@ lo.comp.code.clause{
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
         Code = aCode<>[iDlkawlO(3,2)] |
-        Code = aCode<>[iLkawlO(3,2)]) |
+        Code = aCode<>[iLkawlO(3,2),MapIns]) |
       Code = aCode<>Pre<>[iKawlO(3,2),MapIns]).
   compGoal(unfy(varbl(Nm),R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     present(D,Nm,V),

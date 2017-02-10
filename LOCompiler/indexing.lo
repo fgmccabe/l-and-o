@@ -100,6 +100,7 @@ lo.comp.code.indexing{
 
   checkEntries:(list[(ix,aoTr)],integer,integer,integer,integer){}.
   checkEntries([],C,V,C,V).
+  checkEntries([(ix(anon,_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C,V+1,Cx,Vx).
   checkEntries([(ix(varbl(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C,V+1,Cx,Vx).
   checkEntries([(ix(intgr(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
   checkEntries([(ix(flot(_),_),_),..L],C,V,Cx,Vx) :- checkEntries(L,C+1,V,Cx,Vx).
@@ -117,6 +118,8 @@ lo.comp.code.indexing{
     list[(integer,string)],list[ix],list[ix],list[ix],list[ix]){}.
   computeSubIxes([],VarList,IntList,FltList,StrList,ConsList,VarList,IntList,FltList,StrList,ConsList).
   computeSubIxes([(ix(varbl(_),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
+    computeSubIxes(L,cl<>VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx).
+  computeSubIxes([(ix(anon,cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
     computeSubIxes(L,cl<>VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx).
   computeSubIxes([(ix(intgr(Ix),cl),_),..L],VL,IL,FL,SL,CL,VLx,ILx,FLx,SLx,CLx) :-
     computeSubIxes(L,VL,[ix(intgr(Ix),cl),..IL],FL,SL,CL,VLx,ILx,FLx,SLx,CLx).
@@ -137,7 +140,7 @@ lo.comp.code.indexing{
   selectIndexStream(VL,IL,_,_,_,Col,Deflt) => genHashSequence(IL,Deflt,VL,((A,M)=>[iIndexi(A,M)]),Col) :- IL\=[].
   selectIndexStream(VL,_,FL,_,_,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexn(A,M)]),Col) :- FL\=[].
   selectIndexStream(VL,_,_,SL,_,Col,Deflt) => genHashSequence(SL,Deflt,VL,((A,M)=>[iIndexs(A,M)]),Col) :- SL\=[].
-  selectIndexStream(VL,_,_,_,CL,Col,Deflt) => genHashSequence(FL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- CL\=[].
+  selectIndexStream(VL,_,_,_,CL,Col,Deflt) => genHashSequence(CL,Deflt,VL,((A,M)=>[iIndexx(A,M)]),Col) :- CL\=[].
   selectIndexStream(_,_,_,_,_,_,_) => [].
 
   genHashSequence:(list[ix],string,list[(integer,string)],(integer,integer)=>list[instruction],integer) => list[instruction].
@@ -153,7 +156,9 @@ lo.comp.code.indexing{
   computeHashes([ix(flot(Dx),cl),..L],Max) => [(hash(Dx)%Max,cl),..computeHashes(L,Max)].
   computeHashes([ix(strng(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
   computeHashes([ix(enum(Sx),cl),..L],Max) => [(hash(Sx)%Max,cl),..computeHashes(L,Max)].
-  computeHashes([ix(cons(strct(Op,Ar),_),cl),..L],Max) => [(hash(Op)%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(cons(strct(Op,Ar),_),cl),..L],Max) => [(hash(strct(Op,Ar))%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(strct(Op,Ar),cl),..L],Max) => [(hash(strct(Op,Ar))%Max,cl),..computeHashes(L,Max)].
+  computeHashes([ix(prg(Op,Ar),cl),..L],Max) => [(hash(prg(Op,Ar))%Max,cl),..computeHashes(L,Max)].
 
   mkHashTable:(list[(integer,list[(integer,string)])],list[(integer,string)],integer,integer,list[instruction]) => list[instruction].
   mkHashTable(IxT,VL,Pt,Max,Aux) => Aux :- Pt>=Max.

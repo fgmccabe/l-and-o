@@ -17,6 +17,7 @@ catalog{
     test.o -> "o.lo".
     test.opts -> "opts.lo".
     test.parsetools -> "parsetools.lo".
+    test.r -> "r.lo".
     test.s -> "s.lo".
     test.st -> "st.lo".
   }
