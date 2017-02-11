@@ -158,7 +158,7 @@ retCode g_today(processPo P, ptrPo a) {
   if (!isvar(x))
     return liberror(P, "now", eVARNEEDD);
   else {
-    ptrI now = allocateInteger(&P->proc.heap, get_date());
+    ptrI now = allocateFloat(&P->proc.heap, get_date());
 
     return equal(P, &a[1], &now);
   }
@@ -192,7 +192,7 @@ double get_time(void) {
 /*
  *  returns the time at midnight this morning
  */
-integer get_date(void) {
+double get_date(void) {
   struct timeval t;
 
   gettimeofday(&t, NULL);

@@ -1,0 +1,10 @@
+test.p2{
+  import test.p1.
+  import test.p3.
+
+  assert p(_,"d"), gp("a","d").
+
+  assert gp(x,y) *> m(y).
+
+  assert \+ (gp(x,y) *> f(x)).
+}

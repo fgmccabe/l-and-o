@@ -21,34 +21,31 @@
 retCode g__call(processPo P, ptrPo a) {
   ptrI pkg = deRefI(&a[1]);
   ptrI entry = deRefI(&a[2]);
-  ptrI Arity = deRefI(&a[3]);
 
-  if (isvar(entry) || isvar(pkg) || isvar(Arity))
+  if (isvar(entry) || isvar(pkg) )
     return liberror(P, "__call", eINSUFARG);
-  else if (!IsSymb(entry) || !IsSymb(pkg) || !IsInt(Arity))
+  else if (!IsSymb(entry) || !IsSymb(pkg) )
     return liberror(P, "__call", eINVAL);
   else if (!isLoaded(pkg)) {
     byte errMsg[MAX_MSG_LEN];
 
-    strMsg(errMsg, NumberOf(errMsg), "%U not loaded", SymVal(symbV(pkg)));
+    strMsg(errMsg, NumberOf(errMsg), "%U not loaded", StringVal(stringV(pkg)));
     return raiseError(P, (string) errMsg, eCODE);
   }
   else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
-    integer arity = integerVal((integerPo) objV(Arity));
-
-    strMsg(resolved, NumberOf(resolved), "%U@%U", SymVal(symbV(pkg)), SymVal(symbV(entry)));
+    strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
 
     switchProcessState(P, in_exclusion);
-    ptrI prog = newProgramLbl(resolved, (short)arity);
+    ptrI prog = newProgramLbl(resolved, 0);
     setProcessRunnable(P);
 
     if (!IsProgram(prog)) {
-      strMsg(resolved, NumberOf(resolved), "%U@%U%%%d not defined", SymVal(symbV(pkg)), SymVal(symbV(entry)), arity);
+      strMsg(resolved, NumberOf(resolved), "%U@%U not defined", StringVal(stringV(pkg)), StringVal(stringV(entry)));
       return raiseError(P, resolved, eCODE);
     }
     else {
-      ptrI args = deRefI(&a[4]);
+      ptrI args = deRefI(&a[3]);
 
       P->proc.A[1] = args;               /* Pass in the argument list of strings */
 
@@ -102,21 +99,19 @@ retCode g__is(processPo P, ptrPo a) {
 retCode g__defined(processPo P, ptrPo a) {
   ptrI pkg = deRefI(&a[1]);
   ptrI entry = deRefI(&a[2]);
-  ptrI Ar = deRefI(&a[3]);
 
-  if (isvar(entry) || isvar(pkg) || isvar(Ar))
+  if (isvar(entry) || isvar(pkg))
     return liberror(P, "__defined", eINSUFARG);
-  else if (!IsString(entry) || !IsString(pkg) || !IsInt(Ar))
+  else if (!IsString(entry) || !IsString(pkg))
     return liberror(P, "__defined", eINVAL);
   else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
-    integer arity = IntVal(Ar);
 
     strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
 
     switchProcessState(P, in_exclusion);
 
-    ptrI sym = newProgramLbl(resolved, (short)arity);
+    ptrI sym = newProgramLbl(resolved, 0);
 
     setProcessRunnable(P);
 

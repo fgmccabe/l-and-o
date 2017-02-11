@@ -1,0 +1,6 @@
+test.p3{
+  import test.p1.
+
+  public gp:(string,string){}.
+  gp(x,y) :- p(x,z), p(z,y).
+}

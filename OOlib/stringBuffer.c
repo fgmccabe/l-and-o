@@ -232,9 +232,6 @@ static retCode bufferOutReady(ioPo io) {
 }
 
 static retCode bufferFlusher(ioPo io, long count) {
-  bufferPo s = O_BUFFER(io);
-  ensureSpace(s, 1);
-  s->buffer.buffer[s->buffer.pos] = '\0';
   return Ok;
 }
 

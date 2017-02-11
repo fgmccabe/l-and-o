@@ -9,6 +9,8 @@ escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("var",univType(kVar("t"),predType([kVar("t")]))).
 escapeType("ground",univType(kVar("t"),predType([kVar("t")]))).
+escapeType("_call",predType([type("lo.core*string"),type("lo.core*string"),typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])])).
+escapeType("_defined",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_int_plus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_minus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_times",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
@@ -96,13 +98,17 @@ escapeType("_fseek",predType([type("lo.io#file"),type("lo.core*integer")])).
 escapeType("_flush",predType([type("lo.io#file")])).
 escapeType("_flushall",predType([])).
 escapeType("_setfileencoding",predType([type("lo.io#file"),type("lo.core*integer")])).
-escapeType("_ensure_loaded",predType([type("lo.core*string"),type("lo.core*string")])).
+escapeType("_ensure_loaded",funType([type("lo.core*string"),type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
 escapeType("_logmsg",predType([type("lo.core*string")])).
 escapeType("delay",predType([type("lo.core*float")])).
 escapeType("sleep",predType([type("lo.core*float")])).
 escapeType("now",funType([],type("lo.core*float"))).
-escapeType("today",funType([],type("lo.core*integer"))).
+escapeType("today",funType([],type("lo.core*float"))).
 escapeType("ticks",funType([],type("lo.core*float"))).
+escapeType("_time2date",predType([type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer")])).
+escapeType("_time2utc",predType([type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer")])).
+escapeType("_date2time",funType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*float"),type("lo.core*integer")],type("lo.core*float"))).
+escapeType("_utc2time",funType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*float"),type("lo.core*integer")],type("lo.core*float"))).
 escapeType("_isCcChar",predType([type("lo.core*integer")])).
 escapeType("_isCfChar",predType([type("lo.core*integer")])).
 escapeType("_isCnChar",predType([type("lo.core*integer")])).
@@ -152,6 +158,10 @@ escapeType("_sub_str",funType([type("lo.core*string"),type("lo.core*integer"),ty
 escapeType("_str_split",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_concat",funType([type("lo.core*string"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("_str_start",predType([type("lo.core*string"),type("lo.core*string")])).
+escapeType("getenv",funType([type("lo.core*string"),type("lo.core*string")],type("lo.core*string"))).
+escapeType("setenv",predType([type("lo.core*string"),type("lo.core*string")])).
+escapeType("envir",funType([],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
+escapeType("getlogin",funType([],type("lo.core*string"))).
 isEscape("_exit").
 isEscape("_command_line").
 isEscape("_command_opts").
@@ -159,6 +169,8 @@ isEscape("_unify").
 isEscape("_identical").
 isEscape("var").
 isEscape("ground").
+isEscape("_call").
+isEscape("_defined").
 isEscape("_int_plus").
 isEscape("_int_minus").
 isEscape("_int_times").
@@ -253,6 +265,10 @@ isEscape("sleep").
 isEscape("now").
 isEscape("today").
 isEscape("ticks").
+isEscape("_time2date").
+isEscape("_time2utc").
+isEscape("_date2time").
+isEscape("_utc2time").
 isEscape("_isCcChar").
 isEscape("_isCfChar").
 isEscape("_isCnChar").
@@ -302,3 +318,7 @@ isEscape("_sub_str").
 isEscape("_str_split").
 isEscape("_str_concat").
 isEscape("_str_start").
+isEscape("getenv").
+isEscape("setenv").
+isEscape("envir").
+isEscape("getlogin").

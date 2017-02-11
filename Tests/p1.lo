@@ -1,0 +1,16 @@
+test.p1{
+  -- Test predicates, backtracking and *>
+
+  public p:(string,string){}.
+  p("a","b").
+  p("c","b").
+  p("b","d").
+  p("g","d").
+
+  public m:(string){}.
+  m("d").
+
+  public f:(string){}.
+  f("a").
+  f("g").
+}

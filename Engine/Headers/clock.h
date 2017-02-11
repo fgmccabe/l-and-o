@@ -12,7 +12,7 @@ long taxiFlag(void);
 
 double get_ticks(void);
 double get_time(void);
-integer get_date(void);
+double get_date(void);
 
 #define SCHEDULETICKS 150	/* We re-schedule every 150 milliseconds */
 

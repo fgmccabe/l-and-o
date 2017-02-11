@@ -34,10 +34,8 @@ escape(_identical,False,False,":k't'P2k't'k't'","test for identicality")
 escape(var,False,False,":k't'P1k't'","test for variable")
 escape(ground,False,False,":k't'P1k't'","test for grounded-ness")
 
-
-// escape(_call,True,False,"p4ssiLS","dynamic call")
-
-// escape(_defined,True,False,"P3ssi","test for defined name")
+escape(_call,True,False,"P3SSLS","dynamic call")
+escape(_defined,True,False,"P2SS","test for defined name")
 
 escape(_int_plus,False,False,"F2iii","add two integers")
 escape(_int_minus,False,False,"F2iii","subtract two integers")
@@ -195,12 +193,12 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(delay,False,False,"P1f","delay for period of time")
   escape(sleep,False,False,"P1f","sleep until a definite time")
   escape(now,False,False,"F0f","current time")
-  escape(today,False,False,"F0i","time at midnight")
+  escape(today,False,False,"F0f","time at midnight")
   escape(ticks,False,False,"F0f","used CPU time")
-  //escape(_time2date,False,False,"P10fiiiiiiffS", "convert a time to a date")
-  //escape(_time2utc,False,False,"P10fiiiiiiffS", "convert a time to UTC date")
-  //escape(_date2time,False,False,"F7iiiiifif", "convert a date to a time")
-  // escape(_utc2time,False,False,"F9iiiiiiff", "convert a UTC date to a time")
+  escape(_time2date,False,False,"P10fiiiiiifii", "convert a time to a date")
+  escape(_time2utc,False,False, "P10fiiiiiifii", "convert a time to UTC date")
+  escape(_date2time,False,False,"F7iiiiifif", "convert a date to a time")
+  escape(_utc2time,False,False,"F7iiiiifif", "convert a UTC date to a time")
 
  // Character class escapes
 
@@ -262,12 +260,12 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_str_split,False,False,"P4SiSS","split a string at a point")
   escape(_str_concat,False,False,"F2SSS","Concatenate two strings")
   escape(_str_start,False,False,"P2SS","True if second string starts with first")
-/*
+
   escape(getenv,False,False,"F2SSS","get an environment variable")
   escape(setenv,True,False,"P2SS","set an environment variable")
   escape(envir,False,False,"F0LT2SS","return entire environment")
   escape(getlogin,False,False,"F0S","return user's login")
-
+/*
 / Process manipulation
   escape(_fork,False,False,"p1"threadType,"fork new process")
   escape(_thread,False,False,"F0"threadType"","report thread of current process")

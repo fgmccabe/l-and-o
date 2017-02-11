@@ -64,7 +64,8 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
       byte vrNm[MAX_SYMB_LEN];
       bufferPo sigBuffer = newStringBuffer();
 
-      ret = decodeText(file, sigBuffer);
+      if ((ret = isLookingAt(file, "s")) == Ok)
+        ret = decodeText(file, sigBuffer);
 
       if (ret == Ok)
         ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
@@ -73,6 +74,8 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
         outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkg);
         return Error;
       }
+
+      packageIsLoaded(pkgNm, vrNm);
 
       ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
@@ -144,9 +147,16 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
       if (ret == Ok)
         ret = skipEncoded(in, errorMsg, msgLen); // Move over the tuple constructor
       for (integer ix = 0; ret == Ok && ix < len; ix++) {
+        ret = isLookingAt(in, "n2o2'import'");
+
+        if (ret == Ok)
+          ret = skipEncoded(in, errorMsg, msgLen);  // skip the private/public flag
+
         byte pkgNm[MAX_SYMB_LEN];
         byte vrNm[MAX_SYMB_LEN];
-        ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
+
+        if (ret == Ok)
+          ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
 
         if (ret == Ok)
           ret = pickup(pkgNm, vrNm, errorMsg, msgLen, cl);
@@ -409,10 +419,11 @@ static retCode buildImport(string pkg, string ver, string errorMsg, long msgLen,
 
 retCode g__ensure_loaded(processPo P, ptrPo a) {
   ptrI pname = deRefI(&a[1]);
+  ptrI vers = deRefI(&a[2]);
 
-  if (isvar(pname))
+  if (isvar(pname) || isvar(vers))
     return liberror(P, "__ensure_loaded", eINSUFARG);
-  else if (!IsSymb(pname))
+  else if (!IsString(pname) || !IsString(vers))
     return liberror(P, "__ensure_loaded", eINVAL);
   else {
     if (isLoaded(pname))
@@ -439,27 +450,27 @@ retCode g__ensure_loaded(processPo P, ptrPo a) {
         &vl
       };
 
-      retCode ret = ldPackage(stringVal(stringV(pname)), stringVal(stringV(deRefI(&a[2]))), P->proc.errorMsg,
+      retCode ret = ldPackage(stringVal(stringV(pname)), stringVal(stringV(vers)), P->proc.errorMsg,
                               NumberOf(P->proc.errorMsg), buildImport, &x);
       setProcessRunnable(P);
 
       gcRemoveRoot(H, root);
 
       switch (ret) {
+        case Ok:
+          return equal(P, &lst, &a[3]);
         case Error: {
           byte msg[MAX_MSG_LEN];
 
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w:%#w", &a[1], &a[2]);
           return raiseError(P, msg, eNOTFND);
         }
         case Eof: {
           byte msg[MAX_MSG_LEN];
 
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w in %#w", &a[2], &a[1]);
+          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w:%#w", &a[1], &a[2]);
           return raiseError(P, msg, eNOFILE);
         }
-        case Ok:
-          return equal(P, &lst, &a[3]);
         case Fail:
           return Fail;
         case Space:
