@@ -203,8 +203,6 @@ static inline ptrI ProgramOf(ptrI x) {
     return ((programPo) p)->code;
   else if (isGoObject(p))
     return objectCode((dynPo) p);
-  else if (isSymb(p))
-    return programOfSymbol(p);
   else {
     assert(isSpecialObject(p));
     p = objV(((specialClassPo) objV(p->class))->program);

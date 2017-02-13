@@ -269,7 +269,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmSym: {
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        *tgt = newUniSymbol(getTextFromBuffer(&len, tmpBuffer));
+        *tgt = newEnumSymbol(getTextFromBuffer(&len, tmpBuffer));
       }
       return res;
     }
@@ -429,7 +429,7 @@ static retCode estimateName(string nm, void *cl) {
 
   long length = uniStrLen(nm);
 
-  info->perm += CellCount(sizeof(symbolRec) + (length + 1) * sizeof(byte));
+  info->perm += CellCount(sizeof(clssRec) + (length + 1) * sizeof(byte));
   return Ok;
 }
 

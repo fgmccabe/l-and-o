@@ -12,30 +12,31 @@ lo.topsort{
 
   analyseDefs:all e,t ~~ depends[t->>e] |: (list[t],list[list[t]]) => list[list[t]].
   analyseDefs([],Groups) => Groups.
-  analyseDefs([Def,..Defs],Grps) => analyseDefs(IDefs,G0) :- 
+  analyseDefs([Def,..Defs],Grps) => analyseDefs(IDefs,G0) :-
     analyseDef(Def,Defs,IDefs,[],_,Grps,G0,_).
 
-  analyseDef:all e,t ~~ depends[t->>e] |: 
+  analyseDef:all e,t ~~ depends[t->>e] |:
       (t,list[t],list[t],list[(t,integer)],list[(t,integer)],list[list[t]],list[list[t]],integer){}.
   analyseDef(Df,Defs,ODefs,Stack,OStack,G,OG,Pt) :-
     pushDef(Df,Stack,S0,SPt),
     analyseRefs(references(Df),Defs,ODefs,S0,S1,G,G1,SPt,Pt),
     popGroups(S1,OStack,G1,OG,SPt,Pt).
 
-  analyseRefs:all e,t ~~ depends[t->>e] |: 
+  analyseRefs:all e,t ~~ depends[t->>e] |:
       (list[e],list[t],list[t],list[(t,integer)],list[(t,integer)],list[list[t]],list[list[t]],integer,integer){}.
   analyseRefs([],Defs,Defs,Stk,Stk,Grp,Grp,Pt,Pt).
   analyseRefs([R,..Refs],Defs,ODefs,Stk,OStk,G,G1,Low,Pt) :-
     analyse(R,Defs,IDefs,Stk,S1,G,G0,Low,Low1),
     analyseRefs(Refs,IDefs,ODefs,S1,OStk,G0,G1,Low1,Pt).
 
-  analyse:all e,t ~~ depends[t->>e] |: 
+  analyse:all e,t ~~ depends[t->>e] |:
       (e,list[t],list[t],list[(t,integer)],list[(t,integer)],list[list[t]],list[list[t]],integer,integer){}.
   analyse(Rf,Defs,Defs,Stk,Stk,G,G,Low,Pt) :-
     inStack(Rf,Stk,X),
     minPoint(X,Low,Pt).
-  analyse(Rf,Defs,ODefs,Stack,OStack,G,OG,Low,Pt) :-  
-    analyseDef(pickDef(Rf,Defs,RDefs),RDefs,ODefs,Stack,OStack,G,OG,DfPt),
+  analyse(Rf,Defs,ODefs,Stack,OStack,G,OG,Low,Pt) :-
+    pickDef(Rf,Defs,RDefs,Def), 
+    analyseDef(Def,RDefs,ODefs,Stack,OStack,G,OG,DfPt),
     minPoint(Low,DfPt,Pt).
   analyse(_,Defs,Defs,Stack,Stack,Groups,Groups,Low,Low).
 
@@ -49,11 +50,11 @@ lo.topsort{
   inStack(Rf,[_,..Stk],Pt) :-
     inStack(Rf,Stk,Pt).
 
-  pickDef:all e,t ~~ depends[t->>e] |: (e,list[t],list[t])=>t.
-  pickDef(R,[D,..Dfs],Dfs)=> D :- defines(D,R).
-  pickDef(R,[D,..Dfs],[D,..ODfs]) => pickDef(R,Dfs,ODfs).
+  pickDef:all e,t ~~ depends[t->>e] |: (e,list[t],list[t],t){}.
+  pickDef(R,[D,..Dfs],Dfs,D) :- defines(D,R).
+  pickDef(R,[D,..Dfs],[D,..ODfs],Df) :- pickDef(R,Dfs,ODfs,Df).
 
-  popGroups:all e,t ~~ depends[t->>e] |: 
+  popGroups:all e,t ~~ depends[t->>e] |:
       (list[(t,integer)],list[(t,integer)],list[list[t]],list[list[t]],integer,integer){}.
   popGroups(Stk,Stk,Grps,Grps,Low,Pt) :- Pt<Low.
   popGroups(Stk,OStk,Grps,mkGroup(Group,Grps),Low,Pt) :-

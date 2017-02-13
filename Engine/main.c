@@ -440,7 +440,7 @@ ptrI cmdLineOptions(heapPo H) {
 
   for (i = 0; i < optCount; i++) {
     key = allocateInteger(H, Options[i].option);
-    val = newSymbol(Options[i].value);
+    val = newEnumSym(Options[i].value);
 
     pair = tuplePair(H,key,val);
 

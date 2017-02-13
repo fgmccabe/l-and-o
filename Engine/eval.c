@@ -496,10 +496,7 @@ void runGo(register processPo P) {
                 prog = objectCode(loObjV(prog));
               else if (isObjct(p))
                 prog = ProgramOf(programOfClass(objV(p->class)));
-              else {
-                assert(isSymb(p));
-                prog = ProgramOf(programOfSymbol(p));
-              }
+
               break;
             }
           }
@@ -551,10 +548,7 @@ void runGo(register processPo P) {
               prog = objectCode(loObjV(prog));
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
-            else {
-              assert(isSymb(p));
-              prog = ProgramOf(programOfSymbol(p));
-            }
+
             break;
           }
         }
@@ -602,10 +596,7 @@ void runGo(register processPo P) {
               prog = objectCode(loObjV(prog));
             else if (isObjct(p))
               prog = ProgramOf(programOfClass(objV(p->class)));
-            else {
-              assert(isSymb(p));
-              prog = ProgramOf(programOfSymbol(p));
-            }
+
             break;
           }
         }
@@ -1258,9 +1249,6 @@ void runGo(register processPo P) {
             clssPo class = ((clssPo) objV(vl->class));
 
             ix = class->hash % max;
-          } else {
-            assert(isSymb(vl));
-            ix = SymHash((symbPo) vl) % max;
           }
           PC += ix + 1;
         }

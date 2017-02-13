@@ -165,8 +165,8 @@ void standardClasses(void) {
   thingClass = newClassDf("lo.core#thing", 0);
   thingProg = newProgLbl("lo.core#thing", 3);
 
-  emptyList = newEnumSym("lo.core#[]");
   nilClass = newClassDf("lo.core#[]", 0);
+  emptyList = newEnumSym("lo.core#[]");
   listClass = newClassDf("lo.core#,..", 2);
 
   suspClass = newClassDf("#suspension", 3);
@@ -176,7 +176,6 @@ void standardClasses(void) {
   falseClass = newEnumSym("lo.core#false");
 
   initCodeClass();
-  initSymbolClass();
   initStringClass();
   initDynamicClass();
   initIntegerClass();

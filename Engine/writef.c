@@ -89,17 +89,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
         r = outInteger(f, integerVal((integerPo) p), 10, 0, prec, ' ', False, (string) "", False);
       else if (class == floatClass)
         r = outFloat(f, floatVal((floatPo) p));
-      else if (class == symbolClass) {
-        symbPo s = (symbPo) p;
-        string sym = SymVal(s);
-
-        r = outChar(f, '\'');
-
-        while (r == Ok && *sym != 0)
-          r = wStringChr(f, *sym++);
-        if (r == Ok)
-          r = outChar(f, '\'');
-      } else if (class == stringClass) {
+      else if (class == stringClass) {
         stringPo str = (stringPo)p;
         long pos = 0;
         long end = StringLen(str);
@@ -147,7 +137,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
                 r = outChar(f, ',');
             }
           }
-          if (r == Ok && !identical(vx, emptyList)) {
+          if (r == Ok && !IsNil(vx)) {
             r = outStr(f, ",..");
 
             if (r == Ok)

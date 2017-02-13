@@ -12,7 +12,7 @@
 #include "hashTable.h"
 
 logical isLoaded(ptrI pkg) {
-  return (logical) (loadedVersion(SymVal(symbV(pkg))) != NULL);
+  return (logical) (loadedVersion(StringVal(stringV(pkg))) != NULL);
 }
 
 static logical compatiblVersion(string rqVer, string ver) {

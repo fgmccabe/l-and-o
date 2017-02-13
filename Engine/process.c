@@ -762,9 +762,9 @@ retCode g_thread_state(processPo P, ptrPo a) {
     switchProcessState(P, in_exclusion);
 
     if (tgt == NULL)
-      st = newSymbol(state_names[dead]);
+      st = newEnumSym(state_names[dead]);
     else
-      st = newSymbol(state_names[tgt->proc.state]);
+      st = newEnumSym(state_names[tgt->proc.state]);
     setProcessRunnable(P);
 
     return equal(P, &a[2], &st);

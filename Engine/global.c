@@ -336,9 +336,7 @@ ptrI scanPtr(globalGcPo G, ptrI orig) {
             o->class = fwdP(new);
             tH->create += size;
 
-            if (gHasClass(new, symbolClass))
-              installSymbol((symbPo) new);
-            else if (gHasClass(new, classClass))
+            if (gHasClass(new, classClass))
               installClass((clssPo) new);
             else if (gHasClass(new, programClass))
               installProgram(new);

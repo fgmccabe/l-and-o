@@ -1058,7 +1058,7 @@ retCode g__assert(processPo P, ptrPo a) {
 
   if (isvar(pr))
     return liberror(P, "__assert", eINSUFARG);
-  else if (!IsSymb(pr))
+  else if (!IsString(pr))
     return liberror(P, "__assert", eINVAL);
 
   gcAddRoot(H, &pr);
@@ -1067,7 +1067,7 @@ retCode g__assert(processPo P, ptrPo a) {
 
   pthread_once(&once, initCodeGen);
 
-  tn = newProgramLbl(SymVal(symbV(pr)), 1);
+  tn = newProgramLbl(StringVal(stringV(pr)), 1);
 
   long hsize = estimateHeap(t1, True);
   map regs = iniMap(1, 1);

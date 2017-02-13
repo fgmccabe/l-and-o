@@ -165,19 +165,6 @@ ptrI programOfClass(objPo o) {
     return pr;
 }
 
-ptrI programOfSymbol(objPo o) {
-  assert(isSymb(o));
-
-  return programLbl(SymVal((symbPo) o), OBJECT_ARITY);
-}
-
-ptrI programOfTerm(ptrI x) {
-  if (isvar(x))
-    return ProgramOf(thingProg);
-  else
-    return programOfClass(objV(objV(x)->class));
-}
-
 void defineProg(ptrI defn, ptrI code) {
   assert(IsProgLbl(defn));
   assert(identical(code, kvoid) || IsCode(code));

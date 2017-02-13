@@ -22,17 +22,16 @@ retCode g__call(processPo P, ptrPo a) {
   ptrI pkg = deRefI(&a[1]);
   ptrI entry = deRefI(&a[2]);
 
-  if (isvar(entry) || isvar(pkg) )
+  if (isvar(entry) || isvar(pkg))
     return liberror(P, "__call", eINSUFARG);
-  else if (!IsSymb(entry) || !IsSymb(pkg) )
+  else if (!IsString(entry) || !IsString(pkg))
     return liberror(P, "__call", eINVAL);
   else if (!isLoaded(pkg)) {
     byte errMsg[MAX_MSG_LEN];
 
     strMsg(errMsg, NumberOf(errMsg), "%U not loaded", StringVal(stringV(pkg)));
     return raiseError(P, (string) errMsg, eCODE);
-  }
-  else {
+  } else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
     strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
 
@@ -43,8 +42,7 @@ retCode g__call(processPo P, ptrPo a) {
     if (!IsProgram(prog)) {
       strMsg(resolved, NumberOf(resolved), "%U@%U not defined", StringVal(stringV(pkg)), StringVal(stringV(entry)));
       return raiseError(P, resolved, eCODE);
-    }
-    else {
+    } else {
       ptrI args = deRefI(&a[3]);
 
       P->proc.A[1] = args;               /* Pass in the argument list of strings */
@@ -75,8 +73,7 @@ retCode g__is(processPo P, ptrPo a) {
     byte msg[MAX_SYMB_LEN];
     strMsg(msg, NumberOf(msg), "%w not defined", &prog);
     return raiseError(P, msg, eCODE);
-  }
-  else {
+  } else {
     ptrI arg = deRefI(&a[2]);
 
     P->proc.A[1] = arg;               /* Pass in the argument */
@@ -92,7 +89,6 @@ retCode g__is(processPo P, ptrPo a) {
     return Error;       /* We cant use OK, because that checks for GCmap */
   }
 }
-
 
 // __defined(package,entry) -- look for a defined symbol in package
 //
@@ -138,7 +134,7 @@ void showCall(processPo P, ptrI prog, ptrPo args, long arity) {
   outMsg(out, ")\n%_");
 
   long len;
-  string text = getTextFromBuffer(&len,O_BUFFER(out));
+  string text = getTextFromBuffer(&len, O_BUFFER(out));
 
   outText(logFile, text, len);
   closeFile(out);
@@ -149,5 +145,5 @@ void showOCall(processPo P, ptrPo obj, ptrPo call, ptrPo this) {
   if (deRefI(obj) == deRefI(this))
     outMsg(logFile, "%w: %w.%w\n%_", &P->proc.thread, obj, call);
   else
-    outMsg(logFile, "%w: %w.%w/%w\n%_",&P->proc.thread, obj, call, this);
+    outMsg(logFile, "%w: %w.%w/%w\n%_", &P->proc.thread, obj, call, this);
 }

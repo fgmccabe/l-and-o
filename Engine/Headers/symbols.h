@@ -26,10 +26,7 @@ extern ptrI thingProg;
 extern ptrI classClass;
 
 extern ptrI errorClass;
-extern ptrI procClass;
 extern ptrI filePtrClass;
-
-extern ptrI commaClass;
 
 /* Standard symbols */
 
@@ -58,56 +55,6 @@ extern ptrI kstart;                     /* entry point for new threads */
 extern ptrI kdelay;                     /* delay response handler */
 
 extern ptrI doResume[LO_REGS];          /* array of resume exit points */
-
-/* Symbol structure */
-typedef struct _symb_record_ {
-  ptrI class;                            /* == symbolClass */
-  uinteger hash;
-  byte data[ZEROARRAYSIZE];		           /* The symbol's print name */
-} symbolRec, *symbPo;
-
-extern ptrI symbolClass;
-
-static inline logical IsSymb(ptrI o)
-{
-  return HasClass(o,symbolClass);
-}
-
-static inline logical isSymb(objPo p)
-{
-  return hasClass(p,symbolClass);
-}
-
-static inline symbPo symbV(ptrI x)
-{
-  assert(IsSymb(x));
-  return (symbPo)objV(x);
-}
-
-static inline string SymVal(symbPo p)
-{
-  assert(isSymb((objPo)p));
-
-  return p->data;
-}
-
-static inline uinteger SymHash(symbPo p){
-  assert(isSymb((objPo)p));
-
-  return p->hash;
-}
-
-static inline logical isSymSym(symbPo p)
-{
-  return (logical)(p->data[0]=='\'');
-}
-
-static inline long SymLen(symbPo p)
-{
-  assert(isSymb((objPo)p));
-
-  return strlen((char *)(p->data));
-}
 
 #endif
 

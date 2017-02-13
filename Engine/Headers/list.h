@@ -25,8 +25,7 @@
 
 #include "word.h"
 
-extern ptrI emptyList;			/* The class constructor "lo.core#[]" */
-extern ptrI listClass,nilClass;
+extern ptrI listClass,nilClass,emptyList;
 
 static inline logical isList(objPo p)
 {
@@ -35,7 +34,12 @@ static inline logical isList(objPo p)
 
 static inline logical IsList(ptrI x)
 {
-  return isobj(x) && isList(objV(x));
+  return (logical)(isobj(x) && isList(objV(x)));
+}
+
+static inline logical IsNil(ptrI x)
+{
+  return (logical)(isobj(x) && hasClass(objV(x),nilClass));
 }
 
 static inline ptrPo listHead(objPo l)

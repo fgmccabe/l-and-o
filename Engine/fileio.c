@@ -454,7 +454,7 @@ retCode g__popen(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "__popen", eINVAL);
         } else {
-          string key = SymVal(symbV(envKey));
+          string key = StringVal(stringV(envKey));
           long al = (long) StringLen(stringV(envVal)) + uniStrLen(key) + 4;
           byte buffer[al];
 
@@ -513,7 +513,7 @@ retCode g__setfileencoding(processPo P, ptrPo a) {
 
   if (!hasClass(o1, filePtrClass))
     return liberror(P, "__setfileencoding", eINVAL);
-  else if (!IsSymb(e))
+  else if (!IsInt(e))
     return liberror(P, "__setfileencoding", eINVAL);
   else {
     ioPo file = filePtr(t1);

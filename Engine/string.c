@@ -305,7 +305,6 @@ retCode g__flt2str(processPo P, ptrPo a) {
 
     if (res == Ok) {
       long len;
-      outByte(out, 0);
       string text = getTextFromBuffer(&len, O_BUFFER(out));
       ptrI rslt = allocateString(&P->proc.heap, text, (long) len);
       closeFile(out);
