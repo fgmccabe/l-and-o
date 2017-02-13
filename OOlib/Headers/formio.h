@@ -18,7 +18,7 @@
 
 #include "io.h"
 
-retCode outInteger(ioPo f, integer i, unsigned int base, int width, int precision,
+retCode outInteger(ioPo f, integer i, unsigned short base, int width, int precision,
                    codePoint pad, logical left, string prefix, logical sign);
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
                   codePoint pad, logical left, string prefix, logical sign);
@@ -31,12 +31,12 @@ retCode outInt(ioPo f, integer i);
 retCode outFloat(ioPo out, double x);
 retCode outUStr(ioPo f, string str);
 
-retCode int2Str(integer i, unsigned short base, byte *buff, long len);
+long int2StrByBase(byte *str, integer i, long pos, unsigned short base);
 
 integer parseInteger(string s, long len);
 double parseNumber(string s, long len);
 
-string strMsg(byte *buffer,long len,char *fmt,...);
-string strAppend(byte *buffer,long len,char *fmt,...);
+string strMsg(byte *buffer, long len, char *fmt, ...);
+string strAppend(byte *buffer, long len, char *fmt, ...);
 
 #endif
