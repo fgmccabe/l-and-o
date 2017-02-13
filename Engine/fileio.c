@@ -32,6 +32,8 @@
 ptrI filePtrClass;              // The file class structure
 
 static retCode cellMsg(ioPo f, void *data, long depth, long precision, logical alt);
+static retCode stringMsg(ioPo f, void *data, long depth, long precision, logical alt);
+
 static void clearFilePointer(ptrI p);
 
 static long flSizeFun(specialClassPo class, objPo o);
@@ -48,6 +50,7 @@ typedef struct {
 
 void initFileIo(void) {
   installMsgProc('w', cellMsg);  /* extend outMsg to cope with cell structures */
+  installMsgProc('S',stringMsg); // Special function for writing string values
 }
 
 void initFiles(void) {
@@ -1374,7 +1377,7 @@ retCode g__logmsg(processPo P, ptrPo a) {
   if (!IsString(t1))
     return liberror(P, "__logmsg", eSTRNEEDD);
   else {
-    retCode ret = logMsg(logFile, "%U\n%_", stringVal(stringV(t1)));
+    retCode ret = logMsg(logFile, "%S\n%_", &t1);
     setProcessRunnable(P);
 
     switch (ret) {
@@ -1436,7 +1439,23 @@ static retCode cellMsg(ioPo f, void *data, long depth, long precision, logical a
   if (ptr != NULL) {
     if (precision <= 0)
       precision = 32767;
-    outCell(f, ptr, depth, precision, alt);
+    outCell(f, ptr, depth, (int)precision, alt);
+  } else
+    outStr(f, "(NULL)");
+  return Ok;
+}
+
+static retCode stringMsg(ioPo f, void *data, long depth, long precision, logical alt) {
+  ptrPo ptr = (ptrPo) data;
+
+  if (ptr != NULL && IsString(*ptr)) {
+    if (precision <= 0)
+      precision = 32767;
+    stringPo s = stringV(*ptr);
+    string str = stringVal(s);
+    long len = StringLen(s);
+
+    return outText(f,str,len);
   } else
     outStr(f, "(NULL)");
   return Ok;
