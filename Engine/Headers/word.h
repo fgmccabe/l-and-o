@@ -125,7 +125,7 @@ typedef enum {
 typedef struct _general_record_ {
   ptrI class;        // basic object has a class
   ptrI args[ZEROARRAYSIZE];
-} generalRec;
+} GeneralRec;
 
 // Some typedefs to help with working with classes
 
@@ -143,17 +143,26 @@ typedef retCode (*classScanFun)(specialClassPo class, specialHelperFun helper, v
 
 typedef objPo (*classCpyFun)(specialClassPo class, objPo dst, objPo src);
 
+
+/*
+ * A program label structure
+ */
+
+typedef struct _program_label_ {
+  long arity;                   // Arity of program
+  byte name[ZEROARRAYSIZE];     // Program's print name
+} PrgLabel, *prgLabelPo;
+
+
+comparison compPrgLabel(prgLabelPo p1, prgLabelPo p2);
+uinteger hashPrgLabel(prgLabelPo p);
+
 // The sign of a general_record points to a class object ...
 typedef struct _class_record_ {
-  ptrI class;
-  /* == classClass */
-  uinteger hash;
-  /* the hash code for this class */
-  integer arity;
-  /* how many term args */
-  byte name[ZEROARRAYSIZE];    /* the class's print name */
+  ptrI class;               /* == classClass */
+  uinteger hash;            /* the hash code for this class */
+  PrgLabel lbl;             // The class label
 } clssRec;
-
 
 // Special classes mostly refer to special system objects
 typedef struct _special_class_ {
@@ -259,7 +268,7 @@ static inline long objectSize(objPo p) {
 
   assert(class->class == classClass);
 
-  return class->arity + 1;
+  return class->lbl.arity + 1;
 }
 
 static inline long specialSize(objPo p) {
@@ -281,12 +290,12 @@ static inline ptrI specialProgram(objPo p) {
 static inline long objectArity(objPo o) {
   clssPo class = classOf(o);
 
-  return class->arity;
+  return class->lbl.arity;
 }
 
 static inline long classArity(clssPo class)
 {
-  return class->arity;
+  return class->lbl.arity;
 }
 
 static inline ptrPo objectArgs(objPo o)
@@ -312,16 +321,24 @@ static inline void updateArg(objPo o, long ix, ptrI val) {
 
 static inline string objectClassName(objPo p) {
   clssPo class = classOf(p);
-  return class->name;
+  return class->lbl.name;
 }
 
 static inline string className(clssPo class) {
-  return class->name;
+  return class->lbl.name;
+}
+
+static inline prgLabelPo classLabel(clssPo clss){
+  return &clss->lbl;
 }
 
 static inline uinteger objectHash(objPo p) {
   clssPo class = classOf(p);
   return class->hash;
+}
+
+static inline integer classSize(clssPo clss){
+  return clss->lbl.arity + 1;
 }
 
 extern logical IsBinOp(ptrPo p, ptrI key, ptrPo a1, ptrPo a2);

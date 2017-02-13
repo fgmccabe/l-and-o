@@ -15,7 +15,7 @@ lo.comp.code.clause{
 
   public compCl:(clse,list[litrl])=>assem.
   compCl(clse(Q,Nm,Args,Body),Lts) => assem(Nm,Code,Ltx):-
-    logMsg("compiling \(clse(Q,Nm,Args,Body))"),
+    -- logMsg("compiling \(clse(Q,Nm,Args,Body))"),
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
     unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),
@@ -105,9 +105,11 @@ lo.comp.code.clause{
       Code = aCode<>Pre<>[iKawlO(3,2),MapIns]).
   compGoal(unfy(varbl(Nm),R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     present(D,Nm,V),
+    Addr = varAddr(V),
     (isInitialized(V) ?
-      aCode = unifyTerm(R,true,varAddr(V),D,Dx,Vs,Vsx,Lt,Ltx,Last) |
-      aCode = buildTerm(R,true,varAddr(V),D,Dx,Vs,Vsx,Lt,Ltx,Last)),
+      aCode = unifyTerm(R,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
+      aCode = buildTerm(R,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
+      Dx = D[Nm->markInited(V,Addr)]),
       (Last ?
         ((Alloc|maxLocals(Vs)>0) ?
           Code = aCode<>[iDealloc,iGcmap(0,0)] |
@@ -115,9 +117,11 @@ lo.comp.code.clause{
         Code = aCode<>bCode).
   compGoal(unfy(L,varbl(Nm)),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
     present(D,Nm,V),
+    Addr = varAddr(V),
     (isInitialized(V) ?
-      aCode = unifyTerm(L,true,varAddr(V),D,Dx,Vs,Vsx,Lt,Ltx,Last) |
-      aCode = buildTerm(L,true,varAddr(V),D,Dx,Vs,Vsx,Lt,Ltx,Last)),
+      aCode = unifyTerm(L,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
+      aCode = buildTerm(L,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
+      Dx = D[Nm->markInited(V,Addr)]),
       (Last ?
         ((Alloc|maxLocals(Vs)>0) ?
           Code = aCode<>[iDealloc,iGcmap(0,0)] |

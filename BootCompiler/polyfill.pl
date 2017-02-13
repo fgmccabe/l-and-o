@@ -28,7 +28,8 @@
                     '_band'/3,'_bor'/3,'_bxor'/3,
                     '_blsr'/3,'_basr'/3,'_blsl'/3,
                     '_nthb'/2,
-                    '_file_present'/1,'_file_size'/2,'_file_modified'/2,'_ls'/2
+                    '_file_present'/1,'_file_size'/2,'_file_modified'/2,'_ls'/2,
+                    ticks/1
                     ]).
 
 exit(X) :- halt(X).
@@ -212,3 +213,5 @@ hashCodes([C|More],H0,Hx) :-
 
 stringify([],'lo.core#[]').
 stringify([E|L],'lo.core#,..'(S,LL)) :- atom_string(E,S), stringify(L,LL).
+
+ticks(X) :- get_time(X).

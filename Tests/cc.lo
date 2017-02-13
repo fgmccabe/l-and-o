@@ -1,0 +1,15 @@
+test.cc{
+  public
+  contract all x ~~ additive[x] <~ {
+    (+): (x,x)=>x.
+    (-): (x,x)=>x.
+    zero: x.
+  }
+  
+  public implementation additive[float] <= {
+    X+Y => _flt_plus(X,Y).
+    X-Y => _flt_minus(X,Y).
+
+    zero = 0.0.
+  }
+}

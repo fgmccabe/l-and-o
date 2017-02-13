@@ -184,16 +184,11 @@ lo.comp.code.analyse{
 
   collectVarUsage:(map[string,occMap],map[string,(set[integer],set[integer],set[integer])]) =>
       map[string,(occMap,addr,set[integer],set[integer],set[integer])].
-  collectVarUsage(M,Usage) => foldMap(M,collEntry(Usage),[]).
+  collectVarUsage(M,Usage) => foldMap((Nm,Occs,Tb) => collEntry(Nm,Occs,Usage,Tb),[],M).
 
-  collEntry:(map[string,(set[integer],set[integer],set[integer])]) <=> {
-    apply:(string,occMap,map[string,(occMap,addr,set[integer],set[integer],set[integer])]) =>
-        map[string,(occMap,addr,set[integer],set[integer],set[integer])].
-  }
-  collEntry(Usage) <= {
-    apply(Nm,Occs,Tb) => Tb[Nm->(Occs,aReg(-1),Use,Avoid,Conflict)] :- present(Usage,Nm,(Use,Avoid,Conflict)).
-    apply(Nm,Occs,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
-  }
+  collEntry:(string,occMap,map[string,(set[integer],set[integer],set[integer])],map[string,(occMap,addr,set[integer],set[integer],set[integer])])=>map[string,(occMap,addr,set[integer],set[integer],set[integer])].
+  collEntry(Nm,Occs,Usage,Tb) => Tb[Nm->(Occs,aReg(-1),Use,Avoid,Conflict)] :- present(Usage,Nm,(Use,Avoid,Conflict)).
+  collEntry(Nm,Occs,_,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
 
   allocateVars:(list[usageMap],integer) => (map[string,varDesc],integer,varSet).
   allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,varSet(Us2::set[integer],Lcls,0)) :-

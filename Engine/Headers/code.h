@@ -22,14 +22,6 @@
 #include "lock.h"
 #include "lo.h"
 
-/*
- * A program label structure
- */
-
-typedef struct _program_label_ {
-  long arity;                   // Arity of program
-  byte name[ZEROARRAYSIZE];     // Program's print name
-} PrgLabel;
 
 typedef struct _program_record_ {
   ptrI class;                   // == programClass
@@ -173,7 +165,7 @@ static inline long programArity(objPo p) {
   return ((programPo) p)->lbl.arity;
 }
 
-static inline PrgLabel *programName(objPo p) {
+static inline prgLabelPo programName(objPo p) {
   assert(isProgLbl(p));
 
   return &((programPo) p)->lbl;

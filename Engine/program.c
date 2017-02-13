@@ -28,9 +28,6 @@ static retCode pScanFun(specialClassPo class, specialHelperFun helper, void *c, 
 static objPo pCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger pHashFun(specialClassPo class, objPo o);
 
-static comparison compPrgLabel(PrgLabel *p1, PrgLabel *p2);
-static uinteger hashPrgLabel(PrgLabel *p);
-
 void initPrograms(void) {
   programs = NewHash(256, (hashFun) hashPrgLabel, (compFun) compPrgLabel, NULL);
 

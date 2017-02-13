@@ -31,7 +31,7 @@ retCode outInt(ioPo f, integer i);
 retCode outFloat(ioPo out, double x);
 retCode outUStr(ioPo f, string str);
 
-retCode int2Str(integer i, int base, byte *buff, long len);
+retCode int2Str(integer i, unsigned short base, byte *buff, long len);
 
 integer parseInteger(string s, long len);
 double parseNumber(string s, long len);

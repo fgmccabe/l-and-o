@@ -17,6 +17,9 @@ lo.comp.code.registers{
   public isInitialized:(varDesc){}.
   isInitialized(varDesc(_,inited,_,_,_)).
 
+  public markInited:(varDesc,addr) => varDesc.
+  markInited(varDesc(Nm,_,_,_,U),Addr) => varDesc(Nm,inited,isDefined,Addr,U).
+
   public varAddr:(varDesc)=>addr.
   varAddr(varDesc(_,_,_,A,_))=>A.
 

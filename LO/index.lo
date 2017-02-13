@@ -57,14 +57,14 @@ lo.index{
   public find:all m,k,v ~~ equality[k] |: (map[k,v],k) => v.
   find(M,K) => V :- present(M,K,V).
 
-  public foldMap:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (map[k,v],f,u) => u.
-  foldMap(trEmpty,_,u) => u.
-  foldMap(trLeaf(_,Els),f,u) => foldLeafs(Els,f,u).
-  foldMap(trNode(_,_,Left,Right),f,u) => foldMap(Right,f,foldMap(Left,f,u)).
+  public foldMap:all k,v,u ~~ ((k,v,u)=>u,u,map[k,v]) => u.
+  foldMap(_,u,trEmpty) => u.
+  foldMap(f,u,trLeaf(_,Els)) => foldLeafs(Els,f,u).
+  foldMap(f,u,trNode(_,_,Left,Right)) => foldMap(f,foldMap(f,u,Left),Right).
 
-  foldLeafs:all m,k,v,f,u ~~ f <~ { apply:(k,v,u)=>u} |: (list[(k,v)],f,u) => u.
+  foldLeafs:all m,k,v,f,u ~~ (list[(k,v)],(k,v,u)=>u,u) => u.
   foldLeafs([],_,u)=>u.
-  foldLeafs([(k,v),..l],f,u) => foldLeafs(l,f,f.apply(k,v,u)).
+  foldLeafs([(k,v),..l],f,u) => foldLeafs(l,f,f(k,v,u)).
 
   public implementation all k,v ~~ folding[map[k,v]->>v] <= {
     foldRight(F,U,M) => fldRight(M,F,U).

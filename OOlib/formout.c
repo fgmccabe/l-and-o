@@ -23,7 +23,7 @@
 #include <string.h>
 #include <file.h>
 
-static byte *Int2StrByBase(byte *str, integer i, unsigned int base);
+static byte *Int2StrByBase(byte *str, integer i, unsigned short base);
 static retCode outString(ioPo f, byte *str, int len, int width, int precision,
                          codePoint pad, logical leftPad);
 
@@ -48,7 +48,7 @@ static inline byte hxDgit(integer h) {
     return (byte) (h + 'a' - 10);
 }
 
-static byte *Int2StrByBase(byte *str, integer i, unsigned int base) {
+static byte *Int2StrByBase(byte *str, integer i, unsigned short base) {
   if (i < base)
     *str++ = hxDgit(i);
   else {
@@ -59,7 +59,7 @@ static byte *Int2StrByBase(byte *str, integer i, unsigned int base) {
   return str;
 }
 
-retCode int2Str(integer i, int base, byte *buff, long len) {
+retCode int2Str(integer i, unsigned short base, byte *buff, long len) {
   if (i < 0) {
     *buff = '-';
     if (Int2StrByBase(buff + 1, -i, base) - buff >= 0)

@@ -20,7 +20,6 @@
 #include "lo.h"
 #include "manifestP.h"
 #include "thread.h"
-#include "code.h"
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048
@@ -68,7 +67,7 @@ static objPo spCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger spHashFun(specialClassPo class, objPo o);
 
 void initClass() {
-  classes = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
+  classes = NewHash(256, (hashFun) hashPrgLabel, (compFun) compPrgLabel, NULL);
   specialClasses = NewHash(256, (hashFun) uniHash, (compFun) uniCmp, NULL);
 
   // The first class record has to be created carefully
@@ -88,7 +87,7 @@ static long clSizeFun(specialClassPo class, objPo o) {
   assert(o->class == classClass);
 
   clssPo cl = (clssPo) o;
-  return CellCount(sizeof(clssRec) + sizeof(byte) * (uniStrLen(cl->name) + 1));
+  return CellCount(sizeof(clssRec) + sizeof(byte) * (uniStrLen(cl->lbl.name) + 1));
 }
 
 static comparison clCompFun(specialClassPo class, objPo o1, objPo o2) {
@@ -101,7 +100,7 @@ static comparison clCompFun(specialClassPo class, objPo o1, objPo o2) {
 static retCode clOutFun(specialClassPo class, ioPo out, objPo o) {
   clssPo cl = (clssPo) o;
 
-  return outMsg(out, "%U/%d", cl->name, cl->arity);
+  return outMsg(out, "%U/%d", cl->lbl.name, cl->lbl.arity);
 }
 
 static retCode clScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o) {
@@ -187,7 +186,15 @@ void standardClasses(void) {
 }
 
 ptrI newClassDef(const string name, long arity) {
-  ptrI def = (ptrI) hashGet(classes, (void *) name);
+  struct {  // This needs to have the same memory layout as a PrgLabel
+    long arity;
+    byte nm[MAX_SYMB_LEN];
+  } lbl;
+
+  lbl.arity = arity;
+  uniCpy((string) &lbl.nm, NumberOf(lbl.nm), name);
+
+  ptrI def = (ptrI) hashGet(classes, (void *) &lbl);
 
   if (objV(def) == NULL) {
     long symlen = uniStrLen(name);
@@ -196,13 +203,13 @@ ptrI newClassDef(const string name, long arity) {
 
     new->class = classClass;
     new->hash = uniHash(name)*37+arity;
-    new->arity = arity;
+    new->lbl.arity = arity;
 
-    memcpy(new->name, name, (symlen + 1) * sizeof(byte));
+    memcpy(new->lbl.name, name, (symlen + 1) * sizeof(byte));
 
     def = objP(new);
 
-    hashPut(classes, className(new), (void *) def);
+    hashPut(classes, classLabel(new), (void *) def);
     return def;
   } else {
     assert(classArity((clssPo) objV(def)) == arity);
@@ -211,15 +218,11 @@ ptrI newClassDef(const string name, long arity) {
 }
 
 void installClass(clssPo class) {
-  string name = className(class);
+  prgLabelPo name = classLabel(class);
   ptrI cl = (ptrI) hashGet(classes, name);
 
   if (objV(cl) == NULL)
     hashPut(classes, name, (void *) objP(class));
-}
-
-ptrI classPresent(string name) {
-  return (ptrI) hashGet(classes, name);
 }
 
 ptrI newClassDf(const char *name, long arity) {

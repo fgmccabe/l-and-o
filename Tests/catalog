@@ -1,7 +1,9 @@
 catalog{
   content{
     test.a -> "a.lo".
+    test.bench -> "bench.lo".
     test.c -> "c.lo".
+    test.cc -> "cc.lo".
     test.f -> "f.lo".
     test.eq -> "eq.lo".
     test.gp -> "gp.lo".

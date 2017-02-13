@@ -5,20 +5,31 @@ lo.comp.inline{
 
   -- resolve the head of C1 with the Ixth goal in C2, resulting in the new clause C3.
   resolve:(clse,integer,clse,clse){}.
-  resolve(C1,clse(Q1,Nm,Args1,Body1),Ix,) :-
-    splitOverNeck(Body1,Q1,Q1a,Body2),
-    nthEl(Body2,Ix,call(N0,Ac)),
-    renameVars(C1,clse(Q0,N0,A0,B0),QM)
-    unify(A0,Args2,),
-    rebuildCl(Q1a,Nm,)
+  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>B2<>renamePreds(Rhs,Mx))) :-
+    renameClse(C2,clse(_,P2,E2,B2)),
+    split(Body,Ix,Lhs,Call,Rhs),
+    checkCall(Call,P2,A2),
+    unifyEls(A2,E2,[],Mx),
+    NQ = foldLeft(collectVar,[],pairs(Mx)).
 
+  checkCall:(pred,term,list[term]){}.
+  checkCall(call(Prd,Els),Prd,Els).
+  checkCall(ocall(C,Lb,Th),Prd,[C,Lb,Th]) :-
+    consistentLbl(Prd,Lb).
 
-  mkVars:(list[term]) => list[(term,term)].
-  mkVars([]) => [].
-  mkVars([V,..L]) => [(V,_),..mkVars(L)].
+  consistentLbl:(term,term){}.
+  consistentLbl(prg(Nm,_),enum(Nm)).
+  consistentLbl(prg(Nm,_),cons(strct(Nm,_),_)).
 
-  renameTerm:(term,list[(term,term)]) => term.
-  renameTerm(varbl(Nm),V) => VV :- (varbl(Nm),VV) in V.
+  collectVar:(list[term],(string,term)) => list[term].
+  collectVar(Q,(Nm,varbl(XX))) => [varbl(XX),..Q].
+  collectVar(Q,_) => Q.
+
+  mkVars:(list[term]) => map[string,term].
+  mkVars(Els) => foldLeft((M,varbl(Nm))=>M[Nm->varbl(_str_gen(Nm))],[],Els).
+
+  renameTerm:(term,map[string,term]) => term.
+  renameTerm(varbl(Nm),V) => VV :- present(V,Nm,VV).
   renameTerm(anon,_) => anon.
   renameTerm(intgr(Ix),_) => intgr(Ix).
   renameTerm(flot(Ix),_) => flot(Ix).
@@ -28,11 +39,11 @@ lo.comp.inline{
   renameTerm(prg(Nm,Ar),_) => prg(Nm,Ar).
   renameTerm(cons(Op,Els),V) => cons(renameTerm(Op,V),renameEls(Els,V)).
 
-  renameEls:(list[term],list[(term,term)])=> list[term].
+  renameEls:(list[term],map[string,term])=> list[term].
   renameEls([],_) => [].
   renameEls([T,..L],V) => [renameTerm(T,V),..renameEls(L,V)].
 
-  renamePred:(pred,list[(term,term)]) => pred.
+  renamePred:(pred,map[string,term]) => pred.
   renamePred(call(O,A),V) => call(renameTerm(O,V),renameEls(A,V)).
   renamePred(ecall(O,A),V) => ecall(O,renameEls(A,V)).
   renamePred(ocall(O,A,T),V) => ocall(renameTerm(O,V),renameTerm(A,V),renameTerm(T,V)).
@@ -41,13 +52,41 @@ lo.comp.inline{
   renamePred(neck,_) => neck.
   renamePred(fail,_) => fail.
 
-  renamePreds:(list[pred],list[(term,term)])=> list[pred].
+  renamePreds:(list[pred],map[string,term])=> list[pred].
   renamePreds([],_) => [].
   renamePreds([T,..L],V) => [renamePred(T,V),..renamePreds(L,V)].
 
-  renameClse:(clse,list[(term,term)]) => clse.
-  renameClse(clse(Q,Nm,A,B),V) => clse([],Nm,renameEls(A,V),renamePreds(B,V)).
+  renameClse:(clse,clse){}.
+  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V))) :-
+    V = mkVars(Q).
 
+  unifyTerm:(term,term,map[string,term],map[string,term]){}.
+  unifyTerm(T1,T2,M,Mx) :-
+    unifyT(deRef(T1,M),deRef(T2,M),M,Mx).
 
+  unifyT:(term,term,map[string,term],map[string,term]){}.
+  unifyT(varbl(N1),T2,M,Mx) :- bind(N1,T2,M,Mx).
+  unifyT(T1,varbl(N2),M,Mx) :- bind(N2,T1,M,Mx).
+  unifyT(T,T,M,M) :- isGroundTerm(T).
+  unifyT(cons(O1,E1),cons(O2,E2),M,Mx) :-
+    unifyTerm(O1,O2,M,M1),
+    unifyEls(E1,E2,M1,Mx).
 
+  -- We write this recursion by hand to facilitate debugging
+  unifyEls:(list[term],list[term],map[string,term],map[string,term]){}.
+  unifyEls([],[],M,M).
+  unifyEls([E1,..L1],[E2,..L2],M,Mx) :-
+    unifyTerm(E1,E2,M,M1),
+    unifyEls(L1,L2,M1,Mx).
+
+  bind:(string,term,map[string,term],map[string,term]){}.
+  bind(Nm,T,M,M[Nm->T]).
+
+  deRef:(term,map[string,term]) => term.
+  deRef(varbl(Nm),M) => deRef(V,M) :- present(M,Nm,V).
+  deRef(T,_) => T.
+
+  split:all e ~~ (list[e],integer,list[e],e,list[e]){}.
+  split([R,..l],0,[],R,l).
+  split([e,..l],ix,[e,..f],x,r) :- ix>0, split(l,ix-1,f,x,r).
 }

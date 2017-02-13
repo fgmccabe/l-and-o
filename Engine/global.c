@@ -158,7 +158,7 @@ objPo permObject(heapPo H, ptrI cls) {
   clssPo class = (clssPo) objV(cls);
   long arity = classArity(class);
 
-  objPo o = permAllocate(class->arity + 1);
+  objPo o = permAllocate(class->lbl.arity + 1);
   o->class = cls;
 
   ptrPo p = objectArgs(o);
@@ -225,7 +225,7 @@ static long gTermArity(objPo o) {
   if (isfwd(oCl))
     oCl = *((ptrPo) objV(oCl));
 
-  return ((clssPo) objV(oCl))->arity;
+  return classArity((clssPo) objV(oCl));
 }
 
 static clssPo gClassOf(objPo p) {
@@ -369,7 +369,7 @@ static objPo scanObj(globalGcPo G, objPo scan) {
 
   if (gIsTerm(scan)) {
     clssPo class = gClassOf(scan);
-    long arity = class->arity;
+    long arity = classArity(class);
     ptrPo args = objectArgs(scan);
     long ix;
 
@@ -718,7 +718,7 @@ static void verifyGlobalHeap(void) {
     clssPo class = gClassOf(ob);
 
     if (gFwdCmp(class->class, classClass)) {
-      long arity = class->arity;
+      long arity = classArity(class);
       ptrPo args = objectArgs(ob);
       long ix;
 
@@ -774,7 +774,7 @@ static void verifyOldGeneration(void) {
     clssPo class = gClassOf(ob);
 
     if (gFwdCmp(class->class, classClass)) {
-      long arity = class->arity;
+      long arity = classArity(class);
       ptrPo args = objectArgs(ob);
       long ix;
 

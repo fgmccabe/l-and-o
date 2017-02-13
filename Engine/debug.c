@@ -59,7 +59,7 @@ long cmdCounter = 0;
 #ifdef EXECTRACE
 
 static long cmdCount(string cmdLine) {
-  long count = (long) parseInteger(cmdLine, strlen((char*) cmdLine));
+  long count = (long) parseInteger(cmdLine, strlen((char *) cmdLine));
   if (count == 0)
     return 1; /* never return 0 */
   else
@@ -70,9 +70,13 @@ static processPo focus = NULL;
 
 static pthread_mutex_t debugMutex = PTHREAD_MUTEX_INITIALIZER;
 
+static void clrCmdLine(byte *cmdLine, long len) {
+  strMsg(cmdLine, len, "n\n"); /* default to next instruction */
+}
+
 retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S,
-    long Svalid, rwmode mode, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail,
-    ptrI prefix) {
+                   long Svalid, rwmode mode, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail,
+                   ptrI prefix) {
   byte ch;
   static byte cmdLine[256] = "n";
   codePo code = codeV(prog);
@@ -83,25 +87,25 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
 
   if (focus == NULL || focus == p) {
     switch (waitingFor) {
-    case nextIns:
-      cmdCounter--;
-      break;
-    case nextSucc:
-      switch (op_code(*pc)) {
-      case succ:
+      case nextIns:
         cmdCounter--;
         break;
-      case kawlO:
-      case kawl:
-        cmdCounter++;
+      case nextSucc:
+        switch (op_code(*pc)) {
+          case succ:
+          case dealloc:
+            cmdCounter--;
+            break;
+          case kawlO:
+          case kawl:
+            cmdCounter++;
+            break;
+          default:;
+        }
         break;
-      default:
-        ;
-      }
-      break;
-    case nextBreak: /* nothing to do here */
-    case nextFail:
-      break;
+      case nextBreak: /* nothing to do here */
+      case nextFail:
+        break;
     }
 
     if (tracing || cmdCounter <= 0) {
@@ -112,7 +116,7 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
       dissass(pref, code, pc, a, y, S, mode, B, hBase, H);
 
       outMsg(logFile, "\ncPC=%w[%d],B=%x,SB=%x,T=%x,Y=%x[%d],", &codeLits(ccode)[0], cpc - codeIns(ccode), B,
-          SB, T, y, envSize(cpc));
+             SB, T, y, envSize(cpc));
       if (Svalid > 0)
         outMsg(logFile, "S=%x(%d),", S, Svalid);
       else if (mode == writeMode)
@@ -142,164 +146,176 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
         }
 
         switch (cmdLine[0]) {
-        case ' ':
-          cmdCounter = cmdCount(cmdLine + 1);
-          waitingFor = nextIns;
-          tracing = True;
-          break;
-        case 'n':
-          cmdCounter = cmdCount(cmdLine + 1);
-          waitingFor = nextIns;
-          tracing = False;
-          break;
-        case 'N':
-          cmdCounter = cmdCount(cmdLine + 1);
-          switch (op_code(*pc)) {
-          case kawlO:
-          case kawl:
-          case lkawlO:
-          case lkawl:
-          case dlkawlO:
-          case dlkawl:
-            waitingFor = nextSucc;
-            break;
-          default:
+          case ' ':
+            cmdCounter = cmdCount(cmdLine + 1);
             waitingFor = nextIns;
+            tracing = True;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+          case 'n':
+            cmdCounter = cmdCount(cmdLine + 1);
+            waitingFor = nextIns;
+            tracing = False;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+          case 'N':
+            cmdCounter = cmdCount(cmdLine + 1);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+
+            switch (op_code(*pc)) {
+              case kawlO:
+              case kawl:
+              case lkawlO:
+              case lkawl:
+              case dlkawlO:
+              case dlkawl:
+                waitingFor = nextSucc;
+                break;
+              default:
+                waitingFor = nextIns;
+            }
+            tracing = False;
+            break;
+
+          case '\n':
+            cmdCounter = 1;
+            waitingFor = nextIns;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'x': /* wait for a success */
+            cmdCounter = cmdCount(cmdLine + 1);
+            waitingFor = nextSucc;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'f':
+            focus = p;
+            outMsg(logFile, "Focussing on program %w\n", &p->proc.thread);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'F':
+            pthread_mutex_unlock(&debugMutex);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            return Fail;
+
+          case 'u':
+            focus = NULL;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'q':
+            outMsg(logFile, "terminating lo session");
+            lo_exit(0);
+            break;
+
+          case 'c':
+            cmdCounter = cmdCount(cmdLine + 1);
+            waitingFor = nextBreak;
+            tracing = False;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 't':
+            waitingFor = nextBreak;
+            tracing = True;
+            cmdCounter = 1;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'S':
+            SymbolDebug = True;
+            debugging = False;
+            interactive = True;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+
+          case 'a': { /* dump an argument register */
+            showReg(a, "A", parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1])));
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
           }
-          tracing = False;
-          break;
 
-        case '\n':
-          cmdCounter = 1;
-          waitingFor = nextIns;
-          break;
+          case 'y': { /* dump a local variable */
+            integer off = parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1]));
 
-        case 'x': /* wait for a success */
-          cmdCounter = cmdCount(cmdLine + 1);
-          waitingFor = nextSucc;
-          break;
+            outMsg(logFile, "Y[%ld] = %w\n", off, &y[-off]);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
+          }
 
-        case 'f':
-          focus = p;
-          outMsg(logFile, "Focussing on program %w\n", &p->proc.thread);
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          break;
+          case 'r': { /* show all registers */
+            unsigned int i;
+            int Ylen = envSize(cpc);
 
-        case 'F':
-          pthread_mutex_unlock(&debugMutex);
-          return Fail;
-
-        case 'u':
-          focus = NULL;
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          break;
-
-        case 'q':
-          outMsg(logFile, "terminating lo session");
-          lo_exit(0);
-          break;
-
-        case 'c':
-          cmdCounter = cmdCount(cmdLine + 1);
-          waitingFor = nextBreak;
-          tracing = False;
-          break;
-
-        case 't':
-          waitingFor = nextBreak;
-          tracing = True;
-          cmdCounter = 1;
-          break;
-
-        case 'S':
-          SymbolDebug = True;
-          debugging = False;
-          interactive = True;
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          break;
-
-        case 'a': { /* dump an argument register */
-          showReg(a, "A", parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1])));
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-        }
-
-        case 'y': { /* dump a local variable */
-          integer off = parseInteger(&cmdLine[1], uniStrLen(&cmdLine[1]));
-
-          outMsg(logFile, "Y[%ld] = %w\n", off, &y[-off]);
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-        }
-
-        case 'r': { /* show all registers */
-          unsigned int i;
-          int Ylen = envSize(cpc);
-
-          for (i = 1; i <= B->AX; i++)
-            outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
+            for (i = 1; i <= B->AX; i++)
+              outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
 
 //          for (i = 1; i <= Ylen; i++)
 //            outMsg(logFile, "%Y[%d]=%w\n", i, &y[-i]);
 
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-        }
 
-        case 'P': { /* Display all processes */
-          displayProcesses();
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-        }
-        case 's': /* Show a stack trace of this process */
-          p->proc.B = B;
-          p->proc.C = (callPo) y;
-          p->proc.cPC = cpc;
-          stackTrace(p);
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9': {
-          cmdCounter = cmdCount(cmdLine);
-          waitingFor = nextIns;
-          continue;
-        }
-
-        case 'i': { /* Show the following instructions */
-          long count = cmdCount(cmdLine + 1);
-          insPo tmpPc = pc;
-          insPo limit = &code->data[code->size];
-
-          while (count-- > 0 && tmpPc < limit) {
-            tmpPc = dissass(NULL, codeV(prog), tmpPc, a, y, S, dummyMode, B, NULL, NULL);
-            outMsg(logFile, "\n");
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
           }
-          strMsg(cmdLine, NumberOf(cmdLine), "n\n"); /* default to next instruction */
-          continue;
-        }
 
-        default:
-          outMsg(logFile, "'n' = step, 'N' = step over, 'c' = continue, 't' = trace mode, 'q' = stop\n");
-          outMsg(logFile, "'x' = step until success, 'F' = force backtrack\n");
-          outMsg(logFile, "'<n>' = step <n>\n");
-          outMsg(logFile, "'i <count> = list <count> instructions\n");
-          outMsg(logFile, "'S' = symbolic mode\n");
-          outMsg(logFile, "'r' = show registers, 'a <n>' = show A[n], 'y <n>' = show Y[n]\n");
-          outMsg(logFile, "'s' = show stack trace\n");
-          outMsg(logFile, "'P' = show all processes\n");
-          outMsg(logFile, "'f' = focus on this process\n");
-          outMsg(logFile, "'u' = unfocus \n");
+          case 'P': { /* Display all processes */
+            displayProcesses();
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
+          }
+          case 's': /* Show a stack trace of this process */
+            p->proc.B = B;
+            p->proc.C = (callPo) y;
+            p->proc.cPC = cpc;
+            stackTrace(p);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
 
-          continue;
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9': {
+            cmdCounter = cmdCount(cmdLine);
+            waitingFor = nextIns;
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
+          }
+
+          case 'i': { /* Show the following instructions */
+            long count = cmdCount(cmdLine + 1);
+            insPo tmpPc = pc;
+            insPo limit = &code->data[code->size];
+
+            while (count-- > 0 && tmpPc < limit) {
+              tmpPc = dissass(NULL, codeV(prog), tmpPc, a, y, S, dummyMode, B, NULL, NULL);
+              outMsg(logFile, "\n");
+            }
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
+          }
+
+          default:
+            outMsg(logFile, "'n' = step, 'N' = step over, 'c' = continue, 't' = trace mode, 'q' = stop\n");
+            outMsg(logFile, "'x' = step until success, 'F' = force backtrack\n");
+            outMsg(logFile, "'<n>' = step <n>\n");
+            outMsg(logFile, "'i <count> = list <count> instructions\n");
+            outMsg(logFile, "'S' = symbolic mode\n");
+            outMsg(logFile, "'r' = show registers, 'a <n>' = show A[n], 'y <n>' = show Y[n]\n");
+            outMsg(logFile, "'s' = show stack trace\n");
+            outMsg(logFile, "'P' = show all processes\n");
+            outMsg(logFile, "'f' = focus on this process\n");
+            outMsg(logFile, "'u' = unfocus \n");
+
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
         }
       }
       pthread_mutex_unlock(&debugMutex);
@@ -310,8 +326,8 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
   return Ok;
 }
 
-void dC(ptrI w){
-  outMsg(logFile,"%w\n",&w);
+void dC(ptrI w) {
+  outMsg(logFile, "%w\n", &w);
   flushOut();
 }
 

@@ -80,12 +80,11 @@ lo.comp.compiler{
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rp2),
           (errorFree(Rp2)?
-            (Opts.prologOnly ?
-              Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
+            Repo1 = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]),
+            (Opts.prologOnly |
               Code = compileMdl(TrPrg),
-              Repox = addPackage(Repo,U,pkg(P,V),encMdl(Code))) |
+              Repox = addPackage(Repo1,U,pkg(P,V),encMdl(Code))) |
             Rpx = populateContext(Rp2,getUriPath(U),collectSrc(Src,1,emptyArray))) |
-          Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),

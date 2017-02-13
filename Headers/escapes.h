@@ -279,10 +279,10 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_acquireLock,False,False,":k't'AP2k't'N","acquire lock")
   escape(_waitLock,False,False,":k't'AP2k't'N","release and wait on a lock")
   escape(_releaseLock,False,False,":k't'AP1k't'","release a lock")
-
-  escape(_ins_debug,False,False,"p0","set instruction-level")
-  escape(_stackTrace,False,False,"p0","Print a stack trace")
 */
+  escape(_ins_debug,False,False,"P0","set instruction-level")
+  escape(_stackTrace,False,False,"P0","Print a stack trace")
+
 
 #undef processState
 #undef threadType

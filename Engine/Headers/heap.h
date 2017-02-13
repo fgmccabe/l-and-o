@@ -123,7 +123,7 @@ static inline objPo allocate(heapPo H, size_t size) {
 static inline objPo allocateObject(heapPo H, ptrI class) {
   assert(isClass(class));
 
-  objPo o = allocate(H, (size_t)(((clssPo) objV(class))->arity + 1));
+  objPo o = allocate(H, (size_t)(((clssPo) objV(class))->lbl.arity + 1));
   o->class = class;
   return o;
 }

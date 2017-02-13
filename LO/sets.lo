@@ -23,13 +23,6 @@ lo.sets {
     difference(S1,S2) => setDifference(S1,S2).
   }
 
-  private type all k ~~ equality[k] |: binApp[k] <~ { apply:(k,(),map[k,()])=>map[k,()] }.
-  private binApp:all k ~~ equality[k] |: (map[k,()]) <=> binApp[k].
-  binApp(O) <= {
-    apply(k,_,S) => S[k->()] :- present(O,k,_).
-    apply(_,_,S) => S.
-  }
-
   public implementation all e ~~ equality[e] |: coercion[set[e],list[e]] <= {
     _coerce(set(Els)) => keys(Els).
   }
@@ -50,18 +43,18 @@ lo.sets {
   setDifference(set(M1),set(M2)) => set(M1-M2).
 
   private setIntersection:all e ~~ equality[e] |: (set[e],set[e]) => set[e].
-  setIntersection(set(M1),set(M2)) =>  set(foldMap(M1,binApp(M2),[])).
+  setIntersection(set(M1),set(M2)) =>  set(foldMap(binApp,M2,M1)).
+
+  binApp:all e ~~ equality[e] |: (e,(),map[e,()])=>map[e,()].
+  binApp(k,_,M) => M :- present(M,k,_).
+  binApp(k,_,M) => M[k->()].
 
   public implementation all e,f ~~ equality[e], equality[f] |: mapping[set->>e,f] <= {
     S//F => setMap(S,F).
   }
 
   public setMap:all e,f ~~ equality[e],equality[f] |: (set[e],(e)=>f)=>set[f].
-  setMap(set(Els),F) => foldF(F,nullSet,keys(Els)). -- not elegant without lambdas
-
-  private foldF:all e,f ~~ equality[e], equality[f] |: ((e)=>f,set[f],list[e]) => set[f].
-  foldF(_,S,[]) => S.
-  foldF(F,S,[e,..l]) => foldF(F,addMem(S,F(e)),l).
+  setMap(set(Els),F) => set(foldLeft((M,k)=>M[F(k)->()],[],keys(Els))).
 
   public implementation all e ~~ equality[e] |: folding[set[e]->>e] <= {
     foldRight(F,X,S) => foldRightEls(F,X,S::list[e]).

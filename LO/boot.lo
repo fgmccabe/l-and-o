@@ -16,6 +16,44 @@
   permissions and limitations under the License.
 */
 lo.boot{
+  import lo.
+  import lo.options.
+
+  type bootOptions <~ { repo:string. }
+  bootOptions : (string) <=> bootOptions.
+  bootOptions(R) <= {
+    repo = R.
+  }
+
+  public type all o ~~ optionsProcessor[] <~ {
+    shortForm : string.
+    alternatives : list[string].
+    usage : string.
+    validator : option[(string){}].
+    setOption: (string,o) => o.
+  }
+
+  repoOption:optionsProcessor[bootOptions].
+  repoOption <= {
+    shortForm = "-r".
+    alternatives = [].
+    usage = "-r dir -- directory of code repository".
+    validator = none.
+    setOption(R,bootOptions(_)) => bootOptions(R).
+  }
+
+
+
+
+  public __boot:(){}.
+  __boot() :-
+    handleCmdLineOpts(processOptions(_command_line(),[repoOption],bootOptions(""))).
+
+  handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
+  handleCmdLineOpts(either((Opts,Args))) :-
+    openRepo(Opts.repo,Repo),
+    
+
   __main:(string,list[(char,symbol)],list[string]){}.
   __main(Path,Options,Cmd) ->
       ([Prog,..Args] = Cmd ?
@@ -35,18 +73,76 @@ lo.boot{
      | {__logmsg("Entry: "<>explode(entry)<>" not defined in "<>Prog)};exit(1)
       ).
 
-  private execInits:[list[symbol]]*.
-  execInits([]) -> {}.
-  execInits([P,..L]) ->
-      __call(P,'$init',0,[]);
-      execInits(L).
 
-  private __default:[char,list[(char,symbol)],symbol]=>symbol.
-  __default(C,Opts,_)::(C,Val) in Opts => Val.
-  __default(_,_,Def) => Def.
 
-  private chopGoc:[string]=>string.
-  chopGoc([])=>[].
-  chopGoc(".goc")=>[].
-  chopGoc([C,..L])=>[C,..chopGoc(L)].
+
+
+
+
+openRepo(Opts,Repo),
+parsePkgName(Entry,Pkg),
+processPackage(Pkg,Repo,[],_Loaded,[],All),
+compile_predicates(All),
+lookForMain(Pkg,LOArgs),!.
+
+processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
+loadPrologPkg(Pkg,Repo,Code,Imports),
+assertAll(Code,PrIn,Pr0),
+processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),!,
+initPkg(Pkg).
+
+initPkg(pkg(Pkg,_)) :-
+localName(Pkg,"@","init",Init),
+atom_string(ICall,Init),
+current_predicate(ICall/0),!,
+call(ICall).
+initPkg(_).
+
+lookForMain(pkg(Top,_),Args) :-
+localName(Top,"@","main",M),
+atom_string(Main,M),
+current_predicate(Main/1),!,
+listify(Args,LArgs),
+writef("starting...\n",[]),
+call(Main,LArgs).
+lookForMain(_,_).
+
+assertAll([],Pr0,Pr0).
+assertAll([T|M],Pr0,Prx) :-
+checkPred(T,Pr0,Pr1),
+assert(T),
+assertAll(M,Pr1,Prx).
+
+checkPred(T,Pr,Px) :-
+predOf(T,P),!,
+(is_member(P,Pr),!,Px=Pr ; abolish(P),Px=[P|Pr]).
+
+predOf((H :- _),P) :- !,
+predOf(H,P).
+predOf(T,T/0) :- atom(T),!.
+predOf(T,P/A) :-
+compound_name_arity(T,P,A).
+
+processImports([],Ld,Ld,_,Pr,Pr).
+processImports([import(_,pkg(Pkg,Vers))|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
+is_member(pkg(Pkg,LdVers),Loaded),
+(LdVers \= Vers ->
+    runTimeMsg("not permitted to load multiple versions of same package: %s@%s, %s already loaded",[Pkg,Vers,LdVers]);true),
+processImports(Imports,Loaded,Ldx,Repo,Pr,Prx).
+processImports([import(_,Pkg)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
+processPackage(Pkg,Repo,Loaded,LdI,Pr,Pr0),
+processImports(Imports,LdI,Ldx,Repo,Pr0,Prx).
+
+parsePkgName(P,pkg(Pkg,v(Version))) :-
+sub_string(P,Before,_,After,"#"),!,
+sub_string(P,0,Before,_,Pkg),
+sub_string(P,_,After,0,Version).
+parsePkgName(P,pkg(P,defltVersion)).
+
+getCWDUri(WD) :-
+working_directory(C,C),
+atom_string(C,D),
+string_concat("file:",D,DT),
+parseURI(DT,WD).
+
 }

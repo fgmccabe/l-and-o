@@ -256,10 +256,8 @@ void runGo(register processPo P) {
       switch (debug_stop(P, PROG, PC, cPROG, cPC, A, (ptrPo) C, S, Svalid, mode, B, SB, T,
                          (ptrPo) P->proc.heap.base, H,
                          P->proc.trail, P->proc.thread)) {
-        case Ok:
-          break;
-        case Fail:
-          backTrack();
+        case Ok:break;
+        case Fail:backTrack();
           break;
         default:;
       }
@@ -298,10 +296,9 @@ void runGo(register processPo P) {
           }
         } else {
           SB = cSB;      /* copy back the cut point */
-          PC = cPC;      /* continue from parent call */
+          PC = cPC + 1;      /* continue from parent call, and skip over the gcmap instruction */
           PROG = cPROG;      /* and the environment itself */
           Lits = CodeLits(PROG);
-          PC++;        /* skip over the gcmap instruction */
           continue;
         }
 
@@ -482,13 +479,11 @@ void runGo(register processPo P) {
 #endif
 
           switch (ptg(prog)) {
-            case varTg:
-              A[op_m_val(PCX)] = thingClass;
+            case varTg:A[op_m_val(PCX)] = thingClass;
               prog = ProgramOf(thingProg);
 
               break;                          /* This should eventually raise an error */
-            case fwdTg:
-              strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
+            case fwdTg:strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
               saveRegs(PC);
               raiseError(P, errorMsg, eINVAL);
               restRegs();
@@ -540,12 +535,10 @@ void runGo(register processPo P) {
 #endif
 
         switch (ptg(prog)) {
-          case varTg:
-            A[op_m_val(PCX)] = thingClass;
+          case varTg:A[op_m_val(PCX)] = thingClass;
             prog = ProgramOf(thingProg);
             break;                          /* This should eventually raise an error */
-          case fwdTg:
-            strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
+          case fwdTg:strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
             saveRegs(PC);
             raiseError(P, errorMsg, eINVAL);
             restRegs();
@@ -593,12 +586,10 @@ void runGo(register processPo P) {
 #endif
 
         switch (ptg(prog)) {
-          case varTg:
-            A[op_m_val(PCX)] = thingClass;
+          case varTg:A[op_m_val(PCX)] = thingClass;
             prog = ProgramOf(thingProg);
             break;                          /* This should eventually raise an error */
-          case fwdTg:
-            strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
+          case fwdTg:strMsg(errorMsg, NumberOf(errorMsg), "%w invalid program label", &A[op_m_val(PCX)]);
             saveRegs(PC);
             raiseError(P, errorMsg, eINVAL);
             restRegs();
@@ -642,8 +633,7 @@ void runGo(register processPo P) {
         continue;
       }
 
-      case go_to:
-        PC += op_ll_val(PCX);    /* Relative jump */
+      case go_to:PC += op_ll_val(PCX);    /* Relative jump */
         continue;
 
       case escape: {      /* N, escape into 1st level builtins */
@@ -807,7 +797,8 @@ void runGo(register processPo P) {
       }
 
       case dealloc:      /* deallocate and succeed */
-        PC = cPC = C->cPC;
+        cPC = C->cPC;
+        PC = cPC + 1;        /* skip over the gcmap instruction */
         SB = cSB = C->cSB;
         PROG = cPROG = C->cPROG;
         Lits = codeLits(codeV(PROG));
@@ -828,8 +819,7 @@ void runGo(register processPo P) {
             PC = codeIns(code);
             Lits = codeLits(code);
           }
-        } else
-          PC++;         /* skip over the gcmap instruction */
+        }
         continue;
 
       case trgr:        /* test to see if we need to handle triggered suspensions */
@@ -1027,7 +1017,7 @@ void runGo(register processPo P) {
 
       case trycl: {      /* ARITY,LBL try a clause */
         register int len = envSize(cPC);
-        register short arity = (short)codeArity(codeV(PROG));
+        register short arity = (short) codeArity(codeV(PROG));
 
         register choicePo back;
         register int i;
@@ -1262,14 +1252,15 @@ void runGo(register processPo P) {
 
         testA(op_h_val(PCX));
 
-        if (!isvar(vx)) {integer ix;
-          if(isObjct(vl)) {
+        if (!isvar(vx)) {
+          integer ix;
+          if (isObjct(vl)) {
             clssPo class = ((clssPo) objV(vl->class));
 
             ix = class->hash % max;
           } else {
             assert(isSymb(vl));
-            ix = SymHash((symbPo)vl) % max;
+            ix = SymHash((symbPo) vl) % max;
           }
           PC += ix + 1;
         }
@@ -1292,11 +1283,9 @@ void runGo(register processPo P) {
 
         switch (freezeTerm(&P->proc.heap, &E, E,
                            P->proc.errorMsg, NumberOf(P->proc.errorMsg))) {
-          case Ok:
-            break;
+          case Ok:break;
           case Error:
-          default:
-            syserr("failed to reserve space for an exception");
+          default:syserr("failed to reserve space for an exception");
         }
 
         gcRemoveRoot(&P->proc.heap, root);
@@ -1345,10 +1334,8 @@ void runGo(register processPo P) {
         testA(op_m_val(PCX));
 
         switch (uni(P, B, H, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
-          case Ok:
-            continue;
-          case Fail:
-            backTrack();
+          case Ok:continue;
+          case Fail:backTrack();
             continue;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -1363,10 +1350,8 @@ void runGo(register processPo P) {
         testY(op_o_val(PCX));
 
         switch (uni(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
-          case Ok:
-            break;
-          case Fail:
-            backTrack();
+          case Ok:break;
+          case Fail:backTrack();
             break;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -1379,10 +1364,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);    /* test for validity of S register */
           switch (uni(P, B, H, S++, &A[op_h_val(PCX)])) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1405,10 +1388,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);    /* test for validity of S register */
           switch (uni(P, B, H, S++, &A[op_h_val(PCX)])) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1444,15 +1425,12 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         switch (ptg(aVal)) {
-          case varTg:
-            bindVr(ptr, tmp);    /* bind to the literal value */
+          case varTg:bindVr(ptr, tmp);    /* bind to the literal value */
             continue;
           case objTg: {
             switch (uni(P, B, H, &aVal, &tmp)) {
-              case Ok:
-                continue;
-              case Fail:
-                backTrack();
+              case Ok:continue;
+              case Fail:backTrack();
                 continue;
               default: saveRegs(PC);
                 raiseError(P, errorMsg, P->proc.errorCode);
@@ -1460,8 +1438,7 @@ void runGo(register processPo P) {
                 continue;
             }
           }
-          default:
-            backTrack();
+          default:backTrack();
             continue;
         }
         continue;
@@ -1478,9 +1455,9 @@ void runGo(register processPo P) {
 
         testA(op_h_val(PCX));
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
-
         if (isvar(val)) {
+          enoughSpace(classSize(class));  /* Is there room for the constructor */
+
           objPo new = (objPo) H++;
           register ptrI cns = objP(new);
 
@@ -1492,14 +1469,14 @@ void runGo(register processPo P) {
           validateS(-1);
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < class->arity; hx++)
+          for (long hx = 0; hx < classArity(class); hx++)
             H[hx] = kvoid;
 #endif
 
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1517,7 +1494,7 @@ void runGo(register processPo P) {
 
         testA(0);
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
+        enoughSpace(classSize(class));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1532,7 +1509,7 @@ void runGo(register processPo P) {
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1550,7 +1527,7 @@ void runGo(register processPo P) {
 
         testA(1);
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
+        enoughSpace(classSize(class));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1564,14 +1541,14 @@ void runGo(register processPo P) {
           validateS(-1);
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < class->arity; hx++)
+          for (long hx = 0; hx < classArity(class); hx++)
             H[hx] = kvoid;
 #endif
 
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1589,7 +1566,7 @@ void runGo(register processPo P) {
 
         testA(2);
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
+        enoughSpace(classSize(class));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1603,13 +1580,13 @@ void runGo(register processPo P) {
           validateS(-1);
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < class->arity; hx++)
+          for (long hx = 0; hx < classArity(class); hx++)
             H[hx] = kvoid;
 #endif
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1627,7 +1604,7 @@ void runGo(register processPo P) {
 
         testA(3);
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
+        enoughSpace(classSize(class));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1641,14 +1618,14 @@ void runGo(register processPo P) {
           validateS(-1);
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < class->arity; hx++)
+          for (long hx = 0; hx < classArity(class); hx++)
             H[hx] = kvoid;
 #endif
 
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1666,7 +1643,7 @@ void runGo(register processPo P) {
 
         testA(4);
 
-        enoughSpace(class->arity + 1);  /* Is there room for the constructor */
+        enoughSpace(classSize(class));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1680,14 +1657,14 @@ void runGo(register processPo P) {
           validateS(-1);
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < class->arity; hx++)
+          for (long hx = 0; hx < classArity(class); hx++)
             H[hx] = kvoid;
 #endif
 
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
-          validateS(class->arity);  /* validate S for n instructions */
+          validateS(classArity(class));  /* validate S for n instructions */
         } else
           backTrack();
 
@@ -1699,10 +1676,8 @@ void runGo(register processPo P) {
         testY(op_m_val(PCX));
 
         switch (uni(P, B, H, Yreg(-op_h_val(PCX)), Yreg(-op_m_val(PCX)))) {
-          case Ok:
-            continue;
-          case Fail:
-            backTrack();
+          case Ok:continue;
+          case Fail:backTrack();
             continue;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -1715,10 +1690,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);    /* test for validity of S register */
           switch (uni(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1741,10 +1714,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);      /* test for validity of S register */
           switch (uni(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1774,15 +1745,12 @@ void runGo(register processPo P) {
           S++;
 
           switch (ptg(val)) {
-            case varTg:
-              bindVr(ptr, tmp);              /* bind to the literal value */
+            case varTg:bindVr(ptr, tmp);              /* bind to the literal value */
               continue;
             case objTg: {
               switch (uni(P, B, H, ptr, deRef(&tmp))) {
-                case Ok:
-                  continue;
-                case Fail:
-                  backTrack();
+                case Ok:continue;
+                case Fail:backTrack();
                   continue;
                 default: saveRegs(PC);
                   raiseError(P, errorMsg, P->proc.errorCode);
@@ -1790,8 +1758,7 @@ void runGo(register processPo P) {
                   continue;
               }
             }
-            default:
-              backTrack();
+            default:backTrack();
               continue;
           }
         } else
@@ -2001,10 +1968,8 @@ void runGo(register processPo P) {
         testA(op_m_val(PCX));
 
         switch (mtch(P, B, H, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
-          case Ok:
-            continue;
-          case Fail:
-            backTrack();
+          case Ok:continue;
+          case Fail:backTrack();
             continue;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -2018,10 +1983,8 @@ void runGo(register processPo P) {
         testY(op_o_val(PCX));
 
         switch (mtch(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
-          case Ok:
-            break;
-          case Fail:
-            backTrack();
+          case Ok:break;
+          case Fail:backTrack();
             break;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -2035,10 +1998,8 @@ void runGo(register processPo P) {
 
         if (mode == readMode) {
           switch (mtch(P, B, H, &A[op_h_val(PCX)], S++)) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -2059,15 +2020,12 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         switch (ptg(aVal)) {
-          case varTg:
-            backTrack();                   /* not permitted to bind when matching */
+          case varTg:backTrack();                   /* not permitted to bind when matching */
             continue;
           case objTg: {
             switch (mtch(P, B, H, ptr, deRef(&Lits[op_o_val(PCX)]))) {
-              case Ok:
-                continue;
-              case Fail:
-                backTrack();
+              case Ok:continue;
+              case Fail:backTrack();
                 continue;
               default: saveRegs(PC);
                 raiseError(P, errorMsg, P->proc.errorCode);
@@ -2075,8 +2033,7 @@ void runGo(register processPo P) {
                 continue;
             }
           }
-          default:
-            backTrack();
+          default:backTrack();
         }
         continue;
       }
@@ -2188,10 +2145,8 @@ void runGo(register processPo P) {
         testY(op_o_val(PCX));
 
         switch (mtch(P, B, H, Yreg(-op_o_val(PCX)), &A[op_h_val(PCX)])) {
-          case Ok:
-            continue;
-          case Fail:
-            backTrack();
+          case Ok:continue;
+          case Fail:backTrack();
             continue;
           default: saveRegs(PC);
             raiseError(P, errorMsg, P->proc.errorCode);
@@ -2204,10 +2159,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);                    /* test for validity of S register */
           switch (mtch(P, B, H, Yreg(-op_o_val(PCX)), S++)) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -2224,10 +2177,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);      /* test for validity of S register */
           switch (mtch(P, B, H, S++, &A[op_m_val(PCX)])) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -2244,10 +2195,8 @@ void runGo(register processPo P) {
         if (mode == readMode) {
           isSvalid(1);      /* test for validity of S register */
           switch (mtch(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
-            case Ok:
-              continue;
-            case Fail:
-              backTrack();
+            case Ok:continue;
+            case Fail:backTrack();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -2270,15 +2219,12 @@ void runGo(register processPo P) {
           ptrI tmp = Lits[op_o_val(PCX)];
 
           switch (ptg(val)) {
-            case varTg:
-              bindVr(ptr, tmp);              /* bind to the literal value */
+            case varTg:bindVr(ptr, tmp);              /* bind to the literal value */
               continue;
             case objTg: {
               switch (uni(P, B, H, ptr, deRef(&tmp))) {
-                case Ok:
-                  continue;
-                case Fail:
-                  backTrack();
+                case Ok:continue;
+                case Fail:backTrack();
                   continue;
                 default: saveRegs(PC);
                   raiseError(P, errorMsg, P->proc.errorCode);
@@ -2286,8 +2232,7 @@ void runGo(register processPo P) {
                   continue;
               }
             }
-            default:
-              backTrack();
+            default:backTrack();
               continue;
           }
         } else
@@ -2580,14 +2525,12 @@ static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
           } else
             return Fail;
         }
-        default:
-          strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
+        default:strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
           P->proc.errorCode = eUNIFY;
       }
       return Error;
     }
-    default:
-      strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
+    default:strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
       P->proc.errorCode = eUNIFY;
       return Error;
   }
@@ -2627,15 +2570,13 @@ static retCode test(ptrPo T1, ptrPo T2) {
   register ptrI Tg2 = *(T2 = deRef(T2));
 
   switch (ptg(Tg1)) {                    /* First-level analysis of the pointer */
-    case varTg:
-      return Ok;
+    case varTg:return Ok;
     case objTg: {
       if (IsFrozenVar(Tg1))
         return Ok;
       else {
         switch (ptg(Tg2)) {
-          case varTg:
-            return Ok;
+          case varTg:return Ok;
           case objTg: {
             objPo Term1 = objV(Tg1);
             objPo Term2 = objV(Tg2);
@@ -2665,14 +2606,12 @@ static retCode test(ptrPo T1, ptrPo T2) {
             } else
               return Fail;
           }
-          default:
-            return Fail;
+          default:return Fail;
         }
       }
     }
       return Error;
-    default:
-      return Fail;
+    default:return Fail;
   }
 }
 
@@ -2743,15 +2682,13 @@ static retCode mtch(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
           } else
             return Fail;
         }
-        default:
-          strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
+        default:strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
           P->proc.errorCode = eUNIFY;
           return Error;
       }
       return Error;
     }
-    default:
-      strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
+    default:strMsg(P->proc.errorMsg, NumberOf(P->proc.errorMsg), "incomparable values");
       P->proc.errorCode = eUNIFY;
       return Error;
   }
@@ -2773,8 +2710,7 @@ static retCode ident(ptrPo T1, ptrPo T2) {
     }
     case objTg: {
       switch (ptg(Tg2)) {
-        case varTg:
-          return Fail;
+        case varTg:return Fail;
         case objTg: {
           objPo Term1 = objV(Tg1);
           objPo Term2 = objV(Tg2);
@@ -2803,13 +2739,11 @@ static retCode ident(ptrPo T1, ptrPo T2) {
           } else
             return Fail;
         }
-        default:
-          return Error;
+        default:return Error;
       }
       return Error;
     }
-    default:
-      return Error;
+    default:return Error;
   }
 }
 

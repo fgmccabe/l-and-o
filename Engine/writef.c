@@ -100,10 +100,10 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
         if (r == Ok)
           r = outChar(f, '\'');
       } else if (class == stringClass) {
-        string src = stringVal((stringPo) p);
-
+        stringPo str = (stringPo)p;
         long pos = 0;
-        long end = uniStrLen(src);
+        long end = StringLen(str);
+        string src = stringVal(str);
 
         r = outChar(f, '\"');
 
@@ -124,7 +124,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
         if (r == Ok)
           r = outChar(f, '/');
         if (r == Ok)
-          r = outInteger(f, cl->arity, 10, 0, prec, ' ', False, (string) "", False);
+          r = outInteger(f, classArity(cl), 10, 0, prec, ' ', False, (string) "", False);
       } else if (class == listClass) {
         if (depth > 0) {
           long maxLen = (prec != 0 ? prec * 2 : INT_MAX); /* How many elements to show */
