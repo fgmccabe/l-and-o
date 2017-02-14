@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(loEngine)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c99")
 
 include_directories("Headers" "../Headers" "../OOlib/Headers")
 
