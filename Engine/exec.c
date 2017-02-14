@@ -23,7 +23,7 @@
 #include "tpl.h"
 
 retCode g__exit(processPo P, ptrPo a) {
-  exit((long) FloatVal(objV(deRefI(&a[1]))));
+  exit((int) FloatVal(objV(deRefI(&a[1]))));
 }
 
 /* This is used to attach a shell to a process, so that when the child terminates

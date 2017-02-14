@@ -208,7 +208,7 @@ static char *capitalize(char *str){
   static char buffer[128];
   strcpy(buffer,str);
   if(buffer[0]>='a' && buffer[0]<='z'){
-    buffer[0] = 'A'+(buffer[0]-'a');
+    buffer[0] = (short)('A'+(buffer[0]-'a'));
   }
   return buffer;
 }

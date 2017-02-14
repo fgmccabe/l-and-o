@@ -336,7 +336,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
           rootPo root = gcAddRoot(GH, &pc); /* in case of GC ... */
           gcAddRoot(GH, &el); /* we need a temporary pointer */
 
-          ptrI prg = newProgLbl((char *) prgName, arity);
+          ptrI prg = newProgLbl((char *) prgName, (short)arity);
           gcAddRoot(GH, &prg);
 
           /* get the instructions */

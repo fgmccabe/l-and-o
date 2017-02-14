@@ -594,7 +594,7 @@ char *text = &buff[0];
 long size = NumberOf(buff);
 long pos = 0;
 
-static void putChar(ch) {
+static void putChar(char ch) {
   if(pos>=size){
     char *nBuff = (char*)malloc((size+size/2)*sizeof(char));
     for(int ix=0;ix<pos;ix++)
@@ -603,7 +603,7 @@ static void putChar(ch) {
       free(text);
     text = nBuff;
     }
-  text[pos++] = (ch);
+  text[pos++] = ch;
 }
 
 #line 610 "/Users/fgm/Projects/LandO/OOlib/jsontoken.c"

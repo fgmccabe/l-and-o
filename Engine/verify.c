@@ -30,8 +30,8 @@ typedef struct _segment_ {
   Var args[LO_REGS];
   long lCount;                      //  number of locals in use
   varPo locals;                     //  entry state for this segment
-  unsigned long arity;              //  Arity of the code
-  unsigned long strcount;           //  number of valid structure references
+  short arity;                      //  Arity of the code
+  short strcount;                   //  number of valid structure references
   long litCount;                    //  number of literals
   unsigned int lclHp;               //  how much local heap can we allocate?
   unsigned int gblHp;               //  how much global heap can we allocate?
@@ -124,8 +124,7 @@ static char *splitPhase(insPo pc, long length, segPo seg) {
     switch (op_code(pcx)) {
 #include "instructions.h"
 
-      default:
-        return "invalid instruction";
+      default:return "invalid instruction";
     }
   }
 
@@ -294,8 +293,7 @@ static char *testBreak(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       else
         return NULL;
     }
-    default:
-      return "Invalid instruction operand specification";
+    default:return "Invalid instruction operand specification";
   }
 }
 
@@ -329,8 +327,7 @@ static char *checkSegment(segPo seg) {
     switch (op_code(pcx)) {
 #include "instructions.h"
 
-      default:
-        return "illegal instruction";
+      default:return "illegal instruction";
     }
   }
 #ifdef VERIFYTRACE
@@ -457,7 +454,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case oAl:                             // output argument register in lower slot (0..255)
       return NULL;
     case iLh: {                            // variable in upper slot
-      unsigned int lcNo = op_h_val(pcx);           // Pick up local variable
+      short lcNo = op_h_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited)
         return "attempted to access unset variable";
@@ -466,7 +463,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case iLm: {                            // variable in midle slot
-      unsigned int lcNo = op_m_val(pcx);           // Pick up local variable
+      short lcNo = op_m_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited)
         return "attempted to access unset variable";
@@ -475,7 +472,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case iLl: {                            // variable in lower slot
-      unsigned int lcNo = op_l_val(pcx);           // Pick up local variable
+      short lcNo = op_l_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited)
         return "attempted to access unset variable";
@@ -484,7 +481,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case iLc: {                            // variable in local variable (0..65535)
-      unsigned int lcNo = op_o_val(pcx);           // Pick up local variable
+      short lcNo = op_o_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited)
         return "attempted to access unset variable";
@@ -545,7 +542,7 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     }
 
     case Es: {                             // escape code (0..65535)
-      unsigned int esc = op_o_val(pcx);
+      short esc = op_o_val(pcx);
 
       if (!validEscape(esc, op_h_val(pcx))) {
         static char msg[256];
@@ -559,14 +556,13 @@ static char *checkInOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
       return NULL;
     case ltl: {                            // literal number (0..65535)
-      unsigned int lit = op_o_val(pcx);
+      short lit = op_o_val(pcx);
 
       if (seg->litCount <= lit)
         return "attempted to access invalid literal";
       return NULL;
     }
-    default:
-      return "Problem in checking opcode type";
+    default:return "Problem in checking opcode type";
   }
 }
 
@@ -612,7 +608,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case iLc:                             // input local variable offset (0..65535)
       return NULL;
     case oLh: {                            // output local variable upper slot
-      unsigned int lcNo = op_h_val(pcx);           // Pick up local variable
+      short lcNo = op_h_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo)
         return "attempted to set out of bounds variable";
@@ -621,7 +617,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case oLm: {                            // output local variable middle slot
-      unsigned int lcNo = op_m_val(pcx);           // Pick up local variable
+      short lcNo = op_m_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo)
         return "attempted to set out of bounds variable";
@@ -630,7 +626,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case oLl: {                            // output local variable lower slot
-      unsigned int lcNo = op_l_val(pcx);           // Pick up local variable
+      short lcNo = op_l_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo)
         return "attempted to set out of bounds variable";
@@ -639,7 +635,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
       return NULL;
     }
     case oLc: {                            // output local variable offset  (0..65535)
-      unsigned int lcNo = op_o_val(pcx);           // Pick up local variable
+      short lcNo = op_o_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo)
         return "attempted to set out of bounds variable";
@@ -651,7 +647,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case oSt:                             // output to current structure pointer
       return NULL;
     case uAr: {                            // Arity in upper slot
-      int regNo = op_h_val(pcx);          // Pick up register name
+      unsigned short regNo = op_h_val(pcx);          // Pick up register name
       int i;
 
       for (i = regNo + 1; i < LO_REGS; i++)
@@ -702,8 +698,7 @@ static char *checkOutOperand(segPo seg, insPo pc, insWord pcx, opAndSpec A) {
     case pcl:                             // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
     case ltl:                             // literal number (0..65535)
       return NULL;
-    default:
-      return "Problem in checking opcode type";
+    default:return "Problem in checking opcode type";
   }
 }
 
@@ -723,8 +718,7 @@ static char *checkInstruction(segPo seg, insPo opc, insPo pc, insWord pcx, opAnd
   switch (op_code(pcx)) {
     case dealloc:
     case dlkawlO:
-    case dlkawl:
-      seg->lCount = 0;
+    case dlkawl:seg->lCount = 0;
       free(seg->locals);
       seg->locals = NULL;
     case trycl:
@@ -743,8 +737,8 @@ static char *checkInstruction(segPo seg, insPo opc, insPo pc, insWord pcx, opAnd
     case vdYY:
     case clYY: {
       unsigned int i;
-      unsigned int low = op_o_val(pcx);
-      unsigned int hi = low + op_h_val(pcx);
+      unsigned short low = op_o_val(pcx);
+      unsigned short hi = low + op_h_val(pcx);
 
       for (i = low; i < hi; i++)
         seg->locals[i].inited = True;
@@ -752,8 +746,8 @@ static char *checkInstruction(segPo seg, insPo opc, insPo pc, insWord pcx, opAnd
     }
     case vdAA: {
       unsigned int i;
-      unsigned int low = op_h_val(pcx);
-      unsigned int hi = low + op_o_val(pcx);
+      unsigned short low = op_h_val(pcx);
+      unsigned short hi = low + op_o_val(pcx);
 
       for (i = low; i < hi; i++)
         seg->args[i].inited = True;

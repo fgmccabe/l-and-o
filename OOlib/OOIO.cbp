@@ -29,7 +29,6 @@
 					<Add directory="/usr/local/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
-					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
@@ -53,7 +52,6 @@
 					<Add directory="/usr/local/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
-					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
@@ -171,9 +169,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/unicodeP.h">
 			<Option target="ooio"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/uri.h">
-			<Option target="ooio"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/utils.h">
 			<Option target="ooio"/>
 		</Unit>
@@ -184,9 +179,6 @@
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/file.c">
-			<Option target="ooio"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/files.c">
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/formin.c">
@@ -222,9 +214,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pair.c">
 			<Option target="ooio"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/parseuri.c">
-			<Option target="ooio"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pipe.c">
 			<Option target="ooio"/>
 		</Unit>
@@ -250,9 +239,6 @@
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/unitable.c">
-			<Option target="ooio"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/uri.c">
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/utils.c">

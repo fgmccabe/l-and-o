@@ -25,7 +25,6 @@
 #include "fileio.h"
 #include "term.h"
 #include "formioP.h"
-#include "uri.h"
 #include "pipe.h"
 #include "tpl.h"
 
@@ -154,56 +153,6 @@ logical executableFile(char *file) {
   return False;
 }
 
-/*
- * Construct a new URL from a root URL and an offset
- */
-
-retCode g__mergeURL(processPo P, ptrPo a) {
-  ptrI Base = deRefI(&a[1]);
-  ptrI Url = deRefI(&a[2]);
-
-  if (!IsString(Base))
-    return liberror(P, "__mergeURL", eSTRNEEDD);
-  else if (!IsString(Url))
-    return liberror(P, "__mergeURL", eSTRNEEDD);
-  else {
-    byte ufn[MAX_MSG_LEN];
-    string actual = resolveURI(stringVal(stringV(Base)), stringVal(stringV(Url)), ufn, NumberOf(ufn));
-
-    if (actual == NULL)            /* Illegal URL request */
-      return liberror(P, "__mergeURL", eINVAL);
-    else {
-      ptrI L = allocateString(&P->proc.heap, ufn, uniStrLen(ufn));
-
-      return equal(P, &L, &a[3]);
-    }
-  }
-}
-
-/*
- * Check a URL from a base and a potential url
- */
-retCode g__checkRoot(processPo P, ptrPo a) {
-  ptrI Base = deRefI(&a[1]);
-  ptrI Url = deRefI(&a[2]);
-
-  if (!IsString(Base))
-    return liberror(P, "__checkRoot", eSTRNEEDD);
-  else if (!IsString(Url))
-    return liberror(P, "__checkRoot", eSTRNEEDD);
-  else {
-
-    switch (checkRoot(loSysPath, stringVal(stringV(Base)), stringVal(stringV(Url)))) {
-      case Ok:
-        return Ok;
-      case Fail:
-        return Fail;
-      default:
-        return liberror(P, "__checkRoot", eINVAL);
-    }
-  }
-}
-
 ioEncoding pickEncoding(ptrI k) {
   switch (integerVal(intV(k))) {
     case 0:
@@ -212,44 +161,6 @@ ioEncoding pickEncoding(ptrI k) {
       return utf8Encoding;
     default:
       return unknownEncoding;
-  }
-}
-
-/*
- * Open a URL, used for inputting only
- */
-retCode g__openURL(processPo P, ptrPo a) {
-  switchProcessState(P, wait_io);
-
-  ptrI Base = deRefI(&a[1]);
-  ptrI Url = deRefI(&a[2]);
-
-  if (!IsString(Base))
-    return liberror(P, "__openURL", eSTRNEEDD);
-  else if (!IsString(Url))
-    return liberror(P, "__openURL", eSTRNEEDD);
-  else if (!isvar(deRefI(&a[3])))
-    return liberror(P, "__openURL", eVARNEEDD);
-  else if (isvar(deRefI(&a[4])))
-    return liberror(P, "__openURL", eINVAL);
-  else {
-    byte ufn[MAX_MSG_LEN];
-    string actual = resolveURI(stringVal(stringV(Base)), stringVal(stringV(Url)), ufn, NumberOf(ufn));
-    ioPo file;
-
-    if ((file = openURI(actual, pickEncoding(deRefI(&a[4])))) == NULL) {
-      setProcessRunnable(P);
-      return liberror(P, "__openURL", eNOFILE);
-    } else {
-      ptrI L = allocateString(&P->proc.heap, actual, uniStrLen(actual));
-      ptrI t2 = allocFilePtr(file);  /* return open file descriptor */
-
-      setProcessRunnable(P);
-      if (equal(P, &L, &a[3]) != Ok)
-        return Fail;
-
-      return equal(P, &t2, &a[5]);
-    }
   }
 }
 
@@ -359,45 +270,6 @@ retCode g__openAppendIOFile(processPo P, ptrPo a) {
   return equal(P, &t2, &a[3]);
 }
 
-/*
- * Open a URL, used for writing to only
- */
-retCode g__createURL(processPo P, ptrPo a) {
-  switchProcessState(P, wait_io);
-
-  ptrI Base = deRefI(&a[1]);
-  ptrI Url = deRefI(&a[2]);
-
-  if (!IsString(Base))
-    return liberror(P, "__createURL", eSTRNEEDD);
-  else if (!IsString(Url))
-    return liberror(P, "__createURL", eSTRNEEDD);
-  else if (!isvar(deRefI(&a[3])))
-    return liberror(P, "__createURL", eVARNEEDD);
-  else if (isvar(deRefI(&a[4])))
-    return liberror(P, "__createURL", eINVAL);
-  else {
-    byte base[MAX_MSG_LEN];
-    byte url[MAX_MSG_LEN];
-    byte ufn[MAX_MSG_LEN];
-    string actual;
-    ioPo file;
-
-    actual = resolveURI(base, url, ufn, NumberOf(ufn));
-
-    if ((file = createURI(actual, pickEncoding(deRefI(&a[4])))) == NULL) {
-      setProcessRunnable(P);
-      return liberror(P, "__createURL", eNOFILE);
-    } else {
-      ptrI L = allocateString(&P->proc.heap, actual, uniStrLen(actual));
-      equal(P, &L, &a[3]);
-
-      setProcessRunnable(P);
-      ptrI t2 = allocFilePtr(file); /* return open file descriptor */
-      return equal(P, &t2, &a[4]);
-    }
-  }
-}
 
 // Open a file and return the file pointers associated with the input and the output channels
 
@@ -415,7 +287,7 @@ retCode g__popen(processPo P, ptrPo a) {
   else if (isvar(Ags) || argCount < 0 || isvar(Env) || envCount < 0)
     return liberror(P, "__popen", eINSUFARG);
   else {
-    long len = (long) StringLen(stringV(Cmd)) + 1;
+    long len = StringLen(stringV(Cmd)) + 1;
     char cmd[3 * len];
     ioPo inPipe, outPipe, errPipe;
     strncpy(cmd, (char *) stringVal(stringV(Cmd)), NumberOf(cmd));
@@ -458,7 +330,7 @@ retCode g__popen(processPo P, ptrPo a) {
           return liberror(P, "__popen", eINVAL);
         } else {
           string key = StringVal(stringV(envKey));
-          long al = (long) StringLen(stringV(envVal)) + uniStrLen(key) + 4;
+          long al = StringLen(stringV(envVal)) + uniStrLen(key) + 4;
           byte buffer[al];
 
           strMsg(buffer, al, "%U = %L", key, &envVal);
@@ -1101,7 +973,7 @@ retCode g__inline(processPo P, ptrPo a) {
           } else {
             long len;
             string buff = getTextFromBuffer(&len,O_BUFFER(str));
-            ptrI reslt = allocateString(&P->proc.heap, buff, (long) len); /* grab the result */
+            ptrI reslt = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
             return equal(P, &a[3], &reslt);
@@ -1202,7 +1074,7 @@ retCode g__intext(processPo P, ptrPo a) {
           } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str))==0) {
             long len;
             string buff = getTextFromBuffer(&len,O_BUFFER(str));
-            ptrI result = allocateString(&P->proc.heap, buff, (long) len); /* grab the result */
+            ptrI result = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
 
@@ -1286,7 +1158,7 @@ retCode g__outbyte(processPo P, ptrPo a) {
     else {
       again:
       switchProcessState(P, wait_io);
-      retCode ret = outChar(file, integerVal((integerPo) t2));
+      retCode ret = outChar(file, (codePoint)integerVal((integerPo) t2));
       setProcessRunnable(P);
 
       switch (ret) {

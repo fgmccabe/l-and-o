@@ -25,11 +25,11 @@
 
 #include "word.h"
 
-extern ptrI listClass,nilClass,emptyList;
+extern ptrI consClass,nilClass,emptyList;
 
 static inline logical isList(objPo p)
 {
-  return hasClass(p,listClass);
+  return hasClass(p,consClass);
 }
 
 static inline logical IsList(ptrI x)
@@ -71,7 +71,7 @@ static inline ptrI consLsPair(heapPo P,ptrI head,ptrI tail)
   gcAddRoot(P,&tail);
 
   {
-    objPo new = allocateObject(P,listClass);
+    objPo new = allocateObject(P,consClass);
 
     ptrPo data = objectArgs(new);
 

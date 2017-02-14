@@ -79,7 +79,7 @@ retCode fileSeek(ioPo f, long count);
 retCode fileClose(ioPo f);
 retCode refillBuffer(filePo f);
 retCode fileFill(filePo f);
-retCode fileFlush(filePo f, int count);
+retCode fileFlush(filePo f, long count);
 retCode fileConfigure(filePo, ioConfigOpt mode);
 
 #endif

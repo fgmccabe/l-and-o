@@ -335,7 +335,7 @@ static char *dName(char *sig, bufferPo out) {
   char delim = *sig++;
   outByte(O_IO(out), '"');
   while (*sig != delim && *sig != '\0') {
-    outByte(O_IO(out), *sig++);
+    outByte(O_IO(out), (byte)*sig++);
   }
   outByte(O_IO(out), '"');
   return sig+1;

@@ -36,7 +36,7 @@ retCode g__listen(processPo P, ptrPo a) {
 
     strMsg(nBuff, NumberOf(nBuff), "listen@%ld", port);
     switchProcessState(P, wait_io);
-    listen = O_IO(listeningPort(nBuff, port));
+    listen = O_IO(listeningPort(nBuff, (int)port));
     setProcessRunnable(P);
 
     if (listen == NULL)
@@ -284,7 +284,7 @@ retCode g_hosttoip(processPo P, ptrPo a) {
 
     gcAddRoot(&P->proc.heap, &el);
 
-    for (i = 0; getNthHostIP(host, i, ip, NumberOf(ip)) != NULL; i++) {
+    for (i = 0; getNthHostIP(host, (unsigned)i, ip, NumberOf(ip)) != NULL; i++) {
       el = allocateString(&P->proc.heap, ip, uniStrLen(ip));
 
       l = consLsPair(&P->proc.heap, el, l);

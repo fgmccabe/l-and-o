@@ -304,7 +304,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), arity);
+        *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), (unsigned short)arity);
       }
       return res;
     }

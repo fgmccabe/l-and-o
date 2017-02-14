@@ -21,167 +21,167 @@
 
 logical isChar(codePoint ch)
 {
-  return genCatTbl[ch]!=Other;
+  return (logical)(genCatTbl[ch]!=Other);
 }
 
 /* Other, Control */
 logical isCcChar(codePoint ch){
-  return genCatTbl[ch]==Cc;
+  return (logical)(genCatTbl[ch]==Cc);
 }
 
 /* Other, format */
 logical isCfChar(codePoint ch){
-  return genCatTbl[ch]==Cf;
+  return (logical)(genCatTbl[ch]==Cf);
 }
 
 /* Other, unassigned */
 logical isCnChar(codePoint ch){
-  return genCatTbl[ch]==Cn;
+  return (logical)(genCatTbl[ch]==Cn);
 }
 
 /* Other, private */
 logical isCoChar(codePoint ch){
-  return genCatTbl[ch]==Co;
+  return (logical)(genCatTbl[ch]==Co);
 }
 
 /* Other, surrogate */
 logical isCsChar(codePoint ch){
-  return genCatTbl[ch]==Cs;
+  return (logical)(genCatTbl[ch]==Cs);
 }
 
 /* Letter, lowercase */
 logical isLlChar(codePoint ch){
-  return genCatTbl[ch]==Ll;
+  return (logical)(genCatTbl[ch]==Ll);
 }
 
 /* Letter, modifier */
 logical isLmChar(codePoint ch){
-  return genCatTbl[ch]==Lm;
+  return (logical)(genCatTbl[ch]==Lm);
 }
 
 /* Letter, other */
 logical isLoChar(codePoint ch){
-  return genCatTbl[ch]==Lo;
+  return (logical)(genCatTbl[ch]==Lo);
 }
 
 /* Letter, titlecase */
 logical isLtChar(codePoint ch){
-  return genCatTbl[ch]==Lt;
+  return (logical)(genCatTbl[ch]==Lt);
 }
 
 /* Letter, uppercase */
 logical isLuChar(codePoint ch){
-  return genCatTbl[ch]==Lu;
+  return (logical)(genCatTbl[ch]==Lu);
 }
 
 /* Mark, spacing combining */
 logical isMcChar(codePoint ch){
-  return genCatTbl[ch]==Mc;
+  return (logical)(genCatTbl[ch]==Mc);
 }
 
 /* Mark, enclosing */
 logical isMeChar(codePoint ch){
-  return genCatTbl[ch]==Me;
+  return (logical)(genCatTbl[ch]==Me);
 }
 
 /* Mark, nonspacing */
 logical isMnChar(codePoint ch){
-  return genCatTbl[ch]==Mn;
+  return (logical)(genCatTbl[ch]==Mn);
 }
 
 /* Number, decimal digit */
 logical isNdChar(codePoint ch){
-  return genCatTbl[ch]==Nd;
+  return (logical)(genCatTbl[ch]==Nd);
 }
 
 /* Number, letter */
 logical isNlChar(codePoint ch){
-  return genCatTbl[ch]==Nl;
+  return (logical)(genCatTbl[ch]==Nl);
 }
 
 /* Number, other */
 logical isNoChar(codePoint ch){
-  return genCatTbl[ch]==No;
+  return (logical)(genCatTbl[ch]==No);
 }
 
 /* Punctuation, connector */
 logical isPcChar(codePoint ch){
-  return genCatTbl[ch]==Pc;
+  return (logical)(genCatTbl[ch]==Pc);
 }
 
 /* Punctuation, dash */
 logical isPdChar(codePoint ch){
-  return genCatTbl[ch]==Pd;
+  return (logical)(genCatTbl[ch]==Pd);
 }
 
 /* Punctuation, close */
 logical isPeChar(codePoint ch){
-  return genCatTbl[ch]==Pe;
+  return (logical)(genCatTbl[ch]==Pe);
 }
 
 /* Punctuation, final quote */
 logical isPfChar(codePoint ch){
-  return genCatTbl[ch]==Pf;
+  return (logical)(genCatTbl[ch]==Pf);
 }
 
 /* Punctuation, initial quote */
 logical isPiChar(codePoint ch){
-  return genCatTbl[ch]==Pi;
+  return (logical)(genCatTbl[ch]==Pi);
 }
 
 /* Punctuation, other */
 logical isPoChar(codePoint ch){
-  return genCatTbl[ch]==Po;
+  return (logical)(genCatTbl[ch]==Po);
 }
 
 /* Punctuation, open */
 logical isPsChar(codePoint ch){
-  return genCatTbl[ch]==Ps;
+  return (logical)(genCatTbl[ch]==Ps);
 }
 
 /* Symbol, currency */
 logical isScChar(codePoint ch){
-  return genCatTbl[ch]==Sc;
+  return (logical)(genCatTbl[ch]==Sc);
 }
 
 /* Symbol, modifier */
 logical isSkChar(codePoint ch){
-  return genCatTbl[ch]==Sk;
+  return (logical)(genCatTbl[ch]==Sk);
 }
 
 /* Symbol, math */
 logical isSmChar(codePoint ch){
-  return genCatTbl[ch]==Sm;
+  return (logical)(genCatTbl[ch]==Sm);
 }
 
 /* Symbol, other */
 logical isSoChar(codePoint ch){
-  return genCatTbl[ch]==So;
+  return (logical)(genCatTbl[ch]==So);
 }
 
 /* Separator, line */
 logical isZlChar(codePoint ch){
-  return genCatTbl[ch]==Zl;
+  return (logical)(genCatTbl[ch]==Zl);
 }
 
 /* Separator, paragraph */
 logical isZpChar(codePoint ch){
-  return genCatTbl[ch]==Zp;
+  return (logical)(genCatTbl[ch]==Zp);
 }
 
 /* Separator, space */
 logical isZsChar(codePoint ch){
-  return genCatTbl[ch]==Zs;
+  return (logical)(genCatTbl[ch]==Zs);
 }
 
 logical isLetterChar(codePoint ch)
 {
-  return genCatTbl[ch]==Lu||genCatTbl[ch]==Ll||genCatTbl[ch]==Lt||genCatTbl[ch]==Lm||genCatTbl[ch]==Lo||genCatTbl[ch]==Nl;
+  return (logical)(genCatTbl[ch]==Lu||genCatTbl[ch]==Ll||genCatTbl[ch]==Lt||genCatTbl[ch]==Lm||genCatTbl[ch]==Lo||genCatTbl[ch]==Nl);
 }
 
 logical isSpaceChar(codePoint ch)
 {
-  return ch==' '||ch=='\t'||ch=='\n'||ch=='\r';
+  return (logical)(ch==' '||ch=='\t'||ch=='\n'||ch=='\r');
 }
 
 codePoint lowerOf(codePoint ch)             /* <<<<< Fix me <<<<< */

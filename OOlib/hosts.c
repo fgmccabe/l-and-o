@@ -148,7 +148,7 @@ static hostPo locateHost(string nme) {
     lockClass(hostClass);       /* gethostbyname etc are not thread safe */
     hashPut(HostClass.hostPart.hostTable, h->host.host, h);
 
-    he = gethostbyname((char *) he->h_name); /* make sure that we get the proper name */
+    he = gethostbyname(he->h_name); /* make sure that we get the proper name */
 
     for (al = he->h_aliases; *al != NULL && a < NumberOf(h->host.aliases); al++, a++) {
       h->host.aliases[a] = uniDuplicate((string) al);

@@ -40,14 +40,13 @@ ptrI programClass;
 /* Standard classes */
 ptrI emptyList;  //  the empty list
 ptrI nilClass;  //  The empty list class
-ptrI listClass;  //  the non-empty list
+ptrI consClass;  //  the non-empty list
 
 ptrI thingClass;  //  root type/class
 ptrI thingProg;  //  The thing program label
 
 ptrI integerClass;  //  The integers
 ptrI floatClass;  //  F.P. numbers
-ptrI symbolClass;  //  Standard symbol class
 ptrI stringClass;
 
 ptrI trueClass, falseClass;  //  True and False
@@ -167,7 +166,7 @@ void standardClasses(void) {
 
   nilClass = newClassDf("lo.core#[]", 0);
   emptyList = newEnumSym("lo.core#[]");
-  listClass = newClassDf("lo.core#,..", 2);
+  consClass = newClassDf("lo.core#,..", 2);
 
   suspClass = newClassDf("#suspension", 3);
   varClass = newClassDf("#var", 1);
@@ -313,7 +312,7 @@ void markStandardClasses(globalGcPo G) {
 
   emptyList = scanPtr(G, emptyList);
   nilClass = scanPtr(G, nilClass);
-  listClass = scanPtr(G, listClass);
+  consClass = scanPtr(G, consClass);
   errorClass = scanPtr(G, errorClass);
 
   /*

@@ -32,6 +32,8 @@ retCode outFloat(ioPo out, double x);
 retCode outUStr(ioPo f, string str);
 
 long int2StrByBase(byte *str, integer i, long pos, unsigned short base);
+retCode formatDouble(byte *out, long outLen, double x, char mode, int precision,
+                     string prefix, logical sign);
 
 integer parseInteger(string s, long len);
 double parseNumber(string s, long len);

@@ -21,7 +21,7 @@
 #define threadType "t'lo.thread#thread'"
 #define lockType "t'lo.thread#lock'"
 #define thingType "t'lo.core#thing'"
-#define fileType "t'lo.io#file'"
+#define fileType "t'lo.io#fileHandle'"
 
 /* Define the standard escapes */
 escape(_exit,True,False,"P1i","terminate L&O engine")

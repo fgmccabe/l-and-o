@@ -2,20 +2,25 @@
  * unit testing harness
  */
 lo.unit{
+  import lo.
   import lo.io.
 
   harness <~ { doTest:(){}.  }.
 
-  harness:harness.
-  harness <= {
+  harness:(string) <=> harness.
+  harness(Nm) <= {
     doTest().
   }.
 
+  implementation display[harness] <= {
+    disp(harness(Nm)) => ss(Nm).
+  }
+
   check:(harness){}.
   check(T) :-
-    T.doTest() ?
+    (T.doTest() ?
       stdout.outLine("test \(T) ok") |
-      stdout.outLine("test \(T) failed")).
+      stdout.outLine("test \(T) failed"))).
 
   checkUnit:(harness){}.
   checkUnit(T) :-

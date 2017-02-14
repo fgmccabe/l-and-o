@@ -15,7 +15,6 @@ include_directories("../Headers" "Headers")
 set(SOURCE_FILES
         class.c
         file.c
-        files.c
         formin.c
         formout.c
         hashTable.c
@@ -27,7 +26,6 @@ set(SOURCE_FILES
         managed.c
         object.c
         pair.c
-        parseuri.c
         pipe.c
         pool.c
         sockets.c
@@ -37,7 +35,6 @@ set(SOURCE_FILES
         unichar.c
         unicode.c
         unitable.c
-        uri.c
         utils.c
 
         ${BISON_JsonParser_OUTPUTS}
@@ -51,7 +48,7 @@ set(SOURCE_FILES
         Headers/pool.h Headers/retcode.h Headers/pipe.h Headers/pipeP.h
         Headers/stringBuffer.h Headers/stringBufferP.h
         Headers/timer.h
-        Headers/unicode.h Headers/unicodeP.h Headers/uri.h Headers/utils.h
+        Headers/unicode.h Headers/unicodeP.h Headers/utils.h
         Headers/jsonEvent.h)
 
 add_library(ooio STATIC ${SOURCE_FILES})

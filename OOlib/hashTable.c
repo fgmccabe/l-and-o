@@ -258,7 +258,7 @@ static void rehash(hashPo tbl) {
       bucketPo b = old[i];
 
       while (b != NULL) {
-        register long offset = (tbl->hash)(b->nme) % tbl->size;
+        register unsigned long offset = (unsigned long)((tbl->hash)(b->nme) % tbl->size);
         register bucketPo bb = b; /* switch bucket from old table to new table */
 
         b = b->link;
@@ -282,7 +282,7 @@ retCode ProcessTable(procFun pr, hashPo htbl, void *c) {
 
   {
     register int i;
-    register int size = htbl->size;
+    register long size = htbl->size;
 
     for (i = 0; stat == Ok && i < size; i++) {
       if (htbl->table[i] != NULL) {

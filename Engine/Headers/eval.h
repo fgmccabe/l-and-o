@@ -96,12 +96,11 @@ static inline short int carefulEnv(insPo pc)
     return envSize(pc);
   }
 }
-    
 
 static inline short int argArity(insPo pc)
 {
   assert(op_code(*pc)==gcmap||op_code(*pc)==escape||op_code(*pc)==kawl||op_code(*pc)==kawlO||op_code(*pc)==trycl||op_code(*pc)==tryme || op_code(*pc)==gc || op_code(*pc)==alloc);
-  return (short)(op_h_val(*pc));
+  return op_h_val(*pc);
 }
 
 retCode raiseError(processPo P,string name,ptrI code);

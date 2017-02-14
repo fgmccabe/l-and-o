@@ -31,7 +31,7 @@ extern objectPo listNthElement(listPo list,int32 ix);
 
 extern long listCount(listPo list);
 
-extern listPo emptyList;
+extern listPo nilList;
 
 typedef retCode (*listFun)(objectPo data,void *cl);
 

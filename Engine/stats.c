@@ -60,7 +60,7 @@ static void sortCounts(long count, long base[], long sorted[]) {
     }
 
     if (maxI != i) {
-      int swap = sorted[i];
+      long swap = sorted[i];
       sorted[i] = sorted[maxI];
       sorted[maxI] = swap;
     }

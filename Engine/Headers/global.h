@@ -30,12 +30,12 @@ static inline logical oldGeneration(objPo p)
 {
   extern objPo globalSpace;
   extern objPo leftBase;
-  return globalSpace<=p && p<leftBase;
+  return (logical)(globalSpace<=p && p<leftBase);
 }
 
 static inline logical inGlobalHeap(const objPo p)
 {
-  return inHeap(&globalHeap,p) || oldGeneration(p);
+  return (logical)(inHeap(&globalHeap,p) || oldGeneration(p));
 }
 
 extern void initGlobal(long size);

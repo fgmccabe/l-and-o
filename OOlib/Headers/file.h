@@ -33,14 +33,6 @@ extern classPo fileClass;
 typedef enum { regularFileType, dirFileType, 
 	       linkFileType, socketFileType, unknownFileType } fileType;
 
-fileType typeOfFile(string name);
-logical filePresent(string name);
-retCode isRegularFile(string fname);
-retCode isDirectory(string name);
-
-typedef retCode (*dirProc)(string name,fileType type,void *cl);
-retCode processDirectory(string name,dirProc proc,void *cl);
-
 ioPo openInFile(string file,ioEncoding encoding);
 ioPo openOutFile(string file,ioEncoding encoding);
 ioPo openInOutFile(string file,ioEncoding encoding);
@@ -48,7 +40,6 @@ ioPo openAppendFile(string file,ioEncoding encoding);
 ioPo openInOutAppendFile(string file,ioEncoding encoding);
 ioPo newOutFile(string file,ioEncoding encoding);
 
-codePoint inCh(ioPo f);                 /* read character from a file */
 
 ioPo OpenStdin(void);
 ioPo OpenStdout(void);
@@ -56,9 +47,6 @@ ioPo OpenStderr(void);
 
 int fileNumber(filePo f);
 ioEncoding fileEncoding(filePo f);
-
-retCode rmFile(string name);
-retCode mvFile(string name,string to);
 
 retCode configureIo(filePo f,ioConfigOpt mode);
 logical isFileBlocking(filePo f);

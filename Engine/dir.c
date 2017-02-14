@@ -302,8 +302,6 @@ retCode g__file_mode(processPo P, ptrPo a) {
   }
 }
 
-
-
 /*
  * file_type check out the type of the file
  */
@@ -371,6 +369,18 @@ retCode g__file_type(processPo P, ptrPo a) {
  * succeeds if file is present, false otherwise 
  */
 
+/* Special macro for Windows 95 */
+#define FILE_ACCESS_MODE F_OK|R_OK
+
+/* Check if a file is present or not */
+static retCode filePresent(string name) {
+  if (access((const char *) name, FILE_ACCESS_MODE) == 0)
+    return Ok;
+  else
+    return Fail;
+}
+
+
 retCode g__file_present(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
 
@@ -378,13 +388,10 @@ retCode g__file_present(processPo P, ptrPo a) {
     return liberror(P, "__file_present", eSTRNEEDD);
 
   switchProcessState(P, wait_io);
-  logical present = filePresent(stringVal(stringV(t1)));
+  retCode present = filePresent(stringVal(stringV(t1)));
   setProcessRunnable(P);
 
-  if (present)
-    return Ok;
-  else
-    return Fail;
+  return present;
 }
 
 /*

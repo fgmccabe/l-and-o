@@ -41,6 +41,8 @@
 #define STD_PERMISSIONS (S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR)
 #endif
 
+static retCode isRegularFile(string fname);
+
 /* Set up the file class */
 
 FileClassRec FileClass = {
@@ -318,8 +320,6 @@ retCode fileSeek(ioPo io, long count) {
     f->io.status = Ok;
     return Ok;
   }
-
-  return Error;                         // not implemented yet
 }
 
 retCode fileClose(ioPo io) {
@@ -432,7 +432,7 @@ retCode fileFill(filePo f) {
     return Ok;        // Already got stuff in there
 }
 
-retCode fileFlush(filePo f, int count) {
+retCode fileFlush(filePo f, long count) {
   int fno = f->file.fno;
   long written;
   short remaining = f->file.out_pos;
@@ -673,6 +673,16 @@ ioPo openInOutAppendFile(string name, ioEncoding encoding) {
   }
 }
 
+retCode isRegularFile(string fname) {
+  struct stat buf;
+
+  if (stat((const char *) fname, &buf) == -1)
+    return Fail;    /* File not found */
+  else if (S_ISDIR(buf.st_mode))
+    return Fail;
+  else
+    return Ok;
+}
 
 /* These only apply to Unix */
 

@@ -21,7 +21,7 @@ ptrI permLsPair(heapPo H,ptrI head,ptrI tail)
 
   gcAddRoot(H,&tail);
 
-  objPo new = permObject(H,listClass);
+  objPo new = permObject(H,consClass);
 
   new->args[0] = head;
   new->args[1] = tail;

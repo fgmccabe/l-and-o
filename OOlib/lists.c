@@ -56,7 +56,7 @@ ListRecord EmptyList = {
     NULL}
 };
 
-listPo emptyList = &EmptyList;
+listPo nilList = &EmptyList;
 
 void listInit(objectPo o, va_list *args) {
   listPo l = O_LIST(o);
@@ -76,7 +76,7 @@ void eraseList(objectPo o) {
 
 static uint64 listHash(objectPo o) {
   listPo l = O_LIST(o);
-  if (l == emptyList)
+  if (l == nilList)
     return 0;
   else
     return hashCode(head(l)) * 37 + listHash(O_OBJECT(tail(l)));
@@ -86,14 +86,14 @@ static logical listEquality(objectPo o1, objectPo o2) {
   listPo l1 = O_LIST(o1);
   listPo l2 = O_LIST(o2);
 
-  while (l1 != emptyList && l2 != emptyList) {
+  while (l1 != nilList && l2 != nilList) {
     if (!equals(l1->list.head, l2->list.head))
       return False;
     l1 = tail(l1);
     l2 = tail(l2);
   }
 
-  return (logical) (l1 == emptyList && l2 == emptyList);
+  return (logical) (l1 == nilList && l2 == nilList);
 }
 
 void *head(listPo list) {
@@ -109,21 +109,21 @@ listPo cons(objectPo head, listPo tail) {
 }
 
 listPo tack(objectPo head, listPo list) {
-  if (list == emptyList)
+  if (list == nilList)
     return cons(head, list);
   else {
     listPo l = list;
-    while (l->list.tail != emptyList)
+    while (l->list.tail != nilList)
       l = l->list.tail;
-    l->list.tail = cons(head, emptyList);
+    l->list.tail = cons(head, nilList);
     return list;
   }
 }
 
 objectPo listNthElement(listPo list, int32 ix) {
-  while (list != emptyList && ix-- > 0)
+  while (list != nilList && ix-- > 0)
     list = tail(list);
-  if (list == emptyList)
+  if (list == nilList)
     return Null;
   else
     return head(list);
@@ -131,7 +131,7 @@ objectPo listNthElement(listPo list, int32 ix) {
 
 retCode processList(listPo list, listFun fun, void *cl) {
   retCode ret = Ok;
-  while (ret == Ok && list != emptyList) {
+  while (ret == Ok && list != nilList) {
     ret = fun(head(list), cl);
     list = tail(list);
   }
@@ -139,7 +139,7 @@ retCode processList(listPo list, listFun fun, void *cl) {
 }
 
 void *findInList(listPo list, listTest test, void *cl) {
-  while (list != emptyList) {
+  while (list != nilList) {
     if (test(head(list), cl))
       return head(list);
     list = tail(list);
@@ -149,7 +149,7 @@ void *findInList(listPo list, listTest test, void *cl) {
 
 long listCount(listPo list) {
   long count = 0;
-  while (list != emptyList) {
+  while (list != nilList) {
     count++;
     list = tail(list);
   }
@@ -158,10 +158,10 @@ long listCount(listPo list) {
 
 listPo removeElements(listPo l, listTest test, void *cl) {
   listPo l1 = l;
-  listPo tl = emptyList;
-  while (l1 != emptyList) {
+  listPo tl = nilList;
+  while (l1 != nilList) {
     if (test(head(l1), cl)) {
-      if (tl == emptyList) {    /* top of list */
+      if (tl == nilList) {    /* top of list */
         assert(l1 == l);
         l1 = l = tail(l);
       }
@@ -179,7 +179,7 @@ listPo removeElements(listPo l, listTest test, void *cl) {
 }
 
 listPo filter(listPo l, listTest test, void *cl) {
-  if (l == emptyList)
+  if (l == nilList)
     return l;
   else if (test(head(l), cl)) {
     return cons(head(l), filter(tail(l), test, cl));
@@ -189,7 +189,7 @@ listPo filter(listPo l, listTest test, void *cl) {
 }
 
 void *listFold(listPo l, folder f, void *state) {
-  while(l!=emptyList){
+  while(l!=nilList){
     state = f(head(l),state);
     l = tail(l);
   }

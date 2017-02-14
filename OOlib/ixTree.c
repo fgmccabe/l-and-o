@@ -144,7 +144,7 @@ static pthread_once_t ioOnce = PTHREAD_ONCE_INIT;
 
 static void initLeafTree(void) {
   initRecursiveMutex(&leafClass->mutex);
-  emptyTree = (treePo) newObject(leafClass, emptyList, 0);
+  emptyTree = (treePo) newObject(leafClass, nilList, 0);
 }
 
 static void initLeafClass(classPo class, classPo request) {
@@ -159,7 +159,7 @@ static void eraseLeaf(objectPo o) {
 
 static void leafInit(objectPo o, va_list *args) {
   leafPo l = O_LEAF(o);
-  l->leaf.leafs = cons(O_OBJECT(pair(va_arg(*args, objectPo), va_arg(*args, objectPo))), emptyList);
+  l->leaf.leafs = cons(O_OBJECT(pair(va_arg(*args, objectPo), va_arg(*args, objectPo))), nilList);
   l->tree.mask = va_arg(*args, uint64);
 }
 
@@ -176,8 +176,8 @@ static logical leafEquality(objectPo o1, objectPo o2) {
   leafPo l2 = O_LEAF(o2);
 
   if (ixSize((treePo) l1) == ixSize((treePo) l2)) {
-    for (listPo ll1 = l1->leaf.leafs; ll1 != emptyList; ll1 = tail(ll1)) {
-      for (listPo ll2 = l2->leaf.leafs; ll2 != emptyList; ll2 = tail(ll2)) {
+    for (listPo ll1 = l1->leaf.leafs; ll1 != nilList; ll1 = tail(ll1)) {
+      for (listPo ll2 = l2->leaf.leafs; ll2 != nilList; ll2 = tail(ll2)) {
         if (equals(head(ll1), head(ll2)))
           goto leafLoop;
       }
@@ -192,7 +192,7 @@ static logical leafEquality(objectPo o1, objectPo o2) {
 
 static objectPo findInLeaf(treePo tree, objectPo key, uint64 hash) {
   leafPo l = O_LEAF(tree);
-  for (listPo ll = l->leaf.leafs; ll != emptyList; ll = tail(ll)) {
+  for (listPo ll = l->leaf.leafs; ll != nilList; ll = tail(ll)) {
     pairPo p = O_PAIR(head(ll));
     if (equals(lhs(p), key))
       return rhs(p);
@@ -247,8 +247,8 @@ static treePo mergeWithLeaf(treePo t1, treePo t2) {
 
     if (l1->tree.mask == l2->tree.mask) {
       listPo nl = l2->leaf.leafs;
-      for (listPo ll1 = l1->leaf.leafs; ll1 != emptyList; ll1 = tail(ll1)) {
-        for (listPo ll2 = l2->leaf.leafs; ll2 != emptyList; ll2 = tail(ll2)) {
+      for (listPo ll1 = l1->leaf.leafs; ll1 != nilList; ll1 = tail(ll1)) {
+        for (listPo ll2 = l2->leaf.leafs; ll2 != nilList; ll2 = tail(ll2)) {
           if (equals(lhs(head(ll1)), lhs(head(ll2))))
             goto nextLL1;
         }
@@ -312,7 +312,7 @@ static treePo mergeWithLeaf(treePo t1, treePo t2) {
 }
 
 static logical leafIsEmpty(treePo t) {
-  return (logical) (O_LEAF(t)->leaf.leafs == emptyList);
+  return (logical) (O_LEAF(t)->leaf.leafs == nilList);
 }
 
 int32 leafSize(treePo t) {
@@ -321,7 +321,7 @@ int32 leafSize(treePo t) {
 
 void *leafFold(treePo t, ixFolder f, void *state) {
   listPo l = O_LEAF(t)->leaf.leafs;
-  while (l != emptyList) {
+  while (l != nilList) {
     pairPo h = O_PAIR(head(l));
     state = f(lhs(h), rhs(h), state);
     l = tail(l);

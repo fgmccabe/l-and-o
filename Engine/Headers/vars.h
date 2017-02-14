@@ -59,7 +59,7 @@ static inline ptrI mkvar(ptrPo p)
 
 static inline logical IsFrozenVar(ptrI x)
 {
-  return isobj(x) && HasClass(x,varClass);
+  return (logical)(isobj(x) && HasClass(x,varClass));
 }
 
 extern logical notRecentVar(ptrPo vx);
@@ -98,9 +98,8 @@ static inline logical IsSusp(ptrI x)
 
 static inline logical isSuspVar(ptrPo x)
 {
-  return x[1]==suspClass && x[-1]==suspClass;
+  return (logical)(x[1]==suspClass && x[-1]==suspClass);
 }
-
 
 static inline ptrI allocateSusp(heapPo H,ptrI goal)
 {

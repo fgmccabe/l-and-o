@@ -502,7 +502,7 @@ static iPo uniTerm(genPo S, ptrPo p, int tgt, iPo *post, map regs, map *nregs) {
         long arity = objectArity(t);
 
         if (arity > 0) {
-          iPo argCode = uniSequence(S, objectArgs(t), arity, post, regs, nregs);
+          iPo argCode = uniSequence(S, objectArgs(t), (int)arity, post, regs, nregs);
 
           return appendIns(ins, argCode);
         }
@@ -627,7 +627,7 @@ static iPo bldTerm(genPo S, ptrPo p, int tgt, iPo *pre, map regs, map *nregs) {
         long arity = objectArity(t);
 
         if (arity > 0) {
-          iPo argCode = bldSequence(S, objectArgs(t), arity, pre, regs, nregs);
+          iPo argCode = bldSequence(S, objectArgs(t), (int)arity, pre, regs, nregs);
 
           if (tgt == 0) {
             *pre = appendIns(*pre, argCode);
@@ -985,7 +985,7 @@ retCode g__term(processPo P, ptrPo a) {
   long litCount = S->litNo;
   lPo lt;
   long size = codeCount(ins); /* how many instructions do we have? */
-  ptrI code = permCode(size, litCount);
+  ptrI code = permCode((unsigned)size, (unsigned)litCount);
   ptrI xx = kvoid;
   retCode ret = Ok;
   byte eMsg[MAX_SYMB_LEN];
@@ -1103,7 +1103,7 @@ retCode g__assert(processPo P, ptrPo a) {
   long litCount = S->litNo;
   lPo lt;
   long size = codeCount(ins); /* how many instructions do we have? */
-  ptrI code = permCode(size, litCount);
+  ptrI code = permCode((unsigned)size, (unsigned)litCount);
   ptrI xx = kvoid;
   retCode ret = Ok;
   byte eMsg[MAX_SYMB_LEN];
@@ -1254,7 +1254,7 @@ ptrI loObject(heapPo H, ptrI T) {
       long litCount = S->litNo;
       lPo lt;
       long size = codeCount(ins); /* how many instructions do we have? */
-      ptrI code = permCode(size, litCount);
+      ptrI code = permCode((unsigned)size, (unsigned)litCount);
       ptrI xx = kvoid;
       retCode ret = Ok;
       byte eMsg[MAX_SYMB_LEN];

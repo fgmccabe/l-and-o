@@ -115,8 +115,8 @@ retCode g__stringOf(processPo P, ptrPo a) {
   else if (isvar(Prec) || !isInteger(objV(Prec)))
     return liberror(P, "__stringOf", eINTNEEDD);
   else {
-    long width = integerVal(intV(Width));
-    long prec = integerVal(intV(Prec));
+    long width = (long) integerVal(intV(Width));
+    long prec = (long) integerVal(intV(Prec));
     string buffer = (prec < 0 ?
                      (byte *) malloc(sizeof(byte) * (-prec + 1))
                               : NULL);
@@ -137,9 +137,9 @@ retCode g__stringOf(processPo P, ptrPo a) {
 
         if (width > 0) {                    /* right padded */
           string p;
-          uint64 w = width - len;
+          long w = width - len;
 
-          uniNCpy(text, sLen, txt, (long) len);
+          uniNCpy(text, sLen, txt, len);
           p = text + len;
           while (w-- > 0)
             *p++ = ' ';                   /* pad out with spaces */
@@ -150,7 +150,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
           while (w-- > 0)
             *p++ = ' ';                   /* left pad with spaces */
           if (labs(width) > len)
-            uniNCpy(p, sLen - (p - text), txt, (long) len);
+            uniNCpy(p, sLen - (p - text), txt, len);
           else
             uniNCpy(p, sLen - (p - text), txt + len + width, -width);
         }
@@ -298,16 +298,14 @@ retCode g__flt2str(processPo P, ptrPo a) {
     integer prec = integerVal(intV(a3));
     logical left = (logical) (width > 0);
     byte buffer[128];
-    ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
-    retCode res = outDouble(out, FloatVal(objV(a1)),
-                            (char) (identical(a5, trueClass) ? 'g' : 'f'),
-                            abs((int) width), (int) prec, ' ', left, (string) "", identical(a4, trueClass));
+
+    retCode res = formatDouble(buffer, NumberOf(buffer), FloatVal(objV(a1)),
+                               (char) (identical(a5, trueClass) ? 'g' : 'f'), (int) prec, (string) "",
+                               identical(a4, trueClass));
 
     if (res == Ok) {
       long len;
-      string text = getTextFromBuffer(&len, O_BUFFER(out));
-      ptrI rslt = allocateString(&P->proc.heap, text, (long) len);
-      closeFile(out);
+      ptrI rslt = allocateString(&P->proc.heap, buffer, uniStrLen(buffer));
 
       return funResult(P, a, 6, rslt);
     } else
@@ -456,7 +454,7 @@ retCode g__str_len(processPo P, ptrPo a) {
     return liberror(P, "_str_len", eSTRNEEDD);
   else {
     string s1 = stringVal(stringV(a1));
-    integer slen = uniStrLen(s1);
+    integer slen = (integer) uniStrLen(s1);
 
     if (isvar(a2)) {
       ptrI R = allocateInteger(&P->proc.heap, slen);

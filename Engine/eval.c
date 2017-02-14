@@ -1243,15 +1243,11 @@ void runGo(register processPo P) {
 
         testA(op_h_val(PCX));
 
-        if (!isvar(vx)) {
-          integer ix;
-          if (isObjct(vl)) {
-            clssPo class = ((clssPo) objV(vl->class));
+        if (isObjct(vl)) {
+          clssPo class = ((clssPo) objV(vl->class));
 
-            ix = class->hash % max;
-          }
-          PC += ix + 1;
-        }
+          PC += class->hash % max + 1;
+        } // Otherwise default to next instruction
         continue;
       }
 
@@ -1857,7 +1853,7 @@ void runGo(register processPo P) {
       }
 
       case mYA: {      /* move Y[X],A[h] */
-        register ptrPo yVar = Yreg(-((short) (op_o_val(PCX))));
+        register ptrPo yVar = Yreg(-(op_o_val(PCX)));
 
         bindVr(yVar, deRefI(&A[op_h_val(PCX)]));  /* we need to bind, 'cos we may need to undo this move*/
 
@@ -2334,7 +2330,7 @@ void runGo(register processPo P) {
 
       case vdAA: {      /* Void A[h],Count */
         ptrPo low = &A[op_h_val(PCX)];
-        unsigned int count = op_o_val(PCX);
+        short count = op_o_val(PCX);
 
         while (count-- > 0)
           *low++ = kvoid;
@@ -2347,8 +2343,8 @@ void runGo(register processPo P) {
       }
 
       case vdYY: {      /* Void Y[h],Count */
-        unsigned int low = op_o_val(PCX);
-        unsigned int count = op_h_val(PCX);
+        short low = op_o_val(PCX);
+        short count = op_h_val(PCX);
 
         while (count-- > 0)
           Y[-(low++)] = kvoid;
@@ -2373,7 +2369,7 @@ void runGo(register processPo P) {
       }
 
       case clYY: {      /* clear Y[h],Count */
-        unsigned int count = op_h_val(PCX);
+        short count = op_h_val(PCX);
         ptrPo yReg = Yreg(-op_o_val(PCX));
 
         for (; count-- > 0; yReg--) {

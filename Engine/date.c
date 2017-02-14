@@ -46,7 +46,7 @@ retCode g__time2date(processPo P, ptrPo a) {
   else {
     time_t when = (time_t) FloatVal(objV(T));
     double fraction = 0;
-    struct tm *now = localtime((time_t *) &when);
+    struct tm *now = localtime(&when);
     ptrI val = kvoid;
     retCode ret = Ok;
     rootPo root = gcAddRoot(&P->proc.heap, &val);
@@ -123,7 +123,7 @@ retCode g__time2utc(processPo P, ptrPo a) {
   else {
     time_t when = (time_t) FloatVal(objV(T));
     double fraction = 0;
-    struct tm *now = gmtime((time_t *) &when);
+    struct tm *now = gmtime(&when);
     ptrI val = kvoid;
     rootPo root = gcAddRoot(&P->proc.heap, &val);
     retCode ret = Ok;

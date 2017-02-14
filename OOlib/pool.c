@@ -63,7 +63,7 @@ static inline size_t computeElSize(size_t s)
 poolPo newPool(size_t elsize, int initial)
 {
   size_t actElSize = computeElSize(elsize);
-  char *alloc = calloc(initial,actElSize);
+  char *alloc = calloc((size_t)initial,actElSize);
   int i = 0;
   char *p = alloc;
   poolPo pool = (poolPo)malloc(sizeof(pbase));
@@ -114,7 +114,7 @@ void *allocPool(poolPo pool)
   assert(pool->fcount+pool->used==pool->alloced);
 
   if(pool->free==NULL){
-    char *alloc = calloc(pool->incsize,pool->elsize);
+    char *alloc = calloc((size_t)pool->incsize,pool->elsize);
 
     if(alloc!=NULL){
       int i = pool->incsize; 

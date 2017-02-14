@@ -94,6 +94,7 @@ retCode prevPoint(string src, long *start, codePoint *code) {
       while (UCR(b)) {
         pt = pt | (UXR(b) << factor);
         factor += 6;
+        b = src[--pos];
       }
       if (UC80(b)) {
         *code = pt | (UX80(b) << factor);
