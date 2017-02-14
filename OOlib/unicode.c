@@ -234,7 +234,7 @@ retCode uniTackOn(string dest, long len, codePoint ch) {
 }
 
 retCode uniAppend(string dest, long *pos, long len, string src) {
-  for (; *src != 0 && *pos < len; src++)
+  for (; *src != 0 && *pos < len; src)
     dest[(*pos)++] = *src++;
   if (*pos < len - 1) {
     dest[*pos] = 0;

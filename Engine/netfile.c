@@ -123,7 +123,7 @@ retCode g__connect(processPo P, ptrPo a) {
   else if (isvar(deRefI(&a[3])))
     return liberror(P, "__connect", eINVAL);
   else {
-    short port = (short) integerVal(intV(Port));
+    int16 port = (int16) integerVal(intV(Port));
     retCode ret;
 
     if (port == 0 || !IsString(Host))

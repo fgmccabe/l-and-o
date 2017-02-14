@@ -27,7 +27,7 @@ static retCode strScanFun(specialClassPo class, specialHelperFun helper, void *c
 static objPo strCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger strHashFun(specialClassPo class, objPo o);
 
-static retCode int2Str(integer i, unsigned short base, byte *buff, long len, long *end);
+static retCode int2Str(integer i, uint16 base, byte *buff, long len, long *end);
 
 void initStringClass(void) {
   stringClass = newSpecialClass("lo.core#string", strSizeFun, strCompFun,
@@ -325,7 +325,7 @@ retCode g__int2str(processPo P, ptrPo a) {
     return liberror(P, "_int2str", eINVAL);
   else {
     integer val = integerVal(intV(a1));
-    unsigned short base = (unsigned short) integerVal(intV(a2));
+    uint16 base = (uint16) integerVal(intV(a2));
     integer width = integerVal(intV(a3));
     codePoint pad = (codePoint) IntVal(a4);
     logical left = (logical) (width < 0);

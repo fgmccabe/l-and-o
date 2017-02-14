@@ -20,13 +20,13 @@
 #include "word.h"
 
 void install_escapes(void);
-funpo escapeCode(unsigned short code);
+funpo escapeCode(uint16 code);
 char *escapeName(int code);
 int escapeOpcode(unsigned int code);
 funpo getescape(int code);
-logical validEscape(unsigned int code,int arity);
+logical validEscape(unsigned int code, unsigned short arity);
 void showEscape(processPo P,int code,ptrPo args,long arity);
-logical validEscape(unsigned int code,int arity);
+logical validEscape(unsigned int code, unsigned short arity);
 void ScanEscapes(void);
 
 void showCall(processPo P,ptrI prog,ptrPo args,long arity);

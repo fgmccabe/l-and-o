@@ -175,7 +175,7 @@ retCode fileBackByte(ioPo io, byte b) {
       memmove(&f->file.in_line[1], &f->file.in_line[f->file.in_pos],
               sizeof(byte) * (f->file.in_len - f->file.in_pos));
       f->file.in_line[0] = b;
-      f->file.in_len = (short) (f->file.in_len - f->file.in_pos + 1);
+      f->file.in_len = (int16) (f->file.in_len - f->file.in_pos + 1);
       f->file.in_pos = 0;
       f->io.status = Ok;
     } else
@@ -417,7 +417,7 @@ retCode fileFill(filePo f) {
       }
     } else {
       f->file.in_pos = 0;
-      f->file.in_len = (short) len;
+      f->file.in_len = (int16) len;
       f->file.bufferPos = f->io.inBpos;
 
       if (len == 0) {
@@ -435,7 +435,7 @@ retCode fileFill(filePo f) {
 retCode fileFlush(filePo f, long count) {
   int fno = f->file.fno;
   long written;
-  short remaining = f->file.out_pos;
+  int16 remaining = f->file.out_pos;
   byte *cp = f->file.out_line;
   long writeGap = 0;
 
@@ -493,7 +493,7 @@ retCode fileReset(ioPo f, long mark) {
       return Fail;
     else {
       ff->io.inBpos = mark;
-      ff->file.in_pos = (short) (mark - ff->file.bufferPos);
+      ff->file.in_pos = (int16) (mark - ff->file.bufferPos);
       return Ok;
     }
   }

@@ -21,7 +21,7 @@
 
 typedef struct _sock_object_ *sockPo;
 
-sockPo listeningPort(string name,int port);
+sockPo listeningPort(string name, uint16 port);
 retCode acceptConnection(sockPo listen,ioEncoding encoding,
 			 ioPo *inC,ioPo *outC);
 

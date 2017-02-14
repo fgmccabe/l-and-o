@@ -84,12 +84,12 @@ static void destroyHost(objectPo o) {
 
 /* This will have to be upgraded to IPv6 */
 static logical ipAddr(const string addr, struct in_addr *ip) {
-  short quads[4];
+  int16 quads[4];
   char *p = (char *) addr;
   int i;
 
   for (i = 0; i < 4; i++) {
-    quads[i] = (short) strtol(p, &p, 10);  /* look for a quad number */
+    quads[i] = (int16) strtol(p, &p, 10);  /* look for a quad number */
 
     if (*p == '.')
       p++;

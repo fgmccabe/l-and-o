@@ -370,7 +370,7 @@ static void eraseNode(objectPo o) {
 static void nodeInit(objectPo o, va_list *args) {
   nodePo node = O_NODE(o);
 
-  node->tree.masklen = (short) va_arg(*args, int);
+  node->tree.masklen = (int16) va_arg(*args, int);
   node->tree.mask = va_arg(*args, uint64);
   node->node.l1 = va_arg(*args, treePo);
   node->node.l2 = va_arg(*args, treePo);

@@ -28,50 +28,50 @@
 #include "stats.h"
 #endif
 
-retCode equal(processPo P,ptrPo T1,ptrPo T2);
-retCode unifyType(processPo P,ptrPo T1,ptrPo T2);
-logical identical(ptrI T1,ptrI T2);
-retCode match(processPo P,ptrPo T1,ptrPo T2);
-retCode testmatch(ptrPo T1,ptrPo T2);
+retCode equal(processPo P, ptrPo T1, ptrPo T2);
+retCode unifyType(processPo P, ptrPo T1, ptrPo T2);
+logical identical(ptrI T1, ptrI T2);
+retCode match(processPo P, ptrPo T1, ptrPo T2);
+retCode testmatch(ptrPo T1, ptrPo T2);
 
-typedef enum {readMode,writeMode,dummyMode} rwmode;
+typedef enum {
+  readMode, writeMode, dummyMode
+} rwmode;
 
-extern void chainSuspension(processPo P,ptrPo var);
+extern void chainSuspension(processPo P, ptrPo var);
 
-static inline void bindVar(processPo P,ptrPo ptr,ptrI val)
-{
-  assert((ptr>=(ptrPo)P->proc.heap.base && ptr<(ptrPo)P->proc.heap.create) ||
-	 (ptr>=(ptrPo)P->proc.sBase && ptr<(ptrPo)P->proc.sTop));
+static inline void bindVar(processPo P, ptrPo ptr, ptrI val) {
+  assert((ptr >= (ptrPo) P->proc.heap.base && ptr < (ptrPo) P->proc.heap.create) ||
+         (ptr >= (ptrPo) P->proc.sBase && ptr < (ptrPo) P->proc.sTop));
 
-  if(((void*)P->proc.B<(void*)P->proc.T?
-      (ptr<(ptrPo)P->proc.B->H):
-      ptr<P->proc.T->H)
-     ||ptr>(ptrPo)P->proc.B){
-    P->proc.trail->var=ptr;
-    P->proc.trail->val=*ptr;
+  if (((void *) P->proc.B < (void *) P->proc.T ?
+       (ptr < (ptrPo) P->proc.B->H) :
+       ptr < P->proc.T->H)
+      || ptr > (ptrPo) P->proc.B) {
+    P->proc.trail->var = ptr;
+    P->proc.trail->val = *ptr;
     P->proc.trail++;
   }
-  if(isSuspVar(ptr))
-    chainSuspension(P,ptr);
+  if (isSuspVar(ptr))
+    chainSuspension(P, ptr);
 
-  *ptr=val;
+  *ptr = val;
 }
 
-static inline void bndVar(processPo P,ptrPo ptr,ptrI val)
-{
-  assert((ptr>=(ptrPo)P->proc.heap.base && ptr<(ptrPo)P->proc.heap.create) ||
-	 (ptr>=(ptrPo)P->proc.sBase && ptr<(ptrPo)P->proc.sTop));
+static inline void bndVar(processPo P, ptrPo ptr, ptrI val) {
+  assert((ptr >= (ptrPo) P->proc.heap.base && ptr < (ptrPo) P->proc.heap.create) ||
+         (ptr >= (ptrPo) P->proc.sBase && ptr < (ptrPo) P->proc.sTop));
 
-  if(((void*)P->proc.B<(void*)P->proc.T?
-      (ptr<(ptrPo)P->proc.B->H):
-      ptr<P->proc.T->H)
-     ||ptr>(ptrPo)P->proc.B){
-    P->proc.trail->var=ptr;
-    P->proc.trail->val=*ptr;
+  if (((void *) P->proc.B < (void *) P->proc.T ?
+       (ptr < (ptrPo) P->proc.B->H) :
+       ptr < P->proc.T->H)
+      || ptr > (ptrPo) P->proc.B) {
+    P->proc.trail->var = ptr;
+    P->proc.trail->val = *ptr;
     P->proc.trail++;
   }
 
-  *ptr=val;
+  *ptr = val;
 }
 
 static inline ptrI unBind(ptrPo x)
@@ -79,41 +79,38 @@ static inline ptrI unBind(ptrPo x)
   return *x = (ptrI)x;
 }
 
-static inline short int envSize(insPo pc)
-{
-  assert(op_code(*pc)==gcmap);
+static inline int16 envSize(insPo pc) {
+  assert(op_code(*pc) == gcmap);
   return op_o_val(*pc);
 }
 
-static inline short int carefulEnv(insPo pc)
-{
-  switch(op_code(*pc)){
-  case escape:
-  case kawl:
-  case kawlO:
-    return envSize(pc+1);
-  default:
-    return envSize(pc);
+static inline int16 carefulEnv(insPo pc) {
+  switch (op_code(*pc)) {
+    case escape:
+    case kawl:
+    case kawlO:
+      return envSize(pc + 1);
+    default:
+      return envSize(pc);
   }
 }
 
-static inline short int argArity(insPo pc)
-{
-  assert(op_code(*pc)==gcmap||op_code(*pc)==escape||op_code(*pc)==kawl||op_code(*pc)==kawlO||op_code(*pc)==trycl||op_code(*pc)==tryme || op_code(*pc)==gc || op_code(*pc)==alloc);
+static inline int16 argArity(insPo pc) {
+  assert(op_code(*pc) == gcmap || op_code(*pc) == escape || op_code(*pc) == kawl || op_code(*pc) == kawlO ||
+         op_code(*pc) == trycl || op_code(*pc) == tryme || op_code(*pc) == gc || op_code(*pc) == alloc);
   return op_h_val(*pc);
 }
 
-retCode raiseError(processPo P,string name,ptrI code);
-retCode raiseException(processPo P,ptrI exc);
+retCode raiseError(processPo P, string name, ptrI code);
+retCode raiseException(processPo P, ptrI exc);
 void recoverFromException(processPo P);
 
 void init_args(char **argv, int argc, int start);
 
-static inline retCode funResult(processPo P,ptrPo args,int which,ptrI value)
-{
-  rootPo root = gcAddRoot(&P->proc.heap,&value);
-  retCode ret = equal(P,&value,&args[which]);
-  gcRemoveRoot(&P->proc.heap,root);
+static inline retCode funResult(processPo P, ptrPo args, int which, ptrI value) {
+  rootPo root = gcAddRoot(&P->proc.heap, &value);
+  retCode ret = equal(P, &value, &args[which]);
+  gcRemoveRoot(&P->proc.heap, root);
   return ret;
 }
 

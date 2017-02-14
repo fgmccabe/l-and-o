@@ -18,7 +18,7 @@
 
 #include "io.h"
 
-retCode outInteger(ioPo f, integer i, unsigned short base, int width, int precision,
+retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
                    codePoint pad, logical left, string prefix, logical sign);
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
                   codePoint pad, logical left, string prefix, logical sign);
@@ -31,7 +31,7 @@ retCode outInt(ioPo f, integer i);
 retCode outFloat(ioPo out, double x);
 retCode outUStr(ioPo f, string str);
 
-long int2StrByBase(byte *str, integer i, long pos, unsigned short base);
+long int2StrByBase(byte *str, integer i, long pos, uint16 base);
 retCode formatDouble(byte *out, long outLen, double x, char mode, int precision,
                      string prefix, logical sign);
 

@@ -40,9 +40,9 @@ static inline byte hxDgit(integer h) {
     return (byte) (h + 'a' - 10);
 }
 
-static long natural2StrByBase(byte *str, uinteger i, long pos, unsigned short base);
+static long natural2StrByBase(byte *str, uinteger i, long pos, uint16 base);
 
-long int2StrByBase(byte *str, integer i, long pos, unsigned short base) {
+long int2StrByBase(byte *str, integer i, long pos, uint16 base) {
   if (i < 0) {
     str[pos++] = '-';
     return natural2StrByBase(str, (uinteger) -i, pos, base);
@@ -50,7 +50,7 @@ long int2StrByBase(byte *str, integer i, long pos, unsigned short base) {
     return natural2StrByBase(str, (uinteger) i, pos, base);
 }
 
-static long natural2StrByBase(byte *str, uinteger i, long pos, unsigned short base) {
+static long natural2StrByBase(byte *str, uinteger i, long pos, uint16 base) {
   if (i < base)
     str[pos++] = hxDgit(i);
   else {
@@ -60,7 +60,7 @@ static long natural2StrByBase(byte *str, uinteger i, long pos, unsigned short ba
   return pos;
 }
 
-retCode outInteger(ioPo f, integer i, unsigned short base, int width, int precision,
+retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
                    codePoint pad, logical left, string prefix, logical sign) {
   byte iBuff[128];
   retCode ret;

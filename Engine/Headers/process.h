@@ -82,7 +82,7 @@ typedef struct {
   choicePo B;                           /* Current choice point */
   choicePo SB;                          /* Where to cut to */
   choicePo cSB;                         /* Continuation slashback point */
-  choicePo T;        /* Trap recovery */
+  choicePo T;                           /* Trap recovery */
   trailPo trail;                        /* Current trail point */
   callPo C;                             /* Current call frame */
   callPo cC;                            /* Continuation call frame */
@@ -91,7 +91,7 @@ typedef struct {
   ptrI cPROG;                           /* continuation program  */
   ptrI PROG;                            /* current program  */
   ptrI trigger;                         /* triggered variables */
-  unsigned short F;      /* Trigger flag */
+  uint16 F;                             /* Trigger flag */
 
   byte errorMsg[1024];    // Current error message
   ptrI errorCode;      /* Error code of this process */

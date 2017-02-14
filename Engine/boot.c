@@ -19,7 +19,7 @@
 
 /* An initial bootstrap sequence */
 
-static ptrI buildCode(insPo cd, unsigned short arity, unsigned long cdlen, unsigned long litCnt) {
+static ptrI buildCode(insPo cd, uint16 arity, unsigned long cdlen, unsigned long litCnt) {
   ptrI code = permCode(cdlen, litCnt);
   codePo pc = codeV(code);
 

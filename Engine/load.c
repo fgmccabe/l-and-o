@@ -371,7 +371,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
               }
             }
 
-            codeV(pc)->arity = (unsigned short) arity; /* set the arity of the program */
+            codeV(pc)->arity = (uint16) arity; /* set the arity of the program */
 
             // Now we find the literals
 

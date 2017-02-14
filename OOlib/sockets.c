@@ -84,7 +84,7 @@ FileClassRec SocketClass = {
 
 classPo sockClass = (classPo) &SocketClass;
 
-sockPo listeningPort(string name, int port) {
+sockPo listeningPort(string name, uint16 port) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sock == INVALID_SOCKET)
@@ -103,7 +103,7 @@ sockPo listeningPort(string name, int port) {
       memset((char *) &addr, 0, sizeof(addr));
       addr.sin_family = AF_INET;
       addr.sin_addr.s_addr = htonl(INADDR_ANY);
-      addr.sin_port = htons((unsigned short) port);
+      addr.sin_port = htons( port);
 
       if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
         close(sock);
@@ -237,7 +237,7 @@ static retCode sockFill(filePo f) {
 
     if (nBytes > 0) {
       f->file.in_pos = 0;
-      f->file.in_len = (short) nBytes;
+      f->file.in_len = (int16) nBytes;
       return Ok;
     }
     else if (nBytes == 0) {    //  End of file

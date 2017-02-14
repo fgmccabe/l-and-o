@@ -52,15 +52,15 @@ typedef struct _code_record_ {
   ptrI class;                   // == codeClass
   unsigned long size;           // Number of instruction words
   unsigned long brks;           // Size of the break table */
-  unsigned short arity;          // The program arity -- used for verification purposes
+  uint16 arity;                 // The program arity -- used for verification purposes
   unsigned long litCnt;         // The number of literals in the code */
   insWord data[ZEROARRAYSIZE];  // Instruction words
 } codeRec, *codePo;
 
 extern void initPrograms(void);
-extern ptrI newProgLbl(const char *name, short arity);
-extern ptrI newProgramLbl(string name, short arity);
-extern ptrI programLbl(string name, short arity);
+extern ptrI newProgLbl(const char *name, int16 arity);
+extern ptrI newProgramLbl(string name, int16 arity);
+extern ptrI programLbl(string name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
 extern ptrI programOfSymbol(objPo o);
@@ -230,8 +230,8 @@ extern ptrI loObject(heapPo H, ptrI T);
 /* create a L&O object */
 
 extern void initPrograms(void);
-extern ptrI newProgLbl(const char *name, short arity);
-extern ptrI newProgramLbl(string name, short arity);
+extern ptrI newProgLbl(const char *name, int16 arity);
+extern ptrI newProgramLbl(string name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
 extern ptrI programOfSymbol(objPo o);

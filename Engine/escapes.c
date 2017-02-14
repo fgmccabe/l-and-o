@@ -158,18 +158,18 @@ static char *skipSig(char *tp) {
   }
 }
 
-static short sigArity(char *spec) {
+static int16 sigArity(char *spec) {
   integer ar;
   switch (*spec++) {
     case func_sig:
       ar = scanInt(&spec);
-      return (short)(ar + 1);
+      return (int16)(ar + 1);
     case pred_sig:
       ar = scanInt(&spec);
-      return (short)ar;
+      return (int16)ar;
     case grammar_sig:
       ar = scanInt(&spec);
-      return (short)(ar + 2);
+      return (int16)(ar + 2);
     case univ_sig:
       return sigArity(skipSig(spec));
     default:
@@ -201,7 +201,7 @@ char *escapeName(int code) {
   return escFuns[code].name;
 }
 
-logical validEscape(unsigned int code, int arity) {
+logical validEscape(unsigned int code, unsigned short arity) {
   if (code >= NumberOf(escFuns))
     return False;
   else if (escFuns[code].escape_code == NULL || escFuns[code].arity != arity)

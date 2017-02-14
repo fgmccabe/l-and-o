@@ -77,13 +77,13 @@ static uinteger pHashFun(specialClassPo class, objPo o) {
   return cl->hash;
 }
 
-static uinteger prgHash(const string name, short arity) {
+static uinteger prgHash(const string name, int16 arity) {
   byte fullLbl[MAX_SYMB_LEN];
   strMsg(fullLbl, NumberOf(fullLbl), "%s/%d", name, arity);
   return uniHash((string) fullLbl);
 }
 
-static ptrI allocateProgramLabel(heapPo H, const string name, short arity, ptrI code) {
+static ptrI allocateProgramLabel(heapPo H, const string name, int16 arity, ptrI code) {
   rootPo root = gcAddRoot(H, &code);
 
   long symlen = uniStrLen(name);
@@ -101,7 +101,7 @@ static ptrI allocateProgramLabel(heapPo H, const string name, short arity, ptrI 
   return objP(new);
 }
 
-ptrI newProgramLbl(string name, short arity) {
+ptrI newProgramLbl(string name, int16 arity) {
   struct {
     long arity;
     byte nm[MAX_SYMB_LEN];
@@ -124,7 +124,7 @@ ptrI newProgramLbl(string name, short arity) {
   }
 }
 
-ptrI programLbl(string name, short arity) {
+ptrI programLbl(string name, int16 arity) {
   struct {
     long arity;
     byte nm[MAX_SYMB_LEN];
@@ -136,7 +136,7 @@ ptrI programLbl(string name, short arity) {
   return (ptrI) hashGet(programs, (void *) &lbl);
 }
 
-ptrI newProgLbl(const char *name, short arity) {
+ptrI newProgLbl(const char *name, int16 arity) {
   return newProgramLbl((string) name, arity);
 }
 

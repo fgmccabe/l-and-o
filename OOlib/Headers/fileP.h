@@ -42,13 +42,13 @@ typedef struct _file_part_ {
   /* The file specific part of a file object */
   int fno;                              // The file number
   byte in_line[MAXLINE + 32];           // The input buffer */
-  short in_pos;
-  short in_len;
+  int16 in_pos;
+  int16 in_len;
 
   long bufferPos;                       // Mark at beginning of this buffer
 
   byte out_line[MAXLINE];               // The output buffer
-  short out_pos;                        // Current position within the output buffer
+  int16 out_pos;                        // Current position within the output buffer
 } FilePart;
 
 typedef struct _file_object_ {

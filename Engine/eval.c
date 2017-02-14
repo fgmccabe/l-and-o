@@ -663,7 +663,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode((unsigned short) op_o_val(PCX));
+          funpo ef = escapeCode((uint16) op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -773,8 +773,8 @@ void runGo(register processPo P) {
 
 #ifdef EXECTRACE
         {
-          short newEnvLen = op_o_val(PCX);
-          for (short i = 1; i <= newEnvLen; i++) {
+          uint16 newEnvLen = op_o_val(PCX);
+          for (uint16 i = 1; i <= newEnvLen; i++) {
             *Yreg(-i) = kvoid;
           }
         }
@@ -882,7 +882,7 @@ void runGo(register processPo P) {
         register long arity = codeArity(codeV(PROG));
 
         register choicePo back;
-        register short int i;
+        register int16 i;
         register ptrPo ptr;
 
         if (B < (choicePo) C)
@@ -928,7 +928,7 @@ void runGo(register processPo P) {
 
       case retryme: {      /* LBL subsequent clause follows */
         register integer arity = B->AX;
-        register short int i;
+        register int16 i;
 
         {
           register trailPo tb = B->trail;
@@ -968,7 +968,7 @@ void runGo(register processPo P) {
 
       case trustme: {      /* this is last clause to try */
         register integer arity = B->AX;
-        register short int i;
+        register int16 i;
 
         {
           register trailPo tb = B->trail;
@@ -1008,7 +1008,7 @@ void runGo(register processPo P) {
 
       case trycl: {      /* ARITY,LBL try a clause */
         register int len = envSize(cPC);
-        register short arity = (short) codeArity(codeV(PROG));
+        register int16 arity = (int16) codeArity(codeV(PROG));
 
         register choicePo back;
         register int i;
@@ -1060,7 +1060,7 @@ void runGo(register processPo P) {
 
       case retry: {    /* LBL try a subsequent clause */
         register integer arity = B->AX;
-        register short int i;
+        register int16 i;
 
         {
           register trailPo tb = B->trail;
@@ -1101,7 +1101,7 @@ void runGo(register processPo P) {
 
       case trust: {    /* LBL last clause to try */
         register integer arity = B->AX;
-        register short int i;
+        register int16 i;
 
         {
           register trailPo tb = B->trail;
@@ -1196,7 +1196,7 @@ void runGo(register processPo P) {
     */
 
       case indexs: {    /* Ai,max index symbol access */
-        short max = op_o_val(PCX);
+        int16 max = op_o_val(PCX);
         register ptrI vx = deRefI(&A[op_h_val(PCX)]);
 
         testA(op_h_val(PCX));
