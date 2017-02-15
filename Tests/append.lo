@@ -1,7 +1,6 @@
-append{
-  import go.io.
-  import go.unit.
-  import go.stdparse.
+test.append{
+  import lo.
+  import lo.unit.
 
   -- Test regular append and 'slow' append
 
@@ -9,28 +8,20 @@ append{
   naive([],[]).
   naive([E,..L],R) :- naive(L,I),append(I,[E],R).
 
-  private naiveS:all t ~~ (list[t],list[t]){}.
-  naiveS([],[]).
-  naiveS([E,..L],R) :- naiveS(L,I),R=app(I,[E]).
-
-  private app:all t ~~ (list[t],list[t])=>list[t].
-  app(@eof(),X)=>X.
-  app(@hdtl(E,X),Y) => app(X,Y).cons(E).
+  private append:all t ~~ (list[t],list[t],list[t]){}.
+  append([],X,X).
+  append([E,..X],Y,[E,..Z]) :- append(X,Y,Z).
 
   naivetest:(integer,integer) <=> harness.
   naivetest(_,_)<= harness.
   naivetest(i,Ln)<={
-    test :- O = iota(1,Ln), iter(i,O).
+    desc = "naive reverse test".
+    doTest() :- O = iota(1,Ln), iter(i,O).
 
     iter:all t ~~ (integer,list[t]){}.
     iter(0,_).
-    iter(N,I):- naiveS(I,_),iter(N-1,I).
+    iter(N,I):- naive(I,_),iter(N-1,I).
   }.
 
-  main([C,I,.._]) :-
-      i = naturalOf%%I,
-      count = naturalOf%%C,
-      checkPred(naivetest(i,count)).
-  main([]) :-
-      checkPred(naivetest(1,300)).
+  assert checkUnit(naivetest(1,300)).
 }

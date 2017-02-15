@@ -99,7 +99,7 @@ lo.comp.code.analyse{
     classifyVr(Occs,aReg(_),some(G)),
     Use = registersOccupied(Occs),
     -- Avoid = allUsedRegisters(T,G,Use,nullSet),
-    Conflict = conflicts(Nm,T,G).
+    Conflict = conflicts(occ(Nm,Occs),T,G).
     -- Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet),..Out] :-
@@ -137,16 +137,27 @@ lo.comp.code.analyse{
   -- pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
   pickRegisters([_,..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,SoFar).
 
-  conflicts:(string,list[occMap],integer) => set[integer].
-  conflicts(Nm,T,Gp) => foldLeft((SoFar,Oc)=>checkConflict(Nm,Oc,Gp,SoFar),nullSet,T).
+  conflicts:(occMap,list[occMap],integer) => set[integer].
+  conflicts(Occs,T,Gp) => foldLeft((SoFar,Oc)=>checkConflict(Occs,Oc,Gp,SoFar),nullSet,T).
 
-  checkConflict:(string,occMap,integer,set[integer]) => set[integer].
-  checkConflict(Nm,occ(Nm,_),_,SoFar) => SoFar.
-  checkConflict(Nm,occ(N,Occs),Gp,SoFar) => foldLeft((S,O)=>checkOccs(O,Gp,S),SoFar,Occs) :- N\=Nm.
+  checkConflict:(occMap,occMap,integer,set[integer]) => set[integer].
+  checkConflict(occ(Nm,_),occ(Nm,_),_,SoFar) => SoFar.
+  checkConflict(OOccs,occ("",Occs),Gp,SoFar) => foldLeft((S,O)=>checkTermOccs(O,OOccs,Gp,S),SoFar,Occs).
+  checkConflict(OOccs,occ(N,Occs),Gp,SoFar) => foldLeft((S,O)=>checkOccs(O,OOccs,Gp,S),SoFar,Occs).
 
-  checkOccs:((occForm,integer,integer),integer,set[integer]) => set[integer].
-  checkOccs((_,Gp,Rg),Gp,SoFar) => addMem(SoFar,Rg).
-  checkOccs(_,_,SoFar) => SoFar.
+  checkTermOccs:((occForm,integer,integer),occMap,integer,set[integer]) => set[integer].
+  checkTermOccs((hTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => soFar :- (Form,Gp,Rg) in Occs *> (Form = hTerm | Form = lArg).
+  checkTermOccs((hTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => addMem(SoFar,Rg).
+  checkTermOccs((lTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => soFar :- (Form,Gp,Rg) in Occs *> (Form = hTerm | Form = lArg).
+
+  checkTermOccs(_,_,_,SoFar) => SoFar.
+
+  checkOccs:((occForm,integer,integer),occMap,integer,set[integer]) => set[integer].
+  checkOccs((_,Gp,Rg),Occs,Gp,SoFar) => addMem(SoFar,Rg) :- conflicting(Gp,Rp,Occs).
+  checkOccs(_,_,_,SoFar) => SoFar.
+
+  conflicting:(integer,integer,occMap){}.
+  conflicting(Gp,Rg,occ(_,U)) :- (_,Gp,Rg) in U.
 
   conflict:(list[(occForm,integer,integer)],integer) => set[integer].
   conflict(Ocs,MaxAr) => nonArgUses(1,MaxAr,Ocs)+laterUses(Ocs,Ocs).

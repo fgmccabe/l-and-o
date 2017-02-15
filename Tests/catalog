@@ -1,6 +1,7 @@
 catalog{
   content{
     test.a -> "a.lo".
+    test.append -> "append.lo".
     test.bench -> "bench.lo".
     test.c -> "c.lo".
     test.cc -> "cc.lo".
