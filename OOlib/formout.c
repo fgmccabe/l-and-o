@@ -197,8 +197,8 @@ static int number2Str(double x, int precision, byte *dec, long *exp) {
   }
 }
 
-retCode formatDouble(byte *out, long outLen, double x, char mode, int precision,
-                     string prefix, logical sign) {
+retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayMode, int precision, string prefix,
+                     logical sign) {
   byte dec[DBL_DIG * 2];    /* buffer for the decimal mantissae */
   byte *d = dec;
   byte buff[1024];    /* buffer to represent the number string */
@@ -222,93 +222,104 @@ retCode formatDouble(byte *out, long outLen, double x, char mode, int precision,
     uniCpy(out, outLen, dec);
     return Ok;
   } else {
-    if (tolower(mode) == 'e' || (tolower(mode) == 'g' &&
-                                 (exp < -3 || (precision == 0 ? exp > DBL_DIG : exp > sig + 1)))) {
-      *p++ = *d++;      /* use scientific format */
-      len--;
-      sig--;
-      *p++ = '.';
-      if (precision > 0) {
-        while (precision-- > 0)
-          if (len-- > 0)
-            *p++ = *d++;
-          else
-            *p++ = *d;    /* trailing zero */
-      } else if (precision == 0 && len >= 0) {
-        if (sig > 0) {
-          while (sig-- > 0)
-            *p++ = *d++;
-        } else
-          *p++ = '0';
-      } else             /* ensure that we have the .0 trailing */
-        *p++ = '0';
-
-      *p++ = 'E';      /* Show exponent sign */
-      if (--exp < 0) {
-        *p++ = '-';
-        exp = -exp;
-      }
-      p += natural2StrByBase(p, (uinteger) exp, 0, 10);/* Show exponent value -- adjusted for leading digit*/
-      *p++ = '\0';
-    } else if (exp <= 0) {    /* Use fixed point format */
-      int prec = precision;
-
-      *p++ = '0';
-      *p++ = '.';
-
-      if (precision == 0)
-        while (p < eP && exp++ < 0)
-          *p++ = '0';
+    if (displayMode == general) {
+      if (exp < -3 || (precision == 0 ? exp > DBL_DIG : exp > sig + 1))
+        displayMode = scientific;
       else
-        while (precision > 0 && p < eP && exp < 0) {
-          *p++ = '0';
-          precision--;
-          exp++;
-        }
-
-      if (prec != 0) {
-        while (p < eP && precision > 0) {
-          if (len-- > 0)
-            *p++ = *d++;
-          else
-            *p++ = '0';
-          precision--;
-        }
-      } else {      /* display all available digits */
-        if (sig > 0) {
-          while (p < eP && sig-- > 0)
-            *p++ = *d++;
-        } else
-          *p++ = '0';      /* 0.0 */
-      }
-      *p = '\0';
-    } else {
-      while (p < eP && exp-- > 0)
-        if (len-- > 0) {
-          *p++ = *d++;
-          sig--;
-        } else
-          *p++ = *d;
-
-      if (p < eP && precision > 0) {
+        displayMode = fractional;
+    }
+    switch (displayMode) {
+      case scientific: {
+        *p++ = *d++; /* use scientific format */
+        len--;
+        sig--;
         *p++ = '.';
-        while (p < eP && precision > 0) {  /* copy out the fractional part */
-          if (len-- > 0)
-            *p++ = *d++;
-          else
+        if (precision > 0) {
+          while (precision-- > 0)
+            if (len-- > 0)
+              *p++ = *d++;
+            else
+              *p++ = *d;    /* trailing zero */
+        } else if (precision == 0 && len >= 0) {
+          if (sig > 0) {
+            while (sig-- > 0)
+              *p++ = *d++;
+          } else
             *p++ = '0';
-          precision--;
-        }
-      } else if (p < eP && precision == 0) {
-        *p++ = '.';
-        if (sig > 0) {
-          while (p < eP && sig-- > 0)  /* copy out the fractional part */
-            *p++ = *d++;
-        } else {        /* ensure that we have the .0 trailing */
+        } else             /* ensure that we have the .0 trailing */
           *p++ = '0';
+
+        *p++ = 'E';      /* Show exponent sign */
+        if (--exp < 0) {
+          *p++ = '-';
+          exp = -exp;
         }
+        p += natural2StrByBase(p, (uinteger) exp, 0, 10);/* Show exponent value -- adjusted for leading digit*/
+        *p++ = '\0';
+        break;
       }
-      *p = '\0';
+      case fractional:
+      default:
+        if (exp <= 0) {    /* Use fixed point format */
+          int prec = precision;
+
+          *p++ = '0';
+          *p++ = '.';
+
+          if (precision == 0)
+            while (p < eP && exp++ < 0)
+              *p++ = '0';
+          else
+            while (precision > 0 && p < eP && exp < 0) {
+              *p++ = '0';
+              precision--;
+              exp++;
+            }
+
+          if (prec != 0) {
+            while (p < eP && precision > 0) {
+              if (len-- > 0)
+                *p++ = *d++;
+              else
+                *p++ = '0';
+              precision--;
+            }
+          } else {      /* display all available digits */
+            if (sig > 0) {
+              while (p < eP && sig-- > 0)
+                *p++ = *d++;
+            } else
+              *p++ = '0';      /* 0.0 */
+          }
+          *p = '\0';
+        } else {
+          while (p < eP && exp-- > 0)
+            if (len-- > 0) {
+              *p++ = *d++;
+              sig--;
+            } else
+              *p++ = *d;
+
+          if (p < eP && precision > 0) {
+            *p++ = '.';
+            while (p < eP && precision > 0) {  /* copy out the fractional part */
+              if (len-- > 0)
+                *p++ = *d++;
+              else
+                *p++ = '0';
+              precision--;
+            }
+          } else if (p < eP && precision == 0) {
+            *p++ = '.';
+            if (sig > 0) {
+              while (p < eP && sig-- > 0)  /* copy out the fractional part */
+                *p++ = *d++;
+            } else {        /* ensure that we have the .0 trailing */
+              *p++ = '0';
+            }
+          }
+          *p = '\0';
+        }
     }
 
     uniCpy(out, outLen, prefix);
@@ -319,127 +330,26 @@ retCode formatDouble(byte *out, long outLen, double x, char mode, int precision,
 
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
                   codePoint pad, logical left, string prefix, logical sign) {
-  byte dec[DBL_DIG * 2];    /* buffer for the decimal mantissae */
-  byte *d = dec;
-  byte buff[1024];    /* buffer to represent the number string */
-  byte *p = buff;
-  byte *eP = &buff[NumberOf(buff) - 1]; /* end marker */
+  byte buffer[256];
 
+  FloatDisplayMode displayMode;
 
-  long exp, len, sig;
-
-  if (x < 0) {
-    prefix = (string) "-";
-    x = -x;
-  } else if (sign)
-    prefix = (string) "+";      /* Is the number signed? */
-
-  len = sig = number2Str(x, DBL_DIG + 1, dec, &exp);
-
-  while (sig > 0 && dec[sig - 1] == '0')
-    sig--;      /* chop off trailing zeroes */
-
-  if (strcmp((char *) dec, "Infinity") == 0) {
-    retCode ret = outUStr(out, prefix);
-
-    if (ret == Ok)
-      ret = outString(out, dec, (int) strlen((char *) dec), width, precision, pad, left);
-    return ret;
-  } else {
-    if (tolower(mode) == 'e' || (tolower(mode) == 'g' &&
-                                 (exp < -3 || (precision == 0 ? exp > DBL_DIG : exp > sig + 1)))) {
-      *p++ = *d++;      /* use scientific format */
-      len--;
-      sig--;
-      *p++ = '.';
-      if (precision > 0) {
-        while (precision-- > 0)
-          if (len-- > 0)
-            *p++ = *d++;
-          else
-            *p++ = *d;    /* trailing zero */
-      } else if (precision == 0 && len >= 0) {
-        if (sig > 0) {
-          while (sig-- > 0)
-            *p++ = *d++;
-        } else
-          *p++ = '0';
-      } else             /* ensure that we have the .0 trailing */
-        *p++ = '0';
-
-      *p++ = 'E';      /* Show exponent sign */
-      if (--exp < 0) {
-        *p++ = '-';
-        exp = -exp;
-      }
-      p += natural2StrByBase(p, (uinteger) exp, 0, 10);/* Show exponent value -- adjusted for leading digit*/
-      *p++ = '\0';
-    } else if (exp <= 0) {    /* Use fixed point format */
-      int prec = precision;
-
-      *p++ = '0';
-      *p++ = '.';
-
-      if (precision == 0)
-        while (p < eP && exp++ < 0)
-          *p++ = '0';
-      else
-        while (precision > 0 && p < eP && exp < 0) {
-          *p++ = '0';
-          precision--;
-          exp++;
-        }
-
-      if (prec != 0) {
-        while (p < eP && precision > 0) {
-          if (len-- > 0)
-            *p++ = *d++;
-          else
-            *p++ = '0';
-          precision--;
-        }
-      } else {      /* display all available digits */
-        if (sig > 0) {
-          while (p < eP && sig-- > 0)
-            *p++ = *d++;
-        } else
-          *p++ = '0';      /* 0.0 */
-      }
-      *p = '\0';
-    } else {
-      while (p < eP && exp-- > 0)
-        if (len-- > 0) {
-          *p++ = *d++;
-          sig--;
-        } else
-          *p++ = *d;
-
-      if (p < eP && precision > 0) {
-        *p++ = '.';
-        while (p < eP && precision > 0) {  /* copy out the fractional part */
-          if (len-- > 0)
-            *p++ = *d++;
-          else
-            *p++ = '0';
-          precision--;
-        }
-      } else if (p < eP && precision == 0) {
-        *p++ = '.';
-        if (sig > 0) {
-          while (p < eP && sig-- > 0)  /* copy out the fractional part */
-            *p++ = *d++;
-        } else {        /* ensure that we have the .0 trailing */
-          *p++ = '0';
-        }
-      }
-      *p = '\0';
-    }
-
-    retCode ret = outUStr(out, prefix);
-    if (ret == Ok)
-      ret = outString(out, buff, (int) uniStrLen(buff), width, (int) uniStrLen(buff), pad, left);
-    return ret;
+  switch(mode){
+    case 'g':
+      displayMode = general;
+      break;
+    case 'e':
+      displayMode = scientific;
+      break;
+    default:
+      displayMode = general;
   }
+
+  retCode ret = formatDouble(buffer, NumberOf(buffer), x, displayMode, precision, prefix, sign);
+
+  if (ret == Ok)
+    return outString(out, buffer, (int) uniStrLen(buffer), width, (int) uniStrLen(buffer), pad, left);
+  return ret;
 }
 
 retCode outFloat(ioPo out, double x) {
@@ -783,68 +693,6 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
                 ret = outUStr(f, prefix);
                 if (ret == Ok)
                   ret = outUniString(f, str, (int) uniStrLen(str), width, precision, ' ', leftPad, alternate);
-              } else
-                ret = outStr(f, "(NULL)");
-              break;
-            }
-
-            case 'Z': {    /* Display a chunk of a URL */
-              string str = (string) va_arg(args, string);
-
-              if (str != NULL) {
-                ret = outUStr(f, prefix);
-                if (ret == Ok) {
-                  long len = uniStrLen(str);
-
-                  if (width > 0 && len > width)
-                    len = width;
-
-                  while (ret == Ok && len-- > 0) {
-                    byte ch = *str++;
-
-                    switch (ch) {
-                      default:
-                        if (ch > 32 && ch < 127) {
-                          ret = outChar(f, ch);
-                          continue;
-                        }               // Else fall through
-
-                      case '!':
-                      case '"':
-                      case '#':
-                      case '$':
-                      case '%':
-                      case '&':
-                      case '\'':
-                      case '(':
-                      case ')':
-                      case '+':
-                      case ',':
-                      case '/':
-                      case ':':
-                      case ';':
-                      case '<':
-                      case '=':
-                      case '>':
-                      case '?':
-                      case '@':
-                      case '[':
-                      case '\\':
-                      case ']':
-                      case '^':
-                      case '`':
-                      case '{':
-                      case '|':
-                      case '}':
-                      case '~':ret = outChar(f, '%');
-                        if (ret == Ok && len-- > 0)
-                          ret = outChar(f, hxDgit((ch >> 4) & 0xf));
-                        if (ret == Ok && len-- > 0)
-                          ret = outChar(f, hxDgit(ch & 0xf));
-                        continue;
-                    }
-                  }
-                }
               } else
                 ret = outStr(f, "(NULL)");
               break;

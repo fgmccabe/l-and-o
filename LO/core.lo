@@ -131,7 +131,7 @@ lo.core{
   max(_,Y) => Y.
 
   public implementation display[float] <= {
-    disp(X) => ss(_flt2str(X,0,8,true,false)).
+    disp(X) => ss(_flt2str(X,0,8,0cg,false)).
   }
 
   -- and strings ...

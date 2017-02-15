@@ -80,28 +80,28 @@ lo.comp.escapes{
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
   escapeType("_file_date") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
-  escapeType("_openInFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#file")).
-  escapeType("_openOutFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#file")).
-  escapeType("_openAppendFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#file")).
-  escapeType("_openAppendIOFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#file")).
-  escapeType("_close") => predType(tupleType([tipe("lo.io#file")])).
-  escapeType("_end_of_file") => predType(tupleType([tipe("lo.io#file")])).
-  escapeType("_ready") => predType(tupleType([tipe("lo.io#file")])).
-  escapeType("_inchars") => funType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")]),tipe("lo.core*string")).
-  escapeType("_inbytes") => funType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
-  escapeType("_inchar") => funType(tupleType([tipe("lo.io#file")]),tipe("lo.core*integer")).
-  escapeType("_inbyte") => funType(tupleType([tipe("lo.io#file")]),tipe("lo.core*integer")).
-  escapeType("_inline") => funType(tupleType([tipe("lo.io#file"),tipe("lo.core*string")]),tipe("lo.core*string")).
-  escapeType("_intext") => funType(tupleType([tipe("lo.io#file"),tipe("lo.core*string")]),tipe("lo.core*string")).
-  escapeType("_outch") => predType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")])).
-  escapeType("_outbyte") => predType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")])).
-  escapeType("_outtext") => predType(tupleType([tipe("lo.io#file"),tipe("lo.core*string")])).
-  escapeType("_stdfile") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.io#file")).
-  escapeType("_fposition") => funType(tupleType([tipe("lo.io#file")]),tipe("lo.core*integer")).
-  escapeType("_fseek") => predType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")])).
-  escapeType("_flush") => predType(tupleType([tipe("lo.io#file")])).
+  escapeType("_openInFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
+  escapeType("_openOutFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
+  escapeType("_openAppendFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
+  escapeType("_openAppendIOFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
+  escapeType("_close") => predType(tupleType([tipe("lo.io#fileHandle")])).
+  escapeType("_end_of_file") => predType(tupleType([tipe("lo.io#fileHandle")])).
+  escapeType("_ready") => predType(tupleType([tipe("lo.io#fileHandle")])).
+  escapeType("_inchars") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")]),tipe("lo.core*string")).
+  escapeType("_inbytes") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
+  escapeType("_inchar") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_inbyte") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_inline") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_intext") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_outch") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_outbyte") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_outtext") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")])).
+  escapeType("_stdfile") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
+  escapeType("_fposition") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_fseek") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_flush") => predType(tupleType([tipe("lo.io#fileHandle")])).
   escapeType("_flushall") => predType(tupleType([])).
-  escapeType("_setfileencoding") => predType(tupleType([tipe("lo.io#file"),tipe("lo.core*integer")])).
+  escapeType("_setfileencoding") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
   escapeType("_ensure_loaded") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
   escapeType("delay") => predType(tupleType([tipe("lo.core*float")])).
@@ -146,7 +146,7 @@ lo.comp.escapes{
   escapeType("_isLetterChar") => predType(tupleType([tipe("lo.core*integer")])).
   escapeType("_digitCode") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int2str") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")).
-  escapeType("_flt2str") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*logical"),tipe("lo.core*logical")]),tipe("lo.core*string")).
+  escapeType("_flt2str") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*logical")]),tipe("lo.core*string")).
   escapeType("_str2flt") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
   escapeType("_str_lt") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_str_ge") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
@@ -166,6 +166,8 @@ lo.comp.escapes{
   escapeType("setenv") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("envir") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("getlogin") => funType(tupleType([]),tipe("lo.core*string")).
+  escapeType("_ins_debug") => predType(tupleType([])).
+  escapeType("_stackTrace") => predType(tupleType([])).
 
   public isEscape:(string){}.
   isEscape("_exit").
@@ -328,6 +330,8 @@ lo.comp.escapes{
   isEscape("setenv").
   isEscape("envir").
   isEscape("getlogin").
+  isEscape("_ins_debug").
+  isEscape("_stackTrace").
 
   public escCode:(string)=>integer.
   escCode("_exit") => 0.
@@ -490,5 +494,7 @@ lo.comp.escapes{
   escCode("setenv") => 157.
   escCode("envir") => 158.
   escCode("getlogin") => 159.
+  escCode("_ins_debug") => 160.
+  escCode("_stackTrace") => 161.
 
 }.

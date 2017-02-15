@@ -238,7 +238,7 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
 // String handling escapes
   escape(_int2str,False,False,"F4iiiiS","format an integer as a string")
-  escape(_flt2str,False,False,"F5fiillS","format a floating as a string")
+  escape(_flt2str,False,False,"F5fiiilS","format a floating as a string")
   escape(_str2flt,False,False,"F1Sf","parse a string as a float")
 
   escape(_str_lt,False,False,"P2SS","String 1 is less than string 2")

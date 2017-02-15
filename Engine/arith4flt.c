@@ -322,6 +322,45 @@ retCode g__str2flt(processPo P, ptrPo a) {
     return liberror(P, "_str2flt", eINSUFARG); /* dont support inverse mode */
 }
 
+retCode g__flt2str(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+  ptrI a5 = deRefI(&a[5]);
+
+  if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4) || isvar(a5))
+    return liberror(P, "_flt2str", eINSUFARG);
+  else if (!isFloat(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
+    return liberror(P, "_flt2str", eINVAL);
+  else {
+    integer width = integerVal(intV(a2));
+    integer prec = integerVal(intV(a3));
+    logical left = (logical) (width > 0);
+    byte buffer[128];
+    FloatDisplayMode displayMode;
+
+    switch (integerVal(intV(a4))) {
+      case 'g':displayMode = general;
+        break;
+      case 'e':displayMode = scientific;
+        break;
+      default:displayMode = general;
+    }
+
+    retCode res = formatDouble(buffer, NumberOf(buffer), FloatVal(objV(a1)), displayMode, (int) prec, (string) "",
+                               identical(a4, trueClass));
+
+    if (res == Ok) {
+      long len;
+      ptrI rslt = allocateString(&P->proc.heap, buffer, uniStrLen(buffer));
+
+      return funResult(P, a, 6, rslt);
+    } else
+      return liberror(P, "num2str", eIOERROR);
+  }
+}
+
 retCode g__pwr(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
   objPo A1 = objV(x);
