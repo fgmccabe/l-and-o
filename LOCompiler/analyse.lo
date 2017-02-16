@@ -56,7 +56,7 @@ lo.comp.code.analyse{
   findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
 
   findOccsInGoal:(pred,map[string,occMap],integer) => map[string,occMap].
-  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInArgs(Args,findOccsInTerm(Op,M,Gp,0,oArg,oTerm),Gp,1,lArg,lTerm).
+  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
   findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
   findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInArgs([C,L,T],M,Gp,1,lArg,lTerm).
   findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
@@ -92,36 +92,36 @@ lo.comp.code.analyse{
   usageTable:(list[occMap],integer,list[list[pred]]) => list[usageMap].
   usageTable(Occs,Arity,Parts) => buildRegUsage(Occs,Occs,Parts,Arity,[]).
 
-  registersOccupiedMap:(map[string,occMap]) => map[string,set[integer]].
-  registersOccupiedMap(OM) => OM///((Nm,occ(_,Occs))=>registersOccupied(Occs)).
-
-  registersToAvoid:(map[string,set[integer]],integer,list[occMap]) => map[string,set[integer]].
-  registersToAvoid(UM,Gp,O) => UM///((Nm,U)=>checkOtherRegVars(Nm,Gp,U,O)).
-
   checkOtherRegVars:(string,integer,set[integer],list[occMap]) => set[integer].
   checkOtherRegVars(Nm,Gp,U,O) => foldLeft((A,occ(N,Occs))=>(N=Nm?A|checkOtherOccs(U,Gp,Occs,A)),nullSet,O).
 
   checkOtherOccs:(set[integer],integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
-  checkOtherOccs(Use,RGp,Occs,Avoid) => foldLeft((A,(Form,Gp,Rg)) => checkOccForLArg(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
+  checkOtherOccs(Use,RGp,Occs,Avoid) => foldLeft((A,(Form,Gp,Rg)) => checkOccForArg(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
 
-  checkOccForLArg:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
-  checkOccForLArg(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForLArg(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForLArg(_,_,_,_,_,A) => A.
+  checkOccForArg:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
+  checkOccForArg(hArg,Gp,Gp,Rg,U,A) => addMem(A,Rg).
+  checkOccForArg(hTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForArg(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForArg(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForArg(_,_,_,_,_,A) => A.
 
   conflictSet:(occMap,integer,integer) => set[integer].
-  conflictSet(occ(Nm,Occs),Gp,Arity) => foldLeft(((C,Rg) => addMem(C,Rg) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs),nullSet,iota(1,Arity)).
+  conflictSet(occ(Nm,Occs),Gp,Arity) => foldLeft((C,Rg) => checkArgPos(Gp,Rg,Occs,C),nullSet,iota(1,Arity)) :- ((lArg,Gp,_) in Occs | (oArg,Gp,_) in Occs).
+  conflictSet(occ(Nm,Occs),Gp,Arity) => nullSet.
+
+  checkArgPos:(integer,integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
+  checkArgPos(Gp,Rg,Occs,CS) => addMem(CS,Rg) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs.
+  checkArgPos(_,_,_,CS) => CS.
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
   buildRgUsage(occ("",_),_,_,_,Out) => Out.
-  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Conflict),..Out] :-
+  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,union(Avoid,CS)),..Out] :-
     Nm\="",
     classifyVr(Occs,aReg(_),some(G)),
     Use = registersOccupied(Occs),
     Avoid = checkOtherRegVars(Nm,G,Use,T),
-    -- Avoid = allUsedRegisters(T,G,Use,nullSet),
-    Conflict = conflicts(occ(Nm,Occs),T,G).
-    -- Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity).
+    Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
+    CS = conflictSet(occ(Nm,Occs),G,Ar)+otherUsers(Nm,G,T,Use).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet),..Out] :-
     classifyVr(Occs,Addr,_).
@@ -147,54 +147,17 @@ lo.comp.code.analyse{
   argRegUsed(Regs,(lArg,_,Ix)) => addMem(Regs,Ix).
   argRegUsed(Regs,_) => Regs.
 
-  allUsedRegisters:(list[occMap],integer,set[integer],set[integer]) => set[integer].
-  allUsedRegisters([],Gp,Used,SoFar) => SoFar.
-  allUsedRegisters([occ(_,Occs),..O],Gp,Used,SoFar) =>
-    allUsedRegisters(O,Gp,Used,pickRegisters(Occs,Gp,Used,SoFar)).
+  otherUsers:(string,integer,list[occMap],set[integer])=>set[integer].
+  otherUsers(Nm,Gp,OM,Use) => foldLeft((C,M) => checkHeadUses(M,Nm,Gp,C,Use),nullSet,OM).
 
-  pickRegisters:(list[(occForm,integer,integer)],integer,set[integer],set[integer]) => set[integer].
-  pickRegisters([],_,_,SoFar) => SoFar.
-  pickRegisters([(_,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
-  -- pickRegisters([(lArg,Gp,Rg),..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,addMem(SoFar,Rg)) :- \+ Rg in Used.
-  pickRegisters([_,..Occs],Gp,Used,SoFar) => pickRegisters(Occs,Gp,Used,SoFar).
+  checkHeadUses:(occMap,string,integer,set[integer],set[integer]) => set[integer].
+  checkHeadUses(occ(Nm,Occs),N,Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs) :- N\=Nm.
+  checkHeadUses(_,_,_,C,_) => C.
 
-  conflicts:(occMap,list[occMap],integer) => set[integer].
-  conflicts(Occs,T,Gp) => foldLeft((SoFar,Oc)=>checkConflict(Occs,Oc,Gp,SoFar),nullSet,T).
-
-  checkConflict:(occMap,occMap,integer,set[integer]) => set[integer].
-  checkConflict(occ(Nm,_),occ(Nm,_),_,SoFar) => SoFar.
-  checkConflict(OOccs,occ("",Occs),Gp,SoFar) => foldLeft((S,O)=>checkTermOccs(O,OOccs,Gp,S),SoFar,Occs).
-  checkConflict(OOccs,occ(N,Occs),Gp,SoFar) => foldLeft((S,O)=>checkOccs(O,OOccs,Gp,S),SoFar,Occs).
-
-  checkTermOccs:((occForm,integer,integer),occMap,integer,set[integer]) => set[integer].
-  checkTermOccs((hTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => soFar :- (Form,Gp,Rg) in Occs *> (Form = hTerm | Form = lArg).
-  checkTermOccs((hTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => addMem(SoFar,Rg).
-  checkTermOccs((lTerm,Gp,Rg),occ(_,Occs),Gp,SoFar) => soFar :- (Form,Gp,Rg) in Occs *> (Form = hTerm | Form = lArg).
-
-  checkTermOccs(_,_,_,SoFar) => SoFar.
-
-  checkOccs:((occForm,integer,integer),occMap,integer,set[integer]) => set[integer].
-  checkOccs((_,Gp,Rg),Occs,Gp,SoFar) => addMem(SoFar,Rg) :- conflicting(Gp,Rp,Occs).
-  checkOccs(_,_,_,SoFar) => SoFar.
-
-  conflicting:(integer,integer,occMap){}.
-  conflicting(Gp,Rg,occ(_,U)) :- (_,Gp,Rg) in U.
-
-  conflict:(list[(occForm,integer,integer)],integer) => set[integer].
-  conflict(Ocs,MaxAr) => nonArgUses(1,MaxAr,Ocs)+laterUses(Ocs,Ocs).
-
-  nonArgUses:(integer,integer,list[(occForm,integer,integer)]) => set[integer].
-  nonArgUses(Rg,Lim,_) => nullSet :- Rg>Lim.
-  nonArgUses(Rg,Lim,Ocs) => addMem(nonArgUses(Rg+1,Lim,Ocs),Rg) :- \+ (lArg,_,Rg) in Ocs.
-  nonArgUses(Rg,Lim,Ocs) => nonArgUses(Rg+1,Lim,Ocs).
-
-  laterUses:(list[(occForm,integer,integer)],list[(occForm,integer,integer)]) => set[integer].
-  laterUses([],_) => nullSet.
-  laterUses([(lArg,Gp,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),Rg) :- (hArg,_,OR) in Ocs, OR<Rg, \+ (hArg,_,Rg) in Ocs.
-  laterUses([(hTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),OR) :- (lArg,_,OR) in Ocs, OR>Rg, \+ (hArg,_,OR) in Ocs.
-  laterUses([(lTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),Rg) :- (lTerm,_,GG) in Ocs, GG>Rg.
-  laterUses([(oTerm,_,Rg),..O],Ocs) => addMem(laterUses(O,Ocs),Rg) :- (oTerm,_,GG) in Ocs, GG>Rg.
-  laterUses([_,..O],Ocs) => laterUses(O,Ocs).
+  checkHeadUse:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
+  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- Rg in Use.
+  checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg).
+  checkHeadUse(_,_,_,_,Cs,_) => Cs.
 
   classifyVr:(list[(occForm,integer,integer)],addr,option[integer]){}.
   classifyVr([],voidAddr,none). -- should never happen if our quantification is good.
