@@ -96,19 +96,21 @@ lo.comp.code.analyse{
   registersOccupiedMap(OM) => OM///((Nm,occ(_,Occs))=>registersOccupied(Occs)).
 
   registersToAvoid:(map[string,set[integer]],integer,list[occMap]) => map[string,set[integer]].
-  registersToAvoid(UM,Gp,O) => UM///((Nm,U)=>checkRegConflicts(Nm,Gp,U,O)).
+  registersToAvoid(UM,Gp,O) => UM///((Nm,U)=>checkOtherRegVars(Nm,Gp,U,O)).
 
-  checkRegConflicts:(string,integer,set[integer],list[occMap]) => set[integer].
-  checkRegConflicts(Nm,Gp,U,O) => foldLeft((A,occ(N,Occs))=>(N=Nm?A|checkRegConflict(U,Gp,Occs,A)),nullSet,O).
+  checkOtherRegVars:(string,integer,set[integer],list[occMap]) => set[integer].
+  checkOtherRegVars(Nm,Gp,U,O) => foldLeft((A,occ(N,Occs))=>(N=Nm?A|checkOtherOccs(U,Gp,Occs,A)),nullSet,O).
 
-  checkRegConflict:(set[integer],integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
-  checkRegConflict(Use,RGp,Occs,Avoid) => foldLeft((A,(Form,Gp,Rg)) => checkOccForConflict(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
+  checkOtherOccs:(set[integer],integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
+  checkOtherOccs(Use,RGp,Occs,Avoid) => foldLeft((A,(Form,Gp,Rg)) => checkOccForLArg(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
 
-  checkOccForConflict:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
-  checkOccForConflict(hArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForConflict(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForConflict(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForConflict(_,_,_,_,_,A) => A.
+  checkOccForLArg:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
+  checkOccForLArg(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForLArg(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForLArg(_,_,_,_,_,A) => A.
+
+  conflictSet:(occMap,integer,integer) => set[integer].
+  conflictSet(occ(Nm,Occs),Gp,Arity) => foldLeft(((C,Rg) => addMem(C,Rg) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs),nullSet,iota(1,Arity)).
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
   buildRgUsage(occ("",_),_,_,_,Out) => Out.
@@ -116,6 +118,7 @@ lo.comp.code.analyse{
     Nm\="",
     classifyVr(Occs,aReg(_),some(G)),
     Use = registersOccupied(Occs),
+    Avoid = checkOtherRegVars(Nm,G,Use,T),
     -- Avoid = allUsedRegisters(T,G,Use,nullSet),
     Conflict = conflicts(occ(Nm,Occs),T,G).
     -- Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity).
