@@ -166,25 +166,6 @@ lo.comp.code.analyse{
   classifyVr(Occs,yReg(-1,true),none) :- ((hTerm,_,_) in Occs | (hArg,_,_) in Occs | (oTerm,_,_) in Occs | (lTerm,_,_) in Occs)!.
   classifyVr(_,yReg(-1,false),none).
 
-  classifyVar:(occMap) => addr.
-  classifyVar(occ(_,Ocss)) => Addr :- classifyVr(Occs,Addr,_).
-
-  maxRegister:(pred)=>integer.
-  maxRegister(call(_,Args)) => size(Args).
-  maxRegister(ecall(_,Args)) => size(Args).
-  maxRegister(ocall(_,_,_)) => 3.
-  maxRegister(except(_)) => 1.
-  maxRegister(unfy(_,_)) => 2.
-  maxRegister(_) => 0.
-
-  collectVarUsage:(map[string,occMap],map[string,(set[integer],set[integer],set[integer])]) =>
-      map[string,(occMap,addr,set[integer],set[integer],set[integer])].
-  collectVarUsage(M,Usage) => foldMap((Nm,Occs,Tb) => collEntry(Nm,Occs,Usage,Tb),[],M).
-
-  collEntry:(string,occMap,map[string,(set[integer],set[integer],set[integer])],map[string,(occMap,addr,set[integer],set[integer],set[integer])])=>map[string,(occMap,addr,set[integer],set[integer],set[integer])].
-  collEntry(Nm,Occs,Usage,Tb) => Tb[Nm->(Occs,aReg(-1),Use,Avoid,Conflict)] :- present(Usage,Nm,(Use,Avoid,Conflict)).
-  collEntry(Nm,Occs,_,Tb) => Tb[Nm->(Occs,classifyVar(Occs),nullSet,nullSet,nullSet)].
-
   allocateVars:(list[usageMap],integer) => (map[string,varDesc],integer,varSet).
   allocateVars(Usage,HeadArity) => (allocPerms(sort(findPerms(Usage,0,NumPerms,D1,D),compPerm),D1,NumPerms,nullSet,Lcls),NumPerms,varSet(Us2::set[integer],Lcls,0)) :-
     allocateHeadRegs(Usage,[],iota(1,numRegisters),[],Us0,Fr0,D0),
