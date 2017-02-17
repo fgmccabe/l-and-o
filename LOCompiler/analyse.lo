@@ -115,14 +115,14 @@ lo.comp.code.analyse{
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
   buildRgUsage(occ("",_),_,_,_,Out) => Out.
-  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid+CS),..Out] :-
+  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid+CS+Later),..Out] :-
     Nm\="",
     classifyVr(Occs,aReg(_),some(G)),
     Use = registersOccupied(Occs),
     Avoid = checkOtherRegVars(Nm,G,Use,T),
     Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
     CS = conflictSet(occ(Nm,Occs),G,Ar),
-    Later = otherUsers(T^/((occ(N,OO)) :- N\=Nm, (_,G,_) in OO),G,Use).
+    Later = otherUsers(T^/((occ(N,OO)) :- N\=Nm, (_,G,_) in OO),G,Occs).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet),..Out] :-
     classifyVr(Occs,Addr,_).
@@ -148,15 +148,15 @@ lo.comp.code.analyse{
   argRegUsed(Regs,(lArg,_,Ix)) => addMem(Regs,Ix).
   argRegUsed(Regs,_) => Regs.
 
-  otherUsers:(list[occMap],integer,set[integer])=>set[integer].
+  otherUsers:(list[occMap],integer,list[(occForm,integer,integer)])=>set[integer].
   otherUsers(OM,Gp,Use) => foldLeft((C,M) => checkHeadUses(M,Gp,C,Use),nullSet,OM).
 
-  checkHeadUses:(occMap,integer,set[integer],set[integer]) => set[integer].
+  checkHeadUses:(occMap,integer,set[integer],list[(occForm,integer,integer)]) => set[integer].
   checkHeadUses(occ(_,Occs),Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs).
 
-  checkHeadUse:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
-  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- Rg in Use.
-  checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg).
+  checkHeadUse:(occForm,integer,integer,integer,set[integer],list[(occForm,integer,integer)]) => set[integer].
+  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- \+(hTerm,Gp,Rg) in Use.
+  checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- \+(_,Gp,Rg) in Use.
   checkHeadUse(_,_,_,_,Cs,_) => Cs.
 
   classifyVr:(list[(occForm,integer,integer)],addr,option[integer]){}.
