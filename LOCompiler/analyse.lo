@@ -115,13 +115,14 @@ lo.comp.code.analyse{
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
   buildRgUsage(occ("",_),_,_,_,Out) => Out.
-  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,union(Avoid,CS)),..Out] :-
+  buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) => [usage(Nm,occ(Nm,Occs),aReg(-1),Use,Avoid+CS),..Out] :-
     Nm\="",
     classifyVr(Occs,aReg(_),some(G)),
     Use = registersOccupied(Occs),
     Avoid = checkOtherRegVars(Nm,G,Use,T),
     Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
-    CS = conflictSet(occ(Nm,Occs),G,Ar)+otherUsers(Nm,G,T,Use).
+    CS = conflictSet(occ(Nm,Occs),G,Ar),
+    Later = otherUsers(T^/((occ(N,OO)) :- N\=Nm, (_,G,_) in OO),G,Use).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet),..Out] :-
     classifyVr(Occs,Addr,_).
@@ -147,12 +148,11 @@ lo.comp.code.analyse{
   argRegUsed(Regs,(lArg,_,Ix)) => addMem(Regs,Ix).
   argRegUsed(Regs,_) => Regs.
 
-  otherUsers:(string,integer,list[occMap],set[integer])=>set[integer].
-  otherUsers(Nm,Gp,OM,Use) => foldLeft((C,M) => checkHeadUses(M,Nm,Gp,C,Use),nullSet,OM).
+  otherUsers:(list[occMap],integer,set[integer])=>set[integer].
+  otherUsers(OM,Gp,Use) => foldLeft((C,M) => checkHeadUses(M,Gp,C,Use),nullSet,OM).
 
-  checkHeadUses:(occMap,string,integer,set[integer],set[integer]) => set[integer].
-  checkHeadUses(occ(Nm,Occs),N,Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs) :- N\=Nm.
-  checkHeadUses(_,_,_,C,_) => C.
+  checkHeadUses:(occMap,integer,set[integer],set[integer]) => set[integer].
+  checkHeadUses(occ(_,Occs),Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs).
 
   checkHeadUse:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
   checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- Rg in Use.
@@ -198,7 +198,7 @@ lo.comp.code.analyse{
   allocateHeadRegs([],UsedRgs,FreeRgs,Dict,UsedRgs,FreeRgs,Dict).
   allocateHeadRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Avoid),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     ((hArg,_,Rg) in Occs ?
-      ( Rg in Fr, \+Rg in Avoid ?
+      ( \+Rg in Avoid ?
         D0 = D[Nm->varDesc(Nm,inited,isDefined,aReg(Rg),lastOcc(Occs))],
         U0 = addMem(Ur,Rg),
         F0 = delMem(Fr,Rg) |
