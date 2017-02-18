@@ -2,6 +2,7 @@ lo.comp.bootstrap{
   import lo.
   import lo.array.
   import lo.uri.
+  import lo.repo.file.
   import lo.resources.
 
   import lo.comp.location.
@@ -13,7 +14,6 @@ lo.comp.bootstrap{
   import lo.comp.genprolog.
   import lo.comp.package.
   import lo.comp.typecheck.
-  import lo.comp.repository.
   import lo.comp.errors.
   import lo.comp.grapher.
   import lo.comp.transform.
@@ -28,12 +28,12 @@ lo.comp.bootstrap{
       compilePkgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir),opts,reportBase,Rp),
       _logmsg(formatSS(fullReport(Rp)))).
 
-  processArgs:(compOption,list[pkg],repository,catalog){}.
+  processArgs:(compOption,list[pkg],fileRepo,catalog){}.
   processArgs(Opts,Pkgs,Repo,Cat) :-
     processGroups(makeGraph(Pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)!,
     _logmsg(formatSS(fullReport(Rpx))).
 
-  processGroups:(list[list[(pkg,list[pkg])]],repository,catalog,compOption,list[pkg],report,report){}.
+  processGroups:(list[list[(pkg,list[pkg])]],fileRepo,catalog,compOption,list[pkg],report,report){}.
   processGroups(_,_,_,_,_,Rp,Rpx) :-
     countErrors(Rp)>0,
     reportMsg("aborting compilation",std,Rp,Rpx).
@@ -48,16 +48,16 @@ lo.comp.bootstrap{
   projectPkgs([]) => [].
   projectPkgs([(Pkg,_),..L]) => [Pkg,..projectPkgs(L)].
 
-  processGroup:(list[(pkg,list[pkg])],repository,repository,catalog,compOption,list[pkg],list[pkg],report,report){}.
+  processGroup:(list[(pkg,list[pkg])],fileRepo,fileRepo,catalog,compOption,list[pkg],list[pkg],report,report){}.
   processGroup([],Repo,Repo,_,_,CP,CP,Rp,Rp).
   processGroup([(P,Imps),..L],Repo,RepoX,Cat,Opts,CP,CPx,Rp,Rpx) :-
     processPkg(P,Imps,Repo,Repo0,Cat,Opts,CP,CP0,Rp,Rp0)!,
     processGroup(L,Repo0,RepoX,Cat,Opts,CP0,CPx,Rp0,Rpx).
 
-  processPkg:(pkg,list[pkg],repository,repository,catalog,compOption,list[pkg],list[pkg],report,report){}.
+  processPkg:(pkg,list[pkg],fileRepo,fileRepo,catalog,compOption,list[pkg],list[pkg],report,report){}.
   processPkg(P,Imps,Repo,Repo,_,_,CP,CP,Rp,Rp) :-
     importsOk(Imps,CP),
-    prologPackagePresent(Repo,P),
+    packagePrologOk(Repo,P),
     _logmsg("skipping package \(P)").
   processPkg(P,_,Repo,RepoX,Cat,Opts,CP,[P,..CP],Rp,Rpx) :-
     _logmsg("compiling package \(P)"),
@@ -67,22 +67,23 @@ lo.comp.bootstrap{
   importsOk([],_).
   importsOk([P,..L],CP) :- \+ P in CP, importsOk(L,CP).
 
-  compilePkg:(pkg,repository,repository,catalog,compOption,report,report){}.
-  compilePkg(pkg(P,V),Repo,Repox,Cat,Opts,Rp,Rpx) :-
-    (resolveCatalog(Cat,pkg(P,V),U) ?
+  compilePkg:(pkg,fileRepo,fileRepo,catalog,compOption,report,report){}.
+  compilePkg(Pkg,Repo,Repox,Cat,Opts,Rp,Rpx) :-
+    Pkg = pkg(P,V),
+    (resolveCatalog(Cat,Pkg,U) ?
       Src = getResource(U),
       Term = parseSrc(U,Src,Rp,Rp0),
       (errorFree(Rp0) ?
         Prg = checkProgram(Term,V,Repo,Rp0,Rp1),
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rpx),
-          Repox = addPrologPackage(Repo,U,pkg(P,V),TrPrg::list[integer]) |
+          Repox = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::list[integer]) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),
       Repox = Repo).
 
-  compilePkgs:(list[pkg],repository,catalog,compOption,report,report){}.
+  compilePkgs:(list[pkg],fileRepo,catalog,compOption,report,report){}.
   compilePkgs([],_,_,_,Rp,Rp).
   compilePkgs([Pk,..L],Repo,Cat,Opt,Rp,Rpx) :-
     errorFree(Rp),

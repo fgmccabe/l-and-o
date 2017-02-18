@@ -210,12 +210,12 @@ logical validEscape(unsigned int code, unsigned short arity) {
     return True;
 }
 
-void showEscape(processPo P, int code, ptrPo args, long arity) {
+void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity) {
   int i;
   byte buffer[1024];
   ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
-  outMsg(out, "%w: ", &P->proc.thread);
+  outMsg(out, "%s%w: ", prefix, &P->proc.thread);
   outMsg(out, "%s(", escapeName(code));
 
   for (i = 0; i < arity; i++)

@@ -283,9 +283,9 @@ retCode g__popen(processPo P, ptrPo a) {
   long envCount = ListLen(Env);
 
   if (!IsString(Cmd))
-    return liberror(P, "__popen", eSTRNEEDD);
+    return liberror(P, "_popen", eSTRNEEDD);
   else if (isvar(Ags) || argCount < 0 || isvar(Env) || envCount < 0)
-    return liberror(P, "__popen", eINSUFARG);
+    return liberror(P, "_popen", eINSUFARG);
   else {
     long len = StringLen(stringV(Cmd)) + 1;
     char cmd[3 * len];
@@ -294,10 +294,10 @@ retCode g__popen(processPo P, ptrPo a) {
 
     if (access(cmd, F_OK | R_OK | X_OK) != 0) {
       setProcessRunnable(P);
-      return liberror(P, "__popen", eNOTFND);
+      return liberror(P, "_popen", eNOTFND);
     } else if (!executableFile(cmd)) {
       setProcessRunnable(P);
-      return liberror(P, "__popen", eNOPERM);
+      return liberror(P, "_popen", eNOPERM);
     } else {
       char **argv = (char **) calloc((size_t) (argCount + 2), sizeof(char *));
       char **envp = (char **) calloc((size_t) (envCount + 1), sizeof(char *));
@@ -310,7 +310,7 @@ retCode g__popen(processPo P, ptrPo a) {
 
         if (!IsString(Arg)) {
           setProcessRunnable(P);
-          return liberror(P, "__popen", eINSUFARG);
+          return liberror(P, "_popen", eINSUFARG);
         } else {
           byte *argStr = stringVal(stringV(Arg));
           long al = (long) uniStrLen(argStr);
@@ -341,7 +341,7 @@ retCode g__popen(processPo P, ptrPo a) {
 
       envp[i] = NULL;
 
-      switch (openPipe(argv[0], argv, envp, &inPipe, &outPipe, &errPipe, pickEncoding(deRefI(&a[7])))) {
+      switch (openPipe(argv[0], argv, envp, &inPipe, &outPipe, &errPipe, utf8Encoding)) {
         case Ok: {
           ptrI in = allocFilePtr(inPipe); /* return open file descriptor */
           rootPo root = gcAddRoot(&P->proc.heap, &in);

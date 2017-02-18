@@ -14,6 +14,9 @@ catalog{
     lo.list -> "lists.lo".
     lo.monad -> "monad.lo".
     lo.options -> "options.lo".
+    lo.repo -> "repo.lo".
+    lo.repo.file -> "filerepo.lo".
+    lo.repo.manifest -> "manifest.lo".
     lo.resources -> "resources.lo".
     lo.sets -> "sets.lo".
     lo.sort -> "sort.lo".

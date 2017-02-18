@@ -146,13 +146,9 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_openOutFile,True,False,"F2Si"fileType,"open output file")
   escape(_openAppendFile,True,False,"F2Si"fileType,"open output file")
   escape(_openAppendIOFile,True,False,"F2Si"fileType,"open output file")
- /*
-  escape(_openURL,True,False,"F4SSSiO","open a URL")
-  escape(_checkRoot,True,False,"P2SS","check url against root URL")
-  escape(_mergeURL,True,False,"F2SSS","merge URLs")
-  escape(_createURL,True,False,"F4SSSiO","create a URL")
-  escape(_popen,True,False,"p7SLSLT2sSOOOi","open a pipe")
-  */
+
+  escape(_popen,True,False,"P6SLSLT2SS"fileType fileType fileType,"open a pipe")
+
   escape(_close,True,False,"P1"fileType,"close file")
   escape(_end_of_file,True,False,"P1"fileType,"end of file test")
   escape(_ready,True,False,"P1"fileType,"file ready test")

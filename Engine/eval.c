@@ -681,7 +681,7 @@ void runGo(register processPo P) {
             return;
           }
           if (traceEscapes)
-            showEscape(P, op_o_val(PCX), &A[1], op_h_val(PCX));
+            showEscape(P, "before: ", op_o_val(PCX), &A[1], op_h_val(PCX));
 
 #ifdef MEMTRACE
           if (traceMemory)
@@ -690,6 +690,10 @@ void runGo(register processPo P) {
 #endif
 
           ret = ef(P, A);
+
+          if (traceEscapes)
+            showEscape(P, "after: ", op_o_val(PCX), &A[1], op_h_val(PCX));
+
           gcRemoveRoot(&P->proc.heap, root); /* reset roots */
 
           switch (ret) {

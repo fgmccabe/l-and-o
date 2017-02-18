@@ -29,11 +29,11 @@ jsonVersions(P,[V|L],[Vers|More]) :-
 
 jsonVersion(P,("*",jColl(Dtl)),(pkg(P,defltVersion),SrcUri,fl(Code))) :-!,
   is_member(("source",jTxt(Src)),Dtl),
-  is_member(("code",jTxt(Code)),Dtl),
+  is_member(("prolog",jTxt(Code)),Dtl),
   parseURI(Src,SrcUri).
 jsonVersion(P,(V,jColl(Dtl)),(pkg(P,v(V)),SrcUri,fl(Code))) :-
   is_member(("source",jTxt(Src)),Dtl),
-  is_member(("code",jTxt(Code)),Dtl),
+  is_member(("prolog",jTxt(Code)),Dtl),
   parseURI(Src,SrcUri).
 
 showManifest(man(E),O,Ox) :-
@@ -94,7 +94,7 @@ manifestVersion((pkg(_,defltVersion),Src,fl(CodeFn)), ("*",VV)) :-
 manifestVersion((pkg(_,v(Ver)),Src,fl(CodeFn)), (Ver,VV)) :-
   manifestDetails(CodeFn,Src,VV).
 
-manifestDetails(Fn,Uri,jColl([("source",jTxt(U)),("code",jTxt(Fn))])) :-
+manifestDetails(Fn,Uri,jColl([("source",jTxt(U)),("prolog",jTxt(Fn))])) :-
   showUri(Uri,C,[]),
   string_chars(U,C).
 

@@ -1,0 +1,78 @@
+lo.repo.file{
+  import lo.
+  import lo.repo.
+  import lo.repo.manifest.
+  import lo.uri.
+  import lo.resources.
+
+  public type fileRepo ::= repo(uri,manifest) | nullRepo.
+
+  public openRepository:(uri) => fileRepo.
+  openRepository(Root) => repo(Root,readManifest(RepoUri)) :-
+    RepoUri = resolveUri(Root,parseUri("manifest")),
+    resourcePresent(RepoUri).
+  openRepository(Root) => repo(Root,manifest([])).
+
+  public implementation repository[fileRepo] <= {
+    packagePresent(repo(Root,Man),Pkg,Kind) :-
+      locateInManifest(Man,Pkg,_,S,U),
+      CodeFile = resolveUri(Root,parseUri(U)),
+      SrcFile = resolveUri(Root,parseUri(S)),
+      resourcePresent(CodeFile),
+      (resourcePresent(SrcFile) ?
+          newerFile(CodeFile,SrcFile) | true).
+
+    addToRepo(repo(Root,Man),pkg(Pkg,Vers),Kind,Text) => repo(Root,NM) :-
+      extensionMapping(Kind,Ext),
+      Fn = Pkg+(packageHash(Pkg,Vers)::string)+Ext,
+      putResource(resolveUri(Root,parseUri(Fn)),Text),
+      NM = addToManifest(Man,pkg(Pkg,Vers),Kind,Fn),
+      RepoUri = resolveUri(Root,parseUri("manifest")),
+      flushManifest(RepoUri,NM).
+
+    loadFromRepo(repo(Root,Man),Pkg,Kind,Actual,getResource(resolveUri(Root,parseUri(U)))) :-
+      locateInManifest(Man,Pkg,Actual,Kind,U).
+  }
+
+  public locateCode:(fileRepo,pkg,string,list[integer]){}.
+  locateCode(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
+    locateInManifest(Man,Pkg,_,"code",U).
+
+  public locateProlog:(fileRepo,pkg,string,list[integer]){}.
+  locateProlog(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
+    locateInManifest(Man,Pkg,_,"prolog",U).
+
+  public packageCodeOk:(fileRepo,pkg){}.
+  packageCodeOk(Repo,Pkg) :- packageOk(Repo,Pkg,"code").
+
+  public packagePrologOk:(fileRepo,pkg){}.
+  packagePrologOk(Repo,Pkg) :- packageOk(Repo,Pkg,"prolog").
+
+  packageOk:(fileRepo,pkg,string){}.
+  packageOk(repo(Root,Man),Pkg,Kind) :-
+    locateInManifest(Man,Pkg,_,Kind,U),
+    locateInManifest(Man,Pkg,_,"source",S),
+    CodeFile = resolveUri(Root,parseUri(U)),
+    SrcFile = resolveUri(Root,parseUri(S)),
+    resourcePresent(CodeFile),
+    (resourcePresent(SrcFile) ?
+        newerFile(CodeFile,SrcFile) | true).
+
+  public addPackage:(fileRepo,pkg,list[integer]) => fileRepo.
+  addPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"code",Text).
+
+  public addPrologPackage:(fileRepo,pkg,list[integer]) => fileRepo.
+  addPrologPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"prolog",Text).
+
+  public addSource:(fileRepo,pkg,string) => fileRepo.
+  addSource(repo(Root,Man),Pkg,Nm) => repo(Root,addToManifest(Man,Pkg,"source",Nm)).
+
+  packageHash:(string,version) => integer.
+  packageHash(Pkg,defltVersion) => hash(Pkg).
+  packageHash(Pkg,vers(V)) => ((37*hash(Pkg))+hash(V)).
+
+  extensionMapping:(string,string){}.
+  extensionMapping("source",".lo").
+  extensionMapping("prolog",".pl").
+  extensionMapping("code","").
+}

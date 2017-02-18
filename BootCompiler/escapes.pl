@@ -80,6 +80,7 @@ escapeType("_openInFile",funType([type("lo.core*string"),type("lo.core*integer")
 escapeType("_openOutFile",funType([type("lo.core*string"),type("lo.core*integer")],type("lo.io#fileHandle"))).
 escapeType("_openAppendFile",funType([type("lo.core*string"),type("lo.core*integer")],type("lo.io#fileHandle"))).
 escapeType("_openAppendIOFile",funType([type("lo.core*string"),type("lo.core*integer")],type("lo.io#fileHandle"))).
+escapeType("_popen",predType([type("lo.core*string"),typeExp(tpFun("lo.core*list",1),[type("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]),type("lo.io#fileHandle"),type("lo.io#fileHandle"),type("lo.io#fileHandle")])).
 escapeType("_close",predType([type("lo.io#fileHandle")])).
 escapeType("_end_of_file",predType([type("lo.io#fileHandle")])).
 escapeType("_ready",predType([type("lo.io#fileHandle")])).
@@ -242,6 +243,7 @@ isEscape("_openInFile").
 isEscape("_openOutFile").
 isEscape("_openAppendFile").
 isEscape("_openAppendIOFile").
+isEscape("_popen").
 isEscape("_close").
 isEscape("_end_of_file").
 isEscape("_ready").

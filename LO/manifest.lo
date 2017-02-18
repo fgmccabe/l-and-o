@@ -1,0 +1,82 @@
+lo.repo.manifest{
+  import lo.
+  import lo.resources.
+  import lo.uri.
+  import lo.repo.
+  import lo.json.
+
+  public type manifest ::= manifest(map[string,manifestEntry]).
+
+  type manifestEntry ::= manifestEntry(string,list[(version,map[string,string])]).
+
+  public readManifest:(uri) => manifest.
+  readManifest(u) => m :- parseJson(j) %% getResource(u), jsonManifest(j,m).
+
+  public flushManifest:(uri,manifest){}.
+  flushManifest(Root,M) :-
+    putResource(Root,flatten(disp(manifestJson(M)))).
+
+  jsonManifest:(json,manifest){}.
+  jsonManifest(jColl(L),manifest(L///jsonPkgEntry)).
+
+  jsonPkgEntry:(string,json) => manifestEntry.
+  jsonPkgEntry(Pk,jColl(Vs)) => manifestEntry(Pk,pairs(Vs)//jsonVersion).
+
+  jsonVersion:((string,json)) => (version,map[string,string]).
+  jsonVersion(("*",jColl(Dtl))) => (defltVersion, Dtl///resourceEntry).
+  jsonVersion((V,jColl(Dtl))) => (vers(V),Dtl///resourceEntry).
+
+  resourceEntry:(string,json) => string.
+  resourceEntry(_,jTxt(S)) => S.
+
+  manifestJson:(manifest)=>json.
+  manifestJson(manifest(E)) => jColl(E///entryJson).
+
+  entryJson:(string,manifestEntry) => json.
+  entryJson(P,manifestEntry(_,V)) => jColl(foldLeft(versionJson,[],V)).
+
+  versionJson:(map[string,json],(version,map[string,string])) => map[string,json].
+  versionJson(M,(defltVersion,R)) => M["*"->jColl(R///((_,S)=>jTxt(S)))].
+  versionJson(M,(vers(V),R)) => M[V->jColl(R///((_,S)=>jTxt(S)))].
+
+  -- Displaying a manifest
+  public implementation display[manifest] <= {
+    disp(manifest(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
+  }
+
+  showEntries:(map[string,manifestEntry]) => list[ss].
+  showEntries(M) => values(M)//showEntry.
+
+  showEntry:(manifestEntry) => ss.
+  showEntry(manifestEntry(Pk,Versions)) => ssSeq([ss("  "),ss(Pk),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
+
+  showVersions:(list[(version,map[string,string])]) => list[ss].
+  showVersions([]) => [].
+  showVersions([V,..M]) => [showVersion(V),..showVersions(M)].
+
+  showVersion:((version,map[string,string])) => ss.
+  showVersion((V,R)) => ssSeq([ss("    "),disp(V),ss("="),disp(R),ss("\n")]).
+
+  public locateInManifest:(manifest,pkg,version,string,string){}.
+  locateInManifest(manifest(Entries),pkg(Pkg,Vers),Act,Kind,URI) :-
+    present(Entries,Pkg,manifestEntry(Pkg,V)),
+    getVersion(Vers,Act,V,Map),
+    present(Map,Kind,URI).
+
+  getVersion:(version,version,list[(version,map[string,string])],map[string,string]){}.
+  getVersion(Vers,Vers,V,Map) :- (Vers,Map) in V!.
+  getVersion(defltVersion,Act,V,Map) :- (Act,Map) in V!.
+
+  public addToManifest:(manifest,pkg,string,string) => manifest.
+  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(M[P->addVersion(Entry,V,Kind,Uri)]) :-
+    present(M,P,Entry).
+  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(M[P->addVersion(manifestEntry(P,[]),V,Kind,Uri)]).
+
+  addVersion:(manifestEntry,version,string,string) => manifestEntry.
+  addVersion(manifestEntry(P,Vs),V,K,U) => manifestEntry(P,addToVersion(Vs,V,K,U)).
+
+  addToVersion:(list[(version,map[string,string])],version,string,string) => list[(version,map[string,string])].
+  addToVersion([],V,K,U) => [(V,[K->U])].
+  addToVersion([(V,M),..Vs],V,K,U) => [(V,M[K->U]),..Vs].
+  addToVersion([Vr,..Vs],V,K,U) => [Vr,..addToVersion(Vs,V,K,U)].
+}

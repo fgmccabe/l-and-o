@@ -2,6 +2,8 @@ lo.comp.imports{
   import lo.
   import lo.uri.
   import lo.resources.
+  import lo.repo.
+  import lo.repo.file.
 
   import lo.comp.dict.
   import lo.comp.types.
@@ -9,8 +11,6 @@ lo.comp.imports{
   import lo.comp.misc.
   import lo.comp.decode.
   import lo.comp.package.
-  import lo.comp.repository.
-  import lo.comp.manifest.
   import lo.comp.errors.
   import lo.comp.token.
   import lo.comp.lexer.
@@ -19,9 +19,9 @@ lo.comp.imports{
   import lo.comp.abstract.
   import lo.comp.canon.
 
-  public importPkg:(pkg,repository,pkgSpec,report,report){}.
+  public importPkg:(pkg,fileRepo,pkgSpec,report,report){}.
   importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Enums,Contracts,Impls,Imports),Rp,Rpx) :-
-    locatePrologPackage(Repo,Pkg,Vers,_,Strm),
+    locateProlog(Repo,pkg(Pkg,Vers),_,Strm),
     parse(A,Rp,Rp0) %% getNTokens(Strm,Pkg,5)!,
     pickupPkgSpec(A,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
@@ -36,13 +36,13 @@ lo.comp.imports{
     findContracts(Co,Contracts,[]),
     pickupImplementations(Im,Impls,[]).
 
-  public importPkgs:(list[pkg],list[pkgSpec],repository,report,report) => list[pkgSpec].
+  public importPkgs:(list[pkg],list[pkgSpec],fileRepo,report,report) => list[pkgSpec].
   importPkgs([],Specs,_,Rp,Rp) => Specs.
   importPkgs([Pkg,..L],SoFar,Repo,Rp,Rpx) => importPkgs(L,SoFar,Repo,Rp,Rpx) :- alreadyImported(Pkg,SoFar).
   importPkgs([Pkg,..L],SoFar,Repo,Rp,Rpx) => importPkgs(L,[Spec,..SoFar],Repo,Rp0,Rpx) :-
     importPkg(Pkg,Repo,Spec,Rp,Rp0).
 
-  public importClosure:(list[pkg],list[pkgSpec],repository,report,report) => list[pkgSpec].
+  public importClosure:(list[pkg],list[pkgSpec],fileRepo,report,report) => list[pkgSpec].
   importClosure([],Specs,_,Rp,Rp) => Specs.
   importClosure([Pkg,..L],SoFar,Repo,Rp,Rpx) => importClosure(L,SoFar,Repo,Rp,Rpx) :- alreadyImported(Pkg,SoFar)!.
   importClosure([Pkg,..L],SoFar,Repo,Rp,Rpx) => importClosure(L,importClosure(publicImports(importsOfSpec(Spec)),[Spec,..SoFar],Repo,Rp0,Rp1),Repo,Rp1,Rpx) :-

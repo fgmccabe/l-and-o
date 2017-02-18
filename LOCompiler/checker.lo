@@ -1,5 +1,7 @@
 lo.comp.typecheck{
   import lo.
+  import lo.repo.file.
+
   import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
@@ -16,11 +18,10 @@ lo.comp.typecheck{
   import lo.comp.package.
   import lo.comp.misc.
   import lo.uri.
-  import lo.comp.repository.
   import lo.comp.imports.
   import lo.comp.resolve.
 
-  public checkProgram:(ast,version,repository,report,report)=>canonPkg.
+  public checkProgram:(ast,version,fileRepo,report,report)=>canonPkg.
   checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,Imports),ImportClosure,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
@@ -38,7 +39,7 @@ lo.comp.typecheck{
   computeImports(_,[])=>[].
   computeImports(Pub,[pkgSpec(pkg(Pk,V),_,_,_,_,_,_),..Pkgs]) => [(exportViz(Pk,imp,Pub),pkg(Pk,V)),..computeImports(Pub,Pkgs)].
 
-  private thetaEnv:(string,repository,location,list[ast],list[(string,tipe)],list[env],list[env],
+  private thetaEnv:(string,fileRepo,location,list[ast],list[(string,tipe)],list[env],list[env],
       list[canonDef],list[(string,defnKind)],list[(visibility,pkg)],list[pkgSpec],list[canonOther],report,report){}.
   thetaEnv(Path,Repo,Lc,Els,Fields,Base,TheEnv,Defs,Public,Imports,ImportClosure,Others,Rp,Rpx) :-
     macroRewrite(Els,Stmts,Rp,Rp0),
@@ -66,7 +67,7 @@ lo.comp.typecheck{
     isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
     typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
-  processImportGroup:(list[ast],list[(visibility,pkg)],list[pkgSpec],location,repository,list[env],list[env],report,report){}.
+  processImportGroup:(list[ast],list[(visibility,pkg)],list[pkgSpec],location,fileRepo,list[env],list[env],report,report){}.
   processImportGroup(Stmts,Imports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
     ImportedPkgs = Imports//second,
@@ -96,7 +97,7 @@ lo.comp.typecheck{
   addPublicImports([(priVate,_),..I],Lc,Rest) :-
     addPublicImports(I,Lc,Rest).
 
-  importAllDefs:(list[pkgSpec],location,repository,list[env],list[env]){}.
+  importAllDefs:(list[pkgSpec],location,fileRepo,list[env],list[env]){}.
   importAllDefs([],_,_,Env,Env).
   importAllDefs([Spec,..Specs],Lc,Repo,Env,Ex) :-
     importDefs(Spec,Lc,Env,Ev0),
