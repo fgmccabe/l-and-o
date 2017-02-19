@@ -40,9 +40,6 @@ extern logical traceLock;	/* tracing of synchronization */
 #ifndef STATSTRACE
 #define STATSTRACE
 #endif
-#ifndef MSGTRACE
-#define MSGTRACE
-#endif
 #ifndef LOCKTRACE
 #define LOCKTRACE
 #endif

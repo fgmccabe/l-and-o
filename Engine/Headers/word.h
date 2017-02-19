@@ -1,5 +1,5 @@
 /* 
-   Main memory layout definitions for the L&O engine
+  Main memory layout definitions for the L&O engine
   Copyright (c) 2016, 2017. Francis G. McCabe
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -70,7 +70,7 @@
    A ptrPo points to a ptrI, which is a pointer with a tag in the lower 2 bits.
    A stripped ptrI becomes an objPo, which is normally a pointer to a structure.
 
-   The first word in the structure must have the tag set to *sign*. This is
+   The first word in a structure must its class, whose class is class. This is
    the sentinel for the beginning of all structures.
 
    The special case is variable, which may point *into* structure as well as
@@ -87,12 +87,10 @@
    of the object. Examples include symbols, integer, float, char, code, dynamic objects
 
    A ptrI is defined to be an integer which is long enough to hold a pointer.
-   The assumption that we make is that a pointer is at least 4 bytes.
+   The assumption that we make is that a pointer is at least 4 bytes, but is typically 8.
 */
-typedef PTRINT ptrI, *ptrPo;
-/* PTRINT normally generated during config */
-typedef struct _general_record_ *objPo;
-/* a core pointer */
+typedef PTRINT ptrI, *ptrPo;    /* PTRINT normally generated during config */
+typedef struct _general_record_ *objPo;  /* a core pointer */
 
 typedef struct _class_record_ *clssPo;
 typedef struct _program_record_ *programPo;
@@ -166,22 +164,14 @@ typedef struct _class_record_ {
 
 // Special classes mostly refer to special system objects
 typedef struct _special_class_ {
-  ptrI class;
-  /* == specialClass */
-  classSizeFun sizeFun;
-  /* Function to compute size of object */
-  classCompFun compFun;
-  /* Function to compare two values */
-  classOutFun outFun;
-  /* Function to write a value */
-  classCpyFun copyFun;
-  /* Function to copy special object */
-  classScanFun scanFun;
-  /* Function to scan object */
-  classHashFun hashFun;
-  /* Function to compute hash function */
-  ptrI program;
-  /* Program that responds to this type */
+  ptrI class;                  /* == specialClass */
+  classSizeFun sizeFun;        /* Function to compute size of object */
+  classCompFun compFun;        /* Function to compare two values */
+  classOutFun outFun;          /* Function to write a value */
+  classCpyFun copyFun;         /* Function to copy special object */
+  classScanFun scanFun;        /* Function to scan object */
+  classHashFun hashFun;        /* Function to compute hash function */
+  ptrI program;                /* Program that responds to this type */
   byte name[ZEROARRAYSIZE];    /* the class's print name */
 } specialClassRec;
 
@@ -214,11 +204,6 @@ static inline logical isTermClass(objPo cl) {
 static inline logical IsTermClass(ptrI p) {
   return isTermClass(objV(p));
 }
-
-/* static inline logical isObjct(objPo o) */
-/* { */
-/*   return isClass(o->class); */
-/* } */
 
 #define isObjct(o) (isClass((o)->class))
 
@@ -333,8 +318,7 @@ static inline prgLabelPo classLabel(clssPo clss){
 }
 
 static inline uinteger objectHash(objPo p) {
-  clssPo class = classOf(p);
-  return class->hash;
+  return ((clssPo) objV(p->class))->hash;
 }
 
 static inline integer classSize(clssPo clss){

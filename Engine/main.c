@@ -233,9 +233,11 @@ int getOptions(int argc, char **argv) {
 
             case 'I':
 #ifdef STATSTRACE
+#ifdef EXECTRACE
               traceCount = True;
               atexit(dumpInsCount);
               break;
+#endif
 #else
             logMsg(logFile,"instruction counting not enabled");
             return -1;

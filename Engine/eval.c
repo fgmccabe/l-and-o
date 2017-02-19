@@ -26,7 +26,7 @@
 #define testA(O) { assert(!identical(A[O],kvoid));}
 #define testY(O) { assert(!identical(Y[-O],kvoid));}
 #else
-                                                                                                                        #define testA(O)
+#define testA(O)
 #define testY(O)
 #endif
 
@@ -154,9 +154,9 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
 */
 
 #ifdef EXECTRACE
-#define enoughSpace(X) { assert(H+X<=P->proc.sBase); }
+#define enoughSpace(X) (H+X<=P->proc.sBase)
 #else
-#define enoughSpace(X)
+#define enoughSpace(X) (true)
 #endif
 
 /* Manage the activation of suspended variables */
@@ -182,35 +182,35 @@ void chainSuspension(processPo P, ptrPo p) {
 #define lastValid()
 #endif
 
-#define allocframe(pc, cpc, len, ln) {          \
-      register callPo nC;                                               \
-                                                                        \
-      if((ptrPo)C<(ptrPo)B)            \
-          nC = (callPo)((ptrPo)(C-1)-len);                              \
-      else                \
-        nC = ((callPo)B)-1;                                             \
-                                                                        \
-      if(((trailPo)(((ptrPo)nC)-ln))-TRAIL_FUDGE<=P->proc.trail){       \
-  saveRegs(PC);                                                   \
-  if(extendStack(P,2,2,0)!=Ok)  /* grow the stack */            \
-    syserr("Unable to grow process stack");                       \
-  restRegs();                                                     \
-                                                                        \
-        if((ptrPo)C<(ptrPo)B)            \
-            nC = (callPo)((ptrPo)(C-1)-len);                            \
-        else if((ptrPo)B<(ptrPo)T)                                      \
-          nC = ((callPo)B)-1;                                           \
-      }                                                                 \
-                                                                        \
-      cC = C;                                                           \
-      C = nC;                                                           \
-                                                                        \
-      C->cPC = cPC;    /* where to return to */                \
-      C->cSB = cSB;                                                     \
-      C->cPROG = cPROG;                                                 \
-      C->cC = cC;                                                       \
-                                                                        \
-      Y = (ptrPo)C;    /* negative values used for local variables */ \
+#define allocframe(pc, cpc, len, ln) {                          \
+  register callPo nC;                                           \
+                                                                \
+  if((ptrPo)C<(ptrPo)B)                                         \
+    nC = (callPo)((ptrPo)(C-1)-len);                            \
+  else                                                          \
+    nC = ((callPo)B)-1;                                         \
+                                                                \
+  if(((trailPo)(((ptrPo)nC)-ln))-TRAIL_FUDGE<=P->proc.trail){   \
+    saveRegs(PC);                                               \
+    if(extendStack(P,2,2,0)!=Ok)  /* grow the stack */          \
+      syserr("Unable to grow process stack");                   \
+    restRegs();                                                 \
+                                                                \
+    if((ptrPo)C<(ptrPo)B)                                       \
+      nC = (callPo)((ptrPo)(C-1)-len);                          \
+    else if((ptrPo)B<(ptrPo)T)                                  \
+      nC = ((callPo)B)-1;                                       \
+    }                                                           \
+                                                                \
+    cC = C;                                                     \
+    C = nC;                                                     \
+                                                                \
+    C->cPC = cPC;    /* where to return to */                   \
+    C->cSB = cSB;                                               \
+    C->cPROG = cPROG;                                           \
+    C->cC = cC;                                                 \
+                                                                \
+    Y = (ptrPo)C;    /* negative values used for local variables */ \
   }
 
 void runGo(register processPo P) {
@@ -245,10 +245,10 @@ void runGo(register processPo P) {
   restRegs();
 
   for (;;) {      /* Loop forever, until execution terminates */
+#ifdef EXECTRACE
     assert(P->proc.heap.topRoot == 0);
     assert(op_code(*cPC) == gcmap);
 
-#ifdef EXECTRACE
     pcCount++;
     insCount[op_code(*PC)]++;
 
@@ -663,7 +663,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode((uint16) op_o_val(PCX));
+          funpo ef = escapeCode(op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -681,7 +681,7 @@ void runGo(register processPo P) {
             return;
           }
           if (traceEscapes)
-            showEscape(P, "before: ", op_o_val(PCX), &A[1], op_h_val(PCX));
+            showEscape(P, "before: ", op_o_val(PCX), &A[1], op_h_val(PCX), "");
 
 #ifdef MEMTRACE
           if (traceMemory)
@@ -691,8 +691,10 @@ void runGo(register processPo P) {
 
           ret = ef(P, A);
 
+#ifdef EXECTRACE
           if (traceEscapes)
-            showEscape(P, "after: ", op_o_val(PCX), &A[1], op_h_val(PCX));
+            showEscape(P, " -> ", op_o_val(PCX), &A[1], op_h_val(PCX), "\n");
+#endif
 
           gcRemoveRoot(&P->proc.heap, root); /* reset roots */
 
@@ -1248,9 +1250,7 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         if (isObjct(vl)) {
-          clssPo class = ((clssPo) objV(vl->class));
-
-          PC += class->hash % max + 1;
+          PC += objectHash(vl) % max + 1;
         } // Otherwise default to next instruction
         continue;
       }
@@ -1437,14 +1437,12 @@ void runGo(register processPo P) {
         register ptrI val = *ptr;
         register objPo obj = objV(val);
         register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
         register clssPo class = (clssPo) objV(clss);
-#endif
 
         testA(op_h_val(PCX));
 
         if (isvar(val)) {
-          enoughSpace(classSize(class));  /* Is there room for the constructor */
+          assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
           objPo new = (objPo) H++;
           register ptrI cns = objP(new);
@@ -1482,7 +1480,7 @@ void runGo(register processPo P) {
 
         testA(0);
 
-        enoughSpace(classSize(class));  /* Is there room for the constructor */
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1515,7 +1513,7 @@ void runGo(register processPo P) {
 
         testA(1);
 
-        enoughSpace(classSize(class));  /* Is there room for the constructor */
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1554,7 +1552,7 @@ void runGo(register processPo P) {
 
         testA(2);
 
-        enoughSpace(classSize(class));  /* Is there room for the constructor */
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1592,7 +1590,7 @@ void runGo(register processPo P) {
 
         testA(3);
 
-        enoughSpace(classSize(class));  /* Is there room for the constructor */
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1631,7 +1629,7 @@ void runGo(register processPo P) {
 
         testA(4);
 
-        enoughSpace(classSize(class));  /* Is there room for the constructor */
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
 
         if (isvar(val)) {
           objPo new = (objPo) H++;
@@ -1756,8 +1754,6 @@ void runGo(register processPo P) {
       }
 
       case uScns: {                        /* unify S,f(_,..,_) */
-        enoughSpace(op_o_val(PCX) + 2); /* Verify that we have enough room for the constructor */
-
         if (mode == readMode) {
           register ptrI val = deRefI(S);
           register objPo obj = objV(val);

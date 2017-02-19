@@ -173,6 +173,7 @@ retCode decInt(ioPo in, integer *ii) {
               return Eof;
           }
         }
+        break;
       } else {
         return Eof;
       }

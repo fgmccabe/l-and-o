@@ -70,7 +70,7 @@ static void sortCounts(long count, long base[], long sorted[]) {
 #undef instruction
 #define instruction(Op, Cd, A1, A2, Cmt) \
     case Op:                      /* Cmt */\
-      outMsg(logFile,#Op ": %d = %5.2f%%\n",insCount[Op], (insCount[Op]/(double)pcCount)*100);\
+      outMsg(logFile,#Op ": %d = %5.2g%%\n",insCount[Op], (insCount[Op]/(double)pcCount)*100);\
       break;
 
 #undef escape

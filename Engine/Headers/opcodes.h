@@ -22,11 +22,11 @@ typedef insWord *insPo; /* A program counter value */
 
 #define op_code(c) ((opCode)((c)&op_mask))	/* construct an opcode from a number */
 
-#define op_l_val(v) ((int16)((((uint32)(v))&vl_l_mask)>>8)) /* Get low-order operand */
+#define op_l_val(v) ((uint16)((((uint32)(v))&vl_l_mask)>>8)) /* Get low-order operand */
 #define op_sl_val(v) ((int32)((v)<<16>>24)) /* Get signed low-order operand */
-#define op_m_val(v) ((int16)((((uint32)(v))&vl_m_mask)>>16)) /* Get middle order operand */
+#define op_m_val(v) ((uint16)((((uint32)(v))&vl_m_mask)>>16)) /* Get middle order operand */
 #define op_sm_val(v) ((long)((v)<<8>>24)) /* Get signed middle operand */
-#define op_h_val(v) ((int16)(((uint32)(v))>>24)) /* Get hi-order operand */
+#define op_h_val(v) ((uint16)(((uint32)(v))>>24)) /* Get hi-order operand */
 #define op_sh_val(v) ((int16)((int32)((v)>>24))) /* Get signed hi-order operand */
 
 #define op_o_val(v) ((uint16)((((uint32)(v))&vl_o_mask)>>8)) /* Get offset operand */

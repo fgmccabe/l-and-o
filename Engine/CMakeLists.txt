@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 project(loEngine)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c99")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c99")
 
 include_directories("Headers" "../Headers" "../OOlib/Headers")
 
 set(SOURCE_FILES
         args.c arith4flt.c arith4int.c boot.c call.c char.c class.c clock.c code.c date.c debug.c dict.c dir.c disass.c dynamic.c
         encoded.c envir.c error.c escapes.c eval.c exec.c fileio.c gc.c global.c heap.c lists.c lockvar.c
-        misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c
+        misc.c process.c program.c put.c rendezvous.c sha.c signal.c stats.c string.c suspend.c netfile.c tpl.c
         verify.c writef.c
         main.c
 
@@ -24,7 +24,7 @@ set(SOURCE_FILES
 
         ../Headers/instructions.h ../Headers/config.h ../Headers/escapes.h ../Headers/version.h
 
-        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h tpl.c)
+        Headers/manifest.h Headers/manifestP.h load.c manifest.c thread.c Headers/thread.h)
 
 add_executable(lo ${SOURCE_FILES})
 target_link_libraries(lo ooio)

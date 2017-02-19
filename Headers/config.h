@@ -25,20 +25,8 @@
 /* Version number of package */
 #define VERSION "0.0"
 
-/* Define size of a pointer */
-#define POINTER_SIZE sizeof(void *)
-
 /* The size of `int', as computed by sizeof. */
 #define SIZEOF_INT 4
-
-/* The size of `long', as computed by sizeof. */
-#define SIZEOF_LONG 8
-
-/* The size of `long long', as computed by sizeof. */
-#define SIZEOF_LONG_LONG 8
-
-/* The size of `short int', as computed by sizeof. */
-#define SIZEOF_SHORT_INT 2
 
 /* How to specify a zero array size */
 #define ZEROARRAYSIZE /**/

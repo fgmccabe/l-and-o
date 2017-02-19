@@ -210,7 +210,7 @@ logical validEscape(unsigned int code, unsigned short arity) {
     return True;
 }
 
-void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity) {
+void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity, char *suffx) {
   int i;
   byte buffer[1024];
   ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
@@ -221,7 +221,7 @@ void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity) {
   for (i = 0; i < arity; i++)
     outMsg(out, "%w%s", args++, (i < arity - 1 ? "," : ""));
 
-  outMsg(out, ")\n%_");
+  outMsg(out, ")%s%_",suffx);
 
   long len;
   string text = getTextFromBuffer(&len,O_BUFFER(out));
