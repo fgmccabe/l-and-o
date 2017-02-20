@@ -20,7 +20,6 @@
 #define processState "t'lo.thread#processState'"
 #define threadType "t'lo.thread#thread'"
 #define lockType "t'lo.thread#lock'"
-#define thingType "t'lo.core#thing'"
 #define fileType "t'lo.io*fileHandle'"
 #define socketType "t'lo.io*sockHandle'"
 #define udpType "t'lo.io*udpHandle'"
@@ -281,5 +280,4 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
 
 #undef processState
 #undef threadType
-#undef thingType
 #undef fileType
