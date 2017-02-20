@@ -64,6 +64,8 @@ lo.comp.escapes{
   escapeType("_basr") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_bnot") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_nthb") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")])).
+  escapeType("_suspend") => univType(kVar("u"),predType(tupleType([kVar("u"),predType(tupleType([]))]))).
+  escapeType("_sha1") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("_get_file") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("_put_file") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_cwd") => funType(tupleType([]),tipe("lo.core*string")).
@@ -80,31 +82,41 @@ lo.comp.escapes{
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
   escapeType("_file_date") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
-  escapeType("_openInFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
-  escapeType("_openOutFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
-  escapeType("_openAppendFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
-  escapeType("_openAppendIOFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
-  escapeType("_popen") => predType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])]),tipe("lo.io#fileHandle"),tipe("lo.io#fileHandle"),tipe("lo.io#fileHandle")])).
-  escapeType("_close") => predType(tupleType([tipe("lo.io#fileHandle")])).
-  escapeType("_end_of_file") => predType(tupleType([tipe("lo.io#fileHandle")])).
-  escapeType("_ready") => predType(tupleType([tipe("lo.io#fileHandle")])).
-  escapeType("_inchars") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")]),tipe("lo.core*string")).
-  escapeType("_inbytes") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
-  escapeType("_inchar") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
-  escapeType("_inbyte") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
-  escapeType("_inline") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")]),tipe("lo.core*string")).
-  escapeType("_intext") => funType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")]),tipe("lo.core*string")).
-  escapeType("_outch") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
-  escapeType("_outbyte") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
-  escapeType("_outtext") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*string")])).
-  escapeType("_stdfile") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.io#fileHandle")).
-  escapeType("_fposition") => funType(tupleType([tipe("lo.io#fileHandle")]),tipe("lo.core*integer")).
-  escapeType("_fseek") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
-  escapeType("_flush") => predType(tupleType([tipe("lo.io#fileHandle")])).
+  escapeType("_openInFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
+  escapeType("_openOutFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
+  escapeType("_openAppendFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
+  escapeType("_openAppendIOFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
+  escapeType("_popen") => predType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])]),tipe("lo.io*fileHandle"),tipe("lo.io*fileHandle"),tipe("lo.io*fileHandle")])).
+  escapeType("_close") => predType(tupleType([tipe("lo.io*fileHandle")])).
+  escapeType("_end_of_file") => predType(tupleType([tipe("lo.io*fileHandle")])).
+  escapeType("_ready") => predType(tupleType([tipe("lo.io*fileHandle")])).
+  escapeType("_inchars") => funType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")]),tipe("lo.core*string")).
+  escapeType("_inbytes") => funType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])).
+  escapeType("_inchar") => funType(tupleType([tipe("lo.io*fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_inbyte") => funType(tupleType([tipe("lo.io*fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_inline") => funType(tupleType([tipe("lo.io*fileHandle")]),tipe("lo.core*string")).
+  escapeType("_intext") => funType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_outch") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_outbyte") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_outbytes") => predType(tupleType([tipe("lo.io*fileHandle"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*integer")])])).
+  escapeType("_outtext") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*string")])).
+  escapeType("_stdfile") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
+  escapeType("_fposition") => funType(tupleType([tipe("lo.io*fileHandle")]),tipe("lo.core*integer")).
+  escapeType("_fseek") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_flush") => predType(tupleType([tipe("lo.io*fileHandle")])).
   escapeType("_flushall") => predType(tupleType([])).
-  escapeType("_setfileencoding") => predType(tupleType([tipe("lo.io#fileHandle"),tipe("lo.core*integer")])).
+  escapeType("_setfileencoding") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")])).
   escapeType("_ensure_loaded") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
+  escapeType("_connect") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.io*fileHandle"),tipe("lo.io*fileHandle")])).
+  escapeType("_listen") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.io*fileHandle")])).
+  escapeType("_accept") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.io*fileHandle"),tipe("lo.io*fileHandle"),tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*string")])).
+  escapeType("_udpPort") => predType(tupleType([tipe("lo.core*integer"),tipe("lo.io*udpHandle")])).
+  escapeType("_udpGet") => predType(tupleType([tipe("lo.io*udpHandle"),tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*integer")])).
+  escapeType("_udpSend") => predType(tupleType([tipe("lo.io*udpHandle"),tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*integer")])).
+  escapeType("_udpClose") => predType(tupleType([tipe("lo.io*udpHandle")])).
+  escapeType("hosttoip") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])).
+  escapeType("iptohost") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("delay") => predType(tupleType([tipe("lo.core*float")])).
   escapeType("sleep") => predType(tupleType([tipe("lo.core*float")])).
   escapeType("now") => funType(tupleType([]),tipe("lo.core*float")).
@@ -229,6 +241,8 @@ lo.comp.escapes{
   isEscape("_basr").
   isEscape("_bnot").
   isEscape("_nthb").
+  isEscape("_suspend").
+  isEscape("_sha1").
   isEscape("_get_file").
   isEscape("_put_file").
   isEscape("_cwd").
@@ -261,6 +275,7 @@ lo.comp.escapes{
   isEscape("_intext").
   isEscape("_outch").
   isEscape("_outbyte").
+  isEscape("_outbytes").
   isEscape("_outtext").
   isEscape("_stdfile").
   isEscape("_fposition").
@@ -270,6 +285,15 @@ lo.comp.escapes{
   isEscape("_setfileencoding").
   isEscape("_ensure_loaded").
   isEscape("_logmsg").
+  isEscape("_connect").
+  isEscape("_listen").
+  isEscape("_accept").
+  isEscape("_udpPort").
+  isEscape("_udpGet").
+  isEscape("_udpSend").
+  isEscape("_udpClose").
+  isEscape("hosttoip").
+  isEscape("iptohost").
   isEscape("delay").
   isEscape("sleep").
   isEscape("now").
@@ -394,110 +418,122 @@ lo.comp.escapes{
   escCode("_basr") => 55.
   escCode("_bnot") => 56.
   escCode("_nthb") => 57.
-  escCode("_get_file") => 58.
-  escCode("_put_file") => 59.
-  escCode("_cwd") => 60.
-  escCode("_cd") => 61.
-  escCode("_rm") => 62.
-  escCode("_mv") => 63.
-  escCode("_mkdir") => 64.
-  escCode("_rmdir") => 65.
-  escCode("_chmod") => 66.
-  escCode("_ls") => 67.
-  escCode("_file_mode") => 68.
-  escCode("_file_present") => 69.
-  escCode("_file_type") => 70.
-  escCode("_file_size") => 71.
-  escCode("_file_modified") => 72.
-  escCode("_file_date") => 73.
-  escCode("_openInFile") => 74.
-  escCode("_openOutFile") => 75.
-  escCode("_openAppendFile") => 76.
-  escCode("_openAppendIOFile") => 77.
-  escCode("_popen") => 78.
-  escCode("_close") => 79.
-  escCode("_end_of_file") => 80.
-  escCode("_ready") => 81.
-  escCode("_inchars") => 82.
-  escCode("_inbytes") => 83.
-  escCode("_inchar") => 84.
-  escCode("_inbyte") => 85.
-  escCode("_inline") => 86.
-  escCode("_intext") => 87.
-  escCode("_outch") => 88.
-  escCode("_outbyte") => 89.
-  escCode("_outtext") => 90.
-  escCode("_stdfile") => 91.
-  escCode("_fposition") => 92.
-  escCode("_fseek") => 93.
-  escCode("_flush") => 94.
-  escCode("_flushall") => 95.
-  escCode("_setfileencoding") => 96.
-  escCode("_ensure_loaded") => 97.
-  escCode("_logmsg") => 98.
-  escCode("delay") => 99.
-  escCode("sleep") => 100.
-  escCode("now") => 101.
-  escCode("today") => 102.
-  escCode("ticks") => 103.
-  escCode("_time2date") => 104.
-  escCode("_time2utc") => 105.
-  escCode("_date2time") => 106.
-  escCode("_utc2time") => 107.
-  escCode("_isCcChar") => 108.
-  escCode("_isCfChar") => 109.
-  escCode("_isCnChar") => 110.
-  escCode("_isCoChar") => 111.
-  escCode("_isCsChar") => 112.
-  escCode("_isLlChar") => 113.
-  escCode("_isLmChar") => 114.
-  escCode("_isLoChar") => 115.
-  escCode("_isLtChar") => 116.
-  escCode("_isLuChar") => 117.
-  escCode("_isMcChar") => 118.
-  escCode("_isMeChar") => 119.
-  escCode("_isMnChar") => 120.
-  escCode("_isNdChar") => 121.
-  escCode("_isNlChar") => 122.
-  escCode("_isNoChar") => 123.
-  escCode("_isPcChar") => 124.
-  escCode("_isPdChar") => 125.
-  escCode("_isPeChar") => 126.
-  escCode("_isPfChar") => 127.
-  escCode("_isPiChar") => 128.
-  escCode("_isPoChar") => 129.
-  escCode("_isPsChar") => 130.
-  escCode("_isScChar") => 131.
-  escCode("_isSkChar") => 132.
-  escCode("_isSmChar") => 133.
-  escCode("_isSoChar") => 134.
-  escCode("_isZlChar") => 135.
-  escCode("_isZpChar") => 136.
-  escCode("_isZsChar") => 137.
-  escCode("_isLetterChar") => 138.
-  escCode("_digitCode") => 139.
-  escCode("_int2str") => 140.
-  escCode("_flt2str") => 141.
-  escCode("_str2flt") => 142.
-  escCode("_str_lt") => 143.
-  escCode("_str_ge") => 144.
-  escCode("_str_hash") => 145.
-  escCode("_str_len") => 146.
-  escCode("_str_gen") => 147.
-  escCode("_stringOf") => 148.
-  escCode("_trim") => 149.
-  escCode("explode") => 150.
-  escCode("implode") => 151.
-  escCode("_str_find") => 152.
-  escCode("_sub_str") => 153.
-  escCode("_str_split") => 154.
-  escCode("_str_concat") => 155.
-  escCode("_str_start") => 156.
-  escCode("getenv") => 157.
-  escCode("setenv") => 158.
-  escCode("envir") => 159.
-  escCode("getlogin") => 160.
-  escCode("_ins_debug") => 161.
-  escCode("_stackTrace") => 162.
+  escCode("_suspend") => 58.
+  escCode("_sha1") => 59.
+  escCode("_get_file") => 60.
+  escCode("_put_file") => 61.
+  escCode("_cwd") => 62.
+  escCode("_cd") => 63.
+  escCode("_rm") => 64.
+  escCode("_mv") => 65.
+  escCode("_mkdir") => 66.
+  escCode("_rmdir") => 67.
+  escCode("_chmod") => 68.
+  escCode("_ls") => 69.
+  escCode("_file_mode") => 70.
+  escCode("_file_present") => 71.
+  escCode("_file_type") => 72.
+  escCode("_file_size") => 73.
+  escCode("_file_modified") => 74.
+  escCode("_file_date") => 75.
+  escCode("_openInFile") => 76.
+  escCode("_openOutFile") => 77.
+  escCode("_openAppendFile") => 78.
+  escCode("_openAppendIOFile") => 79.
+  escCode("_popen") => 80.
+  escCode("_close") => 81.
+  escCode("_end_of_file") => 82.
+  escCode("_ready") => 83.
+  escCode("_inchars") => 84.
+  escCode("_inbytes") => 85.
+  escCode("_inchar") => 86.
+  escCode("_inbyte") => 87.
+  escCode("_inline") => 88.
+  escCode("_intext") => 89.
+  escCode("_outch") => 90.
+  escCode("_outbyte") => 91.
+  escCode("_outbytes") => 92.
+  escCode("_outtext") => 93.
+  escCode("_stdfile") => 94.
+  escCode("_fposition") => 95.
+  escCode("_fseek") => 96.
+  escCode("_flush") => 97.
+  escCode("_flushall") => 98.
+  escCode("_setfileencoding") => 99.
+  escCode("_ensure_loaded") => 100.
+  escCode("_logmsg") => 101.
+  escCode("_connect") => 102.
+  escCode("_listen") => 103.
+  escCode("_accept") => 104.
+  escCode("_udpPort") => 105.
+  escCode("_udpGet") => 106.
+  escCode("_udpSend") => 107.
+  escCode("_udpClose") => 108.
+  escCode("hosttoip") => 109.
+  escCode("iptohost") => 110.
+  escCode("delay") => 111.
+  escCode("sleep") => 112.
+  escCode("now") => 113.
+  escCode("today") => 114.
+  escCode("ticks") => 115.
+  escCode("_time2date") => 116.
+  escCode("_time2utc") => 117.
+  escCode("_date2time") => 118.
+  escCode("_utc2time") => 119.
+  escCode("_isCcChar") => 120.
+  escCode("_isCfChar") => 121.
+  escCode("_isCnChar") => 122.
+  escCode("_isCoChar") => 123.
+  escCode("_isCsChar") => 124.
+  escCode("_isLlChar") => 125.
+  escCode("_isLmChar") => 126.
+  escCode("_isLoChar") => 127.
+  escCode("_isLtChar") => 128.
+  escCode("_isLuChar") => 129.
+  escCode("_isMcChar") => 130.
+  escCode("_isMeChar") => 131.
+  escCode("_isMnChar") => 132.
+  escCode("_isNdChar") => 133.
+  escCode("_isNlChar") => 134.
+  escCode("_isNoChar") => 135.
+  escCode("_isPcChar") => 136.
+  escCode("_isPdChar") => 137.
+  escCode("_isPeChar") => 138.
+  escCode("_isPfChar") => 139.
+  escCode("_isPiChar") => 140.
+  escCode("_isPoChar") => 141.
+  escCode("_isPsChar") => 142.
+  escCode("_isScChar") => 143.
+  escCode("_isSkChar") => 144.
+  escCode("_isSmChar") => 145.
+  escCode("_isSoChar") => 146.
+  escCode("_isZlChar") => 147.
+  escCode("_isZpChar") => 148.
+  escCode("_isZsChar") => 149.
+  escCode("_isLetterChar") => 150.
+  escCode("_digitCode") => 151.
+  escCode("_int2str") => 152.
+  escCode("_flt2str") => 153.
+  escCode("_str2flt") => 154.
+  escCode("_str_lt") => 155.
+  escCode("_str_ge") => 156.
+  escCode("_str_hash") => 157.
+  escCode("_str_len") => 158.
+  escCode("_str_gen") => 159.
+  escCode("_stringOf") => 160.
+  escCode("_trim") => 161.
+  escCode("explode") => 162.
+  escCode("implode") => 163.
+  escCode("_str_find") => 164.
+  escCode("_sub_str") => 165.
+  escCode("_str_split") => 166.
+  escCode("_str_concat") => 167.
+  escCode("_str_start") => 168.
+  escCode("getenv") => 169.
+  escCode("setenv") => 170.
+  escCode("envir") => 171.
+  escCode("getlogin") => 172.
+  escCode("_ins_debug") => 173.
+  escCode("_stackTrace") => 174.
 
 }.

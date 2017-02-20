@@ -56,7 +56,7 @@ lo.repo.file{
     SrcFile = resolveUri(Root,parseUri(S)),
     resourcePresent(CodeFile),
     (resourcePresent(SrcFile) ?
-        newerFile(CodeFile,SrcFile) | true).
+        newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 
   public addPackage:(fileRepo,pkg,list[integer]) => fileRepo.
   addPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"code",Text).

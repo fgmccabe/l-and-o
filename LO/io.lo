@@ -1,8 +1,9 @@
 lo.io {
   import lo.core.
   import lo.collection.
-  import lo.lists.
+  import lo.list.
   import lo.coerce.
+  import lo.bits.
 
   /*
   Interface to file I/O services, expressed using object notation
@@ -96,7 +97,7 @@ lo.io {
 
   -- open a file on local file system in append mode
   openAppendFile:(string,ioEncoding)=>outChannel.
-  openAppendFile(fle,encoding) => outChannel(fle,__openAppendFile(fle,encoding::integer)).
+  openAppendFile(fle,encoding) => outChannel(fle,_openAppendFile(fle,encoding::integer)).
 
   -- standard output channel
   stdout:outChannel = outChannel("stdout",__stdfile(1)).
@@ -112,7 +113,7 @@ lo.io {
       (outChannel,inChannel,inChannel).
   pipeConnect(Cmd,Args,Env,encoding) => (outChannel(Cmd+":stdin",inF),inChannel(Cmd+":stdout",outF),
          inChannel(Cmd+":stderr",errF)) :-
-    __popen(Cmd,Args,Env,inF,outF,errF,encoding::integer).
+    _popen(Cmd,Args,Env,inF,outF,errF).
 
   -- report on current working directory
   public cwd:()=>string.
@@ -124,23 +125,33 @@ lo.io {
 
   -- list the contents of a directory
   public ls:(string)=>list[string].
-  ls(D) => _ls(D)//(((F,_))=>F).
+  ls(D) => _ls(D).
 
-  public ffileList:(string)=>list[(string,fileType,list[filePerm])].
-  ffileList(D) => _ls(D)//(((F,T))=>(F,T,fmodes(F))).
+  public fileList:(string)=>list[(string,fileType,list[filePerm])].
+  fileList(D) => _ls(D)//((F)=>(F,fileType(F),fmodes(F))).
 
   -- report on the type of a file
   public type fileType ::= fifoSpecial | directory | charSpecial | blockSpecial
-       | plainFile | symlink | socket | unknownFileType.
+       | plainFile | symlink | socket.
 
-  public ftype:(string)=>fileType.
-  ftype(F) => __file_type(F).
+  public fileType:(string)=>fileType.
+  fileType(F) => _file_type(F)::fileType.
+
+  implementation coercion[integer,fileType] <= {
+    _coerce(0) => fifoSpecial.
+    _coerce(1) => directory.
+    _coerce(2) => charSpecial.
+    _coerce(3) => blockSpecial.
+    _coerce(4) => plainFile.
+    _coerce(5) => symlink.
+    _coerce(6) => socket.
+  }
 
   -- report on the permission modes on a file
   public type filePerm ::= setUid | setGid | stIcky | rUsr | wUsr | xUsr |
          rGrp | wGrp | xGrp | rOth | wOth | xOth.
   public fmodes:(string)=>list[filePerm].
-  fmodes(F) => fileMode(__file_mode(F)).
+  fmodes(F) => fileMode(_file_mode(F)).
 
   private fileMode:(integer)=>list[filePerm].
   fileMode(0) => [].
@@ -155,11 +166,11 @@ lo.io {
   fileMode(X) => [xGrp,..fileMode(X.&.0xff7)] :- X.&.0x8==0x8.
   fileMode(X) => [rOth,..fileMode(X.&.0xffb)] :- X.&.0x4==0x4.
   fileMode(X) => [wOth,..fileMode(X.&.0xffd)] :- X.&.0x2==0x2.
-  fileMode(X) => [xOth,..fileMode(band(X,0xffe))] :- X.&.0x1==0x1.
+  fileMode(X) => [xOth,..fileMode(X.&.0xffe)] :- X.&.0x1==0x1.
 
   -- change the permissions on a file
   public chmode:(string,list[filePerm]){}.
-  chmode(F,P) :- __chmod(F,encodeModes(P,0)).
+  chmode(F,P) :- _chmod(F,encodeModes(P,0)).
 
   private encodeModes:(list[filePerm],integer)=>integer.
   encodeModes([],P)=>P.
@@ -178,20 +189,20 @@ lo.io {
 
   -- delete a file
   public rm:(string){}.
-  rm(F) :- __rm(F).
+  rm(F) :- _rm(F).
 
   -- rename a file
   public mv:(string,string){}.
-  mv(O,N) :- __mv(O,N).
+  mv(O,N) :- _mv(O,N).
 
   -- Test for the presence of a file
   public filePresent:(string){}.
   filePresent(F) :-
-      __file_present(F).
+      _file_present(F).
 
   -- report on the size of a file
-  public fileSize:[string]=>integer.
-  fileSize(F) => __file_size(F).
+  public fileSize:(string)=>integer.
+  fileSize(F) => _file_size(F).
 
   public newerFile:(string,string){}.
   newerFile(U1,U2) :-

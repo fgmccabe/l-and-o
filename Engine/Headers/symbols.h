@@ -42,8 +42,6 @@ extern ptrI kprocessFlag;
 
 extern ptrI trueClass,falseClass;
 
-extern ptrI kfifo,kdir,kcharfile,kblock,kplain,ksymlink,ksock,kunknown;
-
 extern ptrI kloadflag;                  /* The loaded property */
 extern ptrI kversion;                   /* The $version property */
 extern ptrI universal;                  /* The universal package version */

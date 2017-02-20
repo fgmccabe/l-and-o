@@ -21,9 +21,9 @@
 #define threadType "t'lo.thread#thread'"
 #define lockType "t'lo.thread#lock'"
 #define thingType "t'lo.core#thing'"
-#define fileType "t'lo.io#fileHandle'"
-#define socketType "t'lo.io#sockHandle'"
-#define udpType "t'lo.io#udpHandle'"
+#define fileType "t'lo.io*fileHandle'"
+#define socketType "t'lo.io*sockHandle'"
+#define udpType "t'lo.io*udpHandle'"
 
 /* Define the standard escapes */
 escape(_exit,True,False,"P1i","terminate L&O engine")
@@ -154,7 +154,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_inbytes,True,False,"F2"fileType"iLi","read block of bytes")
   escape(_inchar,True,False,"F1"fileType"i","read single character")
   escape(_inbyte,True,False,"F1"fileType"i","read single byte")
-  escape(_inline,True,False,"F2"fileType"S","read a line")
+  escape(_inline,True,False,"F1"fileType"S","read a line")
   escape(_intext,True,False,"F2"fileType"SS","read until matching character")
   escape(_outch,True,False,"P2"fileType"i","write a single character")
   escape(_outbyte,True,False,"P2"fileType"i","write a single byte")
@@ -174,11 +174,11 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   // Socket handling functions
   escape(_connect,True,False,"P5Sii"fileType fileType,"connect to remote host")
   escape(_listen,True,False,"P2i"fileType,"listen on a port")
-  escape(_accept,True,False,"P7i"fileType fileType "SiS","accept connection")
+  escape(_accept,True,False,"P6i"fileType fileType "SiS","accept connection")
 
   escape(_udpPort,True,False,"P2i"udpType,"estabish a UDP port")
-  escape(_udpGet,True,False,"P4"udpType"SSN","read a UDP datagram")
-  escape(_udpSend,True,False,"P4"udpType"SSN","send a UDP datagram")
+  escape(_udpGet,True,False,"P4"udpType"SSi","read a UDP datagram")
+  escape(_udpSend,True,False,"P4"udpType"SSi","send a UDP datagram")
   escape(_udpClose,True,False,"P1"udpType,"close the UDP socket")
 
   escape(hosttoip,False,False,"F1SLS","IP address of host")
