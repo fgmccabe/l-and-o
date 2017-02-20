@@ -19,6 +19,7 @@
 #include "fileio.h"
 #include "ioTcp.h"
 #include "hosts.h"
+#include "udp.h"
 
 /* Open up a socket for listening to */
 
@@ -26,9 +27,9 @@ retCode g__listen(processPo P, ptrPo a) {
   ptrI Port = deRefI(&a[1]);
 
   if (isvar(Port) || !isInteger(objV(Port)))
-    return liberror(P, "__listen", eINTNEEDD);
+    return liberror(P, "_listen", eINTNEEDD);
   else if (!isvar(deRefI(&a[2])))
-    return liberror(P, "__listen", eVARNEEDD);
+    return liberror(P, "_listen", eVARNEEDD);
   else {
     integer port = integerVal(intV(Port));
     byte nBuff[MAX_MSG_LEN];
@@ -36,7 +37,7 @@ retCode g__listen(processPo P, ptrPo a) {
 
     strMsg(nBuff, NumberOf(nBuff), "listen@%ld", port);
     switchProcessState(P, wait_io);
-    listen = O_IO(listeningPort(nBuff, (int)port));
+    listen = O_IO(listeningPort(nBuff, (unsigned short) port));
     setProcessRunnable(P);
 
     if (listen == NULL)
@@ -59,7 +60,7 @@ retCode g__accept(processPo P, ptrPo a) {
   objPo o1 = objV(Port);
 
   if (!hasClass(o1, filePtrClass))
-    return liberror(P, "__accept", eINVAL);
+    return liberror(P, "_accept", eINVAL);
   else {
     ioPo listen = filePtr(Port);
     ioPo inC, outC;
@@ -76,12 +77,12 @@ retCode g__accept(processPo P, ptrPo a) {
         byte pBuff[MAX_MSG_LEN];
         string peerN = peerName(O_SOCK(inC), &port);
         string peerI = peerIP(O_SOCK(inC), &port, &pBuff[0], NumberOf(pBuff));
-        ptrI txtList;
+        ptrI peerNme;
 
         if (peerN == NULL || peerI == NULL) {
           closeFile(inC);
           closeFile(outC);
-          return liberror(P, "__accept", eNOTFND);
+          return liberror(P, "_accept", eNOTFND);
         }
 
         ptrI tI = allocFilePtr(inC); /* return open file descriptor */
@@ -89,20 +90,19 @@ retCode g__accept(processPo P, ptrPo a) {
         ptrI tO = allocFilePtr(outC);
         bindVar(P, deRef(&a[3]), tO);
 
-        txtList = allocateString(&P->proc.heap, peerN, uniStrLen(peerN));
+        peerNme = allocateString(&P->proc.heap, peerN, uniStrLen(peerN));
 
-        bindVar(P, deRef(&a[4]), txtList); /* Bind the peername of the connection */
+        bindVar(P, deRef(&a[4]), peerNme); /* Bind the peername of the connection */
 
         ptrI pt = allocateInteger(&P->proc.heap, port);
         bindVar(P, deRef(&a[6]), pt);   /* Bind the port number of the connection */
 
-        txtList = allocateString(&P->proc.heap, peerI, uniStrLen(peerI));
-        bindVar(P, deRef(&a[5]), txtList);      /* Bind the IP address of the connection */
+        peerNme = allocateString(&P->proc.heap, peerI, uniStrLen(peerI));
+        bindVar(P, deRef(&a[5]), peerNme);      /* Bind the IP address of the connection */
 
         return Ok;
       }
-      default:
-        return liberror(P, "__accept", eIOERROR);
+      default:return liberror(P, "_accept", eIOERROR);
     }
   }
 }
@@ -115,23 +115,27 @@ retCode g__connect(processPo P, ptrPo a) {
 
   ptrI Host = deRefI(&a[1]);
   ptrI Port = deRefI(&a[2]);
+  ptrI Enc = deRefI(&a[3]);
 
   if (!IsString(Host))
-    return liberror(P, "__connect", eSTRNEEDD);
+    return liberror(P, "_connect", eSTRNEEDD);
   else if (isvar(Port) || !isInteger(objV(Port)))
-    return liberror(P, "__connect", eINTNEEDD);
-  else if (isvar(deRefI(&a[3])))
-    return liberror(P, "__connect", eINVAL);
+    return liberror(P, "_connect", eINTNEEDD);
+  else if (isvar(Enc) || !isInteger(objV(Enc)))
+    return liberror(P, "_connect", eINVAL);
   else {
     int16 port = (int16) integerVal(intV(Port));
     retCode ret;
 
-    if (port == 0 || !IsString(Host))
-      return liberror(P, "__connect", eINVAL);
+    if (port == 0)
+      return liberror(P, "_connect", eINVAL);
 
-    string host = stringVal(stringV(Host));
+    byte host[MAX_MSG_LEN];
+
+    copyString2Buff(host, NumberOf(host), stringV(Host));
+
     ioPo inC, outC;
-    ret = connectRemote(host, port, pickEncoding(deRefI(&a[3])), True, &inC, &outC);
+    ret = connectRemote(host, port, pickEncoding(Enc), True, &inC, &outC);
 
     setProcessRunnable(P);
 
@@ -142,81 +146,166 @@ retCode g__connect(processPo P, ptrPo a) {
         equal(P, &a[4], &RemIn);
         return equal(P, &a[5], &RemOut);
       }
-      default:
-        logMsg(logFile, "Failed to establish connection: %U", host);
-        return liberror(P, "__connect", eCONNECT);
+      default:logMsg(logFile, "Failed to establish connection: %U", host);
+        return liberror(P, "_connect", eCONNECT);
     }
   }
 }
 
-#if 0
-** *  Fix me later ** *
+ptrI udpPtrClass;
+
+static long udpSizeFun(specialClassPo class, objPo o);
+static comparison udpCompFun(specialClassPo class, objPo o1, objPo o2);
+static retCode udpOutFun(specialClassPo class, ioPo out, objPo o);
+static retCode udpScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o);
+static objPo udpCopyFun(specialClassPo class, objPo dst, objPo src);
+static uinteger udpHashFun(specialClassPo class, objPo o);
+
+static udpPo udpPtr(ptrI p);
+static ptrI allocUDPPtr(udpPo udp);
+static void clearUDPPointer(ptrI p);
+static logical isUdpPtr(ptrI p);
+
+typedef struct {
+  ptrI class; // == udpPtrClass
+  udpPo udp;
+} udpRec, *uPo;
+
+void initUdp(void) {
+  udpPtrClass = newSpecialClass("lo.io#udp", udpSizeFun, udpCompFun,
+                                udpOutFun, udpCopyFun, udpScanFun, udpHashFun);
+}
+
+static long udpSizeFun(specialClassPo class, objPo o) {
+  return CellCount(sizeof(udpRec));
+}
+
+static comparison udpCompFun(specialClassPo class, objPo o1, objPo o2) {
+  if (o1->class == udpPtrClass && o2->class == udpPtrClass) {
+    if (o1 == o2)
+      return same;
+    else
+      return incomparible;
+  } else
+    return incomparible;
+}
+
+static retCode udpOutFun(specialClassPo class, ioPo out, objPo o) {
+  assert(o->class == filePtrClass);
+
+  uPo f = (uPo) o;
+
+  return outMsg(out, "%s[%x]", udpName(f->udp), udpPortNo(f->udp));
+}
+
+static retCode udpScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o) {
+  return Ok;
+}
+
+static objPo udpCopyFun(specialClassPo class, objPo dst, objPo src) {
+  long size = udpSizeFun(class, src);
+  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
+
+  return (objPo) (((ptrPo) dst) + size);
+}
+
+static uinteger udpHashFun(specialClassPo class, objPo o) {
+  assert(o->class == filePtrClass);
+
+  return (uinteger) ((PTRINT) (((uPo) o)->udp));
+}
 
 /* Open up a UDP socket for listening to */
 
-retCode g_udpPort(processPo P,ptrPo a)
-{
+retCode g__udpPort(processPo P, ptrPo a) {
   ptrI Port = deRefI(&a[1]);
-  
-  if(isvar(Port)||!isInteger(objV(Port)))
-    return liberror(P,"__udpPort",eINTNEEDD);
-  else if(!isvar(deRefI(&a[2])))
-    return liberror(P,"__udpPort",eVARNEEDD);
-  else{
-    long portNo = integerVal(intV(Port));
-    byte nBuff[MAX_MSG_LEN];
-    ioPo sock;
-    
-    strMsg(nBuff,NumberOf(nBuff),"udpPort:%d",portNo);
-    sock = udpPort(nBuff,portNo);
 
-    if(sock==NULL)
-      return liberror(P,"__udpPort",eNOPERM);
-    else{
-      ptrI t2 = allocFilePtr(sock); /* return open file descriptor */
+  if (isvar(Port) || !isInteger(objV(Port)))
+    return liberror(P, "_udpPort", eINTNEEDD);
+  else if (!isvar(deRefI(&a[2])))
+    return liberror(P, "_udpPort", eVARNEEDD);
+  else {
+    int portNo = (int) integerVal(intV(Port));
+    byte nBuff[MAX_MSG_LEN];
+
+    strMsg(nBuff, NumberOf(nBuff), "udpPort:%d", portNo);
+    udpPo sock = udpPort(nBuff, portNo, ioREAD | ioWRITE);
+
+    if (sock == NULL)
+      return liberror(P, "_udpPort", eNOPERM);
+    else {
+      ptrI t2 = allocFilePtr(O_IO(sock)); /* return open file descriptor */
       ptrPo res = deRef(&a[2]);
 
-      bindVar(P,res,t2);
+      bindVar(P, res, t2);
       return Ok;
     }
   }
 }
 
-/* Send a block of text down a UDP port */
-retCode g_udpSend(processPo P,ptrPo a)
-{
+retCode g__udpClose(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
   objPo o1 = objV(t1);
 
-  if(!hasClass(o1,filePtrClass))
-    return liberror(P,"__udpSend",eINVAL);
-  else{
-    ioPo file = filePtr(t1);
+  if (!hasClass(o1, udpPtrClass))
+    return liberror(P, "_udpClose", eINVAL);
+  else {
+    udpPo file = udpPtr(t1);
 
-    if(isUDPport(file)!=Ok)
-      return liberror(P,"__udpSend",eINVAL);
-    else if(isGroundString(&a[2])!=Ok||isGroundString(&a[3])!=Ok)
-      return liberror(P,"__udpSend",eSTRNEEDD);
-    else if(isvar(t1=deRefI(&a[4])) || !isInteger(objV(t1)))
-      return liberror(P,"__udpSend",eINTNEEDD);
-    else{
-      long len = StringLen(&a[2])+1;
-      byte buff[len];
-      long plen = StringLen(&a[3])+1;
-      byte peer[plen];
-      int port = integerVal(intV(t1));
-      
-      if(String2Uni(&a[2],buff,len)!=Ok)
-        return liberror(P,"__udpSend",eSTRNEEDD);
-      else if(String2Uni(&a[3],peer,plen)!=Ok)
-        return liberror(P,"__udpSend",eSTRNEEDD);
-        
-      switch(udpSend(file,buff,len-1,peer,port)){
-      case Ok:
-        return Ok;
+    if (file != NULL) {
+      clearUDPPointer(t1);
+      switchProcessState(P, wait_io);
+      retCode ret = closeUDP(file);
+      setProcessRunnable(P);
+      return ret;
+    } else
+      return Ok;
+  }
+}
 
-      default:
-  return liberror(P,"__udpSend",eIOERROR);
+/* Send a block of text down a UDP port */
+retCode g__udpSend(processPo P, ptrPo a) {
+  ptrI t1 = deRefI(&a[1]);
+
+  if (!isUdpPtr(t1))
+    return liberror(P, "_udpSend", eINVAL);
+  else {
+    udpPo file = udpPtr(t1);
+    ptrI a2 = deRefI(&a[2]);
+
+    if (isvar(a2))
+      return liberror(P, "_udpSend", eINSUFARG);
+    else if (!IsString(a2))
+      return liberror(P, "_udpSend", eSTRNEEDD);
+    else {
+      stringPo str = stringV(a2);
+      string text = stringVal(str);
+      long tLen = stringLen(str);
+
+      ptrI a3 = deRefI(&a[3]);
+
+      if (isvar(a3))
+        return liberror(P, "_udpSend", eINSUFARG);
+      else if (!IsString(a3))
+        return liberror(P, "_udpSend", eSTRNEEDD);
+      else {
+        str = stringV(a3);
+        long peerLn = stringLen(str);
+
+        byte peer[peerLn + 1];
+        copyString2Buff(peer, NumberOf(peer), str);
+
+        if (isvar(t1 = deRefI(&a[4])) || !isInteger(objV(t1)))
+          return liberror(P, "_udpSend", eINTNEEDD);
+        else {
+          uint16 port = (uint16) integerVal(intV(t1));
+
+          switch (udpSend(file, text, tLen, peer, port)) {
+            case Ok:return Ok;
+
+            default:return liberror(P, "__udpSend", eIOERROR);
+          }
+        }
       }
     }
   }
@@ -224,48 +313,40 @@ retCode g_udpSend(processPo P,ptrPo a)
 
 /* read a message from a UDP port */
 
-retCode g_udpGet(processPo P,ptrPo a)
-{
+retCode g__udpGet(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
-  objPo o1 = objV(t1);
 
-  if(!hasClass(o1,filePtrClass))
-    return liberror(P,"__udpGet",eINVAL);
-  else{
-    ioPo file = filePtr(t1);
-    byte txt[16384];
+  if (!isUdpPtr(t1))
+    return liberror(P, "_udpGet", eINVAL);
+  else {
+    udpPo file = udpPtr(t1);
+    byte txt[16384];                 // Maximum size of
     long len = NumberOf(txt);
     byte peer[1024];
     long plen = NumberOf(peer);
     int port = 0;
 
-    if(isUDPport(file)!=Ok)
-      return liberror(P,"__udpGet",eNOPERM);
+    switch (udpRead(file, txt, &len, peer, plen, &port)) {
+      case Eof:return liberror(P, "__udpGet", eEOF);
+      case Ok: {
+        ptrI el = allocateString(&P->proc.heap, txt, len);
 
-    switch(udpRead(file,txt,&len,peer,plen,&port)){
-      case Eof:
-        return liberror(P,"__udpGet",eEOF);
-      case Ok:{
-        ptrI el = allocateString(&P->proc.heap,txt,len);
-
-        if(equal(P,&el,&a[2])!=Ok)
+        if (equal(P, &el, &a[2]) != Ok)
           return Fail;
 
-        el = allocateString(&P->proc.heap,peer,uniStrLen(peer));
+        el = allocateString(&P->proc.heap, peer, uniStrLen(peer));
 
-        if(equal(P,&el,&a[3])!=Ok)
+        if (equal(P, &el, &a[3]) != Ok)
           return Fail;
 
-        el = allocateInteger(&P->proc.heap,port);
+        el = allocateInteger(&P->proc.heap, port);
 
-        return equal(P,&el,&a[4]);
+        return equal(P, &el, &a[4]);
       }
-      default:
-  return liberror(P,"__intext",eIOERROR);
+      default:return liberror(P, "__intext", eIOERROR);
     }
   }
 }
-#endif
 
 /* Access host name functions */
 /* return IP addresses of a host */
@@ -284,7 +365,7 @@ retCode g_hosttoip(processPo P, ptrPo a) {
 
     gcAddRoot(&P->proc.heap, &el);
 
-    for (i = 0; getNthHostIP(host, (unsigned)i, ip, NumberOf(ip)) != NULL; i++) {
+    for (i = 0; getNthHostIP(host, (unsigned) i, ip, NumberOf(ip)) != NULL; i++) {
       el = allocateString(&P->proc.heap, ip, uniStrLen(ip));
 
       l = consLsPair(&P->proc.heap, el, l);
@@ -311,4 +392,29 @@ retCode g_iptohost(processPo P, ptrPo a) {
     } else
       return liberror(P, "iptohost", eNOTFND);
   }
+}
+
+ptrI allocUDPPtr(udpPo udp) {
+  uPo f = (uPo) allocateSpecial(&globalHeap, udpPtrClass);
+
+  f->udp = udp;
+  return objP(f);
+}
+
+udpPo udpPtr(ptrI p) {
+  objPo o = objV(p);
+  assert(hasClass(o, udpPtrClass));
+  return ((uPo) o)->udp;
+}
+
+static void clearUDPPointer(ptrI p) {
+  objPo o = objV(p);
+  assert(hasClass(o, udpPtrClass));
+
+  ((uPo) o)->udp = NULL;
+}
+
+logical isUdpPtr(ptrI p) {
+  objPo o = objV(p);
+  return hasClass(o, udpPtrClass);
 }

@@ -28,12 +28,11 @@
 */
 
 
-enum sha_result_codes
-{
+enum sha_result_codes {
   SHA_SUCCESS = 0,
-  SHA_NULL,		/* Null pointer parameter */
-  SHA_INPUT_TOO_LONG,	/* input data too long */
-  SHA_STATE_ERROR	/* called Input after Result */
+  SHA_NULL,    /* Null pointer parameter */
+  SHA_INPUT_TOO_LONG,  /* input data too long */
+  SHA_STATE_ERROR  /* called Input after Result */
 };
 
 #define SHA1_HASH_SIZE 20 /* Hash size in bytes */
@@ -43,13 +42,15 @@ enum sha_result_codes
   hashing operation
 */
 
-typedef struct SHA1_CONTEXT
-{
-  unsigned long long  Length;		      /* Message length in bits      */
-  unsigned long Intermediate_Hash[SHA1_HASH_SIZE/4]; /* Message Digest  */
-  int Computed;			/* Is the digest computed?	   */
-  int Corrupted;		/* Is the message digest corrupted? */
-  int Message_Block_Index;	/* Index into message block array   */
-  byte Message_Block[64];	/* 512-bit message blocks      */
+typedef struct SHA1_CONTEXT {
+  unsigned long long Length;          /* Message length in bits      */
+  unsigned long Intermediate_Hash[SHA1_HASH_SIZE / 4]; /* Message Digest  */
+  int Computed;      /* Is the digest computed?	   */
+  int Corrupted;    /* Is the message digest corrupted? */
+  int Message_Block_Index;  /* Index into message block array   */
+  unsigned char Message_Block[64];  /* 512-bit message blocks      */
 } SHA1_CONTEXT;
 
+void sha1_reset(SHA1_CONTEXT *context);
+int sha1_input(SHA1_CONTEXT *context, const unsigned char *message_array, unsigned length);
+int sha1_result(SHA1_CONTEXT *context, unsigned char Message_Digest[SHA1_HASH_SIZE]);

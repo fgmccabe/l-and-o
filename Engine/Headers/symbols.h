@@ -27,6 +27,7 @@ extern ptrI classClass;
 
 extern ptrI errorClass;
 extern ptrI filePtrClass;
+extern ptrI udpPtrClass;
 
 /* Standard symbols */
 

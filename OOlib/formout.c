@@ -764,7 +764,7 @@ retCode logMsg(ioPo out, char *fmt, ...) {
   return ret;
 }
 
-retCode ioErrorMsg(ioPo io, char *fmt, ...) {
+retCode ioErrorMsg(objectPo io, char *fmt, ...) {
   va_list args;    /* access the generic arguments */
   va_start(args, fmt);    /* start the variable argument sequence */
 

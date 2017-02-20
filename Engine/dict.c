@@ -80,7 +80,7 @@ void initDict()        /* Initialize the dictionary */
   klabel = newEnumSym("$label");
 
   kstart = newEnumSym("start_thread%0"); /* first call to a thread */
-  kdelay = newProgLbl("lo.stdlib@delayHandler", 1);
+  kdelay = newProgLbl("lo.boot@delayHandler", 1);
 }
 
 void restartDictionary(globalGcPo G) {

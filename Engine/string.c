@@ -19,6 +19,7 @@
 #include <limits.h>
 #include "lo.h"
 #include "term.h"
+#include "sha1.h"
 
 static long strSizeFun(specialClassPo class, objPo o);
 static comparison strCompFun(specialClassPo class, objPo o1, objPo o2);
@@ -54,7 +55,7 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
 static retCode strOutFun(specialClassPo class, ioPo out, objPo o) {
   stringPo s = (stringPo) o;
   string str = StringVal(s);
-  long len = StringLen(s);
+  long len = stringLen(s);
   retCode r = outChar(out, '\'');
 
   long pos = 0;
@@ -100,6 +101,24 @@ ptrI allocateString(heapPo H, string m, long count) {
   new->size = count;
   strncpy((char *) new->data, (char *) m, count);
   return objP(new);
+}
+
+retCode copyString2Buff(byte *buffer, long bLen, stringPo s) {
+  string src = stringVal(s);
+  long len = stringLen(s);
+  long ix = 0;
+  while (ix < len && ix < bLen) {
+    buffer[ix] = src[ix];
+    ix++;
+  }
+
+  if (ix < bLen) {
+    buffer[ix] = 0;
+    return Ok;
+  } else {
+    buffer[ix - 1] = 0;
+    return Eof;
+  }
 }
 
 retCode g__stringOf(processPo P, ptrPo a) {
@@ -322,7 +341,7 @@ retCode g_explode(processPo P, ptrPo a) {
   else {
     stringPo s = stringV(Str);
     string src = stringVal(s);
-    long strLen = StringLen(s);
+    long strLen = stringLen(s);
 
     byte buff[MAX_SYMB_LEN];
     string buffer = (strLen > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * strLen) : buff);
@@ -411,6 +430,26 @@ retCode g_implode(processPo P, ptrPo a) {
     setProcessRunnable(P);
     return funResult(P, a, 2, result);
   }
+}
+
+retCode implodeString(ptrPo l, ioPo out) {
+  ptrI Ls = deRefI(l);
+  retCode ret = Ok;
+
+  while (ret == Ok && IsList(Ls)) {
+    ptrPo h = listHead(objV(Ls));
+    ptrI C = deRefI(h);
+
+    if (isobj(C) && IsInt(C)) {
+      codePoint ch = (codePoint) IntVal(C);
+
+      ret = outChar(out, ch);
+
+      Ls = deRefI(h + 1);
+    } else
+      return Error;
+  }
+  return ret;
 }
 
 retCode g__str_len(processPo P, ptrPo a) {
@@ -618,10 +657,11 @@ retCode g__sub_str(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
     return liberror(P, "_sub_str", eINSUFARG);
   else {
-    string src = stringVal(stringV(a1));
+    stringPo str = stringV(a1);
+    string src = stringVal(str);
+    long len = stringLen(str);
     integer start = integerVal(intV(a2));
     integer end = integerVal(intV(a3));
-    unsigned long len = uniStrLen(src);
 
     end = min(end, len);
 
@@ -669,3 +709,28 @@ retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
   return closeFile(f);
 }
 
+retCode g__sha1(processPo P, ptrPo a) {
+  ptrI Data = deRefI(&a[1]);
+
+  if (isvar(Data))
+    return liberror(P, "__sha1", eINSUFARG);
+  else if (!isString(objV(Data)))
+    return liberror(P, "__sha1", eINVAL);
+  else {
+    stringPo str = stringV(Data);
+    string src = stringVal(str);
+    long len = stringLen(str);
+
+    SHA1_CONTEXT sha1;
+
+    sha1_reset(&sha1);
+    sha1_input(&sha1, src, (unsigned int) len);
+
+    byte sha_result[SHA1_HASH_SIZE];
+    sha1_result(&sha1, sha_result);
+
+    ptrI hash = allocateString(&P->proc.heap, sha_result, SHA1_HASH_SIZE);
+
+    return equal(P, &a[2], &hash);
+  }
+}

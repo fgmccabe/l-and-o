@@ -44,7 +44,6 @@ lo.boot{
 
 
 
-
   public __boot:(){}.
   __boot() :-
     handleCmdLineOpts(processOptions(_command_line(),[repoOption],bootOptions(""))).
@@ -52,7 +51,7 @@ lo.boot{
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
   handleCmdLineOpts(either((Opts,Args))) :-
     openRepo(Opts.repo,Repo),
-    
+
 
   __main:(string,list[(char,symbol)],list[string]){}.
   __main(Path,Options,Cmd) ->
@@ -144,5 +143,9 @@ working_directory(C,C),
 atom_string(C,D),
 string_concat("file:",D,DT),
 parseURI(DT,WD).
+
+  private delayHandler:(list[(){}]){}. -- private, but known to the run-time
+  delayHandler([]).
+  delayHandler([H,..L]) :- H()!, delayHandler(L).
 
 }

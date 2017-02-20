@@ -52,7 +52,7 @@ static inline string StringVal(stringPo p) {
   return p->data;
 }
 
-static inline long StringLen(stringPo p) {
+static inline long stringLen(stringPo p) {
   assert(isString((objPo) p));
   return p->size;
 }
@@ -69,9 +69,11 @@ static inline uinteger stringHash(objPo p) {
 extern ptrI allocateString(heapPo H, string buff, long len);
 extern ptrI allocateCString(heapPo H, const char *buff);
 
+extern retCode copyString2Buff(byte *buffer,long bLen,stringPo s);
+
 extern retCode writeString(ioPo f, void *x, long depth, long prec, logical alt);
 retCode closeOutString(ioPo f, heapPo P, ptrPo tgt);
 
 retCode explodeString(processPo P, byte *text, long length, ptrPo a);
-
+retCode implodeString(ptrPo l, ioPo out);
 #endif

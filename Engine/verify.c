@@ -30,7 +30,7 @@ typedef struct _segment_ {
   Var args[LO_REGS];
   long lCount;                      //  number of locals in use
   varPo locals;                     //  entry state for this segment
-  short arity;                      //  Arity of the code
+  uint16 arity;                     //  Arity of the code
   short strcount;                   //  number of valid structure references
   long litCount;                    //  number of literals
   unsigned int lclHp;               //  how much local heap can we allocate?

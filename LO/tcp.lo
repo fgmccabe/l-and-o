@@ -1,0 +1,29 @@
+lo.tcp{
+  import io.
+
+  tcpConnect:(string,integer,inChannel,outChannel,ioEncoding){}.
+  tcpConnect(host,port,inChnl,outChnl,encoding) :-
+      __connect(host,port,mapEncoding(encoding),inF,outF);
+      inChnl = inFile(inF,host<>":stdout");
+      outChnl = outFile(outF,host<>":stdin").
+
+  serverProc <~ { exec:[string,string,integer,inChannel,outChannel]*}.
+
+  tcpServer:[integer,serverProc,ioEncoding]*.
+  tcpServer(port,handler,encoding) ->
+      __listen(port,L);
+      serverLoop(L,handler,encoding).
+
+  private serverLoop:[opaque,serverProc,ioEncoding]*.
+  serverLoop(L,handler,encoding) ->
+      ( __accept(L,inC,outC,rHost,rIP,rPort,mapEncoding(encoding));
+        outP = outFile(outC,rHost<>":stdout");
+        inP = inFile(inC,rHost<>":stdin");
+        spawn { handler.exec(rHost,rIP,rPort,inP,outP); outP.close(); inP.close()}
+      )
+      onerror(
+       error(_,Code) -> {__logmsg("problem with connection: "<>__errorcode(Code))}
+      );
+      serverLoop(L,handler,encoding).
+
+}

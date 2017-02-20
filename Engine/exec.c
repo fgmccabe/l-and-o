@@ -45,8 +45,10 @@ retCode g__shell(processPo P, ptrPo a) {
   else if (isvar(ags) || aLen < 0 || isvar(env) || eLen < 0)
     return liberror(P, "__shell", eINSUFARG);
   else {
-    string cmd = stringVal(stringV(pth));
-    uint64 len = uniStrLen(cmd) + 1;
+    stringPo str = stringV(pth);
+
+    byte cmd[MAX_MSG_LEN];
+    copyString2Buff(cmd,NumberOf(cmd),str);
 
     if (access((char *) cmd, F_OK | R_OK | X_OK) != 0) {
       setProcessRunnable(P);
@@ -64,8 +66,9 @@ retCode g__shell(processPo P, ptrPo a) {
 
       for (i = 1; IsList(ags); i++, ags = deRefI(listTail(objV(ags)))) {
         ptrPo l = listHead(objV(ags));
-        string s = stringVal(stringV(deRefI(l)));
-        long al = uniStrLen(s);
+        stringPo sp = stringV(deRefI(l));
+        string s = stringVal(sp);
+        long al = stringLen(sp);
 
         if (al < 0)
           return liberror(P, "__shell", eINSUFARG);
@@ -85,9 +88,13 @@ retCode g__shell(processPo P, ptrPo a) {
         if (!isTuplePair(&El, &var, &val) || !IsString(deRefI(&val)) || !IsString(deRefI(&var)))
           return liberror(P, "__shell", eINSUFARG);
         else {
-          string k = stringVal(stringV(deRefI(&var)));
-          string v = stringVal(stringV(deRefI(&val)));
-          long bSize = uniStrLen(k) + uniStrLen(v) + 10;
+          stringPo kp = stringV(deRefI(&var));
+          string k = stringVal(kp);
+          long kl = stringLen(kp);
+          stringPo vp = stringV(deRefI(&val));
+          string v = stringVal(vp);
+          long vl = stringLen(vp);
+          long bSize = kl+vl + 10;
           byte str[bSize];
 
           strMsg(str, bSize, "%U = %U", k, v);

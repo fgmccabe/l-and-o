@@ -23,27 +23,23 @@ typedef struct _variable_ *vPo;
 typedef struct _typevar_ *tvPo;
 
 typedef struct _instruction_ {
-  insWord code;
-  /* The instruction bitmap itself */
+  insWord code;  /* The instruction bitmap itself */
   opAndSpec pA;
-  iPo add;
-  /* Alternate address target */
+  iPo add;       /* Alternate address target */
   iPo next;      /* next instruction */
 } InsRec;
 
 typedef struct _variable_ {
   ptrI var;
   int reg;
-  int count;
-  /* How many references */
-  vPo next;        /* next variable in the chain */
+  int count;     /* How many references */
+  vPo next;      /* next variable in the chain */
 } VarRec;
 
 typedef struct _literal_ {
   ptrI lit;
-  int off;
-  /* which literal is it? */
-  lPo next;        /* next literal in the chain */
+  int off;       /* which literal is it? */
+  lPo next;      /* next literal in the chain */
 } LitRec;
 
 typedef struct {

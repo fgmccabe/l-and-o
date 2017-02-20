@@ -54,7 +54,7 @@ lo.comp.args {
   updateDep(comp(d,p,l,w,r,v,pk,_),dp) => comp(d,p,l,w,r,v,pk,dp).
 
   public parseFlags:(list[string]) => compOption.
-  parseFlags(args) => parseFlgs(args,comp(false,false,false,W,W,defltVersion,[],true)) :- W=cwd().
+  parseFlags(args) => parseFlgs(args,comp(false,false,false,W,W,defltVersion,[],true)) :- W=parseUri(cwd()).
 
   private parseFlgs:(list[string],compOption) => compOption.
   parseFlgs([],Opts) => Opts.

@@ -28,10 +28,12 @@ set(SOURCE_FILES
         pair.c
         pipe.c
         pool.c
+        sha.c
         sockets.c
         stringBuffer.c
         strio.c
         timer.c
+        udp.c
         unichar.c
         unicode.c
         unitable.c
@@ -45,11 +47,11 @@ set(SOURCE_FILES
         Headers/iosockP.h Headers/ioTcp.h Headers/iterate.h Headers/ixTree.h Headers/ixTreeP.h Headers/jsonEvent.h
         Headers/lists.h Headers/listsP.h Headers/lockable.h Headers/lockableP.h Headers/logical.h
         Headers/managed.h Headers/managedP.h Headers/object.h Headers/objectP.h
-        Headers/pool.h Headers/retcode.h Headers/pipe.h Headers/pipeP.h
+        Headers/pool.h Headers/retcode.h Headers/pipe.h Headers/pipeP.h Headers/sha1.h
         Headers/stringBuffer.h Headers/stringBufferP.h
         Headers/timer.h
         Headers/unicode.h Headers/unicodeP.h Headers/utils.h
-        Headers/jsonEvent.h)
+        Headers/jsonEvent.h Headers/udp.h Headers/udpP.h)
 
 add_library(ooio STATIC ${SOURCE_FILES})
 

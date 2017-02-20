@@ -2,6 +2,7 @@ lo{
   public import lo.core.
   public import lo.list.
   public import lo.index.
+  public import lo.io.
   public import lo.coerce.
   public import lo.bits.
   public import lo.collection.

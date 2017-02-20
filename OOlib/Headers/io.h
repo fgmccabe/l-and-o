@@ -106,7 +106,7 @@ retCode fileProperty(ioPo f, void *key, void **val);
 retCode processFileProperties(ioPo f, ioPropertyFun fn, void *c);
 retCode processAllFileProperties(ioPropertyFun f, void *c);
 
-retCode ioErrorMsg(ioPo io, char *fmt, ...);
+retCode ioErrorMsg(objectPo io, char *fmt, ...);
 
 #ifdef VERIFY_OBJECT
 objectPo checkCast(void *c, classPo class);

@@ -2835,11 +2835,9 @@ retCode g__suspend(processPo P, ptrPo a) {
       suspensionPo susp = (suspensionPo) (((ptrPo) x) - 1);
       bndVar(P, &susp->goal, nPair);
       gcRemoveRoot(&P->proc.heap, root);
-      return Ok;
     } else {
       ptrI susp = allocateSusp(&P->proc.heap, deRefI(&a[2]));
       bndVar(P, deRef(&a[1]), susp);      /* return the bound suspension */
-      return Ok;
     }
   } else {
     ptrI pair = consLsPair(&P->proc.heap, deRefI(&a[2]), P->proc.trigger);
@@ -2847,5 +2845,6 @@ retCode g__suspend(processPo P, ptrPo a) {
     P->proc.F = SUSP_ACTIVE;
     return Ok;
   }
+  return Ok;
 }
 

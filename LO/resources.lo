@@ -10,38 +10,7 @@ lo.resources{
   putResource:(uri,list[integer]){}.
   putResource(U,Content) :- _put_file(getUriPath(U),implode(Content)).
 
-  public
-  cwd:()=>uri.
-  cwd() => parseUri(_cwd()).
-
-  public type filePerm ::= ownerRead | ownerWrite | ownerExecute |
-                          groupRead | groupWrite | groupExecute |
-                          otherRead | otherWrite | otheExecute.
-
-  public type fileMode ::= readMode | writeMode | executeMode.
 
   public resourcePresent:(uri){}.
   resourcePresent(U) :- _file_present(getUriPath(U)).
-
-  private implementation coercion[filePerm,integer] <= {
-    _coerce(ownerRead) => 256.
-    _coerce(ownerWrite) => 128.
-    _coerce(ownerExecute) => 64.
-    _coerce(groupRead) => 32.
-    _coerce(groupWrite) => 16.
-    _coerce(groupExecute) => 8.
-    _coerce(otherRead) => 4.
-    _coerce(otherWrite) => 2.
-    _coerce(otherExecute) => 1.
-  }
-
-  private implementation coercion[fileMode,integer] <= {
-    _coerce(readMode) => 1.
-    _coerce(writeMode) => 2.
-    _coerce(executeMode) => 4.
-  }
-
-  public newerFile:(uri,uri){}.
-  newerFile(U1,U2) :-
-    _file_modified(getUriPath(U1)) > _file_modified(getUriPath(U2)).
 }

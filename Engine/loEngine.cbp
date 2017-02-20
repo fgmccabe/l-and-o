@@ -288,12 +288,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/put.c">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/rendezvous.c">
-			<Option target="lo"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/sha.c">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/signal.c">
 			<Option target="lo"/>
 		</Unit>

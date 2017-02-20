@@ -53,7 +53,6 @@
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
-#include "lo.h"
 #include "sha1.h"
 
 /*
@@ -95,7 +94,7 @@ static const unsigned long sha_const_key[5]=
 };
 
 
-static void sha1_reset(SHA1_CONTEXT *context)
+void sha1_reset(SHA1_CONTEXT *context)
 {
   assert(context!=NULL);
 
@@ -130,8 +129,7 @@ static void sha1_reset(SHA1_CONTEXT *context)
    != SHA_SUCCESS	sha Error Code.
 */
 
-int sha1_result(SHA1_CONTEXT *context,
-                      byte Message_Digest[SHA1_HASH_SIZE])
+int sha1_result(SHA1_CONTEXT *context, unsigned char Message_Digest[SHA1_HASH_SIZE])
 {
   int i;
 
@@ -147,7 +145,7 @@ int sha1_result(SHA1_CONTEXT *context,
   }
 
   for (i = 0; i < SHA1_HASH_SIZE; i++)
-    Message_Digest[i] = (byte)((context->Intermediate_Hash[i>>2] >> 8
+    Message_Digest[i] = (unsigned char)((context->Intermediate_Hash[i>>2] >> 8
 				* ( 3 - ( i & 0x03 ) )));
   return SHA_SUCCESS;
 }
@@ -168,7 +166,7 @@ int sha1_result(SHA1_CONTEXT *context,
    != SHA_SUCCESS	sha Error Code.
 */
 
-int sha1_input(SHA1_CONTEXT *context, const byte *message_array,
+int sha1_input(SHA1_CONTEXT *context, const unsigned char *message_array,
 	       unsigned length)
 {
   if (!length)
@@ -187,7 +185,7 @@ int sha1_input(SHA1_CONTEXT *context, const byte *message_array,
   while (length--)
   {
     context->Message_Block[context->Message_Block_Index++]=
-      (*message_array & 0xFF);
+      (unsigned char)(*message_array & 0xFF);
     context->Length  += 8;  /* Length is in bits */
 
 #ifndef DBUG_OFF
@@ -371,67 +369,16 @@ static void SHA1PadMessage(SHA1_CONTEXT *context)
     Store the message length as the last 8 octets
   */
 
-  context->Message_Block[56] = (byte) (context->Length >> 56);
-  context->Message_Block[57] = (byte) (context->Length >> 48);
-  context->Message_Block[58] = (byte) (context->Length >> 40);
-  context->Message_Block[59] = (byte) (context->Length >> 32);
-  context->Message_Block[60] = (byte) (context->Length >> 24);
-  context->Message_Block[61] = (byte) (context->Length >> 16);
-  context->Message_Block[62] = (byte) (context->Length >> 8);
-  context->Message_Block[63] = (byte) (context->Length);
+  context->Message_Block[56] = (unsigned char) (context->Length >> 56);
+  context->Message_Block[57] = (unsigned char) (context->Length >> 48);
+  context->Message_Block[58] = (unsigned char) (context->Length >> 40);
+  context->Message_Block[59] = (unsigned char) (context->Length >> 32);
+  context->Message_Block[60] = (unsigned char) (context->Length >> 24);
+  context->Message_Block[61] = (unsigned char) (context->Length >> 16);
+  context->Message_Block[62] = (unsigned char) (context->Length >> 8);
+  context->Message_Block[63] = (unsigned char) (context->Length);
 
   SHA1ProcessMessageBlock(context);
-}
-
-retCode g__sha1(processPo P,ptrPo a)
-{
-  ptrI Data = deRefI(&a[1]);
-
-  if(isvar(Data))
-    return liberror(P,"__sha1",eINSUFARG);
-  else if(!isGroundTerm(&Data))
-    return liberror(P,"__sha1",eINVAL);
-  else{
-    long dataLen = ListLen(Data);	     /* Pick up the length of the byte string */
-
-    static byte ubuffer[MAX_MSG_LEN];
-    byte *data = ubuffer;
-
-    if(dataLen>NumberOf(ubuffer))
-      data = (byte*)malloc(sizeof(byte)*dataLen);
-
-    {
-      ptrI sP = Data;
-      byte *uP = data;
-
-      while(IsList(sP)){
-        ptrPo el = listHead(objV(sP));
-        ptrI pr = deRefI(el);
-
-        if(IsInt(pr)){
-          integer vl = IntVal(pr);
-
-          if(vl>=0 && vl<=255)
-            *uP++=(byte)vl;
-          else
-            return liberror(P,"__sha1",eINVAL);
-        }
-        sP = deRefI(el+1);
-      }
-    }
-
-    SHA1_CONTEXT sha1;
-
-    sha1_reset(&sha1);
-    sha1_input(&sha1,data,dataLen);
-
-    byte sha_result[SHA1_HASH_SIZE];
-    sha1_result(&sha1,sha_result);
-
-    ptrI hash = allocateString(&P->proc.heap,sha_result,SHA1_HASH_SIZE);
-
-    return equal(P,&a[2],&hash);
-  }
 }
 
 

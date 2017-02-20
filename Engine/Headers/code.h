@@ -109,7 +109,7 @@ static inline insPo codeIns(codePo pc) {
   return pc->data;
 }
 
-static inline unsigned long codeArity(codePo pc) {
+static inline uint16 codeArity(codePo pc) {
   assert(pc->class == codeClass);
 
   return pc->arity;

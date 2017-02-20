@@ -221,7 +221,7 @@ byte inB(ioPo f) {
   if (ret == Ok)
     return b;
   else {
-    ioErrorMsg(f, "problem in reading a byte from %U", fileName(f));
+    ioErrorMsg(O_OBJECT(f), "problem in reading a byte from %U", fileName(f));
     return 0;
   }
 }
@@ -308,7 +308,7 @@ retCode outBlock(ioPo f, byte *data, long len) {
   retCode ret = outBytes(f, data, len, &actual);
 
   if (ret == Ok && len != actual)
-    return ioErrorMsg(f, "couldnt write block of %d bytes properly to %U", len, fileName(f));
+    return ioErrorMsg(O_OBJECT(f), "couldnt write block of %d bytes properly to %U", len, fileName(f));
   else
     return ret;
 }
@@ -319,7 +319,7 @@ retCode outByte(ioPo f, byte c) {
   retCode ret = outBytes(f, &buff[0], len, &len);
 
   if (ret == Ok && len != NumberOf(buff))
-    return ioErrorMsg(f, "couldnt write byte properly to %U", fileName(f));
+    return ioErrorMsg(O_OBJECT(f), "couldnt write byte properly to %U", fileName(f));
   else
     return ret;
 }

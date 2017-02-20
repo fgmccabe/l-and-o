@@ -22,6 +22,8 @@
 #define lockType "t'lo.thread#lock'"
 #define thingType "t'lo.core#thing'"
 #define fileType "t'lo.io#fileHandle'"
+#define socketType "t'lo.io#sockHandle'"
+#define udpType "t'lo.io#udpHandle'"
 
 /* Define the standard escapes */
 escape(_exit,True,False,"P1i","terminate L&O engine")
@@ -99,8 +101,9 @@ escape(_basr,False,False,"F2iii","arithmetic right shift")
 escape(_bnot,False,False,"F1ii","bitwise negate number")
 escape(_nthb,False,False,"P2ii","is nth bit set?")
 
+escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bound")
+
 /*
-  escape(_suspend,False,False,":k'u'A:k'v'AP2k'u'k'v'","suspend if variable not bound")
 
   escape(_assert,False,False,":k'u'Ap2sk'u'","assert a term")
   escape(_retract,False,False,"p1s","remove assertion")
@@ -112,18 +115,13 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   // Create a new object -- clone a term to make an object
   escape(_newObject,False,False,":k'u'AF1k'u'k'u'","create a new object")
 
-  // Property management
- // escape(_setProp,False,False,":k'u'AP3"thingType"sk'u'","set a property on a symbol")
- // escape(_getProp,False,False,":k'u'AP3"thingType"sk'u'","get a symbol property")
- // escape(_delProp,False,False,":k'u'AP2"thingType"s","delete a property from a symbol")
-
   // Term construction
   escape(_univ,False,False,":k'u'A:k'v'AF2sLk'u'k'v'","weird function to construct terms")
+*/
 
   // Sha function
-  escape(_sha1,False,False,"F1LiLi","compute hash of a byte string")
+  escape(_sha1,False,False,"F1SS","compute hash of a byte string")
 
-*/
   escape(_get_file,True,False,"F1SS","Get the contents of a file as a string")
   escape(_put_file,True,False,"P2SS","write a file from a string")
   escape(_cwd,True,False,"F0S","return url of current working directory")
@@ -156,10 +154,11 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
   escape(_inbytes,True,False,"F2"fileType"iLi","read block of bytes")
   escape(_inchar,True,False,"F1"fileType"i","read single character")
   escape(_inbyte,True,False,"F1"fileType"i","read single byte")
-  escape(_inline,True,False,"F2"fileType"SS","read a line")
+  escape(_inline,True,False,"F2"fileType"S","read a line")
   escape(_intext,True,False,"F2"fileType"SS","read until matching character")
   escape(_outch,True,False,"P2"fileType"i","write a single character")
   escape(_outbyte,True,False,"P2"fileType"i","write a single byte")
+  escape(_outbytes,True,False,"P2"fileType"Li","write a list of bytes")
   escape(_outtext,True,False,"P2"fileType"S","write a string as a block")
   escape(_stdfile,True,False,"F1i"fileType,"standard file descriptor")
   escape(_fposition,True,False,"F1"fileType"i","report current file position")
@@ -172,18 +171,18 @@ escape(_nthb,False,False,"P2ii","is nth bit set?")
 
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
 
-  /*
   // Socket handling functions
-  escape(_connect,True,False,"p5SiiOO","connect to remote host")
-  escape(_listen,True,False,"p2iO","listen on a port")
-  escape(_accept,True,False,"p7OOOSSii","accept connection")
-  escape(_udpPort,True,False,"p2NO","estabish a UDP port")
-  escape(_udpGet,True,False,"p4OSSN","read a UDP datagram")
-  escape(_udpSend,True,False,"p4OSSN","send a UDP datagram")
+  escape(_connect,True,False,"P5Sii"fileType fileType,"connect to remote host")
+  escape(_listen,True,False,"P2i"fileType,"listen on a port")
+  escape(_accept,True,False,"P7i"fileType fileType "SiS","accept connection")
+
+  escape(_udpPort,True,False,"P2i"udpType,"estabish a UDP port")
+  escape(_udpGet,True,False,"P4"udpType"SSN","read a UDP datagram")
+  escape(_udpSend,True,False,"P4"udpType"SSN","send a UDP datagram")
+  escape(_udpClose,True,False,"P1"udpType,"close the UDP socket")
+
   escape(hosttoip,False,False,"F1SLS","IP address of host")
   escape(iptohost,False,False,"F1SS","host name from IP")
-*/
-
 
 // Timing and delaying
   escape(delay,False,False,"P1f","delay for period of time")

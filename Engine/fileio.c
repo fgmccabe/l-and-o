@@ -49,7 +49,7 @@ typedef struct {
 
 void initFileIo(void) {
   installMsgProc('w', cellMsg);  /* extend outMsg to cope with cell structures */
-  installMsgProc('S',stringMsg); // Special function for writing string values
+  installMsgProc('S', stringMsg); // Special function for writing string values
 }
 
 void initFiles(void) {
@@ -155,12 +155,9 @@ logical executableFile(char *file) {
 
 ioEncoding pickEncoding(ptrI k) {
   switch (integerVal(intV(k))) {
-    case 0:
-      return rawEncoding;
-    case 3:
-      return utf8Encoding;
-    default:
-      return unknownEncoding;
+    case 0:return rawEncoding;
+    case 3:return utf8Encoding;
+    default:return unknownEncoding;
   }
 }
 
@@ -287,7 +284,7 @@ retCode g__popen(processPo P, ptrPo a) {
   else if (isvar(Ags) || argCount < 0 || isvar(Env) || envCount < 0)
     return liberror(P, "_popen", eINSUFARG);
   else {
-    long len = StringLen(stringV(Cmd)) + 1;
+    long len = stringLen(stringV(Cmd)) + 1;
     char cmd[3 * len];
     ioPo inPipe, outPipe, errPipe;
     strncpy(cmd, (char *) stringVal(stringV(Cmd)), NumberOf(cmd));
@@ -312,10 +309,11 @@ retCode g__popen(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "_popen", eINSUFARG);
         } else {
-          byte *argStr = stringVal(stringV(Arg));
-          long al = (long) uniStrLen(argStr);
+          stringPo ap = stringV(Arg);
+          string arg = stringVal(ap);
+          long al = stringLen(ap);
 
-          argv[i] = strdup((const char *) argStr);
+          argv[i] = strndup((const char *) arg, (size_t) al);
         }
       }
 
@@ -329,11 +327,12 @@ retCode g__popen(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "__popen", eINVAL);
         } else {
-          string key = StringVal(stringV(envKey));
-          long al = StringLen(stringV(envVal)) + uniStrLen(key) + 4;
+          stringPo kp = stringV(envKey);
+          stringPo vp = stringV(envVal);
+          long al = stringLen(kp) + stringLen(vp) + 4;
           byte buffer[al];
 
-          strMsg(buffer, al, "%U = %L", key, &envVal);
+          strMsg(buffer, al, "%S = %S", kp, vp);
 
           envp[i] = strdup((const char *) buffer);
         }
@@ -431,17 +430,13 @@ retCode g__stdfile(processPo P, ptrPo a) {
   ptrI res;
 
   switch (fno) {
-    case 0:
-      res = allocFilePtr(OpenStdin());  /* return stdin file descriptor */
+    case 0:res = allocFilePtr(OpenStdin());  /* return stdin file descriptor */
       break;
-    case 1:
-      res = allocFilePtr(OpenStdout());  /* return stdout file descriptor */
+    case 1:res = allocFilePtr(OpenStdout());  /* return stdout file descriptor */
       break;
-    case 2:
-      res = allocFilePtr(OpenStderr());  /* return stderr file descriptor */
+    case 2:res = allocFilePtr(OpenStderr());  /* return stderr file descriptor */
       break;
-    default:
-      return liberror(P, "__stdfile", eNOPERM);
+    default:return liberror(P, "__stdfile", eNOPERM);
   }
   return equal(P, &res, &a[2]);
 }
@@ -556,17 +551,14 @@ retCode g__fseek(processPo P, ptrPo a) {
     setProcessRunnable(P);
 
     switch (ret) {
-      case Ok:
-        return Ok;
-      case Fail:
-        return Fail;
+      case Ok:return Ok;
+      case Fail:return Fail;
       case Interrupt:
         if (checkForPause(P))
           goto again;
         else
           return liberror(P, "__fseek", eINTRUPT);
-      default:
-        return liberror(P, "__fseek", eIOERROR);
+      default:return liberror(P, "__fseek", eIOERROR);
     }
   }
 }
@@ -633,8 +625,7 @@ retCode g__inbytes(processPo P, ptrPo a) {
           else {
             return liberror(P, "__inbytes", eINTRUPT);
           }
-        default:
-          return liberror(P, "__inbytes", eIOERROR);
+        default:return liberror(P, "__inbytes", eIOERROR);
       }
     }
 
@@ -714,8 +705,7 @@ retCode g__get_file(processPo P, ptrPo a) {
           closeFile(outBuff);
           return liberror(P, "_get_file", eINTRUPT);
         }
-      default:
-        closeFile(file);
+      default:closeFile(file);
         closeFile(outBuff);
         return liberror(P, "_get_file", eIOERROR);
     }
@@ -723,7 +713,7 @@ retCode g__get_file(processPo P, ptrPo a) {
 
   /* grab the result */
   long length;
-  string text = getTextFromBuffer(&length,O_BUFFER(outBuff));
+  string text = getTextFromBuffer(&length, O_BUFFER(outBuff));
   ptrI reslt = allocateString(&P->proc.heap, text, length);
 
   closeFile(file);
@@ -758,12 +748,10 @@ retCode g__put_file(processPo P, ptrPo a) {
   closeFile(file);
 
   switch (ret) {
-    case Ok:
-      return Ok;
+    case Ok:return Ok;
     case Interrupt:      /* should never happen */
       return liberror(P, "_put_file", eINTRUPT);
-    default:
-      return liberror(P, "_put_file", eIOERROR);
+    default:return liberror(P, "_put_file", eIOERROR);
   }
 }
 
@@ -822,8 +810,7 @@ retCode g__inchars(processPo P, ptrPo a) {
             setProcessRunnable(P);
             return liberror(P, "__inchars", eINTRUPT);
           }
-        default:
-          setProcessRunnable(P);
+        default:setProcessRunnable(P);
           return liberror(P, "__inchars", eIOERROR);
       }
     }
@@ -867,10 +854,8 @@ retCode g__inchar(processPo P, ptrPo a) {
     setProcessRunnable(P);
 
     switch (ret) {
-      case Ok:
-        return funResult(P, a, 2, Ch);
-      case Eof:
-        setProcessRunnable(P);
+      case Ok:return funResult(P, a, 2, Ch);
+      case Eof:setProcessRunnable(P);
         return liberror(P, "__inchar", eEOF); /* eof error */
       case Interrupt:
         if (checkForPause(P))
@@ -879,8 +864,7 @@ retCode g__inchar(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "__inchar", eINTRUPT);
         }
-      default:
-        setProcessRunnable(P);
+      default:setProcessRunnable(P);
         return liberror(P, "__inchar", eINVAL); /* other error */
     }
   }
@@ -921,10 +905,8 @@ retCode g__inbyte(processPo P, ptrPo a) {
           goto again;      /* try again */
         else
           return liberror(P, "__inbyte", eINTRUPT);
-      case Eof:
-        return liberror(P, "__inbyte", eEOF); /* eof error */
-      default:
-        return liberror(P, "__inbyte", eIOERROR); /* other error */
+      case Eof:return liberror(P, "__inbyte", eEOF); /* eof error */
+      default:return liberror(P, "__inbyte", eIOERROR); /* other error */
     }
   }
 }
@@ -933,30 +915,20 @@ retCode g__inbyte(processPo P, ptrPo a) {
  * inline(file,match)
  * 
  * get a single line from a file, returned as a string
- * get all characters until either EOF or the match string is found
+ * get all characters until either EOF or a newline is found
  */
 retCode g__inline(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
   objPo o1 = objV(t1);
-  ptrI t2 = deRefI(&a[2]);
 
   if (!hasClass(o1, filePtrClass))
     return liberror(P, "__inline", eINVAL);
-  else if (isvar(t2))
-    return liberror(P, "__inline", eINSUFARG);
-  else if (!IsString(t2))
-    return liberror(P, "__inline", eSTRNEEDD);
   else {
     ioPo file = filePtr(t1);
     codePoint chr;
-    integer tlen = StringLen(stringV(t2));
-    byte term[tlen + 1];
-    string trm = &term[0];
 
     if (isReadingFile(file) != Ok)
       return liberror(P, "__inline", eNOPERM);
-
-    strncpy((char *) term, (char *) stringVal(stringV(a[2])), tlen);
 
     ioPo str = O_IO(newStringBuffer());
 
@@ -972,17 +944,14 @@ retCode g__inline(processPo P, ptrPo a) {
             return liberror(P, "__inline", eEOF);    /* cant read past the end of the file */
           } else {
             long len;
-            string buff = getTextFromBuffer(&len,O_BUFFER(str));
+            string buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
             return equal(P, &a[3], &reslt);
           }
         case Ok:
-          if (*trm == chr)
-            trm++;      /* move on termination string */
-
-          if (*trm == '\0') {                 // Read at least one character
+          if (chr == '\n') {
             ptrI RR = kvoid;              // This is clumsy, but necessary
             rootPo root = gcAddRoot(&P->proc.heap, &RR);
             ret = closeOutString(str, &P->proc.heap, &RR);
@@ -990,26 +959,16 @@ retCode g__inline(processPo P, ptrPo a) {
               ret = equal(P, &RR, &a[3]);
             gcRemoveRoot(&P->proc.heap, root);
             return ret;
-          } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str)) != Ok) {
-            long len;
-            string buff = getTextFromBuffer(&len,O_BUFFER(str));
-            ptrI reslt = allocateString(&P->proc.heap, buff, (size_t) len); /* grab the result */
-
-            closeFile(str);    /* we are done reading */
-
-            return equal(P, &a[3], &reslt);
           } else {
-            trm = &term[0];    // Reset the terminating string
             outChar(str, chr);
+            continue;
           }
-          continue;
         case Interrupt:
           if (checkForPause(P))
             continue;      /* We were interrupted for a GC */
           else
             return liberror(P, "__inline", eINTRUPT);
-        default:
-          return liberror(P, "__inline", eIOERROR);
+        default:return liberror(P, "__inline", eIOERROR);
       }
     }
   }
@@ -1034,9 +993,12 @@ retCode g__intext(processPo P, ptrPo a) {
   else {
     ioPo file = filePtr(t1);
     codePoint chr;
-    string str2 = stringVal(stringV(t2));
-    uint64 tlen = uniStrLen(str2);
+
+    stringPo sp = stringV(t2);
+    long tlen = stringLen(sp);
     byte term[tlen + 1];
+
+    copyString2Buff(term, NumberOf(term), sp);
 
     if (isReadingFile(file) != Ok)
       return liberror(P, "__intext", eNOPERM);
@@ -1055,7 +1017,7 @@ retCode g__intext(processPo P, ptrPo a) {
             return liberror(P, "__intext", eEOF);    /* cant read past the end of the file */
           } else {
             long len;
-            string buff = getTextFromBuffer(&len,O_BUFFER(str));
+            string buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, (size_t) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1071,9 +1033,9 @@ retCode g__intext(processPo P, ptrPo a) {
               ret = equal(P, &RR, &a[3]);
             gcRemoveRoot(&P->proc.heap, root);
             return ret;
-          } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str))==0) {
+          } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str)) == 0) {
             long len;
-            string buff = getTextFromBuffer(&len,O_BUFFER(str));
+            string buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI result = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1087,8 +1049,7 @@ retCode g__intext(processPo P, ptrPo a) {
             continue;      /* We were interrupted for a GC */
           else
             return liberror(P, "__intext", eINTRUPT);
-        default:
-          return liberror(P, "__intext", eIOERROR);
+        default:return liberror(P, "__intext", eIOERROR);
       }
     }
   }
@@ -1128,8 +1089,7 @@ retCode g__outch(processPo P, ptrPo a) {
             goto again;
           else
             return liberror(P, "__outch", eINTRUPT);
-        default:
-          return liberror(P, "__outch", eIOERROR);
+        default:return liberror(P, "__outch", eIOERROR);
       }
     }
   }
@@ -1158,20 +1118,58 @@ retCode g__outbyte(processPo P, ptrPo a) {
     else {
       again:
       switchProcessState(P, wait_io);
-      retCode ret = outChar(file, (codePoint)integerVal((integerPo) t2));
+      retCode ret = outChar(file, (codePoint) integerVal((integerPo) t2));
       setProcessRunnable(P);
 
       switch (ret) {
-        case Ok:
-          return Ok;
+        case Ok:return Ok;
         case Interrupt:
           if (checkForPause(P))
             goto again;
           else
             return liberror(P, "__outbyte", eINTRUPT);
-        default:
-          return liberror(P, "__outbyte", eIOERROR);
+        default:return liberror(P, "__outbyte", eIOERROR);
       }
+    }
+  }
+}
+
+retCode g__outbytes(processPo P, ptrPo a) {
+  ptrI t1 = deRefI(&a[1]);
+  objPo o1 = objV(t1);
+  ptrI t2 = deRefI(&a[2]);
+  objPo o2 = objV(t2);
+
+  if (!hasClass(o1, filePtrClass))
+    return liberror(P, "__outbytes", eINVAL);
+  else if (!isGroundTerm(&t2))
+    return liberror(P, "__outbytes", eINSUFARG);
+  else {
+    ioPo file = filePtr(t1);
+
+    if (isWritingFile(file) != Ok)
+      return liberror(P, "__outbytes", eNOPERM);
+    else {
+      bufferPo buff = newStringBuffer();
+      retCode ret = implodeString(&t2, O_IO(buff));
+      if (ret == Ok) {
+        switchProcessState(P, wait_io);
+        long len;
+        string s = getTextFromBuffer(&len, buff);
+
+        ret = outText(file, s, len);
+
+        setProcessRunnable(P);
+        closeFile(O_IO(buff));
+
+        switch (ret) {
+          case Ok:return Ok;
+          case Interrupt:      /* should never happen */
+            return liberror(P, "_outbytes", eINTRUPT);
+          default:return liberror(P, "_outbytes", eIOERROR);
+        }
+      } else
+        return ret;
     }
   }
 }
@@ -1197,16 +1195,19 @@ retCode g__outtext(processPo P, ptrPo a) {
       return liberror(P, "__outtext", eSTRNEEDD);
     else {
       switchProcessState(P, wait_io);
-      retCode ret = outUStr(file, stringVal(stringV(a[2])));
+      stringPo sp = stringV(deRefI(&a[2]));
+      string s = stringVal(sp);
+      long len = stringLen(sp);
+
+      retCode ret = outText(file, s, len);
+
       setProcessRunnable(P);
 
       switch (ret) {
-        case Ok:
-          return Ok;
+        case Ok:return Ok;
         case Interrupt:      /* should never happen */
           return liberror(P, "__outtext", eINTRUPT);
-        default:
-          return liberror(P, "__outtext", eIOERROR);
+        default:return liberror(P, "__outtext", eIOERROR);
       }
     }
   }
@@ -1230,12 +1231,10 @@ retCode g__outterm(processPo P, ptrPo a) {
     setProcessRunnable(P);
 
     switch (ret) {
-      case Ok:
-        return Ok;
+      case Ok:return Ok;
       case Interrupt:      /* should never happen */
         return liberror(P, "__outterm", eINTRUPT);
-      default:
-        return liberror(P, "__outterm", eIOERROR);
+      default:return liberror(P, "__outterm", eIOERROR);
     }
   }
 }
@@ -1253,12 +1252,10 @@ retCode g__logmsg(processPo P, ptrPo a) {
     setProcessRunnable(P);
 
     switch (ret) {
-      case Ok:
-        return Ok;
+      case Ok:return Ok;
       case Interrupt:      /* should never happen */
         return liberror(P, "__logmsg", eINTRUPT);
-      default:
-        return liberror(P, "__logmsg", eIOERROR);
+      default:return liberror(P, "__logmsg", eIOERROR);
     }
     return Ok;
   }
@@ -1311,7 +1308,7 @@ static retCode cellMsg(ioPo f, void *data, long depth, long precision, logical a
   if (ptr != NULL) {
     if (precision <= 0)
       precision = 32767;
-    outCell(f, ptr, depth, (int)precision, alt);
+    outCell(f, ptr, depth, (int) precision, alt);
   } else
     outStr(f, "(NULL)");
   return Ok;
@@ -1325,9 +1322,9 @@ static retCode stringMsg(ioPo f, void *data, long depth, long precision, logical
       precision = 32767;
     stringPo s = stringV(*ptr);
     string str = stringVal(s);
-    long len = StringLen(s);
+    long len = stringLen(s);
 
-    return outText(f,str,len);
+    return outText(f, str, len);
   } else
     outStr(f, "(NULL)");
   return Ok;

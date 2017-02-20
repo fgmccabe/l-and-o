@@ -17,7 +17,7 @@ test.modsec{
   -- Hint to the run-time:
   main:(list[string]){}.
   main(Args) :-
-    processFiles(parseArgs(Args),cwd(),meta([],[]),M),
+    processFiles(parseArgs(Args),parseUri(cwd()),meta([],[]),M),
     _logmsg("Analysis is \(M::json)").
 
   parseArgs:(list[string]) => list[uri].

@@ -30,9 +30,6 @@ string peerIP(sockPo stream,int *port,string buff,long len);
 retCode connectRemote(string where,int port,
 		      ioEncoding encoding,logical waitForMe,
 		      ioPo *inC,ioPo *outC);
-sockPo udpPort(string name,int port);
-retCode udpRead(sockPo f,byte *msg,long *blen,string peer,long len,int *port);
-retCode udpSend(sockPo f,byte *msg,long blen,string peer,int port);
 
 extern classPo sockClass;
 

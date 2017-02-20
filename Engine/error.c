@@ -107,7 +107,6 @@ void initErrorSymbols(void)
   errorClass = newClassDef((string)"lo.stdlib#error",2);
 }
 
-
 ptrI errorString(heapPo H ,ptrI code)
 {
   if(!isvar(code)){

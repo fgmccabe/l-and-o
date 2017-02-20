@@ -92,7 +92,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
       else if (class == stringClass) {
         stringPo str = (stringPo)p;
         long pos = 0;
-        long end = StringLen(str);
+        long end = stringLen(str);
         string src = stringVal(str);
 
         r = outChar(f, '\"');

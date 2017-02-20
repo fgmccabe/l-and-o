@@ -20,7 +20,7 @@ lo.repo.file{
       SrcFile = resolveUri(Root,parseUri(S)),
       resourcePresent(CodeFile),
       (resourcePresent(SrcFile) ?
-          newerFile(CodeFile,SrcFile) | true).
+          newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 
     addToRepo(repo(Root,Man),pkg(Pkg,Vers),Kind,Text) => repo(Root,NM) :-
       extensionMapping(Kind,Ext),

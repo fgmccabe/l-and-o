@@ -154,7 +154,7 @@ codePoint inCh(ioPo f) {
         case Interrupt:
           goto again;                       // pretty busy loop
         default:
-          return ioErrorMsg(f, "issue in reading char");
+          return ioErrorMsg(O_OBJECT(f), "issue in reading char");
       }
 
       configureIo(fl, turnOffBlocking);
@@ -259,7 +259,7 @@ retCode fileInReady(ioPo io) {
       else
         return Fail;
     } else
-      return ioErrorMsg(io, "%U does not permit read access", fileName(io));
+      return ioErrorMsg(O_OBJECT(io), "%U does not permit read access", fileName(io));
   }
 }
 
@@ -287,7 +287,7 @@ retCode fileOutReady(ioPo io) {
       else
         return Fail;
     } else
-      return ioErrorMsg(io, "%U does not permit write access", fileName(io));
+      return ioErrorMsg(O_OBJECT(io), "%U does not permit write access", fileName(io));
   }
 }
 
@@ -303,7 +303,7 @@ retCode fileSeek(ioPo io, long count) {
   flushFile(io);
 
   if (lseek(f->file.fno, count, SEEK_SET) == -1)
-    return ioErrorMsg(io, "problem %s (%d) in positioning %U", strerror(errno), errno,
+    return ioErrorMsg(O_OBJECT(io), "problem %s (%d) in positioning %U", strerror(errno), errno,
                       fileName(O_IO(f)));
   else {
     f->file.in_pos = f->file.out_pos = 0;
@@ -339,7 +339,7 @@ retCode fileClose(ioPo io) {
             ret = Interrupt;
             break;
           default:
-            ret = ioErrorMsg(io, "problem %s (%d) in closing %U", strerror(errno), errno, fileName(io));
+            ret = ioErrorMsg(O_OBJECT(io), "problem %s (%d) in closing %U", strerror(errno), errno, fileName(io));
             break;
         }
       } else {
@@ -460,7 +460,7 @@ retCode fileFlush(filePo f, long count) {
           }
           return Fail;
         default:
-          return ioErrorMsg(O_IO(f),
+          return ioErrorMsg(O_OBJECT(f),
                             "Problem %s (%d) in writing to %U", strerror(errno), errno,
                             fileName(O_IO(f)));
       }
@@ -567,7 +567,7 @@ retCode fileConfigure(filePo f, ioConfigOpt mode) {
   }
 
   if (fcntl(fno, F_SETFL, flag) == -1)
-    return ioErrorMsg(O_IO(f),
+    return ioErrorMsg(O_OBJECT(f),
                       "problem %s (%d) in configuring %U",
                       strerror(errno), errno, fileName(O_IO(f)));
   else
@@ -804,12 +804,12 @@ void reset_stdin(void) {
 
 retCode rewindFile(filePo f) {
   if (!isSubClass(classOfObject(O_OBJECT(f)), fileClass))
-    return ioErrorMsg(O_IO(f), "%U is not a regular file", fileName(O_IO(f)));
+    return ioErrorMsg(O_OBJECT(f), "%U is not a regular file", fileName(O_IO(f)));
 
   flushFile(O_IO(f));
 
   if (lseek(f->file.fno, 0, 0) == -1)
-    return ioErrorMsg(O_IO(f), "problem %s (%d) in rewinding %U", strerror(errno), errno,
+    return ioErrorMsg(O_OBJECT(f), "problem %s (%d) in rewinding %U", strerror(errno), errno,
                       fileName(O_IO(f)));
   else {
     f->file.in_pos = f->file.out_pos = 0;
