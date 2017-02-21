@@ -17,11 +17,10 @@
 
 /* Declare standard types used in escapes */
 
-#define processState "t'lo.thread#processState'"
-#define threadType "t'lo.thread#thread'"
-#define lockType "t'lo.thread#lock'"
+#define processState "t'lo.thread*processState'"
+#define threadType "t'lo.thread*thread'"
+#define lockType "t'lo.thread*lock'"
 #define fileType "t'lo.io*fileHandle'"
-#define socketType "t'lo.io*sockHandle'"
 #define udpType "t'lo.io*udpHandle'"
 
 /* Define the standard escapes */
@@ -119,7 +118,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
 */
 
   // Sha function
-  escape(_sha1,False,False,"F1SS","compute hash of a byte string")
+  escape(_sha1,False,False,"F1SS","compute hash of a string")
 
   escape(_get_file,True,False,"F1SS","Get the contents of a file as a string")
   escape(_put_file,True,False,"P2SS","write a file from a string")
@@ -259,25 +258,27 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(setenv,True,False,"P2SS","set an environment variable")
   escape(envir,False,False,"F0LT2SS","return entire environment")
   escape(getlogin,False,False,"F0S","return user's login")
-/*
-/ Process manipulation
-  escape(_fork,False,False,"p1"threadType,"fork new process")
-  escape(_thread,False,False,"F0"threadType"","report thread of current process")
-  escape(kill,True,False,"p1"threadType ,"kill off a process")
-  escape(thread_state,False,False,"F1"threadType processState"","state of process")
-  escape(waitfor,False,False,"p1"threadType,"wait for other thread to terminate")
-  escape(_assoc,False,False,":k't'AP2k't'p0","associate a goal with a var")
-  escape(_shell,True,False,"p4SLSLT2SSi","Run a shell cmd")
 
-  // Lock management
-  escape(_acquireLock,False,False,":k't'AP2k't'N","acquire lock")
-  escape(_waitLock,False,False,":k't'AP2k't'N","release and wait on a lock")
-  escape(_releaseLock,False,False,":k't'AP1k't'","release a lock")
-*/
+// Process manipulation
+  escape(_fork,False,False,"F1P0"threadType,"fork new process")
+  escape(_thread,False,False,"F0"threadType"","report thread of current process")
+  escape(kill,True,False,"P1"threadType ,"kill off a process")
+  escape(thread_state,False,False,"F1"threadType processState,"state of process")
+  escape(waitfor,False,False,"P1"threadType,"wait for other thread to terminate")
+
+  escape(_shell,True,False,"F3SLSLT2SSi","Run a shell cmd")
+
+ // Lock management
+  escape(_newLock,False,False,"F0"lockType,"create a new lock")
+  escape(_acquireLock,False,False,"P2"lockType"f","acquire lock")
+  escape(_waitLock,False,False,"P2"lockType"f","release and wait on a lock")
+  escape(_releaseLock,False,False,"P1"lockType,"release a lock")
+
   escape(_ins_debug,False,False,"P0","set instruction-level")
   escape(_stackTrace,False,False,"P0","Print a stack trace")
-
 
 #undef processState
 #undef threadType
 #undef fileType
+#undef lockType
+#undef udpType

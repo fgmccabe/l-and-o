@@ -110,15 +110,14 @@ static void inheritUDP(classPo class, classPo request) {
   }
 }
 
-static pthread_once_t ioOnce = PTHREAD_ONCE_INIT;
+static pthread_once_t udpOnce = PTHREAD_ONCE_INIT;
 
-static void initIoEtc(void) {
-  atexit(closeIo);                      /* set up general closer for exit */
-  initRecursiveMutex(&ioClass->mutex);
+static void initMutexes(void) {
+  initRecursiveMutex(&udpClass->mutex);
 }
 
 static void initUDPClass(classPo class, classPo request) {
-  pthread_once(&ioOnce, initIoEtc);
+  pthread_once(&udpOnce, initMutexes);
 }
 
 static void UdpInit(objectPo o, va_list *args) {
@@ -145,7 +144,7 @@ static void UdpInit(objectPo o, va_list *args) {
   unlockClass(udpClass);
 }
 
-udpPo udpPort(byte *name, int port, ioDirection dir) {
+udpPo newUDPPort(byte *name, int port, ioDirection dir) {
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (sock == INVALID_SOCKET)
@@ -205,13 +204,14 @@ uint16 udpPortNo(udpPo u) {
 }
 
 /* reading from a UDP Socket */
-retCode udpRead(udpPo f, byte *buff, long *blen, string peer, long peerLen, int *port) {
+retCode udpRead(udpPo u, byte *buff, long *blen, string peer, long peerLen, int *port) {
+  assert(isUDPport(O_OBJECT(u)));
 
   again:
   {
     struct sockaddr_in from;
     socklen_t sock_len = sizeof(from);
-    ssize_t nBytes = recvfrom(f->udp.sock, buff, (size_t) *blen, 0, (struct sockaddr *) &from, &sock_len);
+    ssize_t nBytes = recvfrom(u->udp.sock, buff, (size_t) *blen, 0, (struct sockaddr *) &from, &sock_len);
     int locErr = errno;
 
     if (nBytes >= 0) {
@@ -220,7 +220,7 @@ retCode udpRead(udpPo f, byte *buff, long *blen, string peer, long peerLen, int 
       if (port != NULL)
         *port = ntohs(from.sin_port);
       uniCpy(peer, peerLen, (string) inet_ntoa(from.sin_addr));
-      return setUdpStatus(f, Ok);
+      return setUdpStatus(u, Ok);
     } else {
       switch (locErr) {
         case EINTR:            /* Interrupted */
@@ -228,62 +228,61 @@ retCode udpRead(udpPo f, byte *buff, long *blen, string peer, long peerLen, int 
 
         case 0:              /* this shouldnt happen ... but it does */
         case EWOULDBLOCK:            /* Would have blocked */
-          setUdpStatus(f, Ok);
+          setUdpStatus(u, Ok);
           return Fail;
-        default:setUdpStatus(f, Eof);
+        default:setUdpStatus(u, Eof);
           return Error;                  /* Something unspecific */
       }
     }
   }
 }
 
-retCode udpSend(udpPo f, byte *buff, long blen, string peer, int port) {
-  assert(objectHasClass(O_OBJECT(f), udpClass));
+retCode udpSend(udpPo u, byte *buff, long blen, string peer, int port) {
+  assert(isUDPport(O_OBJECT(u)));
 
-  {
-    byte *cp = buff;
-    long nBytes;
-    size_t actual = (size_t) (blen * sizeof(byte));
-    int16 sock = f->udp.sock;
-    struct sockaddr_in serv_addr;
-    string host = getHostname(peer);
-    struct in_addr *addr = host != NULL ? getHostIP(host, 0) : NULL;
+  byte *cp = buff;
+  long nBytes;
+  size_t actual = (size_t) (blen * sizeof(byte));
+  int16 sock = u->udp.sock;
+  struct sockaddr_in serv_addr;
+  string host = getHostname(peer);
+  struct in_addr *addr = host != NULL ? getHostIP(host, 0) : NULL;
 
-    if (addr != NULL) {
-      /* Set up to send to the remote machine */
-      memset((char *) &serv_addr, 0, sizeof(serv_addr));
-      serv_addr.sin_family = AF_INET;
-      serv_addr.sin_addr = *addr;
-      serv_addr.sin_port = htons((u_short) port);
+  if (addr != NULL) {
+    /* Set up to send to the remote machine */
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr = *addr;
+    serv_addr.sin_port = htons((u_short) port);
 
-      while (actual > 0 &&
-             (nBytes = sendto(sock, cp, actual, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) != actual) {
-        if (nBytes == SOCKET_ERROR) {
-          switch (errno) {
-            case EWOULDBLOCK:
-            case ENOBUFS:
-            case EINTR: {
-              while (actual > 0 &&
-                     (nBytes = sendto(sock, cp, actual, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) !=
-                     actual) {
-                if (nBytes == SOCKET_ERROR) {
-                  return Error;
-                }
-                cp += nBytes;
-                actual -= nBytes;
+    while (actual > 0 &&
+           (nBytes = sendto(sock, cp, actual, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) != actual) {
+      if (nBytes == SOCKET_ERROR) {
+        switch (errno) {
+          case EWOULDBLOCK:
+          case ENOBUFS:
+          case EINTR: {
+            while (actual > 0 &&
+                   (nBytes = sendto(sock, cp, actual, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) !=
+                   actual) {
+              if (nBytes == SOCKET_ERROR) {
+                return Error;
               }
-              return Ok;
+              cp += nBytes;
+              actual -= nBytes;
             }
-            default:return Error;
+            return Ok;
           }
-        } else {
-          cp += nBytes;
-          actual -= nBytes;
+          default:return Error;
         }
+      } else {
+        cp += nBytes;
+        actual -= nBytes;
       }
-    } else
-      return Error;
-  }
+    }
+  } else
+    return Error;
+
   return Ok;
 }
 

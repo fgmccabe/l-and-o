@@ -147,12 +147,9 @@ static void processInit(objectPo o, va_list *args) {
 
   tryAgain:
   switch (pthread_cond_init(&p->proc.cond, NULL)) {
-    case 0:
-      break;
-    case EAGAIN:
-      goto tryAgain;
-    default:
-      syserr("cannot init lock");
+    case 0:break;
+    case EAGAIN:goto tryAgain;
+    default:syserr("cannot init lock");
   }
 
   pClass->proc.liveProcesses++;
@@ -690,9 +687,12 @@ void *forkThread(void *arg) {
 
 retCode g__fork(processPo P, ptrPo a) {
   ptrI as = deRefI(&a[1]);        /* the code to use in this sub-thread */
+  ptrI th = deRefI(&a[2]);
 
   if (isvar(as))
-    return liberror(P, "__fork", eINSUFARG);
+    return liberror(P, "_fork", eINSUFARG);
+  else if (!isvar(th))
+    return liberror(P, "_fork", eVARNEEDD);
   else {
     ptrI thread = newThread();
     heapPo H = &P->proc.heap;
@@ -730,7 +730,7 @@ retCode g__fork(processPo P, ptrPo a) {
     if (pthread_create(&new->proc.threadID, &detach, forkThread, new) != 0)
       syserr("cannot fork a thread");
 
-    return Ok;
+    return equal(P,&thread,&th);
   }
 }
 
@@ -794,14 +794,10 @@ retCode g_waitfor(processPo P, ptrPo a) {
       } else {
         setProcessRunnable(P);
         switch (errno) {
-          case EINVAL:
-            return liberror(P, "waitfor", eINVAL);
-          case ESRCH:
-            return liberror(P, "waitfor", eNOTFND);
-          case EDEADLK:
-            return liberror(P, "waitfor", eDEAD);
-          default:
-            return Ok;
+          case EINVAL:return liberror(P, "waitfor", eINVAL);
+          case ESRCH:return liberror(P, "waitfor", eNOTFND);
+          case EDEADLK:return liberror(P, "waitfor", eDEAD);
+          default:return Ok;
         }
       }
     } else

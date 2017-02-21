@@ -229,7 +229,7 @@ retCode g__udpPort(processPo P, ptrPo a) {
     byte nBuff[MAX_MSG_LEN];
 
     strMsg(nBuff, NumberOf(nBuff), "udpPort:%d", portNo);
-    udpPo sock = udpPort(nBuff, portNo, ioREAD | ioWRITE);
+    udpPo sock = newUDPPort(nBuff, portNo, ioREAD | ioWRITE);
 
     if (sock == NULL)
       return liberror(P, "_udpPort", eNOPERM);

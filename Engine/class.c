@@ -179,6 +179,7 @@ void standardClasses(void) {
   initDynamicClass();
   initIntegerClass();
   initFloatClass();
+  initLockStrct();
   initThreadClass();
   initProcessClss();
 }

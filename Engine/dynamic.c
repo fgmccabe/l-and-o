@@ -89,10 +89,3 @@ void setDynamicCode(ptrI O, ptrI code) {
   dynPo o = (dynPo) objV(O);
   o->code = code;
 }
-
-static lockPo getLock(ptrI S) {
-  dynPo s = loObjV(S);
-  if (s->lock == NULL)
-    s->lock = newLock();
-  return s->lock;
-}

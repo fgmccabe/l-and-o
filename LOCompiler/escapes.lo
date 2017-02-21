@@ -179,6 +179,16 @@ lo.comp.escapes{
   escapeType("setenv") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("envir") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("getlogin") => funType(tupleType([]),tipe("lo.core*string")).
+  escapeType("_fork") => funType(tupleType([predType(tupleType([]))]),tipe("lo.thread*thread")).
+  escapeType("_thread") => funType(tupleType([]),tipe("lo.thread*thread")).
+  escapeType("kill") => predType(tupleType([tipe("lo.thread*thread")])).
+  escapeType("thread_state") => funType(tupleType([tipe("lo.thread*thread")]),tipe("lo.thread*processState")).
+  escapeType("waitfor") => predType(tupleType([tipe("lo.thread*thread")])).
+  escapeType("_shell") => funType(tupleType([tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])]),tipe("lo.core*integer")).
+  escapeType("_newLock") => funType(tupleType([]),tipe("lo.thread*lock")).
+  escapeType("_acquireLock") => predType(tupleType([tipe("lo.thread*lock"),tipe("lo.core*float")])).
+  escapeType("_waitLock") => predType(tupleType([tipe("lo.thread*lock"),tipe("lo.core*float")])).
+  escapeType("_releaseLock") => predType(tupleType([tipe("lo.thread*lock")])).
   escapeType("_ins_debug") => predType(tupleType([])).
   escapeType("_stackTrace") => predType(tupleType([])).
 
@@ -356,6 +366,16 @@ lo.comp.escapes{
   isEscape("setenv").
   isEscape("envir").
   isEscape("getlogin").
+  isEscape("_fork").
+  isEscape("_thread").
+  isEscape("kill").
+  isEscape("thread_state").
+  isEscape("waitfor").
+  isEscape("_shell").
+  isEscape("_newLock").
+  isEscape("_acquireLock").
+  isEscape("_waitLock").
+  isEscape("_releaseLock").
   isEscape("_ins_debug").
   isEscape("_stackTrace").
 
@@ -533,7 +553,17 @@ lo.comp.escapes{
   escCode("setenv") => 170.
   escCode("envir") => 171.
   escCode("getlogin") => 172.
-  escCode("_ins_debug") => 173.
-  escCode("_stackTrace") => 174.
+  escCode("_fork") => 173.
+  escCode("_thread") => 174.
+  escCode("kill") => 175.
+  escCode("thread_state") => 176.
+  escCode("waitfor") => 177.
+  escCode("_shell") => 178.
+  escCode("_newLock") => 179.
+  escCode("_acquireLock") => 180.
+  escCode("_waitLock") => 181.
+  escCode("_releaseLock") => 182.
+  escCode("_ins_debug") => 183.
+  escCode("_stackTrace") => 184.
 
 }.

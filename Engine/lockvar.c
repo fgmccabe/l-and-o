@@ -23,6 +23,57 @@
 
 #define NANO (1000000000)
 
+ptrI lockStrct;
+
+static long lckSizeFun(specialClassPo class, objPo o);
+static comparison lckCompFun(specialClassPo class, objPo o1, objPo o2);
+static retCode lckOutFun(specialClassPo class, ioPo out, objPo o);
+static retCode lckScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o);
+static objPo lckCopyFun(specialClassPo class, objPo dst, objPo src);
+static uinteger lckHashFun(specialClassPo class, objPo o);
+
+void initLockStrct(void) {
+  lockStrct = newSpecialClass("lo.thread*lock", lckSizeFun, lckCompFun,
+                              lckOutFun, lckCopyFun, lckScanFun, lckHashFun);
+}
+
+static long lckSizeFun(specialClassPo class, objPo o) {
+  assert(o->class == lockStrct);
+
+  return CellCount(sizeof(LockRec));
+}
+
+static comparison lckCompFun(specialClassPo class, objPo o1, objPo o2) {
+  if (o1 == o2)
+    return same;
+  else
+    return incomparible;
+}
+
+static retCode lckOutFun(specialClassPo class, ioPo out, objPo o) {
+  lockPo s = (lockPo) o;
+
+  return outMsg(out, "lock[0x%x]", s);
+}
+
+static retCode lckScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o) {
+  return Ok;
+}
+
+static objPo lckCopyFun(specialClassPo class, objPo dst, objPo src) {
+  long size = lckSizeFun(class, src);
+  memmove((void *) dst, (void *) src, size * sizeof(ptrI));
+
+  return (objPo) (((ptrPo) dst) + size);
+}
+
+static uinteger lckHashFun(specialClassPo class, objPo o) {
+  assert(o->class == lockStrct);
+
+  return (uinteger) o;
+}
+
+
 // We are having to do this somewhat clumsily because not all systems 
 // support pthread_mutex_timedlock (posix 1.d) including mac os x :(
 // So we use a condition variable to signal that a lock is available
@@ -43,15 +94,13 @@ retCode acquireLock(lockPo l, double tmOut) {
     if (pthread_mutex_unlock(&l->mutex))
       syserr("problem in releasing lock mutex");
     return Ok;
-  }
-  else if (pthread_equal(l->owner, pthread_self())) {
+  } else if (pthread_equal(l->owner, pthread_self())) {
     l->count++;
 
     if (pthread_mutex_unlock(&l->mutex))
       syserr("problem in releasing lock mutex");
     return Ok;
-  }
-  else if (tmOut == 0.0) {      /* treat as a no-timeout lock */
+  } else if (tmOut == 0.0) {      /* treat as a no-timeout lock */
 #ifdef LOCKTRACE
     if (traceLock)
       outMsg(logFile, RED_ESC_ON "getLock cond_wait on 0x%x"RED_ESC_OFF"\n%_", l);
@@ -60,8 +109,7 @@ retCode acquireLock(lockPo l, double tmOut) {
     if (pthread_cond_wait(&l->cond, &l->mutex))
       syserr("problem in waiting");
     goto again;        /* try to lock again */
-  }
-  else {
+  } else {
     struct timespec tm;
     double seconds;
     double fraction = modf(tmOut, &seconds);
@@ -69,13 +117,10 @@ retCode acquireLock(lockPo l, double tmOut) {
     tm.tv_sec = (long) seconds;
     tm.tv_nsec = (long) (fraction * NANO);  // Convert microseconds to nanoseconds
     switch (pthread_cond_timedwait(&l->cond, &l->mutex, &tm)) {
-      case 0:
-        goto again;
-      case ETIMEDOUT:
-        pthread_mutex_unlock(&l->mutex);
+      case 0:goto again;
+      case ETIMEDOUT:pthread_mutex_unlock(&l->mutex);
         return Fail;
-      default:
-        pthread_mutex_unlock(&l->mutex);
+      default:pthread_mutex_unlock(&l->mutex);
         return Error;
     }
   }
@@ -101,8 +146,7 @@ retCode releaseLock(lockPo l) {
         pthread_cond_broadcast(&l->cond);
       }
     }
-  }
-  else if (l->count != 0) {
+  } else if (l->count != 0) {
 #ifdef LOCKTRACE
     if (traceLock)
       outMsg(logFile, RED_ESC_ON "tried to release non-owned lock 0x%x"RED_ESC_OFF"\n%_", l);
@@ -146,8 +190,7 @@ retCode waitLock(lockPo l, double tmOut) {
       if (pthread_cond_wait(&l->cond, &l->mutex))
         syserr("problem in condwait");
       ret = Ok;
-    }
-    else {
+    } else {
       struct timespec tm;
       double seconds;
       double fraction = modf(tmOut, &seconds);
@@ -161,11 +204,9 @@ retCode waitLock(lockPo l, double tmOut) {
 
       int unixRet = 0;
       switch (unixRet = pthread_cond_timedwait(&l->cond, &l->mutex, &tm)) {
-        case 0:
-          ret = Ok;
+        case 0:ret = Ok;
           break;            /* somewhere else we will try to relock */
-        case ETIMEDOUT:
-          ret = Fail;
+        case ETIMEDOUT:ret = Fail;
           break;
         default:
 #ifdef LOCKTRACE
@@ -177,8 +218,7 @@ retCode waitLock(lockPo l, double tmOut) {
           break;
       }
     }
-  }
-  else {
+  } else {
 #ifdef LOCKTRACE
     if (traceLock)
       outMsg(logFile, RED_ESC_ON "0x%x locked more than once"RED_ESC_OFF"\n%_", l);
@@ -191,9 +231,17 @@ retCode waitLock(lockPo l, double tmOut) {
   return ret;
 }
 
-lockPo newLock(void) {
-  lockPo l = (lockPo) malloc(sizeof(Lock));
+static lockPo getLock(ptrI S) {
+  dynPo s = loObjV(S);
+  if (s->lock == NULL)
+    s->lock = newLock();
+  return s->lock;
+}
 
+lockPo newLock(void) {
+  lockPo l = (lockPo) permAllocate(LockCellCount);
+
+  l->class = lockStrct;
   l->owner = NULL;
   l->count = 0;
 
@@ -208,29 +256,31 @@ lockPo newLock(void) {
 
   mtxInit:
   switch (pthread_mutex_init(&l->mutex, &attr)) {
-    case 0:
-      break;
-    case EINVAL:
-      syserr("cannot init");
-    case ENOMEM:
-      syserr("no memory");
-    case EAGAIN:
-      goto mtxInit;
-    default:
-      syserr("!!mutex init");
+    case 0:break;
+    case EINVAL:syserr("cannot init");
+    case ENOMEM:syserr("no memory");
+    case EAGAIN:goto mtxInit;
+    default:syserr("!!mutex init");
   }
 
   pthread_mutexattr_destroy(&attr);
 
   again:
   switch (pthread_cond_init(&l->cond, NULL)) {
-    case 0:
+    case 0:return l;
+    case EAGAIN:goto again;
+    default:syserr("cannot init lock");
       return l;
-    case EAGAIN:
-      goto again;
-    default:
-      syserr("cannot init lock");
-      return l;
+  }
+}
+
+retCode g__newLock(processPo P, ptrPo a) {
+  ptrI A1 = deRefI(&a[1]);
+  if (isvar(A1))
+    return liberror(P, "_newLock", eVARNEEDD);
+  else {
+    ptrI l = objP(newLock());
+    return equal(P, &a[1], &l);
   }
 }
 
@@ -239,7 +289,11 @@ retCode g__acquireLock(processPo P, ptrPo a) {
   ptrI A2 = deRefI(&a[2]);              // Second argument is a timeout value
   objPo o2 = objV(A2);
 
-  if (isvar(A2))
+  if (isvar(A1))
+    return liberror(P, "__acquireLock", eINSUFARG);
+  else if (!IsLock(A1))
+    return liberror(P, "_acquireLock", eINVAL);
+  else if (isvar(A2))
     return liberror(P, "__acquireLock", eINSUFARG);
   else if (!IsFloat(o2))
     return liberror(P, "__acquireLock", eNUMNEEDD);
@@ -252,17 +306,15 @@ retCode g__acquireLock(processPo P, ptrPo a) {
     rootPo root = gcAddRoot(&P->proc.heap, &A1);
     gcAddRoot(&P->proc.heap, &A2);
 
-    dynPo lk = loObjV(A1);    /* pick up the lock-carrying object */
-
-    assert(lk->lock != NULL);
+    lockPo lk = lockV(A1);    // Pick up the lock
 
     switchProcessState(P, wait_lock);
 
 #ifdef LOCKTRACE
     if (traceLock)
-      outMsg(logFile, RED_ESC_ON "%w: getting lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk->lock, &a[1]);
+      outMsg(logFile, RED_ESC_ON "%w: getting lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk, &a[1]);
 #endif
-    retCode ret = acquireLock(lk->lock, tmOut);
+    retCode ret = acquireLock(lk, tmOut);
     setProcessRunnable(P);
 
     gcRemoveRoot(&P->proc.heap, root);
@@ -297,9 +349,10 @@ retCode g__waitLock(processPo P, ptrPo a) {
   objPo o2 = objV(A2);
 
   if (isvar(A1))
-    return liberror(P, "__waitLock", eINSUFARG);
-
-  if (isvar(A2))
+    return liberror(P, "_waitLock", eINSUFARG);
+  else if (!IsLock(A1))
+    return liberror(P, "_waitLock", eINVAL);
+  else if (isvar(A2))
     return liberror(P, "__waitLock", eINSUFARG);
   else if (!IsFloat(o2))
     return liberror(P, "__waitLock", eNUMNEEDD);
@@ -309,18 +362,16 @@ retCode g__waitLock(processPo P, ptrPo a) {
     rootPo root = gcAddRoot(&P->proc.heap, &A1);
     gcAddRoot(&P->proc.heap, &A2);
 
-    dynPo lk = loObjV(A1);    /* pick up the lock-carrying object */
-
-    assert(lk->lock != NULL);    /* must already have the lock */
+    lockPo lk = lockV(A1);    // Pick up the lock
 
     switchProcessState(P, wait_lock);
 
 #ifdef LOCKTRACE
     if (traceLock)
-      outMsg(logFile, RED_ESC_ON "%w: waiting on lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk->lock, &a[1]);
+      outMsg(logFile, RED_ESC_ON "%w: waiting on lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk, &a[1]);
 #endif
 
-    retCode ret = waitLock(lk->lock, tmOut);
+    retCode ret = waitLock(lk, tmOut);
     setProcessRunnable(P);
 
     gcRemoveRoot(&P->proc.heap, root);
@@ -343,9 +394,8 @@ retCode g__waitLock(processPo P, ptrPo a) {
         if (traceLock)
           outMsg(logFile, RED_ESC_ON "%w: problem with waitlock on %w"RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
 #endif
-        return liberror(P, "__waitLock", eDEAD);
-      default:
-        return liberror(P, "__waitLock", eINVAL);
+        return liberror(P, "_waitLock", eDEAD);
+      default:return liberror(P, "_waitLock", eINVAL);
     }
   }
 }
@@ -354,43 +404,40 @@ retCode g__releaseLock(processPo P, ptrPo a) {
   ptrI A1 = deRefI(&a[1]);
 
   if (isvar(A1))
-    return liberror(P, "__releaseLock", eINSUFARG);
+    return liberror(P, "_releaseLock", eINSUFARG);
+  else if (!IsLock(A1))
+    return liberror(P, "_releaseLock", eINVAL);
 
-  dynPo lk = loObjV(A1);
+  lockPo lk = lockV(A1);    // Pick up the lock
 
-  if (lk->lock != NULL) {
 #ifdef LOCKTRACE
-    if (traceLock)
-      outMsg(logFile, RED_ESC_ON "%w: releasing lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk->lock, &a[1]);
+  if (traceLock)
+    outMsg(logFile, RED_ESC_ON "%w: releasing lock 0x%x on %w"RED_ESC_OFF"\n%_", &P->proc.thread, lk, &a[1]);
 #endif
 
-    retCode ret = releaseLock(lk->lock);
+  retCode ret = releaseLock(lk);
 
-    switch (ret) {
-      case Ok:
+  switch (ret) {
+    case Ok:
 #ifdef LOCKTRACE
-        if (traceLock)
-          outMsg(logFile, RED_ESC_ON "%w: Lock released on %w"RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
+      if (traceLock)
+        outMsg(logFile, RED_ESC_ON "%w: Lock released on %w"RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
 #endif
 
-        return Ok;
-      case Fail:
+      return Ok;
+    case Fail:
 #ifdef LOCKTRACE
-        if (traceLock)
-          outMsg(logFile, RED_ESC_ON "%w: Could not release %w "RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
+      if (traceLock)
+        outMsg(logFile, RED_ESC_ON "%w: Could not release %w "RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
 #endif
-        return Fail;
-      case Error:
+      return Fail;
+    case Error:
 #ifdef LOCKTRACE
-        if (traceLock)
-          outMsg(logFile, RED_ESC_ON "%w: did not own %w "RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
+      if (traceLock)
+        outMsg(logFile, RED_ESC_ON "%w: did not own %w "RED_ESC_OFF"\n%_", &P->proc.thread, &a[1]);
 #endif
-        return liberror(P, "__releaseLock", eFAIL);
-      default:
-        return liberror(P, "__releaseLock", eINVAL);
-    }
+      return liberror(P, "__releaseLock", eFAIL);
+    default:return liberror(P, "__releaseLock", eINVAL);
   }
-  else
-    return Ok;
 }
 

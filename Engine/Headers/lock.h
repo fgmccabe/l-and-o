@@ -18,12 +18,18 @@
 
 #include "word.h"
 
-typedef struct {
+extern ptrI lockStrct;
+
+/* Lock structure */
+typedef struct _lock_struct_ {
+  ptrI class;                             // == lockStrct
   long count;				/* The lock recursion count */
   pthread_t owner;			/* The current owner of the lock */
   pthread_mutex_t mutex;		/* The mutex itself */
   pthread_cond_t cond;			/* Condition variable */
-} Lock, *lockPo;
+} LockRec, *lockPo;
+
+#define LockCellCount CellCount(sizeof(LockRec))
 
 lockPo newLock(void);
 
@@ -31,4 +37,23 @@ retCode acquireLock(lockPo l,double tmOut);
 retCode releaseLock(lockPo l);
 retCode waitLock(lockPo l,double tmOut);
 
+void initLockStrct(void);
+
+static inline logical IsLock(ptrI o) {
+  return HasClass(o, lockStrct);
+}
+
+static inline logical isLock(objPo p) {
+  return hasClass(p, lockStrct);
+}
+
+static inline lockPo lockV(ptrI x) {
+  assert(IsLock(x));
+  return (lockPo) objV(x);
+}
+
+retCode g__newLock(processPo P,ptrPo a);
+retCode g__acquireLock(processPo P, ptrPo a);
+retCode g__waitLock(processPo P, ptrPo a);
+retCode g__releaseLock(processPo P, ptrPo a);
 #endif

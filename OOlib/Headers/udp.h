@@ -10,14 +10,16 @@
 
 typedef struct _udp_object_ *udpPo;
 
-udpPo udpPort(byte *name, int port, ioDirection dir);
-retCode udpRead(udpPo f,byte *msg,long *blen,string peer,long len,int *port);
-retCode udpSend(udpPo f,byte *msg,long blen,string peer,int port);
+udpPo newUDPPort(byte *name, int port, ioDirection dir);
+retCode udpRead(udpPo u,byte *msg,long *blen,string peer,long len,int *port);
+retCode udpSend(udpPo u,byte *msg,long blen,string peer,int port);
 string udpName(udpPo f);
 uint16 udpPortNo(udpPo u);
 retCode closeUDP(udpPo u);
 
 extern classPo udpClass;
+
+logical isUDPport(objectPo o);
 
 #ifdef VERIFY_OBJECT
 extern objectPo checkCast(void *c,classPo class);
