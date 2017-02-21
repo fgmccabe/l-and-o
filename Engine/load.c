@@ -9,7 +9,6 @@
 #include "encodedP.h"             /* pick up the term encoding definitions */
 #include "manifestP.h"
 #include "tpl.h"
-#include "hashTable.h"
 
 logical isLoaded(ptrI pkg) {
   return (logical) (loadedVersion(StringVal(stringV(pkg))) != NULL);
@@ -382,6 +381,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
                 updateCodeLit(codeV(pc), i, el);
               }
             }
+
             gcRemoveRoot(GH, root); /* clear the GC root */
 
             closeFile(O_IO(buff));

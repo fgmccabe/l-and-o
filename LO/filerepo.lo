@@ -34,11 +34,11 @@ lo.repo.file{
       locateInManifest(Man,Pkg,Actual,Kind,U).
   }
 
-  public locateCode:(fileRepo,pkg,string,list[integer]){}.
+  public locateCode:(fileRepo,pkg,string,string){}.
   locateCode(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
     locateInManifest(Man,Pkg,_,"code",U).
 
-  public locateProlog:(fileRepo,pkg,string,list[integer]){}.
+  public locateProlog:(fileRepo,pkg,string,string){}.
   locateProlog(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
     locateInManifest(Man,Pkg,_,"prolog",U).
 
@@ -58,10 +58,10 @@ lo.repo.file{
     (resourcePresent(SrcFile) ?
         newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 
-  public addPackage:(fileRepo,pkg,list[integer]) => fileRepo.
+  public addPackage:(fileRepo,pkg,string) => fileRepo.
   addPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"code",Text).
 
-  public addPrologPackage:(fileRepo,pkg,list[integer]) => fileRepo.
+  public addPrologPackage:(fileRepo,pkg,string) => fileRepo.
   addPrologPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"prolog",Text).
 
   public addSource:(fileRepo,pkg,string) => fileRepo.

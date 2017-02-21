@@ -9,7 +9,7 @@ lo.comp.catalog{
   public type catalog ::= catalog(list[catEntry]).
 
   private type catEntry ::= catEntries(map[pkg,uri]) | default(uri) | vErsion(version) | base(uri).
-  
+
   public locateCatalog:(uri) => catalog.
   locateCatalog(Uri) => Cat :-
     CatURI = resolveUri(Uri,relUri(localRsrc(relPath(["catalog"])),noQ)),
@@ -25,9 +25,9 @@ lo.comp.catalog{
     base(Base) in Cat,
     resolveCatalog(locateCatalog(resolveUri(Base,Deflt)),Nm,Uri).
 
-  parseCatalog:(list[integer],uri,catalog){}.
+  parseCatalog:(string,uri,catalog){}.
   parseCatalog(Chrs,Uri,defaultBase(C,Uri)) :-
-    tokens(Toks) %% Chrs,
+    tokens(Toks) %% explode(Chrs),
     parseCat(C) %% Toks.
 
   defaultBase:(catalog,uri) => catalog.
@@ -93,7 +93,7 @@ lo.comp.catalog{
   contents:(map[pkg,uri],map[pkg,uri]) --> list[token].
   contents(C,Cx) --> entry(C,C0), contents(C0,Cx).
   contents(C,C) --> [].
- 
+
   entry:(map[pkg,uri],map[pkg,uri]) --> list[token].
   entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C[Key->Uri]}.
 
@@ -113,6 +113,6 @@ lo.comp.catalog{
   vSegs([]) --> [].
 
   stringify:(list[list[integer]],list[integer])=>string.
-  stringify(L,S) => 
+  stringify(L,S) =>
     implode(multiCat(interleave(L,S))).
 }

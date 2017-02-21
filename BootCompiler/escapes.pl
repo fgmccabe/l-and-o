@@ -61,7 +61,6 @@ escapeType("_basr",funType([type("lo.core*integer"),type("lo.core*integer")],typ
 escapeType("_bnot",funType([type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_nthb",predType([type("lo.core*integer"),type("lo.core*integer")])).
 escapeType("_suspend",univType(kVar("u"),predType([kVar("u"),predType([])]))).
-escapeType("_sha1",funType([type("lo.core*string")],type("lo.core*string"))).
 escapeType("_get_file",funType([type("lo.core*string")],type("lo.core*string"))).
 escapeType("_put_file",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_cwd",funType([],type("lo.core*string"))).
@@ -246,7 +245,6 @@ isEscape("_basr").
 isEscape("_bnot").
 isEscape("_nthb").
 isEscape("_suspend").
-isEscape("_sha1").
 isEscape("_get_file").
 isEscape("_put_file").
 isEscape("_cwd").

@@ -71,7 +71,7 @@ lo.comp.grammar{
   private
   followsInfix:(integer) --> list[token].
   followsInfix(Pr) -->
-    [tok(idTok(Op),_)] , 
+    [tok(idTok(Op),_)] ,
     { prefixOp(Op,OpPr,_) ? OpPr =< Pr | \+ isOperator(Op,_)}.
   followsInfix(_) --> [tok(lpar,_)].
   followsInfix(_) --> [tok(lbra,_)].
@@ -87,7 +87,7 @@ lo.comp.grammar{
   term0(parseString(Lc,Segments,Rp,Rpx),otherMark,Rp,Rpx) --> [tok(stringTok(Segments),Lc)].
   term0(intg(Lc,Ix),otherMark,Rp,Rp) --> [tok(intTok(Ix),Lc)].
   term0(flot(Lc,Dx),otherMark,Rp,Rp) --> [tok(fltTok(Dx),Lc)].
-  term0(tupl(Lc,"[]",[]),otherMark,Rp,Rp) --> 
+  term0(tupl(Lc,"[]",[]),otherMark,Rp,Rp) -->
     [tok(lbra,Lc0),tok(rbra,Lc1)],
     Lc = Lc0.merge(Lc1).
   term0(tupl(Lc,"[]",tupleize(Seq)),otherMark,Rp,Rpx) -->
@@ -116,7 +116,7 @@ lo.comp.grammar{
   term00:(ast,tokMark,report,report) --> list[token].
   term00(iden(Lc,Nm),otherMark,Rp,Rp) --> [tok(idTok(Nm),Lc)].
   term00(iden(Lc,Nm),otherMark,Rp,Rp) --> [tok(idQTok(Nm),Lc)].
-  term00(tupl(Lc,"()",[]),otherMark,Rp,Rp) --> 
+  term00(tupl(Lc,"()",[]),otherMark,Rp,Rp) -->
       [tok(lpar,Lc0),tok(rpar,Lc1)],
       Lc = Lc0.merge(Lc1).
   term00(tupl(Lc,"()",tupleize(Seq)),otherMark,Rp,Rpx) -->
@@ -182,7 +182,7 @@ lo.comp.grammar{
   checkForTerminator(_,Rp,Rp) --> eof.
   checkForTerminator(_,Rp,Rp) --> [tok(rbrce,_)]+.
   checkForTerminator(endBrce,Rp,Rp) --> [].
-  checkForTerminator(_,Rp,Rpx) --> 
+  checkForTerminator(_,Rp,Rpx) -->
     [tok(_,Lc)]+,
     checkFor(period,Lc,"missing terminator",Rp,Rpx).
 

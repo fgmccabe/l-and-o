@@ -397,7 +397,6 @@ retCode decodeText(ioPo in, bufferPo buffer) {
  Estimate amount of heap space needed
  */
 
-
 typedef struct {
   integer amnt;
   integer perm;

@@ -3,12 +3,12 @@ lo.resources{
   import lo.
 
   public
-  getResource:(uri) => list[integer].
-  getResource(U) => explode(_get_file(getUriPath(U))).
+  getResource:(uri) => string.
+  getResource(U) => _get_file(getUriPath(U)).
 
   public
-  putResource:(uri,list[integer]){}.
-  putResource(U,Content) :- _put_file(getUriPath(U),implode(Content)).
+  putResource:(uri,string){}.
+  putResource(U,Content) :- _put_file(getUriPath(U),Content).
 
 
   public resourcePresent:(uri){}.

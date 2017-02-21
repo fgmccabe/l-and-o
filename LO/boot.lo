@@ -18,14 +18,18 @@
 lo.boot{
   import lo.
   import lo.options.
+  import lo.repo.
+  import lo.repo.file.
+  import lo.uri.
 
-  type bootOptions <~ { repo:string. }
-  bootOptions : (string) <=> bootOptions.
-  bootOptions(R) <= {
+  type bootOptions <~ { repo:string. wd:string. }
+  bootOptions : (string,string) <=> bootOptions.
+  bootOptions(R,W) <= {
     repo = R.
+    wd = W.
   }
 
-  public type all o ~~ optionsProcessor[] <~ {
+  public type all o ~~ optionsProcessor <~ {
     shortForm : string.
     alternatives : list[string].
     usage : string.
@@ -38,51 +42,47 @@ lo.boot{
     shortForm = "-r".
     alternatives = [].
     usage = "-r dir -- directory of code repository".
-    validator = none.
-    setOption(R,bootOptions(_)) => bootOptions(R).
+    validator = some(isDir).
+    setOption(R,bootOptions(_,W)) => bootOptions(R,W).
   }
 
+  isDir:(string){}.
+  isDir(D) :- filePresent(D), fileType(D) = directory.
 
+  wdOption:optionsProcessor[bootOptions].
+  wdOption <= {
+    shortForm = "-w".
+    alternatives = [].
+    usage = "-w dir -- override working directory".
+    validator = some(isDir).
+    setOption(W,bootOptions(R,_)) => bootOptions(R,W).
+  }
 
   public __boot:(){}.
   __boot() :-
-    handleCmdLineOpts(processOptions(_command_line(),[repoOption],bootOptions(""))).
+    handleCmdLineOpts(processOptions(_command_line(),[repoOption,wdOption],bootOptions(cwd(),cwd()))).
 
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
-  handleCmdLineOpts(either((Opts,Args))) :-
-    openRepo(Opts.repo,Repo),
+  handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
+    Repo = openRepository(parseUri(Opts.repo)),
+    importPkgs([parsePkgName(Top)],Repo),
+    invokeMain(Top,Args).
 
+  importPkgs:(list[pkg],list[pkg],list[pkg],fileRepo){}.
+  importPkgs([],Ld,Ld,_).
+  importPkgs([P,..L],Ld,Ldx,R) :-
+    importPkg(P,R,Ld,Imps),
+    importPkgs(Imps,[P,..Ld],Ldx,R),
+    initialize(P).
 
-  __main:(string,list[(char,symbol)],list[string]){}.
-  __main(Path,Options,Cmd) ->
-      ([Prog,..Args] = Cmd ?
-	 pkg = implode(chopGoc(Prog));
-	 entry = __default(`m,Options,'main');
-	 __ensure_loaded(Path,pkg,__default(`M,Options,''),depends)
-     | raise error("missing package name",'eNOTFND')
-      )
-      onerror(
-       Err -> {__logmsg("Fatal error on load: "<>Err.show())}; exit(1)
-      );
-      execInits(reverse(depends));
-      (__defined(pkg,entry,1)?
-         ((__call(pkg,entry,1,Args);exit(0)) onerror ( -- __call may *not* be the last call!!!!
-        E -> {__logmsg("Fatal error("<>E.show()<>")")};exit(1)
-          ))
-     | {__logmsg("Entry: "<>explode(entry)<>" not defined in "<>Prog)};exit(1)
-      ).
+  importPkg:(pkg,fileRepo,list[pkg],list[pkg]){}.
+  importPkg(P,_,Ld,[]) :- P in Ld.
+  importPkg(P,R,Ld,Imps) :-
+    locateCode(R,P,_,Code),
+    _define_code(Code,Imps).
 
+  
 
-
-
-
-
-
-openRepo(Opts,Repo),
-parsePkgName(Entry,Pkg),
-processPackage(Pkg,Repo,[],_Loaded,[],All),
-compile_predicates(All),
-lookForMain(Pkg,LOArgs),!.
 
 processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
 loadPrologPkg(Pkg,Repo,Code,Imports),
@@ -132,17 +132,7 @@ processImports([import(_,Pkg)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
 processPackage(Pkg,Repo,Loaded,LdI,Pr,Pr0),
 processImports(Imports,LdI,Ldx,Repo,Pr0,Prx).
 
-parsePkgName(P,pkg(Pkg,v(Version))) :-
-sub_string(P,Before,_,After,"#"),!,
-sub_string(P,0,Before,_,Pkg),
-sub_string(P,_,After,0,Version).
-parsePkgName(P,pkg(P,defltVersion)).
 
-getCWDUri(WD) :-
-working_directory(C,C),
-atom_string(C,D),
-string_concat("file:",D,DT),
-parseURI(DT,WD).
 
   private delayHandler:(list[(){}]){}. -- private, but known to the run-time
   delayHandler([]).

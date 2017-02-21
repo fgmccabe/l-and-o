@@ -10,7 +10,7 @@ lo.comp.lexer{
   -- Define the lexer for the L&O syntax
 
   public tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(getResource(U),getUriPath(U)).
+  tokenizeFile(U) => Toks :-  tokenize(Toks) %% startState(explode(getResource(U)),getUriPath(U)).
 
   public tokenCodes:(list[integer],string) => list[token].
   tokenCodes(Chars,Pth) => Toks :- tokenize(Toks) %% startState(Chars,Pth).

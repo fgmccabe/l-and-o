@@ -72,6 +72,7 @@ long countCodePoints(string src,long start,long end);
 long uniCodeCount(string src);
 
 long advanceCodePoint(string src,long start,long end,long count);
+codePoint nextCodePoint(string src, long *start, long end);
 retCode nxtPoint(string src,long *start,long end,codePoint *code);
 retCode prevPoint(string src, long *pos, codePoint *code);
 

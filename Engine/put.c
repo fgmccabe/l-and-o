@@ -43,23 +43,17 @@ typedef struct _literal_ {
 } LitRec;
 
 typedef struct {
-  int minAreg;
-  /* all A registers before this are reserved */
-  logical yMap[256];
-  /* map of the Y registers in use */
+  int minAreg;   /* all A registers before this are reserved */
+  logical yMap[256]; /* map of the Y registers in use */
   logical aMap[LO_REGS];                /* map of the A registers in use */
 } map;
 
 typedef struct {
-  heapPo heap;
-  /* What heap are we using? */
-  int minYreg;
-  /* How many locals in use */
-  vPo topVar;
-  /* The variables that we have */
-  lPo topLit;
-  /* Stack of literals in the program */
-  int litNo;        /* How many literals so far */
+  heapPo heap;   /* What heap are we using? */
+  int minYreg;   /* How many locals in use */
+  vPo topVar;    /* The variables that we have */
+  lPo topLit;    /* Stack of literals in the program */
+  int litNo;     /* How many literals so far */
 } CodeGenRec, *genPo;
 
 static poolPo iPool = NULL;

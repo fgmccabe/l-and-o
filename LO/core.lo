@@ -48,6 +48,11 @@ lo.core{
     disp:(t)=>ss.
   }
 
+  -- Formatting contract
+  public contract all t ~~ format[t] <~ {
+    frmt:(t,string) => ss.
+  }
+
   -- stream contract
   public
   contract all S,E ~~ stream[S ->> E] <~ {

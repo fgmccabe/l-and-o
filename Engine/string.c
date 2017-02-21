@@ -19,7 +19,6 @@
 #include <limits.h>
 #include "lo.h"
 #include "term.h"
-#include "sha1.h"
 
 static long strSizeFun(specialClassPo class, objPo o);
 static comparison strCompFun(specialClassPo class, objPo o1, objPo o2);
@@ -699,38 +698,53 @@ retCode g__str_gen(processPo P, ptrPo a) {
   }
 }
 
+static int countSignificants(string frmt, long from, long limit, string test);
+
+static retCode formatFloat(double dx,byte *out,long outLen,string frmt){
+  logical isSigned = False;
+  long tLen = uniStrLen(frmt);
+
+  if(dx<0){
+    isSigned = True;
+    dx = -dx;
+  }
+
+  long dotPos = uniIndexOf(frmt,tLen,0,'.');
+  if(dotPos<0)
+    return Error;
+  else{
+    long ePos = uniIndexOf(frmt,tLen,0,'e');
+    if(ePos<0)
+      ePos = uniIndexOf(frmt,tLen,0,'E');
+
+    long beforePeriod = countSignificants(frmt,0,dotPos,(string)"09 ");
+    long afterPeriod = countSignificants(frmt,dotPos,ePos>=0?ePos:tLen,(string)"09 ");
+    long precision = countSignificants(frmt,0,ePos>=0?ePos:tLen,(string)"09 ");
+    byte tmp[MAX_SYMB_LEN];
+
+    retCode ret = formatDouble(tmp,NumberOf(tmp),dx,ePos>=0?scientific:fractional,precision,(string)"",False);
+
+    
+  }
+}
+
+static int countSignificants(string frmt, long from, long limit, string test) {
+  int cx = 0;
+  long tLen = uniStrLen(test);
+  for (long ix = from; ix < limit;) {
+    codePoint ch = nextCodePoint(frmt, &ix, limit);
+    if (uniIndexOf(test, tLen, 0, ch) >= 0)
+      cx++;
+  }
+  return cx;
+}
+
 retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
   long len;
   string buff = getTextFromBuffer(&len, O_BUFFER(f));
-  ptrI str = allocateString(H, buff, (size_t) len);
+  ptrI str = allocateString(H, buff, len);
 
   *deRef(tgt) = str;
 
   return closeFile(f);
-}
-
-retCode g__sha1(processPo P, ptrPo a) {
-  ptrI Data = deRefI(&a[1]);
-
-  if (isvar(Data))
-    return liberror(P, "__sha1", eINSUFARG);
-  else if (!isString(objV(Data)))
-    return liberror(P, "__sha1", eINVAL);
-  else {
-    stringPo str = stringV(Data);
-    string src = stringVal(str);
-    long len = stringLen(str);
-
-    SHA1_CONTEXT sha1;
-
-    sha1_reset(&sha1);
-    sha1_input(&sha1, src, (unsigned int) len);
-
-    byte sha_result[SHA1_HASH_SIZE];
-    sha1_result(&sha1, sha_result);
-
-    ptrI hash = allocateString(&P->proc.heap, sha_result, SHA1_HASH_SIZE);
-
-    return equal(P, &a[2], &hash);
-  }
 }

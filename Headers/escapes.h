@@ -117,9 +117,6 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_univ,False,False,":k'u'A:k'v'AF2sLk'u'k'v'","weird function to construct terms")
 */
 
-  // Sha function
-  escape(_sha1,False,False,"F1SS","compute hash of a string")
-
   escape(_get_file,True,False,"F1SS","Get the contents of a file as a string")
   escape(_put_file,True,False,"P2SS","write a file from a string")
   escape(_cwd,True,False,"F0S","return url of current working directory")

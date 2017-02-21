@@ -800,9 +800,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/retcode.h">
 			<Option target="ooio"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/sha1.h">
-			<Option target="ooio"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/stringBuffer.h">
 			<Option target="ooio"/>
 		</Unit>
@@ -873,9 +870,6 @@
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/pool.c">
-			<Option target="ooio"/>
-		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/OOlib/sha.c">
 			<Option target="ooio"/>
 		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/sockets.c">

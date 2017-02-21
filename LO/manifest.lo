@@ -10,11 +10,11 @@ lo.repo.manifest{
   type manifestEntry ::= manifestEntry(string,list[(version,map[string,string])]).
 
   public readManifest:(uri) => manifest.
-  readManifest(u) => m :- parseJson(j) %% getResource(u), jsonManifest(j,m).
+  readManifest(u) => m :- parseJson(j) %% explode(getResource(u)), jsonManifest(j,m).
 
   public flushManifest:(uri,manifest){}.
   flushManifest(Root,M) :-
-    putResource(Root,flatten(disp(manifestJson(M)))).
+    putResource(Root,implode(flatten(disp(manifestJson(M))))).
 
   jsonManifest:(json,manifest){}.
   jsonManifest(jColl(L),manifest(L///jsonPkgEntry)).

@@ -12,9 +12,9 @@ lo.repo {
   public contract all r ~~ repository[r] <~ {
     packagePresent:(r,pkg,string){}.
 
-    addToRepo:(r,pkg,string,list[integer]) => r.
+    addToRepo:(r,pkg,string,string) => r.
 
-    loadFromRepo:(r,pkg,string,version,list[integer]){}.
+    loadFromRepo:(r,pkg,string,version,string){}.
   }
 
   public implementation equality[pkg] <= {
@@ -43,4 +43,11 @@ lo.repo {
   packageHash:(pkg)=>integer.
   packageHash(pkg(P,defltVersion)) => hash(P).
   packageHash(pkg(P,vers(V))) => hash(P)*47+hash(V).
+
+  public parsePkgName:(string)=>pkg.
+  parsePkgName(P) => pkg(Nm,vers(V)) :-
+    _str_find(P,"#",0,Pos),
+    _str_split(P,Pos,Nm,_),
+    _str_split(P,Pos+1,_,V).
+  parsePkgName(P) => pkg(P,defltVersion).
 }

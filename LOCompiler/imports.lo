@@ -22,7 +22,7 @@ lo.comp.imports{
   public importPkg:(pkg,fileRepo,pkgSpec,report,report){}.
   importPkg(pkg(Pkg,Vers),Repo,pkgSpec(pkg(Pkg,Vers),Export,Types,Enums,Contracts,Impls,Imports),Rp,Rpx) :-
     locateProlog(Repo,pkg(Pkg,Vers),_,Strm),
-    parse(A,Rp,Rp0) %% getNTokens(Strm,Pkg,5)!,
+    parse(A,Rp,Rp0) %% getNTokens(explode(Strm),Pkg,5)!,
     pickupPkgSpec(A,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
   pickupPkgSpec:(ast,list[(visibility,pkg)],list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
