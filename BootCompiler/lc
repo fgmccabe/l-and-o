@@ -6,7 +6,6 @@
 
 eval :-
         current_prolog_flag(argv, Argv),
-        write(Argv),
         main(Argv).
 
 top :-
