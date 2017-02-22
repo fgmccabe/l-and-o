@@ -155,6 +155,8 @@ escapeType("_isLetterChar",predType([type("lo.core*integer")])).
 escapeType("_digitCode",funType([type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int2str",funType([type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")],type("lo.core*string"))).
 escapeType("_flt2str",funType([type("lo.core*float"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*logical")],type("lo.core*string"))).
+escapeType("_int_format",funType([type("lo.core*integer"),type("lo.core*string")],type("lo.core*string"))).
+escapeType("_flt_format",funType([type("lo.core*float"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("_str2flt",funType([type("lo.core*string")],type("lo.core*float"))).
 escapeType("_str_lt",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_ge",predType([type("lo.core*string"),type("lo.core*string")])).
@@ -339,6 +341,8 @@ isEscape("_isLetterChar").
 isEscape("_digitCode").
 isEscape("_int2str").
 isEscape("_flt2str").
+isEscape("_int_format").
+isEscape("_flt_format").
 isEscape("_str2flt").
 isEscape("_str_lt").
 isEscape("_str_ge").

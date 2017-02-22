@@ -234,7 +234,18 @@ retCode uniTackOn(string dest, long len, codePoint ch) {
 }
 
 retCode uniAppend(string dest, long *pos, long len, string src) {
-  for (; *src != 0 && *pos < len; )
+  for (; *src != 0 && *pos < len;)
+    dest[(*pos)++] = *src++;
+  if (*pos < len - 1) {
+    dest[*pos] = 0;
+    return Ok;
+  } else {
+    return Eof;
+  }
+}
+
+retCode uniNAppend(string dest, long *pos, long len, string src, long sLen) {
+  for (long sx = 0; sx < sLen && *pos < len;)
     dest[(*pos)++] = *src++;
   if (*pos < len - 1) {
     dest[*pos] = 0;
@@ -277,6 +288,15 @@ retCode appendCodePoint(string dest, long *pos, long len, codePoint ch) {
       return Eof;
   } else
     return Error;
+}
+
+retCode uniReverse(string dest, long len) {
+  for (long ix = 0; ix < len / 2; ix++) {
+    byte b = dest[ix];
+    dest[ix] = dest[len - ix - 1];
+    dest[len - ix - 1] = b;
+  }
+  return Ok;
 }
 
 retCode uniCpy(string dest, long len, const string src) {

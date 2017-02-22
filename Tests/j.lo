@@ -5,7 +5,7 @@ test.j{
   jj:json.
   jj = "{\"alpha\" : [1.0, 2.0, 3.0]}" :: json.
 
-  show jj.
+  show "\(jj)".
 
   assert jj == jColl(["alpha"->jSeq([jNum(1.0),jNum(2.0),jNum(3.0)])]).
 }

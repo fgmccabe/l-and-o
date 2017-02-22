@@ -1,0 +1,10 @@
+test.format {
+  import lo.
+  import lo.unit.
+
+  show "\(34.567):99.99;".
+
+  show "\(34.567):00000.99;".
+
+  show "\(-2345):P999.99P;%".
+}

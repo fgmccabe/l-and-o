@@ -22,6 +22,8 @@ retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
                    codePoint pad, logical left, string prefix, logical sign);
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
                   codePoint pad, logical left, string prefix, logical sign);
+retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string frmt, long formatLen);
+retCode formattedLong(integer ix, byte *out, long *endPos, long outLen, string frmt, long formatLen);
 retCode outMsg(ioPo f, char *fmt, ...);
 retCode logMsg(ioPo out, char *fmt, ...);
 

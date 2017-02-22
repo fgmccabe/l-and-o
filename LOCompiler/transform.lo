@@ -200,12 +200,12 @@ lo.comp.transform{
   dcgBody(grCall(Lc,NT,tpl(Args)),Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     lineDebug(Lc,G,G0,Opts),
     trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0,Rp,Rpx),
-    (var(Strmx) ? genVarbl("Stx",Strmx) | true),
-    trGoalCall(NT,[Strm,Strmx,..AG],G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx,Rp,Rpx).
+    (var(Strmx) ? genVarbl("Stx",Strmx), Q1=[Strmx,..Q0] | Q0=Q1),
+    trGoalCall(NT,[Strm,Strmx,..AG],G3,Gx,Q1,Qx,Map,Opts,Ex0,Exx,Rp,Rpx).
 
   dcgDisj:(canonNT,canonNT,list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],list[clse],list[clse],report,report){}.
-  dcgDisj(Lhs,Rhs,Map,Opts,[call(DisProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q),Ex,Exx,Rp,Rpx) :-
-    (var(Strmx) ? genVarbl("DjOut",Strmx) | true),
+  dcgDisj(Lhs,Rhs,Map,Opts,[call(DisProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q0),Ex,Exx,Rp,Rpx) :-
+    (var(Strmx) ? genVarbl("DjOut",Strmx), Q0=[Strmx,..Q] | Q0=Q),
     genVarbl("DjStrm",DjStrm),
     dcgBody(Lhs,Map,Opts,LG,[],DjStrm,DjStrmx,[],LQ,Ex,Ex0,Rp,Rp0),
     dcgBody(Rhs,Map,Opts,RG,[],DjStrm,DjStrmy,LQ,DQ,Ex0,Ex1,Rp0,Rpx),
@@ -461,10 +461,10 @@ lo.comp.transform{
   trPtnCallOp:(string,list[term],term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   trPtnCallOp(Nm,Args,X,Q,merge([X],Q),Pre,Px,Tail,[ecall(Nm,Args<>[X]),..Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm),
-    genVarbl("X",X).
+    genVarbl("Xa",X).
   trPtnCallOp(Nm,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,_,Ex,Ex,Rp,Rpx) :-
     lookupFunName(Map,Nm,Reslt),
-    genVarbl("X",X),
+    genVarbl("Xb",X),
     implementPtnCall(Reslt,Nm,X,Args,Ptn,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Rp,Rpx).
 
   implementPtnCall:(mapEntry,string,term,list[term],term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],report,report){}.
@@ -504,7 +504,7 @@ lo.comp.transform{
   trExp(apply(_,Op,tpl(A)),Exp,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExps(A,Args,[],Q,Q0,APre,APx,APost,APostx,Map,Opts,Ex,Ex0,Rp,Rp0),
     trExpCallOp(Op,Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  trExp(dot(Rec,Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExp(dot(Rec,Fld),Exp,Q,merge([X],Qx),Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("XV",X),
     trDotExp(Rec,cons(trCons(Fld,1),[X]),X,Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(whre(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -565,14 +565,14 @@ lo.comp.transform{
   trExpCallOp:(canonTerm,list[term],term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,list[clse],list[clse],report,report){}.
   trExpCallOp(v(_,Nm),Args,X,Q,merge([X],Q),Pre,Px,Tail,[ecall(Nm,Args<>[X]),..Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm),
-    genVarbl("X",X).
-  trExpCallOp(v(Lc,Nm),Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    genVarbl("Xc",X).
+  trExpCallOp(v(Lc,Nm),Args,Exp,Q,merge([X],Qx),APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lookupFunName(Map,Nm,Reslt),
-    genVarbl("X",X),
+    genVarbl("Xd",X),
     implementFunCall(Reslt,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
-  trExpCallOp(T,Args,X,Q,Qx,Pre,APx,Tail,[ocall(C,Cl,Cl),..Tailx],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExpCallOp(T,Args,X,Q,merge([X],Qx),Pre,APx,Tail,[ocall(C,Cl,Cl),..Tailx],Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(T,Cl,Q,Qx,APx,Rx,Rx,Px,Map,Opts,Ex,Exx,Rp,Rpx),
-    genVarbl("X",X),
+    genVarbl("Xe",X),
     XArgs = Args<>[X],
     C = cons(trCons("_call",length(XArgs)),XArgs).
 

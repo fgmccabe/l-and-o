@@ -74,6 +74,33 @@ static uinteger inHashFun(specialClassPo class, objPo o) {
   return (uint64) val;
 }
 
+retCode g__int_format(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_int_format", eINSUFARG);
+  else if (!isInteger(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_int_format", eINVAL);
+  else if (!isvar(a3))
+    return liberror(P, "_int_format", eVARNEEDD);
+  else {
+    byte buffer[MAX_MSG_LEN];
+
+    stringPo frmtP = stringV(a2);
+    string format = stringVal(frmtP);
+    long fLen = stringLen(frmtP);
+    long endPos;
+
+    if (formattedLong(integerVal(intV(a1)), buffer, &endPos, NumberOf(buffer), format, fLen) == Ok) {
+      ptrI rslt = allocateString(&P->proc.heap, buffer, endPos);
+      return funResult(P, a, 3, rslt);
+    } else
+      return liberror(P, "_int_format", eIOERROR);
+  }
+}
+
 /* Integer arithmetic */
 retCode g__int_plus(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);

@@ -229,6 +229,9 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
 // String handling escapes
   escape(_int2str,False,False,"F4iiiiS","format an integer as a string")
   escape(_flt2str,False,False,"F5fiiilS","format a floating as a string")
+  escape(_int_format,False,False,"F2iSS","format an integer using picture format")
+  escape(_flt_format,False,False,"F2fSS","format a floating point using picture format")
+
   escape(_str2flt,False,False,"F1Sf","parse a string as a float")
 
   escape(_str_lt,False,False,"P2SS","String 1 is less than string 2")

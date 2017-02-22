@@ -159,6 +159,8 @@ lo.comp.escapes{
   escapeType("_digitCode") => funType(tupleType([tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int2str") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*string")).
   escapeType("_flt2str") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*logical")]),tipe("lo.core*string")).
+  escapeType("_int_format") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*string")]),tipe("lo.core*string")).
+  escapeType("_flt_format") => funType(tupleType([tipe("lo.core*float"),tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("_str2flt") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
   escapeType("_str_lt") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_str_ge") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
@@ -345,6 +347,8 @@ lo.comp.escapes{
   isEscape("_digitCode").
   isEscape("_int2str").
   isEscape("_flt2str").
+  isEscape("_int_format").
+  isEscape("_flt_format").
   isEscape("_str2flt").
   isEscape("_str_lt").
   isEscape("_str_ge").
@@ -531,36 +535,38 @@ lo.comp.escapes{
   escCode("_digitCode") => 150.
   escCode("_int2str") => 151.
   escCode("_flt2str") => 152.
-  escCode("_str2flt") => 153.
-  escCode("_str_lt") => 154.
-  escCode("_str_ge") => 155.
-  escCode("_str_hash") => 156.
-  escCode("_str_len") => 157.
-  escCode("_str_gen") => 158.
-  escCode("_stringOf") => 159.
-  escCode("_trim") => 160.
-  escCode("explode") => 161.
-  escCode("implode") => 162.
-  escCode("_str_find") => 163.
-  escCode("_sub_str") => 164.
-  escCode("_str_split") => 165.
-  escCode("_str_concat") => 166.
-  escCode("_str_start") => 167.
-  escCode("getenv") => 168.
-  escCode("setenv") => 169.
-  escCode("envir") => 170.
-  escCode("getlogin") => 171.
-  escCode("_fork") => 172.
-  escCode("_thread") => 173.
-  escCode("kill") => 174.
-  escCode("thread_state") => 175.
-  escCode("waitfor") => 176.
-  escCode("_shell") => 177.
-  escCode("_newLock") => 178.
-  escCode("_acquireLock") => 179.
-  escCode("_waitLock") => 180.
-  escCode("_releaseLock") => 181.
-  escCode("_ins_debug") => 182.
-  escCode("_stackTrace") => 183.
+  escCode("_int_format") => 153.
+  escCode("_flt_format") => 154.
+  escCode("_str2flt") => 155.
+  escCode("_str_lt") => 156.
+  escCode("_str_ge") => 157.
+  escCode("_str_hash") => 158.
+  escCode("_str_len") => 159.
+  escCode("_str_gen") => 160.
+  escCode("_stringOf") => 161.
+  escCode("_trim") => 162.
+  escCode("explode") => 163.
+  escCode("implode") => 164.
+  escCode("_str_find") => 165.
+  escCode("_sub_str") => 166.
+  escCode("_str_split") => 167.
+  escCode("_str_concat") => 168.
+  escCode("_str_start") => 169.
+  escCode("getenv") => 170.
+  escCode("setenv") => 171.
+  escCode("envir") => 172.
+  escCode("getlogin") => 173.
+  escCode("_fork") => 174.
+  escCode("_thread") => 175.
+  escCode("kill") => 176.
+  escCode("thread_state") => 177.
+  escCode("waitfor") => 178.
+  escCode("_shell") => 179.
+  escCode("_newLock") => 180.
+  escCode("_acquireLock") => 181.
+  escCode("_waitLock") => 182.
+  escCode("_releaseLock") => 183.
+  escCode("_ins_debug") => 184.
+  escCode("_stackTrace") => 185.
 
 }.

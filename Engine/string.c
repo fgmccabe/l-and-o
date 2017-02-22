@@ -698,46 +698,7 @@ retCode g__str_gen(processPo P, ptrPo a) {
   }
 }
 
-static int countSignificants(string frmt, long from, long limit, string test);
 
-static retCode formatFloat(double dx,byte *out,long outLen,string frmt){
-  logical isSigned = False;
-  long tLen = uniStrLen(frmt);
-
-  if(dx<0){
-    isSigned = True;
-    dx = -dx;
-  }
-
-  long dotPos = uniIndexOf(frmt,tLen,0,'.');
-  if(dotPos<0)
-    return Error;
-  else{
-    long ePos = uniIndexOf(frmt,tLen,0,'e');
-    if(ePos<0)
-      ePos = uniIndexOf(frmt,tLen,0,'E');
-
-    long beforePeriod = countSignificants(frmt,0,dotPos,(string)"09 ");
-    long afterPeriod = countSignificants(frmt,dotPos,ePos>=0?ePos:tLen,(string)"09 ");
-    long precision = countSignificants(frmt,0,ePos>=0?ePos:tLen,(string)"09 ");
-    byte tmp[MAX_SYMB_LEN];
-
-    retCode ret = formatDouble(tmp,NumberOf(tmp),dx,ePos>=0?scientific:fractional,precision,(string)"",False);
-
-    
-  }
-}
-
-static int countSignificants(string frmt, long from, long limit, string test) {
-  int cx = 0;
-  long tLen = uniStrLen(test);
-  for (long ix = from; ix < limit;) {
-    codePoint ch = nextCodePoint(frmt, &ix, limit);
-    if (uniIndexOf(test, tLen, 0, ch) >= 0)
-      cx++;
-  }
-  return cx;
-}
 
 retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
   long len;

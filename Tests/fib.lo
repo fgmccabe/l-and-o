@@ -7,11 +7,11 @@ fib{
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
-  show fib(20).
+  show "\(fib(20))".
 
   fibList:(integer,integer,list[integer]) => list[integer].
   fibList(Curr,Mx,L) =>  L :-  Curr>Mx .
   fibList(Curr,Max,[N1,N2,..L]) => fibList(N1+N2,Max,[N1+N2,N1,N2,..L]).
 
-  show formatSS(listDisp(intDisp).display(fibList(0,4000000,[1,0]))).
+  show "\(fibList(0,4000000,[1,0]))".
 }

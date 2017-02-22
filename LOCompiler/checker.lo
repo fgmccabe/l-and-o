@@ -64,8 +64,8 @@ lo.comp.typecheck{
     isUnary(St,"assert",Lc,C),
     checkCond(C,Env,_,Cond,Rp,Rpx).
   checkOther(St,[expShow(Lc,Show),..More],More,Env,Rp,Rpx) :-
-    isUnary(St,"show",Lc,E),  -- create the call formatSS(disp(E))
-    typeOfTerm(unary(Lc,"formatSS",unary(Lc,"disp",E)),findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
+    isUnary(St,"show",Lc,E),
+    typeOfTerm(E,findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
   processImportGroup:(list[ast],list[(visibility,pkg)],list[pkgSpec],location,fileRepo,list[env],list[env],report,report){}.
   processImportGroup(Stmts,Imports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-

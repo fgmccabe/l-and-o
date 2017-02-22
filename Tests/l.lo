@@ -50,14 +50,14 @@ test.l{
   inc:(integer)=>integer.
   inc = banjo(3).incr.
 
-  show mapp([1,2,3],inc).
+  show mapp([1,2,3],inc)::string.
 
   assert mapp([1,2,3],banjo(1).incr) == [2,3,4].
 
   private positive:(integer){}.
   positive(N) :- N>0.
 
-  show filter([1,-2,3],positive).
+  show filter([1,-2,3],positive)::string.
 
   ab:(integer) --> list[integer].
   ab(T) --> "a", ab(T), "b".

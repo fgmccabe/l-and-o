@@ -13,11 +13,8 @@
   permissions and limitations under the License.
  */
 
-#include "config.h"		/* pick up standard configuration header */
-#include <math.h>
-#include <stdlib.h>
-#include <errno.h>		/* system error doubles */
 #include "lo.h"
+#include <errno.h>		/* system error doubles */
 
 static comparison fltCompFun(specialClassPo class, objPo o1, objPo o2);
 
@@ -358,6 +355,33 @@ retCode g__flt2str(processPo P, ptrPo a) {
       return funResult(P, a, 6, rslt);
     } else
       return liberror(P, "num2str", eIOERROR);
+  }
+}
+
+retCode g__flt_format(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+
+  if (isvar(a1) || isvar(a2))
+    return liberror(P, "_flt_format", eINSUFARG);
+  else if (!isFloat(objV(a1)) || !isString(objV(a2)))
+    return liberror(P, "_flt_format", eINVAL);
+  else if (!isvar(a3))
+    return liberror(P, "_flt_format", eVARNEEDD);
+  else {
+    byte buffer[MAX_MSG_LEN];
+
+    stringPo frmtP = stringV(a2);
+    string format = stringVal(frmtP);
+    long fLen = stringLen(frmtP);
+    long endPos;
+
+    if (formattedFloat(floatVal(floatV(a1)), buffer, &endPos, NumberOf(buffer), format, fLen) == Ok) {
+      ptrI rslt = allocateString(&P->proc.heap, buffer, endPos);
+      return funResult(P, a, 3, rslt);
+    } else
+      return liberror(P, "_flt_format", eIOERROR);
   }
 }
 

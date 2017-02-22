@@ -91,6 +91,10 @@ lo.core{
     disp(X) => ss(_int2str(X,10,0,0c )).
   }
 
+  public implementation format[integer] <= {
+    frmt(X,F) => ss(_int_format(X,F)).
+  }
+
   -- implement standard contracts for floats
   public implementation additive[float] <= {
     X+Y => _flt_plus(X,Y).
@@ -137,6 +141,10 @@ lo.core{
 
   public implementation display[float] <= {
     disp(X) => ss(_flt2str(X,0,8,0cg,false)).
+  }
+
+  public implementation format[float] <= {
+    frmt(X,F) => ss(_flt_format(X,F)).
   }
 
   -- and strings ...

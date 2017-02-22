@@ -111,6 +111,7 @@ lo.comp.code.analyse{
 
   checkArgPos:(integer,integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
   checkArgPos(Gp,Rg,Occs,CS) => addMem(CS,Rg) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs.
+  checkArgPos(Gp,Rg,Occs,CS) => addMem(CS,Rg) :- ((lTerm,Gp,Rg) in Occs | (oTerm,Gp,Rg) in Occs).
   checkArgPos(_,_,_,CS) => CS.
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].

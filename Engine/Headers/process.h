@@ -16,6 +16,7 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "lo.h"
 #include "heap.h"                       /* access heap mgt interface */
 #include "managedP.h"
 #include <pthread.h>

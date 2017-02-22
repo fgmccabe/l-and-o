@@ -197,6 +197,169 @@ static int number2Str(double x, int precision, byte *dec, long *exp) {
   }
 }
 
+static int countSignificants(string frmt, long from, long limit, string test) {
+  int cx = 0;
+  long tLen = uniStrLen(test);
+  for (long ix = from; ix < limit;) {
+    codePoint ch = nextCodePoint(frmt, &ix, limit);
+    if (uniIndexOf(test, tLen, 0, ch) >= 0)
+      cx++;
+  }
+  return cx;
+}
+
+static retCode
+formatDigits(logical isSigned, string digits, long precision, string format, long fLen, byte *out, long outLen,
+             long *outPos);
+
+retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string frmt, long formatLen) {
+  logical isSigned = False;
+
+  if (dx < 0) {
+    isSigned = True;
+    dx = -dx;
+  }
+
+  long dotPos = uniIndexOf(frmt, formatLen, 0, '.');
+  if (dotPos < 0)
+    return Error;
+  else {
+    long ePos = uniIndexOf(frmt, formatLen, 0, 'e');
+    if (ePos < 0)
+      ePos = uniIndexOf(frmt, formatLen, 0, 'E');
+
+    int beforePeriod = countSignificants(frmt, 0, dotPos, (string) "09 ");
+    int afterPeriod = countSignificants(frmt, dotPos, ePos >= 0 ? ePos : formatLen, (string) "09 ");
+    int precision = beforePeriod + afterPeriod;
+    byte digits[MAXFILELEN];
+    long exp10;
+
+    int len = number2Str(dx, precision, digits, &exp10);
+
+    exp10 -= beforePeriod;
+
+    if (ePos < 0) {
+      // no space for an exponent
+      if (exp10 > beforePeriod || exp10 + afterPeriod < -len)
+        return Error;
+      else if (exp10 < 0)
+        return formatDigits(isSigned, digits, precision + exp10, frmt, formatLen, out, outLen, endPos);
+      else
+        return formatDigits(isSigned, digits, precision, frmt, formatLen, out, outLen, endPos);
+    } else {
+      byte mnBf[128], expBf[128];
+      long mnLn, expLn;
+
+      formatDigits(isSigned, digits, len, frmt, ePos, mnBf, NumberOf(mnBf), &mnLn);
+
+      expLn = int2StrByBase(expBf, exp10, 0, 10);
+
+      *endPos = 0;
+      uniAppend(out, endPos, outLen, mnBf);
+      appendCodePoint(out, endPos, outLen, frmt[ePos]);
+      return uniNAppend(out, endPos, outLen, expBf, expLn);
+    }
+  }
+}
+
+retCode formattedLong(integer ix, byte *out, long *endPos, long outLen, string frmt, long formatLen) {
+  byte digits[256];
+  uint16 base = (uint16) (uniIndexOf(frmt, formatLen, 0, 'X') >= 0 ? 16 : 10);
+  logical isSigned = False;
+  if (ix < 0) {
+    isSigned = True;
+    ix = -ix;
+  }
+  long len = natural2StrByBase(digits, (uinteger) ix, 0, base);
+
+  return formatDigits(isSigned, digits, len, frmt, formatLen, out, outLen, endPos);
+}
+
+#define attachChar(O, P, L, Ch) do{ if((*P)>=L) return Error; else O[(*P)++] = Ch; } while(False)
+
+retCode
+formatDigits(logical isSigned, string digits, long precision, string format, long formatLen, byte *out, long outLen,
+             long *pos) {
+  int formSigDigits = countSignificants(format, 0, formatLen, (string) "09X ");
+  logical encounteredSign = False;
+  int zeroDigits = countSignificants(format, 0, formatLen, (string) "0 ");
+
+  if (precision > formSigDigits)
+    return Error;
+
+  *pos = 0;
+
+  for (long ix = formatLen - 1, px = precision - 1; ix >= 0; ix--) {
+    int formChar = format[ix];
+    switch (formChar) {
+      case '-':
+        if (isSigned)
+          attachChar(out, pos, outLen, '-');
+        else
+          attachChar(out, pos, outLen, ' ');
+        break;
+      case '+':
+        if (isSigned)
+          attachChar(out, pos, outLen, '+');
+        else
+          attachChar(out, pos, outLen, ' ');
+        break;
+      case 'P':
+        if (isSigned) {
+          if (encounteredSign)
+            attachChar(out, pos, outLen, '(');
+          else {
+            attachChar(out, pos, outLen, ')');
+            encounteredSign = True;
+          }
+        } else
+          attachChar(out, pos, outLen, ' ');
+
+        break;
+      case '.':
+        if (px >= 0 || zeroDigits > 0)
+          attachChar(out, pos, outLen, formChar);
+        break;
+      case ',':
+      default:
+        if (px >= 0 || zeroDigits > 0)
+          attachChar(out, pos, outLen, formChar);
+        break;
+      case ' ':
+        if (px >= 0) { // more of the raw result to write out
+          attachChar(out, pos, outLen, digits[px]);
+          px--;
+        } else if (zeroDigits > 0)
+          attachChar(out, pos, outLen, ' ');
+
+        zeroDigits--;
+        break;
+      case '0':
+        if (px >= 0) { // more of the raw result to write out
+          attachChar(out, pos, outLen, digits[px]);
+          px--;
+        } else if (zeroDigits > 0)
+          attachChar(out, pos, outLen, '0');
+
+        zeroDigits--;
+        break;
+      case '9':
+      case 'X':
+        if (px >= 0) { // more of the raw result to write out
+          attachChar(out, pos, outLen, digits[px]);
+          px--;
+        }
+        break;
+      case 'e':
+      case 'E':
+      case 'L':
+      case 'R':return Error;
+    }
+  }
+
+  return uniReverse(out, *pos);
+}
+
 retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayMode, int precision, string prefix,
                      logical sign) {
   byte dec[DBL_DIG * 2];    /* buffer for the decimal mantissae */
@@ -334,15 +497,12 @@ retCode outDouble(ioPo out, double x, char mode, int width, int precision,
 
   FloatDisplayMode displayMode;
 
-  switch(mode){
-    case 'g':
-      displayMode = general;
+  switch (mode) {
+    case 'g':displayMode = general;
       break;
-    case 'e':
-      displayMode = scientific;
+    case 'e':displayMode = scientific;
       break;
-    default:
-      displayMode = general;
+    default:displayMode = general;
   }
 
   retCode ret = formatDouble(buffer, NumberOf(buffer), x, displayMode, precision, prefix, sign);
