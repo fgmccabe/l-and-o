@@ -20,9 +20,13 @@ typedef struct _manifest_entry_ {
 typedef struct _manifest_version_ {
   byte version[MAXFILELEN];
   logical isDefault;
-  byte source[MAX_SYMB_LEN]; // File name of source of package
-  byte code[MAX_SYMB_LEN];   // File name of package code
+  hashPo resources;
 } ManifestVersionRecord;
+
+typedef struct _manifest_file_name_ {
+  byte kind[MAX_SYMB_LEN];
+  byte fn[MAXFILELEN];
+} ManifestFileRecord;
 
 
 #endif //LANDO_MANIFESTP_H

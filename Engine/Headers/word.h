@@ -47,6 +47,9 @@
 #define MAX_MSG_LEN 1024
 #endif
 
+#ifndef LO_REGS			    /* do we know how many registers? */
+#define LO_REGS 64		  /* should'nt be more than #bits in an integer*/
+#endif
 
 /* BE VERY CAREFUL if you change this .... */
 /* Definition of a cell/pointer for the L&O run-time engine
@@ -343,13 +346,5 @@ extern void installClass(clssPo class);
 
 extern ptrI classPresent(string name);
 
-#include "heap.h"
-#include "list.h"
-#include "vars.h"
-#include "arith.h"
-#include "symbols.h"
-#include "char.h"
-#include "code.h"
-#include "str.h"
 
 #endif

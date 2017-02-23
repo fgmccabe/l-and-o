@@ -13,7 +13,9 @@
   permissions and limitations under the License.
 */
 #include <jsonEvent.h>
+#include <process.h>
 #include "manifestP.h"
+#include "load.h"
 
 // Use the JSON event parser to parse a manifest file and build up a manifest structure
 
@@ -49,6 +51,7 @@ JsonCallBacks manEvents = {
 
 static poolPo manifestPool = NULL;
 static poolPo versionPool = NULL;
+static poolPo filePool = NULL;
 
 static hashPo manifest;
 
@@ -57,6 +60,7 @@ static byte repoDir[MAXFILELEN];
 void initManifest() {
   manifestPool = newPool(sizeof(ManifestEntryRecord), 128);
   versionPool = newPool(sizeof(ManifestVersionRecord), 128);
+  filePool = newPool(sizeof(ManifestFileRecord), 128);
   manifest = NewHash(128, (hashFun) uniHash, (compFun) uniCmp, NULL);
 }
 
@@ -77,12 +81,21 @@ manifestEntryPo manifestEntry(string package) {
   return (manifestEntryPo) hashGet(manifest, package);
 }
 
-manifestVersionPo newVersion(string version, string source, string code) {
+manifestEntryPo getEntry(string name) {
+  manifestEntryPo entry = (manifestEntryPo) hashGet(manifest, (void *) name);
+
+  if (entry == NULL) {
+    entry = newManifestEntry((string) name);
+    hashPut(manifest, &entry->package, entry);
+  }
+  return entry;
+}
+
+manifestVersionPo newVersion(string version, logical isDefault) {
   manifestVersionPo vEntry = (manifestVersionPo) allocPool(versionPool);
   uniCpy((string) &vEntry->version, NumberOf(vEntry->version), version);
-  uniCpy((string) &vEntry->source, NumberOf(vEntry->source), source);
-  uniCpy((string) &vEntry->code, NumberOf(vEntry->code), code);
-  vEntry->isDefault = uniCmp(version, (string) "*") == same ? True : False;
+  vEntry->resources = NewHash(3, (hashFun) uniHash, (compFun) uniCmp, NULL);
+  vEntry->isDefault = isDefault;
   return vEntry;
 }
 
@@ -98,46 +111,48 @@ manifestVersionPo manifestVersion(string package, string version) {
     return NULL;
 }
 
-string packageCodeFile(string package, string version, byte *flNm, long flLen) {
-  manifestVersionPo entry = manifestVersion(package, version);
+manifestVersionPo entryVersion(manifestEntryPo entry, string version, logical isDefault) {
+  manifestVersionPo ver = hashGet(entry->versions, version);
 
-  if (entry != NULL) {
-    strMsg(flNm,flLen,"%s/%s",repoDir,(string) &entry->code);
-    return flNm;
+  if (ver == NULL) {
+    ver = newVersion(version, isDefault);
+    hashPut(entry->versions, &ver->version, ver);
   }
-  else
+  return ver;
+}
+
+manifestFilePo newManifestResource(string kind, string fileNm) {
+  manifestFilePo f = (manifestFilePo) allocPool(filePool);
+
+  uniCpy((string) &f->kind, NumberOf(f->kind), kind);
+  uniCpy((string) &f->fn, NumberOf(f->fn), fileNm);
+
+  return f;
+}
+
+void addResource(manifestVersionPo version, string kind, string fileNm) {
+  manifestFilePo f = newManifestResource(kind, fileNm);
+
+  hashPut(version->resources, &f->kind, f);
+}
+
+string manifestResource(string package, string version, string kind, byte *fl, long flLen) {
+  manifestVersionPo v = manifestVersion(package, version);
+
+  if (v != NULL) {
+    manifestFilePo f = hashGet(v->resources, kind);
+
+    if (f != NULL) {
+      strMsg(fl, flLen, "%s/%s", repoDir, (string) &f->fn);
+      return fl;
+    } else
+      return NULL;
+  } else
     return NULL;
 }
 
-string loadedVersion(string package) {
-  manifestEntryPo entry = manifestEntry(package);
-
-  if (entry != NULL) {
-    manifestVersionPo loaded = entry->loaded;
-
-    if (loaded != NULL)
-      return (string) &loaded->version;
-  }
-  return NULL;
-}
-
-retCode packageIsLoaded(string package, string version) {
-  manifestEntryPo entry = manifestEntry(package);
-
-  if (entry->loaded != NULL) {
-    if (uniCmp((string) &entry->loaded->version, version) != same)
-      return Error;
-    else
-      return Ok;
-  } else {
-    manifestVersionPo v = hashGet(entry->versions, version);
-    if (v == NULL)
-      return Error;
-    else {
-      entry->loaded = v;
-      return Ok;
-    }
-  }
+string packageCodeFile(string package, string version, byte *flNm, long flLen) {
+  return manifestResource(package, version, (string) "code", flNm, flLen);
 }
 
 typedef enum {
@@ -145,23 +160,23 @@ typedef enum {
   inPackage,
   inVersion,
   inDetail,
-  inSource,
-  inCode
+  inResource
 } ParseState;
 
 typedef struct {
   byte pkg[MAXLINE]; // Package name
   manifestEntryPo entry;
   byte ver[MAXLINE];
-  logical defaultVersion;
-  byte source[MAXFILELEN];
-  byte code[MAXFILELEN];
+  manifestVersionPo version;
+  byte kind[MAXFILELEN];
+  byte fn[MAXFILELEN];
   ParseState state;
 } ParsingState, *statePo;
 
 retCode loadManifest(string dir) {
   uniCpy(repoDir, NumberOf(repoDir), dir);
   initManifest();
+  initPackages();
 
   byte manifestName[MAX_MSG_LEN];
 
@@ -200,10 +215,14 @@ retCode startCollection(void *cl) {
       info->state = inVersion;
       break;
     case inVersion:
-      uniCpy((string) &info->source, NumberOf(info->source), (string) "");
-      uniCpy((string) &info->code, NumberOf(info->code), (string) "");
+      uniCpy((string) &info->kind, NumberOf(info->kind), (string) "");
+      info->state = inResource;
+      break;
+    case inResource:
+      uniCpy((string) &info->fn, NumberOf(info->fn), (string) "");
       info->state = inDetail;
       break;
+
     default:
       return Error;
   }
@@ -222,10 +241,11 @@ retCode endCollection(void *cl) {
     case inVersion:
       info->state = inPackage;
       break;
-    case inDetail:
-    case inSource:
-    case inCode:
+    case inResource:
       info->state = inVersion;
+      break;
+    case inDetail:
+      info->state = inResource;
       break;
     default:
       return Error;
@@ -249,29 +269,18 @@ retCode startEntry(const char *name, void *cl) {
     case initial:
       return Error;
     case inPackage: {
-      manifestEntryPo entry = (manifestEntryPo) hashGet(manifest, (void *) name);
-
-      if (entry == NULL)
-        entry = newManifestEntry((string) name);
-
-      info->entry = entry;
+      info->entry = getEntry((string) name);
       break;
     }
     case inVersion:
       uniCpy((string) &info->ver, NumberOf(info->ver), (string) name);
-      if (uniCmp((string) name, (string) "*") == same)
-        info->defaultVersion = True;
-      else
-        info->defaultVersion = False;
+      break;
+    case inResource:
+      uniCpy((string) &info->kind, NumberOf(info->kind), (string) name);
+      info->state = inDetail;
       break;
     case inDetail:
-      if (uniCmp((string) name, (string) "source") == same)
-        info->state = inSource;
-      else if (uniCmp((string) name, (string) "code") == same)
-        info->state = inCode;
-      else
-        return Error;
-      break;
+      return Error; // expecting a text, not a collection
     default:
       return Error;
   }
@@ -282,24 +291,14 @@ retCode endEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
   switch (info->state) {
-    case inSource:
-    case inCode:
-      info->state = inDetail;
+    case inDetail:
+      info->state = inResource;
+      break;
+    case inResource:
+      info->state = inVersion;
       break;
     case inVersion:
-      if (info->entry != NULL) {
-        manifestVersionPo version = (manifestVersionPo) hashGet(info->entry->versions, info->ver);
-        if (version == NULL) {
-          version = newVersion((string) &info->ver, (string) &info->source, (string) &info->code);
-          hashPut(info->entry->versions, &version->version, version);
-          if (version->isDefault)
-            info->entry->deflt = version;
-        } else {
-          // We override -- effectively a reload. Should rarely happen
-          uniCpy((string) &version->source, NumberOf(version->source), (string) info->source);
-          uniCpy((string) &version->code, NumberOf(version->code), (string) info->code);
-        }
-      }
+      info->state = inPackage;
       break;
     case inPackage:
 
@@ -324,12 +323,8 @@ retCode txtEntry(const char *name, void *cl) {
   switch (info->state) {
     default:
       return Error;
-
-    case inSource:
-      uniCpy((string) &info->source, NumberOf(info->source), (string) name);
-      break;
-    case inCode:
-      uniCpy((string) &info->code, NumberOf(info->code), (string) name);
+    case inDetail:
+      addResource(info->version, (string) &info->kind, (string) name);
       break;
   }
   return Ok;
@@ -342,4 +337,46 @@ retCode nullEntry(void *cl) {
 retCode errorEntry(const char *name, void *cl) {
   logMsg(logFile, "Error: %s", name);
   return Ok;
+}
+
+// Implement escapes that access the manifest
+
+retCode g__pkg_is_present(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+
+  if (isvar(a1) || isvar(a2) || isvar(a3))
+    return liberror(P, "_pkg_is_present", eSTRNEEDD);
+  else if (!isString(objV(a1)) || !isString(objV(a2)) || !isString(objV(a3)))
+    return liberror(P, "_pkg_is_present", eSTRNEEDD);
+  else if (!isvar(a4))
+    return liberror(P, "_pkg_is_present", eVARNEEDD);
+  else {
+    stringPo s1 = stringV(a1);
+    stringPo s2 = stringV(a2);
+    stringPo s3 = stringV(a3);
+
+    byte pkgNm[MAX_SYMB_LEN];
+    copyString2Buff(pkgNm, NumberOf(pkgNm), s1);
+
+    byte verNm[MAX_SYMB_LEN];
+    copyString2Buff(verNm, NumberOf(verNm), s2);
+
+    byte kndNm[MAX_SYMB_LEN];
+    copyString2Buff(kndNm, NumberOf(kndNm), s3);
+
+    byte fn[MAXFILELEN];
+    string actualFn = manifestResource(pkgNm, verNm, kndNm, fn, NumberOf(fn));
+
+    if (actualFn == NULL)
+      return Fail;
+    else if (filePresent(actualFn) != Ok)
+      return Fail;
+    else {
+      ptrI reslt = allocateCString(&P->proc.heap, (char *) actualFn);
+      return equal(P, &reslt, &a[4]);
+    }
+  }
 }

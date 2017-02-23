@@ -7,21 +7,15 @@
 #ifndef LANDO_MANIFEST_H
 #define LANDO_MANIFEST_H
 
-typedef struct {
-  byte packageName[1024];
-  byte version[1024];
-} PackageRec, *packagePo;
-
 typedef struct _manifest_entry_ *manifestEntryPo;
 typedef struct _manifest_version_ *manifestVersionPo;
+typedef struct _manifest_file_name_ *manifestFilePo;
 
 manifestEntryPo manifestEntry(string package);
 
 string packageCodeFile(string package, string version, byte *flNm, long flLen);
 
-string loadedVersion(string package);
-
-retCode packageIsLoaded(string package, string version);
+string manifestResource(string package,string version,string kind,byte *fl,long flLen);
 
 retCode loadManifest(string dir);
 

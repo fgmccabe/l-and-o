@@ -40,6 +40,8 @@ ioPo openAppendFile(string file,ioEncoding encoding);
 ioPo openInOutAppendFile(string file,ioEncoding encoding);
 ioPo newOutFile(string file,ioEncoding encoding);
 
+retCode filePresent(string name);
+retCode isRegularFile(string fname);
 
 ioPo OpenStdin(void);
 ioPo OpenStdout(void);

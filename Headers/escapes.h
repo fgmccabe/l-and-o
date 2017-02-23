@@ -162,7 +162,8 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_flushall,True,False,"P0","flush all files")
   escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
 
-  escape(_ensure_loaded,True,False,"F2SSLT2SS","load class file")
+  escape(_install_pkg,True,False,"F2SSLT2SS","define package from string contents")
+  escape(_pkg_is_present,True,False,"P4SSSS","True if an identified resource is available")
 
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
 

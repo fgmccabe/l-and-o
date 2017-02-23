@@ -57,10 +57,10 @@ lo.repo.manifest{
   showVersion:((version,map[string,string])) => ss.
   showVersion((V,R)) => ssSeq([ss("    "),disp(V),ss("="),disp(R),ss("\n")]).
 
-  public locateInManifest:(manifest,pkg,version,string,string){}.
-  locateInManifest(manifest(Entries),pkg(Pkg,Vers),Act,Kind,URI) :-
+  public locateInManifest:(manifest,pkg,string,string){}.
+  locateInManifest(manifest(Entries),pkg(Pkg,Vers),Kind,URI) :-
     present(Entries,Pkg,manifestEntry(Pkg,V)),
-    getVersion(Vers,Act,V,Map),
+    getVersion(Vers,_,V,Map),
     present(Map,Kind,URI).
 
   getVersion:(version,version,list[(version,map[string,string])],map[string,string]){}.

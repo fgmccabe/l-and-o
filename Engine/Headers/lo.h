@@ -25,19 +25,21 @@
 #include "formio.h"
 #include "stringBuffer.h"
 
-typedef struct _process_ *processPo;
-
-#ifndef LO_REGS			    /* do we know how many registers? */
-#define LO_REGS 64		  /* should'nt be more than #bits in an integer*/
-#endif
-
 #include "word.h"		    /* standard definition of a cell & access fns */
+#include "char.h"
+
 #include "heap.h"
 #include "global.h"
 #include "symbols.h"		/* standard symbols available to the engine */
 #include "errors.h"		  /* standard error codes */
-#include "eval.h"
 #include "str.h"        /* String manipulation */
+#include "arith.h"
+#include "code.h"
+#include "list.h"
+#include "vars.h"
+#include "eval.h"
+
+
 
 #ifndef NULL
 #define NULL            ((void*)0) /* The NULL pointer */

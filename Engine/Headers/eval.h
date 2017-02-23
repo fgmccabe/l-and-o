@@ -20,8 +20,8 @@
 #include "retcode.h"
 #include <math.h>
 #include <assert.h>
-#include "process.h"
 #include "opcodes.h"
+#include "process.h"
 #include "word.h"
 
 #ifdef EXECTRACE

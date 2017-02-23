@@ -41,8 +41,6 @@
 #define STD_PERMISSIONS (S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR)
 #endif
 
-static retCode isRegularFile(string fname);
-
 /* Set up the file class */
 
 FileClassRec FileClass = {
@@ -682,6 +680,17 @@ retCode isRegularFile(string fname) {
     return Fail;
   else
     return Ok;
+}
+
+/* Special macro for Windows 95 */
+#define FILE_ACCESS_MODE F_OK|R_OK
+
+/* Check if a file is present or not */
+retCode filePresent(string name) {
+  if (access((const char *) name, FILE_ACCESS_MODE) == 0)
+    return Ok;
+  else
+    return Fail;
 }
 
 /* These only apply to Unix */

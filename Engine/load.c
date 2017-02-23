@@ -3,15 +3,55 @@
 //
 
 #include <base64.h>
+#include <load.h>
 
 #include "lo.h"
 #include "signature.h"
 #include "encodedP.h"             /* pick up the term encoding definitions */
 #include "manifestP.h"
 #include "tpl.h"
+#include "hashTable.h"
+#include "load.h"
+
+static poolPo packagePool = NULL;
+static hashPo loadedPackages = NULL;
+
+void initPackages() {
+  packagePool = newPool(sizeof(PackageRec), 128);
+  loadedPackages = NewHash(128, (hashFun) uniHash, (compFun) uniCmp, NULL);
+}
+
+packagePo loadedPackage(string package) {
+  return (packagePo) hashGet(loadedPackages, package);
+}
+
+string loadedVersion(string package) {
+  packagePo pkg = loadedPackage(package);
+
+  if (pkg != NULL)
+    return (string) &pkg->version;
+
+  return NULL;
+}
+
+static logical compatiblVersion(string rqVer, string ver);
+
+retCode markLoaded(string package, string version) {
+  packagePo pkg = loadedPackage(package);
+
+  if (pkg != NULL && !compatiblVersion((string) &pkg->version, version))
+    return Error;
+  else {
+    pkg = (packagePo) allocPool(packagePool);
+    uniCpy((byte *) &pkg->packageName, NumberOf(pkg->packageName), package);
+    uniCpy((byte *) &pkg->version, NumberOf(pkg->version), version);
+    hashPut(loadedPackages, &pkg->packageName, pkg);
+    return Ok;
+  }
+}
 
 logical isLoaded(ptrI pkg) {
-  return (logical) (loadedVersion(StringVal(stringV(pkg))) != NULL);
+  return (logical) (loadedPackage(StringVal(stringV(pkg))) != NULL);
 }
 
 static logical compatiblVersion(string rqVer, string ver) {
@@ -74,7 +114,7 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
         return Error;
       }
 
-      packageIsLoaded(pkgNm, vrNm);
+      markLoaded(pkgNm, vrNm);
 
       ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
@@ -111,6 +151,41 @@ retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize, void
       return Ok; // already loaded correct version
   } else
     return ldPackage(pkg, vers, errorMsg, msgSize, loadPackage, cl);
+}
+
+static retCode
+installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
+  bufferPo inBuff = fixedStringBuffer(pkgText, pkgTxtLen);
+
+  retCode ret;
+  byte pkgNm[MAX_SYMB_LEN];
+  byte vrNm[MAX_SYMB_LEN];
+  bufferPo sigBuffer = newStringBuffer();
+
+  if ((ret = isLookingAt(O_IO(inBuff), "s")) == Ok)
+    ret = decodeText(O_IO(inBuff), sigBuffer);
+
+  if (ret == Ok)
+    ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
+
+  markLoaded(pkgNm, vrNm);
+
+  ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
+
+  if (ret == Ok)
+    ret = loadSegments(O_IO(inBuff), errorMsg, msgSize);
+
+  closeFile(O_IO(inBuff));
+
+#ifdef EXECTRACE
+  if (debugging)
+    logMsg(logFile, "package %s installed\n", pkgNm);
+#endif
+
+  if (ret == Eof)
+    return Ok;
+  else
+    return ret;
 }
 
 /*
@@ -335,7 +410,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
           rootPo root = gcAddRoot(GH, &pc); /* in case of GC ... */
           gcAddRoot(GH, &el); /* we need a temporary pointer */
 
-          ptrI prg = newProgLbl((char *) prgName, (short)arity);
+          ptrI prg = newProgLbl((char *) prgName, (short) arity);
           gcAddRoot(GH, &prg);
 
           /* get the instructions */
@@ -417,69 +492,56 @@ static retCode buildImport(string pkg, string ver, string errorMsg, long msgLen,
   return Ok;
 }
 
-retCode g__ensure_loaded(processPo P, ptrPo a) {
-  ptrI pname = deRefI(&a[1]);
-  ptrI vers = deRefI(&a[2]);
+retCode g__install_pkg(processPo P, ptrPo a) {
+  ptrI pkgText = deRefI(&a[1]);
 
-  if (isvar(pname) || isvar(vers))
-    return liberror(P, "__ensure_loaded", eINSUFARG);
-  else if (!IsString(pname) || !IsString(vers))
-    return liberror(P, "__ensure_loaded", eINVAL);
+  if (isvar(pkgText))
+    return liberror(P, "_install_pkg", eINSUFARG);
+  else if (!IsString(pkgText))
+    return liberror(P, "_install_pkg", eINVAL);
   else {
-    if (isLoaded(pname))
-      return Ok;
-    else {
-      switchProcessState(P, wait_io); /* Potentially nec. to wait */
+    switchProcessState(P, wait_io); /* Potentially nec. to wait */
 
-      heapPo H = &P->proc.heap;
-      ptrI lst = emptyList;
-      ptrI el = kvoid;
-      ptrI ky = kvoid;
-      ptrI vl = kvoid;
-      rootPo root = gcAddRoot(H, &lst);
+    heapPo H = &P->proc.heap;
+    ptrI lst = emptyList;
+    ptrI el = kvoid;
+    ptrI ky = kvoid;
+    ptrI vl = kvoid;
+    rootPo root = gcAddRoot(H, &lst);
 
-      gcAddRoot(H, &el);
-      gcAddRoot(H, &ky);
-      gcAddRoot(H, &vl);
+    gcAddRoot(H, &el);
+    gcAddRoot(H, &ky);
+    gcAddRoot(H, &vl);
 
-      BuildSupportRec x = {
-        H,
-        &lst,
-        &el,
-        &ky,
-        &vl
-      };
+    BuildSupportRec x = {
+      H,
+      &lst,
+      &el,
+      &ky,
+      &vl
+    };
 
-      retCode ret = ldPackage(stringVal(stringV(pname)), stringVal(stringV(vers)), P->proc.errorMsg,
-                              NumberOf(P->proc.errorMsg), buildImport, &x);
-      setProcessRunnable(P);
+    stringPo text = stringV(pkgText);
 
-      gcRemoveRoot(H, root);
+    retCode ret = installPackage(stringVal(text), stringLen(text), P->proc.errorMsg,
+                            NumberOf(P->proc.errorMsg), buildImport, &x);
+    setProcessRunnable(P);
 
-      switch (ret) {
-        case Ok:
-          return equal(P, &lst, &a[3]);
-        case Error: {
-          byte msg[MAX_MSG_LEN];
+    gcRemoveRoot(H, root);
 
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w:%#w", &a[1], &a[2]);
-          return raiseError(P, msg, eNOTFND);
-        }
-        case Eof: {
-          byte msg[MAX_MSG_LEN];
-
-          strMsg(msg, NumberOf(msg), "__ensure_loaded: %#w:%#w", &a[1], &a[2]);
-          return raiseError(P, msg, eNOFILE);
-        }
-        case Fail:
-          return Fail;
-        case Space:
-          outMsg(logFile, "Out of heap space, increase and try again\n%_");
-          return liberror(P, "__ensure_loaded", eSPACE);
-        default:
-          return liberror(P, "__ensure_loaded", eINVAL);
-      }
+    switch (ret) {
+      case Ok:
+        return equal(P, &lst, &a[3]);
+      case Error:
+      case Eof:
+        return liberror(P,"_install_pkg",eINVAL);
+      case Fail:
+        return Fail;
+      case Space:
+        outMsg(logFile, "Out of heap space, increase and try again\n%_");
+        return liberror(P, "_install_pkg", eSPACE);
+      default:
+        return liberror(P, "_install_pkg", eINVAL);
     }
   }
 }
-

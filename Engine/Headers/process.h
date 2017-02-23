@@ -16,9 +16,14 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
-#include "lo.h"
+#include "word.h"
+
+typedef struct _process_ *processPo;
+
 #include "heap.h"                       /* access heap mgt interface */
 #include "managedP.h"
+#include "opcodes.h"
+
 #include <pthread.h>
 
 typedef enum {

@@ -15,32 +15,33 @@ lo.repo.file{
 
   public implementation repository[fileRepo] <= {
     packagePresent(repo(Root,Man),Pkg,Kind) :-
-      locateInManifest(Man,Pkg,_,S,U),
+      locateInManifest(Man,Pkg,S,U),
       CodeFile = resolveUri(Root,parseUri(U)),
       SrcFile = resolveUri(Root,parseUri(S)),
       resourcePresent(CodeFile),
       (resourcePresent(SrcFile) ?
           newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 
-    addToRepo(repo(Root,Man),pkg(Pkg,Vers),Kind,Text) => repo(Root,NM) :-
-      extensionMapping(Kind,Ext),
-      Fn = Pkg+(packageHash(Pkg,Vers)::string)+Ext,
-      putResource(resolveUri(Root,parseUri(Fn)),Text),
-      NM = addToManifest(Man,pkg(Pkg,Vers),Kind,Fn),
-      RepoUri = resolveUri(Root,parseUri("manifest")),
-      flushManifest(RepoUri,NM).
-
-    loadFromRepo(repo(Root,Man),Pkg,Kind,Actual,getResource(resolveUri(Root,parseUri(U)))) :-
-      locateInManifest(Man,Pkg,Actual,Kind,U).
+    loadFromRepo(repo(Root,Man),Pkg,Kind,getResource(resolveUri(Root,parseUri(U)))) :-
+      locateInManifest(Man,Pkg,Kind,U).
   }
+
+  public addToRepo:(fileRepo,pkg,string,string) => fileRepo.
+  addToRepo(repo(Root,Man),pkg(Pkg,Vers),Kind,Text) => repo(Root,NM) :-
+    extensionMapping(Kind,Ext),
+    Fn = Pkg+(packageHash(Pkg,Vers)::string)+Ext,
+    putResource(resolveUri(Root,parseUri(Fn)),Text),
+    NM = addToManifest(Man,pkg(Pkg,Vers),Kind,Fn),
+    RepoUri = resolveUri(Root,parseUri("manifest")),
+    flushManifest(RepoUri,NM).
 
   public locateCode:(fileRepo,pkg,string,string){}.
   locateCode(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
-    locateInManifest(Man,Pkg,_,"code",U).
+    locateInManifest(Man,Pkg,"code",U).
 
   public locateProlog:(fileRepo,pkg,string,string){}.
   locateProlog(repo(Root,Man),Pkg,U,getResource(resolveUri(Root,parseUri(U)))) :-
-    locateInManifest(Man,Pkg,_,"prolog",U).
+    locateInManifest(Man,Pkg,"prolog",U).
 
   public packageCodeOk:(fileRepo,pkg){}.
   packageCodeOk(Repo,Pkg) :- packageOk(Repo,Pkg,"code").
@@ -50,8 +51,8 @@ lo.repo.file{
 
   packageOk:(fileRepo,pkg,string){}.
   packageOk(repo(Root,Man),Pkg,Kind) :-
-    locateInManifest(Man,Pkg,_,Kind,U),
-    locateInManifest(Man,Pkg,_,"source",S),
+    locateInManifest(Man,Pkg,Kind,U),
+    locateInManifest(Man,Pkg,"source",S),
     CodeFile = resolveUri(Root,parseUri(U)),
     SrcFile = resolveUri(Root,parseUri(S)),
     resourcePresent(CodeFile),

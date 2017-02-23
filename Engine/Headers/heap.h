@@ -23,14 +23,10 @@
 typedef long rootPo;
 
 typedef struct _heap_rec_ {
-  objPo base;
-  /* base of the heap */
-  objPo end;
-  /* end of the heap */
-  objPo create;
-  /* Where to create the next heap structure */
-  processPo owner;
-  /* This is NULL for the global heap */
+  objPo base;         /* base of the heap */
+  objPo end;          /* end of the heap */
+  objPo create;       /* Where to create the next heap structure */
+  processPo owner;    /* This is NULL for the global heap */
   ptrPo rts[MAXROOT];
   ptrPo *roots;
   long topRoot;

@@ -20,8 +20,6 @@
 #include "word.h"
 #include "opcodes.h"
 #include "lock.h"
-#include "lo.h"
-
 
 typedef struct _program_record_ {
   ptrI class;                   // == programClass

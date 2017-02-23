@@ -342,16 +342,6 @@ retCode g__file_type(processPo P, ptrPo a) {
  * succeeds if file is present, false otherwise 
  */
 
-/* Special macro for Windows 95 */
-#define FILE_ACCESS_MODE F_OK|R_OK
-
-/* Check if a file is present or not */
-static retCode filePresent(string name) {
-  if (access((const char *) name, FILE_ACCESS_MODE) == 0)
-    return Ok;
-  else
-    return Fail;
-}
 
 retCode g__file_present(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
