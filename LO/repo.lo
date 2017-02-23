@@ -13,34 +13,36 @@ lo.repo {
   public contract all r ~~ repository[r] <~ {
     packagePresent:(r,pkg,string){}.
 
-    loadFromRepo:(r,pkg,string,version,string){}.
+    loadFromRepo:(r,pkg,string,string){}.
   }
 
   public implementation all a,b ~~ repository[a], repository[b] |: repository[(a,b)] <= {
     packagePresent(C,P,K) :- comboPkgPrsnt(C,P,K).
 
-    loadFromRepo(C,P,K,V,Txt) :- comboLoad(C,P,K,V,Txt).
+    loadFromRepo(C,P,K,Txt) :- comboLoad(C,P,K,Txt).
   }
 
   comboPkgPrsnt:all a,b ~~ repository[a], repository[b] |: ((a,b),pkg,string){}.
   comboPkgPrsnt((A,_),P,K) :- packagePresent(A,P,K).
   comboPkgPrsnt((_,B),P,K) :- packagePresent(B,P,K).
 
-  comboLoad:all a,b ~~ repository[a], repository[b] |: ((a,b),pkg,string,version,string){}.
-  comboLoad((A,B),P,K,V,Txt) :- (packagePresent(A,P,K) ?
-    loadFromRepo(A,P,K,V,Txt) |
-    loadFromRepo(B,P,K,V,Txt)).
+  comboLoad:all a,b ~~ repository[a], repository[b] |: ((a,b),pkg,string,string){}.
+  comboLoad((A,B),P,K,Txt) :- (packagePresent(A,P,K) ?
+    loadFromRepo(A,P,K,Txt) |
+    loadFromRepo(B,P,K,Txt)).
 
   public type coreRepo <~ {}.
 
   public coreRepo:coreRepo.
 
   public implementation repository[coreRepo] <= {
-    packagePresent(_,pkg(P,defltVersion),"code") :- _pkg_is_present(P,"*").
-    packagePresent(_,pkg(P,vers(V)),"code") :- _pkg_is_present(P,V).
+    packagePresent(_,pkg(P,defltVersion),K) :- _pkg_is_present(P,"*",K,_).
+    packagePresent(_,pkg(P,vers(V)),K) :- _pkg_is_present(P,V,K,_).
 
-    loadFromRepo(_,pkg(P,defltVersion),"code",V,Txt) :- _pkg_load(P,"*",VV,Txt).
-    loadFromRepo(_,pkg(P,vers(V)),"code",V,Txt) :- _pkg_load(P,V,_,Txt).
+    loadFromRepo(_,pkg(P,defltVersion),K,V,_get_file(Fn)) :-
+      _pkg_is_present(P,"*",K,Txt,Fn).
+    loadFromRepo(_,pkg(P,vers(V)),K,V,_get_file(Fn)) :-
+      _pkg_is_present(P,V,K,Fn).
   }
 
   public implementation equality[pkg] <= {
