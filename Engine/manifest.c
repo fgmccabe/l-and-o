@@ -72,7 +72,6 @@ manifestEntryPo newManifestEntry(string name) {
   uniCpy((string) &entry->package, NumberOf(entry->package), name);
   entry->versions = NewHash(1, (hashFun) uniHash, (compFun) uniCmp, NULL);
   entry->deflt = NULL;
-  entry->loaded = NULL;
   hashPut(manifest, &entry->package, entry);
   return entry;
 }
@@ -91,11 +90,10 @@ manifestEntryPo getEntry(string name) {
   return entry;
 }
 
-manifestVersionPo newVersion(string version, logical isDefault) {
+manifestVersionPo newVersion(string version) {
   manifestVersionPo vEntry = (manifestVersionPo) allocPool(versionPool);
   uniCpy((string) &vEntry->version, NumberOf(vEntry->version), version);
   vEntry->resources = NewHash(3, (hashFun) uniHash, (compFun) uniCmp, NULL);
-  vEntry->isDefault = isDefault;
   return vEntry;
 }
 
@@ -109,16 +107,6 @@ manifestVersionPo manifestVersion(string package, string version) {
       return (manifestVersionPo) hashGet(entry->versions, version);
   } else
     return NULL;
-}
-
-manifestVersionPo entryVersion(manifestEntryPo entry, string version, logical isDefault) {
-  manifestVersionPo ver = hashGet(entry->versions, version);
-
-  if (ver == NULL) {
-    ver = newVersion(version, isDefault);
-    hashPut(entry->versions, &ver->version, ver);
-  }
-  return ver;
 }
 
 manifestFilePo newManifestResource(string kind, string fileNm) {
@@ -169,7 +157,6 @@ typedef struct {
   byte ver[MAXLINE];
   manifestVersionPo version;
   byte kind[MAXFILELEN];
-  byte fn[MAXFILELEN];
   ParseState state;
 } ParsingState, *statePo;
 
@@ -219,7 +206,6 @@ retCode startCollection(void *cl) {
       info->state = inResource;
       break;
     case inResource:
-      uniCpy((string) &info->fn, NumberOf(info->fn), (string) "");
       info->state = inDetail;
       break;
 

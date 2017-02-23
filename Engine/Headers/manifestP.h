@@ -14,12 +14,10 @@ typedef struct _manifest_entry_ {
   byte package[MAX_SYMB_LEN];
   hashPo versions;
   manifestVersionPo deflt;
-  manifestVersionPo loaded;
 } ManifestEntryRecord;
 
 typedef struct _manifest_version_ {
   byte version[MAXFILELEN];
-  logical isDefault;
   hashPo resources;
 } ManifestVersionRecord;
 
