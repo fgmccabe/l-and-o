@@ -30,7 +30,6 @@ set(SOURCE_FILES
         pool.c
         sockets.c
         stringBuffer.c
-        strio.c
         timer.c
         udp.c
         unichar.c

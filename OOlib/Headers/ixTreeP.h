@@ -38,14 +38,14 @@ typedef struct {
 } IxTreeClassPartRec;
 
 typedef struct {
-  treePo l1;                            // A node has (up to) four child trees
+  treePo l1;                          // A node has (up to) four child trees
   treePo l2;
   treePo r1;
   treePo r2;
 } IxTreeNodeObjectPartRec;
 
 typedef struct {
-  listPo leafs;
+  listPo leafs;                      // All the entries with this hash value
 } IxLeafNodeObjectPartRec;
 
 typedef struct _ixtree_leaf_class {
@@ -57,9 +57,9 @@ extern IxTreeClassRec TreeLeafClass;
 /* the standard pointer to an IxTree class record */
 extern IxTreeClassRec TreeNodeClass;
 
-typedef struct _tree_part_ {              /* The generic part of an index tree */
-  uint64 mask;                    /* The tree mask */
-  int16 masklen;                        /* The active length of the mask */
+typedef struct _tree_part_ {          /* The generic part of an index tree */
+  uint64 mask;                        /* The tree mask */
+  int16 masklen;                      /* The active length of the mask */
 } IxTreePart;
 
 typedef struct _ix_tree_ {
@@ -69,16 +69,13 @@ typedef struct _ix_tree_ {
 
 typedef struct _ix_tree_leaf_object_ {
   ObjectRec object;
-  IxTreePart tree;
-  /* Abstract tree part of ixTree */
+  IxTreePart tree;                    /* Abstract tree part of ixTree */
   IxLeafNodeObjectPartRec leaf;
 } IxLeafObject;
 
 typedef struct _ix_tree_node_object_ {
-  ObjectRec object;
-  /* object level of the io structure */
-  IxTreePart tree;
-  /* Abstract tree part of ixTree */
+  ObjectRec object;                   /* object level of the tree node structure */
+  IxTreePart tree;                    /* Abstract tree part of ixTree */
   IxTreeNodeObjectPartRec node;
 } IxNodeObject;
 

@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <file.h>
+#include <stringBuffer.h>
 
 static retCode outString(ioPo f, byte *str, int len, int width, int precision,
                          codePoint pad, logical leftPad);
@@ -353,7 +354,8 @@ formatDigits(logical isSigned, string digits, long precision, string format, lon
       case 'e':
       case 'E':
       case 'L':
-      case 'R':return Error;
+      case 'R':
+        return Error;
     }
   }
 
@@ -498,11 +500,14 @@ retCode outDouble(ioPo out, double x, char mode, int width, int precision,
   FloatDisplayMode displayMode;
 
   switch (mode) {
-    case 'g':displayMode = general;
+    case 'g':
+      displayMode = general;
       break;
-    case 'e':displayMode = scientific;
+    case 'e':
+      displayMode = scientific;
       break;
-    default:displayMode = general;
+    default:
+      displayMode = general;
   }
 
   retCode ret = formatDouble(buffer, NumberOf(buffer), x, displayMode, precision, prefix, sign);
@@ -560,36 +565,47 @@ retCode outString(ioPo f, byte *str, int len, int width, int precision,
 static retCode quoteChar(ioPo f, codePoint ch, int *gaps) {
   retCode ret;
   switch (ch) {
-    case '\a':ret = outStr(f, "\\a");
+    case '\a':
+      ret = outStr(f, "\\a");
       (*gaps)--;               // An additional character
       break;
-    case '\b':ret = outStr(f, "\\b");
+    case '\b':
+      ret = outStr(f, "\\b");
       (*gaps)--;
       break;
-    case '\x7f':ret = outStr(f, "\\d");
+    case '\x7f':
+      ret = outStr(f, "\\d");
       (*gaps)--;
       break;
-    case '\x1b':ret = outStr(f, "\\e");
+    case '\x1b':
+      ret = outStr(f, "\\e");
       (*gaps)--;
       break;
-    case '\f':ret = outStr(f, "\\f");
+    case '\f':
+      ret = outStr(f, "\\f");
       (*gaps)--;
       break;
-    case '\n':ret = outStr(f, "\\n");
+    case '\n':
+      ret = outStr(f, "\\n");
       (*gaps)--;
       break;
-    case '\r':ret = outStr(f, "\\r");
+    case '\r':
+      ret = outStr(f, "\\r");
       (*gaps)--;
       break;
-    case '\t':ret = outStr(f, "\\t");
+    case '\t':
+      ret = outStr(f, "\\t");
       (*gaps)--;
       break;
-    case '\v':ret = outStr(f, "\\v");
+    case '\v':
+      ret = outStr(f, "\\v");
       break;
-    case '\\':ret = outStr(f, "\\\\");
+    case '\\':
+      ret = outStr(f, "\\\\");
       (*gaps)--;
       break;
-    case '\"':ret = outStr(f, "\\\"");
+    case '\"':
+      ret = outStr(f, "\\\"");
       (*gaps)--;
       break;
     default:
@@ -723,17 +739,23 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
 
         while (strchr("0 -#+l", *fmt) != NULL) {
           switch (*fmt++) {
-            case '0':pad = '0';
+            case '0':
+              pad = '0';
               continue;
-            case ' ':prefix = (string) " ";
+            case ' ':
+              prefix = (string) " ";
               continue;
-            case '+':sign = True;
+            case '+':
+              sign = True;
               continue;
-            case 'l':longValue = True;
+            case 'l':
+              longValue = True;
               continue;
-            case '#':alternate = True;
+            case '#':
+              alternate = True;
               continue;
-            case '-':leftPad = False;
+            case '-':
+              leftPad = False;
               continue;
             default:;
           }
@@ -760,7 +782,8 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
           ret = procs[(unsigned int) c](f, data, depth, precision, alternate);
         } else
           switch (c) {
-            case '_':ret = flushFile(f);
+            case '_':
+              ret = flushFile(f);
               break;
             case 'c': {    /* Display an integer value as a char */
               codePoint i = (codePoint) (longValue ? va_arg(args, integer) : va_arg(args, int));
@@ -858,12 +881,14 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
               break;
             }
 
-            default:ret = outChar(f, c);
+            default:
+              ret = outChar(f, c);
           }
         break;
       }
 
-      default:ret = outChar(f, *fmt++);
+      default:
+        ret = outChar(f, *fmt++);
     }
   }
   return ret;
@@ -922,6 +947,21 @@ retCode logMsg(ioPo out, char *fmt, ...) {
   }
   flushFile(out);
   return ret;
+}
+
+string strMsg(string buffer, long len, char *fmt, ...) {
+  bufferPo f = fixedStringBuffer(buffer, len);
+
+  va_list args;      /* access the generic arguments */
+  va_start(args, fmt);    /* start the variable argument sequence */
+
+  __voutMsg(O_IO(f), (unsigned char *) fmt, args);  /* Display into the string buffer */
+
+  va_end(args);
+  outByte(O_IO(f), 0);                /* Terminate the string */
+
+  closeFile(O_IO(f));
+  return buffer;
 }
 
 retCode ioErrorMsg(objectPo io, char *fmt, ...) {
