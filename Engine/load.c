@@ -34,7 +34,9 @@ string loadedVersion(string package) {
   return NULL;
 }
 
-static logical compatiblVersion(string rqVer, string ver);
+static logical compatiblVersion(string rqVer, string ver) {
+  return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
+}
 
 retCode markLoaded(string package, string version) {
   packagePo pkg = loadedPackage(package);
@@ -52,10 +54,6 @@ retCode markLoaded(string package, string version) {
 
 logical isLoaded(ptrI pkg) {
   return (logical) (loadedPackage(StringVal(stringV(pkg))) != NULL);
-}
-
-static logical compatiblVersion(string rqVer, string ver) {
-  return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
 }
 
 typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen, void *cl);
@@ -524,7 +522,7 @@ retCode g__install_pkg(processPo P, ptrPo a) {
     stringPo text = stringV(pkgText);
 
     retCode ret = installPackage(stringVal(text), stringLen(text), P->proc.errorMsg,
-                            NumberOf(P->proc.errorMsg), buildImport, &x);
+                                 NumberOf(P->proc.errorMsg), buildImport, &x);
     setProcessRunnable(P);
 
     gcRemoveRoot(H, root);
@@ -534,7 +532,7 @@ retCode g__install_pkg(processPo P, ptrPo a) {
         return equal(P, &lst, &a[3]);
       case Error:
       case Eof:
-        return liberror(P,"_install_pkg",eINVAL);
+        return liberror(P, "_install_pkg", eINVAL);
       case Fail:
         return Fail;
       case Space:

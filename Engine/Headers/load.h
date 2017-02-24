@@ -18,6 +18,4 @@ packagePo loadedPackage(string package);
 
 string loadedVersion(string package);
 
-retCode packageIsLoaded(string package, string version);
-
 #endif //LANDO_LOAD_H

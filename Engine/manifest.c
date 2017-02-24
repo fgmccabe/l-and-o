@@ -151,6 +151,8 @@ typedef enum {
   inResource
 } ParseState;
 
+static char* stNames[] = {"initial", "inPackage", "inVersion", "inDetail", "inResource"};
+
 typedef struct {
   byte pkg[MAXLINE]; // Package name
   manifestEntryPo entry;
@@ -182,15 +184,20 @@ retCode loadManifest(string dir) {
 retCode startManifest(void *cl) {
   statePo info = (statePo) cl;
   info->state = initial;
+
+  logMsg(logFile, "Starting parse of manifest");
   return Ok;
 }
 
 retCode endManifest(void *cl) {
+  logMsg(logFile, "Ending parse of manifest");
   return Ok;
 }
 
 retCode startCollection(void *cl) {
   statePo info = (statePo) cl;
+
+  logMsg(logFile, "Starting collection, state = %s", stNames[info->state]);
 
   switch (info->state) {
     case initial:
@@ -206,7 +213,6 @@ retCode startCollection(void *cl) {
       info->state = inResource;
       break;
     case inResource:
-      info->state = inDetail;
       break;
 
     default:
@@ -217,6 +223,8 @@ retCode startCollection(void *cl) {
 
 retCode endCollection(void *cl) {
   statePo info = (statePo) cl;
+
+  logMsg(logFile, "Ending collection, state = %s", stNames[info->state]);
 
   switch (info->state) {
     case initial:
@@ -251,6 +259,8 @@ retCode endArray(void *cl) {
 retCode startEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
+  logMsg(logFile, "Starting entry, state = %s, name=%s", stNames[info->state], name);
+
   switch (info->state) {
     case initial:
       return Error;
@@ -260,6 +270,8 @@ retCode startEntry(const char *name, void *cl) {
     }
     case inVersion:
       uniCpy((string) &info->ver, NumberOf(info->ver), (string) name);
+      info->version = newVersion((string)name);
+      hashPut(info->entry->versions,&info->version->version,info->version);
       break;
     case inResource:
       uniCpy((string) &info->kind, NumberOf(info->kind), (string) name);
@@ -276,18 +288,15 @@ retCode startEntry(const char *name, void *cl) {
 retCode endEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
+  logMsg(logFile, "Ending entry, state = %s, name=%s", stNames[info->state], name);
+
   switch (info->state) {
     case inDetail:
       info->state = inResource;
       break;
     case inResource:
-      info->state = inVersion;
-      break;
     case inVersion:
-      info->state = inPackage;
-      break;
     case inPackage:
-
     default:
       break;
   }
@@ -305,6 +314,8 @@ retCode boolEntry(logical trueVal, void *cl) {
 
 retCode txtEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
+
+  logMsg(logFile, "Text entry, state = %s, name=%s", stNames[info->state], name);
 
   switch (info->state) {
     default:
