@@ -9,8 +9,8 @@ escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("var",univType(kVar("t"),predType([kVar("t")]))).
 escapeType("ground",univType(kVar("t"),predType([kVar("t")]))).
-escapeType("_call",predType([type("lo.core*string"),type("lo.core*string"),typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])])).
-escapeType("_defined",predType([type("lo.core*string"),type("lo.core*string")])).
+escapeType("_call",predType([type("lo.core*string"),type("lo.core*integer"),typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])])).
+escapeType("_defined",predType([type("lo.core*string"),type("lo.core*integer")])).
 escapeType("_int_plus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_minus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_times",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).

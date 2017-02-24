@@ -12,52 +12,65 @@
   permissions and limitations under the License.
 */
 #include <string.h>
+#include <process.h>
 #include "lo.h"			/* main header file */
 
 // __call(package,entry,arguments) -- list of strings
 // results in the call:
 // package.entry(arguments)
 //
+
+static retCode populateArgs(ptrI Args, ptrPo R, int arity);
+
 retCode g__call(processPo P, ptrPo a) {
-  ptrI pkg = deRefI(&a[1]);
-  ptrI entry = deRefI(&a[2]);
+  ptrI PRG = deRefI(&a[1]);
+  ptrI AR = deRefI(&a[2]);
+  ptrI ARGS = deRefI(&a[3]);
 
-  if (isvar(entry) || isvar(pkg))
+  if (isvar(PRG) || isvar(AR) || isvar(ARGS))
     return liberror(P, "__call", eINSUFARG);
-  else if (!IsString(entry) || !IsString(pkg))
+  else if (!IsString(PRG) || !IsInt(AR) || !isGroundTerm(&ARGS))
     return liberror(P, "__call", eINVAL);
-  else if (!isLoaded(pkg)) {
-    byte errMsg[MAX_MSG_LEN];
+  else {
+    stringPo pS = stringV(PRG);
+    byte prog[MAX_SYMB_LEN];
+    copyString2Buff(prog, NumberOf(prog), pS);
 
-    strMsg(errMsg, NumberOf(errMsg), "%U not loaded", StringVal(stringV(pkg)));
-    return raiseError(P, (string) errMsg, eCODE);
-  } else {
-    byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
-    strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
+    uint16 arity = (uint16) integerVal(intV(AR));
 
-    switchProcessState(P, in_exclusion);
-    ptrI prog = newProgramLbl(resolved, 0);
-    setProcessRunnable(P);
+    ptrI PROG = programLbl((string) prog, arity);
 
-    if (!IsProgram(prog)) {
-      strMsg(resolved, NumberOf(resolved), "%U@%U not defined", StringVal(stringV(pkg)), StringVal(stringV(entry)));
-      return raiseError(P, resolved, eCODE);
-    } else {
-      ptrI args = deRefI(&a[3]);
+    if (PROG != 0 && IsProgram(PROG)) {
+      retCode ret = populateArgs(ARGS, (ptrPo) &P->proc.A, arity);
 
-      P->proc.A[1] = args;               /* Pass in the argument list of strings */
+      if (ret == Ok) {
+        P->proc.cPC = P->proc.PC;                 /* start stacking stuff */
+        P->proc.cPROG = P->proc.PROG;
+        P->proc.cSB = P->proc.SB;
+        P->proc.SB = P->proc.B;
 
-      P->proc.cPC = P->proc.PC;                 /* start stacking stuff */
-      P->proc.cPROG = P->proc.PROG;
-      P->proc.cSB = P->proc.SB;
-      P->proc.SB = P->proc.B;
+        P->proc.PROG = ProgramOf(PROG);  /* We have a new program to call */
+        P->proc.PC = FirstInstruction(P->proc.PROG);
 
-      P->proc.PROG = ProgramOf(prog);  /* We have a new program to call */
-      P->proc.PC = FirstInstruction(P->proc.PROG);
-
-      return Error;       /* We cant use OK, because that checks for GCmap */
+        return Error;       /* We cant use OK, because that checks for GCmap */
+      }
     }
+    strMsg((string) &P->proc.errorMsg, NumberOf(P->proc.errorMsg), "%s/%d not defined", prog, arity);
+    return raiseError(P, (string) &P->proc.errorMsg, eCODE);
   }
+}
+
+retCode populateArgs(ptrI Ls, ptrPo R, int arity) {
+  for (int ix = 0; ix < arity && ix < LO_REGS && IsList(Ls);) {
+    ptrPo h = listHead(objV(Ls));
+    ptrI C = deRefI(h);
+    *R++ = C;
+    Ls = deRefI(h + 1);
+  }
+  if(IsNil(Ls))
+    return Ok;
+  else
+    return Fail;
 }
 
 // __is(pred,arg) -- one argument

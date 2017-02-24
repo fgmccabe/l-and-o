@@ -13,8 +13,8 @@ lo.comp.escapes{
   escapeType("_identical") => univType(kVar("t"),predType(tupleType([kVar("t"),kVar("t")]))).
   escapeType("var") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
   escapeType("ground") => univType(kVar("t"),predType(tupleType([kVar("t")]))).
-  escapeType("_call") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])])).
-  escapeType("_defined") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
+  escapeType("_call") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])])).
+  escapeType("_defined") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")])).
   escapeType("_int_plus") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int_minus") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).
   escapeType("_int_times") => funType(tupleType([tipe("lo.core*integer"),tipe("lo.core*integer")]),tipe("lo.core*integer")).

@@ -65,77 +65,42 @@ lo.boot{
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
   handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
     Repo = openRepository(parseUri(Opts.repo)),
-    importPkgs([parsePkgName(Top)],Repo),
+    importPkgs([parsePkgName(Top)],(Repo,coreRepo)),
     invokeMain(Top,Args).
 
-  importPkgs:(list[pkg],list[pkg],list[pkg],fileRepo){}.
+  importPkgs:all r ~~ repository[r] |: (list[pkg],list[pkg],list[pkg],r){}.
   importPkgs([],Ld,Ld,_).
   importPkgs([P,..L],Ld,Ldx,R) :-
     importPkg(P,R,Ld,Imps),
     importPkgs(Imps,[P,..Ld],Ldx,R),
     initialize(P).
 
-  importPkg:(pkg,fileRepo,list[pkg],list[pkg]){}.
+  importPkg:all r ~~ repository[r] |: (pkg,r,list[pkg],list[pkg]){}.
   importPkg(P,_,Ld,[]) :- P in Ld.
-  importPkg(P,R,Ld,Imps) :-
+  importPkg(P,R,Ld,Imps//((P,V))=>pkgUp(P,V)) :-
     locateCode(R,P,_,Code),
     _define_code(Code,Imps).
 
-  
+  pkgUp:(string,string) => pkg.
+  pkgUp(P,"*") => pkg(P,defltVersion).
+  pkgUp(P,V) => pkg(P,vers(V)).
 
+  initialize:(string){}.
+  initialize(P) :-
+    Pred = P+"@init",
+    ( _defined(Pred,0) ?
+      _call(Pred,0,[]) |
+      logMsg("No init for \(P)")).
 
-processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
-loadPrologPkg(Pkg,Repo,Code,Imports),
-assertAll(Code,PrIn,Pr0),
-processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),!,
-initPkg(Pkg).
-
-initPkg(pkg(Pkg,_)) :-
-localName(Pkg,"@","init",Init),
-atom_string(ICall,Init),
-current_predicate(ICall/0),!,
-call(ICall).
-initPkg(_).
-
-lookForMain(pkg(Top,_),Args) :-
-localName(Top,"@","main",M),
-atom_string(Main,M),
-current_predicate(Main/1),!,
-listify(Args,LArgs),
-writef("starting...\n",[]),
-call(Main,LArgs).
-lookForMain(_,_).
-
-assertAll([],Pr0,Pr0).
-assertAll([T|M],Pr0,Prx) :-
-checkPred(T,Pr0,Pr1),
-assert(T),
-assertAll(M,Pr1,Prx).
-
-checkPred(T,Pr,Px) :-
-predOf(T,P),!,
-(is_member(P,Pr),!,Px=Pr ; abolish(P),Px=[P|Pr]).
-
-predOf((H :- _),P) :- !,
-predOf(H,P).
-predOf(T,T/0) :- atom(T),!.
-predOf(T,P/A) :-
-compound_name_arity(T,P,A).
-
-processImports([],Ld,Ld,_,Pr,Pr).
-processImports([import(_,pkg(Pkg,Vers))|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
-is_member(pkg(Pkg,LdVers),Loaded),
-(LdVers \= Vers ->
-    runTimeMsg("not permitted to load multiple versions of same package: %s@%s, %s already loaded",[Pkg,Vers,LdVers]);true),
-processImports(Imports,Loaded,Ldx,Repo,Pr,Prx).
-processImports([import(_,Pkg)|Imports],Loaded,Ldx,Repo,Pr,Prx) :-
-processPackage(Pkg,Repo,Loaded,LdI,Pr,Pr0),
-processImports(Imports,LdI,Ldx,Repo,Pr0,Prx).
-
-
+  invokeMain:(string,list[string]){}.
+  invokeMain(Top,Args) :-
+    Pred = Top+"@main",
+    ( _defined(Pred,1) ?
+      logMsg("Starting ..."),
+      _call(Pred,1,[[Args]]) |
+      logMsg("No main program: \(Top)") ).
 
   private delayHandler:(list[(){}]){}. -- private, but known to the run-time
   delayHandler([]).
   delayHandler([H,..L]) :- H()!, delayHandler(L).
-
 }

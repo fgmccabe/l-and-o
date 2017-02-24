@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
   initLogfile((string) "-");
   initFileIo();        /* Set up special file handling */
 
-  strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__main"); /* standard entry point */
+  strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__boot"); /* standard entry point */
 
   if ((narg = getOptions(argc, argv)) < 0) {
     outMsg(logFile, _("usage: %s [-v] [-L log] [-g host:port] [-V] [-b boot:ver] [-m entry] [-r repo] [-d wd]"

@@ -34,8 +34,8 @@ escape(_identical,False,False,":k't'P2k't'k't'","test for identicality")
 escape(var,False,False,":k't'P1k't'","test for variable")
 escape(ground,False,False,":k't'P1k't'","test for grounded-ness")
 
-escape(_call,True,False,"P3SSLS","dynamic call")
-escape(_defined,True,False,"P2SS","test for defined name")
+escape(_call,True,False,"P3SiLS","dynamic call")
+escape(_defined,True,False,"P2Si","test for defined name")
 
 escape(_int_plus,False,False,"F2iii","add two integers")
 escape(_int_minus,False,False,"F2iii","subtract two integers")
