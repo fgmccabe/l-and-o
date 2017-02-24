@@ -39,9 +39,9 @@ lo.repo {
     packagePresent(_,pkg(P,defltVersion),K) :- _pkg_is_present(P,"*",K,_).
     packagePresent(_,pkg(P,vers(V)),K) :- _pkg_is_present(P,V,K,_).
 
-    loadFromRepo(_,pkg(P,defltVersion),K,V,_get_file(Fn)) :-
-      _pkg_is_present(P,"*",K,Txt,Fn).
-    loadFromRepo(_,pkg(P,vers(V)),K,V,_get_file(Fn)) :-
+    loadFromRepo(_,pkg(P,defltVersion),K,_get_file(Fn)) :-
+      _pkg_is_present(P,"*",K,Fn).
+    loadFromRepo(_,pkg(P,vers(V)),K,_get_file(Fn)) :-
       _pkg_is_present(P,V,K,Fn).
   }
 

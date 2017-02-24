@@ -101,7 +101,8 @@ escapeType("_fseek",predType([type("lo.io*fileHandle"),type("lo.core*integer")])
 escapeType("_flush",predType([type("lo.io*fileHandle")])).
 escapeType("_flushall",predType([])).
 escapeType("_setfileencoding",predType([type("lo.io*fileHandle"),type("lo.core*integer")])).
-escapeType("_ensure_loaded",funType([type("lo.core*string"),type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
+escapeType("_install_pkg",funType([type("lo.core*string"),type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
+escapeType("_pkg_is_present",predType([type("lo.core*string"),type("lo.core*string"),type("lo.core*string"),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
 escapeType("_connect",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*integer"),type("lo.io*fileHandle"),type("lo.io*fileHandle")])).
 escapeType("_listen",predType([type("lo.core*integer"),type("lo.io*fileHandle")])).
@@ -287,7 +288,8 @@ isEscape("_fseek").
 isEscape("_flush").
 isEscape("_flushall").
 isEscape("_setfileencoding").
-isEscape("_ensure_loaded").
+isEscape("_install_pkg").
+isEscape("_pkg_is_present").
 isEscape("_logmsg").
 isEscape("_connect").
 isEscape("_listen").
