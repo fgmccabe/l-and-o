@@ -7,7 +7,10 @@
         listShow/5,
         stringHash/3,hashSixtyFour/2,stringEndsWith/2,
         marker/2,
+        same/2,
         interleave/3,concatStrings/2]).
+
+same(X,X).
 
 concat([],X,X).
 concat([E|X],Y,[E|Z]) :- concat(X,Y,Z).
@@ -31,7 +34,7 @@ is_member(X,[X|_]).
 is_member(X,[_|Y]) :- is_member(X,Y).
 
 merge([],X,X).
-merge([E|X],Y,Z) :- 
+merge([E|X],Y,Z) :-
   is_member(E,Y),!,
   merge(X,Y,Z).
 merge([E|X],Y,Z) :-
@@ -54,18 +57,17 @@ intersect([_|X],Y,Z) :- intersect(X,Y,Z).
 interleave([],_,[]).
 interleave([F|L],S,[F|M]) :-
   mixin(L,S,M).
-  
+
 mixin([],_,[]).
 mixin([F|L],S,[S,F|M]) :- mixin(L,S,M).
 
 concatStrings(L,S) :-
-  concStrings(L,O,[]),
-  string_chars(S,O).
+  concStrings(L,S,"").
 
 concStrings([],O,O).
-concStrings([S|L],I,O) :-
-  appStr(S,I,I0),
-  concStrings(L,I0,O).
+concStrings([S|L],O,F) :-
+  string_concat(F,S,FF),
+  concStrings(L,O,FF).
 
 collect([],_,[],[]) :- !.
 collect([El|More],T,[El|Ok],Not) :-
@@ -107,7 +109,7 @@ subPath(Path,Marker,Suffix,Name) :-
   string_concat(Path,Marker,P0),
   string_concat(P0,Suffix,Name).
 
-ends_with(String,Tail) :- 
+ends_with(String,Tail) :-
   string_concat(_,Tail,String).
 
 starts_with(String,Front) :-
@@ -135,7 +137,7 @@ hashCodes([C|More],H0,Hx) :-
 hashSixtyFour(H0,H) :-
   H is H0 mod (1<<63).
 
-localName(_,Glue,Nm,Nm) :- 
+localName(_,Glue,Nm,Nm) :-
   sub_string(Nm,_,_,_,Glue),!.
 localName(Pkg,Glue,Nm,LclName) :-
   string_concat(Pkg,Glue,T),

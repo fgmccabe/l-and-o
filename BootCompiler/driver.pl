@@ -89,7 +89,7 @@ processPkg(P,_,Fl,CP,[P|CP],Repo,Rx,Opts) :-
 
 importsOk([],_).
 importsOk([P|I],CP) :-
-  \+ is_member(P,CP),
+  \+ (is_member(AP,CP), consistentPkg(P,AP)),
   importsOk(I,CP).
 
 processFile(SrcUri,Pkg,Repo,Rx,Opts) :-

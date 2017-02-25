@@ -29,4 +29,5 @@ catalog{
     test.st -> "st.lo".
   }
   default: "../LO/catalog".
+  version: "0.0.2".
 }

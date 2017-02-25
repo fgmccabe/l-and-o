@@ -25,4 +25,5 @@ catalog{
     lo.unit -> "unit.lo".
     lo.uri -> "uri.lo".
   }
+  version:"1.0.0".
 }

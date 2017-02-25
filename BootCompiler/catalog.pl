@@ -1,4 +1,4 @@
-:- module(catalog,[locateCatalog/2,catalog//1,resolveCatalog/3,catalogBase/2]).
+:- module(catalog,[locateCatalog/2,catalog//1,resolveCatalog/4,catalogBase/2]).
 
 :- use_module(resource).
 :- use_module(misc).
@@ -10,17 +10,26 @@ locateCatalog(Uri,Cat) :-
   locateResource(CatURI,Chars),
   parseCatalog(Chars,CatURI,Cat),!.
 
-resolveCatalog(cat(Cat),Nm,Uri) :-
+resolveCatalog(cat(Cat),Nm,Uri,V) :-
   is_member(entries(Map),Cat),
   is_member(base(Base),Cat),
   is_member(entry(Nm,U),Map),!,
-  resolveURI(Base,U,Uri).
-resolveCatalog(cat(Cat),Nm,Uri) :-
+  resolveURI(Base,U,Uri),
+  resolveVersion(Nm,Cat,V).
+resolveCatalog(cat(Cat),Nm,Uri,V) :-
   is_member(default(Deflt),Cat),!,
   is_member(base(Base),Cat),
   resolveURI(Base,Deflt,DefltUri),
   locateCatalog(DefltUri,DefltCat),
-  resolveCatalog(DefltCat,Nm,Uri).
+  resolveCatalog(DefltCat,Nm,Uri,V).
+
+resolveVersion(pkg(Pkg,defltVersion),Cat,pkg(Pkg,V)) :-
+  catalogVersion(Cat,V).
+resolveVersion(Pkg,_,Pkg).
+
+catalogVersion(Cat,v(V)) :-
+  is_member(version(V),Cat),!.
+catalogVersion(_,defltVersion).
 
 parseCatalog(Chrs,Uri,Cat) :-
   phrase(tokens(Toks),Chrs),
@@ -34,22 +43,22 @@ catalogBase(cat(Stmts),Base) :-
   is_member(base(Base),Stmts).
 
 catalog(cat(Stmts)) -->
-  [catalog, lbrce], catStmts(Stmts), [rbrce].
+  [iden("catalog"), lbrce], catStmts(Stmts), [rbrce].
 
 catStmts([St|More]) --> catStmt(St), catStmts(More).
 catStmts([]) --> [].
 
-catStmt(entries(Contents)) --> [content, lbrce], contents(Contents), [rbrce].
-catStmt(base(BaseUri)) --> [base, colon], string(Base), { parseURI(Base,BaseUri) }, [term].
-catStmt(version(V)) --> [version, colon], version(V), [term].
-catStmt(default(CatUri)) --> [default, colon], string(U), { parseURI(U,CatUri) }, [term].
+catStmt(entries(Contents)) --> [iden("content"), lbrce], contents(Contents), [rbrce].
+catStmt(base(BaseUri)) --> [iden("base"), colon], string(Base), { parseURI(Base,BaseUri) }, [term].
+catStmt(version(V)) --> [iden("version"), colon, string(V), term].
+catStmt(default(CatUri)) --> [iden("default"), colon], string(U), { parseURI(U,CatUri) }, [term].
 
 contents([Entry|More]) --> entry(Entry), contents(More).
 contents([]) --> [].
 
 entry(entry(Key,Uri)) --> package(Key), [thin_arrow], string(U), [term], {parseURI(U,Uri)}.
 
-package(pkg(Pkg,V)) --> [iden(Id)], suffixes(Suf), version(V), { stringify([Id|Suf], ".", P), string_chars(Pkg,P)}.
+package(pkg(Pkg,V)) --> [iden(Id)], suffixes(Suf), version(V), { stringify([Id|Suf], ".", Pkg)}.
 
 suffixes([Id|More]) --> [period], [iden(Id)], suffixes(More).
 suffixes([]) --> [].
@@ -73,13 +82,6 @@ tokens(Toks) --> spaces, moreToks(Toks).
 moreToks([]) --> at_end.
 moreToks([Tok|More]) --> token(Tok), tokens(More).
 
-token(catalog) --> [c,a,t,a,l,o,g].
-token(content) --> [c,o,n,t,e,n,t].
-token(version) --> [v,e,r,s,i,o,n].
-token(base) --> [b,a,s,e].
-token(default) --> [d,e,f,a,u,l,t].
-token(product) --> [p,r,o,d,u,c,t].
-token(is) --> [i,s].
 token(lbrce) --> ['{'].
 token(rbrce) --> ['}'].
 token(thin_arrow) --> ['-','>'].
@@ -87,7 +89,7 @@ token(T) --> ['.'], ((at_end ; [' '] ; ['\n']) -> {T=term} ; {T=period}).
 token(colon) --> [':'].
 token(hash) --> ['#'].
 token(string(Text)) --> ['"'], stringText(Seq), ['"'], { string_chars(Text,Seq) }.
-token(iden(Text)) --> iden(Text).
+token(iden(Id)) --> iden(Text), {string_chars(Id,Text)}.
 
 stringText([]) --> [].
 stringText([C|More]) --> ['\\'], quote(C), stringText(More).

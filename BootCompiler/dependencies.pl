@@ -11,8 +11,8 @@ dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   collectDefinitions(Els,Dfs,Public,Annots,Imports,Other),
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
-  topsort(Defs,Groups).
-  %showGroups(Groups).
+  topsort(Defs,Groups,misc:same).
+  % showGroups(Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,I,Other) :-
   collectDefinition(St,Stmts,S0,Defs,D0,P,P0,A,A0,I,I0,Other,O0,dependencies:nop),
@@ -100,7 +100,7 @@ contractName(St,Nm) :-
 contractName(St,con(Nm)) :-
   isSquare(St,Nm,_).
 
-%% Thus must mirror the definition in types.pl 
+%% Thus must mirror the definition in types.pl
 implementationName(St,Nm) :-
   isQuantified(St,_,B),
   implementationName(B,Nm).
@@ -521,11 +521,11 @@ collectTypeRefs(C,All,SoFar,Refs) :-
   collectTypeRefs(L,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
-  isBraceTerm(T,_,L,[]), 
+  isBraceTerm(T,_,L,[]),
   isTuple(L,A),
   collectTypeList(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
-  isBraceTuple(T,_,A), 
+  isBraceTuple(T,_,A),
   collectFaceTypes(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isQuantified(T,_,A),
@@ -562,7 +562,7 @@ collectContractRefs(C,All,R0,Refs) :-
 collectLabelRefs(Lb,All,R0,Refs) :- collectExpRefs(Lb,All,R0,Refs).
 
 showGroups([]).
-showGroups([G|M]) :- 
+showGroups([G|M]) :-
   reportMsg("Group:",[]),
   showGroup(G),
   showGroups(M).

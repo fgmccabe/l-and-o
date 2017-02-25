@@ -54,4 +54,5 @@ catalog{
     lo.comp.unify -> "unify.lo".
   }
   default: "../LO/catalog".
+  version: "0.0.1".
 }
