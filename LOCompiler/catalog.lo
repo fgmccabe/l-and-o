@@ -6,38 +6,36 @@ lo.comp.catalog{
   import lo.comp.package.
   import lo.comp.parseutils.
 
-  public type catalog ::= catalog(list[catEntry]).
+  public type catalog <~ {}.
 
-  private type catEntry ::= catEntries(map[pkg,uri]) | default(uri) | vErsion(version) | base(uri).
+  private cat:(map[string,uri],uri,version,option[uri]) <=> catalog.
+  cat(M,B,V,D) <= {}.
 
   public locateCatalog:(uri) => catalog.
   locateCatalog(Uri) => Cat :-
     CatURI = resolveUri(Uri,relUri(localRsrc(relPath(["catalog"])),noQ)),
     parseCatalog(getResource(CatURI),CatURI,Cat).
 
-  public resolveCatalog:(catalog,pkg,uri){}.
-  resolveCatalog(catalog(Cat),Nm,resolveUri(Base,U)) :-
-    catEntries(Map) in Cat,
-    base(Base) in Cat,
-    present(Map,Nm,U).
-  resolveCatalog(catalog(Cat),Nm,Uri) :-
-    default(Deflt) in Cat,
-    base(Base) in Cat,
-    resolveCatalog(locateCatalog(resolveUri(Base,Deflt)),Nm,Uri).
+  public resolveCatalog:(catalog,pkg,uri,pkg){}.
+  resolveCatalog(cat(Map,Base,Vers,_),pkg(P,RV),resolveUri(Base,U),pkg(P,V)) :-
+    present(Map,P,U),
+    resolveVersion(RV,Vers,V).
+  resolveCatalog(cat(_,Base,_,some(Deflt)),Rq,Uri,Pkg) :-
+    resolveCatalog(locateCatalog(resolveUri(Base,Deflt)),Rq,Uri,Pkg).
+
+  resolveVersion:(version,version,version){}.
+  resolveVersion(defltVersion,V,V).
+  resolveVersion(V,_,V).
 
   parseCatalog:(string,uri,catalog){}.
-  parseCatalog(Chrs,Uri,defaultBase(C,Uri)) :-
+  parseCatalog(Chrs,Uri,cat(Map,Base,Vers,Deflt)) :-
     tokens(Toks) %% explode(Chrs),
-    parseCat(C) %% Toks.
-
-  defaultBase:(catalog,uri) => catalog.
-  defaultBase(catalog(Stmts),Fl) => catalog(replace(Stmts,base(_),base(Fl))).
+    parseCat([],Uri,defltVersion,none,Map,Base,Vers,Deflt) %% Toks.
 
   -- Tokenization
 
-  private type token ::= catalg
-    | content | verson | bAse | deflt | lbrce | rbrce
-    | thin_arrow | term | period | colon | hash | idn(list[integer]) | strg(list[integer]).
+  private type token ::= lbrce | rbrce
+    | thin_arrow | term | period | colon | hash | idn(string) | strg(list[integer]).
 
   tokens:(list[token]) --> list[integer].
   tokens(Toks) --> spaces(), moreToks(Toks).
@@ -47,11 +45,6 @@ lo.comp.catalog{
   moreToks([Tok,..More]) --> token(Tok), tokens(More).
 
   token:(token) --> list[integer].
-  token(catalg) --> "catalog".
-  token(content) --> "content".
-  token(verson) --> "version".
-  token(bAse) --> "base".
-  token(deflt) --> "default".
   token(lbrce) --> "{".
   token(rbrce) --> "}".
   token(thin_arrow) --> "->".
@@ -59,7 +52,7 @@ lo.comp.catalog{
   token(colon) --> ":".
   token(hash) --> "#".
   token(strg(Seq)) --> "\"", stringText(Seq), "\"".
-  token(idn(Text)) --> iden(Text).
+  token(idn(implode(Text))) --> iden(Text).
 
   stringText:(list[integer]) --> list[integer].
   stringText([]) --> [].
@@ -73,46 +66,42 @@ lo.comp.catalog{
   quote(0c\t) --> "t".
   quote(C) --> [C].
 
-  private parseCat:(catalog) --> list[token].
-  parseCat(catalog(Stmts)) -->
-    [catalg, lbrce], catStmts(Stmts), [rbrce].
+  private parseCat:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
+  parseCat(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do) -->
+    [idn("catalog"), lbrce], catStmts(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do), [rbrce].
 
-  private catStmts:(list[catEntry]) --> list[token].
-  catStmts([St,..More]) --> catStmt(St), catStmts(More).
-  catStmts([]) --> [].
+  private catStmts:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
+  catStmts(Mi,Bi,Vi,Di,Mx,Bx,Vx,Dx) --> catStmt(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do), catStmts(Mo,Bo,Vo,Do,Mx,Bx,Vx,Dx).
+  catStmts(Mi,Bi,Vi,Di,Mi,Bi,Vi,Di) --> [].
 
-  catStmt:(catEntry) --> list[token].
-  catStmt(catEntries(Contents)) --> [content, lbrce], contents([],Contents), [rbrce].
-  catStmt(base(BaseUri)) --> [bAse, colon, strg(Base)], { parseableUri(Base,BaseUri) }, [term].
-  catStmt(vErsion(V)) --> [verson, colon], versn(V), [term].
-  catStmt(default(CatUri)) --> [deflt, colon, strg(U)], { uriParse(CatUri)%%U }, [term].
+  catStmt:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
+  catStmt(Mi,Bi,Vi,Di,Mx,Bi,Vi,Di) --> [idn("content"), lbrce], contents(Mi,Mx), [rbrce].
+  catStmt(Mi,_,Vi,Di,Mi,Bx,Vi,Di) --> [idn("base"), colon, strg(Base)], { parseableUri(Base,Bx) }, [term].
+  catStmt(Mi,Bi,_,Di,Mi,Bi,vers(implode(Vx)),Di) --> [idn("version"), colon, strg(Vx), term].
+  catStmt(Mi,Bi,Vi,_,Mi,Bi,Vi,some(Dx)) --> [idn("default"), colon, strg(U)], { uriParse(Dx)%%U }, [term].
 
   parseableUri:(list[integer],uri){}.
   parseableUri(Chrs,U) :- uriParse(U)%%Chrs.
 
-  contents:(map[pkg,uri],map[pkg,uri]) --> list[token].
+  contents:(map[string,uri],map[string,uri]) --> list[token].
   contents(C,Cx) --> entry(C,C0), contents(C0,Cx).
   contents(C,C) --> [].
 
-  entry:(map[pkg,uri],map[pkg,uri]) --> list[token].
+  entry:(map[string,uri],map[string,uri]) --> list[token].
   entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C[Key->Uri]}.
 
-  package:(pkg) --> list[token].
-  package(pkg(stringify([Id,..Suf],[0c.]),V)) --> [idn(Id)], suffixes(Suf), versn(V).
+  package:(string) --> list[token].
+  package(stringify([Id,..Suf],".")) --> [idn(Id)], suffixes(Suf).
 
-  suffixes:(list[list[integer]]) --> list[token].
+  suffixes:(list[string]) --> list[token].
   suffixes([Id,..More]) --> [period, idn(Id)], suffixes(More).
   suffixes([]) --> [].
 
-  versn:(version) --> list[token].
-  versn(vers(stringify([F,..Vs],[0c.]))) --> [hash, idn(F)], vSegs(Vs).
-  versn(defltVersion) --> [].
-
-  vSegs:(list[list[integer]]) --> list[token].
-  vSegs([V,..More]) --> [period, idn(V)], vSegs(More).
-  vSegs([]) --> [].
-
-  stringify:(list[list[integer]],list[integer])=>string.
+  stringify:(list[string],string)=>string.
   stringify(L,S) =>
-    implode(multiCat(interleave(L,S))).
+    collapse(interleave(L,S),"").
+
+  collapse:(list[string],string) => string.
+  collapse([],S) => S.
+  collapse([S1,..L],F) => collapse(L,F+S1).
 }

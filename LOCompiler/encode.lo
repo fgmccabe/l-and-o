@@ -113,7 +113,7 @@ lo.comp.encode{
 
   fmtVer:(version) => term.
   fmtVer(defltVersion) => enum("*").
-  fmtVer(vers(V)) => strng(fV).
+  fmtVer(vers(V)) => strng(V).
 
   fmtImports:(list[(visibility,pkg)]) => term.
   fmtImports(Imports) => mkTpl(Imports//fmtImport).

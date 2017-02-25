@@ -18,8 +18,8 @@ makeGraph(Repo,Cat,CWD,Fls,Groups) :-
   graphPkgs(Pkgs,Groups).
 
 graphPkgs(Pkgs,Groups) :-
-  topsort(Pkgs,Groups,grapher:consistentPkg),
-  showGroups(Groups).
+  topsort(Pkgs,Groups,grapher:consistentPkg).
+  % showGroups(Groups).
 
 scanPkgs([],_,_,_,Pkgs,Pkgs).
 scanPkgs([P|L],Repo,Cat,CWD,SoFar,Pkgs) :-

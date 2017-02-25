@@ -70,7 +70,7 @@ lo.comp.bootstrap{
   compilePkg:(pkg,fileRepo,fileRepo,catalog,compOption,report,report){}.
   compilePkg(Pkg,Repo,Repox,Cat,Opts,Rp,Rpx) :-
     Pkg = pkg(P,V),
-    (resolveCatalog(Cat,Pkg,U) ?
+    (resolveCatalog(Cat,Pkg,U,_) ?
       Src = explode(getResource(U)),
       Term = parseSrc(U,Src,Rp,Rp0),
       (errorFree(Rp0) ?
