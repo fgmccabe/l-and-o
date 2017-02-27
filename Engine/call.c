@@ -67,7 +67,7 @@ retCode populateArgs(ptrI Ls, ptrPo R, int arity) {
     *R++ = C;
     Ls = deRefI(h + 1);
   }
-  if(IsNil(Ls))
+  if (IsNil(Ls))
     return Ok;
   else
     return Fail;
@@ -134,12 +134,12 @@ retCode g__defined(processPo P, ptrPo a) {
 /*
  * Used in aiding debugging
  */
-void showCall(processPo P, ptrI prog, ptrPo args, long arity) {
+void showCall(processPo P, char *prefix, ptrI prog, ptrPo args, long arity) {
   int i;
   byte buffer[1024];
   ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
-  outMsg(out, "%w: %w(", &P->proc.thread, &prog);
+  outMsg(out, "%s %w: %w(", prefix, &P->proc.thread, &prog);
 
   for (i = 0; i < arity; i++)
     outMsg(out, "%w%s", args++, (i < arity - 1 ? "," : ""));

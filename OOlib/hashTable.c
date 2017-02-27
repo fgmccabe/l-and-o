@@ -165,7 +165,7 @@ retCode hashPut(hashPo htbl, void *name, void *r) {
     register bucketPo b = htbl->table[offset];
 
     while (b != NULL) {
-      if ((htbl->compare)(b->nme, name) == 0) { /* we have found the entry */
+      if ((htbl->compare)(b->nme, name) == same) { /* we have found the entry */
         b->nme = name;
         b->r = r;
 

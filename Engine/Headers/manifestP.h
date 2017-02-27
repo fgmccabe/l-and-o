@@ -13,7 +13,6 @@
 typedef struct _manifest_entry_ {
   byte package[MAX_SYMB_LEN];
   hashPo versions;
-  manifestVersionPo deflt;
 } ManifestEntryRecord;
 
 typedef struct _manifest_version_ {

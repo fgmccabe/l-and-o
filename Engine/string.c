@@ -498,7 +498,6 @@ retCode g__str_hash(processPo P, ptrPo a) {
 retCode g__str_concat(processPo P, ptrPo a) {
   ptrI a1 = deRefI(&a[1]);
   ptrI a2 = deRefI(&a[2]);
-  ptrI a3 = deRefI(&a[3]);
 
   if (isvar(a1) || isvar(a2))
     return liberror(P, "_str_concat", eSTRNEEDD);
@@ -518,6 +517,40 @@ retCode g__str_concat(processPo P, ptrPo a) {
     ptrI rslt = allocateString(&P->proc.heap, catted, uniStrLen(catted));
 
     return funResult(P, a, 3, rslt);
+  }
+}
+
+retCode g__str_multicat(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+
+  if (isvar(a1))
+    return liberror(P, "_str_multicat", eSTRNEEDD);
+  else if (!isGroundTerm(&a1))
+    return liberror(P, "_str_multicat", eINVAL);
+  else if (!isvar(a2))
+    return liberror(P, "_str_multicat", eVARNEEDD);
+  else {
+    bufferPo b = newStringBuffer();
+    ptrI Ls = a1;
+    retCode ret = Ok;
+
+    while (ret == Ok && IsList(Ls)) {
+      ptrPo h = listHead(objV(Ls));
+      ptrI C = deRefI(h);
+
+      if (IsString(C)) {
+        stringPo s = stringV(C);
+
+        ret = outText(O_IO(b), stringVal(s), stringLen(s));
+        Ls = deRefI(h + 1);
+      }
+    }
+    long len;
+    string txt = getTextFromBuffer(&len, b);
+    ptrI rslt = allocateString(&P->proc.heap, txt, len);
+    closeFile(O_IO(b));
+    return funResult(P, a, 2, rslt);
   }
 }
 
@@ -686,7 +719,8 @@ retCode g__str_gen(processPo P, ptrPo a) {
 
   if (isvar(a1) || !isString(objV(a1)))
     return liberror(P, "_str_gen", eINSUFARG);
-  else if (!isvar(a2)) return liberror(P, "_str_gen", eVARNEEDD);
+  else if (!isvar(a2))
+    return liberror(P, "_str_gen", eVARNEEDD);
   else {
     string prefix = stringVal(stringV(a1));
     byte buff[128];
@@ -697,8 +731,6 @@ retCode g__str_gen(processPo P, ptrPo a) {
     return Ok;
   }
 }
-
-
 
 retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
   long len;

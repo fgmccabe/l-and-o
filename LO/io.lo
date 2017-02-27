@@ -213,4 +213,7 @@ lo.io {
 
   public putFile:(string,string){}.
   putFile(Fn,Text) :- _put_file(Fn,Text).
+
+  public logMsg:(string){}.
+  logMsg(Msg) :- _logmsg(Msg).
 }

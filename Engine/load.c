@@ -68,9 +68,10 @@ retCode loadSegments(ioPo file, string errorMsg, long msgLen);
 static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
   byte flNm[MAXFILELEN];
   string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
+  retCode ret = Ok;
 
   if (fn == NULL) {
-    outMsg(logFile, "cannot determine code for %s:%s", pkg, vers);
+    outMsg(logFile, "cannot determine code for %s:%s%_", pkg, vers);
     return Error;
   }
 
@@ -82,8 +83,6 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
 #endif
 
   if (file != NULL) {
-    retCode ret = Ok;
-
     byte ch;
 
     if ((ch = inB(file)) == '#') { /* look for standard #!/.... header */
@@ -218,8 +217,10 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
       // The imports are next in the signature
       if (ret == Ok)
         ret = skipEncoded(in, errorMsg, msgLen); // Move over the tuple constructor
-      for (integer ix = 0; ret == Ok && ix < len; ix++) {
-        ret = isLookingAt(in, "n2o2'import'");
+      integer ix = 0;
+      while (ix++ < len) {
+        if (ret == Ok)
+          ret = isLookingAt(in, "n2o2'import'");
 
         if (ret == Ok)
           ret = skipEncoded(in, errorMsg, msgLen);  // skip the private/public flag
@@ -232,6 +233,8 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
 
         if (ret == Ok)
           ret = pickup(pkgNm, vrNm, errorMsg, msgLen, cl);
+        if (ret != Ok)
+          return ret;
       }
       return ret;
     } else
@@ -354,10 +357,8 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
     ret = decodePrgName(in, prgName, NumberOf(prgName), &arity);
 
 #ifdef EXECTRACE
-    if (debugging) {
-      outMsg(logFile, "loading segment %s:%d\n", prgName, arity);
-      flushOut();
-    }
+    if (debugging)
+      outMsg(logFile, "loading segment %s:%d\n%_", prgName, arity);
 #endif
 
     if (ret == Ok && isLookingAt(in, "s") == Ok) {
@@ -529,7 +530,7 @@ retCode g__install_pkg(processPo P, ptrPo a) {
 
     switch (ret) {
       case Ok:
-        return equal(P, &lst, &a[3]);
+        return equal(P, &lst, &a[2]);
       case Error:
       case Eof:
         return liberror(P, "_install_pkg", eINVAL);

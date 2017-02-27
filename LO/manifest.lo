@@ -14,7 +14,7 @@ lo.repo.manifest{
 
   public flushManifest:(uri,manifest){}.
   flushManifest(Root,M) :-
-    putResource(Root,implode(flatten(disp(manifestJson(M))))).
+    putResource(Root,formatSS(disp(manifestJson(M)))).
 
   jsonManifest:(json,manifest){}.
   jsonManifest(jColl(L),manifest(L///jsonPkgEntry)).

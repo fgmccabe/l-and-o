@@ -2,6 +2,7 @@ lo.comp.args {
   import lo.uri.
   import lo.resources.
   import lo.
+  import lo.options.
 
   import lo.comp.package.
   import lo.comp.errors.
@@ -29,32 +30,104 @@ lo.comp.args {
     dependency = dp.
   }
 
-  updateDbg:(compOption,logical) => compOption.
-  updateDbg(comp(_,p,l,w,r,v,pk,dp),d) => comp(d,p,l,w,r,v,pk,dp).
+  updateDbg:(string,compOption) => compOption.
+  updateDbg(_,comp(_,p,l,w,r,v,pk,dp)) => comp(true,p,l,w,r,v,pk,dp).
 
-  updateProlog:(compOption,logical) => compOption.
-  updateProlog(comp(d,p,_,w,r,v,pk,dp),l) => comp(d,p,l,w,r,v,pk,dp).
+  updateProlog:(string,compOption) => compOption.
+  updateProlog(_,comp(d,p,_,w,r,v,pk,dp)) => comp(d,p,true,w,r,v,pk,dp).
 
-  updateProf:(compOption,logical) => compOption.
-  updateProf(comp(d,_,l,w,r,v,pk,dp),p) => comp(d,p,l,w,r,v,pk,dp).
+  updateProf:(string,compOption) => compOption.
+  updateProf(_,comp(d,_,l,w,r,v,pk,dp)) => comp(d,true,l,w,r,v,pk,dp).
 
-  updateWd:(compOption,uri) => compOption.
-  updateWd(comp(d,p,l,_,r,v,pk,dp),w) => comp(d,p,l,w,r,v,pk,dp).
+  updateWd:(string,compOption) => compOption.
+  updateWd(w,comp(d,p,l,_,r,v,pk,dp)) => comp(d,p,l,parseUri(w),r,v,pk,dp).
 
-  updateRepoD:(compOption,uri) => compOption.
-  updateRepoD(comp(d,p,l,w,_,v,pk,dp),r) => comp(d,p,l,w,r,v,pk,dp).
+  updateRepoD:(string,compOption) => compOption.
+  updateRepoD(r,comp(d,p,l,w,_,v,pk,dp)) => comp(d,p,l,w,parseUri(r),v,pk,dp).
 
-  updatePk:(compOption,list[pkg]) => compOption.
-  updatePk(comp(d,p,l,w,r,v,_,dp),pk) => comp(d,p,l,w,r,v,pk,dp).
+  updatePk:(list[pkg],compOption) => compOption.
+  updatePk(pk,comp(d,p,l,w,r,v,_,dp)) => comp(d,p,l,w,r,v,pk,dp).
 
-  updateVers:(compOption,version) => compOption.
-  updateVers(comp(d,p,l,w,r,_,pk,dp),v) => comp(d,p,l,w,r,v,pk,dp).
+  updateVers:(string,compOption) => compOption.
+  updateVers(v,comp(d,p,l,w,r,_,pk,dp)) => comp(d,p,l,w,r,vers(v),pk,dp).
 
-  updateDep:(compOption,logical) => compOption.
-  updateDep(comp(d,p,l,w,r,v,pk,_),dp) => comp(d,p,l,w,r,v,pk,dp).
+  updateDep:(string,compOption) => compOption.
+  updateDep(_,comp(d,p,l,w,r,v,pk,_)) => comp(d,p,l,w,r,v,pk,false).
+
+  dbgOption:optionsProcessor[compOption].
+  dbgOption <= {
+    shortForm = "-g".
+    alternatives = ["--debug"].
+    usage = "-g -- enable symbolic debugging".
+    validator = none.
+    setOption(updateDbg).
+  }
+
+  prologOnlyOption:optionsProcessor[compOption].
+  prologOnlyOption <= {
+    shortForm = "-po".
+    alternatives = ["--prolog"].
+    usage = "--prolog -- generate prolog code".
+    validator = none.
+    setOption(updateProlog).
+  }
+
+  profileOption:optionsProcessor[compOption].
+  profileOption <= {
+    shortForm = "-p".
+    alternatives = ["--profile"].
+    usage = "--profile -- enable profiling".
+    validator = none.
+    setOption(updateProf).
+  }
+
+  wdOption:optionsProcessor[compOption].
+  wdOption <= {
+    shortForm = "-w".
+    alternatives = ["--wd"].
+    usage = "-w dir -- source directory".
+    validator = some(isDir).
+    setOption(updateWd).
+  }
+
+  repoOption:optionsProcessor[compOption].
+  repoOption <= {
+    shortForm = "-r".
+    alternatives = ["--repo"].
+    usage = "-r dir -- directory of code repository".
+    validator = some(isDir).
+    setOption(updateRepoD).
+  }
+
+  dependencyOption:optionsProcessor[compOption].
+  dependencyOption <= {
+    shortForm = "-nd".
+    alternatives = ["--no-dependencies"].
+    usage = "--nd -- ignore dependencies".
+    validator = none.
+    setOption(updateDep).
+  }
+
+  isDir:(string){}.
+  isDir(D) :- filePresent(D), fileType(D) = directory.
 
   public parseFlags:(list[string]) => compOption.
-  parseFlags(args) => parseFlgs(args,comp(false,false,false,W,W,defltVersion,[],true)) :- W=parseUri(cwd()).
+  parseFlags(args) =>
+
+    handleCmdLineOpts(processOptions(args,[dbgOption,prologOnlyOption,profileOption,wdOption,repoOption,dependencyOption],
+    comp(false,false,false,W,W,defltVersion,[],true))) :-
+      W=parseUri(cwd()).
+
+  handleCmdLineOpts:(either[(compOption,list[string]),string]){}.
+  handleCmdLineOpts(either((Opts,PkgNms))) :-
+    Repo = (openRepository(parseUri(Opts.repo)),coreRepo),
+    importPkgs([parsePkgName(Top)],[],_,Repo),
+    invokeMain(Top,Args)
+
+    handleCmdLineOpts(_command_line(),[repoOption,wdOption],bootOptions(cwd(),cwd()))).
+
+
+    parseFlgs(args,) :- .
 
   private parseFlgs:(list[string],compOption) => compOption.
   parseFlgs([],Opts) => Opts.

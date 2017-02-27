@@ -12,6 +12,7 @@ lo.comp.bootstrap{
   import lo.comp.canon.
   import lo.comp.catalog.
   import lo.comp.genprolog.
+  import lo.comp.imports.
   import lo.comp.package.
   import lo.comp.typecheck.
   import lo.comp.errors.
@@ -65,7 +66,7 @@ lo.comp.bootstrap{
 
   importsOk:(list[pkg],list[pkg]){}.
   importsOk([],_).
-  importsOk([P,..L],CP) :- \+ P in CP, importsOk(L,CP).
+  importsOk([Pk,..L],CP) :- \+ (P in CP, consistentPkg(Pk,P)), importsOk(L,CP).
 
   compilePkg:(pkg,fileRepo,fileRepo,catalog,compOption,report,report){}.
   compilePkg(Pkg,Repo,Repox,Cat,Opts,Rp,Rpx) :-

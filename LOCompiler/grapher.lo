@@ -16,9 +16,8 @@ lo.comp.grapher{
   import lo.comp.misc.
 
   public makeGraph:(list[pkg],fileRepo,catalog,report,report) => list[list[(pkg,list[pkg])]].
-  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => G :-
-    G = topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)),
-    showGroups(G).
+  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
+  --  showGroups(G).
 
   private implementation depends[(pkg,list[pkg])->>pkg] <= {
     defines((Pk,_),Rq) :- consistentPkg(Rq,Pk).
@@ -42,16 +41,6 @@ lo.comp.grapher{
   showPkg((P,I)) :-
     logMsg("\(P) --> \(I)").
 
-  consistentPkg:(pkg,pkg){}.
-  consistentPkg(pkg(P,V1),pkg(P,V2)) :- consistentVersion(V1,V2)!.
-
-  consistentVersion:(version,version){}.
-  consistentVersion(defltVersion,_).
-  consistentVersion(vers(V),vers(V)).
-
-  private graphPkgs:(list[(pkg,list[pkg])]) => list[list[(pkg,list[pkg])]].
-  graphPkgs(Pkgs) => topsort(Pkgs).
-
   scanPkgs:(list[pkg],fileRepo,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   scanPkgs([],_,_,SoFar,Rp,Rp) => SoFar.
   scanPkgs([Pkg,..Imports],Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imports,Repo,Cat,scanPkg(Pkg,Repo,Cat,SoFar,Rp,Rp0),Rp0,Rpx).
@@ -69,7 +58,8 @@ lo.comp.grapher{
     reportError("cannot locate package \(Pkg)",std,Rp,Rpx).
 
   checkPkg:(pkgSpec,fileRepo,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
-  checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imported,Repo,Cat,[(Pkg,Imported),..SoFar],Rp,Rpx) :-
+  checkPkg(pkgSpec(Pkg,_,_,_,_,_,Imports),Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imported,Repo,Cat,[(VPkg,Imported),..SoFar],Rp,Rpx) :-
+    resolveCatalog(Cat,Pkg,_,VPkg),
     Imported = projectOutPkgs(Imports).
 
   private projectOutPkgs:(list[(visibility,pkg)]) => list[pkg].

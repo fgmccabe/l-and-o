@@ -71,8 +71,6 @@ manifestEntryPo newManifestEntry(string name) {
   manifestEntryPo entry = (manifestEntryPo) allocPool(manifestPool);
   uniCpy((string) &entry->package, NumberOf(entry->package), name);
   entry->versions = NewHash(1, (hashFun) uniHash, (compFun) uniCmp, NULL);
-  entry->deflt = NULL;
-  hashPut(manifest, &entry->package, entry);
   return entry;
 }
 
@@ -97,12 +95,21 @@ manifestVersionPo newVersion(string version) {
   return vEntry;
 }
 
+static retCode pickAny(void *n,void *r,void *c){
+  manifestVersionPo *tgt = (manifestVersionPo*)c;
+  *tgt = (manifestVersionPo)r;
+  return Eof;
+}
+
 manifestVersionPo manifestVersion(string package, string version) {
   manifestEntryPo entry = manifestEntry(package);
 
   if (entry != NULL) {
-    if (uniCmp(version, (string) "*") == same && entry->deflt != NULL)
-      return entry->deflt;
+    if (uniCmp(version, (string) "*") == same){
+      manifestVersionPo deflt = NULL;
+      ProcessTable(pickAny,entry->versions,&deflt);
+      return deflt;
+    }
     else
       return (manifestVersionPo) hashGet(entry->versions, version);
   } else

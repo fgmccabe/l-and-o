@@ -7,7 +7,7 @@ extern logical debugging;	/* instruction tracing option */
 extern logical interactive;	/* Whether it should be interactive */
 extern logical enableVerify;    /* true if we wish to enable code verification */
 extern logical SymbolDebug;	/* symbolic debugging generation */
-extern logical traceEscapes;	/* tracing of escape calls  */
+extern logical traceCalls;	/* trace all calls  */
 extern logical traceVerify;	/* Tracing of code verification */
 extern logical traceMessage;	/* message tracing  */
 extern logical traceTCP;	/* tracing of TCP messages */

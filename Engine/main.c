@@ -161,7 +161,7 @@ int getOptions(int argc, char **argv) {
           switch (*c++) {
             case 'e':    /* Escape call tracing */
 #ifdef EXECTRACE
-              traceEscapes = True;
+              traceCalls = True;
               continue;
 #else
             logMsg(logFile,"Escape tracing not enabled\n");
@@ -261,7 +261,7 @@ int getOptions(int argc, char **argv) {
 
             case '*':    /* trace everything */
 #ifdef ALLTRACE
-              traceEscapes = True;
+              traceCalls = True;
               debugging = True;
               interactive = True;
               traceVerify = True;

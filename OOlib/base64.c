@@ -152,7 +152,7 @@ static retCode encodeWord(ioPo dst, uint32 val) {
 
 static retCode encodeLast(ioPo dst, byte hi, byte md, byte lo, char *rest) {
   retCode ret = encByte(dst, hi);
-  if (ret == Ok && md != 0)
+  if (ret == Ok)
     ret = encByte(dst, md);
   if (ret == Ok && lo != 0)
     ret = encByte(dst, lo);

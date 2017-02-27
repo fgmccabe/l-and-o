@@ -162,7 +162,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_flushall,True,False,"P0","flush all files")
   escape(_setfileencoding,True,False,"P2"fileType"i", "set file encoding on file")
 
-  escape(_install_pkg,True,False,"F2SSLT2SS","define package from string contents")
+  escape(_install_pkg,True,False,"F1SLT2SS","define package from string contents")
   escape(_pkg_is_present,True,False,"P4SSSS","True if an identified resource is available")
 
   escape(_logmsg,False,False,"P1S","log a message in logfile or console")
@@ -254,6 +254,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_str_split,False,False,"P4SiSS","split a string at a point")
   escape(_str_concat,False,False,"F2SSS","Concatenate two strings")
   escape(_str_start,False,False,"P2SS","True if second string starts with first")
+  escape(_str_multicat,False,False,"F1LSS","Concatenate a list of strings into one")
 
   escape(getenv,False,False,"F2SSS","get an environment variable")
   escape(setenv,True,False,"P2SS","set an environment variable")

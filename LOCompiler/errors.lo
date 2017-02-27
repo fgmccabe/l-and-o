@@ -73,10 +73,6 @@ lo.comp.errors{
   reportMsg:(string,location,report,report){}.
   reportMsg(Msg,Lc,report(L),report([othMsg(Lc,Msg),..L])).
 
-  public
-  logMsg:(string){}.
-  logMsg(Msg) :- _logmsg(Msg).
-
   public populateContext:(report,string,array[string]) => report.
   populateContext(report(Msgs),Pth,Lines) => report(sourceMsgs(Msgs,Pth,Lines)).
 

@@ -2,7 +2,7 @@
                     '_flt_plus'/3,'_flt_minus'/3,'_flt_times'/3,'_flt_div'/3,'_flt_mod'/3,
                     '_int_abs'/2,'_flt_abs'/2,
                     explode/2, implode/2,
-                    '_str_find'/4, '_sub_str'/4, '_str_split'/4, '_str_concat'/3, '_str_gen'/2,'_str_len'/2,'_str_start'/2,
+                    '_str_find'/4, '_sub_str'/4, '_str_split'/4, '_str_concat'/3, '_str_multicat'/2,'_str_gen'/2,'_str_len'/2,'_str_start'/2,
                     '_unify'/2,
                     '_isCcChar'/1,'_isCfChar'/1,'_isCnChar'/1,'_isCoChar'/1,'_isCsChar'/1,
                     '_isLlChar'/1,'_isLmChar'/1,'_isLoChar'/1,'_isLtChar'/1,'_isLuChar'/1,
@@ -141,6 +141,14 @@ codeGe([C|L],[C|M]) :-
 
 '_str_concat'(A,B,C) :-
   string_concat(A,B,C).
+
+'_str_multicat'(A,B) :-
+  multiStrCat(A,"",B),!.
+
+multiStrCat('lo.core#[]',S,S).
+multiStrCat('lo.core#,..'(S,L),F,O) :-
+  string_concat(F,S,F1),
+  multiStrCat(L,F1,O).
 
 '_str_find'(Src,Tgt,From,Px) :-
   sub_string(Src,Px,_,_,Tgt), Px>=From,!.

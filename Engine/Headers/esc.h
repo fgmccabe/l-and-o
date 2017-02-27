@@ -29,7 +29,7 @@ void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity, cha
 logical validEscape(unsigned int code, unsigned short arity);
 void ScanEscapes(void);
 
-void showCall(processPo P,ptrI prog,ptrPo args,long arity);
+void showCall(processPo P, char *prefix, ptrI prog, ptrPo args, long arity);
 void showOCall(processPo P,ptrPo obj,ptrPo call,ptrPo this);
 
 

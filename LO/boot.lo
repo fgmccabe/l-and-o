@@ -18,6 +18,7 @@
 lo.boot{
   import lo.
   import lo.options.
+  import lo.either.
   import lo.repo.
   import lo.repo.file.
   import lo.uri.
@@ -27,14 +28,6 @@ lo.boot{
   bootOptions(R,W) <= {
     repo = R.
     wd = W.
-  }
-
-  public type all o ~~ optionsProcessor <~ {
-    shortForm : string.
-    alternatives : list[string].
-    usage : string.
-    validator : option[(string){}].
-    setOption: (string,o) => o.
   }
 
   repoOption:optionsProcessor[bootOptions].
@@ -64,8 +57,8 @@ lo.boot{
 
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
   handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
-    Repo = openRepository(parseUri(Opts.repo)),
-    importPkgs([parsePkgName(Top)],(Repo,coreRepo)),
+    Repo = (openRepository(parseUri(Opts.repo)),coreRepo),
+    importPkgs([parsePkgName(Top)],[],_,Repo),
     invokeMain(Top,Args).
 
   importPkgs:all r ~~ repository[r] |: (list[pkg],list[pkg],list[pkg],r){}.
@@ -77,16 +70,16 @@ lo.boot{
 
   importPkg:all r ~~ repository[r] |: (pkg,r,list[pkg],list[pkg]){}.
   importPkg(P,_,Ld,[]) :- P in Ld.
-  importPkg(P,R,Ld,Imps//((P,V))=>pkgUp(P,V)) :-
-    locateCode(R,P,_,Code),
-    _define_code(Code,Imps).
+  importPkg(P,R,Ld,Imps//(((Pk,V))=>pkgUp(Pk,V))) :-
+    loadFromRepo(R,P,"code",Code),
+    Imps = _install_pkg(Code).
 
   pkgUp:(string,string) => pkg.
   pkgUp(P,"*") => pkg(P,defltVersion).
   pkgUp(P,V) => pkg(P,vers(V)).
 
-  initialize:(string){}.
-  initialize(P) :-
+  initialize:(pkg){}.
+  initialize(pkg(P,_)) :-
     Pred = P+"@init",
     ( _defined(Pred,0) ?
       _call(Pred,0,[]) |
@@ -94,10 +87,10 @@ lo.boot{
 
   invokeMain:(string,list[string]){}.
   invokeMain(Top,Args) :-
-    Pred = Top+"@main",
-    ( _defined(Pred,1) ?
+    Pred = Top+"@_main",
+    ( _defined(Pred,size(Args)) ?
       logMsg("Starting ..."),
-      _call(Pred,1,[[Args]]) |
+      _call(Pred,1,Args) |
       logMsg("No main program: \(Top)") ).
 
   private delayHandler:(list[(){}]){}. -- private, but known to the run-time

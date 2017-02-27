@@ -105,7 +105,7 @@ lo.comp.escapes{
   escapeType("_flush") => predType(tupleType([tipe("lo.io*fileHandle")])).
   escapeType("_flushall") => predType(tupleType([])).
   escapeType("_setfileencoding") => predType(tupleType([tipe("lo.io*fileHandle"),tipe("lo.core*integer")])).
-  escapeType("_install_pkg") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
+  escapeType("_install_pkg") => funType(tupleType([tipe("lo.core*string")]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
   escapeType("_pkg_is_present") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_logmsg") => predType(tupleType([tipe("lo.core*string")])).
   escapeType("_connect") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.io*fileHandle"),tipe("lo.io*fileHandle")])).
@@ -177,6 +177,7 @@ lo.comp.escapes{
   escapeType("_str_split") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("_str_concat") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("_str_start") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
+  escapeType("_str_multicat") => funType(tupleType([typeExp(tpFun("lo.core*list",1),[tipe("lo.core*string")])]),tipe("lo.core*string")).
   escapeType("getenv") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")]),tipe("lo.core*string")).
   escapeType("setenv") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*string")])).
   escapeType("envir") => funType(tupleType([]),typeExp(tpFun("lo.core*list",1),[tupleType([tipe("lo.core*string"),tipe("lo.core*string")])])).
@@ -366,6 +367,7 @@ lo.comp.escapes{
   isEscape("_str_split").
   isEscape("_str_concat").
   isEscape("_str_start").
+  isEscape("_str_multicat").
   isEscape("getenv").
   isEscape("setenv").
   isEscape("envir").
@@ -555,21 +557,22 @@ lo.comp.escapes{
   escCode("_str_split") => 168.
   escCode("_str_concat") => 169.
   escCode("_str_start") => 170.
-  escCode("getenv") => 171.
-  escCode("setenv") => 172.
-  escCode("envir") => 173.
-  escCode("getlogin") => 174.
-  escCode("_fork") => 175.
-  escCode("_thread") => 176.
-  escCode("kill") => 177.
-  escCode("thread_state") => 178.
-  escCode("waitfor") => 179.
-  escCode("_shell") => 180.
-  escCode("_newLock") => 181.
-  escCode("_acquireLock") => 182.
-  escCode("_waitLock") => 183.
-  escCode("_releaseLock") => 184.
-  escCode("_ins_debug") => 185.
-  escCode("_stackTrace") => 186.
+  escCode("_str_multicat") => 171.
+  escCode("getenv") => 172.
+  escCode("setenv") => 173.
+  escCode("envir") => 174.
+  escCode("getlogin") => 175.
+  escCode("_fork") => 176.
+  escCode("_thread") => 177.
+  escCode("kill") => 178.
+  escCode("thread_state") => 179.
+  escCode("waitfor") => 180.
+  escCode("_shell") => 181.
+  escCode("_newLock") => 182.
+  escCode("_acquireLock") => 183.
+  escCode("_waitLock") => 184.
+  escCode("_releaseLock") => 185.
+  escCode("_ins_debug") => 186.
+  escCode("_stackTrace") => 187.
 
 }.

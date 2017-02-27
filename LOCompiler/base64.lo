@@ -5,10 +5,9 @@ lo.comp.base64{
   encode64([H,M,L,..R]) => encodeWord((H.<<.16).|.(M.<<.8).|.L,encode64(R)).
   encode64([H,M]) => encLast(Up,Hi,Md,[0c=]) :- mapToSix((H.<<.16).|.(M.<<.8),Up,Hi,Md,_).
   encode64([H]) => encLast(Up,Hi,Md,[0c=,0c=]) :- mapToSix((H.<<.16),Up,Hi,Md,_).
-  encode64([]) => []. 
+  encode64([]) => [].
 
   private encLast:(integer,integer,integer,list[integer]) => list[integer].
-  encLast(Up,0,0,Rest) => [encByte(Up),..Rest].
   encLast(Up,Hi,0,Rest) => [encByte(Up),encByte(Hi),..Rest].
   encLast(Up,Hi,Md,Rest) => [encByte(Up),encByte(Hi),encByte(Md),..Rest].
 

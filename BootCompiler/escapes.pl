@@ -101,7 +101,7 @@ escapeType("_fseek",predType([type("lo.io*fileHandle"),type("lo.core*integer")])
 escapeType("_flush",predType([type("lo.io*fileHandle")])).
 escapeType("_flushall",predType([])).
 escapeType("_setfileencoding",predType([type("lo.io*fileHandle"),type("lo.core*integer")])).
-escapeType("_install_pkg",funType([type("lo.core*string"),type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
+escapeType("_install_pkg",funType([type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
 escapeType("_pkg_is_present",predType([type("lo.core*string"),type("lo.core*string"),type("lo.core*string"),type("lo.core*string")])).
 escapeType("_logmsg",predType([type("lo.core*string")])).
 escapeType("_connect",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*integer"),type("lo.io*fileHandle"),type("lo.io*fileHandle")])).
@@ -173,6 +173,7 @@ escapeType("_sub_str",funType([type("lo.core*string"),type("lo.core*integer"),ty
 escapeType("_str_split",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_concat",funType([type("lo.core*string"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("_str_start",predType([type("lo.core*string"),type("lo.core*string")])).
+escapeType("_str_multicat",funType([typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])],type("lo.core*string"))).
 escapeType("getenv",funType([type("lo.core*string"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("setenv",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("envir",funType([],typeExp(tpFun("lo.core*list",1),[tupleType([type("lo.core*string"),type("lo.core*string")])]))).
@@ -360,6 +361,7 @@ isEscape("_sub_str").
 isEscape("_str_split").
 isEscape("_str_concat").
 isEscape("_str_start").
+isEscape("_str_multicat").
 isEscape("getenv").
 isEscape("setenv").
 isEscape("envir").

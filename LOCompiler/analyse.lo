@@ -101,6 +101,7 @@ lo.comp.code.analyse{
   checkOccForArg:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
   checkOccForArg(hArg,Gp,Gp,Rg,U,A) => addMem(A,Rg).
   checkOccForArg(hTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForArg(lTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
   checkOccForArg(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
   checkOccForArg(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
   checkOccForArg(_,_,_,_,_,A) => A.

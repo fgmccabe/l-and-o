@@ -234,6 +234,7 @@ lo.comp.types{
 
   surfaceName:(tipe) => string.
   surfaceName(anonType) => "_".
+  surfaceName(tVar(_,_,_)) => "_".
   surfaceName(tipe(Nm)) => Nm.
   surfaceName(tpFun(Nm,_)) => Nm.
   surfaceName(typeExp(Nm,_)) => surfaceName(deRef(Nm)).

@@ -9,18 +9,18 @@ lo{
   public import lo.sets.
   public import lo.trie.
 
-  public flatten : (ss) => list[integer].
+  public flatten : (ss) => list[string].
   flatten(D) => flttn(D,[]).
 
-  flttn : (ss,list[integer]) => list[integer].
-  flttn(ss(S),Rest) => explode(S)<>Rest.
+  flttn : (ss,list[string]) => list[string].
+  flttn(ss(S),Rest) => [S,..Rest].
   flttn(ssSeq(L),Rest) => flttnList(L,Rest).
-  flttn(sc(C),Rest) => [C,..Rest].
+  flttn(sc(C),Rest) => [implode([C]),..Rest].
 
-  flttnList:(list[ss],list[integer]) => list[integer].
+  flttnList:(list[ss],list[string]) => list[string].
   flttnList([],Rest) => Rest.
   flttnList([E,..R],Rest) => flttn(E,flttnList(R,Rest)).
 
   public formatSS:(ss) => string.
-  formatSS(S) => implode(flatten(S)). -- temporary definition.
+  formatSS(S) => _str_multicat(flatten(S)). -- temporary definition.
 }
