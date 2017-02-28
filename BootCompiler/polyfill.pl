@@ -188,7 +188,7 @@ writeCodes(Str,[Code|More]) :-
 
 '_str_hash'(S,HH) :-
     stringHash(0,S,H),
-    HH is H mod 9223372036854775808.
+    HH is H mod 18446744073709551616.
 
 stringHash(H,Str,Hx) :-
   string_codes(Str,Codes),

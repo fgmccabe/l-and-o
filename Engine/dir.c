@@ -32,7 +32,7 @@ retCode g__cwd(processPo P, ptrPo a) {
   setProcessRunnable(P);
   byte wd[MAXFILELEN];
 
-  strMsg(wd,NumberOf(wd),"%s/",cwd);
+  strMsg(wd,NumberOf(wd),"file:%s/",cwd);
 
   if (cwd != NULL) {
     ptrI CWD = allocateCString(&P->proc.heap, (char*)wd);

@@ -690,7 +690,7 @@ void runGo(register processPo P) {
             return;
           }
           if (traceCalls)
-            showEscape(P, "escape: ", op_o_val(PCX), &A[1], op_h_val(PCX), "");
+            showEscape(P, "escape: ", op_o_val(PCX), &A[1], op_h_val(PCX), "\n");
 
 #ifdef MEMTRACE
           if (traceMemory)

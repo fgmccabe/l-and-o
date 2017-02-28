@@ -7,7 +7,7 @@ lo.comp.reduce{
   import lo.comp.term.
 
   public reduceClause:(clse) => clse.
-  reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody<>Post) :-
+  reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>Post<>NBody) :-
     reduceArgs(Args,Q,NArgs,Guard,Post,Q1)!,
     reduceBody(Body,Q1,NBody,NQ).
 

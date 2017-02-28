@@ -34,7 +34,7 @@ lo.comp.compiler{
     Cat = locateCatalog(Opts.wDir),
     (Opts.dependency ?
       processGroups(makeGraph(Opts.pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)! |
-      compilePkgs(Opts.pkgs,Repo,Car,Opts,reportBase,Rpx)),
+      compilePkgs(Opts.pkgs,Repo,Cat,Opts,reportBase,Rpx)),
     _logmsg(formatSS(fullReport(Rpx))).
   processArgs(alternate(M)) :-
     _logmsg(M).

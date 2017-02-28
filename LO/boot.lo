@@ -39,9 +39,6 @@ lo.boot{
     setOption(R,bootOptions(_,W)) => bootOptions(R,W).
   }
 
-  isDir:(string){}.
-  isDir(D) :- filePresent(D), fileType(D) = directory.
-
   wdOption:optionsProcessor[bootOptions].
   wdOption <= {
     shortForm = "-w".
@@ -53,11 +50,14 @@ lo.boot{
 
   public __boot:(){}.
   __boot() :-
-    handleCmdLineOpts(processOptions(_command_line(),[repoOption,wdOption],bootOptions(cwd(),cwd()))).
+    WD = cwd(),
+    handleCmdLineOpts(processOptions(_command_line(),[repoOption,wdOption],bootOptions(WD,WD))).
 
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
   handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
-    Repo = (openRepository(parseUri(Opts.repo)),coreRepo),
+    RD = resolveUri(parseUri(cwd()),parseUri(Opts.repo)),
+    _logmsg("repo dir: \(RD)"),
+    Repo = (openRepository(RD),coreRepo),
     importPkgs([parsePkgName(Top)],[],_,Repo),
     invokeMain(Top,Args).
 
