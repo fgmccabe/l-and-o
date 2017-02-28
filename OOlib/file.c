@@ -682,6 +682,17 @@ retCode isRegularFile(string fname) {
     return Ok;
 }
 
+retCode isDirectory(string fname) {
+  struct stat buf;
+
+  if (stat((const char *) fname, &buf) == -1)
+    return Fail;    /* File not found */
+  else if (S_ISDIR(buf.st_mode))
+    return Ok;
+  else
+    return Fail;
+}
+
 /* Special macro for Windows 95 */
 #define FILE_ACCESS_MODE F_OK|R_OK
 

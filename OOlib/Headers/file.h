@@ -42,8 +42,9 @@ ioPo newOutFile(string file,ioEncoding encoding);
 
 retCode filePresent(string name);
 retCode isRegularFile(string fname);
+retCode isDirectory(string fname);
 
-ioPo OpenStdin(void);
+  ioPo OpenStdin(void);
 ioPo OpenStdout(void);
 ioPo OpenStderr(void);
 

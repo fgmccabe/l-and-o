@@ -197,8 +197,10 @@ lo.io {
 
   -- Test for the presence of a file
   public filePresent:(string){}.
-  filePresent(F) :-
-      _file_present(F).
+  filePresent(F) :- _file_present(F).
+
+  public isDir:(string){}.
+  isDir(D) :- _isdir(D).
 
   -- report on the size of a file
   public fileSize:(string)=>integer.

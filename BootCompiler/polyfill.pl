@@ -28,7 +28,7 @@
                     '_band'/3,'_bor'/3,'_bxor'/3,
                     '_blsr'/3,'_basr'/3,'_blsl'/3,
                     '_nthb'/2,
-                    '_file_present'/1,'_file_size'/2,'_file_modified'/2,'_ls'/2,
+                    '_file_present'/1,'_isdir'/1,'_file_size'/2,'_file_modified'/2,'_ls'/2,
                     ticks/1
                     ]).
 
@@ -212,6 +212,8 @@ hashCodes([C|More],H0,Hx) :-
 % File access primitives
 
 '_file_present'(S) :- exists_file(S).
+
+'_isdir'(D) :- exists_directory(D).
 
 '_file_size'(F,S) :- size_file(F,S).
 

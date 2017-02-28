@@ -125,6 +125,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_mv,True,False,"P2SS","rename file")
   escape(_mkdir,True,False,"P2Si","create directory")
   escape(_rmdir,True,False,"P1S","delete directory")
+  escape(_isdir,True,False,"P1S","is directory present")
   escape(_chmod,True,False,"P2Si","change mode of a file or directory")
   escape(_ls,True,False,"F1SLS","return a list of files in a directory")
 

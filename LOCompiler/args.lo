@@ -2,6 +2,7 @@ lo.comp.args {
   import lo.uri.
   import lo.resources.
   import lo.
+  import lo.either.
   import lo.options.
 
   import lo.comp.package.
@@ -30,37 +31,13 @@ lo.comp.args {
     dependency = dp.
   }
 
-  updateDbg:(string,compOption) => compOption.
-  updateDbg(_,comp(_,p,l,w,r,v,pk,dp)) => comp(true,p,l,w,r,v,pk,dp).
-
-  updateProlog:(string,compOption) => compOption.
-  updateProlog(_,comp(d,p,_,w,r,v,pk,dp)) => comp(d,p,true,w,r,v,pk,dp).
-
-  updateProf:(string,compOption) => compOption.
-  updateProf(_,comp(d,_,l,w,r,v,pk,dp)) => comp(d,true,l,w,r,v,pk,dp).
-
-  updateWd:(string,compOption) => compOption.
-  updateWd(w,comp(d,p,l,_,r,v,pk,dp)) => comp(d,p,l,parseUri(w),r,v,pk,dp).
-
-  updateRepoD:(string,compOption) => compOption.
-  updateRepoD(r,comp(d,p,l,w,_,v,pk,dp)) => comp(d,p,l,w,parseUri(r),v,pk,dp).
-
-  updatePk:(list[pkg],compOption) => compOption.
-  updatePk(pk,comp(d,p,l,w,r,v,_,dp)) => comp(d,p,l,w,r,v,pk,dp).
-
-  updateVers:(string,compOption) => compOption.
-  updateVers(v,comp(d,p,l,w,r,_,pk,dp)) => comp(d,p,l,w,r,vers(v),pk,dp).
-
-  updateDep:(string,compOption) => compOption.
-  updateDep(_,comp(d,p,l,w,r,v,pk,_)) => comp(d,p,l,w,r,v,pk,false).
-
   dbgOption:optionsProcessor[compOption].
   dbgOption <= {
     shortForm = "-g".
     alternatives = ["--debug"].
     usage = "-g -- enable symbolic debugging".
     validator = none.
-    setOption(updateDbg).
+    setOption(_,comp(_,p,l,w,r,v,pk,dp)) => comp(true,p,l,w,r,v,pk,dp).
   }
 
   prologOnlyOption:optionsProcessor[compOption].
@@ -69,7 +46,7 @@ lo.comp.args {
     alternatives = ["--prolog"].
     usage = "--prolog -- generate prolog code".
     validator = none.
-    setOption(updateProlog).
+    setOption(_,comp(d,p,_,w,r,v,pk,dp)) => comp(d,p,true,w,r,v,pk,dp).
   }
 
   profileOption:optionsProcessor[compOption].
@@ -78,7 +55,8 @@ lo.comp.args {
     alternatives = ["--profile"].
     usage = "--profile -- enable profiling".
     validator = none.
-    setOption(updateProf).
+    setOption(_,comp(d,_,l,w,r,v,pk,dp)) => comp(d,true,l,w,r,v,pk,dp).
+
   }
 
   wdOption:optionsProcessor[compOption].
@@ -87,7 +65,7 @@ lo.comp.args {
     alternatives = ["--wd"].
     usage = "-w dir -- source directory".
     validator = some(isDir).
-    setOption(updateWd).
+    setOption(w,comp(d,p,l,_,r,v,pk,dp)) => comp(d,p,l,resolveUri(parseUri(cwd()),parseUri(w)),r,v,pk,dp).
   }
 
   repoOption:optionsProcessor[compOption].
@@ -96,7 +74,7 @@ lo.comp.args {
     alternatives = ["--repo"].
     usage = "-r dir -- directory of code repository".
     validator = some(isDir).
-    setOption(updateRepoD).
+    setOption(r,comp(d,p,l,w,_,v,pk,dp)) => comp(d,p,l,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk,dp).
   }
 
   dependencyOption:optionsProcessor[compOption].
@@ -105,45 +83,23 @@ lo.comp.args {
     alternatives = ["--no-dependencies"].
     usage = "--nd -- ignore dependencies".
     validator = none.
-    setOption(updateDep).
+    setOption(_,comp(d,p,l,w,r,v,pk,_)) => comp(d,p,l,w,r,v,pk,false).
   }
 
-  isDir:(string){}.
-  isDir(D) :- filePresent(D), fileType(D) = directory.
-
-  public parseFlags:(list[string]) => compOption.
+  public parseFlags:(list[string]) => either[compOption,string].
   parseFlags(args) =>
-
     handleCmdLineOpts(processOptions(args,[dbgOption,prologOnlyOption,profileOption,wdOption,repoOption,dependencyOption],
     comp(false,false,false,W,W,defltVersion,[],true))) :-
       W=parseUri(cwd()).
 
-  handleCmdLineOpts:(either[(compOption,list[string]),string]){}.
-  handleCmdLineOpts(either((Opts,PkgNms))) :-
-    Repo = (openRepository(parseUri(Opts.repo)),coreRepo),
-    importPkgs([parsePkgName(Top)],[],_,Repo),
-    invokeMain(Top,Args)
-
-    handleCmdLineOpts(_command_line(),[repoOption,wdOption],bootOptions(cwd(),cwd()))).
-
-
-    parseFlgs(args,) :- .
-
-  private parseFlgs:(list[string],compOption) => compOption.
-  parseFlgs([],Opts) => Opts.
-  parseFlgs(["--",..Pkgs],Opts) => updatePk(Opts,locatePkgs(Opts,Pkgs)).
-  parseFlgs(["-g",..args],Opts) => parseFlgs(args,updateDbg(Opts,true)).
-  parseFlgs(["-p",..args],Opts) => parseFlgs(args,updateProf(Opts,true)).
-  parseFlgs(["-l",..args],Opts) => parseFlgs(args,updateProlog(Opts,true)).
-  parseFlgs(["-w",W,..args],Opts) => parseFlgs(args,updateWd(Opts,resolveUri(Opts.wDir,WD))) :- uriParse(WD) %% explode(W).
-  parseFlgs(["-r",W,..args],Opts) => parseFlgs(args,updateRepoD(Opts,resolveUri(Opts.wDir,D))) :- uriParse(D) %% explode(W).
-  parseFlgs(["-v",V,..args],Opts) => parseFlgs(args,updateVers(Opts,vers(V))).
-  parseFlgs(["-nd",..args],Opts) => parseFlgs(args,updateDep(Opts,false)).
-
-  parseFlgs([A,..args],Opts) => parseFlgs(args,Opts) :-
-    logMsg("unknown option: \(A)").
+  handleCmdLineOpts:(either[(compOption,list[string]),string]) => either[compOption,string].
+  handleCmdLineOpts(either((Opts,PkgNms))) => either(updatePkgs(Opts,locatePkgs(Opts,PkgNms))).
+  handleCmdLineOpts(alternate(M)) => alternate(M).
 
   locatePkgs:(compOption,list[string]) => list[pkg].
-  locatePkgs(_,[]) => [].
+  locatePkgs(Opts,[]) => [].
   locatePkgs(Opts,[P,..L]) => [pkg(P,Opts.version),..locatePkgs(Opts,L)].
+
+  updatePkgs:(compOption,list[pkg]) => compOption.
+  updatePkgs(comp(d,p,l,w,r,v,_,dp),pk) => comp(d,p,l,w,r,v,pk,dp).
 }

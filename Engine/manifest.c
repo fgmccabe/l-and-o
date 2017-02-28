@@ -192,19 +192,19 @@ retCode startManifest(void *cl) {
   statePo info = (statePo) cl;
   info->state = initial;
 
-  logMsg(logFile, "Starting parse of manifest");
+  //logMsg(logFile, "Starting parse of manifest");
   return Ok;
 }
 
 retCode endManifest(void *cl) {
-  logMsg(logFile, "Ending parse of manifest");
+  //logMsg(logFile, "Ending parse of manifest");
   return Ok;
 }
 
 retCode startCollection(void *cl) {
   statePo info = (statePo) cl;
 
-  logMsg(logFile, "Starting collection, state = %s", stNames[info->state]);
+  //logMsg(logFile, "Starting collection, state = %s", stNames[info->state]);
 
   switch (info->state) {
     case initial:
@@ -231,7 +231,7 @@ retCode startCollection(void *cl) {
 retCode endCollection(void *cl) {
   statePo info = (statePo) cl;
 
-  logMsg(logFile, "Ending collection, state = %s", stNames[info->state]);
+  //logMsg(logFile, "Ending collection, state = %s", stNames[info->state]);
 
   switch (info->state) {
     case initial:
@@ -266,7 +266,7 @@ retCode endArray(void *cl) {
 retCode startEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
-  logMsg(logFile, "Starting entry, state = %s, name=%s", stNames[info->state], name);
+  //logMsg(logFile, "Starting entry, state = %s, name=%s", stNames[info->state], name);
 
   switch (info->state) {
     case initial:
@@ -295,7 +295,7 @@ retCode startEntry(const char *name, void *cl) {
 retCode endEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
-  logMsg(logFile, "Ending entry, state = %s, name=%s", stNames[info->state], name);
+  //logMsg(logFile, "Ending entry, state = %s, name=%s", stNames[info->state], name);
 
   switch (info->state) {
     case inDetail:
@@ -322,7 +322,7 @@ retCode boolEntry(logical trueVal, void *cl) {
 retCode txtEntry(const char *name, void *cl) {
   statePo info = (statePo) cl;
 
-  logMsg(logFile, "Text entry, state = %s, name=%s", stNames[info->state], name);
+  //logMsg(logFile, "Text entry, state = %s, name=%s", stNames[info->state], name);
 
   switch (info->state) {
     default:

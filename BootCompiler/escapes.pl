@@ -69,6 +69,7 @@ escapeType("_rm",predType([type("lo.core*string")])).
 escapeType("_mv",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_mkdir",predType([type("lo.core*string"),type("lo.core*integer")])).
 escapeType("_rmdir",predType([type("lo.core*string")])).
+escapeType("_isdir",predType([type("lo.core*string")])).
 escapeType("_chmod",predType([type("lo.core*string"),type("lo.core*integer")])).
 escapeType("_ls",funType([type("lo.core*string")],typeExp(tpFun("lo.core*list",1),[type("lo.core*string")]))).
 escapeType("_file_mode",funType([type("lo.core*string")],type("lo.core*integer"))).
@@ -257,6 +258,7 @@ isEscape("_rm").
 isEscape("_mv").
 isEscape("_mkdir").
 isEscape("_rmdir").
+isEscape("_isdir").
 isEscape("_chmod").
 isEscape("_ls").
 isEscape("_file_mode").

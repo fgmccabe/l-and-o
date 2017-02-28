@@ -1,6 +1,6 @@
 lo.comp.bootstrap{
   import lo.
-  import lo.array.
+  import lo.either.
   import lo.uri.
   import lo.repo.file.
   import lo.resources.
@@ -23,16 +23,18 @@ lo.comp.bootstrap{
   -- Hint to the run-time:
   main:(list[string]){}.
   main(Args) :-
-    opts = parseFlags(Args),
-    (opts.dependency ?
-      processArgs(opts,opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir)) |
-      compilePkgs(opts.pkgs,openRepository(opts.repoDir),locateCatalog(opts.wDir),opts,reportBase,Rp),
-      _logmsg(formatSS(fullReport(Rp)))).
+    processArgs(parseFlags(Args)).
 
-  processArgs:(compOption,list[pkg],fileRepo,catalog){}.
-  processArgs(Opts,Pkgs,Repo,Cat) :-
-    processGroups(makeGraph(Pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)!,
+  processArgs:(either[compOption,string]){}.
+  processArgs(either(Opts)) :-
+    Repo = openRepository(Opts.repoDir),
+    Cat = locateCatalog(Opts.wDir),
+    (Opts.dependency ?
+      processGroups(makeGraph(Opts.pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)! |
+      compilePkgs(Opts.pkgs,Repo,Car,Opts,reportBase,Rpx)),
     _logmsg(formatSS(fullReport(Rpx))).
+  processArgs(alternate(M)) :-
+    _logmsg(M).
 
   processGroups:(list[list[(pkg,list[pkg])]],fileRepo,catalog,compOption,list[pkg],report,report){}.
   processGroups(_,_,_,_,_,Rp,Rpx) :-

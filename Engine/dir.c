@@ -30,9 +30,12 @@ retCode g__cwd(processPo P, ptrPo a) {
   switchProcessState(P, wait_io);
   char *cwd = getcwd(NULL, 0);           /* compute current working directory */
   setProcessRunnable(P);
+  byte wd[MAXFILELEN];
+
+  strMsg(wd,NumberOf(wd),"%s/",cwd);
 
   if (cwd != NULL) {
-    ptrI CWD = allocateCString(&P->proc.heap, cwd);
+    ptrI CWD = allocateCString(&P->proc.heap, (char*)wd);
 
     free(cwd);
     return equal(P, &CWD, &a[1]);
@@ -59,14 +62,20 @@ retCode g__cd(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
+        case EINTR:
+          goto tryAgain;
         case EACCES:
-        case EPERM:return liberror(P, "__cd", eNOPERM);
-        case EBUSY:return liberror(P, "__cd", eFAIL);
-        case ENOTDIR:return liberror(P, "__cd", eNOTDIR);
+        case EPERM:
+          return liberror(P, "__cd", eNOPERM);
+        case EBUSY:
+          return liberror(P, "__cd", eFAIL);
+        case ENOTDIR:
+          return liberror(P, "__cd", eNOTDIR);
         case ENOENT:
-        case ELOOP:return liberror(P, "__cd", eINVAL);
-        default:return liberror(P, "__cd", eIOERROR);
+        case ELOOP:
+          return liberror(P, "__cd", eINVAL);
+        default:
+          return liberror(P, "__cd", eIOERROR);
       }
     }
   }
@@ -90,12 +99,16 @@ retCode g__rm(processPo P, ptrPo a) {
     } else {
       setProcessRunnable(P);
       switch (errno) {
-        case EINTR:goto tryAgain;
+        case EINTR:
+          goto tryAgain;
         case EACCES:
-        case EPERM:return liberror(P, "__rm", eNOPERM);
-        case EBUSY:return liberror(P, "__rm", eFAIL);
+        case EPERM:
+          return liberror(P, "__rm", eNOPERM);
+        case EBUSY:
+          return liberror(P, "__rm", eFAIL);
         case ENOENT:
-        default:return liberror(P, "__rm", eIOERROR);
+        default:
+          return liberror(P, "__rm", eIOERROR);
       }
     }
   }
@@ -122,11 +135,15 @@ retCode g__mv(processPo P, ptrPo a) {
     } else {
       setProcessRunnable(P);
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case EACCES:return liberror(P, "__mv", eNOPERM);
+        case EINTR:
+          goto tryAgain;
+        case EACCES:
+          return liberror(P, "__mv", eNOPERM);
         case EBUSY:
-        case ENOENT:return liberror(P, "__mv", eFAIL);
-        default:return liberror(P, "__mv", eIOERROR);
+        case ENOENT:
+          return liberror(P, "__mv", eFAIL);
+        default:
+          return liberror(P, "__mv", eIOERROR);
       }
     }
   }
@@ -153,9 +170,12 @@ retCode g__mkdir(processPo P, ptrPo a) {
     if (mkdir(str, acmode) == -1) {
       setProcessRunnable(P);
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case EEXIST:return liberror(P, "__mkdir", eFAIL);
-        default:return liberror(P, "__mkdir", eINVAL);
+        case EINTR:
+          goto tryAgain;
+        case EEXIST:
+          return liberror(P, "__mkdir", eFAIL);
+        default:
+          return liberror(P, "__mkdir", eINVAL);
       }
     } else {
       setProcessRunnable(P);
@@ -184,12 +204,16 @@ retCode g__rmdir(processPo P, ptrPo a) {
     } else {
       setProcessRunnable(P);
       switch (errno) {
-        case EINTR:goto tryAgain;
+        case EINTR:
+          goto tryAgain;
         case EACCES:
-        case EPERM:return liberror(P, "__rmdir", eNOPERM);
+        case EPERM:
+          return liberror(P, "__rmdir", eNOPERM);
         case EBUSY:
-        case ENOENT:return liberror(P, "__rmdir", eFAIL);
-        default:return liberror(P, "__rmdir", eIOERROR);
+        case ENOENT:
+          return liberror(P, "__rmdir", eFAIL);
+        default:
+          return liberror(P, "__rmdir", eIOERROR);
       }
     }
   }
@@ -216,10 +240,14 @@ retCode g__chmod(processPo P, ptrPo a) {
     if (chmod(str, acmode) == -1) {
       setProcessRunnable(P);
       switch (errno) {
-        case EINTR:goto tryAgain;    /* A mega hack */
-        case EACCES:return liberror(P, "__chmod", eNOPERM);
-        case EPERM:return liberror(P, "__chmod", eNOPERM);
-        default:return liberror(P, "__chmod", eNOPERM);
+        case EINTR:
+          goto tryAgain;    /* A mega hack */
+        case EACCES:
+          return liberror(P, "__chmod", eNOPERM);
+        case EPERM:
+          return liberror(P, "__chmod", eNOPERM);
+        default:
+          return liberror(P, "__chmod", eNOPERM);
       }
     }
     setProcessRunnable(P);
@@ -249,15 +277,24 @@ retCode g__file_mode(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case ENOTDIR:return liberror(P, "__fmode", eNOFILE);
-        case ENAMETOOLONG:return liberror(P, "__fmode", eINVAL);
-        case ENOENT:return liberror(P, "__fmode", eNOTFND);
-        case EACCES:return liberror(P, "__fmode", eNOPERM);
-        case ELOOP:return liberror(P, "__fmode", eINVAL);
-        case EIO:return liberror(P, "__fmode", eIOERROR);
-        case EFAULT:return liberror(P, "__fmode", eINVAL);
-        default:return liberror(P, "__fmode", eNOTFND);
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__fmode", eNOFILE);
+        case ENAMETOOLONG:
+          return liberror(P, "__fmode", eINVAL);
+        case ENOENT:
+          return liberror(P, "__fmode", eNOTFND);
+        case EACCES:
+          return liberror(P, "__fmode", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__fmode", eINVAL);
+        case EIO:
+          return liberror(P, "__fmode", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__fmode", eINVAL);
+        default:
+          return liberror(P, "__fmode", eNOTFND);
       }
     } else {
       ptrI modes = allocateInteger(&P->proc.heap, buf.st_mode);
@@ -300,15 +337,24 @@ retCode g__file_type(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case ENOTDIR:return liberror(P, "__file_type", eNOFILE);
-        case ENAMETOOLONG:return liberror(P, "__file_type", eINVAL);
-        case ENOENT:return liberror(P, "__file_type", eNOTFND);
-        case EACCES:return liberror(P, "__file_type", eNOPERM);
-        case ELOOP:return liberror(P, "__file_type", eINVAL);
-        case EIO:return liberror(P, "__file_type", eIOERROR);
-        case EFAULT:return liberror(P, "__file_type", eINVAL);
-        default:return liberror(P, "__file_type", eNOTFND);
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__file_type", eNOFILE);
+        case ENAMETOOLONG:
+          return liberror(P, "__file_type", eINVAL);
+        case ENOENT:
+          return liberror(P, "__file_type", eNOTFND);
+        case EACCES:
+          return liberror(P, "__file_type", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__file_type", eINVAL);
+        case EIO:
+          return liberror(P, "__file_type", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__file_type", eINVAL);
+        default:
+          return liberror(P, "__file_type", eNOTFND);
       }
     }
 
@@ -330,18 +376,13 @@ retCode g__file_type(processPo P, ptrPo a) {
     else if (S_ISLNK(buf.st_mode))
       type = allocateInteger(H, symLink);
     else if (S_ISSOCK(buf.st_mode))
-      type = allocateInteger(H, fileSocket);    else
+      type = allocateInteger(H, fileSocket);
+    else
       return liberror(P, "__file_type", eINVAL);
 
     return equal(P, &type, &a[2]);
   }
 }
-
-/*
- * ffile(file)
- * succeeds if file is present, false otherwise 
- */
-
 
 retCode g__file_present(processPo P, ptrPo a) {
   ptrI t1 = deRefI(&a[1]);
@@ -351,6 +392,20 @@ retCode g__file_present(processPo P, ptrPo a) {
 
   switchProcessState(P, wait_io);
   retCode present = filePresent(stringVal(stringV(t1)));
+  setProcessRunnable(P);
+
+  return present;
+}
+
+retCode g__isdir(processPo P, ptrPo a) {
+  ptrI t1 = deRefI(&a[1]);
+
+  if (!IsString(t1))
+    return liberror(P, "_isdir", eSTRNEEDD);
+
+  switchProcessState(P, wait_io);
+
+  retCode present = isDirectory(stringVal(stringV(t1)));
   setProcessRunnable(P);
 
   return present;
@@ -379,15 +434,24 @@ retCode g__file_size(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case ENOTDIR:return liberror(P, "__file_size", eNOTDIR);
-        case ENAMETOOLONG:return liberror(P, "__file_size", eINVAL);
-        case ENOENT:return liberror(P, "__file_size", eNOTFND);
-        case EACCES:return liberror(P, "__file_size", eNOPERM);
-        case ELOOP:return liberror(P, "__file_size", eINVAL);
-        case EIO:return liberror(P, "__file_size", eIOERROR);
-        case EFAULT:return liberror(P, "__file_size", eINVAL);
-        default:return liberror(P, "__file_size", eNOTFND);
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__file_size", eNOTDIR);
+        case ENAMETOOLONG:
+          return liberror(P, "__file_size", eINVAL);
+        case ENOENT:
+          return liberror(P, "__file_size", eNOTFND);
+        case EACCES:
+          return liberror(P, "__file_size", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__file_size", eINVAL);
+        case EIO:
+          return liberror(P, "__file_size", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__file_size", eINVAL);
+        default:
+          return liberror(P, "__file_size", eNOTFND);
       }
     } else {
       ptrI details = allocateInteger(&P->proc.heap, buf.st_size);
@@ -421,15 +485,24 @@ retCode g__file_date(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case ENOTDIR:return liberror(P, "__file_date", eNOFILE);
-        case ENAMETOOLONG:return liberror(P, "__file_date", eINVAL);
-        case ENOENT:return liberror(P, "__file_date", eNOTFND);
-        case EACCES:return liberror(P, "__file_date", eNOPERM);
-        case ELOOP:return liberror(P, "__file_date", eINVAL);
-        case EIO:return liberror(P, "__file_date", eIOERROR);
-        case EFAULT:return liberror(P, "__file_date", eINVAL);
-        default:return liberror(P, "__file_date", eNOTFND);
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__file_date", eNOFILE);
+        case ENAMETOOLONG:
+          return liberror(P, "__file_date", eINVAL);
+        case ENOENT:
+          return liberror(P, "__file_date", eNOTFND);
+        case EACCES:
+          return liberror(P, "__file_date", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__file_date", eINVAL);
+        case EIO:
+          return liberror(P, "__file_date", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__file_date", eINVAL);
+        default:
+          return liberror(P, "__file_date", eNOTFND);
       }
     } else {
       setProcessRunnable(P);
@@ -474,15 +547,24 @@ retCode g__file_modified(processPo P, ptrPo a) {
       setProcessRunnable(P);
 
       switch (errno) {
-        case EINTR:goto tryAgain;
-        case ENOTDIR:return liberror(P, "__file_date", eNOFILE);
-        case ENAMETOOLONG:return liberror(P, "__file_date", eINVAL);
-        case ENOENT:return liberror(P, "__file_date", eNOTFND);
-        case EACCES:return liberror(P, "__file_date", eNOPERM);
-        case ELOOP:return liberror(P, "__file_date", eINVAL);
-        case EIO:return liberror(P, "__file_date", eIOERROR);
-        case EFAULT:return liberror(P, "__file_date", eINVAL);
-        default:return liberror(P, "__file_date", eNOTFND);
+        case EINTR:
+          goto tryAgain;
+        case ENOTDIR:
+          return liberror(P, "__file_date", eNOFILE);
+        case ENAMETOOLONG:
+          return liberror(P, "__file_date", eINVAL);
+        case ENOENT:
+          return liberror(P, "__file_date", eNOTFND);
+        case EACCES:
+          return liberror(P, "__file_date", eNOPERM);
+        case ELOOP:
+          return liberror(P, "__file_date", eINVAL);
+        case EIO:
+          return liberror(P, "__file_date", eIOERROR);
+        case EFAULT:
+          return liberror(P, "__file_date", eINVAL);
+        default:
+          return liberror(P, "__file_date", eNOTFND);
       }
     } else {
       setProcessRunnable(P);
@@ -514,11 +596,15 @@ retCode g__ls(processPo P, ptrPo a) {
       switch (errno) {
         case EACCES:
         case EMFILE:
-        case ENFILE:return liberror(P, "__ls", eNOPERM);
-        case ENOENT:return liberror(P, "__ls", eNOTFND);
+        case ENFILE:
+          return liberror(P, "__ls", eNOPERM);
+        case ENOENT:
+          return liberror(P, "__ls", eNOTFND);
         case ENAMETOOLONG:
-        case ENOTDIR:return liberror(P, "__ls", eINVAL);
-        default:return liberror(P, "__ls", eNOTFND);
+        case ENOTDIR:
+          return liberror(P, "__ls", eINVAL);
+        default:
+          return liberror(P, "__ls", eNOTFND);
       }
     } else {
       ptrI dir = emptyList;
