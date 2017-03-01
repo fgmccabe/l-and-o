@@ -46,7 +46,13 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
     stringPo s1 = (stringPo) o1;
     stringPo s2 = (stringPo) o2;
 
-    return uniCmp(StringVal(s1), StringVal(s2));
+    long l1 = stringLen(s1);
+    long l2 = stringLen(s2);
+
+    if (l1 != l2)
+      return incomparible;
+    else
+      return uniNCmp(stringVal(s1), stringVal(s2), l1);
   } else
     return incomparible;
 }

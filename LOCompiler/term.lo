@@ -117,7 +117,7 @@ lo.comp.term {
   hashTerm(varbl(Nm1)) => hash(Nm1).
   hashTerm(intgr(Ix)) => Ix.
   hashTerm(flot(Dx)) => hash(Dx).
-  hashTerm(enum(N1)) => hash(N1).
+  hashTerm(enum(N1)) => hashTerm(strct(N1,0)).
   hashTerm(strct(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616. -- 'cos of swi-prolog :('
   hashTerm(prg(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616.
   hashTerm(strng(S1)) => hash(S1).

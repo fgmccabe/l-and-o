@@ -719,7 +719,7 @@ retCode g__get_file(processPo P, ptrPo a) {
   closeFile(file);
   closeFile(outBuff);
 
-  return equal(P, &a[3], &reslt);
+  return equal(P, &a[2], &reslt);
 }
 
 /*
@@ -1248,7 +1248,7 @@ retCode g__logmsg(processPo P, ptrPo a) {
   if (!IsString(t1))
     return liberror(P, "__logmsg", eSTRNEEDD);
   else {
-    retCode ret = logMsg(logFile, "%S\n%_", &t1);
+    retCode ret = logMsg(logFile, "%S", &t1);
     setProcessRunnable(P);
 
     switch (ret) {
