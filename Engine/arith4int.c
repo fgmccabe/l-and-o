@@ -387,15 +387,24 @@ retCode g__band(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_band", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, integerVal((integerPo) A1) & integerVal((integerPo) A2));
+    else {
+      uinteger lhs = (uinteger) integerVal((integerPo) A1);
+      uinteger rhs = (uinteger) integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
-      return Ok;
-    } else if ((integerVal((integerPo) A1) & integerVal((integerPo) A2)) == integerVal(intV(z)))
-      return Ok;
-    else
-      return Fail;
+      uinteger reslt = lhs & rhs;
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[3]), R);
+
+        return Ok;
+      } else {
+        if (reslt == (uinteger) integerVal(intV(y)))
+          return Ok;
+        else
+          return Fail;
+      }
+    }
   }
 }
 
@@ -412,15 +421,24 @@ retCode g__bor(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_bor", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, integerVal((integerPo) A1) | integerVal((integerPo) A2));
+    else {
+      uinteger lhs = (uinteger) integerVal((integerPo) A1);
+      uinteger rhs = (uinteger) integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
-      return Ok;
-    } else if ((integerVal((integerPo) A1) | integerVal((integerPo) A2)) == integerVal(intV(z)))
-      return Ok;
-    else
-      return Fail;
+      uinteger reslt = lhs | rhs;
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[3]), R);
+
+        return Ok;
+      } else {
+        if (reslt == (uinteger) integerVal(intV(y)))
+          return Ok;
+        else
+          return Fail;
+      }
+    }
   }
 }
 
@@ -437,15 +455,24 @@ retCode g__bxor(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_bxor", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, integerVal((integerPo) A1) ^ integerVal((integerPo) A2));
+    else {
+      uinteger lhs = (uinteger) integerVal((integerPo) A1);
+      uinteger rhs = (uinteger) integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
-      return Ok;
-    } else if ((integerVal((integerPo) A1) ^ integerVal((integerPo) A2)) == integerVal(intV(y)))
-      return Ok;
-    else
-      return Fail;
+      uinteger reslt = lhs ^ rhs;
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[3]), R);
+
+        return Ok;
+      } else {
+        if (reslt == (uinteger) integerVal(intV(y)))
+          return Ok;
+        else
+          return Fail;
+      }
+    }
   }
 }
 
@@ -462,16 +489,24 @@ retCode g__blsl(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_blsl", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, integerVal((integerPo) A1) << integerVal((integerPo) A2));
+    else {
+      uinteger bits = (uinteger) integerVal((integerPo) A1);
+      uinteger shift = (uinteger) integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
+      uinteger reslt = bits << shift;
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
 
-      return Ok;
-    } else if ((integerVal((integerPo) A1) << integerVal((integerPo) A2)) == integerVal(intV(y)))
-      return Ok;
-    else
-      return Fail;
+        bindVar(P, deRef(&a[3]), R);
+
+        return Ok;
+      } else {
+        if (reslt == (uinteger) integerVal(intV(y)))
+          return Ok;
+        else
+          return Fail;
+      }
+    }
   }
 }
 
@@ -488,15 +523,22 @@ retCode g__blsr(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_blsr", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, ((uinteger) integerVal((integerPo) A1)) >> integerVal((integerPo) A2));
+    else {
+      uinteger bits = (uinteger) integerVal((integerPo) A1);
+      uinteger shift = (uinteger) integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
-      return Ok;
-    } else if ((integerVal((integerPo) A1) >> integerVal((integerPo) A2)) == integerVal(intV(y)))
-      return Ok;
-    else
-      return Fail;
+      uinteger reslt = bits >> shift;
+
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[3]), R);
+        return Ok;
+      } else if (reslt == (uinteger) integerVal(intV(y)))
+        return Ok;
+      else
+        return Fail;
+    }
   }
 }
 
@@ -513,15 +555,22 @@ retCode g__basr(processPo P, ptrPo a) {
 
     if (!isInteger(A1) || !isInteger(A2))
       return liberror(P, "_basr", eINTNEEDD);
-    else if (isvar(z)) {
-      ptrI R = allocateInteger(&P->proc.heap, integerVal((integerPo) A1) >> integerVal((integerPo) A2));
+    else {
+      integer bits = integerVal((integerPo) A1);
+      integer shift = integerVal((integerPo) A2);
 
-      bindVar(P, deRef(&a[3]), R);
-      return Ok;
-    } else if ((integerVal((integerPo) A1) >> integerVal((integerPo) A2)) == integerVal(intV(y)))
-      return Ok;
-    else
-      return Fail;
+      integer reslt = bits >> shift;
+
+      if (isvar(z)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[3]), R);
+        return Ok;
+      } else if (reslt == integerVal(intV(y)))
+        return Ok;
+      else
+        return Fail;
+    }
   }
 }
 
@@ -536,15 +585,20 @@ retCode g__bnot(processPo P, ptrPo a) {
 
     if (!isInteger(A1))
       return liberror(P, "_bnot", eINTNEEDD);
-    else if (isvar(y)) {
-      ptrI R = allocateInteger(&P->proc.heap, ~integerVal((integerPo) A1));
+    else {
+      uinteger bits = (uinteger) integerVal((integerPo) A1);
+      uinteger reslt = ~bits;
 
-      bindVar(P, deRef(&a[2]), R);
-      return Ok;
-    } else if (~integerVal((integerPo) A1) == integerVal(intV(y)))
-      return Ok;
-    else
-      return Fail;
+      if (isvar(y)) {
+        ptrI R = allocateInteger(&P->proc.heap, reslt);
+
+        bindVar(P, deRef(&a[2]), R);
+        return Ok;
+      } else if (reslt == (uinteger) integerVal(intV(y)))
+        return Ok;
+      else
+        return Fail;
+    }
   }
 }
 
