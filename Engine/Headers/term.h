@@ -17,7 +17,6 @@
 #define _TERM_H_
 
 retCode outCell(ioPo f,ptrPo x,long depth,int prec,logical alt);
-retCode outType(ioPo f,ptrPo x,long depth,int prec,logical alt);
 retCode decodeTerm(ioPo in,heapPo P,heapPo R,ptrPo tgt,string errorMsg,long msgSize);
 retCode skipEncoded(ioPo in,string errorMsg, long msgLen);
 #endif

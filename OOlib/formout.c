@@ -24,7 +24,7 @@
 #include <file.h>
 #include <stringBuffer.h>
 
-static retCode outString(ioPo f, byte *str, int len, int width, int precision,
+static retCode outString(ioPo f, byte *str, long len, long width, int precision,
                          codePoint pad, logical leftPad);
 
 retCode outInt(ioPo f, integer i) {
@@ -420,7 +420,7 @@ retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayM
           exp = -exp;
         }
         p += natural2StrByBase(p, (uinteger) exp, 0, 10);/* Show exponent value -- adjusted for leading digit*/
-        *p++ = '\0';
+        *p = '\0';
         break;
       }
       case fractional:
@@ -525,9 +525,9 @@ retCode outUStr(ioPo f, string str) {
   return outText(f, str, uniStrLen(str));
 }
 
-retCode outString(ioPo f, byte *str, int len, int width, int precision,
+retCode outString(ioPo f, byte *str, long len, long width, int precision,
                   codePoint pad, logical leftPad) {
-  int gaps;
+  long gaps;
   retCode ret = Ok;
 
   lock(O_LOCKED(f));
@@ -542,7 +542,7 @@ retCode outString(ioPo f, byte *str, int len, int width, int precision,
     if (!leftPad) {    /* right justified */
       gaps = width - len;
 
-      ret = outText(f, str, (long) len);
+      ret = outText(f, str, len);
 
       while (ret == Ok && gaps-- > 0)
         ret = outChar(f, pad);
@@ -553,16 +553,16 @@ retCode outString(ioPo f, byte *str, int len, int width, int precision,
         ret = outChar(f, pad);
 
       if (ret == Ok)
-        ret = outText(f, str, (long) len);
+        ret = outText(f, str, len);
     }
   } else
-    ret = outText(f, str, (long) len);
+    ret = outText(f, str, len);
 
   unlock(O_LOCKED(f));
   return ret;
 }
 
-static retCode quoteChar(ioPo f, codePoint ch, int *gaps) {
+static retCode quoteChar(ioPo f, codePoint ch, long *gaps) {
   retCode ret;
   switch (ch) {
     case '\a':
@@ -637,8 +637,8 @@ static retCode quoteChar(ioPo f, codePoint ch, int *gaps) {
   return ret;
 }
 
-static retCode dumpText(ioPo f, string str, int len) {
-  int gaps = 0;
+static retCode dumpText(ioPo f, string str, long len) {
+  long gaps = 0;
   retCode ret = Ok;
   int ix;
   for (ix = 0; ret == Ok && ix < len; ix++)
@@ -646,9 +646,9 @@ static retCode dumpText(ioPo f, string str, int len) {
   return ret;
 }
 
-retCode outUniString(ioPo f, string str, int len, int width, int precision,
+retCode outUniString(ioPo f, string str, long len, long width, int precision,
                      codePoint pad, logical leftPad, logical alt) {
-  int gaps;
+  long gaps;
   retCode ret = Ok;
 
   lock(O_LOCKED(f));
@@ -846,7 +846,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
               string str = (string) va_arg(args, string);
 
               if (str != NULL)
-                ret = outString(f, str, (int) uniStrLen(str), width, precision, ' ', leftPad);
+                ret = outString(f, str, uniStrLen(str), width, precision, ' ', leftPad);
               else
                 ret = outStr(f, "(NULL)");
               break;
@@ -875,7 +875,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
               if (str != NULL) {
                 ret = outUStr(f, prefix);
                 if (ret == Ok)
-                  ret = outUniString(f, str, (int) uniStrLen(str), width, precision, ' ', leftPad, alternate);
+                  ret = outUniString(f, str, uniStrLen(str), width, precision, ' ', leftPad, alternate);
               } else
                 ret = outStr(f, "(NULL)");
               break;

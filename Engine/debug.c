@@ -17,9 +17,11 @@
 #include "disass.h"
 #include "esc.h"
 
-logical tracing = True;
+logical tracing = True;  /* do we show each step */
 
-/* do we show each step */
+static retCode addBreakPoint(string name);
+static logical breakPointHit(string name);
+static retCode clearBreakPoint(string name);
 
 retCode g__ins_debug(processPo P, ptrPo a) {
   debugging = interactive = True;
@@ -81,36 +83,83 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
   static byte cmdLine[256] = "n";
   codePo code = codeV(prog);
   codePo ccode = codeV(cprog);
+  ptrPo Lits = codeLits(code);
   extern HeapRec globalHeap;
 
   pthread_mutex_lock(&debugMutex);
 
   if (focus == NULL || focus == p) {
-    switch (waitingFor) {
-      case nextIns:
-        cmdCounter--;
-        break;
-      case nextSucc:
-        switch (op_code(*pc)) {
-          case succ:
-          case dealloc:
+    insWord PCX = *pc;
+    switch (op_code(PCX)) {
+      case kawl:
+      case lkawl:
+      case dlkawl: {
+        switch (waitingFor) {
+          case nextIns:
             cmdCounter--;
             break;
-          case kawlO:
-          case kawl:
-            cmdCounter++;
+          case nextSucc:
+          case nextBreak:
+          case nextFail: {
+            string name = programName(objV(Lits[op_o_val(PCX)]))->name;
+
+            if (breakPointHit(name)) {
+              waitingFor = nextIns;
+              cmdCounter = 0;
+            } else if (waitingFor == nextSucc && op_code(PCX) != dlkawl)
+              cmdCounter++;
             break;
-          default:;
+          }
         }
         break;
-      case nextBreak: /* nothing to do here */
-      case nextFail:
+      }
+      case kawlO:
+      case lkawlO:
+      case dlkawlO: {
+        switch (waitingFor) {
+          case nextIns:
+            cmdCounter--;
+            break;
+          case nextSucc:
+          case nextBreak:
+          case nextFail: {
+            string name = objectClassName(objV(deRefI(&a[1])));
+
+            if (breakPointHit(name)) {
+              waitingFor = nextIns;
+              cmdCounter = 0;
+            } else if (waitingFor == nextSucc && op_code(PCX) != dlkawlO)
+              cmdCounter++;
+            break;
+          }
+        }
+        break;
+      }
+      case succ:
+      case dealloc:
+        switch (waitingFor) {
+          case nextIns:
+          case nextSucc:
+            cmdCounter--;
+            break;
+
+          default:
+            break;
+        }
+        break;
+      default:
+        switch (waitingFor) {
+          case nextIns:
+            cmdCounter--;
+            break;
+          default:
+            break;
+        }
         break;
     }
 
     if (tracing || cmdCounter <= 0) {
       byte pref[MAX_SYMB_LEN];
-      ptrPo Lits = codeLits(code);
 
       strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &prefix, pcCount, &Lits[0]);
       dissass(pref, code, pc, a, y, S, mode, B, hBase, H);
@@ -188,6 +237,42 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
             waitingFor = nextSucc;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
+
+          case '+': { // Set up a new break point
+            int ix = 1;
+            while (ix < NumberOf(cmdLine) && cmdLine[ix] == ' ')
+              ix++;
+            string name = &cmdLine[ix];
+            if (uniIsLit(name, ""))
+              name = programName(objV(Lits[0]))->name;
+
+            retCode ret = addBreakPoint(name);
+
+            if (ret != Ok)
+              outMsg(logFile, "Could not set spy point on %s\n%_", name);
+            else
+              outMsg(logFile, "spy point set on %s\n%_", name);
+
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+          }
+
+          case '-': {
+            int ix = 1;
+            while (ix < NumberOf(cmdLine) && cmdLine[ix] == ' ')
+              ix++;
+            string name = &cmdLine[ix];
+            if (uniIsLit(name, ""))
+              name = programName(objV(Lits[0]))->name;
+
+            if (clearBreakPoint(name) == Ok)
+              outMsg(logFile, "spy point cleared on %s\n%_", name);
+            else
+              outMsg(logFile, "Could not clear spy point on %s\n%_", name);
+
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+          }
 
           case 'f':
             focus = p;
@@ -324,6 +409,46 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
   }
   pthread_mutex_unlock(&debugMutex);
   return Ok;
+}
+
+static byte breakPoints[10][MAX_SYMB_LEN];
+static int breakPointCount = 0;
+
+retCode addBreakPoint(string name) {
+  for (int ix = 0; ix < breakPointCount; ix++) {
+    if (uniCmp(breakPoints[ix], (string) "") == same) {
+      return uniCpy(breakPoints[ix], NumberOf(breakPoints[ix]), name);
+    }
+  }
+  if (breakPointCount < NumberOf(breakPoints)) {
+    uniCpy(breakPoints[breakPointCount], NumberOf(breakPoints[breakPointCount]), name);
+    breakPointCount++;
+    return Ok;
+  } else
+    return Fail;
+}
+
+logical breakPointHit(string name) {
+  for (int ix = 0; ix < breakPointCount; ix++) {
+    if (uniCmp(breakPoints[ix], name) == same)
+      return True;
+  }
+  return False;
+}
+
+retCode clearBreakPoint(string name) {
+  for (int ix = 0; ix < breakPointCount; ix++) {
+    if (uniCmp(breakPoints[ix], name) == same) {
+      if (ix == breakPointCount - 1) {
+        breakPointCount--;
+        while (breakPointCount >= 0 && uniCmp(breakPoints[breakPointCount], (string) "") == same)
+          breakPointCount--;
+        return Ok;
+      } else
+        return uniCpy(breakPoints[ix], NumberOf(breakPoints[ix]), (string) "");
+    }
+  }
+  return Fail;
 }
 
 void dC(ptrI w) {

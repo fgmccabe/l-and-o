@@ -36,7 +36,7 @@ static long strSizeFun(specialClassPo class, objPo o) {
   assert(o->class == stringClass);
   stringPo s = (stringPo) o;
 
-  return CellCount(sizeof(stringRec) + (uniStrLen(s->data) + 1) * sizeof(byte));
+  return CellCount(sizeof(stringRec) + (s->size + 1) * sizeof(byte));
 }
 
 static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
@@ -219,8 +219,9 @@ retCode g__trim(processPo P, ptrPo a) {
     return liberror(P, "__trim", eINVAL);
   else {
     long width = integerVal(intV(Width));
-    string data = stringVal(stringV(Data));
-    long len = uniStrLen(data);
+    stringPo D = stringV(Data);
+    string data = stringVal(D);
+    long len = stringLen(D);
     long awidth = labs(width);
     heapPo H = &P->proc.heap;
 
@@ -464,8 +465,8 @@ retCode g__str_len(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)))
     return liberror(P, "_str_len", eSTRNEEDD);
   else {
-    string s1 = stringVal(stringV(a1));
-    integer slen = (integer) uniStrLen(s1);
+    stringPo str = stringV(a1);
+    integer slen = stringLen(str);
 
     if (isvar(a2)) {
       ptrI R = allocateInteger(&P->proc.heap, slen);
@@ -486,8 +487,11 @@ retCode g__str_hash(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)))
     return liberror(P, "_str_hash", eSTRNEEDD);
   else {
-    string s = stringVal(stringV(a1));
-    integer hash = uniHash(s);
+    stringPo str = stringV(a1);
+    string s = stringVal(str);
+    long len = stringLen(str);
+
+    integer hash = uniNHash(s, len);
 
     if (isvar(a2)) {
       ptrI R = allocateInteger(&P->proc.heap, hash);
@@ -510,17 +514,19 @@ retCode g__str_concat(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_concat", eINVAL);
   else {
-    string s1 = stringVal(stringV(a1));
-    string s2 = stringVal(stringV(a2));
-    unsigned long slen1 = uniStrLen(s1);
-    unsigned long slen2 = uniStrLen(s2);
-    unsigned long tlen = slen1 + slen2;
+    stringPo str1 = stringV(a1);
+    string s1 = stringVal(str1);
+    stringPo str2 = stringV(a2);
+    string s2 = stringVal(str2);
+    long slen1 = stringLen(str1);
+    long slen2 = stringLen(str2);
+    long tlen = slen1 + slen2;
     byte catted[tlen + 1];
 
     uniCpy(catted, tlen + 1, s1);
     uniCpy(&catted[slen1], slen2 + 1, s2);
 
-    ptrI rslt = allocateString(&P->proc.heap, catted, uniStrLen(catted));
+    ptrI rslt = allocateString(&P->proc.heap, catted, tlen);
 
     return funResult(P, a, 3, rslt);
   }
@@ -607,10 +613,13 @@ retCode g__str_start(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_start", eINVAL);
   else {
-    string s1 = stringVal(stringV(a1));
-    string s2 = stringVal(stringV(a2));
+    stringPo str = stringV(a1);
+    stringPo tgt = stringV(a2);
 
-    if (uniNCmp(s1, s2, uniStrLen(s2)) == same)
+    string s1 = stringVal(str);
+    string s2 = stringVal(tgt);
+
+    if (uniNCmp(s1, s2, stringLen(tgt)) == same)
       return Ok;
     else
       return Fail;
@@ -626,11 +635,11 @@ retCode g__str_find(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isString(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
     return liberror(P, "_str_find", eINSUFARG);
   else {
-    string src = stringVal(stringV(a1));
-    string tgt = stringVal(stringV(a2));
+    stringPo src = stringV(a1);
+    stringPo tgt = stringV(a2);
     integer start = integerVal(intV(a3));
 
-    integer pos = uniSearch(src, uniStrLen(src), start, tgt);
+    integer pos = uniSearch(stringVal(src), stringLen(src), start, stringVal(tgt), stringLen(tgt));
 
     if (pos < 0)
       return Fail;
@@ -655,9 +664,10 @@ retCode g__str_split(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)))
     return liberror(P, "_str_split", eINSUFARG);
   else {
-    string src = stringVal(stringV(a1));
+    stringPo S = stringV(a1);
+    string src = stringVal(S);
     integer start = integerVal(intV(a2));
-    unsigned long len = uniStrLen(src);
+    long len = stringLen(S);
 
     if (start < 0 || start > len)
       return Fail;

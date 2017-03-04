@@ -5,7 +5,7 @@
 #include <getopt.h>
 #include "opcodes.h"
 
-/* Generate an April module, that knows about instructions and their
+/* Generate an L&O package, that knows about instructions and their
    mnemonics */
 
 #undef instruction
@@ -60,11 +60,12 @@ int main(int argc,char **argv)
   fprintf(out, "  import lo.comp.code.instructions.\n");
   fprintf(out, "  import lo.comp.code.registers.\n\n");
 
-  fprintf(out, "  public type codeSeg ::= codeSeg(term,list[integer],list[term]).\n");
+  fprintf(out, "  public type codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).\n");
   fprintf(out, "  public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).\n\n");
 
   fprintf(out, "  public asm:(assem)=>codeSeg.\n");
-  fprintf(out, "  asm(assem(Nm,Ins,Lits)) => codeSeg(Nm,mnem(Ins,genLblTbl(Ins,0,[]),genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T)).\n\n");
+  fprintf(out, "  asm(assem(Nm,Ins,Lits,SrcMap)) => codeSeg(Nm,mnem(Ins,Lbls,genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T),genSrcMap(SrcMap,Lbls)) :-\n"
+  "      Lbls = genLblTbl(Ins,0,[]).\n\n");
 
   fprintf(out,"  private mnem:(list[instruction],map[string,integer],map[string,integer],integer)=>list[integer].\n");
   fprintf(out,"  mnem([],_,_,_) => [].\n");
@@ -82,6 +83,12 @@ int main(int argc,char **argv)
   fprintf(out,"  private genLitTbl:(list[litrl],integer,map[string,integer]) => map[string,integer].\n");
   fprintf(out,"  genLitTbl([],_,D) => D.\n");
   fprintf(out,"  genLitTbl([litrl(Lbl,_),..I],Pc,D) => genLitTbl(I,Pc+1,D[Lbl->Pc]).\n\n");
+
+  fprintf(out,"  private genSrcMap:(list[(string,string,tloc)],map[string,integer])=>list[term].\n");
+  fprintf(out,"  genSrcMap([],_) => [].\n");
+  fprintf(out,"  genSrcMap([(S,E,tloc(St,Ln)),..L],M) => [cons(strct(\"()4\",4),[intgr(Sx),intgr(Ex),intgr(St),intgr(Ln)]),..genSrcMap(L,M)] :-\n");
+  fprintf(out,"    present(M,S,Sx),\n");
+  fprintf(out,"    present(M,E,Ex).\n\n");
 
   fprintf(out,"  private ltOff:(string,map[string,integer]) => integer.\n");
   fprintf(out,"  ltOff(Lb,Lbls) => Tgt :-\n");

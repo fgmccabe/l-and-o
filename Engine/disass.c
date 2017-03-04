@@ -141,7 +141,7 @@ static char *showOpAnd(ioPo out, char *sep, opAndSpec A, insWord pcx, rwmode mod
   case Ltl:                             // 16bit literal (-32768..32767)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:                // Structure size
+  case cSz:                             // Structure size
     outMsg(out, "%s%d", sep, op_o_val(pcx));
     return ",";
   case Es:                              // escape code (0..65535)

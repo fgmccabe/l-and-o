@@ -98,7 +98,7 @@ long uniIndexOf(string s, long len, long from, codePoint c);
 long uniLastIndexOf(string s, long len, codePoint c);
 string uniSubStr(string s, long len, long from, long cnt, string buff, long bLen);
 
-long uniSearch(string src, long len, long start, string tgt);
+long uniSearch(string src, long len, long start, string tgt, long tlen);
 string uniSearchAny(string s, long len, string term);
 string uniLast(string s, long l, codePoint c);
 string uniDuplicate(string s);
@@ -106,6 +106,7 @@ logical uniIsLit(string s1, char *s2);
 logical uniIsLitPrefix(string s1, char *s2);
 string uniEndStr(string s);
 uinteger uniHash(const string name);
+uinteger uniNHash(const string name, long len);
 retCode uniLower(string s, long sLen, string d, long dLen);
 
 #ifndef uniEOF

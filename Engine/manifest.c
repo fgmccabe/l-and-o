@@ -95,9 +95,9 @@ manifestVersionPo newVersion(string version) {
   return vEntry;
 }
 
-static retCode pickAny(void *n,void *r,void *c){
-  manifestVersionPo *tgt = (manifestVersionPo*)c;
-  *tgt = (manifestVersionPo)r;
+static retCode pickAny(void *n, void *r, void *c) {
+  manifestVersionPo *tgt = (manifestVersionPo *) c;
+  *tgt = (manifestVersionPo) r;
   return Eof;
 }
 
@@ -105,12 +105,11 @@ manifestVersionPo manifestVersion(string package, string version) {
   manifestEntryPo entry = manifestEntry(package);
 
   if (entry != NULL) {
-    if (uniCmp(version, (string) "*") == same){
+    if (uniCmp(version, (string) "*") == same) {
       manifestVersionPo deflt = NULL;
-      ProcessTable(pickAny,entry->versions,&deflt);
+      ProcessTable(pickAny, entry->versions, &deflt);
       return deflt;
-    }
-    else
+    } else
       return (manifestVersionPo) hashGet(entry->versions, version);
   } else
     return NULL;
@@ -158,7 +157,7 @@ typedef enum {
   inResource
 } ParseState;
 
-static char* stNames[] = {"initial", "inPackage", "inVersion", "inDetail", "inResource"};
+static char *stNames[] = {"initial", "inPackage", "inVersion", "inDetail", "inResource"};
 
 typedef struct {
   byte pkg[MAXLINE]; // Package name
@@ -277,8 +276,8 @@ retCode startEntry(const char *name, void *cl) {
     }
     case inVersion:
       uniCpy((string) &info->ver, NumberOf(info->ver), (string) name);
-      info->version = newVersion((string)name);
-      hashPut(info->entry->versions,&info->version->version,info->version);
+      info->version = newVersion((string) name);
+      hashPut(info->entry->versions, &info->version->version, info->version);
       break;
     case inResource:
       uniCpy((string) &info->kind, NumberOf(info->kind), (string) name);

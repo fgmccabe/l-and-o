@@ -13,9 +13,7 @@
   permissions and limitations under the License.
  */
 #include "config.h"		/* pick up standard configuration header */
-#include <math.h>
 #include <stdlib.h>
-#include <errno.h>		/* system error doubles */
 #include "lo.h"
 
 static long inSizeFun(specialClassPo class, objPo o);
@@ -459,7 +457,7 @@ retCode g__bxor(processPo P, ptrPo a) {
       uinteger lhs = (uinteger) integerVal((integerPo) A1);
       uinteger rhs = (uinteger) integerVal((integerPo) A2);
 
-      uinteger reslt = lhs ^ rhs;
+      uinteger reslt = lhs ^rhs;
       if (isvar(z)) {
         ptrI R = allocateInteger(&P->proc.heap, reslt);
 
@@ -619,7 +617,7 @@ retCode g__nthb(processPo P, ptrPo a) {
       uinteger XX = (uinteger) (integerVal((integerPo) A1));
       uinteger Off = (uinteger) (integerVal((integerPo) A2));
 
-      if (XX & (1 << Off))
+      if (XX & (((uinteger) 1) << Off))
         return Ok;
       else
         return Fail;

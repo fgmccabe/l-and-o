@@ -465,12 +465,11 @@ string uniSearchAny(string s, long len, string term) {
 }
 
 // This is a poor algorithm. Fix me with Boyer-Moore or better
-long uniSearch(string src, long len, long start, string tgt) {
+long uniSearch(string src, long len, long start, string tgt, long tlen) {
   long pos = start;
-  long tgtLen = uniStrLen(tgt);
 
-  while (pos < len - tgtLen) {
-    if (uniNCmp(&src[pos], tgt, tgtLen) == same)
+  while (pos < len - tlen) {
+    if (uniNCmp(&src[pos], tgt, tlen) == same)
       return pos;
     else
       pos++;
@@ -510,6 +509,16 @@ uinteger uniHash(const string name) {
   while (*s) {
     hash = hash * 37 + *s++;
   }
+
+  return hash;
+}
+
+uinteger uniNHash(const string name, long len) {
+  register uinteger hash = 0;
+  byte *s = name;
+
+  for (long ix = 0; ix < len; ix++)
+    hash = hash * 37 + *s++;
 
   return hash;
 }
