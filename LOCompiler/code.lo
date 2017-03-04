@@ -5,7 +5,7 @@ lo.comp.code.code{
   import lo.comp.code.registers.
   import lo.comp.term.
 
-  public type assem ::= assem(term,list[instruction],list[litrl]).
+  public type assem ::= assem(term,list[instruction],list[litrl],list[(string,string,tloc)]).
   public type litrl ::= litrl(string,term).
 
   public implementation display[assem] <= {
@@ -13,7 +13,7 @@ lo.comp.code.code{
   }
 
   dispCodeSeg:(assem) => ss.
-  dispCodeSeg(assem(Nm,Ins,Lits)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins,foldLeft((M,litrl(N,T))=>M[N->T],[],Lits))),ssSeq(anyLits(Lits))]).
+  dispCodeSeg(assem(Nm,Ins,Lits,SrcMap)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins,foldLeft((M,litrl(N,T))=>M[N->T],[],Lits))),ssSeq(anyLits(Lits))]).
 
   dispIns:(list[instruction],map[string,term]) => list[ss].
   dispIns([],_) => [].

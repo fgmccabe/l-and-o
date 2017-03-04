@@ -9,11 +9,12 @@ lo.comp.code.asm{
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
 
-  public type codeSeg ::= codeSeg(term,list[integer],list[term]).
+  public type codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).
   public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).
 
   public asm:(assem)=>codeSeg.
-  asm(assem(Nm,Ins,Lits)) => codeSeg(Nm,mnem(Ins,genLblTbl(Ins,0,[]),genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T)).
+  asm(assem(Nm,Ins,Lits,SrcMap)) => codeSeg(Nm,mnem(Ins,Lbls,genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T),genSrcMap(SrcMap,Lbls)) :-
+      Lbls = genLblTbl(Ins,0,[]).
 
   private mnem:(list[instruction],map[string,integer],map[string,integer],integer)=>list[integer].
   mnem([],_,_,_) => [].
@@ -116,6 +117,12 @@ lo.comp.code.asm{
   private genLitTbl:(list[litrl],integer,map[string,integer]) => map[string,integer].
   genLitTbl([],_,D) => D.
   genLitTbl([litrl(Lbl,_),..I],Pc,D) => genLitTbl(I,Pc+1,D[Lbl->Pc]).
+
+  private genSrcMap:(list[(string,string,tloc)],map[string,integer])=>list[term].
+  genSrcMap([],_) => [].
+  genSrcMap([(S,E,tloc(St,Ln)),..L],M) => [cons(strct("()4",4),[intgr(Sx),intgr(Ex),intgr(St),intgr(Ln)]),..genSrcMap(L,M)] :-
+    present(M,S,Sx),
+    present(M,E,Ex).
 
   private ltOff:(string,map[string,integer]) => integer.
   ltOff(Lb,Lbls) => Tgt :-

@@ -38,17 +38,20 @@ static logical compatiblVersion(string rqVer, string ver) {
   return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
 }
 
-retCode markLoaded(string package, string version) {
+static packagePo markLoaded(string package, string version) {
   packagePo pkg = loadedPackage(package);
 
-  if (pkg != NULL && !compatiblVersion((string) &pkg->version, version))
-    return Error;
-  else {
+  if (pkg != NULL) {
+    if (!compatiblVersion((string) &pkg->version, version))
+      return Null;
+    else
+      return pkg;
+  } else {
     pkg = (packagePo) allocPool(packagePool);
     uniCpy((byte *) &pkg->packageName, NumberOf(pkg->packageName), package);
     uniCpy((byte *) &pkg->version, NumberOf(pkg->version), version);
     hashPut(loadedPackages, &pkg->packageName, pkg);
-    return Ok;
+    return pkg;
   }
 }
 
@@ -63,7 +66,7 @@ static retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity);
 static retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer);
 static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen, pickupPkg pickup, void *cl);
 
-retCode loadSegments(ioPo file, string errorMsg, long msgLen);
+static retCode loadSegments(ioPo file, packagePo owner, string errorMsg, long msgLen);
 
 static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
   byte flNm[MAXFILELEN];
@@ -111,12 +114,12 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
         return Error;
       }
 
-      markLoaded(pkgNm, vrNm);
+      packagePo pkg = markLoaded(pkgNm, vrNm);
 
       ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
       if (ret == Ok)
-        ret = loadSegments(file, errorMsg, msgSize);
+        ret = loadSegments(file, pkg, errorMsg, msgSize);
     }
 
     closeFile(file);
@@ -165,12 +168,12 @@ installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pi
   if (ret == Ok)
     ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
 
-  markLoaded(pkgNm, vrNm);
+  packagePo pkg = markLoaded(pkgNm, vrNm);
 
   ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
   if (ret == Ok)
-    ret = loadSegments(O_IO(inBuff), errorMsg, msgSize);
+    ret = loadSegments(O_IO(inBuff), pkg, errorMsg, msgSize);
 
   closeFile(O_IO(inBuff));
 
@@ -285,13 +288,13 @@ retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity) {
     return Error;
 }
 
-static retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize);
+static retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize);
 
-retCode loadSegments(ioPo file, string errorMsg, long msgLen) {
+retCode loadSegments(ioPo file, packagePo owner, string errorMsg, long msgLen) {
   retCode ret = Ok;
 
   while (ret == Ok) {
-    ret = loadCodeSegment(file, errorMsg, msgLen);
+    ret = loadCodeSegment(file, owner, errorMsg, msgLen);
   }
 
   return ret;
@@ -331,9 +334,10 @@ static retCode in32(ioPo in, int32 *tgt) {
 // a. The program structure object being defined
 // b. A string containing the code as a base64 encoded string.
 // c. A tuple of literals associated with the code segment
+// d. A tuple of source map entries
 // All wrapped up as a #code structure.
 
-retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
+retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize) {
   EncodeSupport sp = {
     NULL,
     0,
@@ -345,7 +349,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
   if (isFileAtEof(in) == Eof)
     return Eof;
   else {
-    retCode ret = isLookingAt(in, "n3o3'#code'");
+    retCode ret = isLookingAt(in, "n4o4'#code'");
 
     if (ret != Ok) {
       strMsg(errorMsg, msgSize, "invalid code stream");
@@ -373,12 +377,24 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
 
       rewindBuffer(buff); // tmpBufer should contain base64 text
 
-      integer litCount;
+      long litMark;
+      markIo(in, &litMark);
+
+      integer litCount, srcMapCount = 0;
 
       ret = decInt(in, &litCount);
 
-      if (ret == Ok)
-        ret = skipEncoded(in, errorMsg, msgSize); // we know this is a tuple structure marker
+      resetToMark(in, litMark);
+
+      if (ret == Ok) {
+        ret = skipEncoded(in, errorMsg, msgSize);
+
+        ret = isLookingAt(in, "n");  // The source map entries
+
+        if (ret == Ok) {
+          ret = decInt(in, &srcMapCount);
+        }
+      }
 
       if (ret != Ok) {
         closeFile(O_IO(buff));
@@ -401,7 +417,7 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
           ret = in32(O_IO(cdeBuffer), &signature); // verify correct code signature
 
           heapPo GH = &globalHeap;
-          ptrI pc = permCode((unsigned long) codeCount, (unsigned long) litCount);
+          ptrI pc = permCode((unsigned long) codeCount, (uinteger) litCount, owner, (uinteger) srcMapCount);
 
           insPo cd = FirstInstruction(pc);
           ptrI el = kvoid;
@@ -447,12 +463,36 @@ retCode loadCodeSegment(ioPo in, string errorMsg, long msgSize) {
             codeV(pc)->arity = (uint16) arity; /* set the arity of the program */
 
             // Now we find the literals
+            ret = resetToMark(in, litMark);
+
+            if (ret == Ok)
+              ret = skipEncoded(in, errorMsg, msgSize); // we know this is a tuple structure marker
 
             for (long i = 0; ret == Ok && i < litCount; i++) {
               if ((ret = decode(in, &sp, GH, &el, buff)) != Ok) /* read each element of term */
                 break; /* we might need to skip out early */
               else {
                 updateCodeLit(codeV(pc), i, el);
+              }
+            }
+
+            // Now we populate the source map
+            if (isLookingAt(in, "n") == Ok) {
+              ret = skipEncoded(in, errorMsg, msgSize);
+              srcMapPo srcMap = sourceMap(codeV(pc));
+
+              for (uinteger ix = 0; ret == Ok && ix < srcMapCount; ix++) {
+                ret = isLookingAt(in, "n4");
+                if (ret == Ok)
+                  ret = skipEncoded(in, errorMsg, msgSize); // skip over tuple marker
+                if (ret == Ok)
+                  ret = decInt(in, (integer*)&srcMap[ix].startOff);
+                if (ret == Ok)
+                  ret = decInt(in, (integer*)&srcMap[ix].endOff);
+                if (ret == Ok)
+                  ret = decInt(in, (integer*)&srcMap[ix].start);
+                if (ret == Ok)
+                  ret = decInt(in, (integer*)&srcMap[ix].len);
               }
             }
 

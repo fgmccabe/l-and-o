@@ -10,7 +10,9 @@ lo.repo.manifest{
   type manifestEntry ::= manifestEntry(string,list[(version,map[string,string])]).
 
   public readManifest:(uri) => manifest.
-  readManifest(u) => m :- parseJson(j) %% explode(getResource(u)), jsonManifest(j,m).
+  readManifest(u) => m :- parseJson(j) %% explode(getResource(u)),
+  --  _logmsg("check \(j) for manifest"),
+    jsonManifest(j,m).
 
   public flushManifest:(uri,manifest){}.
   flushManifest(Root,M) :-
@@ -47,6 +49,10 @@ lo.repo.manifest{
   showEntries:(map[string,manifestEntry]) => list[ss].
   showEntries(M) => values(M)//showEntry.
 
+  public implementation display[manifestEntry] <= {
+    disp(E) => showEntry(E).
+  }
+
   showEntry:(manifestEntry) => ss.
   showEntry(manifestEntry(Pk,Versions)) => ssSeq([ss("  "),ss(Pk),ss(":{\n"),ssSeq(showVersions(Versions)),ss("  }\n")]).
 
@@ -68,9 +74,13 @@ lo.repo.manifest{
   getVersion(defltVersion,Act,V,Map) :- (Act,Map) in V!.
 
   public addToManifest:(manifest,pkg,string,string) => manifest.
-  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(M[P->addVersion(Entry,V,Kind,Uri)]) :-
-    present(M,P,Entry).
-  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(M[P->addVersion(manifestEntry(P,[]),V,Kind,Uri)]).
+  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(MM) :-
+    present(M,P,Entry),
+    MM = M[P->addVersion(Entry,V,Kind,Uri)].
+--    _logmsg("added version to \(MM)").
+  addToManifest(manifest(M),pkg(P,V),Kind,Uri) => manifest(MM) :-
+    MM = M[P->addVersion(manifestEntry(P,[]),V,Kind,Uri)].
+--    _logmsg("new package \(MM)").
 
   addVersion:(manifestEntry,version,string,string) => manifestEntry.
   addVersion(manifestEntry(P,Vs),V,K,U) => manifestEntry(P,addToVersion(Vs,V,K,U)).

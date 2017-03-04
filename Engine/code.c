@@ -86,12 +86,14 @@ static uinteger cdeHashFun(specialClassPo class, objPo o) {
   return hash;
 }
 
-ptrI permCode(unsigned long size, unsigned long litCnt) {
-  codePo block = (codePo) permAllocate(CodeCellCount(size, litCnt));
+ptrI permCode(uinteger size, uinteger litCnt, packagePo owner, uinteger srcMapCount) {
+  codePo block = (codePo) permAllocate(CodeCellCount(size, litCnt, srcMapCount));
 
   block->class = codeClass;
   block->size = size;
   block->litCnt = litCnt;
+  block->srcMapCount = srcMapCount;
+  block->owner = owner;
 
   int i;
   ptrPo lits = codeLits(block);
@@ -100,5 +102,27 @@ ptrI permCode(unsigned long size, unsigned long litCnt) {
     lits[i] = kvoid;
 
   return objP(block);
+}
+
+srcMapPo locateSourceFragment(codePo cde, insPo pc) {
+  srcMapPo srcMap = sourceMap(cde);
+  uinteger mapSize = sourceMapCount(cde);
+  uinteger pcOffset = pc - codeIns(cde);
+
+  uinteger entrySize = (uinteger) MAX_INT;
+  srcMapPo soFar = NULL;
+
+  // We return the smallest entry that encloses the program counter
+  for (uinteger ix = 0; ix < mapSize; ix++) {
+    srcMapPo s = &srcMap[ix];
+
+    if (s->startOff <= pcOffset && s->endOff > pcOffset) {
+      if ((s->endOff - s->startOff) < entrySize) {
+        soFar = s;
+      }
+    }
+  }
+
+  return soFar;
 }
 

@@ -647,13 +647,13 @@ implementFunCall(notInMap,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail
 % We build $$(_call(Args<>Rep),$$(Free),_) :- Cond, !, replacement
 trLambdaRule(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
   freeVarsInRule(equation(Lc,Nm,A,Cond,Exp),Q,[],FreeVars),
-  genstr(Nm,Lam),
   trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), % head args
   trGoal(Cond,PreGx,[neck|PostGx],Q1,Q2,Map,Opts,Ex0,Ex1),   % condition goals
   trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2),  % replacement expression
   length(Args,Ar),
   trCons("_call",Ar,Con),
   CallStrct = cons(Con,Args),
+  genNewName(Map,Nm,Ar,prg(Lam,_)),
   mkClosure(Lam,FreeVars,Closure),
   merge(FreeVars,Q3,QQ),
   LclPrg = prg(Lam,3),
@@ -661,13 +661,13 @@ trLambdaRule(equation(Lc,Nm,A,Cond,Exp),Closure,Q,Map,Opts,Ex,Exx) :-
   failSafeEquation(Lc,"lambda",LclPrg,3,Ex3,Exx).
 trLambdaRule(clause(Lc,Nm,A,Cond,Body),Closure,Q,Map,Opts,Ex,Exx) :-
   freeVarsInRule(clause(Lc,Nm,A,Cond,Body),Q,[],FreeVars),
-  genstr(Nm,Lam),
   trPtns(A,Args,[],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0), % head args
   trGoal(Cond,PreGx,PostC,Q1,Q2,Map,Opts,Ex0,Ex1),   % condition goals
   trGoal(Body,PostC,PostG,Q2,Q3,Map,Opts,Ex1,Ex2),
   length(Args,Ar),
   trCons("_call",Ar,Con),
   CallStrct = cons(Con,Args),
+  genNewName(Map,Nm,Ar,prg(Lam,_)),
   mkClosure(Lam,FreeVars,Closure),
   merge(FreeVars,Q3,QQ),
   LclPrg = prg(Lam,3),

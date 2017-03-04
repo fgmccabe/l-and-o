@@ -98,7 +98,7 @@ lo.comp.resolve{
   resolveTerm(int(Ix),_,Rp,Rp) => int(Ix).
   resolveTerm(flt(Dx),_,Rp,Rp) => flt(Dx).
   resolveTerm(str(Sx),_,Rp,Rp) => str(Sx).
-  resolveTerm(dot(Rc,Fld),Dict,Rp,Rpx) => dot(resolveTerm(Rc,Dict,Rp,Rpx),Fld).
+  resolveTerm(dot(Lc,Rc,Fld),Dict,Rp,Rpx) => dot(Lc,resolveTerm(Rc,Dict,Rp,Rpx),Fld).
   resolveTerm(tpl(Args),Dict,Rp,Rpx) => tpl(resolveTerms(Args,Dict,Rp,Rpx)).
   resolveTerm(whre(Trm,Cond),Dict,Rp,Rpx) => whre(resolveTerm(Trm,Dict,Rp,Rp0),resolveCond(Cond,Dict,Rp0,Rpx)).
   resolveTerm(condExp(Cond,Then,Else),Dict,Rp,Rpx) =>
@@ -162,7 +162,7 @@ lo.comp.resolve{
   resolveTerminals([(Lc,Op,T),..L],Dict,Rp,Rpx) => [(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(T,Dict,Rp0,Rp1)),..resolveTerminals(L,Dict,Rp1,Rpx)].
 
   overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
-  overloadRef(mtd(_,Nm),[DT],RArgs,dot(DT,Nm),RArgs).
+  overloadRef(mtd(Lc,Nm),[DT],RArgs,dot(Lc,DT,Nm),RArgs).
   overloadRef(v(Lc,Nm),DT,RArgs,v(Lc,Nm),DT<>RArgs).
   overloadRef(mtd(Lc,Nm),_,RArgs,v(Lc,Nm),RArgs). -- actually an error recovery step
 

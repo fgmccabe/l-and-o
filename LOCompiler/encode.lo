@@ -19,7 +19,6 @@ lo.comp.encode{
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
-  -- encTerm(code(Tp,Code,Lits),L) => [0c#,..encType(Tp,encTerm(mkTpl(Lits),encodeChars(encode64(Code),0c',L)))].
 
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.
@@ -162,8 +161,8 @@ lo.comp.encode{
 
   -- Encode a code segment
   encCodeSeg:(codeSeg,list[integer]) => list[integer].
-  encCodeSeg(codeSeg(Nm,Code,Lits),L) =>
-    [0cn,..encInt(3,encTerm(strct("#code",3),encTerm(Nm,[0cs,..encodeChars(encode64(fmtIns([LOSig,..Code])),0c',encTerm(mkTpl(Lits),L))])))].
+  encCodeSeg(codeSeg(Nm,Code,Lits,SrcMap),L) =>
+    [0cn,..encInt(3,encTerm(strct("#code",4),encTerm(Nm,[0cs,..encodeChars(encode64(fmtIns([LOSig,..Code])),0c',encTerm(mkTpl(Lits),encTerm(mkTpl(SrcMap),L)))])))].
 
   encSegs:(list[codeSeg],list[integer]) => list[integer].
   encSegs([],L) => L.

@@ -675,7 +675,7 @@ lo.comp.typecheck{
     reportError("invalid entry in map \(E)",E.loc,Rp,Rp0).
 
   recordAccessExp:(location,ast,string,tipe,list[env],list[env],canonTerm,report,report){}.
-  recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld),Rp,Rpx) :-
+  recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Lc,Rec,Fld),Rp,Rpx) :-
     AT = newVar("_R"),
     knownType(Rc,AT,Env,Ev,Rec,Rp,Rp0),
     faceOfType(deRef(AT),Env,Face),

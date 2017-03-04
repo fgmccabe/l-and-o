@@ -29,26 +29,26 @@ lo.comp.code.pkg{
     logMsg("Compiling \(Cls)"),
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),
-    DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,Entries,[]),
+    DefltCode = defltSeq(Prefix,L0,Cls,true,[],Lts,Entries,[],[],SrcMap),
     IndexCode = genIndex(Entries,L0),
-    Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,[litrl(newLabel(Prefix),prg(Nm,Ar)),..Lts]),
+    Code = assem(prg(Nm,Ar),IndexCode<>DefltCode,[litrl(newLabel(Prefix),prg(Nm,Ar)),..Lts],SrcMap),
     logMsg("Assembler output: \(Code)").
 
-  defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)]) => list[instruction].
-  defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,[(Lb,Cl),..Entries],Entries) => [iLbl(Lb),..ClCode] :-
-    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
-  defltSeq(Prefix,Lb,[Cl],false,Lts,Ltx,[(Lbx,Cl),..Entries],Entries) => [iLbl(Lb),iTrustme,iLbl(Lbx),..ClCode] :-
+  defltSeq:(string,string,list[clse],logical,list[litrl],list[litrl],list[(string,clse)],list[(string,clse)],list[(string,string,tloc)],list[(string,string,tloc)]) => list[instruction].
+  defltSeq(Prefix,Lb,[Cl],true,Lts,Ltx,[(Lb,Cl),..Entries],Entries,Sm,SMx) => [iLbl(Lb),..ClCode] :-
+    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Ltx,SMx).
+  defltSeq(Prefix,Lb,[Cl],false,Lts,Ltx,[(Lbx,Cl),..Entries],Entries,Sm,Smx) => [iLbl(Lb),iTrustme,iLbl(Lbx),..ClCode] :-
     Lbx = newLabel("Cl"),
-    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Ltx).
-  defltSeq(Prefix,Lb,[Cl,..Rest],true,Lts,Ltx,[(Lbx,Cl),..Entries],Enx) =>
-      [iLbl(Lb),iTryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx) :-
-    Lbx = newLabel("Cl"),
-    Lbnxt = newLabel("Nxt"),
-    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
-  defltSeq(Prefix,Lb,[Cl,..Rest],false,Lts,Ltx,[(Lbx,Cl),..Entries],Enx) =>
-      [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx) :-
+    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Ltx,Smx).
+  defltSeq(Prefix,Lb,[Cl,..Rest],true,Lts,Ltx,[(Lbx,Cl),..Entries],Enx,Sm,Smx) =>
+      [iLbl(Lb),iTryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx,Sm1,Smx) :-
     Lbx = newLabel("Cl"),
     Lbnxt = newLabel("Nxt"),
-    compCl(reduceClause(Cl),Lts) = assem(_,ClCode,Lt0).
-  defltSeq(_,Lb,[],_,Lts,Lts,Entries,Entries) => [iLbl(Lb),iFayl].
+    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Lt0,Sm1).
+  defltSeq(Prefix,Lb,[Cl,..Rest],false,Lts,Ltx,[(Lbx,Cl),..Entries],Enx,Sm,Smx) =>
+      [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx,Sm1,Smx) :-
+    Lbx = newLabel("Cl"),
+    Lbnxt = newLabel("Nxt"),
+    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Lt0,Smx).
+  defltSeq(_,Lb,[],_,Lts,Lts,Entries,Entries,Sm,Sm) => [iLbl(Lb),iFayl].
 }

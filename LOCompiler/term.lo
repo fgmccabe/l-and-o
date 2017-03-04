@@ -14,15 +14,17 @@ lo.comp.term {
                    | strng(string)
                    | cons(term,list[term]).
 
+  public type tloc ::= tloc(integer,integer).
+
   public type clse ::= clse(list[term],term,list[term],list[pred]).
 
-  public type pred ::= call(term,list[term])
-                    | ecall(string,list[term])
-                    | ocall(term,term,term)
-                    | unfy(term,term)
+  public type pred ::= call(option[tloc],term,list[term])
+                    | ecall(option[tloc],string,list[term])
+                    | ocall(option[tloc],term,term,term)
+                    | unfy(option[tloc],term,term)
                     | neck
                     | fail
-                    | except(term).
+                    | except(option[tloc],term).
 
   public type prProg ::= prProg(pkgSpec,list[clse]).
 
@@ -73,12 +75,12 @@ lo.comp.term {
 
   private displayPred:(pred,list[term]) => ss.
   displayPred(neck,_) => ss("!").
-  displayPred(call(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
-  displayPred(ecall(Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
-  displayPred(ocall(Rc,Lb,Th),Q) => ssSeq([dispTerm(Lb,Q),ss("."),dispTerm(Rc,Q)]).
-  displayPred(unfy(L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
+  displayPred(call(_,Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
+  displayPred(ecall(_,Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
+  displayPred(ocall(_,Rc,Lb,Th),Q) => ssSeq([dispTerm(Lb,Q),ss("."),dispTerm(Rc,Q)]).
+  displayPred(unfy(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
   displayPred(fail,_) => ss("fail").
-  displayPred(except(T),Q) => ssSeq([ss("raise "),dispTerm(T,Q)]).
+  displayPred(except(_,T),Q) => ssSeq([ss("raise "),dispTerm(T,Q)]).
 
   private dispPreds:(string,string,list[pred],list[term]) => list[ss].
   dispPreds(_,_,[],_) => [].
@@ -87,11 +89,11 @@ lo.comp.term {
   public predArity:(pred) => integer.
   predArity(neck) => 0.
   predArity(fail) => 0.
-  predArity(except(_)) => 1.
-  predArity(call(_,Args)) => size(Args).
-  predArity(ocall(_,_,_)) => 3.
-  predArity(unfy(_,_)) => 2.
-  predArity(ecall(_,Args)) => size(Args).
+  predArity(except(_,_)) => 1.
+  predArity(call(_,_,Args)) => size(Args).
+  predArity(ocall(_,_,_,_)) => 3.
+  predArity(unfy(_,_,_)) => 2.
+  predArity(ecall(_,_,Args)) => size(Args).
 
   public implementation equality[term] <= {
     T1 == T2 :- eqTerm(T1,T2).

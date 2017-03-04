@@ -7,7 +7,7 @@
 
 #include "word.h"
 
-typedef struct {
+typedef struct _package_record_ {
   byte packageName[1024];
   byte version[1024];
 } PackageRec, *packagePo;

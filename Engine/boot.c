@@ -20,7 +20,7 @@
 /* An initial bootstrap sequence */
 
 static ptrI buildCode(insPo cd, uint16 arity, unsigned long cdlen, unsigned long litCnt) {
-  ptrI code = permCode(cdlen, litCnt);
+  ptrI code = permCode(cdlen, litCnt, NULL, 0);
   codePo pc = codeV(code);
 
   memcpy(pc->data, cd, cdlen * sizeof(insWord));

@@ -27,7 +27,7 @@ lo.comp.freevars{
   freeVars(str(_),_,F) => F.
   freeVars(tpl(Els),Q,F) => freeVarsList(Els,Q,F).
   freeVars(apply(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
-  freeVars(dot(Rc,_),Q,F) =>freeVars(Rc,Q,F).
+  freeVars(dot(_,Rc,_),Q,F) =>freeVars(Rc,Q,F).
   freeVars(whre(T,C),Q,F) => freeVars(T,Q,freeVarsInGoal(C,Q,F)).
   freeVars(condExp(C,T,E),Q,F) => freeVars(T,Q,freeVars(E,Q,freeVarsInGoal(C,Q,F))).
   freeVars(lambda(Rl),Q,F) => freeVarsInRule(Rl,Q,F).

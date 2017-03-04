@@ -39,7 +39,7 @@ lo.comp.reduce{
   reduceTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
-  reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(VV,cons(Op,NEls)),..Post],Psx,Qx) :-
+  reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(none,VV,cons(Op,NEls)),..Post],Psx,Qx) :-
     VV = genVr("$%"),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
@@ -50,21 +50,21 @@ lo.comp.reduce{
     reduceBody(L,Q1,Psx,NQ).
 
   reducePred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
-  reducePred(call(Op,Args),Q,call(NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-
+  reducePred(call(TLc,Op,Args),Q,call(TLc,NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(Op,Q,NOp,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArgs(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
-  reducePred(ecall(Op,Args),Q,ecall(Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
+  reducePred(ecall(TLc,Op,Args),Q,ecall(TLc,Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
     reduceBildArgs(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
-  reducePred(ocall(Cl,Lb,Th),Q,ocall(NCl,NLb,NTh),Pre,Prx,Post,Psx,Qx) :-
+  reducePred(ocall(TLc,Cl,Lb,Th),Q,ocall(TLc,NCl,NLb,NTh),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
     reduceBildArg(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
-  reducePred(unfy(L,R),Q,unfy(NL,NR),Pre,Prx,Post,Psx,Qx) :-
+  reducePred(unfy(TLc,L,R),Q,unfy(TLc,NL,NR),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(L,Q,NL,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(R,Q0,NR,Pr0,Prx,Ps0,Psx,Qx).
   reducePred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
   reducePred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
-  reducePred(except(E),Q,except(NE),Pre,Prx,Pos,Psx,Qx) :-
+  reducePred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
     reduceBildArg(E,Q,NE,Pre,Prx,Post,Psx,Qx).
 
   reduceBildArgs:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
@@ -92,5 +92,5 @@ lo.comp.reduce{
   reduceBildTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
     VV = genVr("$%"),
-    reduceBildTerms(Els,Q,NEls,Pre,[unfy(VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
+    reduceBildTerms(Els,Q,NEls,Pre,[unfy(none,VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
 }

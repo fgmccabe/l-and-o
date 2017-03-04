@@ -13,8 +13,8 @@ lo.comp.code.clause{
   import lo.comp.errors.
   import lo.comp.term.
 
-  public compCl:(clse,list[litrl])=>assem.
-  compCl(clse(Q,Nm,Args,Body),Lts) => assem(Nm,Code,Ltx):-
+  public compCl:(clse,list[litrl],list[(string,string,tloc)])=>assem.
+  compCl(clse(Q,Nm,Args,Body),Lts,SM0) => assem(Nm,Code,Ltx,SrcMap):-
     logMsg("compiling \(clse(Q,Nm,Args,Body))"),
     Parts = partitionGoals(Body,[]),
     (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
@@ -22,7 +22,7 @@ lo.comp.code.clause{
     heapSize = estimateArgSpace(Args,false),
     hSize = gcPredict(Vs0), -- heapSize should == hSize
     allocating = ((PermSize>0 | size(Parts)>1) ? true | false),
-    compBodyParts(Parts,1,D0,Lt0,Vs0,allocating,bCode,Dx,Ltx,Vsx),
+    compBodyParts(Parts,1,D0,Lt0,Vs0,SM0,allocating,bCode,Dx,Ltx,Vsx,SrcMap),
     Arity = size(Args),
     lSize = max(maxLocals(Vsx),PermSize),
     Code =
@@ -30,17 +30,16 @@ lo.comp.code.clause{
       (lSize>0 ? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
       HCode<>bCode.
 
-
   clearLocals:(set[integer],integer,integer) => list[instruction].
   clearLocals(Lcls,Rg,Max) => [] :- Rg>Max.
   clearLocals(Lcls,Rg,Max) => [iClY(Rg),..clearLocals(Lcls,Rg+1,Max)] :- \+ Rg in Lcls.
   clearLocals(Lcls,Rg,Max) => clearLocals(Lcls,Rg+1,Max).
 
-  compBodyParts:(list[list[pred]],integer,map[string,varDesc],list[litrl],varSet,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
-  compBodyParts([],_,Dx,Lts,Vs,_,[iSucc],Dx,Lts,Vs).
-  compBodyParts([P],Gp,D0,L0,Vs0,Allo,Code,Dx,Lx,Vsx) :-
+  compBodyParts:(list[list[pred]],integer,map[string,varDesc],list[litrl],varSet,list[(string,string,tloc)],logical,list[instruction],map[string,varDesc],list[litrl],varSet,list[(string,string,tloc)]){}.
+  compBodyParts([],_,Dx,Lts,Vs,SM0,_,[iSucc],Dx,Lts,Vs,SM0).
+  compBodyParts([P],Gp,D0,L0,Vs0,SM0,Allo,Code,Dx,Lx,Vsx,SMx) :-
     Mx = maxReg(Vs0),
-    compPart(P,Gp,D0,L0,resetGc(Vs0),true,Allo,fCode,Dx,Lx,Vsx),
+    compPart(P,Gp,D0,L0,SM0,resetGc(Vs0),true,Allo,fCode,Dx,Lx,Vsx,SMx),
     lSize = gcPredict(Vsx),
     (lSize > 0 ?
       ((Allo | maxLocals(Vsx)>0) ?
@@ -48,97 +47,122 @@ lo.comp.code.clause{
         Code = Pre<>[iGc(Mx,lSize),..fCode] |
         Code = clearAs(1,Mx,usedRegs(Vs0)) <> [iGc(Mx,lSize)] <> fCode) |
       Code = fCode).
-  compBodyParts([P,..Arts],Gp,D0,L0,Vs0,Allo,Code,Dx,Lx,Vsx) :-
-    compPart(P,Gp,D0,L0,resetGc(Vs0),false,false,fCode,D1,L1,V1),
+  compBodyParts([P,..Arts],Gp,D0,L0,Vs0,SM0,Allo,Code,Dx,Lx,Vsx,SMx) :-
+    compPart(P,Gp,D0,L0,SM0,resetGc(Vs0),false,false,fCode,D1,L1,V1,SM1),
     lSize = gcPredict(V1),
     Mx = maxReg(Vs0),
     gcMap(Vs0,Mx,Pre,_),
     (lSize>0 ?
       gCode = Pre<>[iGc(Mx,lSize)] |
       gCode = []),
-    compBodyParts(Arts,Gp+1,D1,L1,resetUsed(V1),Allo,bCode,Dx,Lx,Vx),
+    compBodyParts(Arts,Gp+1,D1,L1,resetUsed(V1),SM1,Allo,bCode,Dx,Lx,Vx,SMx),
     Code = gCode<>fCode<>bCode.
 
-  compPart:(list[pred],integer,map[string,varDesc],list[litrl],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
-  compPart([],_,D,Ltx,Vs,_,_,[],D,Ltx,Vs).
-  compPart([G],Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
-    compGoal(G,Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx).
-  compPart([G,G1,..R],Gp,D,Lt,Vs,Last,Alloc,pCode<>rCode,Dx,Ltx,Vsx) :-
-    compGoal(G,Gp,D,Lt,Vs,false,false,pCode,D0,Lt0,Vs0),
-    compPart([G1,..R],Gp,D0,Lt0,Vs0,Last,Alloc,rCode,Dx,Ltx,Vsx).
+  compPart:(list[pred],integer,map[string,varDesc],list[litrl],list[(string,string,tloc)],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet,list[(string,string,tloc)]){}.
+  compPart([],_,D,Ltx,SM,Vs,_,_,[],D,Ltx,Vs,SM).
+  compPart([G],Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    compGoal(G,Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx).
+  compPart([G,G1,..R],Gp,D,Lt,SM,Vs,Last,Alloc,pCode<>rCode,Dx,Ltx,Vsx,SMx) :-
+    compGoal(G,Gp,D,Lt,SM,Vs,false,false,pCode,D0,Lt0,Vs0,SM0),
+    compPart([G1,..R],Gp,D0,Lt0,SM0,Vs0,Last,Alloc,rCode,Dx,Ltx,Vsx,SMx).
 
-  compGoal:(pred,integer,map[string,varDesc],list[litrl],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet){}.
-  compGoal(fail,_,D,Lt,Vs,_,_,[iFayl],D,Lt,Vs).
-  compGoal(neck,_,D,Lt,Vs,true,Alloc,Code,D,Lt,Vs) :-
+  compGoal:(pred,integer,map[string,varDesc],list[litrl],list[(string,string,tloc)],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet,list[(string,string,tloc)]){}.
+  compGoal(fail,_,D,Lt,SM,Vs,_,_,[iFayl],D,Lt,Vs,SM).
+  compGoal(neck,_,D,Lt,SM,Vs,true,Alloc,Code,D,Lt,Vs,SM) :-
     ((Alloc | maxLocals(Vs)>0) ?
       Code = [iCut,iDealloc,iGcmap(0,0)] |
       Code = [iCut,iSucc]).
-  compGoal(neck,_,D,Lt,Vs,false,_,[iCut],D,Lt,Vs).
-  compGoal(ecall(Esc,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+  compGoal(neck,_,D,Lt,SM,Vs,false,_,[iCut],D,Lt,Vs,SM).
+  compGoal(ecall(TLc,Esc,Args),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     Arity = size(Args),
     gcMap(Vsx,Arity,Pre,MapIns),
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
-          Code = aCode<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0)] |
-          Code = aCode<>[iAlloc(Arity,0),iGcmap(Arity,0)]<>Pre<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0)]
+          Code = [iLbl(SLb),..aCode]<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)] |
+          Code = [iLbl(SLb),..aCode]<>[iAlloc(Arity,0),iGcmap(Arity,0)]<>Pre<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)]
           ) |
-      Code = aCode<>Pre<>[iEscape(Arity,Esc),MapIns]).
-  compGoal(call(Prd,Args),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+      Code = [iLbl(SLb),..aCode]<>Pre<>[iEscape(Arity,Esc),MapIns,iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,Sm,SMx).
+  compGoal(call(TLc,Prd,Args),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Lt0,Vsx),
     Arity = size(Args),
     gcMap(Vsx,Arity,Pre,MapIns),
     accessLiteral(Prd,Lbl,Lt0,Ltx)!,
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
-          Code = aCode<>[iDlkawl(Arity,Lbl)] |
-          Code = aCode<>[iLkawl(Arity,Lbl),iGcmap(Arity,0)]
+          Code = [iLbl(SLb),..aCode]<>[iDlkawl(Arity,Lbl),iLbl(ELb)] |
+          Code = [iLbl(SLb),..aCode]<>[iLkawl(Arity,Lbl),iGcmap(Arity,0),iLbl(ELb)]
           ) |
-      Code = aCode<>Pre<>[iKawl(Arity,Lbl),MapIns]).
-  compGoal(ocall(Cl,LbV,ThV),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+      Code = [iLbl(SLb),..aCode]<>Pre<>[iKawl(Arity,Lbl),MapIns,iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(ocall(TLc,Cl,LbV,ThV),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     callArgs([Cl,LbV,ThV],Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     gcMap(Vsx,3,Pre,MapIns),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
-        Code = aCode<>[iDlkawlO(3,2)] |
-        Code = aCode<>[iLkawlO(3,2),MapIns]) |
-      Code = aCode<>Pre<>[iKawlO(3,2),MapIns]).
-  compGoal(unfy(varbl(Nm),R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+        Code = [iLbl(SLb),..aCode]<>[iDlkawlO(3,2),iLbl(ELb)] |
+        Code = [iLbl(SLb),..aCode]<>[iLkawlO(3,2),MapIns,iLbl(ELb)]) |
+      Code = [iLbl(SLb),..aCode]<>Pre<>[iKawlO(3,2),MapIns,iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(unfy(TLc,varbl(Nm),R),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     present(D,Nm,V),
     Addr = varAddr(V),
     (isInitialized(V) ?
       aCode = unifyTerm(R,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
       aCode = buildTerm(R,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
       Dx = D[Nm->markInited(V,Addr)]),
-      (Last ?
-        ((Alloc|maxLocals(Vs)>0) ?
-          Code = aCode<>[iDealloc,iGcmap(0,0)] |
-          Code = aCode<>[iSucc]) |
-        Code = aCode<>bCode).
-  compGoal(unfy(L,varbl(Nm)),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    (Last ?
+      ((Alloc|maxLocals(Vs)>0) ?
+        Code = [iLbl(SLb),..aCode]<>[iDealloc,iGcmap(0,0),iLbl(ELb)] |
+        Code = [iLbl(SLb),..aCode]<>[iSucc,iLbl(ELb)]) |
+      Code = [iLbl(SLb),..aCode]<>bCode<>[iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(unfy(TLc,L,varbl(Nm)),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     present(D,Nm,V),
     Addr = varAddr(V),
     (isInitialized(V) ?
       aCode = unifyTerm(L,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
       aCode = buildTerm(L,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
       Dx = D[Nm->markInited(V,Addr)]),
-      (Last ?
-        ((Alloc|maxLocals(Vs)>0) ?
-          Code = aCode<>[iDealloc,iGcmap(0,0)] |
-          Code = aCode<>[iSucc]) |
-        Code = aCode<>bCode).
-  compGoal(unfy(L,R),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+    (Last ?
+      ((Alloc|maxLocals(Vs)>0) ?
+        Code = [iLbl(SLb),..aCode]<>[iDealloc,iGcmap(0,0),iLbl(ELb)] |
+        Code = [iLbl(SLb),..aCode]<>[iSucc,iLbl(ELb)]) |
+      Code = [iLbl(SLb),..aCode]<>bCode<>[iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(unfy(TLc,L,R),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     pickAreg(Vs,Vs0,V),
     aCode = buildTerm(L,true,V,D,D0,Vs0,Vs1,Lt,Lt0,false),
     bCode = unifyTerm(R,true,V,D0,Dx,Vs1,Vsx,Lt0,Ltx,Last),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
-        Code = aCode<>bCode<>[iDealloc,iGcmap(0,0)] |
-        Code = aCode<>bCode<>[iSucc]) |
-      Code = aCode<>bCode).
-  compGoal(except(E),Gp,D,Lt,Vs,Last,Alloc,Code,Dx,Ltx,Vsx) :-
+        Code = [iLbl(SLb),..aCode]<>bCode<>[iDealloc,iGcmap(0,0),iLbl(ELb)] |
+        Code = [iLbl(SLb),..aCode]<>bCode<>[iSucc,iLbl(ELb)]) |
+      Code = [iLbl(SLb),..aCode]<>bCode<>[iLbl(ELb)]),
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(except(TLc,E),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    SLb = newLabel("Src"),
+    ELb = newLabel("Src"),
     aCode = buildTerm(E,true,aReg(0),D,Dx,Vs,Vsx,Lt,Ltx,Last),
-    Code = aCode<>[iExcept(0)].
+    Code = [iLbl(SLb),..aCode]<>[iExcept(0),iLbl(ELb)],
+    addToSrcMap(TLc,SLb,ELb,SM,SMx).
+
+  addToSrcMap:(option[tloc],string,string,list[(string,string,tloc)],list[(string,string,tloc)]){}.
+  addToSrcMap(some(TLc),SLb,ELb,M,[(SLb,ELb,TLc),..M]).
+  addToSrcMap(none,_,_,M,M).
 
   public newLabel:(string) => string.
   newLabel(Prefix) => _str_gen(Prefix).

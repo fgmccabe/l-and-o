@@ -8,7 +8,7 @@ lo.comp.debug{
   -- Generate code that interfaces with a debugger
   -- are we debugging?
   public debugPreamble:(string,list[term],list[term],list[pred],list[pred],trOptions,trOptions){}.
-  debugPreamble(Nm,Q,[DgVr,FrVr,..Q],[call(prg("go.debug@current",1),[DgVr]),..Gx],Gx,Opts,pushOpt(dbgVars(Nm,DgVr,FrVr),Opts)) :-
+  debugPreamble(Nm,Q,[DgVr,FrVr,..Q],[call(none,prg("go.debug@current",1),[DgVr]),..Gx],Gx,Opts,pushOpt(dbgVars(Nm,DgVr,FrVr),Opts)) :-
     isOption(debugging,Opts),
     DgVr = genVr("__D"),
     FrVr = genVr("__F").
@@ -17,14 +17,14 @@ lo.comp.debug{
   public frameDebug:(string,integer,list[term],list[pred],list[pred],trOptions){}.
   frameDebug(Nm,QNo,Q,G,Gx,Opts) :-
     isOption(dbgVars(Nm,DgVr,FrVr),Opts),
-    G=[unfy(FrVr,constructFrameList(Q)),
-        ocall(cons(trCons("frame",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..Gx].
+    G=[unfy(none,FrVr,constructFrameList(Q)),
+        ocall(none,cons(trCons("frame",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..Gx].
   frameDebug(_,_,_,F,F,_).
 
   public deframeDebug:(string,integer,list[pred],list[pred],trOptions){}.
   deframeDebug(Nm,QNo,FB,FBx,Opts) :-
     isOption(dbgVars(Nm,DgVr,FrVr),Opts),
-    FB=[ocall(cons(trCons("deframe",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..FBx].
+    FB=[ocall(none,cons(trCons("deframe",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..FBx].
   deframeDebug(_,_,F,F,_).
 
   constructFrameList:(list[term]) => term.
@@ -35,12 +35,12 @@ lo.comp.debug{
         cons(strct("lo.list#,..",2),[mkTpl([strng(V),varbl(V)]),constructFrameList(Vars)]).
 
   public breakDebug:(string,list[pred],list[pred],trOptions){}.
-  breakDebug(Nm,[ocall(cons(trCons("break",1),[strng(Nm)]),DgVr,DgVr),..BG],BG,Opts) :-
+  breakDebug(Nm,[ocall(none,cons(trCons("break",1),[strng(Nm)]),DgVr,DgVr),..BG],BG,Opts) :-
     isOption(dbgVars(Nm,DgVr,_),Opts).
   breakDebug(_,G,G,_).
 
   public lineDebug:(location,list[pred],list[pred],trOptions){}.
-  lineDebug(Lc,[ocall(cons(trCons("line",4),[strng(PkgName),intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(size(Lc))]),DgVr,DgVr),..P],P,Opts) :-
+  lineDebug(Lc,[ocall(none,cons(trCons("line",4),[strng(PkgName),intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(size(Lc))]),DgVr,DgVr),..P],P,Opts) :-
     isOption(dbgVars(_,DgVr,_),Opts),
     isOption(pkgName(PkgName),Opts).
   lineDebug(_,P,P,_).

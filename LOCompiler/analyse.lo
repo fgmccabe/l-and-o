@@ -17,7 +17,7 @@ lo.comp.code.analyse{
   isSafeGoal:(pred){}.
   isSafeGoal(neck).
   isSafeGoal(fail).
-  isSafeGoal(unfy(_,_)).
+  isSafeGoal(unfy(_,_,_)).
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
 
@@ -56,11 +56,11 @@ lo.comp.code.analyse{
   findOccsInPart([G,..l],M,Gp) => findOccsInPart(l,findOccsInGoal(G,M,Gp),Gp).
 
   findOccsInGoal:(pred,map[string,occMap],integer) => map[string,occMap].
-  findOccsInGoal(call(Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
-  findOccsInGoal(ecall(Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
-  findOccsInGoal(ocall(C,L,T),M,Gp) => findOccsInArgs([C,L,T],M,Gp,1,lArg,lTerm).
-  findOccsInGoal(unfy(L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
-  findOccsInGoal(except(T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(call(_,Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(ecall(_,Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
+  findOccsInGoal(ocall(_,C,L,T),M,Gp) => findOccsInArgs([C,L,T],M,Gp,1,lArg,lTerm).
+  findOccsInGoal(unfy(_,L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
+  findOccsInGoal(except(_,T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
   findOccsInGoal(neck,M,_) => M.
   findOccsInGoal(fail,M,_) => M.
 

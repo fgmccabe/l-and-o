@@ -45,7 +45,7 @@ lo.comp.canon {
             | condExp(canonCond,canonTerm,canonTerm)
             | lambda(canonRule)
             | theta(list[canonDef],list[canonOther])
-            | dot(canonTerm,string)
+            | dot(location,canonTerm,string)
             | over(location,canonTerm,list[constraint])
             | mtd(location,string).
 
@@ -176,7 +176,7 @@ lo.comp.canon {
   dispTerm(tpl([E,..L])) => ssSeq([ss("("),dispTerm(E),ssSeq(dispEls(L)),ss(")")]).
   dispTerm(whre(T,C)) => ssSeq([dispTerm(T),ss("@@"),dispCond(C)]).
   dispTerm(condExp(T,E,F)) => ssSeq([ss("("),dispCond(T),ss("?"),dispTerm(E),ss("|"),dispTerm(F),ss(")")]).
-  dispTerm(dot(R,F)) => ssSeq([dispTerm(R),ss("."),ss(F)]).
+  dispTerm(dot(_,R,F)) => ssSeq([dispTerm(R),ss("."),ss(F)]).
   dispTerm(over(_,T,C)) => ssSeq([disp(C),ss("|:"),dispTerm(T)]).
   dispTerm(mtd(_,M)) => ss(M).
   dispTerm(lambda(R)) => ssSeq([ss("<"),dispRule(R),ss(">")]).

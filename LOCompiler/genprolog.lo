@@ -37,13 +37,13 @@ lo.comp.genprolog{
   convertCall(C,Ox) => [0c,,0c\n,0c ,0c ,0c ,0c ,..convertPred(C,Ox)].
 
   convertPred:(pred,list[integer]) => list[integer].
-  convertPred(call(Op,Args),Ox) => convertCallOp(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-  convertPred(ecall(Op,Args),Ox) => appId(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-  convertPred(unfy(L,R),Ox) => convertTerm(L,[0c ,0c=, 0c ,..convertTerm(R,Ox)]).
-  convertPred(ocall(Call,Lb,Th),Ox) => appStr("ocall(",convertTerm(Call,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c),..Ox])])])).
+  convertPred(call(_,Op,Args),Ox) => convertCallOp(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
+  convertPred(ecall(_,Op,Args),Ox) => appId(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
+  convertPred(unfy(_,L,R),Ox) => convertTerm(L,[0c ,0c=, 0c ,..convertTerm(R,Ox)]).
+  convertPred(ocall(_,Call,Lb,Th),Ox) => appStr("ocall(",convertTerm(Call,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c),..Ox])])])).
   convertPred(neck,Ox) => [0c!,..Ox].
   convertPred(fail,Ox) => appStr("fail",Ox).
-  convertPred(except(E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
+  convertPred(except(_,E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
 
   convertTerm:(term,list[integer]) => list[integer].
   convertTerm(anon,Ox) => [0c_,..Ox].
