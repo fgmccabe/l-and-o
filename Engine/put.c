@@ -975,7 +975,7 @@ retCode g__term(processPo P, ptrPo a) {
   long litCount = S->litNo;
   lPo lt;
   long size = codeCount(ins); /* how many instructions do we have? */
-  ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL, 0);
+  ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
   ptrI xx = kvoid;
   retCode ret = Ok;
   byte eMsg[MAX_SYMB_LEN];
@@ -1093,7 +1093,7 @@ retCode g__assert(processPo P, ptrPo a) {
   long litCount = S->litNo;
   lPo lt;
   long size = codeCount(ins); /* how many instructions do we have? */
-  ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL, 0);
+  ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
   ptrI xx = kvoid;
   retCode ret = Ok;
   byte eMsg[MAX_SYMB_LEN];
@@ -1244,7 +1244,7 @@ ptrI loObject(heapPo H, ptrI T) {
       long litCount = S->litNo;
       lPo lt;
       long size = codeCount(ins); /* how many instructions do we have? */
-      ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL, 0);
+      ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
       ptrI xx = kvoid;
       retCode ret = Ok;
       byte eMsg[MAX_SYMB_LEN];

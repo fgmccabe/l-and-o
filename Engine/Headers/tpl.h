@@ -19,10 +19,12 @@
 
 extern ptrI tupleClass(integer arity);
 extern objPo newTuple(heapPo H, integer arity);
-extern ptrI tuplePair(heapPo H,ptrI left,ptrI right);
-extern logical isTuplePair(ptrPo t,ptrPo left,ptrPo right);
+extern ptrI tuplePair(heapPo H, ptrI left, ptrI right);
+extern logical isTuplePair(ptrPo t, ptrPo left, ptrPo right);
 
+extern logical IsTuple(ptrI t);
 extern logical isTupleClass(ptrI cl);
+extern ptrPo nthTplEl(objPo p, integer pos);
 
 extern integer tupleArity(objPo t);
 

@@ -100,6 +100,7 @@ string uniSubStr(string s, long len, long from, long cnt, string buff, long bLen
 
 long uniSearch(string src, long len, long start, string tgt, long tlen);
 string uniSearchAny(string s, long len, string term);
+codePoint uniSearchDelims(string s, long len, string t);
 string uniLast(string s, long l, codePoint c);
 string uniDuplicate(string s);
 logical uniIsLit(string s1, char *s2);

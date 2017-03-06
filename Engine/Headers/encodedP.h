@@ -24,7 +24,8 @@ retCode decodeName(ioPo in, bufferPo buffer);
 
 typedef retCode (*intProc)(integer ix, void *cl);
 typedef retCode (*fltProc)(double dx, void *cl);
-typedef retCode (*stringProc)(string sx,void*cl);
+typedef retCode (*nameProc)(string sx,void*cl);
+typedef retCode (*stringProc)(string sx,integer len,void*cl);
 typedef retCode (*strctProc)(string nm,integer ar,void*cl);
 typedef retCode (*flagProc)(void *cl);
 
@@ -34,7 +35,7 @@ typedef struct {
   intProc decVar;
   intProc decInt;
   fltProc decFlt;
-  stringProc decEnum;
+  nameProc decEnum;
   stringProc decString;
   strctProc decStruct;
   strctProc decPrg;

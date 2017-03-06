@@ -464,6 +464,35 @@ string uniSearchAny(string s, long len, string term) {
   return NULL;
 }
 
+codePoint uniSearchDelims(string s, long len, string t) {
+  long pos = 0;
+  long tlen = uniStrLen(t);
+  long tSize = countCodePoints(t, 0, tlen);
+
+  codePoint terms[tSize];
+  long ti = 0;
+
+  for (long tx = 0; tx < tSize;) {
+    terms[ti++] = nextCodePoint(t, &tx, tSize);
+  }
+
+  for (long ix = 0; ix < len;) {
+    codePoint ch = nextCodePoint(s, &ix, len);
+    for (long dx = 0; dx < tSize; dx++) {
+      if (terms[dx] == ch) {
+        terms[dx] = 0;
+        break;
+      }
+    }
+  }
+
+  for (long dx = 0; dx < tSize; dx++) {
+    if (terms[dx] != 0)
+      return terms[dx];
+  }
+  return 0;
+}
+
 // This is a poor algorithm. Fix me with Boyer-Moore or better
 long uniSearch(string src, long len, long start, string tgt, long tlen) {
   long pos = start;

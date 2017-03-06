@@ -163,7 +163,7 @@ retCode decInt(ioPo in, integer *ii) {
                 continue;
               } else {
                 *ii = result;
-                return putBackByte(in,chb);
+                return putBackByte(in, chb);
               }
             case Eof: {
               *ii = result;
@@ -305,7 +305,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
 
       if ((res = decodeName(in, tmpBuffer)) == Ok) {
         long len;
-        *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), (unsigned short)arity);
+        *tgt = newProgramLbl(getTextFromBuffer(&len, tmpBuffer), (unsigned short) arity);
       }
       return res;
     }
@@ -433,12 +433,10 @@ static retCode estimateName(string nm, void *cl) {
   return Ok;
 }
 
-static retCode estimateString(string nm, void *cl) {
+static retCode estimateString(string nm, integer size, void *cl) {
   Estimation *info = (Estimation *) cl;
 
-  long length = uniStrLen(nm);
-
-  info->perm += CellCount(sizeof(stringRec) + (length + 1) * sizeof(byte));
+  info->perm += CellCount(sizeof(stringRec) + (size + 1) * sizeof(byte));
   return Ok;
 }
 
@@ -738,7 +736,7 @@ static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buf
       if (res == Ok) {
         long len;
         string nm = getTextFromBuffer(&len, buff);
-        res = cb->decString(nm, cl);
+        res = cb->decString(nm, len, cl);
       }
       return res;
     }
@@ -816,7 +814,11 @@ static retCode skipFlt(double dx, void *cl) {
   return Ok;
 }
 
-static retCode skipString(string sx, void *cl) {
+static retCode skipString(string sx, integer len, void *cl) {
+  return Ok;
+}
+
+static retCode skipName(string sx,void *cl){
   return Ok;
 }
 
@@ -830,7 +832,7 @@ static DecodeCallBacks skipCB = {
   skipInt,            // decVar
   skipInt,            // decInt
   skipFlt,            // decFlt
-  skipString,         // decEnum
+  skipName,           // decEnum
   skipString,         // decString
   skipStrct,          // decStruct
   skipStrct,          // decPrg
@@ -851,4 +853,155 @@ retCode skipEncoded(ioPo in, string errorMsg, long msgLen) {
       strMsg(errorMsg, msgLen, "problem in decoding");
       return Error;
   }
+}
+
+typedef struct {
+  ioPo out;
+} CopyRec;
+
+static retCode copyFlag(void *cl) {
+  return Ok;
+}
+
+static retCode copyVar(integer ix, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+
+  outChar(out, trmVar);
+  return encodeInt(out, ix);
+}
+
+static retCode copyInt(integer ix, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  outChar(out, trmInt);
+  return encodeInt(out, ix);
+}
+
+static retCode copyFlt(double dx, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  outChar(out, trmFlt);
+  return encodeFlt(out, dx);
+}
+
+static retCode encodeName(ioPo out, string sx, integer len) {
+  codePoint delim = uniSearchDelims(sx, len, (string) ";\"|/%");
+  if (delim == 0)
+    delim = '"';
+
+  retCode ret = outChar(out, delim);
+  long ix = 0;
+  while (ret == Ok && ix < len) {
+    codePoint ch = nextCodePoint(sx, &ix, len);
+    if (ch == '\\')
+      ret = outStr(out, "\\\\");
+    else if (ch == delim) {
+      ret = outChar(out, '\\');
+      if (ret == Ok)
+        ret = outChar(out, delim);
+    } else
+      ret = outChar(out, ch);
+  }
+  if (ret == Ok)
+    ret = outChar(out, delim);
+  return ret;
+}
+
+static retCode copyString(string sx, integer len, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  return encodeStrng(out, sx, len);
+}
+
+static retCode copyEnum(string sx, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  return encodeEnum(out, sx);
+}
+
+static retCode copyStrct(string nm, integer ar, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  return encodeStrct(out,nm,ar);
+}
+
+static retCode copyPrg(string nm, integer ar, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  return encodePrg(out,nm,ar);
+}
+
+static retCode copyCons(integer ar, void *cl) {
+  ioPo out = ((CopyRec *) cl)->out;
+  return encodeCons(out,ar);
+}
+
+static DecodeCallBacks copyCB = {
+  copyFlag,           // startDecoding
+  copyFlag,           // endDecoding
+  copyVar,            // decVar
+  copyInt,            // decInt
+  copyFlt,            // decFlt
+  copyEnum,           // decEnum
+  copyString,         // decString
+  copyStrct,          // decStruct
+  copyPrg,            // decPrg
+  copyCons            // decCons
+};
+
+retCode copyEncoded(ioPo in, ioPo out, string errorMsg, long msgLen) {
+  CopyRec rc = {out};
+
+  switch (streamDecode(in, &skipCB, &rc)) {
+    case Ok:
+      return Ok;
+    case Error:
+      strMsg(errorMsg, msgLen, "problem in decoding");
+      return Error;
+    case Eof:
+      strMsg(errorMsg, msgLen, "unexpected EOF");
+      return Error;
+    default:
+      strMsg(errorMsg, msgLen, "problem in decoding");
+      return Error;
+  }
+}
+
+retCode encodeInt(ioPo out, integer ix) {
+  return outInt(out, ix);
+}
+
+retCode encodeFlt(ioPo out, double dx) {
+  return outFloat(out, dx);
+}
+
+retCode encodeEnum(ioPo out, string sx) {
+  outChar(out, trmSym);
+  return encodeName(out, sx, (integer) uniStrLen(sx));
+}
+
+retCode encodeStrng(ioPo out, string sx, integer len) {
+  outChar(out, trmString);
+  return encodeName(out, sx, len);
+}
+
+retCode encodeStrct(ioPo out, string nm, integer ar){
+  retCode ret = outChar(out, trmStrct);
+  if (ret == Ok)
+    ret = encodeInt(out, ar);
+  if (ret == Ok)
+    ret = encodeName(out, nm, (integer) uniStrLen(nm));
+
+  return ret;
+}
+retCode encodePrg(ioPo out, string nm, integer ar){
+  retCode ret = outChar(out, trmPrg);
+  if (ret == Ok)
+    ret = encodeInt(out, ar);
+  if (ret == Ok)
+    ret = encodeName(out, nm, (integer) uniStrLen(nm));
+
+  return ret;
+}
+
+retCode encodeCons(ioPo out, integer ar){
+  retCode ret = outChar(out, trmCns);
+  if (ret == Ok)
+    ret = encodeInt(out, ar);
+
+  return ret;
 }

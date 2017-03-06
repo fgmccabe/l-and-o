@@ -34,6 +34,14 @@ string loadedVersion(string package) {
   return NULL;
 }
 
+string pkgName(packagePo pkg){
+  return (string)&pkg->packageName;
+}
+
+string pkgVers(packagePo pkg){
+  return (string)&pkg->version;
+}
+
 static logical compatiblVersion(string rqVer, string ver) {
   return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
 }
@@ -377,24 +385,12 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
 
       rewindBuffer(buff); // tmpBufer should contain base64 text
 
-      long litMark;
-      markIo(in, &litMark);
-
-      integer litCount, srcMapCount = 0;
+      integer litCount = 0;
 
       ret = decInt(in, &litCount);
 
-      resetToMark(in, litMark);
-
-      if (ret == Ok) {
-        ret = skipEncoded(in, errorMsg, msgSize);
-
-        ret = isLookingAt(in, "n");  // The source map entries
-
-        if (ret == Ok) {
-          ret = decInt(in, &srcMapCount);
-        }
-      }
+      if(ret==Ok)
+        ret = skipEncoded(in,errorMsg,msgSize);
 
       if (ret != Ok) {
         closeFile(O_IO(buff));
@@ -417,7 +413,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
           ret = in32(O_IO(cdeBuffer), &signature); // verify correct code signature
 
           heapPo GH = &globalHeap;
-          ptrI pc = permCode((unsigned long) codeCount, (uinteger) litCount, owner, (uinteger) srcMapCount);
+          ptrI pc = permCode((unsigned long) codeCount, (uinteger) litCount, owner);
 
           insPo cd = FirstInstruction(pc);
           ptrI el = kvoid;
@@ -463,10 +459,6 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
             codeV(pc)->arity = (uint16) arity; /* set the arity of the program */
 
             // Now we find the literals
-            ret = resetToMark(in, litMark);
-
-            if (ret == Ok)
-              ret = skipEncoded(in, errorMsg, msgSize); // we know this is a tuple structure marker
 
             for (long i = 0; ret == Ok && i < litCount; i++) {
               if ((ret = decode(in, &sp, GH, &el, buff)) != Ok) /* read each element of term */
@@ -476,24 +468,11 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
               }
             }
 
-            // Now we populate the source map
-            if (isLookingAt(in, "n") == Ok) {
-              ret = skipEncoded(in, errorMsg, msgSize);
-              srcMapPo srcMap = sourceMap(codeV(pc));
+            if (ret == Ok) {
+              ret = decode(in, &sp, GH, &el, buff);  // Decode the source map
 
-              for (uinteger ix = 0; ret == Ok && ix < srcMapCount; ix++) {
-                ret = isLookingAt(in, "n4");
-                if (ret == Ok)
-                  ret = skipEncoded(in, errorMsg, msgSize); // skip over tuple marker
-                if (ret == Ok)
-                  ret = decInt(in, (integer*)&srcMap[ix].startOff);
-                if (ret == Ok)
-                  ret = decInt(in, (integer*)&srcMap[ix].endOff);
-                if (ret == Ok)
-                  ret = decInt(in, (integer*)&srcMap[ix].start);
-                if (ret == Ok)
-                  ret = decInt(in, (integer*)&srcMap[ix].len);
-              }
+              if (ret == Ok)
+                codeV(pc)->srcMap = el;
             }
 
             gcRemoveRoot(GH, root); /* clear the GC root */

@@ -930,8 +930,7 @@ retCode isLookingAt(ioPo f, char *prefix) {
     }
 
     if (ret != Ok) {
-      ret = resetToMark(f, mark);
-      if (ret != Ok)
+      if (resetToMark(f, mark) != Ok)
         return Error;
     }
     return ret;

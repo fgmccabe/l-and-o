@@ -16,6 +16,8 @@ void initPackages();
 
 packagePo loadedPackage(string package);
 
+string pkgName(packagePo pkg);
+string pkgVers(packagePo pkg);
 string loadedVersion(string package);
 
 #endif //LANDO_LOAD_H

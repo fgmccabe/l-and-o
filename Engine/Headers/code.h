@@ -43,13 +43,6 @@ extern ptrI dynamicClass;       // A dynamically created entity */
 
 #define OBJECT_ARITY 3          // A method call has 3 args */
 
-typedef struct _src_map_ {
-  uinteger startOff;            // First instruction this map entry is valid for
-  uinteger endOff;              // First instruction this map entry is no longer valid for
-  uinteger start;               // Index into source
-  uinteger len;                 // Length of source code
-} SrcMapEntry, *srcMapPo;
-
 /*
  * A Code fragment
  */
@@ -60,8 +53,8 @@ typedef struct _code_record_ {
   uinteger brks;                // Size of the break table */
   uint16 arity;                 // The program arity -- used for verification purposes
   unsigned long litCnt;         // The number of literals in the code */
-  uinteger srcMapCount;         // How many entries in the source map
-  packagePo owner;              // Which package was this code part of
+  packagePo owner;              // Owning package
+  ptrI srcMap;                  // Source map for this code segment
   insWord data[ZEROARRAYSIZE];  // Instruction words
 } codeRec, *codePo;
 
@@ -109,7 +102,7 @@ static inline codePo codeV(ptrI x) {
   return (codePo) objV(x);
 }
 
-#define CodeCellCount(code, litcnt,srcMap) CellCount(sizeof(codeRec)+(code)*sizeof(insWord)+(litcnt)*sizeof(ptrI)+(srcMap)*sizeof(SrcMapEntry))
+#define CodeCellCount(code, litcnt) CellCount(sizeof(codeRec)+(code)*sizeof(insWord)+(litcnt)*sizeof(ptrI))
 
 static inline insPo codeIns(codePo pc) {
   assert(pc->class == codeClass);
@@ -128,22 +121,15 @@ static inline ptrPo codeLits(codePo pc) {
   return (ptrPo) &pc->data[pc->size];
 }
 
-static inline srcMapPo sourceMap(codePo pc) {
+static inline ptrI sourceMap(codePo pc) {
   assert(pc->class == codeClass);
-  return (srcMapPo) &pc->data[pc->size + pc->litCnt];
+  return pc->srcMap;
 }
 
-static inline uinteger sourceMapCount(codePo pc) {
-  assert(pc->class == codeClass);
-  return pc->srcMapCount;
-}
-
-static packagePo codeOwner(codePo pc) {
+static inline packagePo codeOwner(codePo pc){
   assert(pc->class == codeClass);
   return pc->owner;
 }
-
-extern srcMapPo locateSourceFragment(codePo cde, insPo pc);
 
 /* static inline long codeBreakCount(codePo pc) */
 /* { */
@@ -164,11 +150,6 @@ static inline void updateCodeLit(codePo pc, long ix, ptrI lit) {
   markGrey((objPo) pc);
 
   codeLits(pc)[ix] = lit;
-}
-
-static inline long codeSize(codePo pc) {
-  assert(pc->class == codeClass);
-  return pc->size;
 }
 
 static inline unsigned long codeInsCount(codePo pc) {
@@ -262,13 +243,15 @@ extern ptrI programOfClass(objPo o);
 extern ptrI programOfSymbol(objPo o);
 extern ptrI programOfTerm(ptrI x);
 extern void defineProg(ptrI sym, ptrI code);
-extern ptrI permCode(uinteger size, uinteger litCnt, packagePo owner, uinteger srcMapCount);
+extern ptrI permCode(uinteger size, uinteger litCnt, packagePo owner);
 extern retCode verifyCode(ptrI prog);
 
 extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize, void *cl);
 
 extern void initCodeClass(void);
 logical isLoaded(ptrI package);
+
+retCode locateSourceFragment(codePo cde, insPo pc, packagePo *pkg, integer *start, integer *size);
 
 void initDynamicClass();
 ptrI dynamicObject(heapPo H);

@@ -162,7 +162,7 @@ lo.comp.encode{
   -- Encode a code segment
   encCodeSeg:(codeSeg,list[integer]) => list[integer].
   encCodeSeg(codeSeg(Nm,Code,Lits,SrcMap),L) =>
-    [0cn,..encInt(3,encTerm(strct("#code",4),encTerm(Nm,[0cs,..encodeChars(encode64(fmtIns([LOSig,..Code])),0c',encTerm(mkTpl(Lits),encTerm(mkTpl(SrcMap),L)))])))].
+    [0cn,..encInt(4,encTerm(strct("#code",4),encTerm(Nm,[0cs,..encodeChars(encode64(fmtIns([LOSig,..Code])),0c',encTerm(mkTpl(Lits),encTerm(mkTpl(SrcMap),L)))])))].
 
   encSegs:(list[codeSeg],list[integer]) => list[integer].
   encSegs([],L) => L.

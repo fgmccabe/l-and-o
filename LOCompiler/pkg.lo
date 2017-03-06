@@ -49,6 +49,6 @@ lo.comp.code.pkg{
       [iLbl(Lb),iRetryme(Lbnxt),iLbl(Lbx),..ClCode] <> defltSeq(Prefix,Lbnxt,Rest,false,Lt0,Ltx,Entries,Enx,Sm1,Smx) :-
     Lbx = newLabel("Cl"),
     Lbnxt = newLabel("Nxt"),
-    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Lt0,Smx).
+    compCl(reduceClause(Cl),Lts,Sm) = assem(_,ClCode,Lt0,Sm1).
   defltSeq(_,Lb,[],_,Lts,Lts,Entries,Entries,Sm,Sm) => [iLbl(Lb),iFayl].
 }

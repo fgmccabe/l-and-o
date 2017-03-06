@@ -16,6 +16,7 @@
 #include <string.h>		/* Access string defs */
 
 #include "lo.h"
+#include "tpl.h"
 #include "code.h"
 
 ptrI codeClass;
@@ -43,10 +44,10 @@ static long cdeSizeFun(specialClassPo class, objPo o) {
 
 static retCode cdeScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o) {
   long ix = 0;
-  retCode ret = Ok;
   codePo cde = (codePo) o;
   ptrPo lits = codeLits(cde);
   long count = codeLitCount(cde);
+  retCode ret = helper(&cde->srcMap, c);
 
   for (ix = 0; ret == Ok && ix < count; ix++, lits++)
     ret = helper(lits, c);
@@ -86,14 +87,14 @@ static uinteger cdeHashFun(specialClassPo class, objPo o) {
   return hash;
 }
 
-ptrI permCode(uinteger size, uinteger litCnt, packagePo owner, uinteger srcMapCount) {
-  codePo block = (codePo) permAllocate(CodeCellCount(size, litCnt, srcMapCount));
+ptrI permCode(uinteger size, uinteger litCnt, packagePo owner) {
+  codePo block = (codePo) permAllocate(CodeCellCount(size, litCnt));
 
   block->class = codeClass;
   block->size = size;
   block->litCnt = litCnt;
-  block->srcMapCount = srcMapCount;
   block->owner = owner;
+  block->srcMap = kvoid;
 
   int i;
   ptrPo lits = codeLits(block);
@@ -104,25 +105,43 @@ ptrI permCode(uinteger size, uinteger litCnt, packagePo owner, uinteger srcMapCo
   return objP(block);
 }
 
-srcMapPo locateSourceFragment(codePo cde, insPo pc) {
-  srcMapPo srcMap = sourceMap(cde);
-  uinteger mapSize = sourceMapCount(cde);
-  uinteger pcOffset = pc - codeIns(cde);
+retCode locateSourceFragment(codePo cde, insPo pc, packagePo *pkg, integer *start, integer *size) {
+  ptrI srcMap = sourceMap(cde);
 
-  uinteger entrySize = (uinteger) MAX_INT;
-  srcMapPo soFar = NULL;
+  if (IsTuple(srcMap)) {
+    objPo tpl = objV(srcMap);
 
-  // We return the smallest entry that encloses the program counter
-  for (uinteger ix = 0; ix < mapSize; ix++) {
-    srcMapPo s = &srcMap[ix];
+    integer count = tupleArity(tpl);
+    uinteger pcOffset = pc - codeIns(cde);
+    integer entrySize = MAX_INT;
+    retCode ret = Ok;
 
-    if (s->startOff <= pcOffset && s->endOff > pcOffset) {
-      if ((s->endOff - s->startOff) < entrySize) {
-        soFar = s;
+    for (integer ix = 0; ret == Ok && ix < count; ix++) {
+      ptrI entry = deRefI(nthTplEl(tpl, ix));
+      if (IsTuple(entry)) {
+        objPo eTpl = objV(entry);
+        if (tupleArity(eTpl) == 4) {
+          integer startOff = integerVal(intV(deRefI(nthTplEl(eTpl, 0))));
+          integer endOff = integerVal(intV(deRefI(nthTplEl(eTpl, 1))));
+
+          if (startOff <= pcOffset && endOff > pcOffset) {
+            if (endOff - startOff < entrySize) {
+              entrySize = endOff - startOff;
+              *start = integerVal(intV(deRefI(nthTplEl(eTpl, 2))));
+              *size = integerVal(intV(deRefI(nthTplEl(eTpl, 3))));
+            }
+          }
+        } else
+          ret = Error;
       }
     }
-  }
 
-  return soFar;
+    if (entrySize < MAX_INT) {
+      *pkg = codeOwner(cde);
+      return ret;
+    } else
+      return Fail;
+  } else
+    return Error;
 }
 

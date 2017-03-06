@@ -53,12 +53,18 @@ logical isTuplePair(ptrPo t, ptrPo left, ptrPo right) {
     return False;
 }
 
+logical IsTuple(ptrI t) {
+  objPo tpl = objV(t);
+
+  return isTplClass(classOf(tpl));
+}
+
 integer tupleArity(objPo t) {
   return objectArity(t);
 }
 
-ptrPo nthEl(ptrPo p, integer pos) {
-  objPo tpl = objV(p);
+ptrPo nthTplEl(objPo tpl, integer pos) {
+  assert(isTplClass(classOf(tpl)));
 
   return nthArg(tpl, pos);
 }
@@ -78,7 +84,7 @@ logical isTplClass(clssPo cl) {
 }
 
 logical isTupleClass(ptrI cl) {
-  return  isTplClass((clssPo)objV(cl));
+  return isTplClass((clssPo) objV(cl));
 }
 
 

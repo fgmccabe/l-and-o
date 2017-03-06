@@ -11,7 +11,7 @@ lo.repo.manifest{
 
   public readManifest:(uri) => manifest.
   readManifest(u) => m :- parseJson(j) %% explode(getResource(u)),
-  --  _logmsg("check \(j) for manifest"),
+    _logmsg("check \(j) for manifest"),
     jsonManifest(j,m).
 
   public flushManifest:(uri,manifest){}.

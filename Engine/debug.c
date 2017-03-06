@@ -274,6 +274,17 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
             break;
           }
 
+          case 'l':{
+            integer start,len;
+            packagePo pkg;
+            retCode ret = locateSourceFragment(code, pc, &pkg, &start, &len);
+            if(ret==Ok){
+              outMsg(logFile,"PC in %d:%d from %s\n%_",start,len,pkgName(pkg));
+            }
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            break;
+          }
+
           case 'f':
             focus = p;
             outMsg(logFile, "Focussing on program %w\n", &p->proc.thread);
