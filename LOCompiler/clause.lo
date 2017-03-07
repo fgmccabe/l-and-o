@@ -27,7 +27,7 @@ lo.comp.code.clause{
     lSize = max(maxLocals(Vsx),PermSize),
     Code =
       (hSize>0 ? [iGc(Arity,hSize)] | []) <>
-      (lSize>0 ? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
+      (allocating ? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
       HCode<>bCode.
 
   clearLocals:(set[integer],integer,integer) => list[instruction].
@@ -82,7 +82,7 @@ lo.comp.code.clause{
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
           Code = [iLbl(SLb),..aCode]<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)] |
-          Code = [iLbl(SLb),..aCode]<>[iAlloc(Arity,0),iGcmap(Arity,0)]<>Pre<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)]
+          Code = [iLbl(SLb),..aCode]<>Pre<>[iEscape(Arity,Esc),MapIns,iSucc,iLbl(ELb)]
           ) |
       Code = [iLbl(SLb),..aCode]<>Pre<>[iEscape(Arity,Esc),MapIns,iLbl(ELb)]),
     addToSrcMap(TLc,SLb,ELb,Sm,SMx).

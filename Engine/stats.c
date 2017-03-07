@@ -125,8 +125,8 @@ void dumpInsCount(void) {
 
 #ifdef MEMTRACE
     {
-      extern long gcCount;
-      outMsg(logFile, "%d gc collections\n", gcCount);
+      extern long gcCount, extendCount;
+      outMsg(logFile, "%d gc collections, %d stack extensions\n", gcCount, extendCount);
     }
 #endif
 

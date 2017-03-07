@@ -48,7 +48,7 @@ typedef struct _call_rec_ *callPo;
 typedef struct _call_rec_ {
   insPo cPC;        /* parent program counter */
   ptrI cPROG;                           /* continuation program  */
-  callPo cC;                            /* parent environment */
+  callPo C;                             /* parent environment */
   choicePo cSB;                         /* where to cut to in parent */
 } CallRec;
 
@@ -91,7 +91,6 @@ typedef struct {
   choicePo T;                           /* Trap recovery */
   trailPo trail;                        /* Current trail point */
   callPo C;                             /* Current call frame */
-  callPo cC;                            /* Continuation call frame */
   insPo PC;                             /* Current program counter */
   insPo cPC;                            /* Continuation pointer */
   ptrI cPROG;                           /* continuation program  */

@@ -29,6 +29,10 @@
 #define VERIFYDEPTH 5    /* verify to a depth of 5 */
 #endif
 
+#ifdef MEMTRACE
+long extendCount = 0;
+#endif
+
 typedef struct {
   ptrI class;             /* == procClass */
   processPo process;      /* the process itself */
@@ -114,7 +118,7 @@ static void processInit(objectPo o, va_list *args) {
   c = ((callPo) p->proc.sTop) - 1;              /* top frame */
   c->cPC = FirstInstruction(dieProg);       /* a die instruction */
   c->cSB = (choicePo) p->proc.sTop;           /* slashback */
-  c->cC = (callPo) p->proc.sTop;
+  c->C = (callPo) p->proc.sTop;
   c->cPROG = dieProg;
 
   b = ((choicePo) c) - 1;
@@ -134,7 +138,7 @@ static void processInit(objectPo o, va_list *args) {
   /* fill in the process structure from this */
   p->proc.B = p->proc.SB = p->proc.cSB = b;
   p->proc.T = b;
-  p->proc.C = p->proc.cC = c;
+  p->proc.C = c;
   p->proc.cPROG = b->PROG;
   p->proc.cPC = c->cPC;
   p->proc.trigger = emptyList;    /* no triggers, yet */
@@ -335,7 +339,7 @@ void stackTrace(processPo p) {
         if (Cix < NumberOf(callPoints))
           callPoints[Cix++] = Cx;
         lastCx = Cx;
-        Cx = Cx->cC;
+        Cx = Cx->C;
       }
     }
 
@@ -393,7 +397,7 @@ void stackTrace(processPo p) {
 
         outMsg(logFile, "\ncall frame:%d @ %w[%d], Parent Call frame=%d\n",
                cLevel++, &C->cPROG, C->cPC - FirstInstruction(C->cPROG),
-               findPtr((void **) callPoints, Cix, C->cC));
+               findPtr((void **) callPoints, Cix, C->C));
 
         for (i = 0; i < len; i++)
           outMsg(logFile, "Y[%d] = %.1w\n", (i + 1), --Y);
@@ -402,7 +406,7 @@ void stackTrace(processPo p) {
 
         cPC = C->cPC;
         lastC = C;
-        C = C->cC;
+        C = C->C;
       }
     }
 
@@ -598,10 +602,10 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
 
       assert((ptrPo) nB > (ptrPo) nC && ((ptrPo) C - (ptrPo) B) == ((ptrPo) nC - (ptrPo) nB));
       assert((ptrPo) C->cSB <= p->proc.sTop);
-      assert((ptrPo) C->cC <= p->proc.sTop);
+      assert((ptrPo) C->C <= p->proc.sTop);
 
       nC->cSB = (choicePo) adjust((ptrPo) C->cSB, oTop, nTop);
-      nC->cC = (callPo) adjust((ptrPo) C->cC, oTop, nTop);
+      nC->C = (callPo) adjust((ptrPo) C->C, oTop, nTop);
       nC->cPROG = adjustI(C->cPROG, oHeap, oLimit, nHeap, oBase, oTop, nTop);
       nC->cPC = FirstInstruction(nC->cPROG) + (C->cPC - FirstInstruction(C->cPROG));
 
@@ -609,8 +613,8 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
         *--nY = adjustI(*--Y, oHeap, oLimit, nHeap, oBase, oTop, nTop);
 
       len = envSize(C->cPC);
-      nC = nC->cC;
-      C = C->cC;
+      nC = nC->C;
+      C = C->C;
     }
   }
 
@@ -635,7 +639,6 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
   p->proc.T = (choicePo) adjust((ptrPo) p->proc.T, oTop, nTop);
   p->proc.trail = (trailPo) adjust((ptrPo) p->proc.trail, oBase, nBase);
   p->proc.C = (callPo) adjust((ptrPo) p->proc.C, oTop, nTop);
-  p->proc.cC = (callPo) adjust((ptrPo) p->proc.cC, oTop, nTop);
   p->proc.PC = (insPo) (p->proc.PC - FirstInstruction(p->proc.PROG));
   p->proc.cPC = (insPo) (p->proc.cPC - FirstInstruction(p->proc.cPROG));
   p->proc.PROG = adjustI(p->proc.PROG, oHeap, oLimit, nHeap, oBase, oTop, nTop);
@@ -660,6 +663,10 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
 
 #ifdef PROCTRACE
   verifyProc(p);
+
+#ifdef MEMTRACE
+  extendCount++;
+#endif
 #endif
 
   return Ok;

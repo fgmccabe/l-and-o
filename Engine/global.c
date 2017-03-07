@@ -592,7 +592,7 @@ static void scanProcess(processPo p, globalGcPo G) {
       C->cPC = relativePC(C->cPROG, C->cPC);
       C->cPROG = scanPtr(G, C->cPROG);
 
-      C = C->cC;
+      C = C->C;
     }
   }
 
@@ -647,7 +647,7 @@ static void resetProcess(processPo p, heapPo tH) {
     else {        /* adjust call environment */
       C->cPC = absolutePC(C->cPROG, C->cPC);
 
-      C = C->cC;
+      C = C->C;
     }
   }
   assert((ptrPo) C == p->proc.sTop && (ptrPo) B == p->proc.sTop);

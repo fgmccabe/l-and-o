@@ -21,12 +21,9 @@ extern byte debuggerPrefix[MAX_SYMB_LEN];
 
 void showReg(ptrPo a,char *name,integer reg);
 
-retCode debug_stop(processPo p,ptrI prog,insPo pc,ptrI cprog,insPo cpc,ptrPo a,ptrPo y,
-		   ptrPo S,long Svalid,rwmode mode,
-                   choicePo B,choicePo SB,choicePo T,
-		   ptrPo hBase,ptrPo H,
-		   trailPo trail,
-		   ptrI prefix);
+retCode
+debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S, long Svalid, rwmode mode,
+           callPo C, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail, ptrI prefix);
 		   
 
 #endif

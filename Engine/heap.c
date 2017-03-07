@@ -510,7 +510,7 @@ static logical validPtr(processPo P, ptrPo x) {
           return True;
 
         len = envSize(C->cPC);  /* do this before the next step */
-        C = C->cC;
+        C = C->C;
       }
     }
 
@@ -582,12 +582,12 @@ void verifyProc(processPo p) {
         verifyVar(&C->cPROG, p);
 
         assert(C->cSB <= (choicePo) p->proc.sTop);
-        assert(C->cC <= (callPo) p->proc.sTop);
+        assert(C->C <= (callPo) p->proc.sTop);
         assert(op_code(*C->cPC) == gcmap);
         assert(C->cPC - FirstInstruction(C->cPROG) >= 0);
 
         len = envSize(C->cPC);  /* do this before the next step */
-        C = C->cC;
+        C = C->C;
       }
     }
 

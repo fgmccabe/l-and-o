@@ -114,7 +114,6 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
     P->proc.cSB = cSB;        \
     P->proc.T = T;        \
     P->proc.C = C;        \
-    P->proc.cC = cC;        \
     P->proc.PROG = PROG;      \
     P->proc.cPROG = cPROG;      \
     P->proc.heap.create = (objPo)H;    \
@@ -129,7 +128,6 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
     T = P->proc.T;        \
     C = P->proc.C;        \
     Y = (ptrPo)C;        \
-    cC = P->proc.cC;        \
     PROG = P->proc.PROG;      \
     cPROG = P->proc.cPROG;      \
     PC = P->proc.PC;        \
@@ -202,14 +200,11 @@ void chainSuspension(processPo P, ptrPo p) {
       nC = ((callPo)B)-1;                                       \
     }                                                           \
                                                                 \
-    cC = C;                                                     \
+    nC->cPC = cPC;    /* where to return to */                  \
+    nC->cSB = cSB;                                              \
+    nC->cPROG = cPROG;                                          \
+    nC->C = C;                                                  \
     C = nC;                                                     \
-                                                                \
-    C->cPC = cPC;    /* where to return to */                   \
-    C->cSB = cSB;                                               \
-    C->cPROG = cPROG;                                           \
-    C->cC = cC;                                                 \
-                                                                \
     Y = (ptrPo)C;    /* negative values used for local variables */ \
   }
 
@@ -233,7 +228,6 @@ void runGo(register processPo P) {
   ptrPo Lits;        /* Pointer to the literals vector */
 
   callPo C;        /* Current call frame */
-  callPo cC;        /* continuation call frame */
 
   choicePo B;        /* last choice point */
   choicePo SB;        /* where to cut */
@@ -253,9 +247,8 @@ void runGo(register processPo P) {
     insCount[op_code(*PC)]++;
 
     if (debugging) {
-      switch (debug_stop(P, PROG, PC, cPROG, cPC, A, (ptrPo) C, S, Svalid, mode, B, SB, T,
-                         (ptrPo) P->proc.heap.base, H,
-                         P->proc.trail, P->proc.thread)) {
+      switch (debug_stop(P, PROG, PC, cPROG, cPC, A, (ptrPo) C, S, Svalid, mode, C, B, SB, T, (ptrPo) P->proc.heap.base,
+                         H, P->proc.trail, P->proc.thread)) {
         case Ok:
           break;
         case Fail:
@@ -421,7 +414,7 @@ void runGo(register processPo P) {
           cSB = C->cSB;
           cPROG = C->cPROG;
 
-          C = C->cC;
+          C = C->C;
           Y = (ptrPo) C;
 
 #ifdef EXECTRACE
@@ -626,7 +619,7 @@ void runGo(register processPo P) {
           cPC = C->cPC;
           cSB = C->cSB;
           cPROG = C->cPROG;
-          C = C->cC;
+          C = C->C;
           Y = (ptrPo) C;
         }
         continue;
@@ -676,8 +669,8 @@ void runGo(register processPo P) {
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
-          cPC = PC;          /* make sure environment is registered Ok */
-          cPROG = PROG;
+//          cPC = PC;          /* make sure environment is registered Ok */
+//          cPROG = PROG;
 
           saveRegs(PC);
 
@@ -770,16 +763,13 @@ void runGo(register processPo P) {
             nC = ((callPo) T) - 1;
         }
 
-        cC = C;
+        nC->cPC = cPC;    /* where to return to */
+        nC->cSB = cSB;
+        nC->cPROG = cPROG;
+        nC->C = C;
         C = nC;
 
-        C->cPC = cPC;    /* where to return to */
-        C->cSB = cSB;
-        C->cPROG = cPROG;
-        C->cC = cC;
-
         Y = (ptrPo) C;    /* negative values used for local variables */
-
 
 #ifdef EXECTRACE
         {
@@ -804,7 +794,7 @@ void runGo(register processPo P) {
         PROG = cPROG = C->cPROG;
         Lits = codeLits(codeV(PROG));
 
-        C = C->cC;
+        C = C->C;
         Y = (ptrPo) C;
 
         if (P->proc.F) {      /* have we triggered anything? */
@@ -881,7 +871,7 @@ void runGo(register processPo P) {
         PC--;
         Lits = codeLits(codeV(PROG));
 
-        C = C->cC;
+        C = C->C;
         Y = (ptrPo) C;
         continue;
       }

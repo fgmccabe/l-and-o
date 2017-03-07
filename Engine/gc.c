@@ -409,7 +409,7 @@ static void markProcess(processPo P, gcSupportPo G) {
       C->cPC = (insPo) (C->cPC - FirstInstruction(C->cPROG));
       markPtr(G, &C->cPROG);
 
-      C = C->cC;
+      C = C->C;
     }
   }
 
@@ -644,7 +644,7 @@ static void adjustProcess(processPo p, gcSupportPo G) {
       len = envSize(C->cPC);  /* do this before the next step */
 
       //      cPC = C->cPC;
-      C = C->cC;
+      C = C->C;
     }
   }
 

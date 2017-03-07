@@ -76,9 +76,15 @@ static void clrCmdLine(byte *cmdLine, long len) {
   strMsg(cmdLine, len, "n\n"); /* default to next instruction */
 }
 
-retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S,
-                   long Svalid, rwmode mode, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail,
-                   ptrI prefix) {
+static unsigned long stackSpace(processPo P, callPo C, choicePo B) {
+  ptrPo base = ((ptrPo) C < (ptrPo) B ? (ptrPo) C : (ptrPo) B);
+  return base - (ptrPo) P->proc.trail;
+
+}
+
+retCode
+debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S, long Svalid, rwmode mode,
+           callPo C, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail, ptrI prefix) {
   byte ch;
   static byte cmdLine[256] = "n";
   codePo code = codeV(prog);
@@ -164,16 +170,16 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
       strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &prefix, pcCount, &Lits[0]);
       dissass(pref, code, pc, a, y, S, mode, B, hBase, H);
 
-      outMsg(logFile, "\ncPC=%w[%d],B=%x,SB=%x,T=%x,Y=%x[%d],", &codeLits(ccode)[0], cpc - codeIns(ccode), B,
-             SB, T, y, envSize(cpc));
+      outMsg(logFile, "\ncPC=%w[%d],C=%x,B=%x,SB=%x,T=%x,\nY=%x[%d],",
+             &codeLits(ccode)[0], cpc - codeIns(ccode), C, B, SB, T, y, envSize(cpc));
       if (Svalid > 0)
         outMsg(logFile, "S=%x(%d),", S, Svalid);
       else if (mode == writeMode)
         outMsg(logFile, "S=%x,", H);
-      outMsg(logFile, "trail=%x", trail);
+      outMsg(logFile, "trail=%x,stack=%d", trail, stackSpace(p, C, B));
       if (!identical(p->proc.trigger, emptyList))
         outMsg(logFile, ",%d triggered", ListLen(deRefI(&p->proc.trigger)));
-      outMsg(logFile, "\nH=%x[%d], ", H, (ptrPo) p->proc.heap.end - H);
+      outMsg(logFile, ",H=%x[%d], ", H, (ptrPo) p->proc.heap.end - H);
       outMsg(logFile, "global=%x[%d]\n", globalHeap.create, globalHeap.end - globalHeap.create);
       flushFile(logFile);
     }
@@ -274,12 +280,12 @@ retCode debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrP
             break;
           }
 
-          case 'l':{
-            integer start,len;
+          case 'l': {
+            integer start, len;
             packagePo pkg;
             retCode ret = locateSourceFragment(code, pc, &pkg, &start, &len);
-            if(ret==Ok){
-              outMsg(logFile,"PC in %d:%d from %s\n%_",start,len,pkgName(pkg));
+            if (ret == Ok) {
+              outMsg(logFile, "PC in %d:%d from %s\n%_", start, len, pkgName(pkg));
             }
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
