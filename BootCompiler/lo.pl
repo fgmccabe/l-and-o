@@ -1,4 +1,4 @@
-% :- module(lo,[main/1]).
+:- module(lo,[main/1]).
 
 :- use_module(ocall).
 :- use_module(polyfill).
@@ -30,10 +30,12 @@ stringify([Name|More],[Fn|Files]) :-
   stringify(More,Files).
 
 main(Args) :-
+  writef("entering LO main:\n"),
   getCWDUri(CWD),
-  parseFlags(Args,CWD,Opts,[Entry|LOArgs]),
+  parseFlags(Args,CWD,Opts,[Entry|LOArgs]),!,
   openRepo(Opts,Repo),
   parsePkgName(Entry,Pkg),
+  writef("processing package %w\n",[Pkg]),
   processPackage(Pkg,Repo,[],_Loaded,[],All),
   compile_predicates(All),
   lookForMain(Pkg,LOArgs),!.
@@ -42,6 +44,7 @@ processPackage(Pkg,Repo,Loaded,Ldx,PrIn,PrOut) :-
   loadPrologPkg(Pkg,Repo,Code,Imports),
   assertAll(Code,PrIn,Pr0),
   processImports(Imports,[Pkg|Loaded],Ldx,Repo,Pr0,PrOut),!,
+  writef("%w loaded\n",[Pkg]),
   initPkg(Pkg).
 
 initPkg(pkg(Pkg,_)) :-
@@ -53,6 +56,7 @@ initPkg(_).
 
 lookForMain(pkg(Top,_),Args) :-
   localName(Top,"@","main",M),
+  writef("Trying %w",[M]),
   atom_string(Main,M),
   current_predicate(Main/1),!,
   listify(Args,LArgs),

@@ -6,9 +6,10 @@
 
 eval :-
         current_prolog_flag(argv, Argv),
+        writef("invoke main(%w)\n",[Argv]),
         main(Argv).
 
-top :-
+top :-  writef("starting\n"),
         catch(eval, E, (print_message(error, E), fail)),
         halt.
 top :-
