@@ -95,6 +95,10 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
   pthread_mutex_lock(&debugMutex);
 
   if (focus == NULL || focus == p) {
+
+//    if (cmdCounter > 0)
+//      outMsg(logFile, "cmdCounter=%d\n%_", cmdCounter);
+
     insWord PCX = *pc;
     switch (op_code(PCX)) {
       case kawl: {
@@ -138,7 +142,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         break;
       }
 
-      case kawlO:{
+      case kawlO: {
         switch (waitingFor) {
           case nextIns:
             cmdCounter--;
@@ -159,7 +163,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         break;
       }
       case lkawlO:
-      case dlkawlO:{
+      case dlkawlO: {
         switch (waitingFor) {
           case nextIns:
             cmdCounter--;
@@ -183,6 +187,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         switch (waitingFor) {
           case nextIns:
           case nextSucc:
+          case nextBreak:
             cmdCounter--;
             break;
 

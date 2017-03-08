@@ -25,7 +25,9 @@
 #include "word.h"
 
 #ifdef EXECTRACE
+
 #include "stats.h"
+
 #endif
 
 retCode equal(processPo P, ptrPo T1, ptrPo T2);
@@ -74,9 +76,8 @@ static inline void bndVar(processPo P, ptrPo ptr, ptrI val) {
   *ptr = val;
 }
 
-static inline ptrI unBind(ptrPo x)
-{
-  return *x = (ptrI)x;
+static inline ptrI unBind(ptrPo x) {
+  return *x = (ptrI) x;
 }
 
 static inline int16 envSize(insPo pc) {

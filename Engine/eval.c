@@ -665,7 +665,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode(op_o_val(PCX));
+          funpo ef = escapeCode((uint16) op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -2376,7 +2376,7 @@ void runGo(register processPo P) {
 
       case vdAA: {      /* Void A[h],Count */
         ptrPo low = &A[op_h_val(PCX)];
-        short count = op_o_val(PCX);
+        uint16 count = op_o_val(PCX);
 
         while (count-- > 0)
           *low++ = kvoid;
@@ -2389,8 +2389,8 @@ void runGo(register processPo P) {
       }
 
       case vdYY: {      /* Void Y[h],Count */
-        short low = op_o_val(PCX);
-        short count = op_h_val(PCX);
+        uint16 low = op_o_val(PCX);
+        uint16 count = op_h_val(PCX);
 
         while (count-- > 0)
           Y[-(low++)] = kvoid;
@@ -2415,7 +2415,7 @@ void runGo(register processPo P) {
       }
 
       case clYY: {      /* clear Y[h],Count */
-        short count = op_h_val(PCX);
+        uint16 count = op_h_val(PCX);
         ptrPo yReg = Yreg(-op_o_val(PCX));
 
         for (; count-- > 0; yReg--) {

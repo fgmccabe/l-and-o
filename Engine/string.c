@@ -27,6 +27,7 @@ static retCode strScanFun(specialClassPo class, specialHelperFun helper, void *c
 static objPo strCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger strHashFun(specialClassPo class, objPo o);
 
+
 void initStringClass(void) {
   stringClass = newSpecialClass("lo.core#string", strSizeFun, strCompFun,
                                 strOutFun, strCopyFun, strScanFun, strHashFun);

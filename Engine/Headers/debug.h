@@ -17,8 +17,6 @@ extern long cmdCounter;
 extern DebugWaitFor waitingFor; /* waiting for next instruction */
 extern logical tracing;	        /* do we show each instruction */
 
-extern byte debuggerPrefix[MAX_SYMB_LEN];
-
 void showReg(ptrPo a,char *name,integer reg);
 
 retCode
