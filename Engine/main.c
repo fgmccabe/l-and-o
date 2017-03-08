@@ -34,13 +34,8 @@ logical traceVerify = False;  // true if tracing code verification
 logical traceMessage = False;  // true if tracing message passing 
 logical tracePut = False;  // true if tracing term freeze 
 logical traceLock = False;  /* true if tracing locks */
-#ifdef XTRACE
-#ifdef LOXLIB
-logical traceX = False;			/* True if tracing X windows stuff */
-#endif
-#endif
+logical traceResource = False;
 
-byte loSysPath[MAX_MSG_LEN] = {0};      // Pointer to L&O's installation point
 static byte loCWD[MAX_MSG_LEN] = {0};
 static byte repoDir[MAX_MSG_LEN] = {0};
 static byte bootPkg[MAX_MSG_LEN] = {'l', 'o', '.', 'b', 'o', 'o', 't', 0};  // boot package
@@ -243,22 +238,13 @@ int getOptions(int argc, char **argv) {
             return -1;
 #endif
 
-#if 0
-            case 'x':		/* turn on tracing of X windows */
-#ifdef XTRACE
-#ifdef LOXLIB
-              traceX=True;
+            case 'r':     /* Trace resource mgt */
+#ifdef RESOURCETRACE
+              traceResource = True;
 #else
-              logMsg(logFile,"X not enabled\n");
-              return -1;
+            logMsg(logFile,"Resource tracing not enabled\n");
+            return -1;
 #endif
-              continue;
-#else
-              logMsg(logFile,"X tracing not enabled\n");
-              return -1;
-#endif
-#endif
-
             case '*':    /* trace everything */
 #ifdef ALLTRACE
               traceCalls = True;
@@ -272,6 +258,7 @@ int getOptions(int argc, char **argv) {
               else
                 traceMemory = True;
               tracePut = True;              /* term freeze */
+              traceResource = True;
 #else
             logMsg(logFile,"debugging not enabled\n");
             return -1;
@@ -294,7 +281,7 @@ int getOptions(int argc, char **argv) {
       }
 
       case 'm': {                          /* modify the entry point */
-        uniCpy(entryPoint,NumberOf(entryPoint),(string)optarg);
+        uniCpy(entryPoint, NumberOf(entryPoint), (string) optarg);
         break;
       }
 
@@ -414,9 +401,8 @@ int main(int argc, char **argv) {
 
   setupSignals();
 
-
 #ifdef EXECTRACE
-  if(traceCount)
+  if (traceCount)
     atexit(dumpInsCount);
 #endif
 
@@ -438,13 +424,13 @@ ptrI cmdLineOptions(heapPo H) {
 
   gcAddRoot(H, &pair);
   gcAddRoot(H, &key);
-  gcAddRoot(H,&val);
+  gcAddRoot(H, &val);
 
   for (i = 0; i < optCount; i++) {
     key = allocateInteger(H, Options[i].option);
     val = newEnumSym(Options[i].value);
 
-    pair = tuplePair(H,key,val);
+    pair = tuplePair(H, key, val);
 
     options = consLsPair(H, pair, options);
   }

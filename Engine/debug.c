@@ -97,7 +97,26 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
   if (focus == NULL || focus == p) {
     insWord PCX = *pc;
     switch (op_code(PCX)) {
-      case kawl:
+      case kawl: {
+        switch (waitingFor) {
+          case nextIns:
+            cmdCounter--;
+            break;
+          case nextSucc:
+          case nextBreak:
+          case nextFail: {
+            string name = programName(objV(Lits[op_o_val(PCX)]))->name;
+
+            if (breakPointHit(name)) {
+              waitingFor = nextIns;
+              cmdCounter = 0;
+            } else
+              cmdCounter++;
+            break;
+          }
+        }
+        break;
+      }
       case lkawl:
       case dlkawl: {
         switch (waitingFor) {
@@ -112,16 +131,14 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
             if (breakPointHit(name)) {
               waitingFor = nextIns;
               cmdCounter = 0;
-            } else if (waitingFor == nextSucc && op_code(PCX) != dlkawl)
-              cmdCounter++;
+            }
             break;
           }
         }
         break;
       }
-      case kawlO:
-      case lkawlO:
-      case dlkawlO: {
+
+      case kawlO:{
         switch (waitingFor) {
           case nextIns:
             cmdCounter--;
@@ -134,8 +151,28 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
             if (breakPointHit(name)) {
               waitingFor = nextIns;
               cmdCounter = 0;
-            } else if (waitingFor == nextSucc && op_code(PCX) != dlkawlO)
+            } else
               cmdCounter++;
+            break;
+          }
+        }
+        break;
+      }
+      case lkawlO:
+      case dlkawlO:{
+        switch (waitingFor) {
+          case nextIns:
+            cmdCounter--;
+            break;
+          case nextSucc:
+          case nextBreak:
+          case nextFail: {
+            string name = objectClassName(objV(deRefI(&a[1])));
+
+            if (breakPointHit(name)) {
+              waitingFor = nextIns;
+              cmdCounter = 0;
+            }
             break;
           }
         }
@@ -316,6 +353,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
             cmdCounter = cmdCount(cmdLine + 1);
             waitingFor = nextBreak;
             tracing = False;
+            traceCalls = False;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 

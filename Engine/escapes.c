@@ -21,7 +21,7 @@
 #define MAXESC 1024    /* initial size of the escape hash table */
 
 #ifdef EXECTRACE
-logical traceCalls = False;  /* Trace escape calls */
+logical traceCalls = False;  /* Trace calls */
 #endif
 
 typedef struct {

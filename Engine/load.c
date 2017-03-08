@@ -88,8 +88,8 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
 
   ioPo file = openInFile(fn, utf8Encoding);
 
-#ifdef EXECTRACE
-  if (debugging)
+#ifdef RESOURCETRACE
+  if (traceResource)
     outMsg(logFile, "loading package %s:%s from file %s\n", pkg, vers, fn);
 #endif
 
@@ -132,8 +132,8 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
 
     closeFile(file);
 
-#ifdef EXECTRACE
-    if (debugging)
+#ifdef RESOURCETRACE
+    if (traceResource)
       logMsg(logFile, "package %s loaded\n", pkg);
 #endif
 
@@ -185,8 +185,8 @@ installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pi
 
   closeFile(O_IO(inBuff));
 
-#ifdef EXECTRACE
-  if (debugging)
+#ifdef RESOURCETRACE
+  if (traceResource)
     logMsg(logFile, "package %s installed\n", pkgNm);
 #endif
 
@@ -368,8 +368,8 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
 
     ret = decodePrgName(in, prgName, NumberOf(prgName), &arity);
 
-#ifdef EXECTRACE
-    if (debugging)
+#ifdef RESOURCETRACE
+    if (traceResource)
       outMsg(logFile, "loading segment %s:%d\n%_", prgName, arity);
 #endif
 

@@ -82,7 +82,7 @@ lo.comp.code.clause{
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
           Code = [iLbl(SLb),..aCode]<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)] |
-          Code = [iLbl(SLb),..aCode]<>Pre<>[iEscape(Arity,Esc),MapIns,iSucc,iLbl(ELb)]
+          Code = [iLbl(SLb),..aCode]<>[iAlloc(Arity,0),iGcmap(Arity,0)]<>Pre<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)]
           ) |
       Code = [iLbl(SLb),..aCode]<>Pre<>[iEscape(Arity,Esc),MapIns,iLbl(ELb)]),
     addToSrcMap(TLc,SLb,ELb,Sm,SMx).
