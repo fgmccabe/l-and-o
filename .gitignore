@@ -5,7 +5,6 @@ CMakeCache.txt
 cmake-build-debug
 Makefile
 Tmp/
-*/Build/
 HeaderGenerator/ops
 HeaderGenerator/genesc
 HeaderGenerator/opcodes
