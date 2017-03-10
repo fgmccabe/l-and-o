@@ -10,7 +10,7 @@
 
 #include "lo.h"
 
-void showInstructions(codePo code,insPo pc,unsigned long count);
+void showInstructions(codePo code, long pc, long count);
 insPo dissass(byte *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B,
     ptrPo hBase, ptrPo hLimit);
 

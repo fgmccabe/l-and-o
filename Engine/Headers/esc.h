@@ -24,9 +24,9 @@ funpo escapeCode(uint16 code);
 char *escapeName(int code);
 int escapeOpcode(unsigned int code);
 funpo getescape(int code);
-logical validEscape(unsigned int code, unsigned short arity);
+logical validEscape(uint16 code, unsigned short arity);
 void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity, char *suffx);
-logical validEscape(unsigned int code, unsigned short arity);
+logical validEscape(uint16 code, unsigned short arity);
 void ScanEscapes(void);
 
 void showCall(processPo P, char *prefix, ptrI prog, ptrPo args, long arity);

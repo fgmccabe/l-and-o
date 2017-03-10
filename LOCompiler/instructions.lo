@@ -93,7 +93,8 @@ lo.comp.code.instructions{
    | iClA(integer)		-- Clear A[h]
    | iClY(integer)		-- Clear Y[X]
    | iClS		-- Clear S++
-   | iClYY(integer,integer).		-- Clear Y[X],Count
+   | iClYY(integer,integer)		-- Clear Y[X],Count
+   | iBkpt.		-- Break point
 
 
   public implementation display[instruction] <= {
@@ -191,6 +192,7 @@ lo.comp.code.instructions{
   showIns(iClY(A1),Lits) => ssSeq([ss("clY"),ss(" "),disp(A1)]).
   showIns(iClS,_) => ss("clS").
   showIns(iClYY(A1,A2),Lits) => ssSeq([ss("clYY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
+  showIns(iBkpt,_) => ss("bkpt").
 
   showLit:(string,map[string,term]) => ss.
   showLit(Lt,M) => disp(T) :- present(M,Lt,T).

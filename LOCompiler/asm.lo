@@ -108,6 +108,7 @@ lo.comp.code.asm{
   mnem([iClY(V0),..I],Lbls,Lits,pc) => [185.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iClS,..I],Lbls,Lits,pc) => [187,..mnem(I,Lbls,Lits,pc+1)].
   mnem([iClYY(V0,V1),..I],Lbls,Lits,pc) => [188.|.(V0.<<.8).|.(V1.<<.24),..mnem(I,Lbls,Lits,pc+1)].
+  mnem([iBkpt,..I],Lbls,Lits,pc) => [200,..mnem(I,Lbls,Lits,pc+1)].
 
   private genLblTbl:(list[instruction],integer,map[string,integer]) => map[string,integer].
   genLblTbl([],_,D) => D.

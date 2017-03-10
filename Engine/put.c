@@ -718,7 +718,6 @@ static void genOpAnd(genPo S, iPo ins, opAndSpec A, va_list *args) {
     case Ltl:                             // 16bit literal (-32768..32767)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
-    case cSz:                  // Structure size
     case Es: {                             // escape code (0..65535)
       int reg = (int) va_arg(*args, int);
 
@@ -865,7 +864,6 @@ static char *dumpOpand(genPo S, ioPo out, iPo ins, char *sep, opAndSpec A) {
       return ",";
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
-    case cSz:                // Structure size
       outMsg(out, "%s#%d", sep, op_o_val(ins->code));
       return ",";
     case Es:                              // escape code (0..65535)

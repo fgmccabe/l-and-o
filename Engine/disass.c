@@ -43,13 +43,14 @@ insPo dissass(byte *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmo
   }
 }
 
-void showInstructions(codePo code, insPo pc, unsigned long count) {
-  insPo tmpPc = pc;
+void showInstructions(codePo code, long pc, long count) {
+  insPo basePc = codeIns(code);
 
-  while (count-- > 0) {
-    tmpPc = dissass(NULL, code, tmpPc, NULL, NULL, NULL, dummyMode, NULL, NULL, NULL);
-    outMsg(logFile, "\n");
+  for(long ix=0;ix<count;ix++){
+    dissass(NULL, code, &basePc[ix], NULL, NULL, NULL, dummyMode, NULL, NULL, NULL);
+    outChar(logFile,'\n');
   }
+
   flushFile(logFile);
 }
 
@@ -141,7 +142,6 @@ static char *showOpAnd(ioPo out, char *sep, opAndSpec A, insWord pcx, rwmode mod
   case Ltl:                             // 16bit literal (-32768..32767)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:                             // Structure size
     outMsg(out, "%s%d", sep, op_o_val(pcx));
     return ",";
   case Es:                              // escape code (0..65535)

@@ -9,12 +9,7 @@ extern logical SymbolDebug;
 extern logical debugging;	/* Level of debugging */
 #endif
 
-typedef enum {
-  nextIns, nextSucc, nextFail, nextBreak
-} DebugWaitFor;
-
 extern long cmdCounter;
-extern DebugWaitFor waitingFor; /* waiting for next instruction */
 extern logical tracing;	        /* do we show each instruction */
 
 void showReg(ptrPo a,char *name,integer reg);
@@ -22,6 +17,7 @@ void showReg(ptrPo a,char *name,integer reg);
 retCode
 debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S, long Svalid, rwmode mode,
            callPo C, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail, ptrI prefix);
-		   
+
+retCode breakPoint(processPo p);
 
 #endif

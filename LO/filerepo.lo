@@ -76,4 +76,11 @@ lo.repo.file{
   extensionMapping("source",".lo").
   extensionMapping("prolog",".pl").
   extensionMapping("code","").
+
+  public implementation display[fileRepo] <= {
+    disp(F) => dispRepo(F).
+  }
+
+  dispRepo:(fileRepo) => ss.
+  dispRepo(repo(Root,Man)) => ssSeq([ss("file repo rooted at "),disp(Root),ss("\nmanifest:"),disp(Man)]).
 }

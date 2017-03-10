@@ -36,6 +36,10 @@ lo.repo {
   public coreRepo:coreRepo.
   coreRepo <= {}.
 
+  public implementation display[coreRepo] <= {
+    disp(_) => ss("core repo").
+  }
+
   public implementation repository[coreRepo] <= {
     packagePresent(_,pkg(P,defltVersion),K) :- _pkg_is_present(P,"*",K,_).
     packagePresent(_,pkg(P,vers(V)),K) :- _pkg_is_present(P,V,K,_).

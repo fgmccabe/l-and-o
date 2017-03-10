@@ -12,7 +12,6 @@
   permissions and limitations under the License.
 */
 #include <string.h>
-#include <process.h>
 #include "lo.h"			/* main header file */
 
 // __call(package,entry,arguments) -- list of strings

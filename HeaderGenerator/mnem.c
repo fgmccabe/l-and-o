@@ -135,7 +135,6 @@ static char *genArg(FILE *out,char *sep,int *V,opAndSpec A)
   case Ltl:                              // 16bit literal (-32768..32767)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:             		// Structure size
     fprintf(out,"%sV%d",sep,(*V)++);
     return ",";
   case Es:                              // escape code (0..65535)
@@ -182,7 +181,6 @@ static void genCode(FILE *out,int *V,opAndSpec A)
   case oLc:                             // output local variable offset  (0..65535)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:             		// Structure size
   case Ltl:{                              // 16bit literal (-32768..32767)
     int off = (*V)++;
     fprintf(out,".|.(V%d.<<.8)",off);

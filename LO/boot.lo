@@ -56,8 +56,8 @@ lo.boot{
   handleCmdLineOpts:(either[(bootOptions,list[string]),string]){}.
   handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
     RD = resolveUri(parseUri(cwd()),parseUri(Opts.repo)),
-    _logmsg("repo dir: \(RD)"),
     Repo = (openRepository(RD),coreRepo),
+    _logmsg("repo : \(Repo)"),
     importPkgs([parsePkgName(Top)],[],_,Repo),
     invokeMain(Top,Args).
 

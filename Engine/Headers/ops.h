@@ -100,5 +100,6 @@ typedef enum {
  clY= 185,
  clS= 187,
  clYY= 188,
+ bkpt = 200,
 illegalOp
 } opCode;

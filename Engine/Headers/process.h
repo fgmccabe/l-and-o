@@ -39,6 +39,11 @@ typedef enum {
   dead                                  /* process has died */
 } process_state;
 
+
+typedef enum {
+  nextIns, nextSucc, nextFail, nextBreak
+} DebugWaitFor;
+
 /* A call record */
 
 typedef struct _trail_rec_ *trailPo;

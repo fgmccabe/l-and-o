@@ -201,7 +201,7 @@ char *escapeName(int code) {
   return escFuns[code].name;
 }
 
-logical validEscape(unsigned int code, unsigned short arity) {
+logical validEscape(uint16 code, unsigned short arity) {
   if (code >= NumberOf(escFuns))
     return False;
   else if (escFuns[code].escape_code == NULL || escFuns[code].arity != arity)

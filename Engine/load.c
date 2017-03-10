@@ -34,12 +34,12 @@ string loadedVersion(string package) {
   return NULL;
 }
 
-string pkgName(packagePo pkg){
-  return (string)&pkg->packageName;
+string pkgName(packagePo pkg) {
+  return (string) &pkg->packageName;
 }
 
-string pkgVers(packagePo pkg){
-  return (string)&pkg->version;
+string pkgVers(packagePo pkg) {
+  return (string) &pkg->version;
 }
 
 static logical compatiblVersion(string rqVer, string ver) {
@@ -370,7 +370,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
 
 #ifdef RESOURCETRACE
     if (traceResource)
-      outMsg(logFile, "loading segment %s:%d\n%_", prgName, arity);
+      outMsg(logFile, "loading code %s:%d\n%_", prgName, arity);
 #endif
 
     if (ret == Ok && isLookingAt(in, "s") == Ok) {
@@ -389,8 +389,8 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
 
       ret = decInt(in, &litCount);
 
-      if(ret==Ok)
-        ret = skipEncoded(in,errorMsg,msgSize);
+      if (ret == Ok)
+        ret = skipEncoded(in, errorMsg, msgSize);
 
       if (ret != Ok) {
         closeFile(O_IO(buff));
@@ -475,10 +475,13 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
                 codeV(pc)->srcMap = el;
             }
 
-            gcRemoveRoot(GH, root); /* clear the GC root */
-
             closeFile(O_IO(buff));
             closeFile((O_IO(cdeBuffer)));
+
+            gcRemoveRoot(GH, root); /* clear the GC root */
+
+            if (ret == Ok && enableVerify)
+              ret = verifyCode(pc);
 
             if (ret == Ok)
               defineProg(prg, pc);

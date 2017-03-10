@@ -23,6 +23,9 @@ lo.comp.code.registers{
   public varAddr:(varDesc)=>addr.
   varAddr(varDesc(_,_,_,A,_))=>A.
 
+  public initVarSet:(integer) => varSet.
+  initVarSet(Arity) => varSet(iota(1,Arity)::set[integer],nullSet,0).
+
   public locUsed:(varSet,integer) => varSet.
   locUsed(varSet(A,L,G),Lc) => varSet(A,addMem(L,Lc),G).
 

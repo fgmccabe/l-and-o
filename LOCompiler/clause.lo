@@ -16,18 +16,19 @@ lo.comp.code.clause{
   public compCl:(clse,list[litrl],list[(string,string,tloc)])=>assem.
   compCl(clse(Q,Nm,Args,Body),Lts,SM0) => assem(Nm,Code,Ltx,SrcMap):-
     logMsg("compiling \(clse(Q,Nm,Args,Body))"),
+    Arity = size(Args),
     Parts = partitionGoals(Body,[]),
-    (Dict,PermSize,Vs) = varAnalysis(Q,Args,Parts),
+    (Dict,PermSize,_) = varAnalysis(Q,Args,Parts),
+    Vs = initVarSet(Arity),
     unifyHead(Args,Dict,Lts,Vs,(isEmpty(Parts) ? true | false),Vs0,D0,Lt0,HCode),
     heapSize = estimateArgSpace(Args,false),
     hSize = gcPredict(Vs0), -- heapSize should == hSize
     allocating = ((PermSize>0 | size(Parts)>1) ? true | false),
     compBodyParts(Parts,1,D0,Lt0,Vs0,SM0,allocating,bCode,Dx,Ltx,Vsx,SrcMap),
-    Arity = size(Args),
     lSize = max(maxLocals(Vsx),PermSize),
     Code =
       (hSize>0 ? [iGc(Arity,hSize)] | []) <>
-      (allocating ? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
+      ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
       HCode<>bCode.
 
   clearLocals:(set[integer],integer,integer) => list[instruction].

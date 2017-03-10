@@ -122,7 +122,8 @@ instruction(vdYY,183,oLc,uLt,"Void Y[X],Count}")
 instruction(clA,184,oAh,nOp,"Clear A[h]")
 instruction(clY,185,oLc,nOp,"Clear Y[X]")
 instruction(clS,187,oSt,nOp,"Clear S++")
+instruction(clYY,188,oLc,uLt,"Clear Y[X],Count")
 
 lastInstruction
-instruction(clYY,188,oLc,uLt,"Clear Y[X],Count")
+instruction(bkpt,200,nOp,nOp,"Break point")
 

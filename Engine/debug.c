@@ -19,9 +19,19 @@
 
 logical tracing = True;  /* do we show each step */
 
-static retCode addBreakPoint(string name);
-static logical breakPointHit(string name);
-static retCode clearBreakPoint(string name);
+typedef struct _break_point_ *breakPointPo;
+
+typedef struct _break_point_ {
+  short arity;
+  byte name[MAX_SYMB_LEN];
+} BreakPoint;
+
+static retCode addBreakPoint(breakPointPo bp);
+static logical breakPointHit(string name, short arity);
+static retCode clearBreakPoint(breakPointPo bp);
+static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp);
+
+DebugWaitFor waitFor;                 // In case of debugging, what are we waiting for?
 
 retCode g__ins_debug(processPo P, ptrPo a) {
   debugging = interactive = True;
@@ -54,7 +64,6 @@ void showReg(ptrPo a, char *name, integer reg) {
   }
 }
 
-DebugWaitFor waitingFor = nextIns;
 /* waiting for next instruction */
 long cmdCounter = 0;
 
@@ -100,110 +109,34 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 //      outMsg(logFile, "cmdCounter=%d\n%_", cmdCounter);
 
     insWord PCX = *pc;
-    switch (op_code(PCX)) {
-      case kawl: {
-        switch (waitingFor) {
-          case nextIns:
-            cmdCounter--;
-            break;
-          case nextSucc:
-          case nextBreak:
-          case nextFail: {
-            string name = programName(objV(Lits[op_o_val(PCX)]))->name;
 
-            if (breakPointHit(name)) {
-              waitingFor = nextIns;
-              cmdCounter = 0;
-            } else
-              cmdCounter++;
-            break;
-          }
-        }
+    switch (waitFor) {
+      case nextIns:
+        cmdCounter--;
         break;
-      }
-      case lkawl:
-      case dlkawl: {
-        switch (waitingFor) {
-          case nextIns:
-            cmdCounter--;
-            break;
-          case nextSucc:
-          case nextBreak:
-          case nextFail: {
-            string name = programName(objV(Lits[op_o_val(PCX)]))->name;
+      case nextSucc:
+      case nextBreak:
+      case nextFail:
+        switch (op_code(PCX)) {
+          case kawl:
+          case lkawl:
+          case dlkawl:
+          case kawlO:
+          case lkawlO:
+          case dlkawlO: {
+            objPo prg = objV(deRefI(&a[1]));
+            string name = objectClassName(prg);
+            long arity = objectArity(prg);
 
-            if (breakPointHit(name)) {
-              waitingFor = nextIns;
+            if (breakPointHit(name, (short) arity)) {
+              waitFor = nextIns;
               cmdCounter = 0;
             }
             break;
           }
-        }
-        break;
-      }
-
-      case kawlO: {
-        switch (waitingFor) {
-          case nextIns:
-            cmdCounter--;
-            break;
-          case nextSucc:
-          case nextBreak:
-          case nextFail: {
-            string name = objectClassName(objV(deRefI(&a[1])));
-
-            if (breakPointHit(name)) {
-              waitingFor = nextIns;
-              cmdCounter = 0;
-            } else
-              cmdCounter++;
-            break;
-          }
-        }
-        break;
-      }
-      case lkawlO:
-      case dlkawlO: {
-        switch (waitingFor) {
-          case nextIns:
-            cmdCounter--;
-            break;
-          case nextSucc:
-          case nextBreak:
-          case nextFail: {
-            string name = objectClassName(objV(deRefI(&a[1])));
-
-            if (breakPointHit(name)) {
-              waitingFor = nextIns;
-              cmdCounter = 0;
-            }
-            break;
-          }
-        }
-        break;
-      }
-      case succ:
-      case dealloc:
-        switch (waitingFor) {
-          case nextIns:
-          case nextSucc:
-          case nextBreak:
-            cmdCounter--;
-            break;
-
           default:
             break;
         }
-        break;
-      default:
-        switch (waitingFor) {
-          case nextIns:
-            cmdCounter--;
-            break;
-          default:
-            break;
-        }
-        break;
     }
 
     if (tracing || cmdCounter <= 0) {
@@ -243,16 +176,10 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         }
 
         switch (cmdLine[0]) {
-          case ' ':
-            cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextIns;
-            tracing = True;
-            clrCmdLine(cmdLine, NumberOf(cmdLine));
-            break;
           case 'n':
             cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextIns;
-            tracing = False;
+            waitFor = nextIns;
+            tracing = True;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
           case 'N':
@@ -266,57 +193,50 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
               case lkawl:
               case dlkawlO:
               case dlkawl:
-                waitingFor = nextSucc;
+                waitFor = nextSucc;
                 break;
               default:
-                waitingFor = nextIns;
+                waitFor = nextIns;
             }
             tracing = False;
             break;
 
           case '\n':
             cmdCounter = 1;
-            waitingFor = nextIns;
+            waitFor = nextIns;
+            tracing = True;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
           case 'x': /* wait for a success */
             cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextSucc;
+            waitFor = nextSucc;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
           case '+': { // Set up a new break point
-            int ix = 1;
-            while (ix < NumberOf(cmdLine) && cmdLine[ix] == ' ')
-              ix++;
-            string name = &cmdLine[ix];
-            if (uniIsLit(name, ""))
-              name = programName(objV(Lits[0]))->name;
-
-            retCode ret = addBreakPoint(name);
+            BreakPoint bp;
+            retCode ret = parseBreakPoint(&cmdLine[1], NumberOf(cmdLine) - 1, &bp);
+            if (ret == Ok)
+              ret = addBreakPoint(&bp);
 
             if (ret != Ok)
-              outMsg(logFile, "Could not set spy point on %s\n%_", name);
+              outMsg(logFile, "Could not set spy point on %s\n%_", &cmdLine[1]);
             else
-              outMsg(logFile, "spy point set on %s\n%_", name);
+              outMsg(logFile, "spy point set on %s\n%_", &cmdLine[1]);
 
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
           }
 
           case '-': {
-            int ix = 1;
-            while (ix < NumberOf(cmdLine) && cmdLine[ix] == ' ')
-              ix++;
-            string name = &cmdLine[ix];
-            if (uniIsLit(name, ""))
-              name = programName(objV(Lits[0]))->name;
+            BreakPoint bp;
+            retCode ret = parseBreakPoint(&cmdLine[1], NumberOf(cmdLine) - 1, &bp);
 
-            if (clearBreakPoint(name) == Ok)
-              outMsg(logFile, "spy point cleared on %s\n%_", name);
+            if (ret == Ok && clearBreakPoint(&bp) == Ok)
+              outMsg(logFile, "spy point cleared on %s\n%_", &cmdLine[1]);
             else
-              outMsg(logFile, "Could not clear spy point on %s\n%_", name);
+              outMsg(logFile, "Could not clear spy point on %s\n%_", &cmdLine[1]);
 
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
@@ -356,14 +276,14 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 
           case 'c':
             cmdCounter = cmdCount(cmdLine + 1);
-            waitingFor = nextBreak;
+            waitFor = nextBreak;
             tracing = False;
             traceCalls = False;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
           case 't':
-            waitingFor = nextBreak;
+            waitFor = nextBreak;
             tracing = True;
             cmdCounter = 1;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
@@ -429,7 +349,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
           case '8':
           case '9': {
             cmdCounter = cmdCount(cmdLine);
-            waitingFor = nextIns;
+            waitFor = nextIns;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             continue;
           }
@@ -467,48 +387,85 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
       return Ok;
     }
   }
+
   pthread_mutex_unlock(&debugMutex);
   return Ok;
 }
 
-static byte breakPoints[10][MAX_SYMB_LEN];
+static BreakPoint breakPoints[10];
 static int breakPointCount = 0;
 
-retCode addBreakPoint(string name) {
+retCode addBreakPoint(breakPointPo bp) {
   for (int ix = 0; ix < breakPointCount; ix++) {
-    if (uniCmp(breakPoints[ix], (string) "") == same) {
-      return uniCpy(breakPoints[ix], NumberOf(breakPoints[ix]), name);
+    if (breakPoints[ix].arity == -1) {
+      breakPoints[ix] = *bp;
+      return Ok;
     }
   }
   if (breakPointCount < NumberOf(breakPoints)) {
-    uniCpy(breakPoints[breakPointCount], NumberOf(breakPoints[breakPointCount]), name);
-    breakPointCount++;
+    breakPoints[breakPointCount++] = *bp;
     return Ok;
   } else
     return Fail;
 }
 
-logical breakPointHit(string name) {
+logical breakPointHit(string name, short arity) {
   for (int ix = 0; ix < breakPointCount; ix++) {
-    if (uniCmp(breakPoints[ix], name) == same)
+    if (breakPoints[ix].arity == arity && uniCmp(breakPoints[ix].name, name) == same)
       return True;
   }
   return False;
 }
 
-retCode clearBreakPoint(string name) {
+retCode clearBreakPoint(breakPointPo bp) {
   for (int ix = 0; ix < breakPointCount; ix++) {
-    if (uniCmp(breakPoints[ix], name) == same) {
+    if (breakPoints[ix].arity == bp->arity && uniCmp(breakPoints[ix].name, bp->name) == same) {
       if (ix == breakPointCount - 1) {
         breakPointCount--;
-        while (breakPointCount >= 0 && uniCmp(breakPoints[breakPointCount], (string) "") == same)
+        while (breakPointCount >= 0 && breakPoints[breakPointCount].arity == -1)
           breakPointCount--;
         return Ok;
-      } else
-        return uniCpy(breakPoints[ix], NumberOf(breakPoints[ix]), (string) "");
+      } else {
+        breakPoints[ix].arity = -1;
+        return Ok;
+      }
     }
   }
+
   return Fail;
+}
+
+static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp) {
+  long b = 0;
+  long ix = 0;
+
+  while (ix < bLen && buffer[ix] == ' ')
+    ix++;
+
+  while (ix < bLen) {
+    codePoint cp = nextCodePoint(buffer, &ix, bLen);
+    switch (cp) {
+      case '\n':
+      case 0:
+        appendCodePoint(bp->name, &b, NumberOf(bp->name), 0);
+        bp->arity = 0;
+        return Eof;
+      case '/': {
+        appendCodePoint(bp->name, &b, NumberOf(bp->name), 0);
+        integer arity = parseInteger(&buffer[ix], bLen - ix);
+        bp->arity = (short) arity;
+        return Ok;
+      }
+      default:
+        appendCodePoint(bp->name, &b, NumberOf(bp->name), cp);
+        continue;
+    }
+  }
+  return Error;
+}
+
+retCode breakPoint(processPo P){
+  return Ok;
 }
 
 void dC(ptrI w) {

@@ -59,23 +59,23 @@ static logical occCheck(ptrPo x,ptrPo v);
       suspensionPo susp = (suspensionPo)(d-1);        \
                   \
       if(isvar(v) && isSuspVar((ptrPo)v)){        \
-  suspensionPo other = (suspensionPo)(((ptrPo)v)-1);    \
-  ptrPo tail = &other->goal;          \
+        suspensionPo other = (suspensionPo)(((ptrPo)v)-1);    \
+        ptrPo tail = &other->goal;          \
                   \
-  while(IsList(*tail))            \
-    tail = listTail(objV(*tail));        \
+        while(IsList(*tail))            \
+          tail = listTail(objV(*tail));        \
                   \
-  bndVr(tail,susp->goal);          \
+        bndVr(tail,susp->goal);          \
       }                  \
       else{                \
-  ptrPo tail = &susp->goal;          \
+        ptrPo tail = &susp->goal;          \
                   \
-  while(IsList(*tail))            \
-    tail = listTail(objV(*tail));        \
+        while(IsList(*tail))            \
+          tail = listTail(objV(*tail));        \
                   \
-  P->proc.F = SUSP_ACTIVE;          \
-  bndVr(tail,P->proc.trigger);          \
-  P->proc.trigger = susp->goal;          \
+        P->proc.F = SUSP_ACTIVE;          \
+        bndVr(tail,P->proc.trigger);          \
+        P->proc.trigger = susp->goal;          \
       }                  \
     }                  \
     *d = v;                \
@@ -105,45 +105,45 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
     *d = v;                \
   }while(0)
 
-#define saveRegs(pc)        \
-  {            \
-    P->proc.PC = pc;        \
-    P->proc.cPC = cPC;        \
-    P->proc.B = B;        \
-    P->proc.SB = SB;        \
-    P->proc.cSB = cSB;        \
-    P->proc.T = T;        \
-    P->proc.C = C;        \
-    P->proc.PROG = PROG;      \
-    P->proc.cPROG = cPROG;      \
-    P->proc.heap.create = (objPo)H;    \
+#define saveRegs(pc)                 \
+  {                                  \
+    P->proc.PC = pc;                 \
+    P->proc.cPC = cPC;               \
+    P->proc.B = B;                   \
+    P->proc.SB = SB;                 \
+    P->proc.cSB = cSB;               \
+    P->proc.T = T;                   \
+    P->proc.C = C;                   \
+    P->proc.PROG = PROG;             \
+    P->proc.cPROG = cPROG;           \
+    P->proc.heap.create = (objPo)H;  \
   }
 
-#define restRegs()        \
-  {            \
-    cPC = P->proc.cPC;        \
-    B = P->proc.B;        \
-    SB = P->proc.SB;        \
-    cSB = P->proc.cSB;        \
-    T = P->proc.T;        \
-    C = P->proc.C;        \
-    Y = (ptrPo)C;        \
-    PROG = P->proc.PROG;      \
-    cPROG = P->proc.cPROG;      \
-    PC = P->proc.PC;        \
-    {            \
-      codePo pc = codeV(PROG);      \
-      Lits = codeLits(pc);      \
-    }                                           \
-    H = (ptrPo)P->proc.heap.create;    \
-    A = &P->proc.A[0];        \
-    assert(P->proc.state==runnable);    \
+#define restRegs()                   \
+  {                                  \
+    cPC = P->proc.cPC;               \
+    B = P->proc.B;                   \
+    SB = P->proc.SB;                 \
+    cSB = P->proc.cSB;               \
+    T = P->proc.T;                   \
+    C = P->proc.C;                   \
+    Y = (ptrPo)C;                    \
+    PROG = P->proc.PROG;             \
+    cPROG = P->proc.cPROG;           \
+    PC = P->proc.PC;                 \
+    {                                \
+      codePo pc = codeV(PROG);       \
+      Lits = codeLits(pc);           \
+    }                                \
+    H = (ptrPo)P->proc.heap.create;  \
+    A = &P->proc.A[0];               \
+    assert(P->proc.state==runnable); \
   }
 
-#define backTrack()        \
-  do{            \
-  PC = B->PC;        \
-  PROG = B->PROG;        \
+#define backTrack()                \
+  do{                              \
+  PC = B->PC;                      \
+  PROG = B->PROG;                  \
   Lits = codeLits(codeV(PROG));    \
   }while(False)
 
@@ -619,6 +619,7 @@ void runGo(register processPo P) {
           cPC = C->cPC;
           cSB = C->cSB;
           cPROG = C->cPROG;
+
           C = C->C;
           Y = (ptrPo) C;
         }
@@ -960,6 +961,7 @@ void runGo(register processPo P) {
         Y = (ptrPo) C;
         assert(B->H >= (ptrPo) P->proc.heap.base && B->H <= H); /* check this one */
         H = B->H;      /* reset the stack heap */
+
         P->proc.F = 0;      /* reset the flag */
 
         B->PC = PC + op_ll_val(PCX);  /* next clause to try */
@@ -2431,6 +2433,22 @@ void runGo(register processPo P) {
         } else
           unBind(H++);
         continue;
+      }
+
+      case bkpt: {
+        saveRegs(PC);
+        retCode ret = breakPoint(P);
+        restRegs();
+        switch (ret) {
+          case Ok:
+            continue;
+          case Fail:
+            backTrack();
+            continue;
+          case Error:
+          default:
+            return;
+        }
       }
 
       default:      /* illegal instruction */

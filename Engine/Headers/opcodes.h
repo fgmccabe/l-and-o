@@ -57,7 +57,6 @@ typedef enum {
   Ltl,                           // 16bit literal (-32768..32767)
   vSz,           		// Size of local variable vector
   lSz,                           // trim local variable vector
-  cSz,           		// Structure size
   Es,                            // escape code (0..65535)
   pcr,                        // program counter relative offset (-32768..32767)
   pcl,              // long pc relative offset (-0x80000000..0x7fffffff) (24bit)

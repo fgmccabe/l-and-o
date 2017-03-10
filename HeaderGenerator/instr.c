@@ -96,7 +96,6 @@ static char *genOpAnd(FILE *f,char *sep,opAndSpec A)
   case uLt:                             // small literal in upper slot (-128..127)
   case vSz:                             // Size of local variable vector
   case lSz:                             // Size of local variable vector
-  case cSz:             		            // Structure size
   case Ltl:                             // 16 bit integer offset
     fprintf(f,"%sinteger",sep);
     return ",";
@@ -167,7 +166,6 @@ static char *dispOpAnd(FILE *f,char *sep,opAndSpec A,int ix){
     case uLt:                             // small literal in upper slot (-128..127)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
-    case cSz:             		            // Structure size
       fprintf(f,"%sss(\" \"),disp(A%d)",sep,ix);
       return ",";
     case Ltl:                             // 16 bit integer offset
@@ -217,7 +215,6 @@ static char *opAndArg(FILE *f,char *sep,opAndSpec A,int ix){
     case uLt:                             // small literal in upper slot (-128..127)
     case vSz:                             // Size of local variable vector
     case lSz:                             // Size of local variable vector
-    case cSz:             		            // Structure size
     case Ltl:                             // 16 bit integer offset
     case Es:                              // escape code (0..65535)
     case pcr:                             // program counter relative offset (-32768..32767)
