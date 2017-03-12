@@ -29,7 +29,7 @@
 #include "char.h"
 
 #include "heap.h"
-#include "process.h"
+#include "proc.h"
 
 #include "global.h"
 #include "symbols.h"		/* standard symbols available to the engine */

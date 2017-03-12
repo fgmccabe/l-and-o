@@ -14,7 +14,7 @@
 */
 
 #include "lo.h"			/* Main L&O header file */
-#include "thread.h"
+#include "thred.h"
 #include "escodes.h"
 
 /* An initial bootstrap sequence */

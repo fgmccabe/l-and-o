@@ -20,7 +20,7 @@
 #include "dict.h"
 #include "symbols.h"
 #include "errors.h"
-#include "process.h"
+#include "proc.h"
 #include "eval.h"
 #include "term.h"
 

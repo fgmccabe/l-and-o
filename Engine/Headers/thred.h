@@ -6,7 +6,7 @@
 #define LANDO_THREAD_H
 
 #include "config.h"
-#include "process.h"
+#include "proc.h"
 #include "word.h"
 #include "lo.h"
 

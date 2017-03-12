@@ -19,7 +19,7 @@
 
 #include "lo.h"
 #include "manifestP.h"
-#include "thread.h"
+#include "thred.h"
 
 #ifndef MAX_FILE_LEN
 #define MAX_FILE_LEN 2048

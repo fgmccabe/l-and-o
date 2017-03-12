@@ -21,7 +21,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "lo.h"
-#include "process.h"
+#include "proc.h"
 
 /* General off-line unification */
 retCode g__unify(processPo P,ptrPo a)

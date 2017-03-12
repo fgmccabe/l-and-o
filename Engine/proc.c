@@ -19,7 +19,7 @@
 #include <pthread.h>
 
 #include "lo.h"			/* Main april header file */
-#include "thread.h"
+#include "thred.h"
 
 #ifndef DEFSTACK
 #define DEFSTACK 1024    /* default initial size of process stack */
@@ -583,6 +583,10 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
       nB->trail = (trailPo) adjust((ptrPo) B->trail, oBase, nBase);
       nB->cPC = FirstInstruction(nB->cPROG) + (B->cPC - FirstInstruction(B->cPROG));
       nB->PC = FirstInstruction(nB->PROG) + (B->PC - FirstInstruction(B->PROG));
+#ifdef EXECTRACE
+      nB->waitFor = B->waitFor;
+      nB->cWaitFor = B->cWaitFor;
+#endif
 
       for (i = 0; i < ar; i++)
         *nA++ = adjustI(*A++, oHeap, oLimit, nHeap, oBase, oTop, nTop);
@@ -613,7 +617,9 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
       nC->C = (callPo) adjust((ptrPo) C->C, oTop, nTop);
       nC->cPROG = adjustI(C->cPROG, oHeap, oLimit, nHeap, oBase, oTop, nTop);
       nC->cPC = FirstInstruction(nC->cPROG) + (C->cPC - FirstInstruction(C->cPROG));
-
+#ifdef EXECTRACE
+      nC->cWaitFor = C->cWaitFor;
+#endif
       for (i = 0; i < len; i++)
         *--nY = adjustI(*--Y, oHeap, oLimit, nHeap, oBase, oTop, nTop);
 

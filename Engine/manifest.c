@@ -13,9 +13,8 @@
   permissions and limitations under the License.
 */
 #include <jsonEvent.h>
-#include <process.h>
+#include "lo.h"
 #include "manifestP.h"
-#include "load.h"
 
 // Use the JSON event parser to parse a manifest file and build up a manifest structure
 

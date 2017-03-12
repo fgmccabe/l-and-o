@@ -274,18 +274,19 @@ void runGo(register processPo P) {
           P->proc.trigger = emptyList;
           PROG = ProgramOf(kdelay);  /* The standard delay handler */
 
-          {
-            codePo code = codeV(PROG);
-            PC = codeIns(code);
-            Lits = codeLits(code);
-            SB = B;
-            continue;
-          }
+          codePo code = codeV(PROG);
+          PC = codeIns(code);
+          Lits = codeLits(code);
+          SB = B;
+          continue;
         } else {
           SB = cSB;      /* copy back the cut point */
           PC = cPC + 1;      /* continue from parent call, and skip over the gcmap instruction */
           PROG = cPROG;      /* and the environment itself */
           Lits = CodeLits(PROG);
+#ifdef EXECTRACE
+          P->proc.waitFor = P->proc.cWaitFor;
+#endif
           continue;
         }
 
@@ -337,6 +338,8 @@ void runGo(register processPo P) {
             Lits = codeLits(code);
 
 #ifdef EXECTRACE
+            P->proc.cWaitFor = P->proc.waitFor;
+
             if (traceCalls)
               showCall(P, "call", prog, &A[1], ar);
 #endif
@@ -397,6 +400,10 @@ void runGo(register processPo P) {
           cSB = C->cSB;
           cPROG = C->cPROG;
 
+#ifdef EXECTRACE
+          P->proc.cWaitFor = C->cWaitFor;
+#endif
+
           C = C->C;
           Y = (ptrPo) C;
 
@@ -441,13 +448,11 @@ void runGo(register processPo P) {
           P->proc.trigger = emptyList;
           PROG = ProgramOf(kdelay);  /* The standard delay handler */
 
-          {
-            codePo code = codeV(PROG);
-            PC = codeIns(code);
-            Lits = codeLits(code);
-            SB = B;
-            continue;
-          }
+          codePo code = codeV(PROG);
+          PC = codeIns(code);
+          Lits = codeLits(code);
+          SB = B;
+          continue;
         } else {
           ptrI prog = deRefI(&A[op_m_val(PCX)]); /* note that we deref through suspensions */
 
@@ -494,6 +499,10 @@ void runGo(register processPo P) {
             cPROG = PROG;
             cSB = SB;
             SB = B;
+
+#ifdef EXECTRACE
+            P->proc.cWaitFor = P->proc.waitFor;
+#endif
 
             PROG = prog;      /* We have a new environment */
             PC = codeIns(code);
@@ -603,6 +612,10 @@ void runGo(register processPo P) {
           cSB = C->cSB;
           cPROG = C->cPROG;
 
+#ifdef EXECTRACE
+          P->proc.cWaitFor = C->cWaitFor;
+#endif
+
           C = C->C;
           Y = (ptrPo) C;
         }
@@ -620,6 +633,10 @@ void runGo(register processPo P) {
           cPC = PC;      /* emulate a kawl, return back to this instruction */
           cPROG = PROG;
           cSB = SB;
+
+#ifdef EXECTRACE
+          P->proc.cWaitFor = P->proc.waitFor;
+#endif
           SB = B;
 
           allocframe(PC, cPC, envSize(PC), arity + 1); /* allocate a frame to store the current arguments */
@@ -751,6 +768,10 @@ void runGo(register processPo P) {
         nC->cSB = cSB;
         nC->cPROG = cPROG;
         nC->C = C;
+
+#ifdef EXECTRACE
+        nC->cWaitFor = P->proc.cWaitFor;
+#endif
         C = nC;
 
         Y = (ptrPo) C;    /* negative values used for local variables */
@@ -777,6 +798,11 @@ void runGo(register processPo P) {
         SB = cSB = C->cSB;
         PROG = cPROG = C->cPROG;
         Lits = codeLits(codeV(PROG));
+
+#ifdef EXECTRACE
+        P->proc.cWaitFor = C->cWaitFor;
+        P->proc.waitFor = P->proc.cWaitFor;
+#endif
 
         C = C->C;
         Y = (ptrPo) C;
@@ -825,13 +851,11 @@ void runGo(register processPo P) {
           P->proc.trigger = emptyList;
           PROG = ProgramOf(kdelay);  /* The standard delay handler */
 
-          {
-            codePo code = programCode(objV(PROG));
-            PC = codeIns(code);
-            Lits = codeLits(code);
-            SB = B;
-            continue;
-          }
+          codePo code = programCode(objV(PROG));
+          PC = codeIns(code);
+          Lits = codeLits(code);
+          SB = B;
+          continue;
         } else
           PC++;
         continue;
@@ -845,6 +869,10 @@ void runGo(register processPo P) {
         PC = cPC = C->cPC;
         SB = cSB = C->cSB;
         PROG = cPROG = C->cPROG;
+
+#ifdef EXECTRACE
+        P->proc.cWaitFor = C->cWaitFor;
+#endif
 
         assert(op_code(*PC) == gcmap);
 
@@ -894,7 +922,12 @@ void runGo(register processPo P) {
         back->trail = P->proc.trail;
         back->H = P->proc.heap.create;
 
-        assert(inHeap(&P->proc.heap, (objPo) back->B->H));
+#ifdef EXECTRACE
+        back->waitFor = P->proc.waitFor;
+        back->cWaitFor = P->proc.cWaitFor;
+#endif
+
+        assert(legalHeapPtr(&P->proc.heap, back->B->H));
 
         B = back;
         ptr = (ptrPo) (B + 1);
@@ -939,6 +972,11 @@ void runGo(register processPo P) {
         P->proc.heap.create = B->H;       /* reset the stack heap */
         P->proc.F = 0;                    /* reset the flag */
 
+#ifdef EXECTRACE
+        P->proc.waitFor = B->waitFor;
+        P->proc.cWaitFor = B->cWaitFor;
+#endif
+
         B->PC = PC + op_ll_val(PCX);      /* next clause to try */
         continue;
       }
@@ -976,6 +1014,11 @@ void runGo(register processPo P) {
         assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));
         P->proc.heap.create = B->H;      /* reset the stack heap */
         P->proc.F = 0;      /* reset the flag */
+
+#ifdef EXECTRACE
+        P->proc.waitFor = B->waitFor;
+        P->proc.cWaitFor = B->cWaitFor;
+#endif
 
         B = B->B;
         continue;
@@ -1018,6 +1061,11 @@ void runGo(register processPo P) {
         back->B = B;
         back->trail = P->proc.trail;
         back->H = P->proc.heap.create;
+
+#ifdef EXECTRACE
+        back->waitFor = P->proc.waitFor;
+        back->cWaitFor = P->proc.cWaitFor;
+#endif
 
         assert(legalHeapPtr(&P->proc.heap, (objPo) back->B->H));
         assert(op_code(*back->PC) == retry || op_code(*back->PC) == trust ||
@@ -1072,6 +1120,9 @@ void runGo(register processPo P) {
         PC += op_ll_val(PCX);
 
 #ifdef EXECTRACE
+        P->proc.waitFor = B->waitFor;
+        P->proc.cWaitFor = B->cWaitFor;
+
         if (traceCalls)
           showCall(P, "retry", PROG, &A[1], arity);
 #endif
@@ -1112,8 +1163,13 @@ void runGo(register processPo P) {
         C = B->C;
         Y = (ptrPo) C;
         assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));
-        P->proc.heap.create = B->H;      /* reset the stack heap */
-        P->proc.F = 0;      /* reset the flag */
+        P->proc.heap.create = B->H;       /* reset the stack heap */
+        P->proc.F = 0;                    /* reset the flag */
+
+#ifdef EXECTRACE
+        P->proc.waitFor = B->waitFor;
+        P->proc.cWaitFor = B->cWaitFor;
+#endif
 
         B = B->B;
         PC += op_ll_val(PCX);             /* new place to go to */
@@ -1436,7 +1492,7 @@ void runGo(register processPo P) {
         if (isvar(val)) {
           integer size = classSize(class);
           assert(enoughSpace(size));  /* Is there room for the constructor */
-          objPo new = (objPo) P->proc.heap.create;
+          objPo new = P->proc.heap.create;
 
           P->proc.heap.create += size;
           S = ((ptrPo) new) + 1;
@@ -2067,8 +2123,7 @@ void runGo(register processPo P) {
           if (isvar(val)) {
             backTrack();                 /* Not permitted to bind when matching */
             invalidateS();
-          }
-          else if (hasClass(obj, clss)) {
+          } else if (hasClass(obj, clss)) {
             S = objectArgs(obj);        /* point to the first argument */
             validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
           } else {

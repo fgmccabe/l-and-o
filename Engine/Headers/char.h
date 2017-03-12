@@ -17,7 +17,7 @@
 #define _LO_CHAR_H_
 
 #include "word.h"
-#include "process.h"
+#include "proc.h"
 
 retCode wStringChr(ioPo f,codePoint ch);
 

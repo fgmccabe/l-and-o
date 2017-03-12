@@ -12,7 +12,6 @@
  KIND, either express or implied. See the License for the specific language governing
  permissions and limitations under the License.
  */
-#include <process.h>
 #include "lo.h"
 #include "debug.h"
 #include "disass.h"
@@ -31,8 +30,6 @@ static retCode addBreakPoint(breakPointPo bp);
 static logical breakPointHit(string name, short arity);
 static retCode clearBreakPoint(breakPointPo bp);
 static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp);
-
-DebugWaitFor waitFor;                 // In case of debugging, what are we waiting for?
 
 retCode g__ins_debug(processPo P, ptrPo a) {
   debugging = interactive = True;
@@ -102,16 +99,12 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
   ptrPo Lits = codeLits(code);
   extern HeapRec globalHeap;
 
-  ptrPo hBase = (ptrPo)p->proc.heap.base;
-  ptrPo hCreate = (ptrPo)p->proc.heap.create;
+  ptrPo hBase = (ptrPo) p->proc.heap.base;
+  ptrPo hCreate = (ptrPo) p->proc.heap.create;
 
   pthread_mutex_lock(&debugMutex);
 
   if (focus == NULL || focus == p) {
-
-//    if (cmdCounter > 0)
-//      outMsg(logFile, "cmdCounter=%d\n%_", cmdCounter);
-
     insWord PCX = *pc;
 
     switch (op_code(PCX)) {
@@ -124,7 +117,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         long arity = lbl->arity;
 
         if (breakPointHit(name, (short) arity)) {
-          waitFor = nextIns;
+          p->proc.waitFor = nextIns;
           cmdCounter = 0;
         }
         break;
@@ -137,7 +130,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         long arity = objectArity(prg);
 
         if (breakPointHit(name, (short) arity)) {
-          waitFor = nextIns;
+          p->proc.waitFor = nextIns;
           cmdCounter = 0;
         }
         break;
@@ -146,7 +139,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         break;
     }
 
-    if (waitFor == nextIns)
+    if (p->proc.waitFor == nextIns)
       cmdCounter--;
 
     if (tracing || cmdCounter <= 0) {
@@ -163,7 +156,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
       if (!identical(p->proc.trigger, emptyList))
         outMsg(logFile, ",%d triggered", ListLen(deRefI(&p->proc.trigger)));
       outMsg(logFile, ",H=%x[%d], ", hCreate, (ptrPo) p->proc.heap.end - hCreate);
-      outMsg(logFile, "global=%x[%d]\n", globalHeap.create, globalHeap.end - (objPo)globalHeap.create);
+      outMsg(logFile, "global=%x[%d]\n", globalHeap.create, globalHeap.end - (objPo) globalHeap.create);
       flushFile(logFile);
     }
 
@@ -186,7 +179,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
         switch (cmdLine[0]) {
           case 'n':
             cmdCounter = cmdCount(cmdLine + 1);
-            waitFor = nextIns;
+            p->proc.waitFor = nextIns;
             tracing = True;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
@@ -201,24 +194,24 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
               case lkawl:
               case dlkawlO:
               case dlkawl:
-                waitFor = nextSucc;
+                p->proc.waitFor = nextSucc;
                 break;
               default:
-                waitFor = nextIns;
+                p->proc.waitFor = nextIns;
             }
             tracing = False;
             break;
 
           case '\n':
             cmdCounter = 1;
-            waitFor = nextIns;
+            p->proc.waitFor = nextIns;
             tracing = True;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
           case 'x': /* wait for a success */
             cmdCounter = cmdCount(cmdLine + 1);
-            waitFor = nextSucc;
+            p->proc.waitFor = nextSucc;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
@@ -284,14 +277,14 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 
           case 'c':
             cmdCounter = cmdCount(cmdLine + 1);
-            waitFor = nextBreak;
+            p->proc.waitFor = nextBreak;
             tracing = False;
             traceCalls = False;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             break;
 
           case 't':
-            waitFor = nextBreak;
+            p->proc.waitFor = nextBreak;
             tracing = True;
             cmdCounter = 1;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
@@ -357,7 +350,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
           case '8':
           case '9': {
             cmdCounter = cmdCount(cmdLine);
-            waitFor = nextIns;
+            p->proc.waitFor = nextIns;
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             continue;
           }

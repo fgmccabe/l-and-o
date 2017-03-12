@@ -21,7 +21,7 @@
 #include <math.h>
 #include <assert.h>
 #include "opcodes.h"
-#include "process.h"
+#include "proc.h"
 #include "word.h"
 
 #ifdef EXECTRACE

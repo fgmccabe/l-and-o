@@ -4,7 +4,7 @@
 // The thread class - a live thread has a pointer to its process structure
 
 #include "lo.h"
-#include "thread.h"
+#include "thred.h"
 
 ptrI threadClass;
 
