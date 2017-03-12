@@ -125,7 +125,7 @@ lo.comp.code.analyse{
     Avoid = checkOtherRegVars(Nm,G,Use,T),
     Ar = (nthEl(Parts,G-1,GPart) ? max(Arity,maxArity(GPart)) | Arity),
     CS = conflictSet(occ(Nm,Occs),G,Ar),
-    Later = otherUsers(T^/((occ(N,OO)) :- N\=Nm, (_,G,_) in OO),G,Occs).
+    Later = otherUsers(T^/((occ(N,OO)) :- (_,G,_) in OO),G,Occs).
   buildRgUsage(occ(Nm,Occs),T,Parts,Arity,Out) =>
       [usage(Nm,occ(Nm,Occs),Addr,nullSet,nullSet),..Out] :-
     classifyVr(Occs,Addr,_).
@@ -158,7 +158,7 @@ lo.comp.code.analyse{
   checkHeadUses(occ(_,Occs),Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs).
 
   checkHeadUse:(occForm,integer,integer,integer,set[integer],list[(occForm,integer,integer)]) => set[integer].
-  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- \+(hTerm,Gp,Rg) in Use.
+  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg).
   checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- \+(_,Gp,Rg) in Use.
   checkHeadUse(_,_,_,_,Cs,_) => Cs.
 

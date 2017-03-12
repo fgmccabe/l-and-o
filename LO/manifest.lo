@@ -64,9 +64,13 @@ lo.repo.manifest{
 
   public locateInManifest:(manifest,pkg,string,string){}.
   locateInManifest(manifest(Entries),pkg(Pkg,Vers),Kind,URI) :-
+    -- _logmsg(_stringOf(Pkg,0,0)),
     present(Entries,Pkg,manifestEntry(Pkg,V)),
+    -- _logmsg(_stringOf(V,0,0)),
     getVersion(Vers,_,V,Map),
-    present(Map,Kind,URI).
+    _logmsg("\(Pkg) has kinds \(Map)"),
+    present(Map,Kind,URI),
+    _logmsg("\(Pkg) : \(Kind) at \(URI)").
 
   getVersion:(version,version,list[(version,map[string,string])],map[string,string]){}.
   getVersion(Vers,Vers,V,Map) :- (Vers,Map) in V!.

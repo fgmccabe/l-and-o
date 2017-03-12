@@ -35,6 +35,7 @@ void countEscape(insWord PCX) {
 }
 
 void countIns(insWord PCX) {
+  pcCount++;
   insCount[op_code(PCX)]++;
 }
 

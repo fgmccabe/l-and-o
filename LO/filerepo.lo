@@ -15,10 +15,14 @@ lo.repo.file{
 
   public implementation repository[fileRepo] <= {
     packagePresent(repo(Root,Man),Pkg,Kind) :-
-      locateInManifest(Man,Pkg,S,U),
+      -- _logmsg("is \(Pkg) in manifest \(Man)"),
+      locateInManifest(Man,Pkg,"source",S),
+      locateInManifest(Man,Pkg,"code",U),
+      -- _logmsg("in manifest"),
       CodeFile = resolveUri(Root,parseUri(U)),
       SrcFile = resolveUri(Root,parseUri(S)),
       resourcePresent(CodeFile),
+      -- _logmsg("resource present"),
       (resourcePresent(SrcFile) ?
           newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 

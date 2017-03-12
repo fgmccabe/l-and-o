@@ -126,7 +126,7 @@ static inline ptrI sourceMap(codePo pc) {
   return pc->srcMap;
 }
 
-static inline packagePo codeOwner(codePo pc){
+static inline packagePo codeOwner(codePo pc) {
   assert(pc->class == codeClass);
   return pc->owner;
 }
@@ -244,7 +244,7 @@ extern ptrI programOfSymbol(objPo o);
 extern ptrI programOfTerm(ptrI x);
 extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(uinteger size, uinteger litCnt, packagePo owner);
-extern retCode verifyCode(ptrI prog);
+extern retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen);
 
 extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize, void *cl);
 

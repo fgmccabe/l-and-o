@@ -27,7 +27,9 @@ lo.repo {
   comboPkgPrsnt((_,B),P,K) :- packagePresent(B,P,K).
 
   comboLoad:all a,b ~~ repository[a], repository[b] |: ((a,b),pkg,string,string){}.
-  comboLoad((A,B),P,K,Txt) :- (packagePresent(A,P,K) ?
+  comboLoad((A,B),P,K,Txt) :-
+    _logmsg("trying to access \(P):\(K)"),
+    (packagePresent(A,P,K) ?
     loadFromRepo(A,P,K,Txt) |
     loadFromRepo(B,P,K,Txt)).
 

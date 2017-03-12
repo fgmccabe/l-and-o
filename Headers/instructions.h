@@ -86,7 +86,6 @@ instruction(mScns,88,oSt,ltl,"Build constructor")
 instruction(oAU,90,iAh,nOp,"Unbind A[h]")
 instruction(oYU,91,iLc,nOp,"Unbind local")
 instruction(oYA,92,iLc,iAh,"Overwrite local")
-instruction(oYnil,93,iLc,nOp,"Overwrite with empty list")
 
 /* Matching, i.e., non-binding instructions */
 instruction(cAA,110,iAh,iAm,"Match")

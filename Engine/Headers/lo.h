@@ -29,6 +29,8 @@
 #include "char.h"
 
 #include "heap.h"
+#include "process.h"
+
 #include "global.h"
 #include "symbols.h"		/* standard symbols available to the engine */
 #include "errors.h"		  /* standard error codes */

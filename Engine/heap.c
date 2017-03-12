@@ -425,19 +425,19 @@ void verifyVar(ptrPo ptr, processPo P) {
 void verifyHeap(heapPo P) {
   objPo scan = P->base;
 
-  assert(P->base <= P->create && P->create <= P->end);
-  while (scan < P->create) {
+  assert(P->base <= (objPo)P->create && (objPo)P->create <= P->end);
+  while (scan < (objPo)P->create) {
     assert(scan < P->end);
     scan = verifyObj(scan, P);
   }
-  assert(scan == P->create);
+  assert(scan == (objPo)P->create);
 }
 
 static void verifyTerm(ptrPo ptr, heapPo P);
 
 void verifyTrm(objPo ob, heapPo P) {
-  assert((ob >= P->base && ob < P->create) ||
-         (ob >= globalHeap.base && ob < globalHeap.create));
+  assert((ob >= P->base && ob < (objPo)P->create) ||
+         (ob >= globalHeap.base && ob < (objPo)globalHeap.create));
 
   ptrPo args = objectArgs(ob);
   long arity = objectArity(ob);
@@ -524,7 +524,7 @@ void verifyProc(processPo p) {
   register ptrPo oBase = p->proc.sBase;
   register ptrPo oTop = p->proc.sTop;
   heapPo heap = &p->proc.heap;
-  ptrPo heapMark = (ptrPo) p->proc.heap.create; /* check for strictly descending H vars */
+  objPo heapMark = p->proc.heap.create; /* check for strictly descending H vars */
 
   assert(oBase < oTop);
 
@@ -558,7 +558,7 @@ void verifyProc(processPo p) {
         assert(B->trail >= (trailPo) p->proc.sBase &&
                B->trail <= p->proc.trail);
         assert(op_code(*B->cPC) == gcmap);
-        assert(B->H >= (ptrPo) p->proc.heap.base && B->H <= (ptrPo) p->proc.heap.create);
+        assert(B->H >= p->proc.heap.base && B->H <= p->proc.heap.create);
         assert(B->H <= heapMark);
         assert((ptrPo) T >= (ptrPo) B);
         heapMark = B->H;

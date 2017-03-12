@@ -32,9 +32,9 @@
 
 #define Yreg(off) (&((ptrPo)C)[off])
 
-static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2);
+static retCode uni(processPo P, choicePo B, ptrPo T1, ptrPo T2);
 
-static retCode mtch(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2);
+static retCode mtch(processPo P, choicePo B, ptrPo T1, ptrPo T2);
 
 #ifdef DO_OCCURS_CHECK
 static logical occCheck(ptrPo x,ptrPo v);
@@ -45,64 +45,54 @@ static logical occCheck(ptrPo x,ptrPo v);
 #define localVar(p)\
   ((p)>=(ptrPo)P->proc.sBase && (p)<(ptrPo)P->proc.sTop)
 
-#define bindVr(d, v)          \
-  do{              \
-    assert(((d)>=(ptrPo)P->proc.heap.base && (d)<H)||      \
-     ((d)>=(ptrPo)P->proc.sBase && (d)<(ptrPo)P->proc.sTop));  \
-                  \
-    if((d)<(B)->H || (d)>(ptrPo)B){          \
-      P->proc.trail->var=d;            \
-      P->proc.trail->val=*d;            \
-      P->proc.trail++;              \
-    }                  \
-    if(isSuspVar((d)) && (d)+1<H && (d)>=(ptrPo)P->proc.heap.base){  \
-      suspensionPo susp = (suspensionPo)(d-1);        \
-                  \
-      if(isvar(v) && isSuspVar((ptrPo)v)){        \
-        suspensionPo other = (suspensionPo)(((ptrPo)v)-1);    \
-        ptrPo tail = &other->goal;          \
-                  \
-        while(IsList(*tail))            \
-          tail = listTail(objV(*tail));        \
-                  \
-        bndVr(tail,susp->goal);          \
-      }                  \
-      else{                \
-        ptrPo tail = &susp->goal;          \
-                  \
-        while(IsList(*tail))            \
-          tail = listTail(objV(*tail));        \
-                  \
-        P->proc.F = SUSP_ACTIVE;          \
-        bndVr(tail,P->proc.trigger);          \
-        P->proc.trigger = susp->goal;          \
-      }                  \
-    }                  \
-    *d = v;                \
-  }while(0)
-
-static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
-  assert(((d) >= (ptrPo) P->proc.heap.base && (d) < H) ||
-         ((d) >= (ptrPo) P->proc.sBase && (d) < (ptrPo) P->proc.sTop));
-  if ((d) < (B)->H || (d) > (ptrPo) B) {
-    P->proc.trail->var = d;
-    P->proc.trail->val = *d;
-    P->proc.trail++;
-  }
-  *d = v;
+static inline logical validPtr(processPo P, ptrPo x) {
+  return (logical) ((x >= (ptrPo) P->proc.heap.base && x < (ptrPo) P->proc.heap.create) ||
+                    (x >= P->proc.sBase && x < P->proc.sTop));
 }
 
-#define bndVr(d, v)          \
-  do{              \
-    assert(((d)>=(ptrPo)P->proc.heap.base && (d)<H)||      \
-     ((d)>=(ptrPo)P->proc.sBase && (d)<(ptrPo)P->proc.sTop));  \
-                  \
-    if((d)<(B)->H || (d)>(ptrPo)(B)){          \
-      P->proc.trail->var=d;            \
-      P->proc.trail->val=*d;            \
-      P->proc.trail++;              \
-    }                  \
-    *d = v;                \
+#define bindVr(d, v)                 \
+  do{                                \
+    assert(validPtr(P,d));           \
+                                     \
+    if((d)<(ptrPo)((B)->H) || (ptrPo)(d)>(ptrPo)B){  \
+      P->proc.trail->var=d;          \
+      P->proc.trail->val=*d;         \
+      P->proc.trail++;               \
+    }                                \
+    if(isSuspVar((d)) && inHeap(&P->proc.heap,(objPo)d)){ \
+      suspensionPo susp = (suspensionPo)(d-1); \
+                                     \
+      if(isvar(v) && isSuspVar((ptrPo)v)){\
+        suspensionPo other = (suspensionPo)(((ptrPo)v)-1);\
+        ptrPo tail = &other->goal;   \
+                                     \
+        while(IsList(*tail))         \
+          tail = listTail(objV(*tail));\
+                                     \
+        bndVr(tail,susp->goal);      \
+      }                              \
+      else{                          \
+        ptrPo tail = &susp->goal;    \
+                                     \
+        while(IsList(*tail))         \
+          tail = listTail(objV(*tail));\
+                                     \
+        P->proc.F = SUSP_ACTIVE;     \
+        bndVr(tail,P->proc.trigger); \
+        P->proc.trigger = susp->goal;\
+      }                              \
+    }                                \
+    *d = v;                          \
+  }while(0)
+
+#define bndVr(d, v)                  \
+  do{                                \
+    if((objPo)(d)<(B)->H || (ptrPo)(d)>(ptrPo)(B)){\
+      P->proc.trail->var=d;          \
+      P->proc.trail->val=*d;         \
+      P->proc.trail++;               \
+    }                                \
+    *d = v;                          \
   }while(0)
 
 #define saveRegs(pc)                 \
@@ -116,7 +106,6 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
     P->proc.C = C;                   \
     P->proc.PROG = PROG;             \
     P->proc.cPROG = cPROG;           \
-    P->proc.heap.create = (objPo)H;  \
   }
 
 #define restRegs()                   \
@@ -135,24 +124,19 @@ static inline void bind(processPo P, choicePo B, ptrPo H, ptrPo d, ptrI v) {
       codePo pc = codeV(PROG);       \
       Lits = codeLits(pc);           \
     }                                \
-    H = (ptrPo)P->proc.heap.create;  \
     A = &P->proc.A[0];               \
     assert(P->proc.state==runnable); \
   }
 
-#define backTrack()                \
-  do{                              \
-  PC = B->PC;                      \
-  PROG = B->PROG;                  \
-  Lits = codeLits(codeV(PROG));    \
+#define backTrack()                  \
+  do{                                \
+  PC = B->PC;                        \
+  PROG = B->PROG;                    \
+  Lits = codeLits(codeV(PROG));      \
   }while(False)
 
-/* Specialized allocation functions -- for use when allocating in
-   the evaluator
-*/
-
 #ifdef EXECTRACE
-#define enoughSpace(X) (H+X<=P->proc.sBase)
+#define enoughSpace(X) (((ptrPo)P->proc.heap.create)+X<=P->proc.sBase)
 #else
 #define enoughSpace(X) (true)
 #endif
@@ -171,13 +155,22 @@ void chainSuspension(processPo P, ptrPo p) {
 }
 
 #ifdef EXECTRACE
-#define isSvalid(C) {assert(mode==readMode?((S==NULL||inGlobalHeap((objPo)S) || (S>=(ptrPo)P->proc.heap.base && S<H)) && (Svalid-=C)>=0):True);}
+#define isSvalid(C) {assert((inGlobalHeap((objPo)S) || inHeap(&P->proc.heap,(objPo)S)) && (Svalid-=C)>=0);}
 #define validateS(N) {Svalid=N;}
 #define lastValid() { assert(Svalid==0); }
+#define invalidateS() { Svalid=0;}
 #else
 #define isSvalid(C)
 #define validateS(N)
 #define lastValid()
+#define invalidateS()
+#endif
+
+#ifdef EXECTRACE
+#define recordDebugState()                                      \
+  nC->cWaitFor = P->proc.cWaitFor;
+#else
+#define recordDebugState()
 #endif
 
 #define allocframe(pc, cpc, len, ln) {                          \
@@ -204,6 +197,7 @@ void chainSuspension(processPo P, ptrPo p) {
     nC->cSB = cSB;                                              \
     nC->cPROG = cPROG;                                          \
     nC->C = C;                                                  \
+    recordDebugState();                                         \
     C = nC;                                                     \
     Y = (ptrPo)C;    /* negative values used for local variables */ \
   }
@@ -215,7 +209,6 @@ void runGo(register processPo P) {
 
   register ptrPo A;      /* Argument registers */
 
-  ptrPo H;              /* heap stack creation point */
   ptrPo S = NULL;        /* structure pointer */
   rwmode mode = readMode;
 #ifdef EXECTRACE
@@ -247,8 +240,7 @@ void runGo(register processPo P) {
     insCount[op_code(*PC)]++;
 
     if (debugging) {
-      switch (debug_stop(P, PROG, PC, cPROG, cPC, A, (ptrPo) C, S, Svalid, mode, C, B, SB, T, (ptrPo) P->proc.heap.base,
-                         H, P->proc.trail, P->proc.thread)) {
+      switch (debug_stop(P, PROG, PC, cPROG, cPC, A, (ptrPo) C, S, Svalid, mode, C, B, SB, T)) {
         case Ok:
           break;
         case Fail:
@@ -298,38 +290,27 @@ void runGo(register processPo P) {
         }
 
       case kawl: {                         /* call Ar,prog call program */
+        uint16 ar = op_h_val(PCX);
+
         if (P->proc.F) {      /* We have been interrupted */
-          uinteger arity;
-
-          // Compute the arity of the call, so we can save the right registers
-
-          {
-            ptrI prog = Lits[op_o_val(PCX)];
-
-            if (IsDefined(prog))
-              arity = codeArity(codeV(ProgramOf(prog)));
-            else
-              arity = LO_REGS;
-          }
-
           cPC = PC;      /* emulate a kawl, return back to this instruction */
           cPROG = PROG;
           cSB = SB;
           SB = B;
 
-          allocframe(PC, cPC, envSize(PC), arity + 1); /* allocate a frame to store the current arguments */
+          allocframe(PC, cPC, envSize(PC), ar + 1); /* allocate a frame to store the current arguments */
 
           P->proc.F = 0;      /* reset the flag */
 
           {
             int i;      /* store the current argument registers */
 
-            for (i = 1; i <= arity; i++)
+            for (i = 1; i <= ar; i++)
               Y[-i] = A[i];
           }
 
           /* emulate a kawl to the delay handler */
-          cPROG = doResume[arity];  /* pick the right code to return via */
+          cPROG = doResume[ar];  /* pick the right code to return via */
           cPC = FirstInstruction(cPROG);
 
           A[1] = P->proc.trigger;    /* and pick up the trigger list */
@@ -357,7 +338,7 @@ void runGo(register processPo P) {
 
 #ifdef EXECTRACE
             if (traceCalls)
-              showCall(P, "call", prog, &A[1], codeArity(code));
+              showCall(P, "call", prog, &A[1], ar);
 #endif
 
             continue;
@@ -373,6 +354,7 @@ void runGo(register processPo P) {
 
       case lkawl: {                  /* Depth,Lit tail recursive call to program */
         ptrI prog = Lits[op_o_val(PCX)];
+        uint16 ar = op_h_val(PCX);
 
         if (IsProgLbl(prog)) {
           SB = B;
@@ -400,6 +382,7 @@ void runGo(register processPo P) {
 
       case dlkawl: {                       /* deallocating last call */
         ptrI prog = Lits[op_o_val(PCX)];
+        uint16 ar = op_h_val(PCX);
 
         if (IsProgLbl(prog)) {
           PROG = ProgramOf(prog);    /* We have a new environment */
@@ -419,7 +402,7 @@ void runGo(register processPo P) {
 
 #ifdef EXECTRACE
           if (traceCalls)
-            showCall(P, "dlcall", prog, &A[1], codeArity(code));
+            showCall(P, "dlcall", prog, &A[1], ar);
 #endif
 
           continue;
@@ -666,7 +649,7 @@ void runGo(register processPo P) {
             continue;
           }
         } else {        /* Enter the regular handling of the escape */
-          funpo ef = escapeCode((uint16) op_o_val(PCX));
+          funpo ef = escapeCode(op_o_val(PCX));
           retCode ret;
           rootPo root = gcCurrRoot(&P->proc.heap);
 
@@ -685,16 +668,16 @@ void runGo(register processPo P) {
           }
           if (traceCalls)
             showEscape(P, "escape: ", op_o_val(PCX), &A[1], op_h_val(PCX), "\n");
-
-#ifdef MEMTRACE
-          if (traceMemory)
-            verifyProc(P);    /* Verify this process before the escape...*/
-#endif
 #endif
 
           ret = ef(P, A);
 
           gcRemoveRoot(&P->proc.heap, root); /* reset roots */
+
+#ifdef MEMTRACE
+          if (traceMemory)
+            verifyProc(P);    /* Verify this process after the escape...*/
+#endif
 
           switch (ret) {
             case Ok: restRegs();      /* restore registers in case of g/c */
@@ -854,14 +837,10 @@ void runGo(register processPo P) {
         continue;
 
       case resume: {
-        register int arity = op_h_val(PCX);
+        register uint16 arity = op_h_val(PCX);
 
-        {
-          int i;
-
-          for (i = 1; i <= arity; i++)
-            A[i] = Y[-i];
-        }
+        for (int i = 1; i <= arity; i++)
+          A[i] = Y[-i];
 
         PC = cPC = C->cPC;
         SB = cSB = C->cSB;
@@ -877,10 +856,9 @@ void runGo(register processPo P) {
         continue;
       }
 
-      case tryme: {    /* ARITY,LBL try this clause */
+      case tryme: {    /* LBL try this clause */
         register int len = envSize(cPC);
-
-        register long arity = codeArity(codeV(PROG));
+        register int16 arity = (int16) codeArity(codeV(PROG));
 
         register choicePo back;
         register int16 i;
@@ -914,9 +892,9 @@ void runGo(register processPo P) {
         back->PROG = PROG;
         back->B = B;
         back->trail = P->proc.trail;
-        back->H = H;
+        back->H = P->proc.heap.create;
 
-        assert(back->B->H <= H);
+        assert(inHeap(&P->proc.heap, (objPo) back->B->H));
 
         B = back;
         ptr = (ptrPo) (B + 1);
@@ -929,16 +907,14 @@ void runGo(register processPo P) {
 
       case retryme: {      /* LBL subsequent clause follows */
         register integer arity = B->AX;
-        register int16 i;
 
         {
           register trailPo tb = B->trail;
           register trailPo t = P->proc.trail;
 
-          while (t > tb) {               /* reset variables since last choice point */
+          while (t > tb) {                /* reset variables since last choice point */
             t--;
-            *t->var = (ptrI) t->var;  /* restore to unbound */
-            //	  *t->var = t->val;             /* restore to previous value */
+            *t->var = t->val;             /* restore to previous value */
           }
 
           P->proc.trail = t;
@@ -947,7 +923,7 @@ void runGo(register processPo P) {
         {
           register ptrPo ptr = (ptrPo) (B + 1); /* pick up the argument registers */
 
-          for (i = 1; i <= arity; i++)
+          for (uint16 i = 1; i <= arity; i++)
             A[i] = *ptr++;                  /* unstack the argument registers */
           A[0] = kvoid;
         }
@@ -959,18 +935,16 @@ void runGo(register processPo P) {
         T = B->T;                         /* restore trap handler also */
         C = B->C;
         Y = (ptrPo) C;
-        assert(B->H >= (ptrPo) P->proc.heap.base && B->H <= H); /* check this one */
-        H = B->H;      /* reset the stack heap */
+        assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));/* check this one */
+        P->proc.heap.create = B->H;       /* reset the stack heap */
+        P->proc.F = 0;                    /* reset the flag */
 
-        P->proc.F = 0;      /* reset the flag */
-
-        B->PC = PC + op_ll_val(PCX);  /* next clause to try */
+        B->PC = PC + op_ll_val(PCX);      /* next clause to try */
         continue;
       }
 
       case trustme: {      /* this is last clause to try */
         register integer arity = B->AX;
-        register int16 i;
 
         {
           register trailPo tb = B->trail;
@@ -978,8 +952,7 @@ void runGo(register processPo P) {
 
           while (t > tb) {               /* reset variables since last choice point */
             t--;
-            *t->var = (ptrI) t->var;  /* restore to unbound */
-            //	  *t->var = t->val;             /* restore to previous value */
+            *t->var = t->val;             /* restore to previous value */
           }
 
           P->proc.trail = t;
@@ -988,7 +961,7 @@ void runGo(register processPo P) {
         {
           register ptrPo ptr = (ptrPo) (B + 1); /* pick up the argument registers */
 
-          for (i = 1; i <= arity; i++)
+          for (uint16 i = 1; i <= arity; i++)
             A[i] = *ptr++;                  /* unstack the argument registers */
           A[0] = kvoid;
         }
@@ -1000,15 +973,15 @@ void runGo(register processPo P) {
         T = B->T;                         /* restore trap handler also */
         C = B->C;
         Y = (ptrPo) C;
-        assert(B->H >= (ptrPo) P->proc.heap.base && B->H <= H); /* check this one */
-        H = B->H;      /* reset the stack heap */
+        assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));
+        P->proc.heap.create = B->H;      /* reset the stack heap */
         P->proc.F = 0;      /* reset the flag */
 
         B = B->B;
         continue;
       }
 
-      case trycl: {      /* ARITY,LBL try a clause */
+      case trycl: {      /* LBL try a clause */
         register int len = envSize(cPC);
         register int16 arity = (int16) codeArity(codeV(PROG));
 
@@ -1044,9 +1017,9 @@ void runGo(register processPo P) {
         back->PROG = PROG;
         back->B = B;
         back->trail = P->proc.trail;
-        back->H = H;
+        back->H = P->proc.heap.create;
 
-        assert(back->B->H <= H);
+        assert(legalHeapPtr(&P->proc.heap, (objPo) back->B->H));
         assert(op_code(*back->PC) == retry || op_code(*back->PC) == trust ||
                op_code(*back->PC) == retryme || op_code(*back->PC) == trustme);
 
@@ -1070,8 +1043,7 @@ void runGo(register processPo P) {
 
           while (t > tb) {               /* reset variables since last choice point */
             t--;
-            *t->var = (ptrI) t->var;  /* restore to unbound */
-            //	  *t->var = t->val;             /* restore to previous value */
+            *t->var = t->val;             /* restore to previous value */
           }
 
           P->proc.trail = t;
@@ -1092,8 +1064,8 @@ void runGo(register processPo P) {
         T = B->T;                         /* restore trap handler also */
         C = B->C;
         Y = (ptrPo) C;
-        assert(B->H >= (ptrPo) P->proc.heap.base && B->H <= H); /* check this one */
-        H = B->H;      /* reset the stack heap */
+        assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));
+        P->proc.heap.create = B->H;      /* reset the stack heap */
         P->proc.F = 0;      /* reset the flag */
 
         B->PC = PC;
@@ -1139,8 +1111,8 @@ void runGo(register processPo P) {
         T = B->T;                         /* restore trap handler also */
         C = B->C;
         Y = (ptrPo) C;
-        assert(B->H >= (ptrPo) P->proc.heap.base && B->H <= H); /* check this one */
-        H = B->H;      /* reset the stack heap */
+        assert(legalHeapPtr(&P->proc.heap, (objPo) B->H));
+        P->proc.heap.create = B->H;      /* reset the stack heap */
         P->proc.F = 0;      /* reset the flag */
 
         B = B->B;
@@ -1203,7 +1175,7 @@ void runGo(register processPo P) {
        It is an error for the argument not to be a symbol.
     */
 
-      case indexs: {    /* Ai,max index symbol access */
+      case indexs: {    /* Ai,max index access */
         int16 max = op_o_val(PCX);
         register ptrI vx = deRefI(&A[op_h_val(PCX)]);
 
@@ -1244,7 +1216,7 @@ void runGo(register processPo P) {
        It is an error for the argument not to be a symbol.
     */
 
-      case indexx: {    /* Ai,max index symbol access */
+      case indexx: {    /* Ai,max index access */
         int max = op_o_val(PCX);
         register ptrI vx = deRefI(&A[op_h_val(PCX)]);
         register objPo vl = objV(vx);
@@ -1303,7 +1275,7 @@ void runGo(register processPo P) {
           PC++;
         }
 
-        if (H + size > P->proc.sBase) {
+        if ((ptrPo) P->proc.heap.create + size > (ptrPo) P->proc.sBase) {
           saveRegs(PC - 1);
 
 #ifdef MEMTRACE
@@ -1325,7 +1297,7 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
         testA(op_m_val(PCX));
 
-        switch (uni(P, B, H, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
+        switch (uni(P, B, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
           case Ok:
             continue;
           case Fail:
@@ -1343,7 +1315,7 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
         testY(op_o_val(PCX));
 
-        switch (uni(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
+        switch (uni(P, B, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
           case Ok:
             break;
           case Fail:
@@ -1357,13 +1329,15 @@ void runGo(register processPo P) {
       }
 
       case uAS: {      /* unify A[h],S++ */
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
-          switch (uni(P, B, H, S++, &A[op_h_val(PCX)])) {
+          switch (uni(P, B, S++, &A[op_h_val(PCX)])) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1374,22 +1348,24 @@ void runGo(register processPo P) {
           ptrI AA = deRefI(&A[op_h_val(PCX)]);
 
           if (isvar(AA) && localVar((ptrPo) AA)) {
-            bindVr((ptrPo) AA, unBind(H++)); /* We can globalise into the structure */
+            bindVr((ptrPo) AA, unBind(S++)); /* We can globalise into the structure */
           } else
-            *H++ = AA;
+            *S++ = AA;
         }
 
         continue;
       }
 
       case ucAS: {      /* unify A[h],S++ with occurs check on write */
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
-          switch (uni(P, B, H, S++, &A[op_h_val(PCX)])) {
+          switch (uni(P, B, S++, &A[op_h_val(PCX)])) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1401,7 +1377,7 @@ void runGo(register processPo P) {
           ptrI AA = *Ap;
 
           if (isvar(AA) && localVar((ptrPo) AA)) {
-            bindVr((ptrPo) AA, unBind(H++)); /* We can globalise into the structure */
+            bindVr((ptrPo) AA, unBind(S++)); /* We can globalise into the structure */
           } else {
             if (occCheck(S, Ap)) {
               strMsg(errorMsg, NumberOf(errorMsg), "system");
@@ -1410,7 +1386,7 @@ void runGo(register processPo P) {
               restRegs();
               continue;
             }
-            *H++ = AA;
+            *S++ = AA;
           }
         }
         continue;
@@ -1429,7 +1405,7 @@ void runGo(register processPo P) {
             bindVr(ptr, tmp);    /* bind to the literal value */
             continue;
           case objTg: {
-            switch (uni(P, B, H, &aVal, &tmp)) {
+            switch (uni(P, B, &aVal, &tmp)) {
               case Ok:
                 continue;
               case Fail:
@@ -1458,9 +1434,13 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
 
         if (isvar(val)) {
-          assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
+          integer size = classSize(class);
+          assert(enoughSpace(size));  /* Is there room for the constructor */
+          objPo new = (objPo) P->proc.heap.create;
 
-          objPo new = (objPo) H++;
+          P->proc.heap.create += size;
+          S = ((ptrPo) new) + 1;
+
           register ptrI cns = objP(new);
 
           new->class = clss;
@@ -1468,207 +1448,20 @@ void runGo(register processPo P) {
           bindVr(ptr, cns);
 
           mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
+          validateS(classArity(class));
 
 #ifdef EXECTRACE
-          for (long hx = 0; hx < classArity(class); hx++)
-            H[hx] = kvoid;
-#endif
-
-        } else if (obj->class == clss) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity(class));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case uAcns0: {    /* unify A[0],f(_,..,_) */
-        register ptrPo ptr = deRef(&A[0]);
-        register ptrI val = *ptr;
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
-        register clssPo class = (clssPo) objV(clss);
-#endif
-
-        testA(0);
-
-        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
-
-        if (isvar(val)) {
-          objPo new = (objPo) H++;
-          register ptrI cns = objP(new);
-
-          new->class = clss;
-
-          bindVr(ptr, cns);
-
-          mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
-        } else if (obj->class == clss) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity(class));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case uAcns1: {    /* unify A[1],f(_,..,_) */
-        register ptrPo ptr = deRef(&A[1]);
-        register ptrI val = *ptr;
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
-        register clssPo class = (clssPo) objV(clss);
-#endif
-
-        testA(1);
-
-        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
-
-        if (isvar(val)) {
-          objPo new = (objPo) H++;
-          register ptrI cns = objP(new);
-
-          new->class = clss;
-
-          bindVr(ptr, cns);
-
-          mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
-
-#ifdef EXECTRACE
-          for (long hx = 0; hx < classArity(class); hx++)
-            H[hx] = kvoid;
-#endif
-
-        } else if (obj->class == clss) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity(class));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case uAcns2: {    /* unify A[2],f(_,..,_) */
-        register ptrPo ptr = deRef(&A[2]);
-        register ptrI val = *ptr;
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
-        register clssPo class = (clssPo) objV(clss);
-#endif
-
-        testA(2);
-
-        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
-
-        if (isvar(val)) {
-          objPo new = (objPo) H++;
-          register ptrI cns = objP(new);
-
-          new->class = clss;
-
-          bindVr(ptr, cns);
-
-          mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
-
-#ifdef EXECTRACE
-          for (long hx = 0; hx < classArity(class); hx++)
-            H[hx] = kvoid;
+          for (long hx = 0; hx < size; hx++)
+            S[hx] = kvoid;
 #endif
         } else if (obj->class == clss) {
           S = objectArgs(obj);    /* point to the first argument */
           mode = readMode;  /* modes only apply to unify instructions */
           validateS(classArity(class));  /* validate S for n instructions */
-        } else
+        } else {
           backTrack();
-
-        continue;
-      }
-
-      case uAcns3: {    /* unify A[3],f(_,..,_) */
-        register ptrPo ptr = deRef(&A[3]);
-        register ptrI val = *ptr;
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
-        register clssPo class = (clssPo) objV(clss);
-#endif
-
-        testA(3);
-
-        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
-
-        if (isvar(val)) {
-          objPo new = (objPo) H++;
-          register ptrI cns = objP(new);
-
-          new->class = clss;
-
-          bindVr(ptr, cns);
-
-          mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
-
-#ifdef EXECTRACE
-          for (long hx = 0; hx < classArity(class); hx++)
-            H[hx] = kvoid;
-#endif
-
-        } else if (obj->class == clss) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity(class));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case uAcns4: {    /* unify A[4],f(_,..,_) */
-        register ptrPo ptr = deRef(&A[4]);
-        register ptrI val = *ptr;
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-#ifdef EXECTRACE
-        register clssPo class = (clssPo) objV(clss);
-#endif
-
-        testA(4);
-
-        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
-
-        if (isvar(val)) {
-          objPo new = (objPo) H++;
-          register ptrI cns = objP(new);
-
-          new->class = clss;
-
-          bindVr(ptr, cns);
-
-          mode = writeMode;  /* we are now in writing mode... */
-          validateS(-1);
-
-#ifdef EXECTRACE
-          for (long hx = 0; hx < classArity(class); hx++)
-            H[hx] = kvoid;
-#endif
-
-        } else if (obj->class == clss) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity(class));  /* validate S for n instructions */
-        } else
-          backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -1677,7 +1470,7 @@ void runGo(register processPo P) {
         testY(op_h_val(PCX));
         testY(op_m_val(PCX));
 
-        switch (uni(P, B, H, Yreg(-op_h_val(PCX)), Yreg(-op_m_val(PCX)))) {
+        switch (uni(P, B, Yreg(-op_h_val(PCX)), Yreg(-op_m_val(PCX)))) {
           case Ok:
             continue;
           case Fail:
@@ -1691,39 +1484,43 @@ void runGo(register processPo P) {
       }
 
       case uYS: {                          /* unify Y[X],S++ */
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
-          switch (uni(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
+          switch (uni(P, B, S++, Yreg(-op_o_val(PCX)))) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
               restRegs();
               continue;
           }
-        } else {      /* write mode: copy Y into H++ */
+        } else {      /* write mode: copy Y into S++ */
           register ptrPo ptr = deRef(Yreg(-op_o_val(PCX)));
           register ptrI val = *ptr;
 
           if (isvar(val)) {
-            bindVr(ptr, unBind(H++)); /* We can globalise into the structure */
+            bindVr(ptr, unBind(S++)); /* We can globalise into the structure */
           } else
-            *H++ = val;
+            *S++ = val;
         }
         continue;
       }
 
       case ucYS: {        /* unify Y[X],S++ with occurs check on write*/
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);      /* test for validity of S register */
-          switch (uni(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
+          switch (uni(P, B, S++, Yreg(-op_o_val(PCX)))) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
@@ -1735,21 +1532,22 @@ void runGo(register processPo P) {
           register ptrI val = *ptr;
 
           if (isvar(val)) {
-            bindVr(ptr, unBind(H++)); /* We can globalise into the structure */
+            bindVr(ptr, unBind(S++)); /* We can globalise into the structure */
           } else {
-            *H++ = val;
+            *S++ = val;
           }
         }
         continue;
       }
 
       case uSlit: {      /* unify S++,<lit> */
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
           register ptrPo ptr = deRef(S);
           ptrI val = *ptr;
           ptrI tmp = Lits[op_o_val(PCX)];
 
-          isSvalid(1);      /* test for validity of S register */
           S++;
 
           switch (ptg(val)) {
@@ -1757,11 +1555,12 @@ void runGo(register processPo P) {
               bindVr(ptr, tmp);              /* bind to the literal value */
               continue;
             case objTg: {
-              switch (uni(P, B, H, ptr, deRef(&tmp))) {
+              switch (uni(P, B, ptr, deRef(&tmp))) {
                 case Ok:
                   continue;
                 case Fail:
                   backTrack();
+                  invalidateS();
                   continue;
                 default: saveRegs(PC);
                   raiseError(P, errorMsg, P->proc.errorCode);
@@ -1771,42 +1570,65 @@ void runGo(register processPo P) {
             }
             default:
               backTrack();
+              invalidateS();
               continue;
           }
         } else
-          *H++ = Lits[op_o_val(PCX)];
+          *S++ = Lits[op_o_val(PCX)];
 
         continue;
       }
 
       case uScns: {                        /* unify S,f(_,..,_) */
+        register ptrI clss = Lits[op_o_val(PCX)];
+        register clssPo class = (clssPo) objV(clss);
+
+        isSvalid(1);      /* test for validity of S register */
+        lastValid();
+
         if (mode == readMode) {
           register ptrI val = deRefI(S);
           register objPo obj = objV(val);
-          register ptrI clss = Lits[op_o_val(PCX)];
 
-          isSvalid(1);      /* test for validity of S register */
           if (isvar(val)) {
-            objPo cns = (objPo) H++;
+            objPo new = (objPo) P->proc.heap.create;
 
-            cns->class = clss;
+            P->proc.heap.create += classSize(class);
+            new->class = clss;
 
-            bindVr((ptrPo) obj, objP(cns));  /* bind to the constructor */
+            *S = objP(new);
+
+            S = ((ptrPo) new) + 1;      // Set up S for the new structure
+
+            bindVr((ptrPo) obj, objP(new));  /* bind to the constructor */
 
             mode = writeMode;             /* we are now in writing mode... */
-            validateS(-1);
+            validateS(classArity(class));
           } else if (hasClass(obj, clss)) {
             S = objectArgs(obj);    /* point to the first argument */
-            validateS(classArity((clssPo) objV(clss))); /* validate S for n instructions */
-          } else
+            validateS(classArity(class)); /* validate S for n instructions */
+          } else {
             backTrack();
+            invalidateS();
+          }
         } else {                             /* write mode */
-          register ptrPo hH = H++;
-          register objPo new = (objPo) H++;
+          integer size = classSize(class);
+          assert(enoughSpace(size));  /* Is there room for the constructor */
+          objPo new = (objPo) P->proc.heap.create;
 
-          new->class = Lits[op_o_val(PCX)];
+          P->proc.heap.create += size;
+          new->class = clss;
 
-          *hH = objP(new);
+          *S = objP(new);
+
+          S = ((ptrPo) new) + 1;      // Set up S for the new structure
+
+          validateS(classArity(class));
+
+#ifdef EXECTRACE
+          for (long hx = 0; hx < size; hx++)
+            S[hx] = kvoid;
+#endif
         }
         continue;
       }
@@ -1830,12 +1652,12 @@ void runGo(register processPo P) {
         register ptrI yVal = *ptr;
 
         if (isvar(yVal) && ptr >= (ptrPo) B->H && ptr < (ptrPo) B) { /* unsafe var */
-          variablePo vv = (variablePo) H;
+          variablePo vv = (variablePo) P->proc.heap.create;
           vv->class = varClass;
           yVal = vv->val = (ptrI) (&vv->val);
 
           bindVr(ptr, yVal);
-          H += VariableCellCount;
+          P->proc.heap.create += VariableCellCount;
         }
 
         A[op_h_val(PCX)] = yVal;
@@ -1843,11 +1665,12 @@ void runGo(register processPo P) {
       }
 
       case mAS: {      /* move A[h],S++ */
+        isSvalid(1);      /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
           A[op_h_val(PCX)] = deRefI(S++);
         } else
-          A[op_h_val(PCX)] = unBind(H++);
+          A[op_h_val(PCX)] = unBind(S++);
         continue;
       }
 
@@ -1857,21 +1680,28 @@ void runGo(register processPo P) {
       }
 
       case mAcns: {    /* move A[h],f(_,..,_) */
-        register objPo new = (objPo) H++;
+        register ptrI clss = Lits[op_o_val(PCX)];
+        register clssPo class = (clssPo) objV(clss);
 
-        new->class = Lits[op_o_val(PCX)];
+        long arity = classArity(class);
+        long size = classSize(class);
 
-        assert(isClass(new->class));
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
+
+        register objPo new = (objPo) P->proc.heap.create;
+        P->proc.heap.create += classSize(class);
+
+        new->class = clss;
+        S = objectArgs(new);
 
         A[op_h_val(PCX)] = objP(new);
 
         mode = writeMode;
-        validateS(-1);
+        validateS(arity);
+
 #ifdef EXECTRACE
         {
-          long arity = classArity((clssPo) objV(new->class));
-          long i;
-          for (i = 0; i < arity; i++)
+          for (integer i = 0; i < arity; i++)
             new->args[i] = kvoid;
         }
 #endif
@@ -1896,12 +1726,12 @@ void runGo(register processPo P) {
 
       case mYS: {      /* move Y[X],S++ */
         register ptrPo yVar = Yreg(-op_o_val(PCX));
+        isSvalid(1);    /* test for validity of S register */
 
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
           bindVr(yVar, deRefI(S++));
         } else
-          bindVr(yVar, unBind(H++));
+          bindVr(yVar, unBind(S++));
         continue;
       }
 
@@ -1909,10 +1739,12 @@ void runGo(register processPo P) {
         register ptrPo ptr = deRef(&A[op_h_val(PCX)]);
         register ptrI val = *ptr;
 
+        isSvalid(1);    /* test for validity of S register */
+
         if (isvar(val) && localVar(ptr)) {
-          bindVr(ptr, unBind(H++));
+          bindVr(ptr, unBind(S++));
         } else
-          *H++ = val;
+          *S++ = val;
         continue;
       }
 
@@ -1920,34 +1752,60 @@ void runGo(register processPo P) {
         register ptrPo ptr = deRef(Yreg(-op_o_val(PCX)));
         register ptrI val = *ptr;
 
+        isSvalid(1);    /* test for validity of S register */
+
         if (isvar(val) && localVar(ptr)) {
-          bindVr(ptr, unBind(H++));
+          bindVr(ptr, unBind(S++));
         } else
-          *H++ = val;
+          *S++ = val;
 
         continue;
       }
 
       case mSlit: {      /* Move S++,<lit> */
-        *H++ = Lits[op_o_val(PCX)];
+        isSvalid(1);    /* test for validity of S register */
+
+        *S++ = Lits[op_o_val(PCX)];
         continue;
       }
 
       case mScns: {      /* Move S++,f(_,..,_) */
-        register ptrPo hH = H++;
-        register objPo new = (objPo) H++;
+        isSvalid(1);    /* test for validity of S register */
+        lastValid();
 
-        new->class = Lits[op_o_val(PCX)];
+        register ptrPo hH = S++;
 
+        register ptrI clss = Lits[op_o_val(PCX)];
+        register clssPo class = (clssPo) objV(clss);
+
+        assert(enoughSpace(classSize(class)));  /* Is there room for the constructor */
+
+        register objPo new = (objPo) P->proc.heap.create;
+        P->proc.heap.create += classSize(class);
+
+        new->class = clss;
         *hH = objP(new);
-        mode = writeMode;                 // We are in write mode
-        validateS(-1);
+
+        S = objectArgs(new);
+
+        long arity = classArity(class);
+
+        mode = writeMode;
+        validateS(arity);
+
+#ifdef EXECTRACE
+        {
+          for (integer i = 0; i < arity; i++)
+            new->args[i] = kvoid;
+        }
+#endif
         continue;
       }
 
       case oAU: {                          /* overwrite A[h] with new variable */
-        unBind(H);
-        A[op_h_val(PCX)] = (ptrI) H++;
+        variablePo vv = (variablePo) P->proc.heap.create;
+        vv->class = varClass;
+        A[op_h_val(PCX)] = vv->val = (ptrI) (&vv->val);
         continue;
       }
 
@@ -1965,19 +1823,12 @@ void runGo(register processPo P) {
         continue;
       }
 
-      case oYnil: {                        /* overwrite Y[L] with nil */
-        register ptrPo ptr = Yreg(-op_o_val(PCX));
-
-        bindVr(ptr, emptyList);
-        continue;
-      }
-
         /* Matching instructions ...  */
       case cAA: {      /* Match A[h],A[m] */
         testA(op_h_val(PCX));
         testA(op_m_val(PCX));
 
-        switch (mtch(P, B, H, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
+        switch (mtch(P, B, &A[op_h_val(PCX)], &A[op_m_val(PCX)])) {
           case Ok:
             continue;
           case Fail:
@@ -1994,7 +1845,7 @@ void runGo(register processPo P) {
         testA(op_h_val(PCX));
         testY(op_o_val(PCX));
 
-        switch (mtch(P, B, H, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
+        switch (mtch(P, B, &A[op_h_val(PCX)], Yreg(-op_o_val(PCX)))) {
           case Ok:
             break;
           case Fail:
@@ -2011,19 +1862,22 @@ void runGo(register processPo P) {
         isSvalid(1);    /* test for validity of S register */
 
         if (mode == readMode) {
-          switch (mtch(P, B, H, &A[op_h_val(PCX)], S++)) {
+          switch (mtch(P, B, &A[op_h_val(PCX)], S++)) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
               restRegs();
               continue;
           }
-        } else
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2040,7 +1894,7 @@ void runGo(register processPo P) {
             backTrack();                   /* not permitted to bind when matching */
             continue;
           case objTg: {
-            switch (mtch(P, B, H, ptr, deRef(&Lits[op_o_val(PCX)]))) {
+            switch (mtch(P, B, ptr, deRef(&Lits[op_o_val(PCX)]))) {
               case Ok:
                 continue;
               case Fail:
@@ -2075,96 +1929,11 @@ void runGo(register processPo P) {
         continue;
       }
 
-      case cAcns0: {    /* match A[0],f(_,..,_) */
-        register ptrI val = deRefI(&A[0]);
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-
-        testA(0);
-
-        if (hasClass(obj, clss)) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case cAcns1: {    /* match A[1],f(_,..,_) */
-        register ptrI val = deRefI(&A[1]);
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-
-        testA(1);
-
-        if (hasClass(obj, clss)) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case cAcns2: {    /* match A[2],f(_,..,_) */
-        register ptrI val = deRefI(&A[2]);
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-
-        testA(2);
-
-        if (hasClass(obj, clss)) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case cAcns3: {    /* match A[3],f(_,..,_) */
-        register ptrI val = deRefI(&A[3]);
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-
-        testA(3);
-
-        if (hasClass(obj, clss)) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
-      case cAcns4: {    /* match A[4],f(_,..,_) */
-        register ptrI val = deRefI(&A[4]);
-        register objPo obj = objV(val);
-        register ptrI clss = Lits[op_o_val(PCX)];
-
-        testA(4);
-
-        if (hasClass(obj, clss)) {
-          S = objectArgs(obj);    /* point to the first argument */
-          mode = readMode;  /* modes only apply to unify instructions */
-          validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-        } else
-          backTrack();
-
-        continue;
-      }
-
       case cYA: {      /* Match Y[X],A[h] */
         testA(op_h_val(PCX));
         testY(op_o_val(PCX));
 
-        switch (mtch(P, B, H, Yreg(-op_o_val(PCX)), &A[op_h_val(PCX)])) {
+        switch (mtch(P, B, Yreg(-op_o_val(PCX)), &A[op_h_val(PCX)])) {
           case Ok:
             continue;
           case Fail:
@@ -2180,19 +1949,22 @@ void runGo(register processPo P) {
       case cYS: {                          /* match Y[X],S++ */
         if (mode == readMode) {
           isSvalid(1);                    /* test for validity of S register */
-          switch (mtch(P, B, H, Yreg(-op_o_val(PCX)), S++)) {
+          switch (mtch(P, B, Yreg(-op_o_val(PCX)), S++)) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
               restRegs();
               continue;
           }
-        } else
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2200,19 +1972,22 @@ void runGo(register processPo P) {
       case cSA: {                          /* match S++,A[m] */
         if (mode == readMode) {
           isSvalid(1);      /* test for validity of S register */
-          switch (mtch(P, B, H, S++, &A[op_m_val(PCX)])) {
+          switch (mtch(P, B, S++, &A[op_m_val(PCX)])) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
               restRegs();
               continue;
           }
-        } else
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2220,19 +1995,22 @@ void runGo(register processPo P) {
       case cSY: {                          /* match S++,Y[X] */
         if (mode == readMode) {
           isSvalid(1);      /* test for validity of S register */
-          switch (mtch(P, B, H, S++, Yreg(-op_o_val(PCX)))) {
+          switch (mtch(P, B, S++, Yreg(-op_o_val(PCX)))) {
             case Ok:
               continue;
             case Fail:
               backTrack();
+              invalidateS();
               continue;
             default: saveRegs(PC);
               raiseError(P, errorMsg, P->proc.errorCode);
               restRegs();
               continue;
           }
-        } else
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2251,11 +2029,12 @@ void runGo(register processPo P) {
               bindVr(ptr, tmp);              /* bind to the literal value */
               continue;
             case objTg: {
-              switch (uni(P, B, H, ptr, deRef(&tmp))) {
+              switch (uni(P, B, ptr, deRef(&tmp))) {
                 case Ok:
                   continue;
                 case Fail:
                   backTrack();
+                  invalidateS();
                   continue;
                 default: saveRegs(PC);
                   raiseError(P, errorMsg, P->proc.errorCode);
@@ -2265,10 +2044,13 @@ void runGo(register processPo P) {
             }
             default:
               backTrack();
+              invalidateS();
               continue;
           }
-        } else
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2282,15 +2064,21 @@ void runGo(register processPo P) {
           register objPo obj = objV(val);
           ptrI clss = Lits[op_o_val(PCX)];
 
-          if (isvar(val))
+          if (isvar(val)) {
             backTrack();                 /* Not permitted to bind when matching */
+            invalidateS();
+          }
           else if (hasClass(obj, clss)) {
             S = objectArgs(obj);        /* point to the first argument */
             validateS(classArity((clssPo) objV(clss)));  /* validate S for n instructions */
-          } else
+          } else {
             backTrack();
-        } else
+            invalidateS();
+          }
+        } else {
           backTrack();
+          invalidateS();
+        }
 
         continue;
       }
@@ -2298,12 +2086,12 @@ void runGo(register processPo P) {
         /* Initialization and first-time moves */
 
       case clAA: {      /* First/clear A[h],A[m] */
-        variablePo vv = (variablePo) H;
+        variablePo vv = (variablePo) P->proc.heap.create;
         register ptrI vr = (ptrI) &vv->val;
 
         vv->class = varClass;
         vv->val = vr;
-        H += VariableCellCount;
+        P->proc.heap.create += VariableCellCount;
 
         A[op_h_val(PCX)] = A[op_m_val(PCX)] = vr;
         continue;
@@ -2316,24 +2104,27 @@ void runGo(register processPo P) {
 
       case clAS: {      /* First/clean A[h],S++ */
         assert(mode == writeMode);
+        isSvalid(1);                    /* test for validity of S register */
 
-        A[op_h_val(PCX)] = unBind(H++); /* make an argument unbound */
+        A[op_h_val(PCX)] = unBind(S++); /* make an argument unbound */
         continue;
       }
 
       case clSA: {      /* First/clear S++,A[m] */
         assert(mode == writeMode);
+        isSvalid(1);                    /* test for validity of S register */
 
-        A[op_m_val(PCX)] = unBind(H++); /* make an argument unbound */
+        A[op_m_val(PCX)] = unBind(S++); /* make an argument unbound */
         continue;
       }
 
       case clSY: {      /* First/clear S++,Y[X] */
         register ptrPo yReg = Yreg(-op_o_val(PCX));
 
+        isSvalid(1);                    /* test for validity of S register */
         assert(mode == writeMode);
 
-        bindVr(yReg, unBind(H++));    /* make an argument unbound */
+        bindVr(yReg, unBind(S++));    /* make an argument unbound */
         continue;
       }
 
@@ -2400,12 +2191,12 @@ void runGo(register processPo P) {
       }
 
       case clA: {      /* clear A[h] */
-        variablePo vv = (variablePo) H;
+        variablePo vv = (variablePo) P->proc.heap.create;
         register ptrI vr = (ptrI) &vv->val;
 
         vv->class = varClass;
         vv->val = vr;
-        H += VariableCellCount;
+        P->proc.heap.create += VariableCellCount;
 
         A[op_h_val(PCX)] = vr;
         continue;
@@ -2427,11 +2218,12 @@ void runGo(register processPo P) {
       }
 
       case clS: {      /* clear S++ */
+        isSvalid(1);                    /* test for validity of S register */
+
         if (mode == readMode) {
-          isSvalid(1);    /* test for validity of S register */
           S++;
         } else
-          unBind(H++);
+          unBind(S++);
         continue;
       }
 
@@ -2459,7 +2251,7 @@ void runGo(register processPo P) {
 
 retCode equal(processPo P, ptrPo T1, ptrPo T2) {
   trailPo trail = P->proc.trail;
-  retCode ret = uni(P, P->proc.B, (ptrPo) P->proc.heap.create, T1, T2);
+  retCode ret = uni(P, P->proc.B, T1, T2);
 
   if (ret != Ok) {
     register trailPo t = P->proc.trail;
@@ -2477,7 +2269,7 @@ retCode equal(processPo P, ptrPo T1, ptrPo T2) {
     return ret;
 }
 
-static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
+static retCode uni(processPo P, choicePo B, ptrPo T1, ptrPo T2) {
   register ptrI Tg1 = *(T1 = deRef(T1));
   register ptrI Tg2 = *(T2 = deRef(T2));
 
@@ -2560,7 +2352,7 @@ static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
               int ix;
               retCode ret = Ok;
               for (ix = 0; ret == Ok && ix < arity; ix++, a1++, a2++)
-                ret = uni(P, B, H, a1, a2);
+                ret = uni(P, B, a1, a2);
               return ret;
             } else {
               specialClassPo sClass = (specialClassPo) objV(classT1);
@@ -2589,7 +2381,7 @@ static retCode uni(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
 /* One-way matching, T1 may not be instantiated but T2 may be */
 retCode match(processPo P, ptrPo T1, ptrPo T2) {
   trailPo trail = P->proc.trail;
-  retCode ret = mtch(P, P->proc.B, (ptrPo) P->proc.heap.create, T1, T2);
+  retCode ret = mtch(P, P->proc.B, T1, T2);
 
   if (ret != Ok) {
     register trailPo t = P->proc.trail;
@@ -2607,69 +2399,7 @@ retCode match(processPo P, ptrPo T1, ptrPo T2) {
     return ret;
 }
 
-/* Trial matching, intended as a rough check to see if unification may be possible */
-/* Operates by ignoring variables, and testing everything else */
-static retCode test(ptrPo T1, ptrPo T2);
-
-retCode testmatch(ptrPo T1, ptrPo T2) {
-  return test(T1, T2);
-}
-
-static retCode test(ptrPo T1, ptrPo T2) {
-  register ptrI Tg1 = *(T1 = deRef(T1));
-  register ptrI Tg2 = *(T2 = deRef(T2));
-
-  switch (ptg(Tg1)) {                    /* First-level analysis of the pointer */
-    case varTg:
-      return Ok;
-    case objTg: {
-      if (IsFrozenVar(Tg1))
-        return Ok;
-      else {
-        switch (ptg(Tg2)) {
-          case varTg:
-            return Ok;
-          case objTg: {
-            objPo Term1 = objV(Tg1);
-            objPo Term2 = objV(Tg2);
-            ptrI classT1 = objV(Term1)->class;
-
-            if (hasClass(Term2, classT1)) {
-              if (!IsSpecialClass(classT1)) {
-                ptrPo a1 = objectArgs(Term1);
-                ptrPo a2 = objectArgs(Term2);
-                long arity = objectArity(Term1);
-
-                int ix;
-                retCode ret = Ok;
-                for (ix = 0; ret == Ok && ix < arity; ix++, a1++, a2++)
-                  ret = test(a1, a2);
-                return ret;
-              } else {
-                specialClassPo sClass = (specialClassPo) objV(classT1);
-
-                comparison comp = sClass->compFun(sClass, Term1, Term2);
-
-                if (comp == same)
-                  return Ok;
-                else
-                  return Fail;
-              }
-            } else
-              return Fail;
-          }
-          default:
-            return Fail;
-        }
-      }
-    }
-      return Error;
-    default:
-      return Fail;
-  }
-}
-
-static retCode mtch(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
+static retCode mtch(processPo P, choicePo B, ptrPo T1, ptrPo T2) {
   register ptrI Tg1 = *(T1 = deRef(T1));
   register ptrI Tg2 = *(T2 = deRef(T2));
 
@@ -2721,7 +2451,7 @@ static retCode mtch(processPo P, choicePo B, ptrPo H, ptrPo T1, ptrPo T2) {
 
               retCode ret = Ok;
               for (ix = 0; ret == Ok && ix < arity; ix++, a1++, a2++)
-                ret = mtch(P, B, H, a1, a2);
+                ret = mtch(P, B, a1, a2);
               return ret;
             } else {
               specialClassPo sClass = (specialClassPo) objV(classT1);
@@ -2811,25 +2541,25 @@ logical identical(ptrI T1, ptrI T2) {
 }
 
 #ifdef DO_OCCURS_CHECK
-                                                                                                                        static logical occCheck(ptrPo x,ptrPo v)
-{
-  ptrI Vx = *(v=deRef(v));
+static logical occCheck(ptrPo x, ptrPo v) {
+  v = deRef(v);
+  ptrI Vx = *(v = deRef(v));
 
-  switch(ptg(Vx)){
-  case varTg:
-    return x==v;
-  case objTg:{
-    objPo p = objV(Vx);
-    ptrPo args = objectArgs(p);
-    long arity = objectArity(p);
-    long ix;
-    logical ret = Ok;
-    for(ix=0;ret==Ok && ix<arity;ix++,args++)
-      ret = occCheck(x,args);
-    return ret;
-  }
-  default:
-    return True;                        /* should never happen */
+  switch (ptg(Vx)) {
+    case varTg:
+      return x == v;
+    case objTg: {
+      objPo p = objV(Vx);
+      ptrPo args = objectArgs(p);
+      long arity = objectArity(p);
+      long ix;
+      logical ret = True;
+      for (ix = 0; ret && ix < arity; ix++, args++)
+        ret = occCheck(x, args);
+      return ret;
+    }
+    default:
+      return True;                        /* should never happen */
   }
 }
 #endif

@@ -12,6 +12,7 @@
  KIND, either express or implied. See the License for the specific language governing
  permissions and limitations under the License.
  */
+#include <process.h>
 #include "lo.h"
 #include "debug.h"
 #include "disass.h"
@@ -93,13 +94,16 @@ static unsigned long stackSpace(processPo P, callPo C, choicePo B) {
 
 retCode
 debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S, long Svalid, rwmode mode,
-           callPo C, choicePo B, choicePo SB, choicePo T, ptrPo hBase, ptrPo H, trailPo trail, ptrI prefix) {
+           callPo C, choicePo B, choicePo SB, choicePo T) {
   byte ch;
   static byte cmdLine[256] = "n";
   codePo code = codeV(prog);
   codePo ccode = codeV(cprog);
   ptrPo Lits = codeLits(code);
   extern HeapRec globalHeap;
+
+  ptrPo hBase = (ptrPo)p->proc.heap.base;
+  ptrPo hCreate = (ptrPo)p->proc.heap.create;
 
   pthread_mutex_lock(&debugMutex);
 
@@ -110,52 +114,56 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 
     insWord PCX = *pc;
 
-    switch (waitFor) {
-      case nextIns:
-        cmdCounter--;
-        break;
-      case nextSucc:
-      case nextBreak:
-      case nextFail:
-        switch (op_code(PCX)) {
-          case kawl:
-          case lkawl:
-          case dlkawl:
-          case kawlO:
-          case lkawlO:
-          case dlkawlO: {
-            objPo prg = objV(deRefI(&a[1]));
-            string name = objectClassName(prg);
-            long arity = objectArity(prg);
+    switch (op_code(PCX)) {
+      case kawl:
+      case lkawl:
+      case dlkawl: {
+        objPo prg = objV(Lits[op_o_val(PCX)]);
+        prgLabelPo lbl = programName(prg);
+        string name = lbl->name;
+        long arity = lbl->arity;
 
-            if (breakPointHit(name, (short) arity)) {
-              waitFor = nextIns;
-              cmdCounter = 0;
-            }
-            break;
-          }
-          default:
-            break;
+        if (breakPointHit(name, (short) arity)) {
+          waitFor = nextIns;
+          cmdCounter = 0;
         }
+        break;
+      }
+      case kawlO:
+      case lkawlO:
+      case dlkawlO: {
+        objPo prg = objV(deRefI(&a[1]));
+        string name = objectClassName(prg);
+        long arity = objectArity(prg);
+
+        if (breakPointHit(name, (short) arity)) {
+          waitFor = nextIns;
+          cmdCounter = 0;
+        }
+        break;
+      }
+      default:
+        break;
     }
+
+    if (waitFor == nextIns)
+      cmdCounter--;
 
     if (tracing || cmdCounter <= 0) {
       byte pref[MAX_SYMB_LEN];
 
-      strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &prefix, pcCount, &Lits[0]);
-      dissass(pref, code, pc, a, y, S, mode, B, hBase, H);
+      strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &p->proc.thread, pcCount, &Lits[0]);
+      dissass(pref, code, pc, a, y, S, mode, B, hBase, hCreate);
 
       outMsg(logFile, "\ncPC=%w[%d],C=%x,B=%x,SB=%x,T=%x,\nY=%x[%d],",
              &codeLits(ccode)[0], cpc - codeIns(ccode), C, B, SB, T, y, envSize(cpc));
       if (Svalid > 0)
         outMsg(logFile, "S=%x(%d),", S, Svalid);
-      else if (mode == writeMode)
-        outMsg(logFile, "S=%x,", H);
-      outMsg(logFile, "trail=%x,stack=%d", trail, stackSpace(p, C, B));
+      outMsg(logFile, "trail=%x,stack=%d", p->proc.trail, stackSpace(p, C, B));
       if (!identical(p->proc.trigger, emptyList))
         outMsg(logFile, ",%d triggered", ListLen(deRefI(&p->proc.trigger)));
-      outMsg(logFile, ",H=%x[%d], ", H, (ptrPo) p->proc.heap.end - H);
-      outMsg(logFile, "global=%x[%d]\n", globalHeap.create, globalHeap.end - globalHeap.create);
+      outMsg(logFile, ",H=%x[%d], ", hCreate, (ptrPo) p->proc.heap.end - hCreate);
+      outMsg(logFile, "global=%x[%d]\n", globalHeap.create, globalHeap.end - (objPo)globalHeap.create);
       flushFile(logFile);
     }
 
@@ -464,7 +472,7 @@ static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp) {
   return Error;
 }
 
-retCode breakPoint(processPo P){
+retCode breakPoint(processPo P) {
   return Ok;
 }
 

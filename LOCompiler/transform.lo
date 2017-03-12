@@ -516,7 +516,7 @@ lo.comp.transform{
     trGoal(T,TG,[neck,..LG],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trExp(L,LRslt,Q0,Q1,LG,Lx,Lx,[],Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trExp(R,RRslt,Q1,LQ,RG,Rx,Rx,[],Map,Opts,Ex1,Ex2,Rp1,Rpx),
-    genNewName(Map,"condExp",length(LQ),CondPr),
+    genNewName(Map,"condExp",length(LQ)+1,CondPr),
     Cl1 = clse(LQ,CondPr,[LRslt,..LQ],TG),
     Cl2 = clse(LQ,CondPr,[RRslt,..LQ],RG),
     Ex2 = [Cl1,Cl2,..Exx].

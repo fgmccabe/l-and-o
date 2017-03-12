@@ -100,7 +100,8 @@ void initGlobal(long size) {
   greySize = globalSize >> CARDSHIFT;
   grey = (cardMap *) calloc((size_t)greySize, sizeof(cardMap));
 
-  globalHeap.base = globalHeap.create = leftBase;
+  globalHeap.base = leftBase;
+  globalHeap.create = leftBase;
   globalHeap.end = rightBase;
   globalHeap.owner = NULL;
 
@@ -124,10 +125,10 @@ void markGrey(objPo p) {
 }
 
 retCode reserveGlobalSpace(long size) {
-  if (globalHeap.create + size > globalHeap.end)
+  if ((objPo)globalHeap.create + size > globalHeap.end)
     globalGC(size);
 
-  if (globalHeap.create + size > globalHeap.end)
+  if ((objPo)globalHeap.create + size > globalHeap.end)
     return Space;
   return Ok;
 }
@@ -135,15 +136,15 @@ retCode reserveGlobalSpace(long size) {
 objPo permAllocate(long size) {
   pthread_mutex_lock(&globalMutex);
 
-  if (globalHeap.create + size > globalHeap.end) {
+  if ((objPo)globalHeap.create + size > globalHeap.end) {
     globalGC(size);
 
-    if (globalHeap.create + size > globalHeap.end)
+    if ((objPo)globalHeap.create + size > globalHeap.end)
       syserr("ran out of global heap");
   }
 
   {
-    register objPo new = globalHeap.create;
+    register objPo new = (objPo)globalHeap.create;
     globalHeap.create += size;
 
     pthread_mutex_unlock(&globalMutex);
@@ -296,7 +297,7 @@ ptrI scanPtr(globalGcPo G, ptrI orig) {
           if (isfwd(*po))
             return varP(po + offset);  /* Already moved */
           else if (isobj(*po) && gIsTerm((objPo) po)) {
-            objPo new = tH->create;
+            objPo new = (objPo)tH->create;
             long size = gTermArity((objPo) po);
             memmove(new, po, size * sizeof(ptrI));
             *po = fwdP(new);    /* plant the forward pointer */
@@ -316,7 +317,7 @@ ptrI scanPtr(globalGcPo G, ptrI orig) {
       if (isfwd(o->class))
         return objP(objV(o->class));
       else if (inHeap(sH, o)) {
-        objPo new = tH->create;
+        objPo new = (objPo)tH->create;
 
         assert(new >= tH->base);
 
@@ -363,7 +364,7 @@ static retCode scanSpecial(ptrPo arg, void *c) {
 
 // Look at an copied object scanning each element
 static objPo scanObj(globalGcPo G, objPo scan) {
-  assert(G->tH->create < G->tH->end);
+  assert((objPo)G->tH->create < G->tH->end);
 
   if (gIsTerm(scan)) {
     clssPo class = gClassOf(scan);
@@ -427,7 +428,7 @@ static void collectPhase(globalGcPo G) {
     scan = scanObj(G, scan);
 
   // We should have no more than we started with
-  assert(G->tH->create - G->tH->base <= G->fH->create - G->fH->base);
+  assert((objPo)G->tH->create - G->tH->base <= (objPo)G->fH->create - G->fH->base);
 
   resetAllProcesses(G->tH);
 }
@@ -452,11 +453,13 @@ void globalGC(long request)    /* how many cells were requested? */
 #endif
 
   if (globalHeap.base == leftBase) {
-    toHeap.base = toHeap.create = rightBase;
+    toHeap.base = rightBase;
+    toHeap.create = rightBase;
     toHeap.end = &globalSpace[globalSize];
   }
   else {
-    toHeap.base = toHeap.create = leftBase;
+    toHeap.base = leftBase;
+    toHeap.create = leftBase;
     toHeap.end = globalHeap.base;
   }
 
@@ -473,7 +476,8 @@ void globalGC(long request)    /* how many cells were requested? */
     globalHeap.end = toHeap.end;
   }
   else {
-    globalHeap.base = globalHeap.create = leftBase = toHeap.create;
+    globalHeap.base = leftBase = (objPo)toHeap.create;
+    globalHeap.create = toHeap.create;
     globalHeap.end = rightBase = leftBase + (&globalSpace[globalSize] - leftBase) / 2;
     clearGreys();      /* only clear the dirty flags when old generation is grown */
   }
@@ -705,7 +709,7 @@ static retCode verifySpecial(ptrPo arg, void *c) {
 
 static void verifyGlobalHeap(void) {
   objPo ob = globalHeap.base;
-  objPo create = globalHeap.create;
+  objPo create = (objPo)globalHeap.create;
   objPo end = globalHeap.end;
 
   assert(globalHeap.base <= create && create <= end);

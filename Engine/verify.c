@@ -38,6 +38,7 @@ typedef struct _segment_ {
   unsigned int gblHp;               //  how much global heap can we allocate?
   logical inited;                   //  Has the segment's variables been initialized?
   logical checked;                  //  Has this segment been checked?
+  logical allocating;               //  Are we allocating variables?
   codePo cde;                       //  Pointer to the code structure itself
   long pc;                          //  base intruction of this segment
   long insCount;                    //  No. of instructions in this segment
@@ -59,6 +60,8 @@ static void showSegs(segPo root);
 #endif
 
 static poolPo segpool = NULL;
+static int noOfSegments(segPo root);
+static void showSeg(segPo seg);
 
 #undef lastInstruction
 #define lastInstruction
@@ -85,6 +88,7 @@ static segPo initVerify(codePo cde, unsigned long length) {
     seg->entryPoints = 1;
     seg->checked = False;
     seg->inited = False;
+    seg->allocating = False;
     seg->locals = NULL;
     seg->lCount = 0;
     seg->strcount = 0;
@@ -153,6 +157,7 @@ static segPo splitSeg(segPo root, long pc, long tgt, logical isAlt) {
     new->entryPoints = 1;
     new->checked = False;
     new->inited = False;
+    new->allocating = seg->allocating;
     new->locals = NULL;
     new->lCount = 0;
     new->strcount = 0;
@@ -177,23 +182,23 @@ static void showSegs(segPo root) {
   int segNo = 0;
   segPo seg = root;
 
-  outMsg(logFile,"%d segments\n",noOfSegments(root));
+  outMsg(logFile, "%d segments\n", noOfSegments(root));
 
   while (seg != NULL) {
     if (seg->alt != NULL) {
-      int sN = 0;
+      int altSegNo = 0;
       segPo s = root;
 
       while (s != NULL && s->pc < seg->alt->pc) {
         s = s->next;
-        sN++;
+        altSegNo++;
       }
       assert(s == seg->alt);
 
       outMsg(logFile, "segment: %d (%d) [%d-%d](%d), alt=%d [%d]\n",
-             segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount, seg->insCount, sN, s->pc);
+             segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount, seg->insCount, altSegNo, s->pc);
     } else
-      outMsg(logFile, "segment %d (%d) [%d-%d](%d):\n", segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount,
+      outMsg(logFile, "segment: %d (%d) [%d-%d](%d)\n", segNo, seg->entryPoints, seg->pc, seg->pc + seg->insCount,
              seg->insCount);
     segNo++;
 
@@ -204,7 +209,7 @@ static void showSegs(segPo root) {
   flushFile(logFile);
 }
 
-static void showSeg(segPo seg) {
+void showSeg(segPo seg) {
   unsigned int i;
   unsigned int max = NumberOf(seg->args) - 1;
 
@@ -255,7 +260,7 @@ static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, byte *err
     case pcr: {                            // program counter relative offset (-32768..32767)
       segPo alt = splitSeg(seg, pc - 1, pc + op_o_val(pcx), True);
       if (alt == NULL || splitSeg(seg, pc - 1, pc, False) == NULL) {
-        strMsg(errorMsg, msgLen, "invalid destination address %d @ %d", op_o_val(pcx), pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "invalid destination address %d @ %d" RED_ESC_OFF, op_o_val(pcx), pc);
         return Error;
       } else
         return Ok;
@@ -263,13 +268,13 @@ static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, byte *err
     case pcl: {                            // long pc relative offset (-0x80000000..0x7fffffff) (24bit)
       segPo alt = splitSeg(seg, pc - 1, pc + op_ll_val(pcx), True);
       if (alt == NULL || splitSeg(seg, pc - 1, pc, False) == NULL) {
-        strMsg(errorMsg, msgLen, "invalid destination address %d @ %d", op_o_val(pcx), pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "invalid destination address %d @ %d" RED_ESC_OFF, op_o_val(pcx), pc);
         return Error;
       } else
         return Ok;
     }
     default: {
-      strMsg(errorMsg, msgLen, "invalid address %d", pc);
+      strMsg(errorMsg, msgLen, RED_ESC_ON "invalid address %d" RED_ESC_OFF, pc);
       return Error;
     }
   }
@@ -284,16 +289,15 @@ static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, byte *err
 static retCode
 checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, byte *errorMsg, long msgLen);
 
-static retCode checkSegment(segPo seg, byte *errorMsg, long msgLen) {
+static retCode checkSegment(segPo seg, string name, byte *errorMsg, long msgLen) {
   long pc = seg->pc;
   long limit = pc + seg->insCount;
   retCode ret = Ok;
 
 #ifdef VERIFYTRACE
   if (traceVerify) {
-    outMsg(logFile, "On entry to segment:\n");
+    outMsg(logFile, "On entry: ");
     showSeg(seg);
-    showInstructions(seg->cde, seg->pc, seg->insCount);
   }
 #endif
 
@@ -308,13 +312,13 @@ static retCode checkSegment(segPo seg, byte *errorMsg, long msgLen) {
 #include "instructions.h"
 
       default:
-        strMsg(errorMsg, msgLen, "illegal instruction at %d", pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "illegal instruction at %d" RED_ESC_OFF, pc);
         return Error;
     }
   }
 #ifdef VERIFYTRACE
   if (traceVerify) {
-    outMsg(logFile, "After checking segment:\n");
+    outMsg(logFile, "On exit:  ");
     showSeg(seg);
   }
 #endif
@@ -322,7 +326,7 @@ static retCode checkSegment(segPo seg, byte *errorMsg, long msgLen) {
   return Ok;
 }
 
-static int noOfSegments(segPo root) {
+int noOfSegments(segPo root) {
   int i;
 
   for (i = 0; root != NULL; i++, root = root->next);
@@ -339,7 +343,7 @@ static retCode mergeSegVars(segPo seg, segPo next, byte *errorMsg, long msgLen) 
     for (i = 0; i <= next->lCount; i++)
       next->locals[i] = seg->locals[i];
   } else if (next->lCount > seg->lCount) {
-    strMsg(errorMsg, msgLen, "improper reallocation of locals");
+    strMsg(errorMsg, msgLen, RED_ESC_ON "improper reallocation of locals" RED_ESC_OFF);
     return Error;
   } else if (seg->locals != NULL) {
     for (i = 0; i <= next->lCount; i++) {
@@ -355,7 +359,7 @@ static retCode mergeSegVars(segPo seg, segPo next, byte *errorMsg, long msgLen) 
   return Ok;
 }
 
-static retCode checkSegments(segPo root, byte *errorMsg, long msgLen) {
+static retCode checkSegments(segPo root, string name, byte *errorMsg, long msgLen) {
   int count = noOfSegments(root);
   segPo stack[count];
   int top = 0;
@@ -365,7 +369,7 @@ static retCode checkSegments(segPo root, byte *errorMsg, long msgLen) {
 
   while (ret == Ok && top > 0) {
     segPo seg = stack[--top];
-    ret = checkSegment(seg, errorMsg, msgLen);
+    ret = checkSegment(seg, name, errorMsg, msgLen);
 
     if (ret != Ok)
       return ret;
@@ -396,14 +400,14 @@ static retCode checkSegments(segPo root, byte *errorMsg, long msgLen) {
 
   for (segPo seg = root; seg != NULL; seg = seg->next)
     if (!seg->checked) {
-      strMsg(errorMsg, msgLen, "unreachable segment @ %x", seg->pc);
+      strMsg(errorMsg, msgLen, RED_ESC_ON "unreachable segment %s @ %x" RED_ESC_OFF, name, seg->pc);
       return Error;
     }
 
   return Ok;
 }
 
-static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
+static retCode checkInOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
   switch (A) {
     case nOp:                             // No operand
       return Ok;
@@ -411,7 +415,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       int regNo = op_h_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS || !seg->args[regNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset argument register A[%d] @ %d", regNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset argument register A[%d] @ %d" RED_ESC_OFF, regNo, opc);
         return Error;
       } else
         seg->args[regNo].read = True;
@@ -423,7 +427,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       int regNo = op_m_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS || !seg->args[regNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset argument register A[%d] @ %d", regNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset argument register A[%d] @ %d" RED_ESC_OFF, regNo, opc);
         return Error;
       } else
         seg->args[regNo].read = True;
@@ -435,7 +439,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       int regNo = op_l_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS || !seg->args[regNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset argument register A[%d] @ %d", regNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset argument register A[%d] @ %d" RED_ESC_OFF, regNo, pc);
         return Error;
       } else
         seg->args[regNo].read = True;
@@ -447,7 +451,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       short lcNo = op_h_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset local Y[%d] @ %d", lcNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset local Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].read = True;
@@ -457,7 +461,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       short lcNo = op_m_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset local Y[%d] @ %d", lcNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset local Y[%d] @ %d" RED_ESC_OFF, lcNo, pc);
         return Error;
       } else
         seg->locals[lcNo].read = True;
@@ -467,7 +471,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       short lcNo = op_l_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset local Y[%d] @ %d", lcNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset local Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].read = True;
@@ -477,7 +481,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       short lcNo = op_o_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo || !seg->locals[lcNo].inited) {
-        strMsg(errorMsg, msgLen, "attempted to access unset local Y[%d] @ %d", lcNo, pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access unset local Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].read = True;
@@ -492,7 +496,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
     case iSt:                             // input at current structure pointer
     case oSt:                             // output to current structure pointer
       if (seg->strcount == 0) {
-        strMsg(errorMsg, msgLen, "too many accesses to structure @ %d", pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "too many accesses to structure @ %d" RED_ESC_OFF, opc);
         return Error;
       }
       seg->strcount--;
@@ -504,7 +508,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
 
       for (i = 1; i <= regNo; i++)
         if (!seg->args[i].inited) {
-          strMsg(errorMsg, msgLen, "uninitialized argument A[%d] @ %d", regNo, pc);
+          strMsg(errorMsg, msgLen, RED_ESC_ON "uninitialized argument A[%d] @ %d" RED_ESC_OFF, regNo, opc);
           return Error;
         }
 
@@ -513,6 +517,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
     case oAr:        //  Output arity in upper slot
     case uLt:                             // small literal in upper slot (-128..127)
     case Ltl:                              // 16bit literal (-32768..32767)
+    case vSz:
       return Ok;
 
     case lSz: {                            // Size of local variable vector
@@ -542,7 +547,7 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       uint16 esc = op_o_val(pcx);
 
       if (!validEscape(esc, op_h_val(pcx))) {
-        strMsg(errorMsg, msgLen, "invalid escape code [%s/%d]", escapeName(esc), op_h_val(pcx));
+        strMsg(errorMsg, msgLen, RED_ESC_ON "invalid escape code [%s/%d] @ %d" RED_ESC_OFF, escapeName(esc), op_h_val(pcx), opc);
         return Error;
       }
       return Ok;
@@ -554,20 +559,20 @@ static retCode checkInOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte
       short lit = op_o_val(pcx);
 
       if (seg->litCount <= lit) {
-        strMsg(errorMsg, msgLen, "attempted to access invalid literal %d", lit);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access invalid literal %d @ %d" RED_ESC_OFF, lit, opc);
         return Error;
       }
 
       return Ok;
     }
     default: {
-      strMsg(errorMsg, msgLen, "Problem in checking opcode type: 0x%x", pcx);
+      strMsg(errorMsg, msgLen, RED_ESC_ON "Problem in checking opcode type: 0x%x @ %d" RED_ESC_OFF, pcx, opc);
       return Error;
     }
   }
 }
 
-static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
+static retCode checkOutOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
   switch (A) {
     case nOp:                             // No operand
       return Ok;
@@ -577,7 +582,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       int regNo = op_h_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS) {
-        strMsg(errorMsg, msgLen, "attempted to set non-existent register: A[%d]", regNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set non-existent register: A[%d] @ %d" RED_ESC_OFF, regNo, opc);
         return Error;
       } else
         seg->args[regNo].inited = True;
@@ -589,7 +594,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       int regNo = op_m_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS) {
-        strMsg(errorMsg, msgLen, "attempted to set non-existent register: A[%d]", regNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set non-existent register: A[%d] @ %d" RED_ESC_OFF, regNo, opc);
         return Error;
       } else
         seg->args[regNo].inited = True;
@@ -601,7 +606,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       int regNo = op_l_val(pcx);          // Pick up input register name
 
       if (regNo > LO_REGS) {
-        strMsg(errorMsg, msgLen, "attempted to set non-existent register: A[%d]", regNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set non-existent register: A[%d]@ %d" RED_ESC_OFF, regNo, opc);
         return Error;
       } else
         seg->args[regNo].inited = True;
@@ -616,7 +621,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       short lcNo = op_h_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo) {
-        strMsg(errorMsg, msgLen, "attempted to set out of bounds variable: Y[%d]", lcNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set out of bounds variable: Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].inited = True;
@@ -626,7 +631,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       short lcNo = op_m_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo) {
-        strMsg(errorMsg, msgLen, "attempted to set out of bounds variable: Y[%d]", lcNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set out of bounds variable: Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].inited = True;
@@ -636,7 +641,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       short lcNo = op_l_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo) {
-        strMsg(errorMsg, msgLen, "attempted to set out of bounds variable: Y[%d]", lcNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set out of bounds variable: Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].inited = True;
@@ -646,7 +651,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
       short lcNo = op_o_val(pcx);           // Pick up local variable
 
       if (seg->lCount < lcNo) {
-        strMsg(errorMsg, msgLen, "attempted to set out of bounds variable: Y[%d]", lcNo);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to set out of bounds variable: Y[%d] @ %d" RED_ESC_OFF, lcNo, opc);
         return Error;
       } else
         seg->locals[lcNo].inited = True;
@@ -705,7 +710,7 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
     case ltl:                             // literal number (0..65535)
       return Ok;
     default: {
-      strMsg(errorMsg, msgLen, "Problem in checking opcode type: %x", pcx);
+      strMsg(errorMsg, msgLen, RED_ESC_ON "Problem in checking opcode type: %x @ %d" RED_ESC_OFF, pcx, opc);
       return Error;
     }
       return Ok;
@@ -714,76 +719,94 @@ static retCode checkOutOperand(segPo seg, long pc, insWord pcx, opAndSpec A, byt
 
 static retCode
 checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, byte *errorMsg, long msgLen) {
-  retCode ret = checkInOperand(seg, pc, pcx, A1, errorMsg, msgLen);
+  opCode op = op_code(pcx);
+
+  retCode ret = checkInOperand(seg, opc, pc, pcx, A1, errorMsg, msgLen);
 
   if (ret == Ok)
-    ret = checkInOperand(seg, pc, pcx, A1, errorMsg, msgLen);
+    ret = checkInOperand(seg, opc, pc, pcx, A2, errorMsg, msgLen);
   if (ret == Ok)
-    ret = checkInOperand(seg, pc, pcx, A2, errorMsg, msgLen);
+    ret = checkOutOperand(seg, opc, pc, pcx, A1, errorMsg, msgLen);
   if (ret == Ok)
-    ret = checkOutOperand(seg, pc, pcx, A1, errorMsg, msgLen);
-  if (ret == Ok)
-    ret = checkOutOperand(seg, pc, pcx, A2, errorMsg, msgLen);
+    ret = checkOutOperand(seg, opc, pc, pcx, A2, errorMsg, msgLen);
 
   // We have to hack the special aspects for now
-  switch (op_code(pcx)) {
-    case dealloc:
-    case dlkawlO:
-    case dlkawl:
-      seg->lCount = 0;
-      free(seg->locals);
-      seg->locals = NULL;
-    case trycl:
-    case tryme:
-    case retry:
-    case trust:
-    case retryme:
-    case trustme: {
-      unsigned int i;
-      for (i = 1; i <= seg->arity; i++) {
-        seg->args[i].inited = True;
-        seg->args[i].read = False;
-      }
-      break;
-    }
-    case uAcns:
-    case uScns:
-    case mAcns:
-    case mScns:
-    case cAcns:
-    case cScns: {
-      short litNo = op_o_val(pcx);
+  if (ret == Ok) {
+    switch (op) {
+      case alloc:
+        seg->allocating = True;
+        break;
+      case dealloc:
+      case dlkawlO:
+      case dlkawl:
+        seg->lCount = 0;
+        free(seg->locals);
+        seg->locals = NULL;
 
-      if (seg->litCount <= litNo) {
-        strMsg(errorMsg, msgLen, "attempted to access invalid literal %d", litNo);
-        return Error;
-      } else {
-        ptrI lit = seg->Lits[litNo];
-        register clssPo class = (clssPo) objV(lit);
-        seg->strcount = (short) classArity(class);
+        if (!seg->allocating) {
+          strMsg(errorMsg, msgLen, RED_ESC_ON "dealloc without corresponding alloc @ %d" RED_ESC_OFF, opc);
+          return Error;
+        }
+        break;
+      case succ:
+      case lkawl:
+      case lkawlO:
+        if (seg->allocating) {
+          strMsg(errorMsg, msgLen, RED_ESC_ON "succ without corresponding dealloc @ %d" RED_ESC_OFF, opc);
+          return Error;
+        }
+      case trycl:
+      case tryme:
+      case retry:
+      case trust:
+      case retryme:
+      case trustme: {
+        unsigned int i;
+        for (i = 1; i <= seg->arity; i++) {
+          seg->args[i].inited = True;
+          seg->args[i].read = False;
+        }
         break;
       }
-    }
-    case vdYY:
-    case clYY: {
-      unsigned int i;
-      unsigned short low = op_o_val(pcx);
-      unsigned short hi = low + op_h_val(pcx);
+      case uAcns:
+      case uScns:
+      case mAcns:
+      case mScns:
+      case cAcns:
+      case cScns: {
+        short litNo = op_o_val(pcx);
 
-      for (i = low; i < hi; i++)
-        seg->locals[i].inited = True;
-      break;
-    }
-    case vdAA: {
-      unsigned int i;
-      unsigned short low = op_h_val(pcx);
-      unsigned short hi = low + op_o_val(pcx);
+        if (seg->litCount <= litNo) {
+          strMsg(errorMsg, msgLen, RED_ESC_ON "attempted to access invalid literal %d @ %d" RED_ESC_OFF, litNo, opc);
+          return Error;
+        } else {
+          ptrI lit = seg->Lits[litNo];
+          register clssPo class = (clssPo) objV(lit);
+          seg->strcount = (short) classArity(class);
+          break;
+        }
+      }
+      case vdYY:
+      case clYY: {
+        unsigned int i;
+        unsigned short low = op_o_val(pcx);
+        unsigned short hi = low + op_h_val(pcx);
 
-      for (i = low; i < hi; i++)
-        seg->args[i].inited = True;
-      break;
+        for (i = low; i < hi; i++)
+          seg->locals[i].inited = True;
+        break;
+      }
+      case vdAA: {
+        unsigned int i;
+        unsigned short low = op_h_val(pcx);
+        unsigned short hi = low + op_o_val(pcx);
+
+        for (i = low; i < hi; i++)
+          seg->args[i].inited = True;
+        break;
+      }
+      default:;
     }
-    default:;
   }
 
 #ifdef VERIFYTRACE
@@ -807,14 +830,12 @@ static pthread_mutex_t verifyMutex = PTHREAD_MUTEX_INITIALIZER;
         ret=testBreak(segs,pc,pcx,A2,errorMsg,msgLen);\
       continue;
 
-retCode verifyCode(ptrI prog) {
+retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen) {
   pthread_mutex_lock(&verifyMutex);  //  We synchronize all verification
 
   codePo cde = codeV(prog);
   int i;
   segPo segs = initVerify(cde, codeInsCount(cde));
-  byte errorMsg[MAX_MSG_LEN];
-  long msgLen = NumberOf(errorMsg);
 
   uint16 arity = segs->arity = codeArity(cde);
 
@@ -842,7 +863,7 @@ retCode verifyCode(ptrI prog) {
 #include "instructions.h"
 
       default:
-        strMsg(errorMsg, msgLen, "invalid instruction at %d", pc);
+        strMsg(errorMsg, msgLen, RED_ESC_ON "invalid instruction at %s:%d" RED_ESC_OFF, name, pc);
         return Error;
     }
   }
@@ -853,17 +874,12 @@ retCode verifyCode(ptrI prog) {
 #endif
 
   if (ret == Ok)
-    ret = checkSegments(segs, errorMsg, msgLen);
+    ret = checkSegments(segs, name, errorMsg, msgLen);
 
   clearSegs(segs);
 
   pthread_mutex_unlock(&verifyMutex);  //  We can now allow others to verify
 
-  if (ret == Ok)
-    return Ok;
-  else {
-    logMsg(logFile, "Invalid code segment %s", errorMsg);
-    return Error;
-  }
+  return ret;
 }
 

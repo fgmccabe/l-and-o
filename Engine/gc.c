@@ -76,7 +76,7 @@ void initMasks(void) {
   uint16 i;
 
   for (i = 0; i < CARDWIDTH; i++)
-    masks[i] = (cardMap) ((uint64)1 << i);    /* compute 2**i for i=0 to i=63 */
+    masks[i] = (cardMap) ((uint64) 1 << i);    /* compute 2**i for i=0 to i=63 */
 }
 
 static void initMarkTable(long count, heapPo H, gcSupportPo G) {
@@ -211,7 +211,7 @@ void gcCollect(heapPo H, long amount) {
     GCSupport GCSRec;
     gcSupportPo G = &GCSRec;
 
-    initMarkTable(H->create - H->base, H, G);
+    initMarkTable((objPo) H->create - H->base, H, G);
 
 #ifdef MEMTRACE
     if (traceMemory)
@@ -246,7 +246,7 @@ void gcCollect(heapPo H, long amount) {
       verifyProc(H->owner);
 #endif
 
-    if (H->end - H->create <= amount) {
+    if (H->end - (objPo) H->create <= amount) {
       if (extendStack(H->owner, 2, 3, amount) != Ok)
         syserr("Unable to grow process heap");
     }
@@ -530,7 +530,7 @@ static void shuffleHeap(gcSupportPo G, heapPo H) {
       scan = scan + sClass->sizeFun(sClass, scan);
     }
   }
-  H->create = (objPo) next;    /* new top of the heap */
+  H->create = (objPo)next;    /* new top of the heap */
 }
 
 static retCode helpAdjust(ptrPo arg, void *c) {
@@ -612,10 +612,10 @@ static void adjustProcess(processPo p, gcSupportPo G) {
       /* We need to be a little careful when adjusting the H pointer */
       if (H->owner == p) {
         ptrPo finalH = searchBreak(G->Brk, G->endBrk,
-                                   (B->H >= (ptrPo) H->base && B->H < (ptrPo) H->end ? nextMarked(G, B->H) : B->H));
+                                   (B->H >=  H->base && B->H < H->end ? nextMarked(G, (ptrPo)B->H) : (ptrPo)B->H));
 
         if (finalH != NULL)
-          B->H = finalH;
+          B->H = (objPo)finalH;
       }
 
       Start = FirstInstruction(B->PROG);

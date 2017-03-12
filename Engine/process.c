@@ -133,7 +133,7 @@ static void processInit(objectPo o, va_list *args) {
   b->PROG = dieProg;
   b->trail = p->proc.trail = (trailPo) p->proc.sBase;
   b->C = c;                             /* succeed forever */
-  b->H = (ptrPo) p->proc.heap.create;
+  b->H = p->proc.heap.create;
 
   /* fill in the process structure from this */
   p->proc.B = p->proc.SB = p->proc.cSB = b;
@@ -146,6 +146,10 @@ static void processInit(objectPo o, va_list *args) {
   p->proc.state = quiescent;                 /* not yet executing */
   p->proc.pauseRequest = False;  /* This will go true when a pause is requested */
   p->proc.cl = NULL;                         /* no client data yet */
+
+#ifdef EXECTRACE
+  p->proc.waitFor = p->proc.cWaitFor = nextBreak;
+#endif
 
   p->proc.thread = thread;
 
@@ -326,6 +330,7 @@ void stackTrace(processPo p) {
 
       assert((ptrPo) Bx >= p->proc.sBase && (ptrPo) Bx <= p->proc.sTop &&
              (ptrPo) Cx >= p->proc.sBase && (ptrPo) Cx <= p->proc.sTop);
+      assert(B->H >= p->proc.heap.base && B->H <= p->proc.heap.create);
 
       if ((ptrPo) Bx < (ptrPo) Cx) {  /* show a choice point */
         if (Bix < NumberOf(choicePoints))
@@ -489,7 +494,7 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
   ptrPo nTop = &st[nsz];
   objPo nHeap = (objPo) st;
   objPo oHeap = p->proc.heap.base;
-  objPo oLimit = p->proc.heap.create;
+  objPo oLimit = (objPo)p->proc.heap.create;
   callPo nC = (callPo) adjust((ptrPo) C, oTop, nTop);
   choicePo nB = (choicePo) adjust((ptrPo) B, oTop, nTop);
   choicePo nT = (choicePo) adjust((ptrPo) T, oTop, nTop);
@@ -569,7 +574,7 @@ retCode extendStack(processPo p, int sfactor, int hfactor, long hmin) {
 
       nB->AX = ar = B->AX;
       nB->B = (choicePo) adjust((ptrPo) B->B, oTop, nTop);
-      nB->H = adjust((ptrPo) B->H, (ptrPo) oHeap, (ptrPo) nHeap);
+      nB->H = (objPo)adjust((ptrPo) B->H, (ptrPo) oHeap, (ptrPo) nHeap);
       nB->cSB = (choicePo) adjust((ptrPo) B->cSB, oTop, nTop);
       nB->T = (choicePo) adjust((ptrPo) B->T, oTop, nTop);
       nB->C = (callPo) adjust((ptrPo) B->C, oTop, nTop);

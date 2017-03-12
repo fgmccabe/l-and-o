@@ -256,7 +256,7 @@ retCode uniNAppend(string dest, long *pos, long len, string src, long sLen) {
 }
 
 retCode appendCodePoint(string dest, long *pos, long len, codePoint ch) {
-  if (ch > 0 && ch <= 0x7f) {
+  if (ch <= 0x7f) {
     if ((*pos) < len - 1) {
       dest[(*pos)++] = (byte) ((ch) & 0x7f);
       return Ok;

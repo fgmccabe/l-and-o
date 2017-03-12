@@ -57,13 +57,13 @@ lo.boot{
   handleCmdLineOpts(either((Opts,[Top,..Args]))) :-
     RD = resolveUri(parseUri(cwd()),parseUri(Opts.repo)),
     Repo = (openRepository(RD),coreRepo),
-    _logmsg("repo : \(Repo)"),
     importPkgs([parsePkgName(Top)],[],_,Repo),
     invokeMain(Top,Args).
 
   importPkgs:all r ~~ repository[r] |: (list[pkg],list[pkg],list[pkg],r){}.
   importPkgs([],Ld,Ld,_).
   importPkgs([P,..L],Ld,Ldx,R) :-
+    _logmsg("importing \(P)"),
     importPkg(P,R,Ld,Imps),
     importPkgs(Imps,[P,..Ld],Ldx,R),
     initialize(P).
@@ -72,6 +72,7 @@ lo.boot{
   importPkg(P,_,Ld,[]) :- P in Ld.
   importPkg(P,R,Ld,Imps//(((Pk,V))=>pkgUp(Pk,V))) :-
     loadFromRepo(R,P,"code",Code),
+    _logmsg("\(P) from repo"),
     Imps = _install_pkg(Code).
 
   pkgUp:(string,string) => pkg.

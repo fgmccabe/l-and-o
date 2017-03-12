@@ -55,6 +55,9 @@ typedef struct _call_rec_ {
   ptrI cPROG;                           /* continuation program  */
   callPo C;                             /* parent environment */
   choicePo cSB;                         /* where to cut to in parent */
+#ifdef EXECTRACE
+  DebugWaitFor cWaitFor;
+#endif
 } CallRec;
 
 /* definition of a choice point record */
@@ -74,8 +77,12 @@ typedef struct _choice_rec_ {
   ptrI cPROG;                           /* continuation program  */
   ptrI PROG;                            /* current program  */
   trailPo trail;                        /* current trail level */
-  choicePo T;                            /* error recovery trap */
-  ptrPo H;                              /* value of the heap stack at choice point */
+  choicePo T;                           /* error recovery trap */
+  objPo H;                              /* value of the heap stack at choice point */
+#ifdef EXECTRACE
+  DebugWaitFor waitFor;
+  DebugWaitFor cWaitFor;
+#endif
 } ChoiceRec;
 
 /* Object and class interface */
@@ -113,6 +120,10 @@ typedef struct {
   process_state state;                 /* What is the status of this process? */
   logical pauseRequest;         /* Has a pause of this process been requested? */
   process_state savedState;    /* Saved state of this process? */
+#ifdef EXECTRACE
+  DebugWaitFor waitFor;
+  DebugWaitFor cWaitFor;
+#endif
 } ProcessRec;
 
 /*

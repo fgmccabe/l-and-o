@@ -76,13 +76,13 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
 
 static retCode loadSegments(ioPo file, packagePo owner, string errorMsg, long msgLen);
 
-static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
+static retCode ldPackage(string pkgName, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
   byte flNm[MAXFILELEN];
-  string fn = packageCodeFile(pkg, vers, flNm, NumberOf(flNm));
+  string fn = packageCodeFile(pkgName, vers, flNm, NumberOf(flNm));
   retCode ret = Ok;
 
   if (fn == NULL) {
-    outMsg(logFile, "cannot determine code for %s:%s%_", pkg, vers);
+    outMsg(logFile, "cannot determine code for %s:%s%_", pkgName, vers);
     return Error;
   }
 
@@ -90,7 +90,7 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
 
 #ifdef RESOURCETRACE
   if (traceResource)
-    outMsg(logFile, "loading package %s:%s from file %s\n", pkg, vers, fn);
+    outMsg(logFile, "loading package %s:%s from file %s\n", pkgName, vers, fn);
 #endif
 
   if (file != NULL) {
@@ -117,8 +117,8 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
       if (ret == Ok)
         ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
 
-      if (ret == Ok && uniCmp((string) pkgNm, pkg) != same) {
-        outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkg);
+      if (ret == Ok && uniCmp((string) pkgNm, pkgName) != same) {
+        outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkgName);
         return Error;
       }
 
@@ -133,8 +133,12 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
     closeFile(file);
 
 #ifdef RESOURCETRACE
-    if (traceResource)
-      logMsg(logFile, "package %s loaded\n", pkg);
+    if (traceResource) {
+      if (ret != Error)
+        logMsg(logFile, "package %s loaded\n", pkgName);
+      else
+        logMsg(logFile, "problem in loading %s: %s", pkgName, errorMsg);
+    }
 #endif
 
     if (ret == Eof)
@@ -142,7 +146,7 @@ static retCode ldPackage(string pkg, string vers, string errorMsg, long msgSize,
     else
       return ret;
   } else {
-    strMsg(errorMsg, msgSize, "package %s not found", pkg);
+    strMsg(errorMsg, msgSize, "package %s not found", pkgName);
     return Eof;
   }
 }
@@ -370,7 +374,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
 
 #ifdef RESOURCETRACE
     if (traceResource)
-      outMsg(logFile, "loading code %s:%d\n%_", prgName, arity);
+      outMsg(logFile, "loading code %s/%d\n%_", prgName, arity);
 #endif
 
     if (ret == Ok && isLookingAt(in, "s") == Ok) {
@@ -481,7 +485,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
             gcRemoveRoot(GH, root); /* clear the GC root */
 
             if (ret == Ok && enableVerify)
-              ret = verifyCode(pc);
+              ret = verifyCode(pc, prgName, errorMsg, msgSize);
 
             if (ret == Ok)
               defineProg(prg, pc);

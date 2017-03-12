@@ -59,7 +59,11 @@ void pushPtr(gcSupportPo G, ptrPo x, long count);
 ptrI adjustPtr(gcSupportPo G, ptrI cell);
 
 static inline logical inHeap(heapPo P, const objPo x) {
-  return (logical) (x >= P->base && x < P->create);
+  return (logical) (x >= P->base && x < (objPo)P->create);
+}
+
+static inline logical legalHeapPtr(heapPo P,const objPo x) {
+  return (logical) (x >= P->base && x <= (objPo)P->create);
 }
 
 /* Root management */
@@ -87,7 +91,7 @@ static inline void gcRemoveRoot(heapPo H, rootPo mk) {
 static inline objPo allocSpace(heapPo P, size_t size) {
   objPo new;
 
-  if (P->create + size > P->end)
+  if ((objPo)P->create + size > P->end)
     return NULL;    /* allow caller to invoke GC */
 
   new = (objPo) P->create;
@@ -105,11 +109,11 @@ static inline objPo allocate(heapPo H, size_t size) {
     gcCollect(H, size);    /* gc on every allocation */
 #endif
 
-  if (H->create + size > H->end)
+  if ((objPo)H->create + size > H->end)
     gcCollect(H, size);    /* this aborts if there is no memory */
 
   {
-    register objPo new = H->create;
+    register objPo new = (objPo)H->create;
     H->create += size;
 
     return new;
@@ -135,7 +139,7 @@ static inline objPo allocateSpecial(heapPo H, ptrI class) {
 }
 
 static inline long spaceLeft(heapPo H) {
-  return H->end - H->create;
+  return H->end - (objPo)H->create;
 }
 
 static inline long totalHeapSize(heapPo H) {

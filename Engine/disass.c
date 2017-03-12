@@ -47,7 +47,7 @@ void showInstructions(codePo code, long pc, long count) {
   insPo basePc = codeIns(code);
 
   for(long ix=0;ix<count;ix++){
-    dissass(NULL, code, &basePc[ix], NULL, NULL, NULL, dummyMode, NULL, NULL, NULL);
+    dissass(NULL, code, &basePc[pc+ix], NULL, NULL, NULL, dummyMode, NULL, NULL, NULL);
     outChar(logFile,'\n');
   }
 

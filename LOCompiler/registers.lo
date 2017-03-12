@@ -62,13 +62,20 @@ lo.comp.code.registers{
   resetGc(varSet(A,L,_)) => varSet(A,L,0).
 
   public gcMap:(varSet,integer,list[instruction],instruction){}.
-  gcMap(varSet(Rgs,Locs,_),Arity,clearYs(1,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
+  gcMap(varSet(Rgs,Locs,_),Arity,clearYs(1,none,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
     Esize = foldRight((X,Y)=>max(X,Y),0,Locs).
 
-  clearYs:(integer,integer,set[integer]) => list[instruction].
-  clearYs(Rg,Mx,_) => [] :- Rg>Mx.
-  clearYs(Rg,Mx,Locs) => [iClY(Rg),..clearYs(Rg+1,Mx,Locs)] :- \+ Rg in Locs.
-  clearYs(Rg,Mx,Locs) => clearYs(Rg+1,Mx,Locs).
+  clearYs:(integer,option[(integer,integer)],integer,set[integer]) => list[instruction].
+  clearYs(Rg,Rnge,Mx,_) => emitClearYs(Rnge) :- Rg > Mx.
+  clearYs(Rg,some((Fr,So)),Mx,Locs) => clearYs(Rg+1,some((Fr,So+1)),Mx,Locs) :- \+Rg in Locs, Rg=So+1.
+  clearYs(Rg,Rnge,Mx,Locs) => emitClearYs(Rnge) <> clearYs(Rg+1,some((Rg,Rg)),Mx,Locs) :- \+Rg in Locs.
+  clearYs(Rg,Rnge,Mx,Locs) => emitClearYs(Rnge) <> clearYs(Rg+1,none,Mx,Locs).
+
+  emitClearYs:(option[(integer,integer)]) => list[instruction].
+  emitClearYs(none) => [].
+  emitClearYs(some((R,R))) => [iClY(R)].
+  emitClearYs(some((F,T))) => [iClYY(F,T-F)] :- T-F<256.
+  emitClearYs(some((F,T))) => [iClY(F),..emitClearYs(some((F+1,T)))].
 
   public clearAs:(integer,integer,set[integer]) => list[instruction].
   clearAs(Rg,Mx,_) => [] :- Rg>Mx.

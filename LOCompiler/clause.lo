@@ -28,7 +28,7 @@ lo.comp.code.clause{
     lSize = max(maxLocals(Vsx),PermSize),
     Code =
       (hSize>0 ? [iGc(Arity,hSize)] | []) <>
-      ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,lSize),..clearLocals(usedLocals(Vs0),1,lSize)] | []) <>
+      ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,0)] | []) <>
       HCode<>bCode.
 
   clearLocals:(set[integer],integer,integer) => list[instruction].
@@ -120,7 +120,7 @@ lo.comp.code.clause{
     (isInitialized(V) ?
       aCode = unifyTerm(R,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
       aCode = buildTerm(R,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
-      Dx = D[Nm->markInited(V,Addr)]),
+      Dx = D1[Nm->markInited(V,Addr)]),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
         Code = [iLbl(SLb),..aCode]<>[iDealloc,iGcmap(0,0),iLbl(ELb)] |
@@ -135,7 +135,7 @@ lo.comp.code.clause{
     (isInitialized(V) ?
       aCode = unifyTerm(L,true,Addr,D,Dx,Vs,Vsx,Lt,Ltx,Last) |
       aCode = buildTerm(L,true,Addr,D,D1,Vs,Vsx,Lt,Ltx,Last),
-      Dx = D[Nm->markInited(V,Addr)]),
+      Dx = D1[Nm->markInited(V,Addr)]),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
         Code = [iLbl(SLb),..aCode]<>[iDealloc,iGcmap(0,0),iLbl(ELb)] |

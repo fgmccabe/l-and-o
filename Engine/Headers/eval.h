@@ -34,7 +34,6 @@ retCode equal(processPo P, ptrPo T1, ptrPo T2);
 retCode unifyType(processPo P, ptrPo T1, ptrPo T2);
 logical identical(ptrI T1, ptrI T2);
 retCode match(processPo P, ptrPo T1, ptrPo T2);
-retCode testmatch(ptrPo T1, ptrPo T2);
 
 typedef enum {
   readMode, writeMode, dummyMode
@@ -48,7 +47,7 @@ static inline void bindVar(processPo P, ptrPo ptr, ptrI val) {
 
   if (((void *) P->proc.B < (void *) P->proc.T ?
        (ptr < (ptrPo) P->proc.B->H) :
-       ptr < P->proc.T->H)
+       ptr < (ptrPo)P->proc.T->H)
       || ptr > (ptrPo) P->proc.B) {
     P->proc.trail->var = ptr;
     P->proc.trail->val = *ptr;
@@ -66,7 +65,7 @@ static inline void bndVar(processPo P, ptrPo ptr, ptrI val) {
 
   if (((void *) P->proc.B < (void *) P->proc.T ?
        (ptr < (ptrPo) P->proc.B->H) :
-       ptr < P->proc.T->H)
+       ptr < (ptrPo)P->proc.T->H)
       || ptr > (ptrPo) P->proc.B) {
     P->proc.trail->var = ptr;
     P->proc.trail->val = *ptr;
