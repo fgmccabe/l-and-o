@@ -122,8 +122,7 @@ static long termSize(ptrI src, long *vCount, heapPo H, logical deep) {
         for (ix = 0; ix < arity; ix++, a++)
           size += termSize(deRefI(a), vCount, H, deep);
         return size;
-      }
-      else {
+      } else {
         assert(isSpecialObject(p));
 
         specialClassPo sClass = sClassOf(p);
@@ -173,8 +172,7 @@ static retCode copyTermToHeap(ptrPo dst, ptrPo src, varTablePo vT) {
           for (ix = 0; res == Ok && ix < arity; ix++)
             res = copyTermToHeap(dA++, sA++, vT);
           return res;
-        }
-        else if (isSpecialObject(p)) {
+        } else if (isSpecialObject(p)) {
           specialClassPo sClass = sClassOf(p);
 
           objPo new = allocateSpecial(&globalHeap, p->class);
@@ -183,11 +181,9 @@ static retCode copyTermToHeap(ptrPo dst, ptrPo src, varTablePo vT) {
 
           sClass->copyFun(sClass, new, p);
           return Ok;
-        }
-        else
+        } else
           return Error;
-      }
-      else {
+      } else {
         *dst = *src;
         return Ok;
       }
@@ -212,8 +208,8 @@ retCode localCopy(ptrPo dst, heapPo H, ptrPo src) {
         free(vTable.vTable);    /* release the allocated table */
       return ret;
     }
-  }
-  else return Error;
+  } else
+    return Error;
 }
 
 static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
@@ -229,8 +225,7 @@ static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
       if (inGlobalHeap(p)) {
         *dst = S;
         return Ok;
-      }
-      else if (isObjct(p)) {
+      } else if (isObjct(p)) {
         ptrPo a = objectArgs(p);
         long arity = objectArity(p);
         retCode ret = Ok;
@@ -245,8 +240,7 @@ static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
           ret = freezeT(n, a, H, eMsg, len);
 
         return ret;
-      }
-      else if (isSpecialObject(p) && inHeap(H, p)) {
+      } else if (isSpecialObject(p) && inHeap(H, p)) {
         objPo new = allocateSpecial(&globalHeap, p->class);
 
         *dst = objP(new);
@@ -255,8 +249,7 @@ static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
         sClass->copyFun(sClass, new, p);
 
         return Ok;
-      }
-      else {
+      } else {
         strMsg(eMsg, len, "invalid value %0,3w in value", src);
         return Error;
       }
@@ -279,13 +272,11 @@ retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, string eMsg, long len) {
   if (vCount > 0) {
     ret = Error;
     strMsg(eMsg, len, "%d unbound variables in value", vCount);
-  }
-  else if (reserveGlobalSpace(size) == Ok) {
+  } else if (reserveGlobalSpace(size) == Ok) {
     ret = freezeT(&xx, &src, H, eMsg, len);
     gcRemoveRoot(H, root);
     *dst = xx;
-  }
-  else {
+  } else {
     ret = Space;
     strMsg(eMsg, len, "out of heap space");
   }
@@ -334,8 +325,7 @@ logical IsBinOp(ptrPo p, ptrI key, ptrPo a1, ptrPo a2) {
     *a1 = *a++;
     *a2 = *a;
     return True;
-  }
-  else
+  } else
     return False;
 }
 
@@ -362,8 +352,7 @@ static objPo verifyObj(objPo ob, heapPo H) {
     for (ix = 0; ix < arity; ix++, arg++)
       verifyPtr(arg, H);
     return ob + objectSize(ob);
-  }
-  else {
+  } else {
     assert(isSpecialObject(ob));
     specialClassPo sClass = sClassOf(ob);
     sClass->scanFun(sClass, helpVerify, H, ob);
@@ -425,19 +414,19 @@ void verifyVar(ptrPo ptr, processPo P) {
 void verifyHeap(heapPo P) {
   objPo scan = P->base;
 
-  assert(P->base <= (objPo)P->create && (objPo)P->create <= P->end);
-  while (scan < (objPo)P->create) {
+  assert(P->base <= (objPo) P->create && (objPo) P->create <= P->end);
+  while (scan < (objPo) P->create) {
     assert(scan < P->end);
     scan = verifyObj(scan, P);
   }
-  assert(scan == (objPo)P->create);
+  assert(scan == (objPo) P->create);
 }
 
 static void verifyTerm(ptrPo ptr, heapPo P);
 
 void verifyTrm(objPo ob, heapPo P) {
-  assert((ob >= P->base && ob < (objPo)P->create) ||
-         (ob >= globalHeap.base && ob < (objPo)globalHeap.create));
+  assert((ob >= P->base && ob < (objPo) P->create) ||
+         (ob >= globalHeap.base && ob < (objPo) globalHeap.create));
 
   ptrPo args = objectArgs(ob);
   long arity = objectArity(ob);
@@ -502,8 +491,7 @@ static logical validPtr(processPo P, ptrPo x) {
           len = envSize(B->cPC);  /* do this before the next step */
         }
         B = B->B;    /*look at the previous choice point */
-      }
-      else {      /* mark a call environment */
+      } else {      /* mark a call environment */
         register ptrPo Y = (ptrPo) C;
 
         if (x >= Y - len && x < Y)
@@ -518,6 +506,8 @@ static logical validPtr(processPo P, ptrPo x) {
     return False;                               /* The pointer is a wild one */
   }
 }
+
+static void checkStack(processPo p, objPo heapMark, callPo C, int len, choicePo B, choicePo T);
 
 /* Used in verification */
 void verifyProc(processPo p) {
@@ -535,64 +525,7 @@ void verifyProc(processPo p) {
     register int len = envSize(p->proc.cPC);
     register int i;
 
-    while (B < (choicePo) p->proc.sTop || C < (callPo) p->proc.sTop) {
-      assert(B <= (choicePo) oTop && B >= (choicePo) oBase &&
-             C <= (callPo) oTop && C >= (callPo) oBase);
-
-      if ((ptrPo) B < (ptrPo) C) {
-        register ptrPo A = (ptrPo) (B + 1);
-
-        assert((ptrPo) B <= (ptrPo) T && (ptrPo) B < (ptrPo) C);
-
-        verifyVar(&B->PROG, p);
-        verifyVar(&B->cPROG, p);
-
-        for (i = 0; i < B->AX; i++, A++)
-          verifyVar(A, p);
-
-        assert(B->cSB <= (choicePo) p->proc.sTop);
-        assert(B->B <= (choicePo) p->proc.sTop);
-        assert(B->T <= (choicePo) p->proc.sTop);
-        assert(B->C <= (callPo) p->proc.sTop);
-
-        assert(B->trail >= (trailPo) p->proc.sBase &&
-               B->trail <= p->proc.trail);
-        assert(op_code(*B->cPC) == gcmap);
-        assert(B->H >= p->proc.heap.base && B->H <= p->proc.heap.create);
-        assert(B->H <= heapMark);
-        assert((ptrPo) T >= (ptrPo) B);
-        assert(B->B <= (choicePo) p->proc.sTop && B->B>B);
-        heapMark = B->H;
-
-        if (B == T)
-          T = T->T;
-
-        if (B->C < C && B->C < (callPo) p->proc.sTop) {
-          C = B->C;    /* the choice point's call back is newer */
-          len = envSize(B->cPC);  /* do this before the next step */
-        }
-        B = B->B;    /*look at the previous choice point */
-      }
-      else {      /* verify a call environment */
-        register ptrPo Y = (ptrPo) C;
-
-        assert((ptrPo) C < (ptrPo) B && (ptrPo) C < (ptrPo) T);
-        for (i = 0; --Y, i < len; i++)
-          verifyVar(Y, p);
-
-        verifyVar(&C->cPROG, p);
-
-        assert(C->cSB <= (choicePo) p->proc.sTop);
-        assert(C->C <= (callPo) p->proc.sTop && C->C>C);
-        assert(op_code(*C->cPC) == gcmap);
-        assert(C->cPC - FirstInstruction(C->cPROG) >= 0);
-
-        len = envSize(C->cPC);  /* do this before the next step */
-        C = C->C;
-      }
-    }
-
-    assert((ptrPo) C == p->proc.sTop && (ptrPo) B == p->proc.sTop);
+    checkStack(p, heapMark, C, len, B, T);
 
     for (i = 0; i < argArity(p->proc.PC); i++)
       if (validPtr(p, (ptrPo) objV(p->proc.A[i])))
@@ -618,6 +551,69 @@ void verifyProc(processPo p) {
 
     verifyHeap(heap);
   }
+}
+
+void checkStack(processPo p, objPo heapMark, callPo C, int len, choicePo B, choicePo T) {
+  register int i;
+
+  assert(B <= (choicePo) p->proc.sTop && B >= (choicePo) p->proc.sBase &&
+         C <= (callPo) p->proc.sTop && C >= (callPo) p->proc.sBase);
+
+  if ((ptrPo) B < (ptrPo) C) {
+    register ptrPo A = (ptrPo) (B + 1);
+
+    assert((ptrPo) B <= (ptrPo) T && (ptrPo) B < (ptrPo) C);
+
+    verifyVar(&B->PROG, p);
+    verifyVar(&B->cPROG, p);
+
+    for (i = 0; i < B->AX; i++, A++)
+      verifyVar(A, p);
+
+    assert(B->cSB <= (choicePo) p->proc.sTop);
+    assert(B->B <= (choicePo) p->proc.sTop);
+    assert(B->T <= (choicePo) p->proc.sTop);
+    assert(B->C <= (callPo) p->proc.sTop);
+
+    assert(B->trail >= (trailPo) p->proc.sBase &&
+           B->trail <= p->proc.trail);
+    assert(op_code(*B->cPC) == gcmap);
+    assert(B->H >= p->proc.heap.base && B->H <= p->proc.heap.create);
+    assert(B->H <= heapMark);
+    assert((ptrPo) T >= (ptrPo) B);
+    assert(B->B <= (choicePo) p->proc.sTop && B->B > B);
+    heapMark = B->H;
+
+    if (B == T)
+      T = T->T;
+
+    if (B->C < C && B->C < (callPo) p->proc.sTop) {
+      C = B->C;    /* the choice point's call back is newer */
+      len = envSize(B->cPC);  /* do this before the next step */
+    }
+    B = B->B;    /*look at the previous choice point */
+  } else {      /* verify a call environment */
+    register ptrPo Y = (ptrPo) C;
+
+    assert((ptrPo) C < (ptrPo) B && (ptrPo) C < (ptrPo) T);
+    for (i = 0; --Y, i < len; i++)
+      verifyVar(Y, p);
+
+    verifyVar(&C->cPROG, p);
+
+    assert(C->cSB <= (choicePo) p->proc.sTop);
+    assert(C->C <= (callPo) p->proc.sTop && C->C > C);
+    assert(op_code(*C->cPC) == gcmap);
+    assert(C->cPC - FirstInstruction(C->cPROG) >= 0);
+
+    len = envSize(C->cPC);  /* do this before the next step */
+    C = C->C;
+  }
+
+  if (B < (choicePo) p->proc.sTop || C < (callPo) p->proc.sTop)
+    checkStack(p, heapMark, C, len, B, T);
+  else
+    assert((ptrPo) C == p->proc.sTop && (ptrPo) B == p->proc.sTop);
 }
 
 static retCode vP(processPo p, void *c) {
