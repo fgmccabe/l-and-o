@@ -95,6 +95,38 @@ static inline logical validPtr(processPo P, ptrPo x) {
     *d = v;                          \
   }while(0)
 
+static inline void bindV(processPo P, choicePo B, ptrPo d, ptrI v) {
+  assert(validPtr(P, d));
+  if ((d) < (ptrPo) ((B)->H) || (ptrPo) (d) > (ptrPo) B) {
+    P->proc.trail->var = d;
+    P->proc.trail->val = *d;
+    P->proc.trail++;
+  }
+  if (isSuspVar((d)) && inHeap(&P->proc.heap, (objPo) d)) {
+    suspensionPo susp = (suspensionPo) (d - 1);
+
+    if (isvar(v) && isSuspVar((ptrPo) v)) {
+      suspensionPo other = (suspensionPo) (((ptrPo) v) - 1);
+      ptrPo tail = &other->goal;
+
+      while (IsList(*tail))
+        tail = listTail(objV(*tail));
+
+      bndVr(tail, susp->goal);
+    } else {
+      ptrPo tail = &susp->goal;
+
+      while (IsList(*tail))
+        tail = listTail(objV(*tail));
+
+      P->proc.F = SUSP_ACTIVE;
+      bndVr(tail, P->proc.trigger);
+      P->proc.trigger = susp->goal;
+    }
+  }
+  *d = v;
+}
+
 #define saveRegs(pc)                 \
   {                                  \
     P->proc.PC = pc;                 \
@@ -199,7 +231,7 @@ void chainSuspension(processPo P, ptrPo p) {
     nC->C = C;                                                  \
     recordDebugState();                                         \
     C = nC;                                                     \
-    Y = (ptrPo)C;    /* negative values used for local variables */ \
+    Y = (ptrPo)C;/* negative values used for local variables */ \
   }
 
 void runGo(register processPo P) {
@@ -1775,8 +1807,9 @@ void runGo(register processPo P) {
 
       case mYY: {      /* move Y[h],Y[m] */
         register ptrPo yVar = Yreg(-op_h_val(PCX));
+        register ptrPo sVar = Yreg(-op_m_val(PCX));
 
-        bindVr(yVar, deRefI(Yreg(-op_m_val(PCX)))); /* we need to bind, 'cos we may need to undo this move*/
+        bindV(P, B, yVar, deRefI(sVar)); /* we need to bind, 'cos we may need to undo this move*/
         continue;
       }
 

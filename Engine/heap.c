@@ -561,6 +561,7 @@ void verifyProc(processPo p) {
         assert(B->H >= p->proc.heap.base && B->H <= p->proc.heap.create);
         assert(B->H <= heapMark);
         assert((ptrPo) T >= (ptrPo) B);
+        assert(B->B <= (choicePo) p->proc.sTop && B->B>B);
         heapMark = B->H;
 
         if (B == T)
@@ -582,7 +583,7 @@ void verifyProc(processPo p) {
         verifyVar(&C->cPROG, p);
 
         assert(C->cSB <= (choicePo) p->proc.sTop);
-        assert(C->C <= (callPo) p->proc.sTop);
+        assert(C->C <= (callPo) p->proc.sTop && C->C>C);
         assert(op_code(*C->cPC) == gcmap);
         assert(C->cPC - FirstInstruction(C->cPROG) >= 0);
 

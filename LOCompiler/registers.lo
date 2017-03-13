@@ -61,9 +61,13 @@ lo.comp.code.registers{
   public resetGc:(varSet) => varSet.
   resetGc(varSet(A,L,_)) => varSet(A,L,0).
 
-  public gcMap:(varSet,integer,list[instruction],instruction){}.
-  gcMap(varSet(Rgs,Locs,_),Arity,clearYs(1,none,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
-    Esize = foldRight((X,Y)=>max(X,Y),0,Locs).
+  public gcMap:(varSet,map[string,varDesc],integer,integer,list[instruction],instruction){}.
+  gcMap(varSet(Rgs,Locs,_),D,Arity,Gp,clearYs(1,none,Esize,Locs)<>clearAs(1,Arity,Rgs),iGcmap(Arity,Esize)) :-
+    Esize = foldMap((k,v,u)=>compLclVar(p,v,u),0,D).
+
+  compLclVar:(integer,varDesc,integer) => integer.
+  compLclVar(Gp,varDesc(_,_,isDefined,yReg(Lc,_),_),Mx) => Lc :- Lc>Mx.
+  compLclVar(_,_,Mx) => Mx.
 
   clearYs:(integer,option[(integer,integer)],integer,set[integer]) => list[instruction].
   clearYs(Rg,Rnge,Mx,_) => emitClearYs(Rnge) :- Rg > Mx.

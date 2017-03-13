@@ -28,7 +28,7 @@ lo.comp.code.clause{
     lSize = max(maxLocals(Vsx),PermSize),
     Code =
       (hSize>0 ? [iGc(Arity,hSize)] | []) <>
-      ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,0)] | []) <>
+      ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,lSize)] | []) <>
       HCode<>bCode.
 
   clearLocals:(set[integer],integer,integer) => list[instruction].
@@ -44,7 +44,7 @@ lo.comp.code.clause{
     lSize = gcPredict(Vsx),
     (lSize > 0 ?
       ((Allo | maxLocals(Vsx)>0) ?
-        gcMap(Vs0,Mx,Pre,_),
+        gcMap(Vs0,D0,Mx,Gp,Pre,_),
         Code = Pre<>[iGc(Mx,lSize),..fCode] |
         Code = clearAs(1,Mx,usedRegs(Vs0)) <> [iGc(Mx,lSize)] <> fCode) |
       Code = fCode).
@@ -52,7 +52,7 @@ lo.comp.code.clause{
     compPart(P,Gp,D0,L0,SM0,resetGc(Vs0),false,false,fCode,D1,L1,V1,SM1),
     lSize = gcPredict(V1),
     Mx = maxReg(Vs0),
-    gcMap(Vs0,Mx,Pre,_),
+    gcMap(Vs0,D1,Mx,Gp,Pre,_),
     (lSize>0 ?
       gCode = Pre<>[iGc(Mx,lSize)] |
       gCode = []),
@@ -79,7 +79,7 @@ lo.comp.code.clause{
     ELb = newLabel("Src"),
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
     Arity = size(Args),
-    gcMap(Vsx,Arity,Pre,MapIns),
+    gcMap(Vsx,Dx,Arity,Gp,Pre,MapIns),
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
           Code = [iLbl(SLb),..aCode]<>[iEscape(Arity,Esc),MapIns,iDealloc,iGcmap(0,0),iLbl(ELb)] |
@@ -92,7 +92,7 @@ lo.comp.code.clause{
     ELb = newLabel("Src"),
     callArgs(Args,Gp,D,Lt,Vs,Last,aCode,Dx,Lt0,Vsx),
     Arity = size(Args),
-    gcMap(Vsx,Arity,Pre,MapIns),
+    gcMap(Vsx,Dx,Arity,Gp,Pre,MapIns),
     accessLiteral(Prd,Lbl,Lt0,Ltx)!,
     (Last ?
       ( (Alloc | maxLocals(Vs)>0) ?
@@ -105,7 +105,7 @@ lo.comp.code.clause{
     SLb = newLabel("Src"),
     ELb = newLabel("Src"),
     callArgs([Cl,LbV,ThV],Gp,D,Lt,Vs,Last,aCode,Dx,Ltx,Vsx),
-    gcMap(Vsx,3,Pre,MapIns),
+    gcMap(Vsx,Dx,3,Gp,Pre,MapIns),
     (Last ?
       ((Alloc|maxLocals(Vs)>0) ?
         Code = [iLbl(SLb),..aCode]<>[iDlkawlO(3,2),iLbl(ELb)] |

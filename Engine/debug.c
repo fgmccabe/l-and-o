@@ -339,6 +339,14 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
             clrCmdLine(cmdLine, NumberOf(cmdLine));
             continue;
 
+          case 'v': // Verify the stack
+            p->proc.B = B;
+            p->proc.C = (callPo) y;
+            p->proc.cPC = cpc;
+            verifyProc(p);
+            clrCmdLine(cmdLine, NumberOf(cmdLine));
+            continue;
+
           case '0':
           case '1':
           case '2':
