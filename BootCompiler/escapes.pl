@@ -76,7 +76,7 @@ escapeType("_file_mode",funType([type("lo.core*string")],type("lo.core*integer")
 escapeType("_file_present",predType([type("lo.core*string")])).
 escapeType("_file_type",funType([type("lo.core*string")],type("lo.core*integer"))).
 escapeType("_file_size",funType([type("lo.core*string")],type("lo.core*integer"))).
-escapeType("_file_modified",funType([type("lo.core*string")],type("lo.core*float"))).
+escapeType("_file_modified",funType([type("lo.core*string")],type("lo.core*integer"))).
 escapeType("_file_date",predType([type("lo.core*string"),type("lo.core*integer"),type("lo.core*integer"),type("lo.core*integer")])).
 escapeType("_openInFile",funType([type("lo.core*string"),type("lo.core*integer")],type("lo.io*fileHandle"))).
 escapeType("_openOutFile",funType([type("lo.core*string"),type("lo.core*integer")],type("lo.io*fileHandle"))).

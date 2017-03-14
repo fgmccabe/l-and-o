@@ -723,17 +723,19 @@ void runGo(register processPo P) {
 
           gcRemoveRoot(&P->proc.heap, root); /* reset roots */
 
+          restRegs();
+
 #ifdef MEMTRACE
           if (traceMemory)
             verifyProc(P);    /* Verify this process after the escape...*/
 #endif
 
           switch (ret) {
-            case Ok: restRegs();      /* restore registers in case of g/c */
+            case Ok:
               assert(op_code(*PC) == gcmap);
               PC++;        /* skip over the gcmap instruction */
               continue;
-            case Fail: restRegs();
+            case Fail:
               backTrack();
               continue;
             case Interrupt:      /* We were interrupted */
@@ -741,19 +743,16 @@ void runGo(register processPo P) {
                 strMsg(errorMsg, NumberOf(errorMsg), "interrupt");
                 saveRegs(PC);
                 raiseError(P, errorMsg, eINTRUPT);
+                restRegs();
               }
-              restRegs();
               continue;
             case Space:      /* Ran out of space */
               strMsg(errorMsg, NumberOf(errorMsg), "system");
-              saveRegs(PC);
               raiseError(P, errorMsg, eSPACE);
               restRegs();
               continue;
             case Error:      /* Report a run-time error */
-            restRegs();      /* should be already setup */
-              continue;
-
+              continue;      /* Everything already set up */
             default:
               logMsg(logFile, "Invalid return code `%d' from escape function `%s'",
                      ret, escapeName((int) op_so_val(PCX)));

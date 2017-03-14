@@ -133,7 +133,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_file_present,True,False,"P1S","check presence of a file")
   escape(_file_type,True,False,"F1Si","report on the type of a file")
   escape(_file_size,True,False,"F1Si","report on the size of a file")
-  escape(_file_modified,True,False,"F1Sf","report on when a file was last modified")
+  escape(_file_modified,True,False,"F1Si","report on when a file was last modified")
   escape(_file_date,True,False,"P4Siii","report on file access time and modification times")
 
   escape(_openInFile,True,False,"F2Si"fileType,"open input file")

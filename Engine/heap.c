@@ -527,10 +527,6 @@ void verifyProc(processPo p) {
 
     checkStack(p, heapMark, C, len, B, T);
 
-    for (i = 0; i < argArity(p->proc.PC); i++)
-      if (validPtr(p, (ptrPo) objV(p->proc.A[i])))
-        verifyVar(&p->proc.A[i], p);
-
     verifyVar(&p->proc.PROG, p);
     verifyVar(&p->proc.cPROG, p);
     verifyVar(&p->proc.trigger, p);

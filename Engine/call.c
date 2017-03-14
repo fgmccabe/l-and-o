@@ -105,25 +105,27 @@ retCode g__is(processPo P, ptrPo a) {
 // __defined(package,entry) -- look for a defined symbol in package
 //
 retCode g__defined(processPo P, ptrPo a) {
-  ptrI pkg = deRefI(&a[1]);
-  ptrI entry = deRefI(&a[2]);
+  ptrI entry = deRefI(&a[1]);
+  ptrI ar = deRefI(&a[2]);
 
-  if (isvar(entry) || isvar(pkg))
+  if (isvar(entry) || isvar(ar))
     return liberror(P, "__defined", eINSUFARG);
-  else if (!IsString(entry) || !IsString(pkg))
+  else if (!IsString(entry) || !IsInt(ar))
     return liberror(P, "__defined", eINVAL);
   else {
     byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
 
-    strMsg(resolved, NumberOf(resolved), "%U@%U", StringVal(stringV(pkg)), StringVal(stringV(entry)));
+    copyString2Buff(resolved,NumberOf(resolved),stringV(entry));
+
+    integer arity = integerVal(intV(ar));
 
     switchProcessState(P, in_exclusion);
 
-    ptrI sym = newProgramLbl(resolved, 0);
+    ptrI sym = programLbl(resolved, (uint16)arity);
 
     setProcessRunnable(P);
 
-    if (IsProgram(sym))
+    if (sym!=0 && IsProgram(sym))
       return Ok;
     else
       return Fail;

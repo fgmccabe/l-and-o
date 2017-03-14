@@ -80,7 +80,7 @@ lo.comp.escapes{
   escapeType("_file_present") => predType(tupleType([tipe("lo.core*string")])).
   escapeType("_file_type") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_size") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
-  escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*float")).
+  escapeType("_file_modified") => funType(tupleType([tipe("lo.core*string")]),tipe("lo.core*integer")).
   escapeType("_file_date") => predType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer"),tipe("lo.core*integer"),tipe("lo.core*integer")])).
   escapeType("_openInFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
   escapeType("_openOutFile") => funType(tupleType([tipe("lo.core*string"),tipe("lo.core*integer")]),tipe("lo.io*fileHandle")).
