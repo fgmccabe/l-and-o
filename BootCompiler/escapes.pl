@@ -9,7 +9,7 @@ escapeType("_unify",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("_identical",univType(kVar("t"),predType([kVar("t"),kVar("t")]))).
 escapeType("var",univType(kVar("t"),predType([kVar("t")]))).
 escapeType("ground",univType(kVar("t"),predType([kVar("t")]))).
-escapeType("_call",predType([type("lo.core*string"),type("lo.core*integer"),typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])])).
+escapeType("_call",predType([type("lo.core*string"),type("lo.core*integer"),typeExp(tpFun("lo.core*list",1),[typeExp(tpFun("lo.core*list",1),[type("lo.core*string")])])])).
 escapeType("_defined",predType([type("lo.core*string"),type("lo.core*integer")])).
 escapeType("_int_plus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
 escapeType("_int_minus",funType([type("lo.core*integer"),type("lo.core*integer")],type("lo.core*integer"))).
@@ -160,6 +160,7 @@ escapeType("_flt2str",funType([type("lo.core*float"),type("lo.core*integer"),typ
 escapeType("_int_format",funType([type("lo.core*integer"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("_flt_format",funType([type("lo.core*float"),type("lo.core*string")],type("lo.core*string"))).
 escapeType("_str2flt",funType([type("lo.core*string")],type("lo.core*float"))).
+escapeType("_str2int",funType([type("lo.core*string")],type("lo.core*integer"))).
 escapeType("_str_lt",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_ge",predType([type("lo.core*string"),type("lo.core*string")])).
 escapeType("_str_hash",funType([type("lo.core*string")],type("lo.core*integer"))).
@@ -349,6 +350,7 @@ isEscape("_flt2str").
 isEscape("_int_format").
 isEscape("_flt_format").
 isEscape("_str2flt").
+isEscape("_str2int").
 isEscape("_str_lt").
 isEscape("_str_ge").
 isEscape("_str_hash").

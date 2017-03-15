@@ -40,7 +40,7 @@ retCode g__call(processPo P, ptrPo a) {
     ptrI PROG = programLbl((string) prog, arity);
 
     if (PROG != 0 && IsProgram(PROG)) {
-      retCode ret = populateArgs(ARGS, (ptrPo) &P->proc.A, arity);
+      retCode ret = populateArgs(ARGS, (ptrPo) &P->proc.A[1], arity);
 
       if (ret == Ok) {
         P->proc.cPC = P->proc.PC;                 /* start stacking stuff */

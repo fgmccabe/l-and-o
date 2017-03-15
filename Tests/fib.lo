@@ -1,4 +1,4 @@
-fib{
+test.fib{
   -- Implement fibonacci sequence
   import lo.
 
@@ -7,11 +7,13 @@ fib{
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
-  show "\(fib(20))".
-
   fibList:(integer,integer,list[integer]) => list[integer].
   fibList(Curr,Mx,L) =>  L :-  Curr>Mx .
   fibList(Curr,Max,[N1,N2,..L]) => fibList(N1+N2,Max,[N1+N2,N1,N2,..L]).
 
-  show "\(fibList(0,4000000,[1,0]))".
+  main:(integer){}.
+  main(Cnt) :-
+    logMsg("Fib of \(Cnt) is \(fib(Cnt))").
+
+  -- show "\(fibList(0,4000000,[1,0]))".
 }

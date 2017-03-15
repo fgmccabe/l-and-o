@@ -54,7 +54,7 @@ initPkg(pkg(Pkg,_)) :-
 initPkg(_).
 
 lookForMain(pkg(Top,_),Args) :-
-  localName(Top,"@","main",M),
+  localName(Top,"@","_main",M),
   % writef("Trying %w",[M]),
   atom_string(Main,M),
   current_predicate(Main/1),!,

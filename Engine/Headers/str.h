@@ -60,18 +60,17 @@ static inline long stringLen(stringPo p) {
 static inline uinteger stringHash(objPo p) {
   clssPo class = classOf(p);
 
-  assert(hasClass(p,stringClass));
+  assert(hasClass(p, stringClass));
 
   specialClassPo sClass = (specialClassPo) class;
   return sClass->hashFun(sClass, p);
 }
 
-extern ptrI allocateString(heapPo H, string buff, long len);
-extern ptrI allocateCString(heapPo H, const char *buff);
+ptrI allocateString(heapPo H, string buff, long len);
+ptrI allocateCString(heapPo H, const char *buff);
 
-extern retCode copyString2Buff(byte *buffer,long bLen,stringPo s);
-
-extern retCode writeString(ioPo f, void *x, long depth, long prec, logical alt);
+retCode copyString2Buff(byte *buffer, long bLen, stringPo s);
+retCode strPrepare(string tgt, long tLen, string src, long sLen, codePoint pad, logical left, long width);
 retCode closeOutString(ioPo f, heapPo P, ptrPo tgt);
 
 retCode explodeString(processPo P, byte *text, long length, ptrPo a);

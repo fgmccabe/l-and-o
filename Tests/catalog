@@ -6,6 +6,7 @@ catalog{
     test.c -> "c.lo".
     test.cc -> "cc.lo".
     test.f -> "f.lo".
+    test.fib -> "fib.lo".
     test.format -> "fo.lo".
     test.eq -> "eq.lo".
     test.gp -> "gp.lo".

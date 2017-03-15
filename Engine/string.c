@@ -27,7 +27,6 @@ static retCode strScanFun(specialClassPo class, specialHelperFun helper, void *c
 static objPo strCopyFun(specialClassPo class, objPo dst, objPo src);
 static uinteger strHashFun(specialClassPo class, objPo o);
 
-
 void initStringClass(void) {
   stringClass = newSpecialClass("lo.core#string", strSizeFun, strCompFun,
                                 strOutFun, strCopyFun, strScanFun, strHashFun);
@@ -266,8 +265,7 @@ retCode g__trim(processPo P, ptrPo a) {
 
 // Prepare a string to be formatted in a differently sized field
 
-static retCode strPrepare(string tgt, long tLen, string src, long sLen,
-                          codePoint pad, logical left, long width) {
+retCode strPrepare(string tgt, long tLen, string src, long sLen, codePoint pad, logical left, long width) {
   long i, j;
 
   if (width == 0)
@@ -304,38 +302,6 @@ static retCode strPrepare(string tgt, long tLen, string src, long sLen,
     }
   }
   return Ok;
-}
-
-retCode g__int2str(processPo P, ptrPo a) {
-  ptrI a1 = deRefI(&a[1]);
-  ptrI a2 = deRefI(&a[2]);
-  ptrI a3 = deRefI(&a[3]);
-  ptrI a4 = deRefI(&a[4]);
-
-  if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4))
-    return liberror(P, "_int2str", eINTNEEDD);
-  else if (!isInteger(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
-    return liberror(P, "_int2str", eINVAL);
-  else {
-    integer val = integerVal(intV(a1));
-    uint16 base = (uint16) integerVal(intV(a2));
-    integer width = integerVal(intV(a3));
-    codePoint pad = (codePoint) IntVal(a4);
-    logical left = (logical) (width < 0);
-    byte buffer[128];
-    byte result[128];
-
-    long len = int2StrByBase(buffer, val, 0, 10);
-
-    retCode ret = strPrepare(result, NumberOf(result), buffer, len, pad, left, labs(width));
-
-    if (ret == Ok) {
-      ptrI rslt = allocateString(&P->proc.heap, result, uniStrLen(result));
-
-      return funResult(P, a, 5, rslt);
-    } else
-      return liberror(P, "_int2str", eIOERROR);
-  }
 }
 
 retCode g_explode(processPo P, ptrPo a) {

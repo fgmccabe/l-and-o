@@ -24,8 +24,8 @@ ancestor{
 
     show()=> "ancestor test".
   }.
-                                        
-  main(_) :- checkUnit(ancestorTester).
 
-  
+  main() :- checkUnit(ancestorTester).
+
+
 }

@@ -339,6 +339,59 @@ retCode g__int2flt(processPo P, ptrPo a) {
   }
 }
 
+retCode g__int2str(processPo P, ptrPo a) {
+  ptrI a1 = deRefI(&a[1]);
+  ptrI a2 = deRefI(&a[2]);
+  ptrI a3 = deRefI(&a[3]);
+  ptrI a4 = deRefI(&a[4]);
+
+  if (isvar(a1) || isvar(a2) || isvar(a3) || isvar(a4))
+    return liberror(P, "_int2str", eINTNEEDD);
+  else if (!isInteger(objV(a1)) || !isInteger(objV(a2)) || !isInteger(objV(a3)) || !isInteger(objV(a4)))
+    return liberror(P, "_int2str", eINVAL);
+  else {
+    integer val = integerVal(intV(a1));
+    uint16 base = (uint16) integerVal(intV(a2));
+    integer width = integerVal(intV(a3));
+    codePoint pad = (codePoint) IntVal(a4);
+    logical left = (logical) (width < 0);
+    byte buffer[128];
+    byte result[128];
+
+    long len = int2StrByBase(buffer, val, 0, 10);
+
+    retCode ret = strPrepare(result, NumberOf(result), buffer, len, pad, left, labs(width));
+
+    if (ret == Ok) {
+      ptrI rslt = allocateString(&P->proc.heap, result, uniStrLen(result));
+
+      return funResult(P, a, 5, rslt);
+    } else
+      return liberror(P, "_int2str", eIOERROR);
+  }
+}
+
+retCode g__str2int(processPo P, ptrPo a) {
+  ptrI x = deRefI(&a[1]);
+  ptrI y = deRefI(&a[2]);
+
+  if (IsString(x)) {
+    string src = stringVal(stringV(x));
+    integer reslt = parseInteger(src, uniStrLen(src));
+
+    if (isvar(y)) {    /* check the output argument */
+      ptrI Ans = allocateInteger(&P->proc.heap, reslt);
+
+      bindVar(P, deRef(&a[2]), Ans);
+      return Ok;
+    } else if (isInteger(objV(y)) && IntVal(y) == reslt)
+      return Ok;
+    else
+      return Fail;
+  } else
+    return liberror(P, "_str2int", eINSUFARG); /* dont support inverse mode */
+}
+
 /* irand(X) => Random integer in range [0..X) */
 
 retCode g_irand(processPo P, ptrPo a) {

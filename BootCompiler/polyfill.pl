@@ -18,6 +18,7 @@
                     '_str_lt'/2, '_str_ge'/2,
                     '_int_lt'/2, '_int_ge'/2,
                     '_flt_lt'/2,'_flt_ge'/2,
+                    '_str2flt'/2,'_str2int'/2,
                     listify/2,
                     '_get_file'/2,
                     '_put_file'/2,
@@ -56,6 +57,9 @@ listify([],'lo.core#[]').
 listify([E|L],'lo.core#,..'(E,LL)) :- listify(L,LL).
 
 implode(C,S) :- listify(L,C),string_codes(S,L).
+
+'_str2int'(S,I) :- number_string(I,S).
+'_str2flt'(S,D) :- number_string(D,S).
 
 /* Unicode character class */
 

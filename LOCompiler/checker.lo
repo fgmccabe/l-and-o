@@ -25,15 +25,44 @@ lo.comp.typecheck{
   checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,Imports),ImportClosure,ODefs,OOthers) :-
     isBraceTerm(Prog,Lc,Pk,Els),
     PkgNm = packageName(Pk),
-    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),_,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
-    (errorFree(Rp0) ?
+    thetaEnv(PkgNm,Repo,Lc,Els,[],pushScope(stdDict),Env,Defs,Public,Imports,ImportClosure,Others,Rp,Rp0),
+    PDefs = implementMain(Defs,Env,Rp0,Rp1),
+    (errorFree(Rp1) ?
       findImportedImplementations(ImportClosure,[],OverDict),
-      overload(Defs,OverDict,ODict,ODefs,Rp0,Rp1),
-      OOthers = overloadOthers(Others,ODict,Rp1,Rpx) |
+      overload(PDefs,OverDict,ODict,ODefs,Rp1,Rp2),
+      OOthers = overloadOthers(Others,ODict,Rp2,Rpx) |
       Rpx=Rp0,
       ODefs=Defs,
       OOthers=Others),
     computeExport(ODefs,[],Public,Exports,Types,Enums,Contracts,Impls).
+
+  private implementMain:(list[canonDef],list[env],report,report) => list[canonDef].
+  implementMain(Defs,Env,Rp,Rpx) => [MainDef,..Defs] :-
+    isVar("main",Env,vr(MV,Tp)),
+    \+isVar("_main",Env,_),
+    relDef(Lc,"main",_,_,_) in Defs,
+    isPredType(Tp),
+    moveQuants(Tp,Q,MTp),
+    moveConstraints(MTp,Cx,predType(tupleType(ArgTps))),
+    StringTp = findType("string",Lc,Env,Rp,Rp0),
+    ListTp = typeExp(findType("list",Lc,Env,Rp0,Rp1),[StringTp]),
+    constructMainArgs(ArgTps,StringTp,ListTp,Lc,Env,HedArgs,CallArgs,Rp1,Rpx),
+    moveConstraints(MnTp,Cx,predType(tupleType([ListTp]))),
+    moveQuants(FnlTp,Q,MnTp),
+    Cl = clause(Lc,"_main",tpl([HedArgs]),callCond(Lc,MV,tpl(CallArgs))),
+    logMsg("generated main: \(Cl)"),
+    MainDef = relDef(Lc,"_main",FnlTp,Cx,[Cl]).
+  implementMain(Defs,_,Rp,Rp) => Defs.
+
+  private constructMainArgs:(list[tipe],tipe,tipe,location,list[env],canonTerm,list[canonTerm],report,report){}.
+  constructMainArgs([],StrTp,LstTp,Lc,Env,H,[],Rp,Rpx) :-
+    typeOfTerm(iden(Lc,"[]"),ListTp,Env,_,H,Rp,Rpx).
+  constructMainArgs([Tp,..TL],StrTp,LstTp,Lc,Env,apply(Lc,Op,tpl([H,HL])),[C,..CL],Rp,Rpx) :-
+    Vr = iden(Lc,_str_gen("_")),
+    typeOfTerm(Vr,StrTp,Env,E0,H,Rp,Rp0),
+    typeOfTerm(unary(Lc,"_coerce",Vr),Tp,E0,E1,C,Rp0,Rp1),
+    knownType(iden(Lc,",.."),newVar("_"),E1,_,Op,Rp1,Rp2),
+    constructMainArgs(TL,StrTp,ListTp,Lc,E1,HL,CL,Rp2,Rpx).
 
   private computeImports:(list[(string,defnKind)],list[pkgSpec]) => list[(visibility,pkg)].
   computeImports(_,[])=>[].

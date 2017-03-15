@@ -24,8 +24,8 @@ lo.comp.compiler{
   import lo.comp.code.pkg.
 
   -- Hint to the run-time:
-  main:(list[string]){}.
-  main(Args) :-
+  _main:(list[string]){}.
+  _main(Args) :-
     processArgs(parseFlags(Args)).
 
   processArgs:(either[compOption,string]){}.

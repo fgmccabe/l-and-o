@@ -34,7 +34,7 @@ escape(_identical,False,False,":k't'P2k't'k't'","test for identicality")
 escape(var,False,False,":k't'P1k't'","test for variable")
 escape(ground,False,False,":k't'P1k't'","test for grounded-ness")
 
-escape(_call,True,False,"P3SiLS","dynamic call")
+escape(_call,True,False,"P3SiLLS","dynamic call")
 escape(_defined,True,False,"P2Si","test for defined name")
 
 escape(_int_plus,False,False,"F2iii","add two integers")
@@ -235,6 +235,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_flt_format,False,False,"F2fSS","format a floating point using picture format")
 
   escape(_str2flt,False,False,"F1Sf","parse a string as a float")
+  escape(_str2int,False,False,"F1Si","parse a string as an integer")
 
   escape(_str_lt,False,False,"P2SS","String 1 is less than string 2")
   escape(_str_ge,False,False,"P2SS","String 1 is greater than or equals to string 2")

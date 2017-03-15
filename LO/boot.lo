@@ -72,7 +72,6 @@ lo.boot{
   importPkg(P,_,Ld,[]) :- P in Ld.
   importPkg(P,R,Ld,Imps//(((Pk,V))=>pkgUp(Pk,V))) :-
     loadFromRepo(R,P,"code",Code),
-    _logmsg("\(P) from repo"),
     Imps = _install_pkg(Code).
 
   pkgUp:(string,string) => pkg.
@@ -89,9 +88,9 @@ lo.boot{
   invokeMain:(string,list[string]){}.
   invokeMain(Top,Args) :-
     Pred = Top+"@_main",
-    ( _defined(Pred,size(Args)) ?
+    ( _defined(Pred,1) ?
       logMsg("Starting ..."),
-      _call(Pred,1,Args) |
+      _call(Pred,1,[Args]) |
       logMsg("No main program: \(Top)") ).
 
   private delayHandler:(list[(){}]){}. -- private, but known to the run-time
