@@ -324,9 +324,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
       gcAddRoot(S->R, &class); /* Keep the pointer to the class */
 
       if (res == Ok) {
-        objPo obj = allocate(H, (size_t) (arity + 1));
-
-        obj->class = class;
+        objPo obj = allocateObject(H,class);
 
         *tgt = objP(obj);
 

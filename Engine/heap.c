@@ -164,6 +164,7 @@ static retCode copyTermToHeap(ptrPo dst, ptrPo src, varTablePo vT) {
           retCode res = Ok;
 
           objPo xx = allocate(vT->H, (size_t) objectSize(p));
+          xx->class = p->class;
           *dst = objP(xx);
 
           int ix;
