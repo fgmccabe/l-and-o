@@ -51,8 +51,8 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
 
     if (l1 != l2)
       return incomparible;
-    else
-      return uniNCmp(stringVal(s1), stringVal(s2), l1);
+    else if(memcmp(stringVal(s1),stringVal(s2),(size_t)(l1*sizeof(byte)))==0)
+      return same;
   } else
     return incomparible;
 }
@@ -104,26 +104,21 @@ ptrI allocateString(heapPo H, string m, long count) {
 
   new->class = stringClass;
   new->size = count;
-  strncpy((char *) new->data, (char *) m, count);
+  memcpy(new->data,m,(size_t)(count*sizeof(byte)));
   return objP(new);
 }
 
 retCode copyString2Buff(byte *buffer, long bLen, stringPo s) {
-  string src = stringVal(s);
-  long len = stringLen(s);
-  long ix = 0;
-  while (ix < len && ix < bLen) {
-    buffer[ix] = src[ix];
-    ix++;
-  }
+  long sLen = stringLen(s);
+  long len = min(sLen, bLen - 1);
 
-  if (ix < bLen) {
-    buffer[ix] = 0;
+  memcpy(buffer, stringVal(s), len * sizeof(byte));
+  buffer[len] = '\0';
+
+  if (sLen < bLen)
     return Ok;
-  } else {
-    buffer[ix - 1] = 0;
+  else
     return Eof;
-  }
 }
 
 retCode g__stringOf(processPo P, ptrPo a) {
@@ -146,6 +141,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
     retCode ret = outCell(str, &Data, prec == 0 ? INT_MAX / 4 : prec, 0, False);
 
     if (ret != Ok) {
+      closeFile(str);
       if (buffer != NULL)
         free(buffer);
       return liberror(P, "__stringOf", eINVAL);
@@ -177,14 +173,12 @@ retCode g__stringOf(processPo P, ptrPo a) {
             uniNCpy(p, sLen - (p - text), txt + len + width, -width);
         }
 
-        {
-          ptrI txtList = allocateString(H, text, labs(width));
+        ptrI txtList = allocateString(H, text, labs(width));
 
-          closeFile(str);  /* close the file down */
-          if (buffer != NULL)
-            free(buffer);
-          return funResult(P, a, 4, txtList);
-        }
+        closeFile(str);  /* close the file down */
+        if (buffer != NULL)
+          free(buffer);
+        return funResult(P, a, 4, txtList);
       } else {
         ptrI txtList = kvoid;
         rootPo root = gcAddRoot(&P->proc.heap, &txtList);
@@ -318,6 +312,7 @@ retCode g_explode(processPo P, ptrPo a) {
 
     byte buff[MAX_SYMB_LEN];
     string buffer = (strLen > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * strLen) : buff);
+
     strncpy((char *) buffer, (char *) src, strLen); // Copy out the string in case of GC
 
     ptrI out = emptyList;

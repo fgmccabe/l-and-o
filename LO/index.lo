@@ -127,7 +127,7 @@ lo.index{
   mergeLeafs(T1,T2) =>
       (nthBit(H1,CML) ? trNode(CM,CML,T2,T1) | trNode(CM,CML,T1,T2)) :-
       T1 = trLeaf(H1,L1),
-      T2=trLeaf(H2,L2),
+      T2 = trLeaf(H2,L2),
       CML = commonMaskLen(H1,H2,HashLen),
       CM = commonMask(H1,CML).
 

@@ -16,6 +16,8 @@ lo.comp.term {
 
   public type tloc ::= tloc(integer,integer).
 
+  public type trel ::= trel(string,integer,tipe,tloc,list[clse]).
+
   public type clse ::= clse(list[term],term,list[term],list[pred]).
 
   public type pred ::= call(option[tloc],term,list[term])

@@ -21,7 +21,9 @@ lo.comp.types{
         | typeRule(tipe,tipe)
         | faceType(list[(string,tipe)])
         | constrained(tipe,constraint)
-        | univType(tipe,tipe).
+        | tpLambda(list[tipe],tipe)
+        | univType(tipe,tipe)
+        | existType(tipe,tipe).
 
   public
   type constraint ::= conTract(string,list[tipe],list[tipe])
@@ -67,14 +69,20 @@ lo.comp.types{
   dispType(grammarType(A,R)) => ssSeq([dispType(A),ss("-->"), dispType(R)]).
   dispType(classType(A,R)) => ssSeq([dispType(A),ss("<=>"), dispType(R)]).
   dispType(predType(A)) => ssSeq([dispType(A),ss("{}")]).
-  dispType(univType(V,Tp)) => ssSeq([ss("all "), dispType(V),.. showMoreQuantified(Tp)]).
+  dispType(univType(V,Tp)) => ssSeq([ss("all "), dispType(V),.. showMoreUniv(Tp)]).
+  dispType(existType(V,Tp)) => ssSeq([ss("exists "), dispType(V),.. showMoreExists(Tp)]).
   dispType(faceType(Els)) => ssSeq([ss("{ "), ssSeq(dispTypeFields(Els)), ss("}")]).
   dispType(typeRule(Hd,Bd)) => ssSeq([dispType(Hd), ss("<~"),dispType(Bd)]).
   dispType(constrained(Tp,Con)) => ssSeq([showConstraint(Con),.. showMoreConstraints(Tp)]).
+  dispType(tpLambda(Args,Tp)) => ssSeq([ss("["),ssSeq(dispTypeEls(Args)),ss("]"),ss("->"),dispType(Tp)]).
 
-  showMoreQuantified:(tipe) => list[ss].
-  showMoreQuantified(univType(V,Tp)) => [ss(","), dispType(V),.. showMoreQuantified(Tp)].
-  showMoreQuantified(Tp) => [ss(" ~~ "),dispType(Tp)].
+  showMoreUniv:(tipe) => list[ss].
+  showMoreUniv(univType(V,Tp)) => [ss(","), dispType(V),.. showMoreUniv(Tp)].
+  showMoreUniv(Tp) => [ss(" ~~ "),dispType(Tp)].
+
+  showMoreExists:(tipe) => list[ss].
+  showMoreExists(existType(V,Tp)) => [ss(","), dispType(V),.. showMoreExists(Tp)].
+  showMoreExists(Tp) => [ss(" ~~ "),dispType(Tp)].
 
   showMoreConstraints:(tipe) => list[ss].
   showMoreConstraints(constrained(Tp,Con)) => [ss(","), showConstraint(Con) ,.. showMoreConstraints(Tp)].
@@ -138,11 +146,13 @@ lo.comp.types{
 
   public isPredType:(tipe){}.
   isPredType(univType(_,T)) :- isPredType(T).
+  isPredType(existType(_,T)) :- isPredType(T).
   isPredType(constrained(T,C)) :- isPredType(T).
   isPredType(predType(_)).
 
   public isClassType:(tipe){}.
   isClassType(univType(_,T)) :- isClassType(T).
+  isClassType(existType(_,T)) :- isClassType(T).
   isClassType(constrained(T,C)) :- isClassType(T).
   isClassType(classType(_,_)).
 
@@ -189,6 +199,7 @@ lo.comp.types{
   typeKind(tFun(_,Ar,_,_)) => typeFun(Ar).
   typeKind(kFun(_,Ar)) => typeFun(Ar).
   typeKind(tpFun(_,Ar)) => typeFun(Ar).
+  typeKind(tpLambda(A,_)) => typeFun(size(A)).
   typeKind(_) => simpleType.
 
   private bnd:(tipe,tipe){}.
@@ -216,9 +227,11 @@ lo.comp.types{
   idOccIn(Id,classType(_,C)) :- idOccIn(Id,C).
   idOccIn(Id,grammarType(A,_)) :- idOccIn(Id,A).
   idOccIn(Id,grammarType(_,R)) :- idOccIn(Id,R).
-  idOccIn(Id,univType(_,B)) :- idOccIn(Id,B).
+  idOccIn(Id,univType(V,B)) :- \+idOccIn(Id,V), idOccIn(Id,B).
+  idOccIn(Id,existType(V,B)) :- \+idOccIn(Id,V), idOccIn(Id,B).
   idOccIn(Id,faceType(L)) :- (Fld,A) in L, idOccIn(Id,A).
   idOccIn(Id,constrained(T,_)) :- idOccIn(Id,T).
+  idOccIn(Id,tpLambda(A,T)) :- \+(V in A, idOccIn(Id,V)), idOccIn(Id,T).
 
   public implementationName:(constraint)=>string.
   implementationName(conTract(Nm,Args,_)) =>
@@ -241,6 +254,7 @@ lo.comp.types{
   surfaceName(kVar(Nm)) => Nm.
   surfaceName(kFun(Nm,_)) => Nm.
   surfaceName(tupleType(Els)) => "()\(length(Els))".
+  surfaceName(tpLambda(_,Tp)) => surfaceName(deRef(Tp)).
 
   public bindAT:(list[tipe],list[tipe],map[string,tipe]) => map[string,tipe].
   bindAT([],_,Q) => Q.
@@ -257,6 +271,7 @@ lo.comp.types{
   typeArity(grammarType(E,_)) => typeArity(E).
   typeArity(classType(E,_)) => typeArity(E).
   typeArity(univType(_,T)) => typeArity(T).
+  typeArity(existType(_,T)) => typeArity(T).
   typeArity(constrained(T,_)) => typeArity(T).
   typeArity(tupleType(L)) => length(L).
   typeArity(faceType(F)) => length(F).
