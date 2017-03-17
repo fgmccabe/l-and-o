@@ -16,8 +16,9 @@ lo.comp.grapher{
   import lo.comp.misc.
 
   public makeGraph:(list[pkg],fileRepo,catalog,report,report) => list[list[(pkg,list[pkg])]].
-  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
-  --  showGroups(G).
+  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => G :-
+    G = topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)),
+    showGroups(G).
 
   private implementation depends[(pkg,list[pkg])->>pkg] <= {
     defines((Pk,_),Rq) :- consistentPkg(Rq,Pk).
@@ -69,27 +70,28 @@ lo.comp.grapher{
   scanFile:(uri,pkg,fileRepo,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   scanFile(Fl,Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp0,Rpx) :-
     Term = parseFile(Fl,Rp,Rp0),
-    scanTerm(Term,Imps).
+    scanTerm(Term,Cat,Imps).
 
-  scanTerm:(ast,list[pkg]){}.
-  scanTerm(T,scanTheta(Th,[])) :-
+  scanTerm:(ast,catalog,list[pkg]){}.
+  scanTerm(T,Cat,scanTheta(Th,Cat,[])) :-
     isBraceTerm(T,_,P,Th).
 
-  scanTheta:(list[ast],list[pkg]) => list[pkg].
-  scanTheta([],Imps) => Imps.
-  scanTheta([St,..Stmts],Imports) => scanTheta(Stmts,scanStmt(St,Imports)).
+  scanTheta:(list[ast],catalog,list[pkg]) => list[pkg].
+  scanTheta([],_,Imps) => Imps.
+  scanTheta([St,..Stmts],Cat,Imports) => scanTheta(Stmts,Cat,scanStmt(St,Cat,Imports)).
 
-  scanStmt:(ast,list[pkg]) => list[pkg].
-  scanStmt(St,Imp) => scanStmt(El,Imp) :-
+  scanStmt:(ast,catalog,list[pkg]) => list[pkg].
+  scanStmt(St,Cat,Imp) => scanStmt(El,Cat,Imp) :-
     isUnary(St,"public",_,El).
-  scanStmt(St,Imp) => scanStmt(El,Imp) :-
+  scanStmt(St,Cat,Imp) => scanStmt(El,Cat,Imp) :-
     isUnary(St,"private",_,El).
-  scanStmt(St,Imps) => [scanPkgName(P,defltVersion),..Imps] :-
+  scanStmt(St,Cat,Imps) => [scanPkgName(P,Cat),..Imps] :-
     isUnary(St,"import",_,P).
-  scanStmt(St,Imps) => Imps.
+  scanStmt(St,_,Imps) => Imps.
 
-  scanPkgName:(ast,version) => pkg.
+  scanPkgName:(ast,catalog) => pkg.
   scanPkgName(T,_) => pkg(packageName(P),vers("\(V)")) :-
     isBinary(T,"#",_,P,V).
-  scanPkgName(T,V) => pkg(packageName(T),V).
+  scanPkgName(T,Cat) => Pkg :-
+    resolveCatalog(Cat,pkg(packageName(T),defltVersion),_,Pkg).
 }

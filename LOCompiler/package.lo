@@ -7,4 +7,7 @@ lo.comp.package{
   public type visibility ::= priVate | pUblic.
 
   public type pkgSpec ::= pkgSpec(pkg,list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
+
+  public pkgSpecPkg:(pkgSpec)=>pkg.
+  pkgSpecPkg(pkgSpec(P,_,_,_,_,_,_))=>P.
 }

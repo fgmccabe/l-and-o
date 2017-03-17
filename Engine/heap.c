@@ -163,8 +163,7 @@ static retCode copyTermToHeap(ptrPo dst, ptrPo src, varTablePo vT) {
           long arity = objectArity(p);
           retCode res = Ok;
 
-          objPo xx = allocate(vT->H, (size_t) objectSize(p));
-          xx->class = p->class;
+          objPo xx = allocateObject(vT->H,p->class);
           *dst = objP(xx);
 
           int ix;

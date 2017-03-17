@@ -83,9 +83,9 @@ static inline ptrI allocateVar(heapPo H)
 #define SuspensionMark objectMark(suspensionKey,SuspensionCellCount)
 
 typedef struct _susp_record_ {
-  ptrI class;                            /* = suspClass */
+  ptrI class;                           /* = suspClass */
   ptrI var;                             /* variable that is suspended */
-  ptrI key;				/* A copy of the sentinel for a suspension record */
+  ptrI key;				                      /* A copy of the sentinel for a suspension record */
   ptrI goal;                            /* goal structure to activate on suspension */
 } suspensionRec, *suspensionPo;
 

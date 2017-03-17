@@ -36,6 +36,8 @@ lo.comp.typecheck{
       OOthers=Others),
     computeExport(ODefs,[],Public,Exports,Types,Enums,Contracts,Impls).
 
+
+
   private implementMain:(list[canonDef],list[env],report,report) => list[canonDef].
   implementMain(Defs,Env,Rp,Rpx) => [MainDef,..Defs] :-
     isVar("main",Env,vr(MV,Tp)),
@@ -97,11 +99,16 @@ lo.comp.typecheck{
     typeOfTerm(E,findType("string",Lc,Env,Rp,Rp0),Env,_,Show,Rp0,Rpx).
 
   processImportGroup:all r ~~ repository[r] |: (list[ast],list[(visibility,pkg)],list[pkgSpec],location,r,list[env],list[env],report,report){}.
-  processImportGroup(Stmts,Imports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
+  processImportGroup(Stmts,AImports,ImportClosure,Lc,Repo,Env,Ex,Rp,Rpx) :-
     findAllImports(Stmts,Imports),
     ImportedPkgs = Imports//second,
     ImportClosure = importClosure(ImportedPkgs,[],Repo,Rp,Rpx),
+    AImports = Imports//(((Vz,pkg(Pk,_))) => (Vz,pkg(Pk,importedVersion(Pk,ImportClosure)))),
     importAllDefs(ImportClosure,Lc,Env,Ex).
+
+  importedVersion:(string,list[pkgSpec])=>version.
+  importedVersion(P,Specs) => AV :-
+    pkgSpec(pkg(P,AV),_,_,_,_,_,_) in Specs.
 
   findAllImports:(list[ast],list[(visibility,pkg)]){}.
   findAllImports([],[]).
