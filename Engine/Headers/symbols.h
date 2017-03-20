@@ -32,23 +32,15 @@ extern ptrI udpPtrClass;
 /* Standard symbols */
 
 extern ptrI kvoid;
-extern ptrI emptyList,emptySymbol;
+extern ptrI emptyList;
 
-extern ptrI bootProg;
-extern ptrI dieProg;                   /* program just dies */
-extern ptrI exitProg;                /* program that succeeds out of process */
-extern ptrI trapProg;                  /* default trap handler */
-extern ptrI kprocessFlag;
+extern ptrI dieProg;                    /* program just dies */
+extern ptrI exitProg;                   /* program that succeeds out of process */
+extern ptrI trapProg;                   /* default trap handler */
 
 extern ptrI trueClass,falseClass;
 
-extern ptrI kloadflag;                  /* The loaded property */
-extern ptrI kversion;                   /* The $version property */
-extern ptrI universal;                  /* The universal package version */
-extern ptrI kdefined;                   /* The names defined in a package  */
-extern ptrI klabel;                     /* The $label property */
-extern ptrI kmain;			/* The main entry point */
-extern ptrI kmainThread;		/* The main thread */
+extern ptrI kmainThread;		            /* The main thread */
 
 extern ptrI kstart;                     /* entry point for new threads */
 extern ptrI kdelay;                     /* delay response handler */

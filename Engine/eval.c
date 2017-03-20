@@ -235,27 +235,27 @@ void chainSuspension(processPo P, ptrPo p) {
   }
 
 void runGo(register processPo P) {
-  register insWord PCX = 0;    /* Current instruction register  */
-  register insPo PC;            /* program counter */
-  insPo cPC;        /* continuation program counter */
+  register insWord PCX = 0;           /* Current instruction register  */
+  register insPo PC;                  /* program counter */
+  insPo cPC;                          /* continuation program counter */
 
-  register ptrPo A;      /* Argument registers */
+  register ptrPo A;                   /* Argument registers */
 
-  ptrPo S = NULL;        /* structure pointer */
+  ptrPo S = NULL;                     /* structure pointer */
   rwmode mode = readMode;
 #ifdef EXECTRACE
-  long Svalid = 0;      /* how long S is valid for */
+  long Svalid = 0;                    /* how long S is valid for */
 #endif
 
-  ptrI PROG;        /* Current program being executed */
-  ptrI cPROG;        /* Continuation program */
-  ptrPo Y;              /* Current global variables */
-  ptrPo Lits;        /* Pointer to the literals vector */
+  ptrI PROG;                          /* Current program being executed */
+  ptrI cPROG;                         /* Continuation program */
+  ptrPo Y;                            /* Current global variables */
+  ptrPo Lits;                         /* Pointer to the literals vector */
 
-  callPo C;        /* Current call frame */
+  callPo C;                           /* Current call frame */
 
-  choicePo B;        /* last choice point */
-  choicePo SB;        /* where to cut */
+  choicePo B;                         /* last choice point */
+  choicePo SB;                    /* where to cut */
   choicePo cSB;        /* continuation cut */
   choicePo T;        /* Trap recovery point */
 
