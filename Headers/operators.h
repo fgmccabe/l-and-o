@@ -94,3 +94,5 @@ postfixOp(";",1149,1150,"action terminator")
 postfixOp("+",759,760,"lookahead in grammar rule")
 lastPostOp
 postfixOp("!",904,905,"one solution operator")
+
+token("$","Used for curried functions and types")

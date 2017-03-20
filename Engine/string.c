@@ -53,6 +53,8 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
       return incomparible;
     else if(memcmp(stringVal(s1),stringVal(s2),(size_t)(l1*sizeof(byte)))==0)
       return same;
+    else
+      return incomparible;
   } else
     return incomparible;
 }

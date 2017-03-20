@@ -14,7 +14,7 @@ lo.comp.parseType{
   public
   parseType:(ast,list[env],tipe,report,report){}.
   parseType(T,Env,Type,Rp,Rpx) :-
-    prsType(T,Env,[],[],Cons,Tp,Rp,Rpx),
+    prsType(T,simpleType,Env,[],[],Cons,Tp,Rp,Rpx),
     moveConstraints(Type,Cons,Tp).
 
   public parseTypeRule:(ast,map[string,tipe],list[env],tipe,string,report,report){}.
@@ -31,66 +31,90 @@ lo.comp.parseType{
   parseTypeRule(St,B,Env,typeRule(Lhs,Rhs),Path,Rp,Rpx) :-
     isBinary(St,"<~",_,L,R),
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
-    prsType(R,Env,B,C0,Cx,Tp,Rp0,Rpx),
+    prsType(R,simpleType,Env,B,C0,Cx,Tp,Rp0,Rpx),
     faceOfType(deRef(Tp),Env,Rhs).
+  parseTypeRule(St,B,Env,typeRule(Lhs,Rhs),Path,Rp,Rpx) :-
+    isBinary(St,"=",_,L,R),
+    parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
+    prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
 
-  private prsArgType:(ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
-  prsArgType(T,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
+  private prsArgType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
+  prsArgType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
+    checkKind(K,simpleType,T.loc,Rp,Rp0),
     isRoundTuple(T,_,A),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsArgType(T,Env,Q,C,Cx,AT,Rp,Rpx) :-
-    prsType(T,Env,Q,C,Cx,AT,Rp,Rpx).
+    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsArgType(T,K,Env,Q,C,Cx,AT,Rp,Rpx) :-
+    prsType(T,K,Env,Q,C,Cx,AT,Rp,Rpx).
 
-  private prsType:(ast,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
-  prsType(T,Env,Q,Cx,Cx,PT,Rp,Rpx) :-
+  private prsType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
+  prsType(T,K,Env,Q,Cx,Cx,PT,Rp,Rpx) :-
     isQuantified(T,V,BT),
     parseTypeBound(V,Q,B0,Env,PT,Inner),
-    prsType(BT,Env,B0,[],C0,BTp,Rp,Rpx),
+    prsType(BT,K,Env,B0,[],C0,BTp,Rp,Rpx),
     moveConstraints(Inner,C0,BTp). -- no constraints migrate out of quantified type
-  prsType(T,Env,Q,C,C,Type,Rp,Rpx) :-
+  prsType(T,K,Env,Q,C,C,Type,Rp,Rpx) :-
     isBinary(T,"|:",_,L,R),
     parseConstraint(L,Env,Q,[],C0,Rp,Rp0),
-    prsType(R,Env,Q,[],_,Inner,Rp0,Rpx),
+    prsType(R,K,Env,Q,[],_,Inner,Rp0,Rpx),
     moveConstraints(Type,C0,Inner).
-  prsType(T,Env,Q,C,C,Tp,Rp,Rpx) :-
+  prsType(T,K,Env,Q,C,C,Tp,Rp,Rpx) :-
     isIden(T,Lc,Nm),
-    prsTypeName(Lc,Nm,Env,Q,Tp,Rp,Rpx).
-  prsType(Sq,Env,Q,C,Cx,Type,Rp,Rpx) :-
-    isSquareTerm(Sq,Lc,Op,Args), 
+    prsTypeName(Lc,Nm,K,Env,Q,Tp,Rp,Rpx).
+  prsType(Sq,K,Env,Q,C,Cx,Type,Rp,Rpx) :-
+    isSquareTerm(Sq,Lc,Op,Args),
     isIden(Op,_,Nm),
-    prsTypeName(Lc,Nm,Env,Q,TpCon,Rp,Rp0),
-    prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp0,Rp1),
-    applyTypeExp(deRef(TpCon),ArgTps,Lc,Type,Rp1,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
-  prsType(F,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
-    isBinary(F,"=>",_,L,R),
-    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
-    prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
-  prsType(F,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
-    isBinary(F,"-->",_,L,R),
-    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
-    prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
-  prsType(F,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
-    isBinary(F,"<=>",_,L,R),
-    prsArgType(L,Env,Q,C,C1,AT,Rp,Rp0),
-    prsType(R,Env,Q,C1,Cx,RT,Rp0,Rpx).
-  prsType(T,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
-    isBraceTerm(T,_,L,[]),
-    prsArgType(L,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsType(T,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
-    isRoundTuple(T,_,[A]), 
+    checkKind(K,typeExpForm(Args),Lc,Rp,Rp0),
+    prsTypeName(Lc,Nm,typeFun(size(Args)-checkCurrying(Args)),Env,Q,TpCon,Rp0,Rp1),
+    prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp1,Rp2),
+    applyTypeExp(deRef(TpCon),ArgTps,Lc,Type,Rp2,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
+  prsType(F,K,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
+    isBinary(F,"=>",Lc,L,R),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+  prsType(F,K,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
+    isBinary(F,"-->",Lc,L,R),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+  prsType(F,K,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
+    isBinary(F,"<=>",Lc,L,R),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+  prsType(T,K,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
+    isBraceTerm(T,Lc,L,[]),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsArgType(L,simpleType,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
+    isRoundTuple(T,Lc,[A]),
     isRoundTuple(A,_,Inner),
-    prsTypes(Inner,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsType(T,Env,Q,C,Cx,AT,Rp,Rpx) :-
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsTypes(Inner,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsType(T,K,Env,Q,C,Cx,AT,Rp,Rpx) :-
     isRoundTuple(T,_,[A]),
-    prsType(A,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsType(T,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
-    isRoundTuple(T,_,A),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsType(T,Env,Q,C,Cx,faceType(AT),Rp,Rpx) :-
-    isBraceTuple(T,_,L),
-    prsTypeFields(L,Env,Q,C,Cx,AT,Rp,Rpx).
-  prsType(T,_,_,Cx,Cx,anonType,Rp,Rpx) :-
-    reportError("cannot understand type \(T)",T.loc,Rp,Rpx).
+    prsType(A,K,Env,Q,C,Cx,AT,Rp,Rpx).
+  prsType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
+    isRoundTuple(T,Lc,A),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsType(T,K,Env,Q,C,Cx,faceType(AT),Rp,Rpx) :-
+    isBraceTuple(T,Lc,L),
+    checkKind(K,simpleType,Lc,Rp,Rp0),
+    prsTypeFields(L,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsType(T,K,_,_,Cx,Cx,anonType,Rp,Rpx) :-
+    reportError("cannot understand type \(T), expecting a \(K)",T.loc,Rp,Rpx).
+
+  private checkCurrying:(list[ast]) => integer.
+  checkCurrying([]) => 0.
+  checkCurrying([A,..L]) => checkCurrying(L)+1 :- isCurryDollar(A).
+  checkCurrying([_,..L]) => checkCurrying(L).
+
+  private typeExpForm:(list[ast]) => typeKind.
+  typeExpForm(L) => typeFun(Ar) :-
+    Ar = checkCurrying(L),
+    Ar>0.
+  typeExpForm(_) => simpleType.
 
   private applyTypeExp:(tipe,list[tipe],location,tipe,report,report){}.
   applyTypeExp(Op,Args,_,typeExp(Op,Args),Rp,Rp) :-
@@ -105,7 +129,7 @@ lo.comp.parseType{
   private prsTypes:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],report,report){}.
   prsTypes([],_,_,C,C,[],Rp,Rp).
   prsTypes([T,..R],Env,Q,C,Cx,[PT,..M],Rp,Rpx) :-
-    prsType(T,Env,Q,C,C0,PT,Rp,Rp0),
+    prsType(T,_,Env,Q,C,C0,PT,Rp,Rp0),
     prsTypes(R,Env,Q,C0,Cx,M,Rp0,Rpx).
 
   private prsTypeFields:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[(string,tipe)],report,report){}.
@@ -113,20 +137,21 @@ lo.comp.parseType{
   prsTypeFields([A,..AT],Env,Q,C,Cx,[(Fld,FldTp),..ArgTypes],Rp,Rp) :-
     isBinary(A,":",_,L,R),
     isIden(L,_,Fld),
-    prsType(R,Env,Q,C,C0,FldTp,Rp,Rp0),
+    prsType(R,simpleType,Env,Q,C,C0,FldTp,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C0,Cx,ArgTypes,Rp0,Rpx).
   prsTypeFields([A,..AT],Env,Q,C,Cx,ArgTypes,Rp,Rpx) :-
     reportError("\(A) is not a valid field designator",A.loc,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C,Cx,ArgTypes,Rp0,Rpx).
 
-  prsTypeName:(location,string,list[env],map[string,tipe],tipe,report,report){}.
-  prsTypeName(_,"_",_,_,anonType,Rp,Rp).
-  prsTypeName(_,"void",_,_,voidType,Rp,Rp).
-  prsTypeName(_,"this",_,_,thisType,Rp,Rp).
-  prsTypeName(_,Id,_,B,Tp,Rp,Rp) :- present(B,Id,Tp).
-  prsTypeName(_,Id,Env,_,Tp,Rp,Rp) :- 
-    isType(Id,Env,_,Tp).
-  prsTypeName(Lc,Id,_,_,anonType,Rp,Rpx) :- 
+  prsTypeName:(location,string,typeKind,list[env],map[string,tipe],tipe,report,report){}.
+  prsTypeName(_,"_",K,_,_,anonType,Rp,Rp).
+  prsTypeName(Lc,"void",K,_,_,voidType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
+  prsTypeName(Lc,"this",K,_,_,thisType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
+  prsTypeName(Lc,Id,K,_,B,Tp,Rp,Rp) :- present(B,Id,Tp), checkKind(K,typeKind(Tp),Lc,Rp,Rpx).
+  prsTypeName(Lc,Id,K,Env,_,Tp,Rp,Rpx) :-
+    isType(Id,Env,_,Tp),
+    checkKind(K,typeKind(Tp),Lc,Rp,Rpx). -- This is one place we might do aliasing
+  prsTypeName(Lc,Id,_,_,_,anonType,Rp,Rpx) :-
     reportError("type \(Id) not declared",Lc,Rp,Rpx).
 
   public parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
@@ -182,11 +207,11 @@ lo.comp.parseType{
     parseConstraint(L,Env,B,C1,Cx,Rp0,Rpx).
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,"<~",_,L,R),
-    prsType(L,Env,B,C0,C1,TV,Rp,Rp0),
+    prsType(L,simpleType,Env,B,C0,C1,TV,Rp,Rp0),
     isBraceTuple(R,_,E),
     prsTypeFields(E,Env,B,C1,C2,AT,Rp0,Rpx),
     addConstraint(implementsFace(TV,AT),C2,Cx).
-  parseConstraint(Sq,Env,B,C0,Cx,Rp,Rpx) :- 
+  parseConstraint(Sq,Env,B,C0,Cx,Rp,Rpx) :-
     isSquareTerm(Sq,Lc,Op,Args),
     isIden(Op,Lc0,Nm),
     parseContractName(Lc0,Nm,Env,conTract(ConNm,_ATs,_Dps),Rp,Rp0),
@@ -209,7 +234,7 @@ lo.comp.parseType{
   parseContractName(_,Id,Env,Con,Rp,Rp) :-
     isContract(Id,Env,conEntry(_,_,Spec,_)),
     (_,Con) = freshen(Spec,[]).
-  parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :- 
+  parseContractName(Lc,Id,_,conTract(Id,[],[]),Rp,Rpx) :-
     reportError("contract \(Id) not declared",Lc,Rp,Rpx).
 
   parseContractArgs:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],list[tipe],report,report){}.
@@ -224,7 +249,7 @@ lo.comp.parseType{
   parseContractConstraint(T,Env,N,Con,Rp,Rpx) :-
     parseContractCon(T,Env,[],[],Cons,N,Tp,Rp,Rpx)!,
     wrapConConstraints(Cons,Tp,Con).
- 
+
   private parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
   parseContractCon(Tp,Env,B,C,C,N,PT,Rp,Rpx) :-
     isQuantified(Tp,V,BT),
@@ -269,6 +294,9 @@ lo.comp.parseType{
   parseTypeCore(St,Type,Path) :-
     isBinary(St,"<~",_,L,_),
     parseTypeCore(L,Type,Path).
+  parseTypeCore(St,Type,Path) :-
+    isBinary(St,"=",_,L,_),
+    parseTypeCore(L,Type,Path).
   parseTypeCore(N,tipe(subPath(Path,marker(tpe),Nm)),Path) :-
     isIden(N,_,Nm).
   parseTypeCore(T,tpFun(subPath(Path,marker(tpe),Nm),length(A)),Path) :-
@@ -282,7 +310,7 @@ lo.comp.parseType{
     isSquareTerm(N,_,Nm,A),
     isIden(Nm,_,TpNm),
     parseHeadArgs(A,B,Args,Rp,Rpx).
-  
+
   parseHeadArgs:(list[ast],map[string,tipe],list[tipe],report,report){}.
   parseHeadArgs([],_,[],Rp,Rp).
   parseHeadArgs([H,..L],B,[V,..Args],Rp,Rpx) :-
@@ -317,4 +345,13 @@ lo.comp.parseType{
   reConQuant([],Tp,Tp).
   reConQuant([(Nm,V),..M],Tp,QTp) :-
     reConQuant(M,univCon(V,Tp),QTp).
+
+  checkKind:(typeKind,typeKind,location,report,report){}.
+  checkKind(K,K,_,Rp,Rp).
+  checkKind(simpleType,K,Lc,Rp,Rpx) :-
+    reportError("expecting a simple type, not a \(K)",Lc,Rp,Rpx).
+  checkKind(K,simpleType,Lc,Rp,Rpx) :-
+    reportError("expecting a \(K) type, not a simple type",Lc,Rp,Rpx).
+  checkKind(K1,K2,Lc,Rp,Rpx) :-
+    reportError("expecting a \(K1), not a \(K2)",Lc,Rp,Rpx).
 }

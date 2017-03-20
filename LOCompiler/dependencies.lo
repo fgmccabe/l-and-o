@@ -140,6 +140,9 @@ lo.comp.dependencies{
   typeRuleName(S,Nm) :-
     isBinary(S,"<~",_,L,_),
     (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
+  typeRuleName(S,Nm) :-
+    isBinary(S,"=",_,L,_),
+    (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
 
   astImplName:(ast,string){}.
   astImplName(S,Nm) :-
@@ -224,6 +227,7 @@ lo.comp.dependencies{
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"<=>",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"->>",_,L,R).
+  refsInType(T,All,So) =>  refsInType(R,All,So) :-  isBinary(T,"=",_,_,R).
   refsInType(T,All,So) =>  refsInTypes(L,All,So) :-  isRoundTuple(T,_,L).
   refsInType(T,All,So) =>  refsInConstraint(L,All,refsInType(R,All,So)) :-  isBinary(T,"|:",_,L,R).
   refsInType(T,All,So) =>  refsInType(R,All,So) :-  isBinary(T,"<~",_,_,R). -- type rule

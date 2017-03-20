@@ -16,9 +16,8 @@ lo.comp.grapher{
   import lo.comp.misc.
 
   public makeGraph:(list[pkg],fileRepo,catalog,report,report) => list[list[(pkg,list[pkg])]].
-  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => G :-
-    G = topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)),
-    showGroups(G).
+  makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
+    -- showGroups(G).
 
   private implementation depends[(pkg,list[pkg])->>pkg] <= {
     defines((Pk,_),Rq) :- consistentPkg(Rq,Pk).

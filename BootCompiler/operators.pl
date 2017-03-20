@@ -152,6 +152,7 @@
   follows('','!','!').
   follows('!','=','!=').
   follows('','#','#').
+  follows('','$','$').
   final('%',"%").	 /* modulo */
   final('%%',"%%").	 /* grammar parse */
   final('*',"*").	 /* multiplication */
@@ -210,3 +211,4 @@
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */
   final('#',"#").	 /* package separator */
+  final('$',"$").	 /* Used for curried functions and types */

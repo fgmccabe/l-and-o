@@ -28,6 +28,7 @@ catalog{
     test.r -> "r.lo".
     test.s -> "s.lo".
     test.st -> "st.lo".
+    test.t -> "t.lo".
   }
   default: "../LO/catalog".
   version: "0.0.2".

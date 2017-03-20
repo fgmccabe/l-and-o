@@ -3,8 +3,6 @@
  */
 
 #include "trieP.h"
-#include "retcode.h"
-#include "logical.h"
 #include "pool.h"
 #include <stdlib.h>
 #include <string.h>
@@ -44,9 +42,9 @@ static comparison charComp(void *l, void *r) {
   if(left<right)
     return smaller;
   else if(left==right)
-    return bigger;
-  else
     return same;
+  else
+    return bigger;
 }
 
 static void addToTr(char *full, char *key, void *value, triePo trie) {

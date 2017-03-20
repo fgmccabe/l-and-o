@@ -161,6 +161,7 @@ lo.comp.operators{
   follows("",0c!,"!").
   follows("!",0c=,"!=").
   follows("",0c#,"#").
+  follows("",0c$,"$").
 
   public final:(string){}.
   final("%").	 /* modulo */
@@ -221,4 +222,5 @@ lo.comp.operators{
   final("!").	 /* one solution operator */
   final("!=").	 /* not equal */
   final("#").	 /* package separator */
+  final("$").	 /* Used for curried functions and types */
 }.

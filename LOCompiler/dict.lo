@@ -50,15 +50,15 @@ lo.comp.dict{
 
   public
   declareTypeExists:(string,location,tipe,list[env]) => list[env].
-  declareTypeExists(Nm,Lc,Tp,Env) => declareType(Nm,tpDef(Lc,Tp,voidType),Env).
+  declareTypeExists(Nm,Lc,Tp,Env) => declareType(Nm,tpDef(Lc,Tp,Tp),Env).
 
   public declareType:(string,typeDef,list[env]) => list[env].
   declareType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) =>
       [scope(Types[Nm->Tp],Names,Cons,Contracts,Imps),..E].
 
   private standardType:(string,tipe,list[env]) => list[env].
-  standardType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) => 
-      [scope(Types[Nm->tpDef(std,Tp,typeRule(Tp,faceType([])))],Names,Cons,Contracts,Imps),..E].
+  standardType(Nm,Tp,[scope(Types,Names,Cons,Contracts,Imps),..E]) =>
+      [scope(Types[Nm->tpDef(std,Tp,Tp)],Names,Cons,Contracts,Imps),..E].
 
   private
   localTypeName:(string) => string.
@@ -130,8 +130,8 @@ lo.comp.dict{
   impInD(Nm,[_,..Env],Con) :- impInD(Nm,Env,Con).
 
   public isImplemented:(constraint,list[env],implEntry){}.
-  isImplemented(conTract(Nm,Args,Deps),Env,Impl) :- 
-    impInD(Nm,Env,Impls), 
+  isImplemented(conTract(Nm,Args,Deps),Env,Impl) :-
+    impInD(Nm,Env,Impls),
     present(Impls,implementationName(conTract(Nm,Args,Deps)),Impl).
 
   public stdDict : list[env].
