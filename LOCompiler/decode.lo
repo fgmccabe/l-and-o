@@ -75,6 +75,7 @@ lo.comp.decode{
   decodeType(classType(A,T)) --> "C", decodeType(A), decodeType(T).
   decodeType(tupleType(Tps)) --> "T", typeLen(Ln),decodeTypes(Ln,Tps).
   decodeType(typeRule(L,R)) --> "Y", decodeType(L), decodeType(R).
+  decodeType(tpLambda(L,R)) --> "Z", decodeType(L), decodeType(R).
 
   private typeLen:(integer) --> list[integer].
   typeLen(Ix) --> digits(0,Ix).

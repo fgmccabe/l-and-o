@@ -117,7 +117,7 @@ lo.comp.macro{
 
   wrapQuants:(list[ast],location,ast,ast){}.
   wrapQuants([],_,Rule,Rule).
-  wrapQuants(Q,Lc,Rl,unary(Lc,"all",binary(Lc,"~~",QV,Rl))) :-
+  wrapQuants(Q,Lc,Rl,binary(Lc,"~~",unary(Lc,"all",QV),Rl)) :-
     listComma(Q,Lc,QV).
 
   wrapConstraints:(list[ast],location,ast,ast){}.

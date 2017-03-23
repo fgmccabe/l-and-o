@@ -1,6 +1,11 @@
 test.c{
-  type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
+  -- type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
 
-  type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
+  -- type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
+  public
+  type all t ~~ option[t] ::= none | some(t).
+
+  x : option[integer].
+  x = some(1).
 }

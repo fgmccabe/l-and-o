@@ -12,7 +12,7 @@ isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
 
 isAlgebraicTypeDef(Term) :- isAlgebraicTypeDef(Term,_,_,_,_,_).
 
-isQuantified(T,V,B) :- isUnary(T,"all",R), isBinary(R,"~~",V,B).
+isQuantified(T,V,B) :- isBinary(T,"~~",L,B), isUnary(L,"all",V).
 
 getQuantifiers(T,LV,B) :- isQuantified(T,V,B), deComma(V,LV).
 getQuantifiers(T,[],T).
@@ -79,4 +79,3 @@ tupleize(T,Lc,Op,tuple(Lc,Op,[T])).
 getTupleArgs(app(_,name(_,","),tuple(_,"()",[L,R])), [L|Rest]) :-
     getTupleArgs(R,Rest).
 getTupleArgs(T,[T]).
-  

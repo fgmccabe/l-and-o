@@ -17,23 +17,28 @@ lo.comp.parseType{
     prsType(T,simpleType,Env,[],[],Cons,Tp,Rp,Rpx),
     moveConstraints(Type,Cons,Tp).
 
-  public parseTypeRule:(ast,map[string,tipe],list[env],tipe,string,report,report){}.
-  parseTypeRule(St,_,Env,Rule,Path,Rp,Rpx) :-
-    isQuantified(St,V,Body),
-    parseTypeBound(V,[],B,Env,Rule,Rl),
-    parseTypeRule(Body,B,Env,Inner,Path,Rp,Rpx),
-    reQuant(pairs(B),Inner,Rl).
-  parseTypeRule(St,B,Env,Rule,Path,Rp,Rpx) :-
+  public parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string,report,report){}.
+  parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
+    isUnary(St,"type",_,InSt),
+    parseTpRule(InSt,[],Env,Type,FaceRule,Path,Rp,Rpx).
+
+  parseTpRule:(ast,map[string,tipe],list[env],tipe,tipe,string,report,report){}.
+  parseTpRule(St,M,Env,Type,Rule,Path,Rp,Rpx) :-
+    hasQuant(St,M,M1,Body,Rule,Rl),
+    hasQuant(St,M,_,_,Type,Tp),  -- we do it twice!
+    parseTpRule(Body,M1,Env,Tp,Rl,Path,Rp,Rpx).
+  parseTpRule(St,B,Env,Type,Rule,Path,Rp,Rpx) :-
     isBinary(St,"|:",_,L,R),
     parseConstraint(L,Env,B,[],Cx,Rp,Rp0),
-    parseTypeRule(R,B,Env,Inner,Path,Rp0,Rpx),
-    wrapConstraints(Cx,Inner,Rule).
-  parseTypeRule(St,B,Env,typeRule(Lhs,Rhs),Path,Rp,Rpx) :-
+    parseTpRule(R,B,Env,Tp,Inner,Path,Rp0,Rpx),
+    wrapConstraints(Cx,Inner,Rule),
+    wrapConstraints(Cx,Tp,Type).
+  parseTpRule(St,B,Env,Lhs,typeRule(Lhs,Rhs),Path,Rp,Rpx) :-
     isBinary(St,"<~",_,L,R),
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
     prsType(R,simpleType,Env,B,C0,Cx,Tp,Rp0,Rpx),
     faceOfType(deRef(Tp),Env,Rhs).
-  parseTypeRule(St,B,Env,typeRule(Lhs,Rhs),Path,Rp,Rpx) :-
+  parseTpRule(St,B,Env,Lhs,tpLambda(Lhs,Rhs),Path,Rp,Rpx) :-
     isBinary(St,"=",_,L,R),
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
     prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
@@ -64,9 +69,8 @@ lo.comp.parseType{
     isSquareTerm(Sq,Lc,Op,Args),
     isIden(Op,_,Nm),
     checkKind(K,typeExpForm(Args),Lc,Rp,Rp0),
-    prsTypeName(Lc,Nm,typeFun(size(Args)-checkCurrying(Args)),Env,Q,TpCon,Rp0,Rp1),
-    prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp1,Rp2),
-    applyTypeExp(deRef(TpCon),ArgTps,Lc,Type,Rp2,Rpx). -- should do this too:  sameType(tupleType(ATs),tupleType(ArgTps),Env).
+    prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp0,Rp1),
+    parseTypeExp(Nm,Lc,Q,Env,ArgTps,Type,Rp1,Rpx)!.
   prsType(F,K,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
@@ -105,6 +109,24 @@ lo.comp.parseType{
   prsType(T,K,_,_,Cx,Cx,anonType,Rp,Rpx) :-
     reportError("cannot understand type \(T), expecting a \(K)",T.loc,Rp,Rpx).
 
+  prsTypeName:(location,string,typeKind,list[env],map[string,tipe],tipe,report,report){}.
+  prsTypeName(_,"_",simpleType,_,_,anonType,Rp,Rp).
+  prsTypeName(_,"_",typeFun(Ar),_,_,newTFun("_",Ar),Rp,Rp).
+  prsTypeName(Lc,"void",K,_,_,voidType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
+  prsTypeName(Lc,"this",K,_,_,thisType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
+  prsTypeName(Lc,Id,K,Env,B,Tp,Rp,Rp) :-
+    present(B,Id,Tp),
+    checkKind(K,typeKind(Tp),Lc,Rp,Rpx).
+  prsTypeName(Lc,Id,K,Env,_,Type,Rp,Rpx) :-
+    typeInDict(Id,Env,_,_,TpK,Tp),
+    checkKind(K,TpK,Lc,Rp,Rpx),
+    (_,FrTp) = freshen(Tp,[]),
+    (FrTp = tpLambda(_,Type) ? true |
+     FrTp = typeRule(Lhs,_) ? Type = typeOp(Lhs) |
+     typeOp(FrTp) = Type).
+  prsTypeName(Lc,Id,_,_,_,anonType,Rp,Rpx) :-
+    reportError("type \(Id) not declared",Lc,Rp,Rpx).
+
   private checkCurrying:(list[ast]) => integer.
   checkCurrying([]) => 0.
   checkCurrying([A,..L]) => checkCurrying(L)+1 :- isCurryDollar(A).
@@ -116,11 +138,27 @@ lo.comp.parseType{
     Ar>0.
   typeExpForm(_) => simpleType.
 
-  private applyTypeExp:(tipe,list[tipe],location,tipe,report,report){}.
-  applyTypeExp(Op,Args,_,typeExp(Op,Args),Rp,Rp) :-
-    validTypeOp(Op,length(Args))!.
-  applyTypeExp(T,Args,Lc,voidType,Rp,Rpx) :-
-    reportError("cannot apply type exp \(T) to \(Args)",Lc,Rp,Rpx).
+  private parseTypeExp:(string,location,map[string,tipe],list[env],list[tipe],tipe,report,report){}.
+  parseTypeExp(Nm,Lc,Q,_,Args,Type,Rp,Rpx) :-
+    present(Q,Nm,Tp),
+    checkKind(typeFun(size(Args)),typeKind(Tp),Lc,Rp,Rp0),
+    applyTypeExp(Tp,Args,Env,Type,Lc,Rp0,Rpx).
+  parseTypeExp(Nm,Lc,_,Env,Args,Type,Rp,Rpx) :-
+    typeInDict(Nm,Env,_,_,K,Tp),
+    (_,FrTp) = freshen(Tp,[]),
+    checkKind(typeFun(size(Args)),typeKind(typeOp(typeCore(FrTp))),Lc,Rp,Rp0),
+    applyTypeExp(FrTp,Args,Env,Type,Lc,Rp0,Rpx).
+
+  private applyTypeExp:(tipe,list[tipe],list[env],tipe,location,report,report){}.
+  applyTypeExp(tpLambda(Ax,Reslt),Args,Env,Reslt,Lc,Rp,Rpx) :-
+    (sameType(Ax,typeExp(newTFun("_",size(Args)),Args),Env) ?
+        Rp=Rpx |
+        reportError("could not apply type \(Ax) to \(Args)",Lc,Rp,Rpx)).
+  applyTypeExp(typeRule(Ax,Reslt),Args,Env,Ax,Lc,Rp,Rpx) :-
+    (sameType(Ax,typeExp(newTFun("_",size(Args)),Args),Env) ?
+        Rp=Rpx |
+        reportError("could not apply type \(Ax) to \(Args)",Lc,Rp,Rpx)).
+  applyTypeExp(Tp,Args,_,typeExp(Tp,Args),_,Rp,Rp).
 
   validTypeOp:(tipe,integer){}.
   validTypeOp(tpFun(_,Ar),Ar).
@@ -143,18 +181,7 @@ lo.comp.parseType{
     reportError("\(A) is not a valid field designator",A.loc,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C,Cx,ArgTypes,Rp0,Rpx).
 
-  prsTypeName:(location,string,typeKind,list[env],map[string,tipe],tipe,report,report){}.
-  prsTypeName(_,"_",K,_,_,anonType,Rp,Rp).
-  prsTypeName(Lc,"void",K,_,_,voidType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
-  prsTypeName(Lc,"this",K,_,_,thisType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
-  prsTypeName(Lc,Id,K,_,B,Tp,Rp,Rp) :- present(B,Id,Tp), checkKind(K,typeKind(Tp),Lc,Rp,Rpx).
-  prsTypeName(Lc,Id,K,Env,_,Tp,Rp,Rpx) :-
-    isType(Id,Env,_,Tp),
-    checkKind(K,typeKind(Tp),Lc,Rp,Rpx). -- This is one place we might do aliasing
-  prsTypeName(Lc,Id,_,_,_,anonType,Rp,Rpx) :-
-    reportError("type \(Id) not declared",Lc,Rp,Rpx).
-
-  public parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
+  parseTypeBound:(ast,map[string,tipe],map[string,tipe],list[env],tipe,tipe){}.
   parseTypeBound(P,BV,Bound,Env,QT,Inner) :-
     isBinary(P,",",_,L,R),
     parseTypeBound(L,BV,B0,Env,QT,Q0),
@@ -317,6 +344,31 @@ lo.comp.parseType{
     isIden(H,Lc,Nm),
     (present(B,Nm,V) ? Rp=Rpx | reportError("type argument \(H) not quantified ",Lc,Rp,Rp0)),
     parseHeadArgs(L,B,Args,Rp0,Rpx).
+
+  hasQuant:(ast,map[string,tipe],map[string,tipe],ast,tipe,tipe){}.
+  hasQuant(T,M,M1,B,univType(K,In),In) :-
+    isBinary(T,"~~",Lc1,L,BB),
+    isUnary(L,"all",Lc2,Vs),
+    (isBinary(Vs,",",_,Lh,Rh) ?
+      getQuant(Lh,M,M1,K),
+      B = binary(Lc1,"~~",unary(Lc2,"all",Rh),BB) |
+      getQuant(Vs,M,M1,K),
+      B = BB).
+  hasQuant(T,M,M1,B,existType(K,In),In) :-
+    isBinary(T,"~~",Lc1,L,BB),
+    isUnary(L,"exists",Lc2,Vs),
+    (isBinary(Vs,",",_,Lh,Rh) ?
+      getQuant(Lh,M,M1,K),
+      B = binary(Lc1,"~~",unary(Lc2,"exists",Rh),BB) |
+      getQuant(Vs,M,M1,K),
+      B = BB).
+
+  getQuant:(ast,map[string,tipe],map[string,tipe],tipe){}.
+  getQuant(X,M,M[Nm->kVar(Nm)],kVar(Nm)) :- isIden(X,_,Nm).
+  getQuant(X,M,M[Nm->kFun(Nm,Ar)],kFun(Nm,Ar)) :-
+    isBinary(X,"/",_,L,R),
+    isInteger(R,_,Ar),
+    isIden(L,_,Nm).
 
   -- reapply quantifiers to a type to get full form
   reQuant:(list[(string,tipe)],tipe,tipe){}.

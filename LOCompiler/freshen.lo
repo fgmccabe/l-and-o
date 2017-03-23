@@ -59,6 +59,7 @@ lo.comp.freshen{
   frshn(univType(kFun(Nm,Ar),T),B) => univType(kFun(Nm,Ar),frshnType(dT,B[\+Nm])).
   frshn(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
   frshn(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
+  frshn(tpLambda(S,T),B) => tpLambda(frshnType(S,B),frshnType(T,B)).
   frshn(Tp,_) => Tp.
 
   private
@@ -126,6 +127,9 @@ lo.comp.freshen{
   frze(typeRule(A,R),B,typeRule(FA,FR)) :-
     freeze(A,B,FA),
     freeze(R,B,FR).
+  frze(tpLambda(A,R),B,tpLambda(FA,FR)) :-
+    freeze(A,B,FA),
+    freeze(R,B,FR).
   frze(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
     freeze(Tp,B,FTp),
     freezeConstraint(Con,B,FCon).
@@ -140,7 +144,7 @@ lo.comp.freshen{
 
   reQuant:(list[(string,tipe)],map[string,tipe],tipe,tipe){}.
   reQuant([],_,T,T).
-  reQuant([(_,Tp),..R],BB,FT,FZT) :- 
+  reQuant([(_,Tp),..R],BB,FT,FZT) :-
     V = deRef(Tp), isUnbound(V),
     reQuant(R,BB,FT,FZT).
   reQuant([_,..B],BB,T,FT) :- reQuant(B,BB,T,FT).

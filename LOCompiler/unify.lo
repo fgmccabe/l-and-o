@@ -49,7 +49,7 @@ lo.comp.unify{
     bind(V1,V2).
 
   checkBinding:(tipe,tipe,list[env]){}.
-  checkBinding(V,Tp,_) :- 
+  checkBinding(V,Tp,_) :-
     bind(V,Tp).
 
   surfaceBound:(list[tipe]){}.
@@ -78,13 +78,13 @@ lo.comp.unify{
   faceOfType:(tipe,list[env],tipe){}.
   faceOfType(faceType(F),_,faceType(F)).
   faceOfType(tipe(Nm),Env,F) :-
-    typeInDict(Nm,Env,FR),
+    typeInDict(Nm,Env,_,_,_,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(_,F)).
   faceOfType(typeExp(Op,Args),Env,Face) :-
     deRef(Op) = tpFun(Nm,Ar),
     Ar=length(Args),
-    typeInDict(Nm,Env,FR),
+    typeInDict(Nm,Env,_,_,_,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
     (_,Face) = freshen(F,bindAT(AT,Args,[])).

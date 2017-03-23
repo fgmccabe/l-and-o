@@ -55,28 +55,32 @@ lo.comp.encode{
   encodeType(Tp) => encType(Tp,[]).
 
   private encType:(tipe,list[integer]) => list[integer].
-  encType(anonType,L) => [0c_,..L].
-  encType(voidType,L) => [0cv,..L].
-  encType(thisType,L) => [0ch,..L].
-  encType(tipe("lo.core*logical"),L) => [0cl,..L].
-  encType(tipe("lo.core*integer"),L) => [0ci,..L].
-  encType(tipe("lo.core*float"),L) => [0cf,..L].
-  encType(tipe("lo.core*string"),L) => [0cS,..L].
-  encType(tpFun(Nm,Ar),L) => [0cz,..encInt(Ar,encodeText(Nm,L))].
-  encType(typeExp(Op,[E]),L) => [0cL,..encType(E,L)] :- deRef(Op)=tpFun("lo.core*list",1).
-  encType(kVar(Nm),L) => [0ck,..encodeText(Nm,L)].
-  encType(kFun(Nm,Ar),L) => [0cK,..encInt(Ar,encodeText(Nm,L))].
-  encType(tipe(Nm),L) => [0ct,..encodeText(Nm,L)].
-  encType(typeExp(Op,Els),L) => [0cU,..encType(deRef(Op),encTypes(Els,L))].
-  encType(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
-  encType(funType(A,R),L) => [0cF,..encType(A,encType(R,L))].
-  encType(classType(A,R),L) => [0cC,..encType(A,encType(R,L))].
-  encType(predType(A),L) => [0cP,..encType(A,L)].
-  encType(grammarType(A,R),L) => [0cG,..encType(A,encType(R,L))].
-  encType(typeRule(A,R),L) => [0cY,..encType(A,encType(R,L))].
-  encType(faceType(Els),L) => [0cI,..encFieldTypes(Els,L)].
-  encType(constrained(T,C),L) => [0c|,..encType(T,encConstraint(C,L))].
-  encType(univType(V,T),L) => [0c:,..encType(V,encType(T,L))].
+  encType(T,L) => encTp(deRef(T),L).
+
+  private encTp:(tipe,list[integer]) => list[integer].
+  encTp(anonType,L) => [0c_,..L].
+  encTp(voidType,L) => [0cv,..L].
+  encTp(thisType,L) => [0ch,..L].
+  encTp(tipe("lo.core*logical"),L) => [0cl,..L].
+  encTp(tipe("lo.core*integer"),L) => [0ci,..L].
+  encTp(tipe("lo.core*float"),L) => [0cf,..L].
+  encTp(tipe("lo.core*string"),L) => [0cS,..L].
+  encTp(tpFun(Nm,Ar),L) => [0cz,..encInt(Ar,encodeText(Nm,L))].
+  encTp(typeExp(Op,[E]),L) => [0cL,..encType(E,L)] :- deRef(Op)=tpFun("lo.core*list",1).
+  encTp(kVar(Nm),L) => [0ck,..encodeText(Nm,L)].
+  encTp(kFun(Nm,Ar),L) => [0cK,..encInt(Ar,encodeText(Nm,L))].
+  encTp(tipe(Nm),L) => [0ct,..encodeText(Nm,L)].
+  encTp(typeExp(Op,Els),L) => [0cU,..encType(Op,encTypes(Els,L))].
+  encTp(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
+  encTp(funType(A,R),L) => [0cF,..encType(A,encType(R,L))].
+  encTp(classType(A,R),L) => [0cC,..encType(A,encType(R,L))].
+  encTp(predType(A),L) => [0cP,..encType(A,L)].
+  encTp(grammarType(A,R),L) => [0cG,..encType(A,encType(R,L))].
+  encTp(typeRule(A,R),L) => [0cY,..encType(A,encType(R,L))].
+  encTp(tpLambda(A,R),L) => [0cZ,..encType(A,encType(R,L))].
+  encTp(faceType(Els),L) => [0cI,..encFieldTypes(Els,L)].
+  encTp(constrained(T,C),L) => [0c|,..encTp(T,encConstraint(C,L))].
+  encTp(univType(V,T),L) => [0c:,..encType(V,encType(T,L))].
 
   private encTypes:(list[tipe],list[integer]) => list[integer].
   encTypes(Els,L) => encInt(length(Els),encTps(Els,L)).

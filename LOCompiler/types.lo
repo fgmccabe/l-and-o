@@ -3,6 +3,8 @@ lo.comp.types{
 
   import lo.comp.misc.
 
+  public type typeKind ::= simpleType | typeFun(integer).
+
   public type tipe ::= anonType
         | voidType
         | thisType
@@ -19,6 +21,7 @@ lo.comp.types{
         | grammarType(tipe,tipe)
         | classType(tipe,tipe)
         | typeRule(tipe,tipe)
+        | tpLambda(tipe,tipe)
         | faceType(list[(string,tipe)])
         | constrained(tipe,constraint)
         | univType(tipe,tipe)
@@ -72,7 +75,7 @@ lo.comp.types{
   dispType(existType(V,Tp)) => ssSeq([ss("exists "), dispType(V),.. showMoreExists(Tp)]).
   dispType(faceType(Els)) => ssSeq([ss("{ "), ssSeq(dispTypeFields(Els)), ss("}")]).
   dispType(typeRule(Hd,Bd)) => ssSeq([dispType(Hd), ss("<~"),dispType(Bd)]) :- Bd = faceType(_).
-  dispType(typeRule(Hd,Bd)) => ssSeq([dispType(Hd), ss("="),dispType(Bd)]).
+  dispType(tpLambda(Hd,Bd)) => ssSeq([dispType(Hd), ss("="),dispType(Bd)]).
   dispType(constrained(Tp,Con)) => ssSeq([showConstraint(Con),.. showMoreConstraints(Tp)]).
 
   showMoreUniv:(tipe) => list[ss].
@@ -192,8 +195,6 @@ lo.comp.types{
   bind:(tipe,tipe){}.
   bind(T,Tp) :- (typeKind(T)=typeKind(Tp), \+ occursIn(T,Tp), bnd(T,Tp))!.
 
-  public type typeKind ::= simpleType | typeFun(integer).
-
   public implementation display[typeKind] <= {
     disp(K) => dispTpKind(K).
   }
@@ -207,7 +208,24 @@ lo.comp.types{
   typeKind(kFun(_,Ar)) => typeFun(Ar).
   typeKind(tpFun(_,Ar)) => typeFun(Ar).
   typeKind(typeRule(A,_)) => typeFun(typeArity(A)).
+  typeKind(tpLambda(A,_)) => typeFun(typeArity(A)).
   typeKind(_) => simpleType.
+
+  public typeNm:(tipe) => string.
+  typeNm(anonType) => "_".
+  typeNm(tVar(_,_,_)) => "_".
+  typeNm(voidType) => "void".
+  typeNm(tipe(Nm)) => Nm.
+  typeNm(tpFun(Nm,_)) => Nm.
+  typeNm(typeExp(Nm,_)) => typeNm(deRef(Nm)).
+  typeNm(kVar(Nm)) => Nm.
+  typeNm(kFun(Nm,_)) => Nm.
+  typeNm(tupleType(Els)) => "()\(length(Els))".
+  typeNm(typeRule(Tp,_)) => surfaceName(deRef(Tp)).
+  typeNm(tpLambda(Tp,_)) => surfaceName(deRef(Tp)).
+  typeNm(univType(_,Tp)) => typeNm(Tp).
+  typeNm(existType(_,Tp)) => typeNm(Tp).
+  typeNm(constrained(Tp,_)) => typeNm(Tp).
 
   private bnd:(tipe,tipe){}.
   bnd(tVar(Tp,_,_),Tp).
@@ -239,6 +257,7 @@ lo.comp.types{
   idOccIn(Id,faceType(L)) :- (Fld,A) in L, idOccIn(Id,A).
   idOccIn(Id,constrained(T,_)) :- idOccIn(Id,T).
   idOccIn(Id,typeRule(A,T)) :- \+idOccIn(Id,A), idOccIn(Id,T).
+  idOccIn(Id,tpLambda(A,T)) :- \+idOccIn(Id,A), idOccIn(Id,T).
 
   public implementationName:(constraint)=>string.
   implementationName(conTract(Nm,Args,_)) =>
@@ -255,13 +274,15 @@ lo.comp.types{
   surfaceName:(tipe) => string.
   surfaceName(anonType) => "_".
   surfaceName(tVar(_,_,_)) => "_".
+  surfaceName(voidType) => "void".
   surfaceName(tipe(Nm)) => Nm.
   surfaceName(tpFun(Nm,_)) => Nm.
   surfaceName(typeExp(Nm,_)) => surfaceName(deRef(Nm)).
   surfaceName(kVar(Nm)) => Nm.
   surfaceName(kFun(Nm,_)) => Nm.
   surfaceName(tupleType(Els)) => "()\(length(Els))".
-  surfaceName(typeRule(_,Tp)) => surfaceName(deRef(Tp)).
+  surfaceName(typeRule(Tp,_)) => surfaceName(deRef(Tp)).
+  surfaceName(tpLambda(Tp,_)) => surfaceName(deRef(Tp)).
 
   public bindAT:(list[tipe],list[tipe],map[string,tipe]) => map[string,tipe].
   bindAT([],_,Q) => Q.
@@ -282,4 +303,19 @@ lo.comp.types{
   typeArity(constrained(T,_)) => typeArity(T).
   typeArity(tupleType(L)) => length(L).
   typeArity(faceType(F)) => length(F).
+
+  public typeCore:(tipe)=>tipe.
+  typeCore(typeRule(L,_)) => L.
+  typeCore(tpLambda(L,_)) => L.
+  typeCore(univType(_,Tp)) => typeCore(Tp).
+  typeCore(existType(_,Tp)) => typeCore(Tp).
+  typeCore(constrained(Tp,_)) => typeCore(Tp).
+  typeCore(Tp) => Tp.
+
+  public typeOp:(tipe) => tipe.
+  typeOp(typeExp(Op,_)) => Op.
+  typeOp(univType(_,Tp)) => typeOp(Tp).
+  typeOp(existType(_,Tp)) => typeOp(Tp).
+  typeOp(Tp) => Tp.
+
 }

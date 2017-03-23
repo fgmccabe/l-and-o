@@ -5,9 +5,11 @@ test.t{
 
   type all x ~~ beta[x] = (string,x).
 
-  f:alpha.
-  f=("f",3).
+  type all x, y/2 ~~ alphabeta[x,y] <~ {}.
 
+/*  f:alpha.
+  f=("f",3).
+*/
   g:beta[integer].
   g=("g",4).
 }

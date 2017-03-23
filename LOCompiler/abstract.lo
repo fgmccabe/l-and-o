@@ -142,8 +142,8 @@ lo.comp.abstract{
 
   public isQuantified:(ast,ast,ast){}.
   isQuantified(T,V,B) :-
-    isUnary(T,"all",_,R),
-    isBinary(R,"~~",_,V,B).
+    isBinary(T,"~~",_,L,B),
+    isUnary(L,"all",_,V).
 
   getQuantifiers:(ast,list[ast],ast){}.
   getQuantifiers(T,deComma(V),B) :- isQuantified(T,V,B).

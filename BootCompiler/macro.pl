@@ -126,8 +126,8 @@ typeRule(Lc,Quants,Constraints,Hd,Body,Stmt) :-
 wrapQuants([],_,Rule,Rule).
 wrapQuants(Q,Lc,Rl,Rule) :-
   listComma(Q,Lc,QV),
-  binary(Lc,"~~",QV,Rl,R1),
-  unary(Lc,"all",R1,Rule).
+  unary(Lc,"all",QV,R1),
+  binary(Lc,"~~",R1,Rl,Rule).
 
 wrapConstraints([],_,Tp,Tp).
 wrapConstraints(Con,Lc,Tp,ConTp) :-
@@ -149,7 +149,7 @@ genFieldArgs([F|M],[name(Lc,V)|R],[FA|AR]) :-
   binary(Lc,"=",L,name(Lc,V),FA),
   genFieldArgs(M,R,AR).
 
-hasType(Lc,Nm,Tp,St) :- 
+hasType(Lc,Nm,Tp,St) :-
   binary(Lc,":",name(Lc,Nm),Tp,St).
 
 classType(Lc,Args,Res,Tp) :- isTuple(A,Lc,Args),binary(Lc,"<=>",A,Res,Tp).
@@ -174,4 +174,3 @@ generateAnnotations([Def|Els],Quants,Constraints,[Annot|Stmts],S0) :-
   generateAnnotations(Els,Quants,Constraints,Stmts,S0).
 generateAnnotations([_|Els],Quants,Constraints,Stmts,S0) :- % ignore things like assertions
   generateAnnotations(Els,Quants,Constraints,Stmts,S0).
-
