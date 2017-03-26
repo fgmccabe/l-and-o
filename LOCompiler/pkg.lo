@@ -15,17 +15,12 @@ lo.comp.code.pkg{
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
 
-  public compileMdl:(prProg) => codeMdl.
-  compileMdl(prProg(Spec,Clses)) =>
-    codeMdl(Spec,pairs(pickupDefs(Clses,[]))//(((Nm,Cls)) => asm(compRel(Nm,Cls)))).
+  public compileMdl:(prProg,report,report) => codeMdl.
+  compileMdl(prProg(Spec,Rels),Rp,Rp) =>
+    codeMdl(Spec,pairs(Rels)//(((Nm,Rl)) => asm(compRel(Nm,Rl)))).
 
-  pickupDefs:(list[clse],map[term,list[clse]]) => map[term,list[clse]].
-  pickupDefs([],D)=>D.
-  pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->Clses<>[Cl]]):- Cl=clse(_,Nm,_,_), present(D,Nm,Clses).
-  pickupDefs([Cl,..L],D) => pickupDefs(L,D[Nm->[Cl]]) :- Cl=clse(_,Nm,_,_).
-
-  compRel:(term,list[clse]) => assem.
-  compRel(prg(Nm,Ar),Cls) => Code :-
+  compRel:(term,trel) => assem.
+  compRel(prg(Nm,Ar),trel(_,Lc,Fal,Cls)) => Code :-
     logMsg("Compiling \(Cls)"),
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),

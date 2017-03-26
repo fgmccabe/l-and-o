@@ -85,10 +85,15 @@ lo.comp.compiler{
           transformProg(Prg,Opts,TrPrg,Rp1,Rp2),
           (errorFree(Rp2)?
             Repo1 = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),
+            logMsg("transformed program: \(TrPrg)"),
             (Opts.prologOnly ?
               Repox = Repo1 |
-              Code = compileMdl(TrPrg),
-              Repox = addPackage(Repo1,Pkg,implode(encMdl(Code)))) |
+              Code = compileMdl(TrPrg,Rp2,Rp3),
+              (errorFree(Rp3) ?
+                 Repox = addPackage(Repo1,Pkg,implode(encMdl(Code))),
+                 Rpx = Rp3 |
+                 Rpx = populateContext(Rp3,getUriPath(U),collectSrc(Src,1,emptyArray)),
+                 Repox = Rep1)) |
             Rpx = populateContext(Rp2,getUriPath(U),collectSrc(Src,1,emptyArray))) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |

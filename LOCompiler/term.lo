@@ -16,7 +16,9 @@ lo.comp.term {
 
   public type tloc ::= tloc(integer,integer).
 
-  public type trel ::= trel(string,integer,tipe,tloc,list[clse]).
+  public type fallible ::= fallible | infallible.
+
+  public type trel ::= trel(term,option[tloc],fallible,list[clse]).
 
   public type clse ::= clse(list[term],term,list[term],list[pred]).
 
@@ -28,14 +30,18 @@ lo.comp.term {
                     | fail
                     | except(option[tloc],term).
 
-  public type prProg ::= prProg(pkgSpec,list[clse]).
+  public type prProg ::= prProg(pkgSpec,map[term,trel]).
 
   public implementation display[prProg] <= {
     disp(Prog) => dispProg(Prog).
   }
 
   private dispProg:(prProg)=>ss.
-  dispProg(prProg(_,Rules)) => ssSeq([ss("compiled rules\n"),..dispRules(Rules)]).
+  dispProg(prProg(_,Rels)) => ssSeq([ss("compiled rules\n"),..values(Rels)//dispRel]).
+
+  private dispRel:(trel) => ss.
+  dispRel(trel(Nm,Lc,F,Rules)) =>
+    ssSeq([disp(Nm),ss(F=fallible ? ": failable" | ": not failsafe"),ss("\n"),..Rules//dispClause]).
 
   private dispRules:(list[clse]) => list[ss].
   dispRules([]) => [].
