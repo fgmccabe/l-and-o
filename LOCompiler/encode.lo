@@ -7,11 +7,55 @@ lo.comp.encode{
   import lo.comp.parseutils.
   import lo.comp.code.asm.
 
+  public encodeProg:(prProg) => list[integer].
+  encodeProg(prProg(Spec,Code)) => encTerm(packageSig(Spec),encodeProgMap(values(Code),[])).
+
+  encodeProgMap:(list[trel],list[integer]) => list[integer].
+  encodeProgMap([],L) => L.
+  encodeProgMap([T,..R],L) => encodeRel(T,encodeProgMap(R,L)).
+
+  encodeRel:(trel,list[integer]) => list[integer].
+  encodeRel(trel(Pred,TLc,Fl,Clses),L) => [0cR,..encTerm(Pred,encodeTLoc(TLc,encodeFall(Fl,encodeClses(Clses,L))))].
+
+  encodeClses:(list[clse],list[integer]) => list[integer].
+  encodeClses(Clses,L) => encSequence(encClause,Clses,L).
+
+  encClause:(clse,list[integer]) => list[integer].
+  encClause(clse(Q,Nm,Args,Body),L) => [0cC,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encSequence(encPred,Body,L))))].
+
+  encPred:(pred,list[integer]) => list[integer].
+  encPred(call(TLc,Op,Args),L) => [0cP,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
+  encPred(ecall(TLc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encSequence(encTerm,Args,L)))].
+  encPred(ocall(TLc,O,S,I),L) => [0cO,..encodeTLoc(TLc,encTerm(O,encTerm(S,encTerm(I,L))))].
+  encPred(unfy(TLc,Lf,Rg),L) => [0c=,..encodeTLoc(TLc,encTerm(Lf,encTerm(Rg,L)))].
+  encPred(neck,L) => [0c!,..L].
+  encPred(fail,L) => [0c#,..L].
+  encPred(except(TLc,E),L) => [0c^,..encodeTLoc(TLc,encTerm(E,L))].
+
+  encSequence:all t ~~ ((t,list[integer])=>list[integer],list[t],list[integer])=>list[integer].
+  encSequence(F,S,L) => [0cL,..encInt(size(S),encSeq(F,S,L))].
+
+  encSeq:all t ~~ ((t,list[integer])=>list[integer],list[t],list[integer])=>list[integer].
+  encSeq(_,[],L) => L.
+  encSeq(F,[E,..R],L) => F(E,encSeq(F,R,L)).
+
+  encodeTLoc:(option[tloc],list[integer]) => list[integer].
+  encodeTLoc(TLc,L) => encodeOptional((tloc(F,T),Lx)=>[0cT,..encInt(F,encInt(T,Lx))],TLc,L).
+
+  encodeFall:(fallible,list[integer]) => list[integer].
+  encodeFall(fallible,L) => encTerm(enum("lo.core#true"),L).
+  encodeFall(infallible,L) => encTerm(enum("lo.core#false"),L).
+
+  public encodeOptional:all t ~~ ((t,list[integer])=>list[integer],option[t],list[integer]) => list[integer].
+  encodeOptional(F,none,L) => [0cN,..L].
+  encodeOptional(F,some(O),L) => [0c@,..F(O,L)].
+
   public encodeTerm:(term) => list[integer].
   encodeTerm(T) => encTerm(T,[]).
 
   private encTerm:(term,list[integer]) => list[integer].
   encTerm(anon,L) => [0ca,..L].
+  encTerm(varbl(Nm),L) => [0cv,..encodeText(Nm,L)].
   encTerm(intgr(Ix),L) => [0cx,..encInt(Ix,L)].
   encTerm(flot(Dx),L) => [0cd,..encFlot(Dx,L)].
   encTerm(enum(Nm),L) => [0ce,..encodeText(Nm,L)].

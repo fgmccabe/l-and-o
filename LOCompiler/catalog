@@ -44,6 +44,7 @@ catalog{
     lo.comp.parseutils -> "parseutils.lo".
     lo.comp.reduce -> "reduce.lo".
     lo.comp.regexp -> "regexp.lo".
+    lo.comp.repo -> "reposrc.lo".
     lo.comp.resolve -> "resolve.lo".
     lo.comp.term -> "term.lo".
     lo.comp.token -> "token.lo".

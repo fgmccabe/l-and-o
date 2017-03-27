@@ -15,14 +15,11 @@ lo.repo.file{
 
   public implementation repository[fileRepo] <= {
     packagePresent(repo(Root,Man),Pkg,Kind) :-
-      -- _logmsg("is \(Pkg) in manifest \(Man)"),
       locateInManifest(Man,Pkg,"source",S),
       locateInManifest(Man,Pkg,"code",U),
-      -- _logmsg("in manifest"),
       CodeFile = resolveUri(Root,parseUri(U)),
       SrcFile = resolveUri(Root,parseUri(S)),
       resourcePresent(CodeFile),
-      -- _logmsg("resource present"),
       (resourcePresent(SrcFile) ?
           newerFile(getUriPath(CodeFile),getUriPath(SrcFile)) | true).
 
@@ -66,9 +63,6 @@ lo.repo.file{
   public addPackage:(fileRepo,pkg,string) => fileRepo.
   addPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"code",Text).
 
-  public addPrologPackage:(fileRepo,pkg,string) => fileRepo.
-  addPrologPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"prolog",Text).
-
   public addSource:(fileRepo,pkg,string) => fileRepo.
   addSource(repo(Root,Man),Pkg,Nm) => repo(Root,addToManifest(Man,Pkg,"source",Nm)).
 
@@ -79,6 +73,7 @@ lo.repo.file{
   extensionMapping:(string,string){}.
   extensionMapping("source",".lo").
   extensionMapping("prolog",".pl").
+  extensionMapping("term",".term").
   extensionMapping("code","").
 
   public implementation display[fileRepo] <= {

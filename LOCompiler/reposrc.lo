@@ -1,0 +1,25 @@
+lo.comp.repo{
+  -- Manage the repo for the compiler
+
+  import lo.
+  import lo.either.
+  import lo.uri.
+  import lo.repo.
+  import lo.repo.file.
+  import lo.resources.
+
+  import lo.comp.encode.
+  import lo.comp.package.
+  import lo.comp.term.
+
+  public addPrologPackage:(fileRepo,pkg,string) => fileRepo.
+  addPrologPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"prolog",Text).
+
+  public recordTermPkg:(fileRepo,prProg) => fileRepo.
+  recordTermPkg(Repo,Prg) => addTermPackage(Repo,Pkg,implode(encodeProg(Prg))) :-
+    Prg = prProg(pkgSpec(Pkg,_,_,_,_,_,_),_).
+
+  addTermPackage:(fileRepo,pkg,string) => fileRepo.
+  addTermPackage(Repo,Pkg,Text) => addToRepo(Repo,Pkg,"term",Text).
+
+}

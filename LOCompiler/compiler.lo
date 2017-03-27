@@ -15,6 +15,7 @@ lo.comp.compiler{
   import lo.comp.genprolog.
   import lo.comp.imports.
   import lo.comp.package.
+  import lo.comp.repo.
   import lo.comp.typecheck.
   import lo.comp.errors.
   import lo.comp.grapher.
@@ -84,7 +85,7 @@ lo.comp.compiler{
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rp2),
           (errorFree(Rp2)?
-            Repo1 = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),
+            Repo1 = recordTermPkg(addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),TrPrg),
             logMsg("transformed program: \(TrPrg)"),
             (Opts.prologOnly ?
               Repox = Repo1 |

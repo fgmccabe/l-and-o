@@ -14,6 +14,7 @@ lo.comp.bootstrap{
   import lo.comp.genprolog.
   import lo.comp.imports.
   import lo.comp.package.
+  import lo.comp.repo.
   import lo.comp.typecheck.
   import lo.comp.errors.
   import lo.comp.grapher.
@@ -80,7 +81,8 @@ lo.comp.bootstrap{
         Prg = checkProgram(Term,V,Repo,Rp0,Rp1),
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rpx),
-          Repox = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string) |
+          Repo1 = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),
+          Repox = recordTermPkg(Repo1,TrPrg) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),
