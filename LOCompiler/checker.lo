@@ -306,6 +306,10 @@ lo.comp.typecheck{
     isBinary(St,":-",Lc,L,G),
     isBinary(L,"<=",_,H,R),
     checkClassRule(Lc,H,G,R,ProgramType,Defs,Defx,E,Pth,Rp,Rpx).
+  processStmt(St,Tp,Defs,Dx,Env,_,Rp,Rpx) :-
+    isBinary(St,":-",Lc,L,G),
+    isBinary(L,"=",_,H,R),
+    checkDefn(Lc,H,G,R,Tp,Defs,Dx,Env,Rp,Rpx).
   processStmt(St,ProgramType,Defs,Dfx,E,_,Rp,Rpx) :-
     isBinary(St,":-",Lc,L,R),
     checkClause(Lc,L,R,ProgramType,Defs,Dfx,E,Rp,Rpx).

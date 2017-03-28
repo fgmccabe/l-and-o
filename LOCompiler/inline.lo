@@ -4,7 +4,7 @@ lo.comp.inline{
   import lo.comp.term.
 
   -- resolve the head of C1 with the Ixth goal in C2, resulting in the new clause C3.
-  resolve:(clse,integer,clse,clse){}.
+  public resolve:(clse,integer,clse,clse){}.
   resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>B2<>renamePreds(Rhs,Mx))) :-
     renameClse(C2,clse(_,P2,E2,B2)),
     split(Body,Ix,Lhs,Call,Rhs),
@@ -13,8 +13,8 @@ lo.comp.inline{
     NQ = foldLeft(collectVar,[],pairs(Mx)).
 
   checkCall:(pred,term,list[term]){}.
-  checkCall(call(Prd,Els),Prd,Els).
-  checkCall(ocall(C,Lb,Th),Prd,[C,Lb,Th]) :-
+  checkCall(call(_,Prd,Els),Prd,Els).
+  checkCall(ocall(_,C,Lb,Th),Prd,[C,Lb,Th]) :-
     consistentLbl(Prd,Lb).
 
   consistentLbl:(term,term){}.
@@ -31,12 +31,7 @@ lo.comp.inline{
   renameTerm:(term,map[string,term]) => term.
   renameTerm(varbl(Nm),V) => VV :- present(V,Nm,VV).
   renameTerm(anon,_) => anon.
-  renameTerm(intgr(Ix),_) => intgr(Ix).
-  renameTerm(flot(Ix),_) => flot(Ix).
-  renameTerm(enum(Ix),_) => enum(Ix).
-  renameTerm(strng(Ix),_) => strng(Ix).
-  renameTerm(strct(Nm,Ar),_) => strct(Nm,Ar).
-  renameTerm(prg(Nm,Ar),_) => prg(Nm,Ar).
+  renameTerm(T,_) => T :- isGroundTerm(T).
   renameTerm(cons(Op,Els),V) => cons(renameTerm(Op,V),renameEls(Els,V)).
 
   renameEls:(list[term],map[string,term])=> list[term].
@@ -44,11 +39,11 @@ lo.comp.inline{
   renameEls([T,..L],V) => [renameTerm(T,V),..renameEls(L,V)].
 
   renamePred:(pred,map[string,term]) => pred.
-  renamePred(call(O,A),V) => call(renameTerm(O,V),renameEls(A,V)).
-  renamePred(ecall(O,A),V) => ecall(O,renameEls(A,V)).
-  renamePred(ocall(O,A,T),V) => ocall(renameTerm(O,V),renameTerm(A,V),renameTerm(T,V)).
-  renamePred(unfy(L,R),V) => unfy(renameTerm(L,V),renameTerm(R,V)).
-  renamePred(except(A),V) => except(renameTerm(A,V)).
+  renamePred(call(TLc,O,A),V) => call(TLc,renameTerm(O,V),renameEls(A,V)).
+  renamePred(ecall(TLc,O,A),V) => ecall(TLc,O,renameEls(A,V)).
+  renamePred(ocall(TLc,O,A,T),V) => ocall(TLc,renameTerm(O,V),renameTerm(A,V),renameTerm(T,V)).
+  renamePred(unfy(TLc,L,R),V) => unfy(TLc,renameTerm(L,V),renameTerm(R,V)).
+  renamePred(except(TLc,A),V) => except(TLc,renameTerm(A,V)).
   renamePred(neck,_) => neck.
   renamePred(fail,_) => fail.
 

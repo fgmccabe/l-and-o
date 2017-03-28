@@ -1,0 +1,35 @@
+comp.test.i{
+  import lo.
+
+  import lo.comp.term.
+  import lo.comp.inline.
+
+
+  five:clse.
+  five = clse([varbl("IntPlus"),varbl("X")],prg("five",0),[],
+      [ocall(none,cons(strct("+",1),[varbl("IntPlus")]),enum("int"),enum("int")),
+       ocall(none,cons(strct("call",3),[intgr(2),intgr(3),varbl("X")]),varbl("IntPlus"),varbl("IntPlus"))]).
+
+  int:clse.
+  int = clse([varbl("Lb"),varbl("Th")],prg("int",3),
+       [cons(strct("+",1),[cons(strct("int^+",2),[varbl("Lb"),varbl("Th")])])],
+       []).
+
+  intHat:clse.
+  intHat = clse([varbl("X"),varbl("Y"),varbl("Z"),varbl("Lb"),varbl("Th")],
+      prg("int^+",3),
+      [cons(strct("call",3),[varbl("X"),varbl("Y"),varbl("Z")]),varbl("Lb"),varbl("Th")],
+      [call(none,prg("int+",5),[varbl("X"),varbl("Y"),varbl("Z"),varbl("Lb"),varbl("Th")])]).
+
+  intEsc:clse.
+  intEsc = clse([varbl("X"),varbl("Y"),varbl("Z"),varbl("Lb"),varbl("Th")],
+      prg("int+",5),
+      [varbl("X"),varbl("Y"),varbl("Z"),varbl("Lb"),varbl("Th")],
+      [ecall(none,"int_plus",[varbl("X"),varbl("Y"),varbl("Z")])]).
+
+  test:clse.
+  test=C :- resolve(intHat,0,intEsc,C).
+
+  show "\(test)".
+
+}

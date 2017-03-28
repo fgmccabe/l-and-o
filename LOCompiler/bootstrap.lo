@@ -13,6 +13,7 @@ lo.comp.bootstrap{
   import lo.comp.catalog.
   import lo.comp.genprolog.
   import lo.comp.imports.
+  import lo.comp.inline.
   import lo.comp.package.
   import lo.comp.repo.
   import lo.comp.typecheck.

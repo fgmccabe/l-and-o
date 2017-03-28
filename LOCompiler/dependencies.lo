@@ -202,6 +202,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"<=",_,L,R)).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"=>",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=>",_,H,E).
+  stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=",_,H,E).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,":-",_,L,R).
   stmtRefs(S,All,So) =>  refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInNT(R,All,So)) :-  isBinary(S,"-->",_,L,R).
