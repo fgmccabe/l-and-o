@@ -1,6 +1,8 @@
 lo.comp.decode{
   import lo.
   import lo.resources.
+
+  import lo.comp.package.
   import lo.comp.term.
   import lo.comp.types.
   import lo.comp.parseutils.
@@ -18,7 +20,7 @@ lo.comp.decode{
 
   public unwrapSpec:(term) => pkgSpec.
   unwrapSpec(cons(_,[Pk,cons(_,Is),Ex,Tp,cons(_,C),cons(_,Co),cons(_,Im)])) =>
-      pkgSpec(decodePkg(Pk),Fields,Types,Enums,Contracts,decodeImports(Is),Imports) :-
+      pkgSpec(decodePkg(Pk),Fields,Types,Enums,Contracts,Impls,decodeImports(Is)) :-
     faceType(Fields) = decodeSignature(Ex),
     faceType(Types) = decodeSignature(Tp),
     pickupEnums(C,Enums,[]),
@@ -62,9 +64,49 @@ lo.comp.decode{
 
   decodeRels:(map[term,trel],map[term,trel]) --> list[integer].
   decodeRels(M,M) --> eof.
-  decodeRels(M,Mx) --> decodeRel(Pk,Rl),decodeRels(M[Pk->Rl],Mx).
+  decodeRels(M,Mx) --> decodeRel(Prg,Rl),decodeRels(M[Prg->Rl],Mx).
 
-  decodeRel:(pkg,trel) --> list[integer].
+  decodeRel:(term,trel) --> list[integer].
+  decodeRel(Prg,trel(Prg,TLc,Fal,Clses)) --> "R", decodeTerm(Prg), decodeOptional(decodeTloc,TLc), decodeFall(Fal), decodeClauses(Clses).
+
+  decodeFall:(fallible) --> list[integer].
+  decodeFall(fallible) --> decodeTerm(enum("lo.core#true")).
+  decodeFall(infallible) --> decodeTerm(enum("lo.core#false")).
+
+  decodeClause:(clse) --> list[integer].
+  decodeClause(clse(Q,Nm,Args,Body)) --> "C",
+      decodeTerm(Nm),
+      decodeSequence(decodeTerm,Q),
+      decodeSequence(decodeTerm,Args),
+      decodeSequence(decodePred,Body).
+
+  decodePred:(pred) --> list[integer].
+  decodePred(call(TLc,Op,Args)) --> "P", decodeOptional(decodeTloc,TLc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
+  decodePred(ecall(TLc,Op,Args)) --> "E", decodeOptional(decodeTloc,TLc), decodeName(Op), decodeSequence(decodeTerm,Args).
+  decodePred(ocall(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
+  decodePred(unfy(TLc,L,R)) --> "=", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
+  decodePred(next) --> "!".
+  decodePred(fail) --> "#".
+  decodePred(except(TLc,E)) --> "^", decodeOptional(decodeTloc,TLc), decodeTerm(E).
+
+  decodeOptional:all t ~~ (((t)-->list[integer]),option[t]) --> list[integer].
+  decodeOptional(_,none) --> "N".
+  decodeOptional(I,some(O)) --> "@", I(O).
+
+  decodeSequence:all t ~~ (((t)-->list[integer]),list[t]) --> list[integer].
+  decodeSequence(I,L) --> "L", decInt(Count), decodeSeq(I,L,Count).
+
+  decodeSeq:all t ~~ (((t)-->list[integer]),list[t],integer) --> list[integer].
+  decodeSeq(_,[],0) --> [].
+  decodeSeq(I,[E,..L],Cx) --> {Cx>0}, I(E), decodeSeq(I,L,Cx-1).
+
+  decodeTloc:(tloc) --> list[integer].
+  decodeTloc(tloc(F,T)) --> "T", decInt(F), decInt(T).
+
+  decodeClauses:(list[clse]) --> list[integer].
+  decodeClauses(Clses) --> decodeSequence(decodeClause,Clses).
+
+
 
   public decodeTuple:(string) => list[term].
   decodeTuple(Txt) => Els :- decodeTerm(cons(_,Els)) %% explode(Txt).

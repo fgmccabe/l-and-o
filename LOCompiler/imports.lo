@@ -25,20 +25,10 @@ lo.comp.imports{
     pickupPkgSpec(A,IPkg,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
   pickupPkgSpec:(ast,pkg,list[(visibility,pkg)],list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
-  pickupPkgSpec(Term,Pkg,decodeImports(Is),Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
+  pickupPkgSpec(Term,Pkg,Imports,Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
     isUnary(Term,"#pkg",_,E),
     isString(E,_,Enc),
-    pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports) = unwrapSpec(decodeValue(Enc)),
-    
-    cons(_,[Pk,cons(_,Is),Ex,Tp,cons(_,C),cons(_,Co),cons(_,Im)]) = decodeValue(Enc),
-    faceType(Fields) = decodeSignature(Ex),
-    faceType(Types) = decodeSignature(Tp),
-    pickupEnums(C,Enums,[]),
-    findContracts(Co,Contracts,[]),
-    pickupImplementations(Im,Impls,[]).
-
-      public type pkgSpec ::= pkgSpec(pkg,list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
-
+    pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports) = unwrapSpec(decodeValue(Enc)).
 
   public importPkgs:all r ~~ repository[r] |: (list[pkg],list[pkgSpec],r,report,report) => list[pkgSpec].
   importPkgs([],Specs,_,Rp,Rp) => Specs.

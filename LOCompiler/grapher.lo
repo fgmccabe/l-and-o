@@ -67,30 +67,34 @@ lo.comp.grapher{
   projectOutPkgs([(_,Pkg),..L]) => [Pkg,..projectOutPkgs(L)].
 
   scanFile:(uri,pkg,fileRepo,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
-  scanFile(Fl,Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp0,Rpx) :-
+  scanFile(Fl,Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp1,Rpx) :-
+    logMsg("scanning \(Fl)"),
     Term = parseFile(Fl,Rp,Rp0),
-    scanTerm(Term,Cat,Imps).
+    scanTerm(Term,Cat,Imps,Rp0,Rp1).
 
-  scanTerm:(ast,catalog,list[pkg]){}.
-  scanTerm(T,Cat,scanTheta(Th,Cat,[])) :-
+  scanTerm:(ast,catalog,list[pkg],report,report){}.
+  scanTerm(T,Cat,scanTheta(Th,Cat,[],Rp,Rpx),Rp,Rpx) :-
     isBraceTerm(T,_,P,Th).
 
-  scanTheta:(list[ast],catalog,list[pkg]) => list[pkg].
-  scanTheta([],_,Imps) => Imps.
-  scanTheta([St,..Stmts],Cat,Imports) => scanTheta(Stmts,Cat,scanStmt(St,Cat,Imports)).
+  scanTheta:(list[ast],catalog,list[pkg],report,report) => list[pkg].
+  scanTheta([],_,Imps,Rp,Rp) => Imps.
+  scanTheta([St,..Stmts],Cat,Imports,Rp,Rpx) => scanTheta(Stmts,Cat,scanStmt(St,Cat,Imports,Rp,Rp0),Rp0,Rpx).
 
-  scanStmt:(ast,catalog,list[pkg]) => list[pkg].
-  scanStmt(St,Cat,Imp) => scanStmt(El,Cat,Imp) :-
+  scanStmt:(ast,catalog,list[pkg],report,report) => list[pkg].
+  scanStmt(St,Cat,Imp,Rp,Rpx) => scanStmt(El,Cat,Imp,Rp,Rpx) :-
     isUnary(St,"public",_,El).
-  scanStmt(St,Cat,Imp) => scanStmt(El,Cat,Imp) :-
+  scanStmt(St,Cat,Imp,Rp,Rpx) => scanStmt(El,Cat,Imp,Rp,Rpx) :-
     isUnary(St,"private",_,El).
-  scanStmt(St,Cat,Imps) => [scanPkgName(P,Cat),..Imps] :-
-    isUnary(St,"import",_,P).
-  scanStmt(St,_,Imps) => Imps.
+  scanStmt(St,Cat,Imps,Rp,Rpx) => Pkgs :-
+    isUnary(St,"import",_,P),
+    scanPkgName(P,Cat,Pkgs,Imps,Rp,Rpx).
+  scanStmt(St,_,Imps,Rp,Rp) => Imps.
 
-  scanPkgName:(ast,catalog) => pkg.
-  scanPkgName(T,_) => pkg(packageName(P),vers("\(V)")) :-
+  scanPkgName:(ast,catalog,list[pkg],list[pkg],report,report){}.
+  scanPkgName(T,_,[pkg(packageName(P),vers("\(V)")),..Pkgs],Pkgs,Rp,Rp) :-
     isBinary(T,"#",_,P,V).
-  scanPkgName(T,Cat) => Pkg :-
+  scanPkgName(T,Cat,[Pkg,..Pkgs],Pkgs,Rp,Rp) :-
     resolveCatalog(Cat,pkg(packageName(T),defltVersion),_,Pkg).
+  scanPkgName(T,Cat,Pkgs,Pkgs,Rp,Rpx) :-
+    reportError("cannot locate package \(T) in catalog",T.loc,Rp,Rpx).
 }

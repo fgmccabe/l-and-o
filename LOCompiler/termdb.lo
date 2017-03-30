@@ -5,7 +5,7 @@ lo.comp.termbase{
    import lo.resources.
 
    import lo.comp.term.
-   import lo.comp.encoded.
+   import lo.comp.encode.
 
 
    public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,trel].
