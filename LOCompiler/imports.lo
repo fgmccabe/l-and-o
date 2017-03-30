@@ -25,15 +25,20 @@ lo.comp.imports{
     pickupPkgSpec(A,IPkg,Imports,Export,Types,Enums,Contracts,Impls,Rp0,Rpx)!.
 
   pickupPkgSpec:(ast,pkg,list[(visibility,pkg)],list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],report,report){}.
-  pickupPkgSpec(Term,decodePkg(Pk),decodeImports(Is),Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
+  pickupPkgSpec(Term,Pkg,decodeImports(Is),Fields,Types,Enums,Contracts,Impls,Rp,Rp) :-
     isUnary(Term,"#pkg",_,E),
     isString(E,_,Enc),
+    pkgSpec(Pkg,Fields,Types,Enums,Contracts,Impls,Imports) = unwrapSpec(decodeValue(Enc)),
+    
     cons(_,[Pk,cons(_,Is),Ex,Tp,cons(_,C),cons(_,Co),cons(_,Im)]) = decodeValue(Enc),
     faceType(Fields) = decodeSignature(Ex),
     faceType(Types) = decodeSignature(Tp),
     pickupEnums(C,Enums,[]),
     findContracts(Co,Contracts,[]),
     pickupImplementations(Im,Impls,[]).
+
+      public type pkgSpec ::= pkgSpec(pkg,list[(string,tipe)],list[(string,tipe)],list[string],list[conEntry],list[implEntry],list[(visibility,pkg)]).
+
 
   public importPkgs:all r ~~ repository[r] |: (list[pkg],list[pkgSpec],r,report,report) => list[pkgSpec].
   importPkgs([],Specs,_,Rp,Rp) => Specs.
@@ -65,43 +70,7 @@ lo.comp.imports{
   publicImports([(pUblic,Pkg),..L]) => [Pkg,..publicImports(L)].
   publicImports([(priVate,_),..L]) => publicImports(L).
 
-  decodeImports:(list[term]) => list[(visibility,pkg)].
-  decodeImports([]) => [].
-  decodeImports([cons(strct("import",2),[Vz,Pk]),..Is]) => [(decodeViz(Vz),decodePkg(Pk)),..decodeImports(Is)].
 
-  decodeTypes:(string) => list[(string,tipe)].
-  decodeTypes(Txt) => F :- decodeType(faceType(F)) %% explode(Txt).
-
-  decodeViz:(term)=>visibility.
-  decodeViz(enum("public")) => pUblic.
-  decodeViz(enum("private")) => priVate.
-
-  decodePkg:(term)=>pkg.
-  decodePkg(cons(strct("pkg",2),[strng(Pk),V]))=> pkg(Pk,decodeVers(V)).
-
-  decodeVers:(term)=>version.
-  decodeVers(enum("*"))=>defltVersion.
-  decodeVers(strng(V)) => vers(V).
-
-  pickupEnums:(list[term],list[string],list[string]){}.
-  pickupEnums([],Cls,Cls).
-  pickupEnums([strng(Nm),..Rest],[Nm,..More],Cls):-
-    pickupEnums(Rest,More,Cls).
-
-  findContracts:(list[term],list[conEntry],list[conEntry]){}.
-  findContracts([],C,C).
-  findContracts([cons(_,[strng(Nm),strng(ConNm),strng(ConSig),FaceSig]),..M],[conEntry(Nm,ConNm,Con,decodeSignature(FaceSig)),..C],Cx) :-
-    decodeConstraint(ConSig,Con),
-    findContracts(M,C,Cx).
-
-  pickupImplementations:(list[term],list[implEntry],list[implEntry]){}.
-  pickupImplementations([],I,I).
-  pickupImplementations([cons(_,[strng(Nm),strng(Sig)]),..M],[implEntry(Nm,Spec),..I],RI) :-
-    decodeConstraint(Sig,Spec),
-    pickupImplementations(M,I,RI).
-
-  private decodeSignature:(term) => tipe.
-  decodeSignature(strng(S)) => T :- decodeType(T) %% explode(S).
 
   private splitOnHash:(string) => string.
   splitOnHash(S) => pathSuffix(S,"#").

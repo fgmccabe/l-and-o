@@ -12,7 +12,7 @@ comp.test.i{
 
   int:clse.
   int = clse([varbl("Lb"),varbl("Th")],prg("int",3),
-       [cons(strct("+",1),[cons(strct("int^+",2),[varbl("Lb"),varbl("Th")])])],
+       [cons(strct("+",1),[cons(strct("int^+",2),[varbl("Lb"),varbl("Th")])]),varbl("Lb"),varbl("Th")],
        []).
 
   intHat:clse.
@@ -27,9 +27,24 @@ comp.test.i{
       [varbl("X"),varbl("Y"),varbl("Z"),varbl("Lb"),varbl("Th")],
       [ecall(none,"int_plus",[varbl("X"),varbl("Y"),varbl("Z")])]).
 
-  test:clse.
-  test=C :- resolve(intHat,0,intEsc,C).
 
-  show "\(test)".
+  t1:clse.
+  t1=C :- resolve(five,0,int,C).
+
+  -- show "resolve \(five) against \(int) to get \(t1)".
+
+  t2:clse.
+  t2=C :- resolve(t1,0,intHat,C).
+
+  show "resolve \(t1) against \(intHat) to get \(t2)".
+
+  test:clse.
+  test=C :- resolve(t2,0,intEsc,C).
+
+  show "resolve \(t2) against \(intEsc) to get \(test)".
+
+  t1:clse.
+  t1=C :- resolve(five,0,int,C).
+
 
 }

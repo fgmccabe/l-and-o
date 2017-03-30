@@ -47,6 +47,7 @@ catalog{
     lo.comp.repo -> "reposrc.lo".
     lo.comp.resolve -> "resolve.lo".
     lo.comp.term -> "term.lo".
+    lo.comp.termbase -> "termdb.lo".
     lo.comp.token -> "token.lo".
     lo.comp.transform -> "transform.lo".
     lo.comp.transutils -> "transutils.lo".

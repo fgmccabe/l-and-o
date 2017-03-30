@@ -1,0 +1,19 @@
+lo.comp.termbase{
+   import lo.
+   import lo.repo.file.
+   import lo.uri.
+   import lo.resources.
+
+   import lo.comp.term.
+   import lo.comp.encoded.
+
+
+   public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,trel].
+   loadTermBase(Pkgs,Repo) => foldRight((Pkg,M)=>loadTermPkg(Pkg,Repo,M),[],Pkgs).
+
+
+   loadTermPkg:all r ~~ repository[r] |: (pkg,r,map[term,trel]) => map[term,trel].
+   loadTermPkg(Pkg,R,M) => unpackMdl(decodeMdl(Txt),M) :-
+     loadFromRepo(R,Pkg,"term",Txt).
+
+}

@@ -9,6 +9,63 @@ lo.comp.decode{
   public decodeValue:(string) => term.
   decodeValue(Txt) => Term :- decodeTerm(Term) %% explode(Txt).
 
+  public decodeMdl:(string) => prProg.
+  decodeMdl(Txt) => prProg(Spec,Code) :-
+    (decodePkgSpec(Spec), decodeRels([],Code)) %% explode(Txt).
+
+  decodePkgSpec:(pkgSpec) --> list[integer].
+  decodePkgSpec(unwrapSpec(S)) --> decodeTerm(S).
+
+  public unwrapSpec:(term) => pkgSpec.
+  unwrapSpec(cons(_,[Pk,cons(_,Is),Ex,Tp,cons(_,C),cons(_,Co),cons(_,Im)])) =>
+      pkgSpec(decodePkg(Pk),Fields,Types,Enums,Contracts,decodeImports(Is),Imports) :-
+    faceType(Fields) = decodeSignature(Ex),
+    faceType(Types) = decodeSignature(Tp),
+    pickupEnums(C,Enums,[]),
+    findContracts(Co,Contracts,[]),
+    pickupImplementations(Im,Impls,[]).
+
+  decodePkg:(term)=>pkg.
+  decodePkg(cons(strct("pkg",2),[strng(Pk),V]))=> pkg(Pk,decodeVers(V)).
+
+  decodeVers:(term)=>version.
+  decodeVers(enum("*"))=>defltVersion.
+  decodeVers(strng(V)) => vers(V).
+
+  findContracts:(list[term],list[conEntry],list[conEntry]){}.
+  findContracts([],C,C).
+  findContracts([cons(_,[strng(Nm),strng(ConNm),strng(ConSig),FaceSig]),..M],[conEntry(Nm,ConNm,Con,decodeSignature(FaceSig)),..C],Cx) :-
+    decodeConstraint(ConSig,Con),
+    findContracts(M,C,Cx).
+
+  pickupImplementations:(list[term],list[implEntry],list[implEntry]){}.
+  pickupImplementations([],I,I).
+  pickupImplementations([cons(_,[strng(Nm),strng(Sig)]),..M],[implEntry(Nm,Spec),..I],RI) :-
+    decodeConstraint(Sig,Spec),
+    pickupImplementations(M,I,RI).
+
+  decodeSignature:(term) => tipe.
+  decodeSignature(strng(S)) => T :- decodeType(T) %% explode(S).
+
+  decodeImports:(list[term]) => list[(visibility,pkg)].
+  decodeImports([]) => [].
+  decodeImports([cons(strct("import",2),[Vz,Pk]),..Is]) => [(decodeViz(Vz),decodePkg(Pk)),..decodeImports(Is)].
+
+  decodeViz:(term)=>visibility.
+  decodeViz(enum("public")) => pUblic.
+  decodeViz(enum("private")) => priVate.
+
+  pickupEnums:(list[term],list[string],list[string]){}.
+  pickupEnums([],Cls,Cls).
+  pickupEnums([strng(Nm),..Rest],[Nm,..More],Cls):-
+    pickupEnums(Rest,More,Cls).
+
+  decodeRels:(map[term,trel],map[term,trel]) --> list[integer].
+  decodeRels(M,M) --> eof.
+  decodeRels(M,Mx) --> decodeRel(Pk,Rl),decodeRels(M[Pk->Rl],Mx).
+
+  decodeRel:(pkg,trel) --> list[integer].
+
   public decodeTuple:(string) => list[term].
   decodeTuple(Txt) => Els :- decodeTerm(cons(_,Els)) %% explode(Txt).
 
