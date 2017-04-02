@@ -13,6 +13,7 @@ catalog{
     lo.json -> "json.lo".
     lo.list -> "lists.lo".
     lo.monad -> "monad.lo".
+    lo.option -> "optionmonad.lo".
     lo.options -> "options.lo".
     lo.repo -> "repo.lo".
     lo.repo.file -> "filerepo.lo".

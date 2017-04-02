@@ -119,6 +119,10 @@ lo.list{
   lastEl([X],X).
   lastEl([_,..L],X) :- lastEl(L,X).
 
+  public dropLast:all e ~~ (list[e],list[e]){}.
+  dropLast([_],[]).
+  dropLast([E,..L],[E,..R]) :- dropLast(L,R).
+
   private indexes:all e ~~ (list[e],integer) => list[integer].
   indexes([],_) => [].
   indexes([_,..L],Ix) => [Ix,..indexes(L,Ix+1)].
@@ -153,4 +157,8 @@ lo.list{
 
   public tail:all e ~~ (list[e]) => list[e].
   tail([_,..L]) => L.
+
+  public split:all e ~~ (list[e],integer,list[e],e,list[e]){}.
+  split([R,..l],0,[],R,l).
+  split([e,..l],ix,[e,..f],x,r) :- ix>0, split(l,ix-1,f,x,r).
 }

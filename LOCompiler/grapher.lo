@@ -68,7 +68,7 @@ lo.comp.grapher{
 
   scanFile:(uri,pkg,fileRepo,catalog,list[(pkg,list[pkg])],report,report) => list[(pkg,list[pkg])].
   scanFile(Fl,Pkg,Repo,Cat,SoFar,Rp,Rpx) => scanPkgs(Imps,Repo,Cat,[(Pkg,Imps),..SoFar],Rp1,Rpx) :-
-    logMsg("scanning \(Fl)"),
+    -- logMsg("scanning \(Fl)"),
     Term = parseFile(Fl,Rp,Rp0),
     scanTerm(Term,Cat,Imps,Rp0,Rp1).
 

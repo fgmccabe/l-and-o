@@ -12,6 +12,7 @@ lo.comp.args {
     debugging : logical.
     profiling : logical.
     prologOnly : logical.
+    inlining : logical.
     wDir : uri.
     repoDir : uri.
     version : version.
@@ -19,11 +20,12 @@ lo.comp.args {
     dependency : logical.
   }
 
-  private comp:(logical,logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
-  comp(d,p,l,w,r,v,pk,dp) <= {
+  private comp:(logical,logical,logical,logical,uri,uri,version,list[pkg],logical)<=>compOption.
+  comp(d,p,l,i,w,r,v,pk,dp) <= {
     debugging = d.
     profiling = p.
     prologOnly = l.
+    inlining = i.
     wDir = w.
     repoDir = r.
     version = v.
@@ -37,7 +39,7 @@ lo.comp.args {
     alternatives = ["--debug"].
     usage = "-g -- enable symbolic debugging".
     validator = none.
-    setOption(_,comp(_,p,l,w,r,v,pk,dp)) => comp(true,p,l,w,r,v,pk,dp).
+    setOption(_,comp(_,p,l,i,w,r,v,pk,dp)) => comp(true,p,l,i,w,r,v,pk,dp).
   }
 
   prologOnlyOption:optionsProcessor[compOption].
@@ -46,7 +48,17 @@ lo.comp.args {
     alternatives = ["--prolog"].
     usage = "--prolog -- generate prolog code".
     validator = none.
-    setOption(_,comp(d,p,_,w,r,v,pk,dp)) => comp(d,p,true,w,r,v,pk,dp).
+    setOption(_,comp(d,p,_,i,w,r,v,pk,dp)) => comp(d,p,true,i,w,r,v,pk,dp).
+  }
+
+  inlineOption:optionsProcessor[compOption].
+  inlineOption <= {
+    shortForm = "-i".
+    alternatives = ["--inline"].
+    usage = "--profile -- enable profiling".
+    validator = none.
+    setOption(_,comp(d,p,l,_,w,r,v,pk,dp)) => comp(d,p,l,true,w,r,v,pk,dp).
+
   }
 
   profileOption:optionsProcessor[compOption].
@@ -55,7 +67,7 @@ lo.comp.args {
     alternatives = ["--profile"].
     usage = "--profile -- enable profiling".
     validator = none.
-    setOption(_,comp(d,_,l,w,r,v,pk,dp)) => comp(d,true,l,w,r,v,pk,dp).
+    setOption(_,comp(d,_,l,i,w,r,v,pk,dp)) => comp(d,true,l,i,w,r,v,pk,dp).
 
   }
 
@@ -65,7 +77,7 @@ lo.comp.args {
     alternatives = ["--wd"].
     usage = "-w dir -- source directory".
     validator = some(isDir).
-    setOption(w,comp(d,p,l,_,r,v,pk,dp)) => comp(d,p,l,resolveUri(parseUri(cwd()),parseUri(w)),r,v,pk,dp).
+    setOption(w,comp(d,p,l,i,_,r,v,pk,dp)) => comp(d,p,l,i,resolveUri(parseUri(cwd()),parseUri(w)),r,v,pk,dp).
   }
 
   repoOption:optionsProcessor[compOption].
@@ -74,7 +86,7 @@ lo.comp.args {
     alternatives = ["--repo"].
     usage = "-r dir -- directory of code repository".
     validator = some(isDir).
-    setOption(r,comp(d,p,l,w,_,v,pk,dp)) => comp(d,p,l,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk,dp).
+    setOption(r,comp(d,p,l,i,w,_,v,pk,dp)) => comp(d,p,l,i,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk,dp).
   }
 
   dependencyOption:optionsProcessor[compOption].
@@ -83,13 +95,13 @@ lo.comp.args {
     alternatives = ["--no-dependencies"].
     usage = "--nd -- ignore dependencies".
     validator = none.
-    setOption(_,comp(d,p,l,w,r,v,pk,_)) => comp(d,p,l,w,r,v,pk,false).
+    setOption(_,comp(d,p,l,i,w,r,v,pk,_)) => comp(d,p,l,i,w,r,v,pk,false).
   }
 
   public parseFlags:(list[string]) => either[compOption,string].
   parseFlags(args) =>
-    handleCmdLineOpts(processOptions(args,[dbgOption,prologOnlyOption,profileOption,wdOption,repoOption,dependencyOption],
-    comp(false,false,false,W,W,defltVersion,[],true))) :-
+    handleCmdLineOpts(processOptions(args,[dbgOption,prologOnlyOption,inlineOption,profileOption,wdOption,repoOption,dependencyOption],
+    comp(false,false,false,false,W,W,defltVersion,[],true))) :-
       W=parseUri(cwd()).
 
   handleCmdLineOpts:(either[(compOption,list[string]),string]) => either[compOption,string].
@@ -101,5 +113,5 @@ lo.comp.args {
   locatePkgs(Opts,[P,..L]) => [pkg(P,Opts.version),..locatePkgs(Opts,L)].
 
   updatePkgs:(compOption,list[pkg]) => compOption.
-  updatePkgs(comp(d,p,l,w,r,v,_,dp),pk) => comp(d,p,l,w,r,v,pk,dp).
+  updatePkgs(comp(d,p,l,i,w,r,v,_,dp),pk) => comp(d,p,l,i,w,r,v,pk,dp).
 }

@@ -1,0 +1,13 @@
+lo.option {
+  import lo.
+  import lo.monad.
+
+  public implementation monad[option->>()] <= {
+    none >>= _ => none.
+    some(X) >>= F => F(X).
+
+    return X => some(X).
+
+    raise () => none.
+  }
+}

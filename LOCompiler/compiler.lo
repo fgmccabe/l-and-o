@@ -88,13 +88,12 @@ lo.comp.compiler{
         (errorFree(Rp1) ?
           transformProg(Prg,Opts,TrPrg,Rp1,Rp2),
           (errorFree(Rp2)?
-            OptPrg = inline(TrPrg,loadTermBase(Imps,Repo)),
-
-            Repo1 = recordTermPkg(addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),TrPrg),
-            logMsg("transformed program: \(TrPrg)"),
+            (Opts.inlining ? OptPrg = inline(TrPrg,loadTermBase(Imps,Repo)) | OptPrg=TrPrg),
+            Repo1 = recordTermPkg(addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,OptPrg::string),OptPrg),
+            logMsg("transformed program: \(OptPrg)"),
             (Opts.prologOnly ?
               Repox = Repo1 |
-              Code = compileMdl(TrPrg,Rp2,Rp3),
+              Code = compileMdl(OptPrg,Rp2,Rp3),
               (errorFree(Rp3) ?
                  Repox = addPackage(Repo1,Pkg,implode(encMdl(Code))),
                  Rpx = Rp3 |
@@ -110,7 +109,7 @@ lo.comp.compiler{
   compilePkgs([],_,_,_,Rp,Rp).
   compilePkgs([Pk,..L],Repo,Cat,Opt,Rp,Rpx) :-
     errorFree(Rp),
-    compilePkg(Pk,Repo,Repo0,Cat,Opt,Rp,Rp0),
+    compilePkg(Pk,[],Repo,Repo0,Cat,Opt,Rp,Rp0),
     compilePkgs(L,Repo0,Cat,Opts,Rp0,Rpx).
   compilePkgs(_,_,_,_,Rp,Rp) :- \+ errorFree(Rp).
 }

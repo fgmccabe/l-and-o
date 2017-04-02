@@ -39,6 +39,10 @@ lo.comp.term {
   private dispProg:(prProg)=>ss.
   dispProg(prProg(_,Rels)) => ssSeq([ss("compiled rules\n"),..values(Rels)//dispRel]).
 
+  public implementation display[trel] <= {
+    disp(R) => dispRel(R).
+  }
+
   private dispRel:(trel) => ss.
   dispRel(trel(Nm,Lc,F,Rules)) =>
     ssSeq([disp(Nm),ss(F=fallible ? ": failable" | ": not failsafe"),ss("\n"),..Rules//dispClause]).
@@ -84,7 +88,7 @@ lo.comp.term {
   private displayPred:(pred,list[term]) => ss.
   displayPred(neck,_) => ss("!").
   displayPred(call(_,Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
-  displayPred(ecall(_,Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
+  displayPred(ecall(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   displayPred(ocall(_,Rc,Lb,Th),Q) => ssSeq([dispTerm(Lb,Q),ss("."),dispTerm(Rc,Q)]).
   displayPred(unfy(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
   displayPred(fail,_) => ss("fail").

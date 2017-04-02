@@ -28,11 +28,11 @@ lo.comp.canon {
 
   public type
   canonRule ::= clause(location,string,canonTerm,canonCond)
-             | equation(location,string,canonTerm,canonTerm,canonCond)
-             | vrDef(location,string,canonTerm,canonCond)
-             | clRule(location,string,canonTerm,canonTerm,canonCond,tipe)
-             | grRule(location,string,canonTerm,canonNT,canonNT)
-             | tpRule(location,tipe).
+            | equation(location,string,canonTerm,canonTerm,canonCond)
+            | vrDef(location,string,canonTerm,canonCond)
+            | clRule(location,string,canonTerm,canonTerm,canonCond,tipe)
+            | grRule(location,string,canonTerm,canonNT,canonNT)
+            | tpRule(location,tipe).
 
   public type
   canonTerm ::= v(location,string)
