@@ -142,25 +142,28 @@ lo.comp.inline{
     split(Body,Ix,Lhs,Call,Rhs),
     checkCall(Call,P2,A2),
     unifyEls(A2,E2,[],Mx),
-    NQ = otherVars(Q,Mx)<>foldLeft(collectVar,[],pairs(Mx)).
+    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)).
   resolve(gclse(Q,Prd,Args,Guard,Body),Ix,C2,gclse(NQ,Prd,NArgs,NGuard,NBody)) :-
     renameClse(C2,NC2,V),
     ( Ix<size(Guard) ?
         split(Guard,Ix,Lhs,Call,Rhs),
         checkCall(Call,C2.name,A2),
         unifyEls(A2,NC2.args,[],Mx),
-        mergeBody(Lhs,C2,Rhs,Mx,NGuard),
+        NGuard = renamePreds(Lhs,Mx)<>renameBody(C2,Mx)<>renamePreds(Rhs,Mx),
         NArgs = renameEls(Args,Mx),
         NBody = renamePreds(Body,Mx) |
         split(Body,Ix-size(Guard),Lhs,Call,Rhs),
         checkCall(Call,C2.name,A2),
         unifyEls(A2,NC2.args,[],Mx),
-        mergeBody(Lhs,C2,Rhs,Mx,NB),
+        NB = renamePreds(Lhs,Mx)<>renameBody(C2,Mx)<>renamePreds(Rhs,Mx),
         genEqualities(findVarsInPreds(Guard,findVars(Args,[]),V,Mx,Eqs)),
         NBody = Eqs<>NB,
         NArgs = Args,
         NGuard = Guard).
 
+  renameBody:(clse,ma[string,term]) => list[pred].
+  renameBody(clse(_,_,_,B),Mx) => renamePreds(B,Mx).
+  renameBody(gclse(_,_,_,G,B),Mx) => renamePreds(G)<>renamePreds(B).
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
@@ -176,7 +179,7 @@ lo.comp.inline{
   collectVar(Q,_) => Q.
 
   otherVars:(list[term],map[string,term])=>list[term].
-  otherVars(Q,Mx) => Q^/((varbl(Nm)):-\+present(Mx,Nm,_)).
+  otherVars(Q,Mx) => Q^/((varbl(Nm)):-\+present(Mx,Nm,_)). -- select variables not in unify map.
 
   mkVars:(list[term]) => map[string,term].
   mkVars(Els) => foldLeft((M,varbl(Nm))=>M[Nm->varbl(_str_gen(Nm))],[],Els).
