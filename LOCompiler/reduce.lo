@@ -10,6 +10,9 @@ lo.comp.reduce{
   reduceClause(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>Post<>NBody) :-
     reduceArgs(Args,Q,NArgs,Guard,Post,Q1)!,
     reduceBody(Body,Q1,NBody,NQ).
+  reduceClause(gclse(Q,Nm,Args,Guard,Body)) => gclse(NQ,Nm,NArgs,NGuard<>Gard<>Post,NBody) :-
+    reduceArgs(Args,Q,NArgs,Gard,Post,Q1)!,
+    reduceBody(Body,Q1,NBody,NQ).
 
   reduceArgs:(list[term],list[term],list[term],list[pred],list[pred],list[term]){}.
   reduceArgs([],Q,[],[],[],Q).

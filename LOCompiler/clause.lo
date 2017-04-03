@@ -30,6 +30,8 @@ lo.comp.code.clause{
       (hSize>0 ? [iGc(Arity,hSize)] | []) <>
       ((allocating | lSize>0)? [iAlloc(Arity,lSize),iGcmap(Arity,lSize)] | []) <>
       HCode<>bCode.
+  compCl(gclse(Q,Nm,Args,Guard,Body),Lts,SM0) =>
+    compCl(clse(Q,Nm,Args,Guard<>[neck,..Body]),Lts,SM0).
 
   clearLocals:(set[integer],integer,integer) => list[instruction].
   clearLocals(Lcls,Rg,Max) => [] :- Rg>Max.

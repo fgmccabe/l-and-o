@@ -193,4 +193,5 @@ lo.comp.code.indexing{
   collectHeads:(list[(string,clse)],integer) => list[(list[(integer,string)],list[term])].
   collectHeads([],_) => [].
   collectHeads([(Lbl,clse(_,_,Args,_)),..L],ClNo) => [([(ClNo,Lbl)],Args),..collectHeads(L,ClNo+1)].
+  collectHeads([(Lbl,gclse(_,_,Args,_,_)),..L],ClNo) => [([(ClNo,Lbl)],Args),..collectHeads(L,ClNo+1)].
 }

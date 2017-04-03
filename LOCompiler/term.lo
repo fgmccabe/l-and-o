@@ -1,6 +1,7 @@
 lo.comp.term {
   import lo.
 
+  import lo.comp.misc.
   import lo.comp.package.
   import lo.comp.types.
 
@@ -18,9 +19,31 @@ lo.comp.term {
 
   public type fallible ::= fallible | infallible.
 
-  public type trel ::= trel(term,option[tloc],fallible,list[clse]).
+  public type trel <~ { name:term }.
 
-  public type clse ::= clse(list[term],term,list[term],list[pred]).
+  public trel:(term,option[tloc],fallible,list[clse]) <=> trel.
+  trel(Nm,_,_,_) <= {
+    name = Nm.
+  }
+
+  public type clse <~ { name:term. quants:list[term]. args:list[term]. nth:(integer)=>pred.}.
+
+  public clse:(list[term],term,list[term],list[pred]) <=> clse.
+  clse(Q,Nm,Args,Body) <= {
+    name = Nm.
+    quants = Q.
+    args = Args.
+    nth(Ix) => C :- nthEl(Body,Ix,C).
+  }.
+
+  public gclse:(list[term],term,list[term],list[pred],list[pred]) <=> clse.
+  gclse(Q,Nm,Args,Guard,Body) <= {
+    name = Nm.
+    quants = Q.
+    args = Args.
+    nth(Ix) => C :- Ix<size(Guard), nthEl(Guard,Ix,C).
+    nth(Ix) => C :- nthEl(Body,Ix-size(Guard),C).
+  }.
 
   public type pred ::= call(option[tloc],term,list[term])
                     | ecall(option[tloc],string,list[term])
@@ -57,6 +80,7 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(gclse(Q,Hd,Args,Guard,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Guard,Q)),ss("!!"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
 
   public implementation display[term] <= {
     disp(T) => dispTerm(T,[]).

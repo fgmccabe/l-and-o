@@ -240,6 +240,9 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectHeadRefs(H,All,R0,R1),
   collectCondRefs(Exp,All,R1,Refs).
 collRefs(St,All,_,R0,Refs) :-
+  isUnary(St,"type",SSt),
+  collRefs(SSt,All,_,R0,Refs).
+collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
 collRefs(St,All,_,R0,Refs) :-

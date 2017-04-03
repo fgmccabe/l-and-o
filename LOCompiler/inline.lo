@@ -2,6 +2,7 @@ lo.comp.inline{
   import lo.
   import lo.topsort.
 
+  import lo.comp.misc.
   import lo.comp.term.
   import lo.comp.termbase.
 
@@ -38,13 +39,18 @@ lo.comp.inline{
   }
 
   dispRelEntry:(relEntry) => ss.
-  dispRelEntry(rel(Refs,Rl)) => ssSeq([disp(relName(Rl)),ss("->"),ssSeq(Refs//disp),ss("\n")]).
+  dispRelEntry(rel(Refs,Rl)) => ssSeq([disp(Rl.name),ss("->"),ssSeq(Refs//disp),ss("\n")]).
 
   getRelRefs:(trel,list[term]) => list[term].
   getRelRefs(trel(_,_,_,Clses),All) => foldLeft((Refs,Cl)=>getClRefs(Cl,All,Refs),[],Clses).
 
   getClRefs:(clse,list[term],list[term]) => list[term].
-  getClRefs(clse(_,_,A,B),All,Refs) => foldLeft((Rfs,Prd)=>predRef(Prd,All,Rfs),termRefs(A,All,Refs),B).
+  getClRefs(clse(_,_,A,B),All,Refs) => predRefs(B,All,termRefs(A,All,Refs)).
+  getClRefs(gclse(_,_,A,G,B),All,Refs) => predRefs(B,All,predRefs(G,All,termRefs(A,All,Refs))).
+
+  predRefs:(list[pred],list[term],list[term]) => list[term].
+  predRefs([],_,Refs) => Refs.
+  predRefs([P,..R],A,Refs) => predRefs(R,A,predRef(P,A,Refs)).
 
   predRef:(pred,list[term],list[term]) => list[term].
   predRef(call(_,O,A),All,Refs) => termRefs(A,All,termRef(O,All,Refs)).
@@ -67,14 +73,11 @@ lo.comp.inline{
   extractGroups([]) => [].
   extractGroups([G,..L]) => [foldLeft((M,rel(_,R)) => [R,..M],[],G),..extractGroups(L)].
 
-  relName:(trel)=>term.
-  relName(trel(Nm,_,_,_)) => Nm.
-
   inlineGroups:(list[list[trel]],map[term,trel]) => map[term,trel].
   inlineGroups(Groups,I) => foldLeft((M,G)=>inlineGroup(G,M,I),[],Groups).
 
   inlineGroup:(list[trel],map[term,trel],map[term,trel]) => map[term,trel].
-  inlineGroup(Rels,P,I) => foldLeft((M,R) => M[relName(R)->R],P,fixedPoint(trace("inlining ",Rels),P,I)).
+  inlineGroup(Rels,P,I) => foldLeft((M,(R:trel)) => M[R.name->R],P,fixedPoint(trace("inlining ",Rels),P,I)).
 
   fixedPoint:(list[trel],map[term,trel],map[term,trel]) => list[trel].
   fixedPoint(TR,P,I) => (Any ? fixedPoint(TR1,P,I) | TR) :-
@@ -111,17 +114,14 @@ lo.comp.inline{
 
   countBody:(clse) => integer.
   countBody(clse(_,_,_,B)) => size(B).
+  countBody(gclse(_,_,_,G,B)) => size(G)+size(B).
 
   inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
   inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,Clses)) :-
-    nthCall(Cl,Ix,Call),
-    checkCall(Call,Pr,_),
+    checkCall(Cl.nth(Ix),Pr,_),
     (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))),
     (Fall = fallible ? Clses=Cls | dropLast(Cls,Clses)).
   inlineable(_,_,_,_) => none.
-
-  nthCall:(clse,integer,pred){}.
-  nthCall(clse(_,_,_,Body),Ix,Call) :- nthEl(Body,Ix,Call).
 
   resolveableClauses:(clse,integer,list[clse]) => list[clse].
   resolveableClauses(Cl,Ix,[]) => [].
@@ -130,20 +130,37 @@ lo.comp.inline{
   resolveableClauses(Cl,Ix,[_,..L]) => resolveableClauses(Cl,Ix,L).
 
   resolveable:(clse,integer,clse){}.
-  resolveable(clse(Q,Prd,Args,Body),Ix,C2) :-
-    renameClse(C2,clse(_,P2,E2,_)),
-    split(Body,Ix,Lhs,Call,Rhs),
-    checkCall(Call,P2,A2),
-    unifyEls(A2,E2,[],_).
+  resolveable(C1,Ix,C2) :-
+    renameClse(C2,NC2,_),
+    checkCall(C1.nth(Ix),NC2.name,A2),
+    unifyEls(A2,NC2.args,[],_).
 
   -- resolve the head of C1 with the Ixth goal in C2, resulting in the new clause C3.
   public resolve:(clse,integer,clse,clse){}.
   resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>renamePreds(B2,Mx)<>renamePreds(Rhs,Mx))) :-
-    renameClse(C2,clse(_,P2,E2,B2)),
+    renameClse(C2,clse(_,P2,E2,B2),_),
     split(Body,Ix,Lhs,Call,Rhs),
     checkCall(Call,P2,A2),
     unifyEls(A2,E2,[],Mx),
     NQ = otherVars(Q,Mx)<>foldLeft(collectVar,[],pairs(Mx)).
+  resolve(gclse(Q,Prd,Args,Guard,Body),Ix,C2,gclse(NQ,Prd,NArgs,NGuard,NBody)) :-
+    renameClse(C2,NC2,V),
+    ( Ix<size(Guard) ?
+        split(Guard,Ix,Lhs,Call,Rhs),
+        checkCall(Call,C2.name,A2),
+        unifyEls(A2,NC2.args,[],Mx),
+        mergeBody(Lhs,C2,Rhs,Mx,NGuard),
+        NArgs = renameEls(Args,Mx),
+        NBody = renamePreds(Body,Mx) |
+        split(Body,Ix-size(Guard),Lhs,Call,Rhs),
+        checkCall(Call,C2.name,A2),
+        unifyEls(A2,NC2.args,[],Mx),
+        mergeBody(Lhs,C2,Rhs,Mx,NB),
+        genEqualities(findVarsInPreds(Guard,findVars(Args,[]),V,Mx,Eqs)),
+        NBody = Eqs<>NB,
+        NArgs = Args,
+        NGuard = Guard).
+
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
@@ -188,8 +205,10 @@ lo.comp.inline{
   renamePreds([],_) => [].
   renamePreds([T,..L],V) => [renamePred(T,V),..renamePreds(L,V)].
 
-  renameClse:(clse,clse){}.
-  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V))) :-
+  renameClse:(clse,clse,map[string,term]){}.
+  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V)),V) :-
+    V = mkVars(Q).
+  renameClse(gclse(Q,Nm,A,G,B),gclse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(G,V),renamePreds(B,V)),V) :-
     V = mkVars(Q).
 
   unifyTerm:(term,term,map[string,term],map[string,term]){}.
