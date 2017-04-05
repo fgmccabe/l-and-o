@@ -26,6 +26,8 @@ lo.comp.code.instructions{
    | iTrust(string)		-- last clause
    | iFayl		-- fail current execution
    | iCut		-- cut choice point
+   | iDepth(integer)		-- pick up current stack depth
+   | iTrim(integer)		-- trim stack
    | iIndexi(integer,integer)		-- integer index jump
    | iIndexs(integer,integer)		-- symbol index jump
    | iIndexn(integer,integer)		-- numerical index jump
@@ -65,7 +67,6 @@ lo.comp.code.instructions{
    | iOAU(integer)		-- Unbind A[h]
    | iOYU(integer)		-- Unbind local
    | iOYA(integer,integer)		-- Overwrite local
-   | iOYnil(integer)		-- Overwrite with empty list
    | iCAA(integer,integer)		-- Match
    | iCAY(integer,integer)		-- Match
    | iCAS(integer)		-- Match
@@ -124,6 +125,8 @@ lo.comp.code.instructions{
   showIns(iTrust(A1),Lits) => ssSeq([ss("trust"),ss(" "),ss(A1)]).
   showIns(iFayl,_) => ss("fayl").
   showIns(iCut,_) => ss("cut").
+  showIns(iDepth(A1),Lits) => ssSeq([ss("depth"),ss(" "),disp(A1)]).
+  showIns(iTrim(A1),Lits) => ssSeq([ss("trim"),ss(" "),disp(A1)]).
   showIns(iIndexi(A1,A2),Lits) => ssSeq([ss("indexi"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iIndexs(A1,A2),Lits) => ssSeq([ss("indexs"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iIndexn(A1,A2),Lits) => ssSeq([ss("indexn"),ss(" "),disp(A1),ss(" "),disp(A2)]).
@@ -163,7 +166,6 @@ lo.comp.code.instructions{
   showIns(iOAU(A1),Lits) => ssSeq([ss("oAU"),ss(" "),disp(A1)]).
   showIns(iOYU(A1),Lits) => ssSeq([ss("oYU"),ss(" "),disp(A1)]).
   showIns(iOYA(A1,A2),Lits) => ssSeq([ss("oYA"),ss(" "),disp(A1),ss(" "),disp(A2)]).
-  showIns(iOYnil(A1),Lits) => ssSeq([ss("oYnil"),ss(" "),disp(A1)]).
   showIns(iCAA(A1,A2),Lits) => ssSeq([ss("cAA"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iCAY(A1,A2),Lits) => ssSeq([ss("cAY"),ss(" "),disp(A1),ss(" "),disp(A2)]).
   showIns(iCAS(A1),Lits) => ssSeq([ss("cAS"),ss(" "),disp(A1)]).

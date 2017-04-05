@@ -13,8 +13,8 @@ lo.comp.inline{
 
   dependencySort:(map[term,trel]) => list[list[trel]].
   dependencySort(Prog) => G :-
-    G = extractGroups(topsort(depends(Prog))),
-    showGroups(G).
+    G = extractGroups(topsort(depends(Prog))).
+    -- showGroups(G).
 
   showGroups:(list[list[trel]]){}.
   showGroups([]).
@@ -106,7 +106,7 @@ lo.comp.inline{
   passOverCond:(clse,logical,integer,integer,map[term,trel],map[term,trel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
     Ix<Mx,
-    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2),logMsg("resolved \(Cl) is clause:\(C2)") ?
+    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2) ?
         NCl = passOverCond(C2,true,0,countBody(C2),P,I) |
         NCl = passOverCond(Cl,Any,Ix+1,Mx,P,I)).
   passOverCond(Cl,true,_,_,_,_) => some(Cl).
@@ -117,11 +117,15 @@ lo.comp.inline{
   countBody(gclse(_,_,_,G,B)) => size(G)+size(B).
 
   inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
-  inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,Clses)) :-
+  inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,filterException(Cls))) :-
     checkCall(Cl.nth(Ix),Pr,_),
-    (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))),
-    (Fall = fallible ? Clses=Cls | dropLast(Cls,Clses)).
+    (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
   inlineable(_,_,_,_) => none.
+
+  filterException:(list[clse]) => list[clse].
+  filterException([])=>[].
+  filterException([clse(_,_,_,[except(_,_)])]) => [].
+  filterException([Cl,..R]) => [Cl,..filterException(R)].
 
   resolveableClauses:(clse,integer,list[clse]) => list[clse].
   resolveableClauses(Cl,Ix,[]) => [].
@@ -135,13 +139,13 @@ lo.comp.inline{
     checkCall(C1.nth(Ix),NC2.name,A2),
     unifyEls(A2,NC2.args,[],_).
 
-  -- resolve the head of C1 with the Ixth goal in C2, resulting in the new clause C3.
+  -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
   public resolve:(clse,integer,clse,clse){}.
-  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>renamePreds(B2,Mx)<>renamePreds(Rhs,Mx))) :-
-    renameClse(C2,clse(_,P2,E2,B2),_),
+  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx))) :-
+    renameClse(C2,NC2,V),
     split(Body,Ix,Lhs,Call,Rhs),
-    checkCall(Call,P2,A2),
-    unifyEls(A2,E2,[],Mx),
+    checkCall(Call,C2.name,A2),
+    unifyEls(A2,NC2.args,[],Mx),
     NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)).
   resolve(gclse(Q,Prd,Args,Guard,Body),Ix,C2,gclse(NQ,Prd,NArgs,NGuard,NBody)) :-
     renameClse(C2,NC2,V),
@@ -149,21 +153,29 @@ lo.comp.inline{
         split(Guard,Ix,Lhs,Call,Rhs),
         checkCall(Call,C2.name,A2),
         unifyEls(A2,NC2.args,[],Mx),
-        NGuard = renamePreds(Lhs,Mx)<>renameBody(C2,Mx)<>renamePreds(Rhs,Mx),
+        NGuard = renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx),
         NArgs = renameEls(Args,Mx),
         NBody = renamePreds(Body,Mx) |
         split(Body,Ix-size(Guard),Lhs,Call,Rhs),
         checkCall(Call,C2.name,A2),
         unifyEls(A2,NC2.args,[],Mx),
-        NB = renamePreds(Lhs,Mx)<>renameBody(C2,Mx)<>renamePreds(Rhs,Mx),
-        genEqualities(findVarsInPreds(Guard,findVars(Args,[]),V,Mx,Eqs)),
+        NB = renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx),
+        Eqs = genEqualities(trace("ovars ",findVarsInPreds(Guard,findVarsInList(Args,[]))),V,Mx,predLoc(Call)),
         NBody = Eqs<>NB,
-        NArgs = Args,
-        NGuard = Guard).
+        NArgs = renameEls(Args,Mx),
+        NGuard = renamePreds(Guard,Mx)),
+    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)).
 
-  renameBody:(clse,ma[string,term]) => list[pred].
+  renameBody:(clse,map[string,term]) => list[pred].
   renameBody(clse(_,_,_,B),Mx) => renamePreds(B,Mx).
-  renameBody(gclse(_,_,_,G,B),Mx) => renamePreds(G)<>renamePreds(B).
+  renameBody(gclse(_,_,_,G,B),Mx) => renamePreds(G,Mx)<>renamePreds(B,Mx).
+
+  genEqualities:(list[term],map[string,term],map[string,term],option[tloc]) => list[pred].
+  genEqualities([],_,_,_) => [].
+  genEqualities([varbl(Nm),..V],RV,UV,Lc) => [unfy(Lc,varbl(Nm),Nt),..genEqualities(V,RV,UV,Lc)]:-
+    present(RV,Nm,varbl(NwNm)),
+    present(UV,NwNm,Nt).
+  genEqualities([_,..V],RV,UV,Lc) => genEqualities(V,RV,UV,Lc).
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
@@ -242,7 +254,26 @@ lo.comp.inline{
   deRef(varbl(Nm),M) => deRef(V,M) :- present(M,Nm,V).
   deRef(T,_) => T.
 
-  trace:all x ~~ display[x] |: (string,x)=>x.
-  trace(M,X) => X :-
-    logMsg(M+"\(X)").
+  -- Finding variables
+  findVars:(term,list[term]) => list[term].
+  findVars(varbl(Nm),V) => mergeEl(V,varbl(Nm)).
+  findVars(T,V) => V :- isGroundTerm(T).
+  findVars(anon,V) => V.
+  findVars(cons(_,A),V) => findVarsInList(A,V).
+
+  findVarsInList:(list[term],list[term]) => list[term].
+  findVarsInList([],V) => V.
+  findVarsInList([T,..L],V) => findVarsInList(L,findVars(T,V)).
+
+  findVarsInPred:(pred,list[term]) => list[term].
+  findVarsInPred(call(_,_,A),V) => findVarsInList(A,V).
+  findVarsInPred(ecall(_,_,A),V) => findVarsInList(A,V).
+  findVarsInPred(ocall(_,C,L,T),V) => findVars(C,findVars(L,findVars(T,V))).
+  findVarsInPred(unfy(_,L,T),V) => findVars(L,findVars(T,V)).
+  findVarsInPred(except(_,E),V) => findVars(E,V).
+  findVarsInPred(fail,V) => V.
+  findVarsInPred(neck,V) => V.
+
+  findVarsInPreds:(list[pred],list[term]) => list[term].
+  findVarsInPreds(Ps,V) => foldRight(findVarsInPred,V,Ps).
 }

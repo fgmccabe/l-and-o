@@ -19,27 +19,6 @@ lo.comp.misc{
   public starts_with:(string,string){}.
   starts_with(S,T) :- _sub_str(S,0,size(T)) == T.
 
-  public type all x,y ~~ pr[x,y] ::= pr(x,y).
-
-  public implementation all x,y ~~ display[x], display[y] |: display[pr[x,y]] <= {
-    disp(D) => dispDf(D).
-  }
-
-  dispDf: all x,y ~~ display[x], display[y] |: (pr[x,y]) => ss.
-  dispDf(pr(X,Y)) => ssSeq([ss("("),disp(X),ss(","),disp(Y),ss(")")]).
-
-  implementation all x,y ~~ equality[x], equality[y] |: equality[pr[x,y]] <= {
-    X == Y :- prEq(X,Y).
-
-    hash(D) => prHash(D).
-  }
-
-  prEq:all x,y ~~ equality[x], equality[y] |: (pr[x,y],pr[x,y]){}.
-  prEq(pr(X1,Y1),pr(X2,Y2)) :- X1==X2, Y1==Y2.
-
-  prHash:all x,y ~~ equality[x], equality[y] |: (pr[x,y]) => integer.
-  prHash(pr(X,Y)) => (37*hash(X))+hash(Y).
-
   public replace:all x~~(list[x],x,x) => list[x].
   replace([],_,r) => [r].
   replace([e,..l],e,r) => [r,..l].
@@ -62,4 +41,8 @@ lo.comp.misc{
   filter:(integer,integer,list[integer]){}.
   filter(Ix,Ix,L) :- E in L *> E%Ix \= 0.
   filter(Ix,Nx,L) :- filter(Ix+2,Nx,L).
+
+  public trace:all x ~~ display[x] |: (string,x)=>x.
+  trace(M,X) => X :-
+    logMsg(M+"\(X)").
 }

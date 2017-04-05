@@ -17,6 +17,11 @@ lo.list{
   merge([e,..l],x) => merge(l,x) :- listEl(e,x).
   merge([e,..l],x) => [e,..merge(l,x)].
 
+  public mergeEl:all t ~~ equality[t] |: (list[t],t) => list[t].
+  mergeEl([],x) => [x].
+  mergeEl([e,..l],x) => [e,..l] :- e==x.
+  mergeEl([e,..l],x) => [e,..mergeEl(l,x)].
+
   public multiCat:all x ~~ (list[list[x]]) => list[x].
   multiCat([]) => [].
   multiCat([E,..L]) => cat(E,L).

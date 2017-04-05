@@ -131,6 +131,15 @@ lo.comp.term {
   predArity(unfy(_,_,_)) => 2.
   predArity(ecall(_,_,Args)) => size(Args).
 
+  public predLoc:(pred) => option[tloc].
+  predLoc(neck) => none.
+  predLoc(fail) => none.
+  predLoc(except(Lc,_)) => Lc.
+  predLoc(call(Lc,_,_)) => Lc.
+  predLoc(ocall(Lc,_,_,_)) => Lc.
+  predLoc(ecall(Lc,_,_)) => Lc.
+  predLoc(unfy(Lc,_,_)) => Lc.
+
   public implementation equality[term] <= {
     T1 == T2 :- eqTerm(T1,T2).
     hash(T) => hashTerm(T).
