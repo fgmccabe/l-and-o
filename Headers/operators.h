@@ -86,8 +86,9 @@ prefixOp("import",900,899,"import module")
 prefixOp("return",899,890,"wrap value in monad")
 prefixOp("raise",899,890,"error return in monad")
 prefixOp(".~.",650,649,"bitwise 1's complement")
-lastPreOp
 prefixOp("-",300,299,"arithmetic negation")
+lastPreOp
+prefixOp(".",1,0,"label prefix")
 
 postfixOp(". ",1899,1900,"statement terminator")
 postfixOp(";",1149,1150,"action terminator")

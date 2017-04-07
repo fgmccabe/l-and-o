@@ -69,7 +69,7 @@ lo.comp.transform{
     transformEquations(Map,Opts,LclFun,_,Extra,Defs,No+1,R0,Ex0,Exx,Rp0,Rpx).
 
   transformEqn:(canonRule,list[lyr],trOptions,string,integer,list[term],integer,list[clse],list[clse],map[term,trel],map[term,trel],report,report){}.
-  transformEqn(equation(Lc,Nm,tpl(A),Value,Cond),Map,Opts,LclFun,Arity,Extra,QNo,[gclse(Q,prg(LclFun,Arity+size(Extra)),Args,Guard,Body),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
+  transformEqn(equation(Lc,Nm,tpl(A),Value,Cond),Map,Opts,LclFun,Arity,Extra,QNo,[clse(Q,prg(LclFun,Arity+size(Extra)),Args,Guard<>[neck,..Body]),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        -- are we debugging?
     trPtns(A,Args,[Rep,..Extra],Q0,Q1,PreG,PreGx,PostG,PreV,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
     trGoal(Cond,PreGx,[],Q1,Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1),   -- condition goals
@@ -131,7 +131,7 @@ lo.comp.transform{
     lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
     deframeDebug(Nm,0,G8,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    Px = P2[LclPrg->trel(LclPrg,some(Lc::tloc),fallible,[gclse(Q,LclPrg,Args,Guard,Body)])].
+    Px = P2[LclPrg->trel(LclPrg,some(Lc::tloc),fallible,[clse(Q,LclPrg,Args,Guard<>Body)])].
   transformDefn(Map,Opts,Lc,Nm,Cond,Value,P,Px,Rp,Rpx) :-
     extraVars(Map,Extra),
     LclPrg = prg(LclName,length(Extra)+1),
@@ -145,7 +145,7 @@ lo.comp.transform{
     lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
     deframeDebug(Nm,0,G7,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    Px = P1[LclPrg->trel(LclPrg,some(Lc::tloc),fallible,[gclse(Q,LclPrg,[Rep,..Extra],Guard,Body)])].
+    Px = P1[LclPrg->trel(LclPrg,some(Lc::tloc),fallible,[clse(Q,LclPrg,[Rep,..Extra],Guard<>Body)])].
 
   transformGrammar:(canonDef,list[lyr],trOptions,map[term,trel],map[term,trel],report,report){}.
   transformGrammar(grammDef(Lc,Nm,_,[],Rls),Map,Opts,P,Px,Rp,Rpx) :-
@@ -223,9 +223,9 @@ lo.comp.transform{
   dcgOne(Lhs,Map,Opts,[call(none,OneProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q),P,Px,Rp,Rpx) :-
     genVarbl("OneStm",OneStm),
     (var(Strmx) ? genVarbl("DjOut",Strmx) | true),
-    dcgBody(Lhs,Map,Opts,LG,[],OneStm,OneStmx,[],DQ,P,P0,Rp,Rpx),
+    dcgBody(Lhs,Map,Opts,LG,[neck],OneStm,OneStmx,[],DQ,P,P0,Rp,Rpx),
     genNewName(Map,"One",length(DQ)+2,OneProg),
-    C1 = gclse([OneStm,..DQ],OneProg,[OneStm,OneStmx,..DQ],LG,[]),
+    C1 = clse([OneStm,..DQ],OneProg,[OneStm,OneStmx,..DQ],LG),
     Px = P0[OneProg->trel(OneProg,none,fallible,[C1])].
 
   dcgNeg:(canonNT,list[lyr],trOptions,list[pred],list[pred],term,list[term],list[term],map[term,trel],map[term,trel],report,report){}.
@@ -233,7 +233,7 @@ lo.comp.transform{
     genVarbl("NegStrm",NegStrm),
     dcgBody(Tst,Map,Opts,TG,[],NegStrm,_,[],TQ,P,P0,Rp,Rpx),
     genNewName(Map,"Neg",length(TQ)+1,NegProg),
-    C1 = gclse([NegStrm,..TQ],NegProg,[NegStrm,..TQ],TG,[fail]),
+    C1 = clse([NegStrm,..TQ],NegProg,[NegStrm,..TQ],TG<>[neck,fail]),
     C2 = clse([NegStrm,..TQ],NegProg,[NegStrm,..TQ],[]),
     Px = P0[NegProg->trel(NegProg,none,fallible,[C1,C2])].
 
@@ -245,8 +245,8 @@ lo.comp.transform{
     dcgBody(Lhs,Map,Opts,LG,[],CndStrm0,CndStrmx,TQ,LQ,P0,P1,Rp0,Rp1),
     dcgBody(Rhs,Map,Opts,RG,[],CndStrm,CndStrmy,LQ,DQ,P1,P2,Rp1,Rpx),
     genNewName(Map,"Cond",length(DQ)+2,CondProg),
-    C1 = gclse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmx,..DQ],TG,LG),
-    C2 = gclse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmy,..DQ],[],RG),
+    C1 = clse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmx,..DQ],TG<>[neck,..LG]),
+    C2 = clse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmy,..DQ],RG),
     Px = P2[CondProg->trel(CondProg,none,fallible,[C1,C2])].
 
   dcgAhead:(canonNT,list[lyr],trOptions,list[pred],list[pred],term,list[term],list[term],map[term,trel],map[term,trel],report,report){}.
@@ -316,7 +316,7 @@ lo.comp.transform{
 
   thetaInit:(list[lyr],list[pred],map[term,trel],map[term,trel]){}.
   thetaInit(Map,Inits,P,Px) :-
-    Px = addCl(P,gclse([],prg(localName(layerName(Map),"@","init"),0),[],Inits,[])).
+    Px = addCl(P,clse([],prg(localName(layerName(Map),"@","init"),0),[],Inits<>[neck])).
 
   transformClass:(location,string,list[canonRule],tipe,list[lyr],trOptions,map[term,trel],map[term,trel],report,report){}.
   transformClass(Lc,Nm,Defs,Face,Map,Opts,P,Px,Rp,Rpx) :-
@@ -333,7 +333,7 @@ lo.comp.transform{
   enumAccess(_,_,Rls,Rls).
 
   labelDefn:(list[lyr],string,string) => clse.
-  labelDefn(Map,Nm,LclName) => gclse(Extra,prg(Access,size(Extra)+1),[cons(trCons(Nm,1),[LblTerm]),..Extra],[],[]) :-
+  labelDefn(Map,Nm,LclName) => clse(Extra,prg(Access,size(Extra)+1),[cons(trCons(Nm,1),[LblTerm]),..Extra],[]) :-
     lookupVarName(Map,Nm,Spec),
     extraVars(Map,Extra),                                   -- extra variables coming from labels
     extraArity(1,Extra,ArA),
@@ -399,8 +399,8 @@ lo.comp.transform{
     genVarbl("This",ThVr),
     genVarbl("Lbl",LblVr),
     Q = Args<>[LblVr,ThVr],
-    Px = addCl(P,gclse(Q,prg(layerName(Map),3),
-          [cons(trCons(Name,Arity),Args),LblVr,ThVr],[],[call(TLc,prg(Prog,Arity+2),Q)])).
+    Px = addCl(P,clse(Q,prg(layerName(Map),3),
+          [cons(trCons(Name,Arity),Args),LblVr,ThVr],[neck,call(TLc,prg(Prog,Arity+2),Q)])).
 
   closureAccess:(list[lyr],string,map[term,trel],map[term,trel]){}.
   closureAccess(Map,Name,P,Px) :-
@@ -532,8 +532,8 @@ lo.comp.transform{
     trExp(L,LRslt,Q0,Q1,LG,Lx,Lx,[],Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trExp(R,RRslt,Q1,LQ,RG,Rx,Rx,[],Map,Opts,Ex1,Ex2,Rp1,Rpx),
     genNewName(Map,"condExp",length(LQ)+1,CondPr),
-    Cl1 = gclse(LQ,CondPr,[LRslt,..LQ],TG,LG),
-    Cl2 = gclse(LQ,CondPr,[RRslt,..LQ],[],RG),
+    Cl1 = clse(LQ,CondPr,[LRslt,..LQ],TG<>[neck,..LG]),
+    Cl2 = clse(LQ,CondPr,[RRslt,..LQ],RG),
     Exx = Ex2[CondPr->trel(CondPr,none,infallible,[Cl1,Cl2])].
   trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trLambda(Rl,Rslt,merge(allLabelArgs(Map,[]),Q),Map,Opts,Ex,Exx,Rp,Rpx).
@@ -619,7 +619,7 @@ lo.comp.transform{
     trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rp2),      -- replacement expression
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    Code = [gclse(merge(FreeVars,Q3),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],Goals,PostGx),
+    Code = [clse(merge(FreeVars,Q3),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],Goals<>[neck,..PostGx]),
            failSafeEquation(Lc,strng(Nm),Lam,3,Rp2,Rpx)],
     Exx = Ex2[LmPrg->trel(LmPrg,none,infallible,Code)].
   trLambda(clause(Lc,Nm,tpl(A),Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -664,19 +664,19 @@ lo.comp.transform{
     trGoal(L,LG,[],Q0,Q1,Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trGoal(R,RG,[],Q1,LQ,Map,Opts,Ex1,Ex2,Rp1,Rpx),
     genNewName(Map,"cond",length(LQ),CondPr),
-    Cl1 = gclse(LQ,CondPr,LQ,TG,LG),
-    Cl2 = gclse(LQ,CondPr,LQ,[],RG),
+    Cl1 = clse(LQ,CondPr,LQ,TG<>[neck,..LG]),
+    Cl2 = clse(LQ,CondPr,LQ,RG),
     Exx = Ex2[CondPr->trel(CondPr,none,fallible,[Cl1,Cl2])].
   trGoal(oneCond(T),[call(none,OnePr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trGoal(T,TG,[],[],LQ,Map,Opts,Ex,Ex0,Rp,Rpx),
+    trGoal(T,TG,[neck],[],LQ,Map,Opts,Ex,Ex0,Rp,Rpx),
     genNewName(Map,"one",length(LQ),OnePr),
-    Cl1 = gclse(LQ,OnePr,LQ,TG,[]),
+    Cl1 = clse(LQ,OnePr,LQ,TG),
     Exx = Ex0[OnePr->trel(OnePr,none,fallible,[Cl1])].
   trGoal(negCond(T),[call(none,NegPr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(T,TG,[],[],LQ,Map,Opts,Ex,Ex0,Rp,Rpx),
     genNewName(Map,"neg",length(LQ),NegPr),
-    Cl1 = gclse(LQ,NegPr,LQ,TG,[fail]),
-    Cl2 = gclse(LQ,NegPr,LQ,[],[]),
+    Cl1 = clse(LQ,NegPr,LQ,TG<>[neck,fail]),
+    Cl2 = clse(LQ,NegPr,LQ,[]),
     Exx = Ex0[NegPr->trel(NegPr,none,fallible,[Cl1,Cl2])].
   trGoal(forallCond(L,R),[call(none,APr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(L,LG,[call(none,BPr,LQ)],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
@@ -684,10 +684,10 @@ lo.comp.transform{
     QAr = length(LQ),
     genNewName(Map,"forallA",QAr,APr),
     genNewName(Map,"forallB",QAr,BPr),
-    ACl1 = gclse(LQ,APr,LQ,LG,[fail]),
-    ACl2 = gclse(LQ,APr,LQ,[],[]),
-    BCl1 = gclse(LQ,BPr,LQ,RG,[fail]),
-    BCl2 = gclse(LQ,BPr,LQ,[],[]),
+    ACl1 = clse(LQ,APr,LQ,LG<>[neck,fail]),
+    ACl2 = clse(LQ,APr,LQ,[]),
+    BCl1 = clse(LQ,BPr,LQ,RG<>[neck,fail]),
+    BCl2 = clse(LQ,BPr,LQ,[]),
     Ex2 = Ex1[APr->trel(APr,none,fallible,[ACl1,ACl2])],
     Exx = Ex2[BPr->trel(BPr,none,fallible,[BCl1,BCl2])].
   trGoal(unifyCond(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -802,7 +802,7 @@ lo.comp.transform{
     genVarbl("This",ThVr),
     genVarbl("Lbl",LbVr),
     Con = cons(trCons(Name,Arity),Args),
-    Px =addCl(P,gclse(Args<>[LblVr,ThVr],prg(Prefix,3),[Con,LbVr,ThVr],[],[call(TLc,Super,[Con,LbVr,ThVr])])).
+    Px =addCl(P,clse(Args<>[LblVr,ThVr],prg(Prefix,3),[Con,LbVr,ThVr],[call(TLc,Super,[Con,LbVr,ThVr])])).
 
   collectMtds:(list[canonDef],string,term,term,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)]){}.
   collectMtds([],_,_,_,List,List,_).

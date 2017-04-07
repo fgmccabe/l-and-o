@@ -77,6 +77,7 @@ lo.comp.operators{
   prefixOp("raise",899,890).	 /* error return in monad */
   prefixOp(".~.",650,649).	 /* bitwise 1's complement */
   prefixOp("-",300,299).	 /* arithmetic negation */
+  prefixOp(".",1,0).	 /* label prefix */
   postfixOp(". ",1899,1900).	 /* statement terminator */
   postfixOp(";",1149,1150).	 /* action terminator */
   postfixOp("+",759,760).	 /* lookahead in grammar rule */
@@ -176,7 +177,7 @@ lo.comp.operators{
   final("-->").	 /* grammar rule */
   final("->").	 /* map entry */
   final("->>").	 /* dependent type marker */
-  final(".").	 /* object access */
+  final(".").	 /* label prefix */
   final(".#.").	 /* test nth bit */
   final(".&.").	 /* bitwise and */
   final(".|.").	 /* bitwise or */

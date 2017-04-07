@@ -81,6 +81,7 @@ lo.comp.lexer{
   nxtTok(lqpar) --> [0c<, 0c|].
   nxtTok(rqpar) --> [0c|, 0c>].
   nxtTok(period) --> [0c.], whiteSpace().
+  nxtTok(period) --> [0c.], [0c}]+.
   nxtTok(regTok(Rg)) --> "`", regExp(Chars), "`", { Rg = implode(Chars) }.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
   nxtTok(idQTok(Id)) --> [0c'], readQuoted(Q), [0c'], { Id = implode(Q)}.
