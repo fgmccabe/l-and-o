@@ -6,7 +6,6 @@
 #define _OPCODES_H_
 
 #include "config.h"
-#include "ops.h"
 
 /* All these assume a 32-bit word; anything else must be re-engineered */
 

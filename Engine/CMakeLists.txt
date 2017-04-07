@@ -16,7 +16,7 @@ set(SOURCE_FILES
         Headers/char.h Headers/clock.h
         Headers/code.h Headers/constants.h Headers/dbgflags.h Headers/debug.h Headers/dict.h Headers/disass.h
         Headers/encoded.h Headers/encodedP.h Headers/signature.h Headers/term.h
-        Headers/errors.h Headers/esc.h ../Headers/escodes.h Headers/eval.h Headers/lock.h Headers/proc.h Headers/ops.h Headers/opcodes.h
+        Headers/errors.h Headers/esc.h ../Headers/escodes.h Headers/eval.h Headers/lock.h Headers/proc.h Headers/opcodes.h
         Headers/global.h Headers/heap.h Headers/list.h Headers/local.h Headers/perms.h Headers/vars.h
         Headers/fileio.h Headers/lo.h
         Headers/arith.h Headers/str.h Headers/symbols.h Headers/dll.h
@@ -27,5 +27,6 @@ set(SOURCE_FILES
         Headers/manifest.h Headers/manifestP.h load.c manifest.c thred.c Headers/thred.h Headers/load.h)
 
 add_executable(lo ${SOURCE_FILES})
+add_dependencies(lo generate)
 target_link_libraries(lo ooio)
 

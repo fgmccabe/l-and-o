@@ -46,7 +46,6 @@ lo.comp.inline{
 
   getClRefs:(clse,list[term],list[term]) => list[term].
   getClRefs(clse(_,_,A,B),All,Refs) => predRefs(B,All,termRefs(A,All,Refs)).
-  getClRefs(gclse(_,_,A,G,B),All,Refs) => predRefs(B,All,predRefs(G,All,termRefs(A,All,Refs))).
 
   predRefs:(list[pred],list[term],list[term]) => list[term].
   predRefs([],_,Refs) => Refs.
@@ -101,7 +100,7 @@ lo.comp.inline{
       [Cl,..inlineClauses(Cls,SoFar,Any,P,I)]).
 
   inlineClause:(clse,map[term,trel],map[term,trel]) => option[clse].
-  inlineClause(Cl,P,I) =>  passOverCond(Cl,false,0,countBody(Cl),P,I).
+  inlineClause(Cl,P,I) =>  passOverCond(Cl,false,0,countBody(Cl),P,I) :- logMsg("inlining \(Cl)").
 
   passOverCond:(clse,logical,integer,integer,map[term,trel],map[term,trel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
@@ -114,7 +113,6 @@ lo.comp.inline{
 
   countBody:(clse) => integer.
   countBody(clse(_,_,_,B)) => size(B).
-  countBody(gclse(_,_,_,G,B)) => size(G)+size(B).
 
   inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
   inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,filterException(Cls))) :-
@@ -135,40 +133,23 @@ lo.comp.inline{
 
   resolveable:(clse,integer,clse){}.
   resolveable(C1,Ix,C2) :-
-    renameClse(C2,NC2,_),
+    renameClse(C2,NC2),
     checkCall(C1.nth(Ix),NC2.name,A2),
     unifyEls(A2,NC2.args,[],_).
 
   -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
   public resolve:(clse,integer,clse,clse){}.
-  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx))) :-
-    renameClse(C2,NC2,V),
+  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),NBody)) :-
+    renameClse(C2,clse(Q2,P2,A2,B2)),
     split(Body,Ix,Lhs,Call,Rhs),
-    checkCall(Call,C2.name,A2),
-    unifyEls(A2,NC2.args,[],Mx),
-    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)).
-  resolve(gclse(Q,Prd,Args,Guard,Body),Ix,C2,gclse(NQ,Prd,NArgs,NGuard,NBody)) :-
-    renameClse(C2,NC2,V),
-    ( Ix<size(Guard) ?
-        split(Guard,Ix,Lhs,Call,Rhs),
-        checkCall(Call,C2.name,A2),
-        unifyEls(A2,NC2.args,[],Mx),
-        NGuard = renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx),
-        NArgs = renameEls(Args,Mx),
-        NBody = renamePreds(Body,Mx) |
-        split(Body,Ix-size(Guard),Lhs,Call,Rhs),
-        checkCall(Call,C2.name,A2),
-        unifyEls(A2,NC2.args,[],Mx),
-        NB = renamePreds(Lhs,Mx)<>renameBody(NC2,Mx)<>renamePreds(Rhs,Mx),
-        Eqs = genEqualities(trace("ovars ",findVarsInPreds(Guard,findVarsInList(Args,[]))),V,Mx,predLoc(Call)),
-        NBody = Eqs<>NB,
-        NArgs = renameEls(Args,Mx),
-        NGuard = renamePreds(Guard,Mx)),
-    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)).
+    checkCall(Call,P2,CArgs),
+    unifyEls(CArgs,A2,[],Mx),
+    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)),
+    mergeBody(renamePreds(Lhs,Mx),renamePreds(B2,Mx),renamePreds(Rhs,Mx),NBody).
 
-  renameBody:(clse,map[string,term]) => list[pred].
-  renameBody(clse(_,_,_,B),Mx) => renamePreds(B,Mx).
-  renameBody(gclse(_,_,_,G,B),Mx) => renamePreds(G,Mx)<>renamePreds(B,Mx).
+  mergeBody:(list[pred],list[pred],list[pred],list[pred]){}.
+  mergeBody(Lhs,B,Rhs,FL<>BL<>FB<>[neck,..BB]) :- concat(FL,[neck,..BL],Lhs), concat(FB,[neck,..BB],B).
+  mergeBody(Lhs,B,Rhs,Lhs<>FB<>[neck,..BB]<>FR) :- concat(FR,[neck,..BR],Rhs), concat(FB,[neck,..BB],B).
 
   genEqualities:(list[term],map[string,term],map[string,term],option[tloc]) => list[pred].
   genEqualities([],_,_,_) => [].
@@ -220,10 +201,8 @@ lo.comp.inline{
   renamePreds([],_) => [].
   renamePreds([T,..L],V) => [renamePred(T,V),..renamePreds(L,V)].
 
-  renameClse:(clse,clse,map[string,term]){}.
-  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V)),V) :-
-    V = mkVars(Q).
-  renameClse(gclse(Q,Nm,A,G,B),gclse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(G,V),renamePreds(B,V)),V) :-
+  renameClse:(clse,clse){}.
+  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V))) :-
     V = mkVars(Q).
 
   unifyTerm:(term,term,map[string,term],map[string,term]){}.

@@ -166,4 +166,8 @@ lo.list{
   public split:all e ~~ (list[e],integer,list[e],e,list[e]){}.
   split([R,..l],0,[],R,l).
   split([e,..l],ix,[e,..f],x,r) :- ix>0, split(l,ix-1,f,x,r).
+
+  public concat:all e ~~ (list[e],list[e],list[e]){}.
+  concat([],X,X).
+  concat([e,..X],Y,[e,..Z]) :- concat(X,Y,Z).
 }

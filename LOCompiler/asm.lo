@@ -40,8 +40,6 @@ lo.comp.code.asm{
   mnem([iTrust(V0),..I],Lbls,Lits,pc) => [23.|.(pcGap(pc,V0,Lbls,16777215).<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iFayl,..I],Lbls,Lits,pc) => [24,..mnem(I,Lbls,Lits,pc+1)].
   mnem([iCut,..I],Lbls,Lits,pc) => [25,..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iDepth(V0),..I],Lbls,Lits,pc) => [26.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
-  mnem([iTrim(V0),..I],Lbls,Lits,pc) => [27.|.(V0.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexi(V0,V1),..I],Lbls,Lits,pc) => [28.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexs(V0,V1),..I],Lbls,Lits,pc) => [29.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].
   mnem([iIndexn(V0,V1),..I],Lbls,Lits,pc) => [30.|.(V0.<<.24).|.(V1.<<.8),..mnem(I,Lbls,Lits,pc+1)].

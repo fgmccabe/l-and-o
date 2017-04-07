@@ -17,6 +17,16 @@
 					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
+			<Target title="generate">
+				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 generate"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
 			<Target title="mnem">
 				<Option output="/Users/fgm/Projects/LandO/HeaderGenerator/mnem" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>

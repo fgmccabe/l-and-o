@@ -22,8 +22,6 @@ lo.comp.genprolog{
   convertClause:(clse,list[integer]) => list[integer].
   convertClause(clse(_,Nm,Args,[]),Ox) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
   convertClause(clse(_,Nm,Args,[C,..Rest]),Ox) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPred(C,foldRight(convertCall,[0c.,0c\n,..Ox],Rest))]).
-  convertClause(gclse(_,Nm,Args,[],Body),Ox) => convertHead(Nm,Args,[0c:,0c-,0c ,0c!,..convertPreds(Body,[0c,,0c\n,0c ,0c ,0c ,0c ],[0c.,0c\n,..Ox])]).
-  convertClause(gclse(_,Nm,Args,Guard,Body),Ox) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPreds(Guard,[],[0c,,0c!,..convertPreds(Body,[0c,,0c\n,0c ,0c ,0c ,0c ],[0c.,0c\n,..Ox])])]).
 
   convertHead:(term,list[term],list[integer]) => list[integer].
   convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).

@@ -21,8 +21,6 @@ typedef enum {
  trust= 23,
  fayl= 24,
  cut= 25,
- depth= 26,
- trim= 27,
  indexi= 28,
  indexs= 29,
  indexn= 30,

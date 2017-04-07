@@ -144,9 +144,6 @@
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/opcodes.h">
 			<Option target="lo"/>
 		</Unit>
-		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/ops.h">
-			<Option target="lo"/>
-		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/Engine/Headers/perms.h">
 			<Option target="lo"/>
 		</Unit>

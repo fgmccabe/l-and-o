@@ -36,15 +36,6 @@ lo.comp.term {
     nth(Ix) => C :- nthEl(Body,Ix,C).
   }.
 
-  public gclse:(list[term],term,list[term],list[pred],list[pred]) <=> clse.
-  gclse(Q,Nm,Args,Guard,Body) <= {
-    name = Nm.
-    quants = Q.
-    args = Args.
-    nth(Ix) => C :- Ix<size(Guard), nthEl(Guard,Ix,C).
-    nth(Ix) => C :- nthEl(Body,Ix-size(Guard),C).
-  }.
-
   public type pred ::= call(option[tloc],term,list[term])
                     | ecall(option[tloc],string,list[term])
                     | ocall(option[tloc],term,term,term)
@@ -80,7 +71,6 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
-  dispClause(gclse(Q,Hd,Args,Guard,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Guard,Q)),ss("!!"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
 
   public implementation display[term] <= {
     disp(T) => dispTerm(T,[]).

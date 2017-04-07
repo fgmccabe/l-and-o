@@ -22,7 +22,6 @@ lo.comp.encode{
 
   encClause:(clse,list[integer]) => list[integer].
   encClause(clse(Q,Nm,Args,Body),L) => [0cC,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encSequence(encPred,Body,L))))].
-  encClause(gclse(Q,Nm,Args,Guard,Body),L) => [0cG,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encSequence(encPred,Guard,encSequence(encPred,Body,L)))))].
 
   encPred:(pred,list[integer]) => list[integer].
   encPred(call(TLc,Op,Args),L) => [0cP,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].

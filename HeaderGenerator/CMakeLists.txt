@@ -25,3 +25,20 @@ target_link_libraries(genins ooio)
 set(ASM_SOURCE_FILES mnem.c)
 add_executable(mnem ${ASM_SOURCE_FILES})
 target_link_libraries(mnem ooio)
+
+set(OPS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/../Engine/Headers/ops.h)
+set(ASM_LO ${CMAKE_CURRENT_SOURCE_DIR}/../LOCompiler/asm.lo)
+set(INSTRUCTIONS_LO ${CMAKE_CURRENT_SOURCE_DIR}/../LOCompiler/instructions.lo)
+set(OPERATORS_LO ${CMAKE_CURRENT_SOURCE_DIR}/../LOCompiler/operators.lo)
+set(ESCAPES_LO ${CMAKE_CURRENT_SOURCE_DIR}/../LOCompiler/escapes.lo)
+set(OPERATORS_PL ${CMAKE_CURRENT_SOURCE_DIR}/../BootCompiler/operators.pl)
+set(ESCAPES_PL ${CMAKE_CURRENT_SOURCE_DIR}/../BootCompiler/escapes.pl)
+
+add_custom_target(generate ALL opcodes ${OPS_HEADER}
+        COMMAND mnem ${ASM_LO}
+        COMMAND genins ${INSTRUCTIONS_LO}
+        COMMAND ops -c lo.comp.operators ${OPERATORS_LO}
+        COMMAND ops ${OPERATORS_PL}
+        COMMAND genesc -c lo.comp.escapes ${ESCAPES_LO}
+        COMMAND genesc ${ESCAPES_PL}
+        )

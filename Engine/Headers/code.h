@@ -19,6 +19,7 @@
 
 #include "word.h"
 #include "opcodes.h"
+#include "ops.h"
 #include "lock.h"
 #include "load.h"
 

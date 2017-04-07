@@ -79,12 +79,6 @@ lo.comp.decode{
       decodeSequence(decodeTerm,Q),
       decodeSequence(decodeTerm,Args),
       decodeSequence(decodePred,Body).
-  decodeClause(gclse(Q,Nm,Args,Guard,Body)) --> "G",
-      decodeTerm(Nm),
-      decodeSequence(decodeTerm,Q),
-      decodeSequence(decodeTerm,Args),
-      decodeSequence(decodePred,Guard),
-      decodeSequence(decodePred,Body).
 
   decodePred:(pred) --> list[integer].
   decodePred(call(TLc,Op,Args)) --> "P", decodeOptional(decodeTloc,TLc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
