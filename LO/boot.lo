@@ -23,7 +23,7 @@ lo.boot{
   import lo.repo.file.
   import lo.uri.
 
-  type bootOptions <~ { repo:string. wd:string. }
+  bootOptions <~ { repo:string. wd:string. }
   bootOptions : (string,string) <=> bootOptions.
   bootOptions(R,W) <= {
     repo = R.

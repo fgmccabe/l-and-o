@@ -1,6 +1,6 @@
-ancestor{
-  import go.io.
-  import go.unit.
+test.ancestor{
+  import lo.
+  import lo.unit.
 
   parent:(string,string){}.
   parent("a","b").
@@ -14,18 +14,13 @@ ancestor{
   ancestor(X,Y) :- parent(X,Z), ancestor(Z,Y).
 
   ancestorTester:harness.
-
-  ancestorTester <= harness.
+  ancestorTester <= harness("ancestor test").
   ancestorTester <= {
-    test() :- parent("a","b"),        -- define the tests to be applied here
+    doTest() :- parent("a","b"),        -- define the tests to be applied here
                 \+parent("b","a"),
                 ancestor("a","f"),
                 \+ancestor("f",_).
-
-    show()=> "ancestor test".
   }.
 
-  main() :- checkUnit(ancestorTester).
-
-
+  assert checkUnit(ancestorTester).
 }

@@ -5,7 +5,7 @@ lo.array{
   import lo.list.
   import lo.coerce.
 
-  public type all e ~~ array[e] <~ {}
+  public all e ~~ array[e] <~ {}
 
   private array:all e ~~ (map[integer,e]) <=> array[e].
   array(Els) <= {}.

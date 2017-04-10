@@ -1,32 +1,33 @@
 /*
- * Testing inner classes with inheritance 
+ * Testing inner classes with inheritance
 */
-anon2{
-  import go.io.
-  import go.unit.
+test.anon2{
+  import lo.
+  import lo.io.
+  import lo.unit.
 
-  bf <~ { mem:(symbol){}. }.
+  type bf <~ { mem:(string){}. }.
 
-  beliefs:(list[symbol])<=>bf.
+  beliefs:(list[string])<=>bf.
   beliefs(I)<={                         -- A simple belief store
     mem(X) :- X in I.
   }.
 
-  ot <~ { bfs:()=>bf. }.			            -- a bfs has a belief store
+  type ot <~ { bfs:()=>bf. }.			      -- a bfs has a belief store
 
-  outer:(list[symbol])<=>ot.
+  outer:(list[string])<=>ot.
   outer(X)<={
     b:bf.
     b=beliefs(X).
     bfs()=>b.
   }.
 
-  foo <~ { iBelieve:(symbol){}. }.       -- A foo can believe things
+  type foo <~ { iBelieve:(string){}. }. -- A foo can believe things
 
-  XX <~ { belief:(symbol){}. }.          -- An XXX can be checked, and has beliefs
+  type XX <~ { belief:(string){}. }.    -- An XXX can be checked, and has beliefs
   XX <~ ot.
 
-  inner:(list[symbol]) <=> XX.
+  inner:(list[string]) <=> XX.
   inner(X) <= outer(X).			            -- inner inherits its belief store
   inner(Bfs) <= {
     belief(B) :- bfs().mem(B).		      -- we believe things that are in our belief store
@@ -40,15 +41,13 @@ anon2{
   }.
 
   anon:harness.
-  anon<=harness.                        -- test harness
+  anon<=harness("inner class").         -- test harness
   anon<={
     doPred() :-
-        II = inner(['A','C','D']),     -- what do we believe?
-        II.belief('A'),
-        \+ II.belief('B').
+        II = inner(["A","C","D"]),      -- what do we believe?
+        II.belief("A"),
+        \+ II.belief("B").
   }.
 
   assert checkUnit(anon).
 }
-
-    

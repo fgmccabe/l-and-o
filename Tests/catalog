@@ -1,7 +1,10 @@
 catalog{
   content{
+    aa -> "aa.lo".
     test.a -> "a.lo".
+    test.anon2 -> "anon2.lo".
     test.append -> "append.lo".
+    test.ancestor -> "ancestor.lo".
     test.bench -> "bench.lo".
     test.c -> "c.lo".
     test.cc -> "cc.lo".
@@ -11,6 +14,7 @@ catalog{
     test.eq -> "eq.lo".
     test.gp -> "gp.lo".
     test.gt -> "gt.lo".
+    test.i -> "i.lo".
     test.j -> "j.lo".
     test.l -> "l.lo".
     test.lambda -> "lambda.lo".

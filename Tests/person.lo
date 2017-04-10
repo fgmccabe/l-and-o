@@ -14,7 +14,7 @@ person{
     spouse()=>noone.
   }.
 
-  person : (integer,person) ~> person.
+  person : (integer,person) <=> person.
   person(A,S) <= {
     spouse()=>S.
     age()=>A
@@ -46,5 +46,5 @@ person{
   check:(){}.
   check() :-
       married(shiftless,_).
-    
+
 }

@@ -18,9 +18,11 @@ lo.comp.parseType{
     moveConstraints(Type,Cons,Tp).
 
   public parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string,report,report){}.
-  parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
+  parseTypeDefinition(N,Lc,St,Defs,Dfs,Env,Path,Rp,Rpx) :-
     isUnary(St,"type",_,InSt),
-    parseTpRule(InSt,[],Env,Type,FaceRule,Path,Rp,Rpx).
+    parseTypeDefinition(N,Lc,InSt,Defs,Dfs,Env,Path,Rp,Rpx).
+  parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
+    parseTpRule(St,[],Env,Type,FaceRule,Path,Rp,Rpx).
 
   parseTpRule:(ast,map[string,tipe],list[env],tipe,tipe,string,report,report){}.
   parseTpRule(St,M,Env,Type,Rule,Path,Rp,Rpx) :-
@@ -37,9 +39,9 @@ lo.comp.parseType{
     isBinary(St,"<~",_,L,R),
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
     prsType(R,simpleType,Env,B,C0,Cx,Tp,Rp0,Rpx),
-    faceOfType(deRef(Tp),Env,Rhs).
+    faceOfType(Tp,Env,Rhs).
   parseTpRule(St,B,Env,Lhs,tpLambda(Lhs,Rhs),Path,Rp,Rpx) :-
-    isBinary(St,"=",_,L,R),
+    isBinary(St,"~>",_,L,R),
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
     prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
 
@@ -322,7 +324,7 @@ lo.comp.parseType{
     isBinary(St,"<~",_,L,_),
     parseTypeCore(L,Type,Path).
   parseTypeCore(St,Type,Path) :-
-    isBinary(St,"=",_,L,_),
+    isBinary(St,"~>",_,L,_),
     parseTypeCore(L,Type,Path).
   parseTypeCore(N,tipe(subPath(Path,marker(tpe),Nm)),Path) :-
     isIden(N,_,Nm).

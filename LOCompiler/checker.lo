@@ -383,7 +383,7 @@ lo.comp.typecheck{
     checkClassHead(H,ClassTp,_,pushScope(E),E1,Nm,Hd,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     SuperTp = newVar("SpTp"),
-    typeOfTerm(R,SuperTp,E2,_,Repl,Rp1,Rpx),
+    knownType(R,SuperTp,E2,_,Repl,Rp1,Rpx),
     faceOfType(SuperTp,E2,SuperFace).
 
   private checkClassHead:(ast,tipe,tipe,list[env],list[env],string,canonTerm,report,report){}.
@@ -395,7 +395,7 @@ lo.comp.typecheck{
 
   private checkThetaTerm:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[(string,tipe)],string,report,report){}.
   checkThetaTerm(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath,Rp,Rpx) :-
-    faceOfType(deRef(ClassTp),Env,Face),
+    faceOfType(ClassTp,Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
     thetaEnv(ClassPath,coreRepo,Lc,Els,Fields,declareVar("this",vr(v(Lc,"this"),ClassTp),Env),_OEnv,Defs,Public,_Imports,_,Others,Rp,Rpx),
     computeExport(Defs,Fields,Public,_,Types,_,[],[]).
@@ -709,7 +709,7 @@ lo.comp.typecheck{
   recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Lc,Rec,Fld),Rp,Rpx) :-
     AT = newVar("_R"),
     knownType(Rc,AT,Env,Ev,Rec,Rp,Rp0),
-    faceOfType(deRef(AT),Env,Face),
+    faceOfType(AT,Env,Face),
     moveConstraints(Face,_,faceType(Fields)),
     fieldInFace(Fields,AT,Fld,Lc,FTp,Rp0,Rp1)!,
     (_,Tp) = freshen(FTp,[]), -- the record is this to the right of dot.

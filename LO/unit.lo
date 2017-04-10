@@ -3,27 +3,28 @@
  */
 lo.unit{
   import lo.
-  -- import lo.io.
+  import lo.io.
 
   public type harness <~ { doTest:(){}. desc:string. }.
 
-  harness:(string) <=> harness.
+  public harness:(string) <=> harness.
   harness(Nm) <= {
     doTest().
+    desc = Nm.
   }.
 
-  implementation display[harness] <= {
+  public implementation display[harness] <= {
     disp(H) => ss(H.desc).
   }
 
   check:(harness){}.
   check(T) :-
     (T.doTest() ?
-      _logmsg("\(T) ok") |
-      _logmsg("\(T) failed")).
+      logMsg("\(T) ok") |
+      logMsg("\(T) failed")).
 
   public checkUnit:(harness){}.
   checkUnit(T) :-
-      _logmsg("starting \(T)"),
+      logMsg("starting \(T)"),
       check(T).
 }

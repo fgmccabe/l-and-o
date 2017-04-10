@@ -136,9 +136,23 @@ lo.comp.abstract{
   public isAlgebraicTypeDef:(ast,location,list[ast],list[ast],ast,ast){}.
   isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
     isUnary(Stmt,"type",Lc,Term),
-    getQuantifiers(Term,Quants,Inner),
+    isAlgebraicTypeDef(Term,_,Quants,Constraints,Head,Body).
+  isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
+    getQuantifiers(Stmt,Quants,Inner),
     getConstraints(Inner,Constraints,TpStmt),
-    isBinary(TpStmt,"::=",_,Head,Body).
+    isBinary(TpStmt,"::=",Lc,Head,Body).
+
+  public isTypeRule:(ast){}.
+  isTypeRule(St) :-
+    isQuantified(St,_,Inner),
+    isTypeRule(Inner).
+  isTypeRule(St) :-
+    isConstrained(St,_,Inner),
+    isTypeRule(Inner).
+  isTypeRule(St) :-
+    isBinary(St,"<~",_,_,_).
+  isTypeRule(St) :-
+    isBinary(St,"~>",_,_,_).
 
   public isQuantified:(ast,ast,ast){}.
   isQuantified(T,V,B) :-

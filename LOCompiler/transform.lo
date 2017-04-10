@@ -471,6 +471,8 @@ lo.comp.transform{
   implementVarPtn(moduleClass(Enum,_,0),_,_,enum(Enum),Q,Q,Pre,Pre,Post,Post,Rp,Rp).
   implementVarPtn(localClass(Enum,_,0,LbVr,ThVr),_,_,cons(strct(Enum,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Pre,Pre,Post,Post,Rp,Rp).
   implementVarPtn(inherit(Nm,_,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Pre,Pre,Post,Post,Rp,Rp).
+  implementVarPtn(inheritField(Super,LblVr,ThVr),Nm,Lc,X,Q,merge([X,LblVr,ThVr],Q),
+        [call(Lc,Super,[cons(trCons(Nm,1),[X]),LblVr,ThVr]),..Pre],Pre,Tail,Tail,Rp,Rp) :- genVarbl(Nm,X).
   implementVarPtn(notInMap,Nm,_,varbl(Nm),Q,merge([varbl(Nm)],Q),Pre,Pre,Post,Post,Rp,Rp).                -- variable local to clause
 
   trPtnCallOp:(string,option[tloc],list[term],term,list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[pred],list[lyr],trOptions,map[term,trel],map[term,trel],report,report){}.
@@ -781,23 +783,23 @@ lo.comp.transform{
     trExp(R,Repl,Q0,Q1,Prex,Px,Px,[ocall(some(Lc::tloc),CV,Repl,ThVr)],Map,Opts,Pr0,Pr1,RP0,Rp1),
     genNewName(Map,"^",3,Super),
     Pr2 = addCl(Pr1,clse(merge(Q1,[CV,ThVr]),Super,[CV,Ptn,ThVr],Body)),
-    makeInheritFields(InhFields,LclName,some(Lc::tloc),Super,Fields,LbVr,ThVr,Pr2,Pr3,List,L1),
+    makeInheritFields(InhFields,LclName,some(Lc::tloc),Super,Fields,Map,LbVr,ThVr,Pr2,Pr3,List,L1),
     makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L1,Lx,Fields,Pr3,Prx,Rp1,Rpx).
 
-  makeInheritFields:(list[(string,tipe)],string,option[tloc],term,list[(string,tipe)],term,term,
+  makeInheritFields:(list[(string,tipe)],string,option[tloc],term,list[(string,tipe)],list[lyr],term,term,
         map[term,trel],map[term,trel],list[(string,mapEntry)],list[(string,mapEntry)]){}.
-  makeInheritFields([],_,_,_,_,_,_,Entry,Entry,List,List).
-  makeInheritFields([(Nm,Tp),..InhFields],LclName,TLc,Super,Fields,LbVr,ThVr,Entry,En,List,Lx) :-
+  makeInheritFields([],_,_,_,_,_,_,_,Entry,Entry,List,List).
+  makeInheritFields([(Nm,Tp),..InhFields],LclName,TLc,Super,Fields,Map,LbVr,ThVr,Entry,En,List,Lx) :-
     (Nm,_) in List,
     \+ isPredType(Tp), -- we dont allow overriding of relations
-    makeInheritFields(InhFields,LclName,TLc,Super,Fields,LbVr,ThVr,Entry,En,List,Lx).
-  makeInheritFields([(Nm,Tp),..InhFields],LclName,TLc,Super,Fields,LbVr,ThVr,Entry,En,List,Lx) :-
-    inheritClause(Nm,Tp,TLc,LclName,Super,Entry,En0),
-    makeInheritFields(InhFields,LclName,TLc,Super,Fields,LbVr,ThVr,En0,En,[(Nm,inheritField(Super,LbVr,ThVr)),..List],Lx).
+    makeInheritFields(InhFields,LclName,TLc,Super,Fields,Map,LbVr,ThVr,Entry,En,List,Lx).
+  makeInheritFields([(Nm,Tp),..InhFields],LclName,TLc,Super,Fields,Map,LbVr,ThVr,Entry,En,List,Lx) :-
+    inheritClause(Nm,Tp,TLc,LclName,Map,Super,Entry,En0),
+    makeInheritFields(InhFields,LclName,TLc,Super,Fields,Map,LbVr,ThVr,En0,En,[(Nm,inheritField(Super,LbVr,ThVr)),..List],Lx).
 
-  inheritClause:(string,tipe,option[tloc],string,term,map[term,trel],map[term,trel]){}.
-  inheritClause(Name,Tp,TLc,Prefix,Super,P,Px) :-
-    Arity = effectiveArity(Tp,0),
+  inheritClause:(string,tipe,option[tloc],string,list[lyr],term,map[term,trel],map[term,trel]){}.
+  inheritClause(Name,Tp,TLc,Prefix,Map,Super,P,Px) :-
+    Arity = (isProgramType(Tp) ? effectiveArity(Tp,0) | 1),
     Args = genVars(Arity),
     genVarbl("This",ThVr),
     genVarbl("Lbl",LbVr),

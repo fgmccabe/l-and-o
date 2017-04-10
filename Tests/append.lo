@@ -13,7 +13,6 @@ test.append{
   append([E,..X],Y,[E,..Z]) :- append(X,Y,Z).
 
   naivetest:(integer,integer) <=> harness.
-  naivetest(_,_)<= harness.
   naivetest(i,Ln)<={
     desc = "naive reverse test".
     doTest() :- O = iota(1,Ln), iter(i,O).

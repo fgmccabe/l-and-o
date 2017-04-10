@@ -12,15 +12,7 @@ lo.comp.inline{
     logMsg("inline \(values(P):list[trel]) using \(M)").
 
   dependencySort:(map[term,trel]) => list[list[trel]].
-  dependencySort(Prog) => G :-
-    G = extractGroups(topsort(depends(Prog))).
-    -- showGroups(G).
-
-  showGroups:(list[list[trel]]){}.
-  showGroups([]).
-  showGroups([G,..L]) :-
-    logMsg("inline group:\n\(G)"),
-    showGroups(L).
+  dependencySort(Prog) => extractGroups(topsort(depends(Prog))).
 
   private type relEntry ::= rel(list[term],trel).
 
@@ -100,12 +92,12 @@ lo.comp.inline{
       [Cl,..inlineClauses(Cls,SoFar,Any,P,I)]).
 
   inlineClause:(clse,map[term,trel],map[term,trel]) => option[clse].
-  inlineClause(Cl,P,I) =>  passOverCond(Cl,false,0,countBody(Cl),P,I) :- logMsg("inlining \(Cl)").
+  inlineClause(Cl,P,I) =>  passOverCond(Cl,false,0,countBody(Cl),P,I).
 
   passOverCond:(clse,logical,integer,integer,map[term,trel],map[term,trel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
     Ix<Mx,
-    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2) ?
+    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2), logMsg("resolved->\(C2)") ?
         NCl = passOverCond(C2,true,0,countBody(C2),P,I) |
         NCl = passOverCond(Cl,Any,Ix+1,Mx,P,I)).
   passOverCond(Cl,true,_,_,_,_) => some(Cl).
@@ -116,9 +108,15 @@ lo.comp.inline{
 
   inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
   inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,filterException(Cls))) :-
-    checkCall(Cl.nth(Ix),Pr,_),
-    (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
+    inlineableCall(Cl.nth(Ix),P,I,Cls).
   inlineable(_,_,_,_) => none.
+
+  inlineableCall:(pred,map[term,trel],map[term,trel],list[clse]){}.
+  inlineableCall(call(_,Pr,_),P,I,Cls) :- (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
+  inlineableCall(ocall(_,_,Lb,_),P,I,Cls) :-
+    consistentLbl(Pr,Lb),
+    (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
+  inlineableCall(unfy(_,L,R),_,_,[clse([varbl("X")],prg("=",2),[varbl("X"),varbl("X")],[])]).
 
   filterException:(list[clse]) => list[clse].
   filterException([])=>[].
@@ -144,12 +142,12 @@ lo.comp.inline{
     split(Body,Ix,Lhs,Call,Rhs),
     checkCall(Call,P2,CArgs),
     unifyEls(CArgs,A2,[],Mx),
-    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)),
+    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx+V)),
     mergeBody(renameGoals(Lhs,V,Mx,predLoc(Call)),renamePreds(B2,Mx),renamePreds(Rhs,Mx),NBody).
 
   renameGoals:(list[pred],map[string,term],map[string,term],option[tloc]) => list[pred].
   renameGoals(G,_,Mx,_) => renamePreds(G,Mx) :- \+ neck in G.
-  renameGoals(G,V,Mx,Lc) => Lhs<>genEqualities(findVarsInPreds(Lhs,[]),V,Mx,Lc)<>[neck,..renamePreds(Rhs,Mx)]:- concat(Lhs,[neck,..Rhs],G).
+  renameGoals(G,V,Mx,Lc) => renamePreds(Lhs,Mx)<>genEqualities(findVarsInPreds(Lhs,[]),V,Mx,Lc)<>[neck,..renamePreds(Rhs,Mx)]:- concat(Lhs,[neck,..Rhs],G).
 
   mergeBody:(list[pred],list[pred],list[pred],list[pred]){}.
   mergeBody(Lhs,[neck,..B],Rhs,Lhs<>B<>Rhs).
@@ -168,6 +166,7 @@ lo.comp.inline{
   checkCall(call(_,Prd,Els),Prd,Els).
   checkCall(ocall(_,C,Lb,Th),Prd,[C,Lb,Th]) :-
     consistentLbl(Prd,Lb).
+  checkCall(unfy(_,L,R),prg("=",2),[L,R]).
 
   consistentLbl:(term,term){}.
   consistentLbl(prg(Nm,3),enum(Nm)).
@@ -184,7 +183,7 @@ lo.comp.inline{
   mkVars(Els) => foldLeft((M,varbl(Nm))=>M[Nm->varbl(_str_gen(Nm))],[],Els).
 
   renameTerm:(term,map[string,term]) => term.
-  renameTerm(varbl(Nm),V) => VV :- present(V,Nm,VV).
+  renameTerm(varbl(Nm),V) => renameTerm(VV,V) :- present(V,Nm,VV).
   renameTerm(varbl(Nm),V) => varbl(Nm) :- \+ present(V,Nm,_).
   renameTerm(anon,_) => anon.
   renameTerm(T,_) => T :- isGroundTerm(T).
@@ -233,7 +232,8 @@ lo.comp.inline{
     unifyEls(L1,L2,M1,Mx).
 
   bind:(string,term,map[string,term],map[string,term]){}.
-  bind(Nm,T,M,M[Nm->T]).
+  bind(Nm,varbl(Nm),M,M).
+  bind(Nm,T,M,M[Nm->T]) :- T\=varbl(Nm).
 
   deRef:(term,map[string,term]) => term.
   deRef(varbl(Nm),M) => deRef(V,M) :- present(M,Nm,V).

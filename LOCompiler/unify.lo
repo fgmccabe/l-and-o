@@ -76,19 +76,23 @@ lo.comp.unify{
 
   public
   faceOfType:(tipe,list[env],tipe){}.
-  faceOfType(faceType(F),_,faceType(F)).
-  faceOfType(tipe(Nm),Env,F) :-
+  faceOfType(Tp,Env,FT) :-
+    faceOfTp(deRef(Tp),Env,FT).
+
+  faceOfTp:(tipe,list[env],tipe){}.
+  faceOfTp(faceType(F),_,faceType(F)).
+  faceOfTp(tipe(Nm),Env,F) :-
     typeInDict(Nm,Env,_,_,_,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(_,F)).
-  faceOfType(typeExp(Op,Args),Env,Face) :-
+  faceOfTp(typeExp(Op,Args),Env,Face) :-
     deRef(Op) = tpFun(Nm,Ar),
     Ar=length(Args),
     typeInDict(Nm,Env,_,_,_,FR),
     moveQuants(FR,_,FQR),
     moveConstraints(FQR,_,typeRule(typeExp(_,AT),F)),
     (_,Face) = freshen(F,bindAT(AT,Args,[])).
-  faceOfType(T,Env,faceType(allImpCons(Env,Env,T,[]))) :- isTypeVar(T).
+  faceOfTp(T,Env,faceType(allImpCons(Env,Env,T,[]))) :- isTypeVar(T).
 
   private allImpCons:(list[env],list[env],tipe,list[(string,tipe)]) => list[(string,tipe)].
   allImpCons([],_,_,So) => So.

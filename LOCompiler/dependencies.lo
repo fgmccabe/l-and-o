@@ -97,6 +97,8 @@ lo.comp.dependencies{
   ruleNameKind(S,tpe,Nm) :-
     isUnary(S,"type",_,I),
     typeRuleName(I,Nm).
+  ruleNameKind(S,tpe,Nm) :-
+    typeRuleName(S,Nm).
   ruleNameKind(S,K,Nm) :- isUnary(S,"public",_,I), ruleNameKind(I,K,Nm).
   ruleNameKind(S,K,Nm) :- isUnary(S,"private",_,I), ruleNameKind(I,K,Nm).
   ruleNameKind(S,valu,Nm) :- ruleHead(S,H)!, Nm = headName(H).
@@ -141,7 +143,7 @@ lo.comp.dependencies{
     isBinary(S,"<~",_,L,_),
     (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
   typeRuleName(S,Nm) :-
-    isBinary(S,"=",_,L,_),
+    isBinary(S,"~>",_,L,_),
     (isSquareTerm(L,_,Op,_) ? isIden(Op,_,Nm) | isIden(L,_,Nm)).
 
   astImplName:(ast,string){}.
@@ -198,6 +200,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"private",_,I).
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"public",_,I).
   stmtRefs(S,All,So) =>  refsInType(I,All,So) :-  isUnary(S,"type",_,I).
+  stmtRefs(S,All,So) =>  refsInType(S,All,So) :-  isTypeRule(S).
   stmtRefs(S,All,So) =>  refsInContract(I,All,So) :-  isUnary(S,"contract",_,I).
   stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"<=",_,L,R)).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"=>",_,L,R).
@@ -218,6 +221,8 @@ lo.comp.dependencies{
   refsInHead(S,All,So) => So :- isIden(S,_,_).
   refsInHead(S,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :- isBinary(A,_,_,L,R).
   refsInHead(S,All,So) => refsInTerm(R,All,So) :- isUnary(A,_,_,R).
+
+
 
   refsInType:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).

@@ -1,0 +1,17 @@
+test.i{
+  -- Test inlining
+
+  aa:(integer,integer) => integer.
+  aa(X,Y) => bb(X,Y) :- c(Y).
+
+  bb:(integer,integer) => integer.
+  bb(X,1) => _int_plus(X,X).
+  bb(X,2) => _int_times(X,X).
+
+  c:(integer){}.
+  c(0).
+  c(2).
+  c(4).
+
+  assert aa(3,1) = 6, aa(3,2) = 9.
+}

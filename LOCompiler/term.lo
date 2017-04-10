@@ -147,6 +147,7 @@ lo.comp.term {
   eqTerm(cons(O1,E1),cons(O2,E2)) :- eqTerm(O1,O2), eqEls(E1,E2).
 
   eqEls:(list[term],list[term]){}.
+  eqEls([],[]).
   eqEls([E1,..L1],[E2,..L2]) :- eqTerm(E1,E2), eqEls(L1,L2).
 
   hashTerm:(term)=>integer.

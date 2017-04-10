@@ -158,6 +158,16 @@ lo.comp.types{
   isClassType(constrained(T,C)) :- isClassType(T).
   isClassType(classType(_,_)).
 
+  public isProgramType:(tipe){}.
+  isProgramType(univType(_,T)) :- isProgramType(T).
+  isProgramType(existType(_,T)) :- isProgramType(T).
+  isProgramType(constrained(T,_)) :- isProgramType(T).
+  isProgramType(tVar(Curr,_,_)) :-  \+var(Curr), isProgramType(Curr).
+  isProgramType(funType(_,_)).
+  isProgramType(predType(_)).
+  isProgramType(grammarType(_,_)).
+
+
   private
   collectConstraints:(tipe,list[constraint]) => list[constraint].
   collectConstraints(constrained(T,C),Cx) => collectConstraints(T,[C,..Cx]).

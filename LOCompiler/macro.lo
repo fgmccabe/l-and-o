@@ -111,7 +111,7 @@ lo.comp.macro{
     checkSoFar(Nm,T,L,LL,Rp,Rpx).
 
   typeRule:(location,list[ast],list[ast],ast,ast,ast){}.
-  typeRule(Lc,Quants,Constraints,Hd,Body,unary(Lc,"type",Rule)) :-
+  typeRule(Lc,Quants,Constraints,Hd,Body,Rule) :-
     wrapConstraints(Constraints,Lc,binary(Lc,"<~",Hd,Body),ConRl),
     wrapQuants(Quants,Lc,ConRl,Rule).
 

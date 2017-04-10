@@ -106,8 +106,6 @@ lo.comp.decode{
   decodeClauses:(list[clse]) --> list[integer].
   decodeClauses(Clses) --> decodeSequence(decodeClause,Clses).
 
-
-
   public decodeTuple:(string) => list[term].
   decodeTuple(Txt) => Els :- decodeTerm(cons(_,Els)) %% explode(Txt).
 

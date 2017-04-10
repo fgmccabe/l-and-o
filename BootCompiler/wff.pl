@@ -5,8 +5,11 @@
 :-use_module(errors).
 
 isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
-  isUnary(Stmt,Lc,"type",Term),
-  getQuantifiers(Term,Quants,Inner),
+  isUnary(Stmt,_,"type",Term),
+  isAlgebraicTypeDef(Term,Lc,Quants,Constraints,Head,Body).
+isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
+  locOfAst(Stmt,Lc),
+  getQuantifiers(Stmt,Quants,Inner),
   isConstrained(Inner,Constraints,TpStmt),
   isBinary(TpStmt,"::=",Head,Body).
 

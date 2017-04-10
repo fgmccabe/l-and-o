@@ -120,8 +120,7 @@ checkSoFar(Lc,Nm,T,[P|L],[P|LL]) :-
 typeRule(Lc,Quants,Constraints,Hd,Body,Stmt) :-
   binary(Lc,"<~",Hd,Body,Rl),
   wrapConstraints(Constraints,Lc,Rl,ConRl),
-  wrapQuants(Quants,Lc,ConRl,Rule),
-  unary(Lc,"type",Rule,Stmt).
+  wrapQuants(Quants,Lc,ConRl,Stmt).
 
 wrapQuants([],_,Rule,Rule).
 wrapQuants(Q,Lc,Rl,Rule) :-

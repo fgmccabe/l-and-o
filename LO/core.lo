@@ -1,7 +1,7 @@
 lo.core{
   -- Core definitions of types and interfaces that are really part of the language
 
-  public type thing ::= thing.
+  public thing ::= thing.
 
   public contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
@@ -18,7 +18,7 @@ lo.core{
   }
 
   public
-  type all t ~~ option[t] ::= none | some(t).
+  all t ~~ option[t] ::= none | some(t).
 
   public
   contract all x ~~ additive[x] <~ {
@@ -41,7 +41,7 @@ lo.core{
   }
 
   -- Structured string.
-  public type ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
+  public ss ::= ss(string) | sc(integer) | ssSeq(list[ss]).
 
   -- Displayable contract
   public contract all t ~~ display[t] <~ {
@@ -188,11 +188,11 @@ lo.core{
 
   -- Not strictly necessary, but makes for better symmetry.
   public
-  type logical ::= true | false.
+  logical ::= true | false.
 
-  -- We need the list type in the core
+  -- We need the list in the core
   public
-  type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
+  all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
   -- Implement equality for lists
   public

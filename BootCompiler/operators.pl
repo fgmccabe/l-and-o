@@ -20,7 +20,8 @@
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=>",949,950,949).	 /* class constructor type */
   infixOp("=>",949,950,949).	 /* function arrow */
-  infixOp("<~",949,949,948).	 /* type interface rule */
+  infixOp("<~",949,949,948).	 /* type rule */
+  infixOp("~>",949,949,948).	 /* type alias definition */
   infixOp(">>=",899,900,900).	 /* monadic bind */
   infixOp("->",899,900,899).	 /* map entry */
   infixOp("=",899,900,899).	 /* unifies predicate */
@@ -123,6 +124,7 @@
   follows('|','|','||').
   follows('','~','~').
   follows('~','~','~~').
+  follows('~','>','~>').
   follows('','\\','\\').
   follows('\\','+','\\+').
   follows('\\','=','\\=').
@@ -184,6 +186,7 @@
   final('||',"||").	 /* bag of constructor */
   final('~',"~").	 /* grammar remainder */
   final('~~',"~~").	 /* quantifier */
+  final('~>',"~>").	 /* type alias definition */
   final('\\+',"\\+").	 /* logical negation */
   final('\\=',"\\=").	 /* not unifyable */
   final('\\==',"\\==").	 /* not equals */
@@ -195,7 +198,7 @@
   final(':-',":-").	 /* clause arrow */
   final(';',";").	 /* action terminator */
   final('<',"<").	 /* less than */
-  final('<~',"<~").	 /* type interface rule */
+  final('<~',"<~").	 /* type rule */
   final('<=',"<=").	 /* class rule arrow */
   final('<=>',"<=>").	 /* class constructor type */
   final('<>',"<>").	 /* list append */
