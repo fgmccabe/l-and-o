@@ -26,6 +26,7 @@ lo.comp.keywords{
   keyword("::=").
   keyword("<=").
   keyword("<~").
+  keyword("~>").
   keyword("*>").
   keyword("\\+").
   keyword("\\=").
@@ -36,6 +37,7 @@ lo.comp.keywords{
   keyword("@@").
   keyword("this").
   keyword("import").
+  keyword("open").
   keyword("private").
   keyword("public").
   keyword("contract").
@@ -63,5 +65,6 @@ lo.comp.keywords{
   ruleKeyword("-->").
   ruleKeyword("::=").
   ruleKeyword("<=").
-  ruleKeyword("<~").  
+  ruleKeyword("<~").
+  ruleKeyword("~>").
 }

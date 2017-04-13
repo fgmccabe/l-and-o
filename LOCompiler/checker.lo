@@ -315,7 +315,7 @@ lo.comp.typecheck{
     checkClause(Lc,L,R,ProgramType,Defs,Dfx,E,Rp,Rpx).
   processStmt(St,predType(AT),[clause(Lc,Nm,Args,trueCond),..Defs],Defs,E,_,Rp,Rpx) :-
     splitHead(St,Lc,Nm,A),
-    typeOfArg(A,AT,pushScope(E),E0,Args,Rp,Rpx).
+    typeOfArg(A,AT,E,E0,Args,Rp,Rpx).
   processStmt(St,Tp,Defs,Dx,Env,_,Rp,Rpx) :-
     isBinary(St,"=",Lc,L,R),
     checkDefn(Lc,L,iden(Lc,"true"),R,Tp,Defs,Dx,Env,Rp,Rpx).
