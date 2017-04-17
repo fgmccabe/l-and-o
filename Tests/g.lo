@@ -6,7 +6,7 @@ g{
     _hdtl:(S,E,S){}.
   }
 
-  public 
+  public
   contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
@@ -18,7 +18,7 @@ g{
     X-Y => _int_minus(X,Y).
   }
 
-  type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
+  all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   implementation all e ~~ stream[cons[e] ->> e] <= {
     _eof(nil).

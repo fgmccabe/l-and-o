@@ -8,7 +8,7 @@ lo.comp.args {
   import lo.comp.package.
   import lo.comp.errors.
 
-  public type compOption <~ {
+  public compOption <~ {
     debugging : logical.
     profiling : logical.
     prologOnly : logical.

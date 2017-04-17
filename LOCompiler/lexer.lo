@@ -18,7 +18,7 @@ lo.comp.lexer{
   public getNTokens:(list[integer],string,integer) => list[token].
   getNTokens(Chars,Pth,Count) => Toks :- (skipSpaces(), allTokens(Toks,Count)) %% startState(Chars,Pth) ~ _.
 
-  public type tokenState <~ {
+  public tokenState <~ {
     currentLocation:((integer,integer,integer,string)){}
   }.
 

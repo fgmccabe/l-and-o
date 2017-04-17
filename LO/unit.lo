@@ -5,7 +5,7 @@ lo.unit{
   import lo.
   import lo.io.
 
-  public type harness <~ { doTest:(){}. desc:string. }.
+  public harness <~ { doTest:(){}. desc:string. }.
 
   public harness:(string) <=> harness.
   harness(Nm) <= {

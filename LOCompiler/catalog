@@ -46,6 +46,7 @@ catalog{
     lo.comp.regexp -> "regexp.lo".
     lo.comp.repo -> "reposrc.lo".
     lo.comp.resolve -> "resolve.lo".
+    lo.comp.singleton -> "singleton.lo".
     lo.comp.term -> "term.lo".
     lo.comp.termbase -> "termdb.lo".
     lo.comp.token -> "token.lo".

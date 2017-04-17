@@ -1,6 +1,6 @@
 catalog{
   content{
-    aa -> "aa.lo".
+    test.aa -> "aa.lo".
     test.a -> "a.lo".
     test.anon2 -> "anon2.lo".
     test.append -> "append.lo".

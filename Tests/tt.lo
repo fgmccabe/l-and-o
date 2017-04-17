@@ -1,7 +1,7 @@
 tt{
-  type all t ~~ hasName[t] <~ { name:t}.
+  all t ~~ hasName[t] <~ { name:t}.
 
-  type named <~ hasName[integer].
+  named <~ hasName[integer].
 
-  type all xx ~~ nn[xx] <~ hasName[xx].
+  all xx ~~ nn[xx] <~ hasName[xx].
 }

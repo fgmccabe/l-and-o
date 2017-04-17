@@ -29,7 +29,7 @@ freeVars(tuple(_,Els),Q,F,FV) :- freeVarsList(Els,Q,F,FV).
 freeVars(apply(Op,A),Q,F,FV) :- freeVars(Op,Q,F,F0), freeVarsList(A,Q,F0,FV).
 freeVars(dot(Rc,_),Q,F,FV) :- freeVars(Rc,Q,F,FV).
 freeVars(where(T,C),Q,F,FV) :- freeVars(T,Q,F,F0),freeVarsInGoal(C,Q,F0,FV).
-freeVars(conditional(C,T,E),Q,F,FV) :- freeVars(T,Q,F,F0),freeVarsInGoal(C,Q,F0,F1),freeVars(E,Q,F1,FV).
+freeVars(conditional(_,C,T,E),Q,F,FV) :- freeVars(T,Q,F,F0),freeVarsInGoal(C,Q,F0,F1),freeVars(E,Q,F1,FV).
 freeVars(lambda(Rl),Q,F,FV) :- freeVarsInRule(Rl,Q,F,FV).
 
 freeVarsInGoal(true(_),_,F,F).

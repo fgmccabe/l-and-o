@@ -21,10 +21,10 @@ lo.comp.code.analyse{
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
 
-  type occForm ::= hArg | hTerm | lArg | lTerm | oArg | oTerm.
+  occForm ::= hArg | hTerm | lArg | lTerm | oArg | oTerm.
 
   -- Usedto keep track of occurrences.
-  type occMap ::= occ(string,list[(occForm,integer,integer)]).
+  occMap ::= occ(string,list[(occForm,integer,integer)]).
 
   public varAnalysis:(list[term],list[term],list[list[pred]]) => (map[string,varDesc],integer,varSet).
   varAnalysis(Q,Args,Parts) => allocateVars(Usage,maxHeadArity(Parts)) :-
@@ -78,7 +78,7 @@ lo.comp.code.analyse{
   updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix),..Occs])] :- present(M,Nm,occ(Nm,Occs)).
   updateOccurrence(Nm,M,Key,Gp,Ix) => M[Nm->occ(Nm,[(Key,Gp,Ix)])].
 
-  type usageMap ::= usage(string,occMap,addr,set[integer],set[integer]).
+  private usageMap ::= usage(string,occMap,addr,set[integer],set[integer]).
 
   implementation display[usageMap] <= {
     disp(U) => dispUsage(U).

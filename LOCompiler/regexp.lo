@@ -4,7 +4,7 @@ lo.comp.regexp{
   import lo.comp.lexer.
 
   public
-  type regExp ::= reChars(list[integer])
+  regExp ::= reChars(list[integer])
          | reNegChars(list[integer])
          | reGroup(regExp,string)
          | reChoice(regExp,regExp)

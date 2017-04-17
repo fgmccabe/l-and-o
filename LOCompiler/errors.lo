@@ -5,9 +5,9 @@ lo.comp.errors{
 
   import lo.comp.location.
 
-  public type reportMsg ::= sourcedMsg(reportMsg,string) | errorMsg(location,string) | warnMsg(location,string) | othMsg(location,string).
+  public reportMsg ::= sourcedMsg(reportMsg,string) | errorMsg(location,string) | warnMsg(location,string) | othMsg(location,string).
 
-  public type report <~ {
+  public report <~ {
     msgs:list[reportMsg].
   }.
 
@@ -50,13 +50,13 @@ lo.comp.errors{
   cntErrors([_,..L],C) => cntErrors(L,C).
 
   public countWarnings:(report) => integer.
-  countWarnings(report(L)) => cntWarninngs(L,0).
+  countWarnings(report(L)) => cntWarnings(L,0).
 
-  private cntWarninngs:(list[reportMsg],integer) => integer.
-  cntWarninngs([],C) => C.
-  cntWarninngs([sourcedMsg(warnMsg(_,_),_),..L],C) => cntWarninngs(L,C+1).
-  cntWarninngs([warnMsg(_,_),..L],C) => cntWarninngs(L,C+1).
-  cntWarninngs([_,..L],C) => cntWarninngs(L,C).
+  private cntWarnings:(list[reportMsg],integer) => integer.
+  cntWarnings([],C) => C.
+  cntWarnings([sourcedMsg(warnMsg(_,_),_),..L],C) => cntWarnings(L,C+1).
+  cntWarnings([warnMsg(_,_),..L],C) => cntWarnings(L,C+1).
+  cntWarnings([_,..L],C) => cntWarnings(L,C).
 
   public reportBase : report.
   reportBase = report([]).

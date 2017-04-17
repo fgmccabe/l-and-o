@@ -5,9 +5,9 @@ lo.repo.manifest{
   import lo.repo.
   import lo.json.
 
-  public type manifest ::= manifest(map[string,manifestEntry]).
+  public manifest ::= manifest(map[string,manifestEntry]).
 
-  type manifestEntry ::= manifestEntry(string,list[(version,map[string,string])]).
+  manifestEntry ::= manifestEntry(string,list[(version,map[string,string])]).
 
   public readManifest:(uri) => manifest.
   readManifest(u) => m :- parseJson(j) %% explode(getResource(u)),
@@ -34,7 +34,7 @@ lo.repo.manifest{
   manifestJson(manifest(E)) => jColl(E///entryJson).
 
   entryJson:(string,manifestEntry) => json.
-  entryJson(P,manifestEntry(_,V)) => jColl(foldLeft(versionJson,[],V)).
+  entryJson(P,manifestEntry(_,V)) => jColl(foldRight(versionJson,[],V)).
 
   versionJson:(map[string,json],(version,map[string,string])) => map[string,json].
   versionJson(M,(defltVersion,R)) => M["*"->jColl(R///((_,S)=>jTxt(S)))].

@@ -1,14 +1,14 @@
 b{
-  type all k,v ~~ nkeyVal[k,v] ::= empty | pair{left:keyVal[k,v]. ky:k. vl:v. right:keyVal[k,v]}.
+  all k,v ~~ nkeyVal[k,v] ::= empty | pair{left:keyVal[k,v]. ky:k. vl:v. right:keyVal[k,v]}.
 
   contract
   all t ~~ named[t] <~ {
     named:(t)=>string.
   }
 
-  type entity ::= chair(string) | p{nm:string}.
+  entity ::= chair(string) | p{nm:string}.
 
-  type all t ~~ named[t] |: cons[t] ::= nil | cons(t,cons[t]).
+  all t ~~ named[t] |: cons[t] ::= nil | cons(t,cons[t]).
 
   implementation named[entity] <= {
     name(Ch) => entityName(Ch).

@@ -1,10 +1,9 @@
 test.eq{
-  public contract all a ~~ equality[a] <~ {
+  contract all a ~~ equality[a] <~ {
     (==): (a,a){}.
   }
   -- We need the list type in the core
-  public
-  type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
+  all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
   -- Implement equality for lists
   public

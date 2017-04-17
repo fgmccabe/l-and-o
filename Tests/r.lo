@@ -1,5 +1,5 @@
 test.r{
-  type foo ::= foo(integer).
+  foo ::= foo(integer).
 
   moveR:(integer,integer,foo){}.
   moveR(X,Y,Z) :- Z=foo(U),

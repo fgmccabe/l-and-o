@@ -8,7 +8,7 @@ lo.comp.abstract{
   import lo.comp.package.
 
   public
-  type defnKind ::= tpe | con | impl | valu | clss | imp.
+  defnKind ::= tpe | con | impl | valu | clss | imp.
 
   public marker:(defnKind)=>string.
   marker(tpe)=>"*".

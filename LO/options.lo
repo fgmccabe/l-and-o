@@ -3,7 +3,7 @@ lo.options{
   import lo.either.
 
   -- Process command line list of strings to produce a set of Options
-  public type all o ~~ optionsProcessor[o] <~ {
+  public all o ~~ optionsProcessor[o] <~ {
     shortForm : string.
     alternatives : list[string].
     usage : string.

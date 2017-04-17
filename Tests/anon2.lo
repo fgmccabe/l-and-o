@@ -6,14 +6,14 @@ test.anon2{
   import lo.io.
   import lo.unit.
 
-  type bf <~ { mem:(string){}. }.
+  bf <~ { mem:(string){}. }.
 
   beliefs:(list[string])<=>bf.
   beliefs(I)<={                         -- A simple belief store
     mem(X) :- X in I.
   }.
 
-  type ot <~ { bfs:()=>bf. }.			      -- a bfs has a belief store
+  ot <~ { bfs:()=>bf. }.			      -- a bfs has a belief store
 
   outer:(list[string])<=>ot.
   outer(X)<={
@@ -22,9 +22,9 @@ test.anon2{
     bfs()=>b.
   }.
 
-  type foo <~ { iBelieve:(string){}. }. -- A foo can believe things
+  foo <~ { iBelieve:(string){}. }. -- A foo can believe things
 
-  type XX <~ { belief:(string){}. }.    -- An XXX can be checked, and has beliefs
+  XX <~ { belief:(string){}. }.    -- An XXX can be checked, and has beliefs
   XX <~ ot.
 
   inner:(list[string]) <=> XX.

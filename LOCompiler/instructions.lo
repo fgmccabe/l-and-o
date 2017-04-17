@@ -3,7 +3,7 @@ lo.comp.code.instructions{
   import lo.
 
   import lo.comp.term.
-  public type instruction ::=              -- type defining the opcodes
+  public instruction ::=              -- type defining the opcodes
      iLbl(string)               -- label in code stream
    | iHalt		-- stop execution
    | iDie		-- stop current process

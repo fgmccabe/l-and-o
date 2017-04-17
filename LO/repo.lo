@@ -6,9 +6,9 @@ lo.repo {
    * Public contract and API for repository access
    */
 
-  public type pkg ::= pkg(string,version).
+  public pkg ::= pkg(string,version).
 
-  public type version ::= defltVersion | vers(string).
+  public version ::= defltVersion | vers(string).
 
   public contract all r ~~ repository[r] <~ {
     packagePresent:(r,pkg,string){}.
@@ -33,7 +33,7 @@ lo.repo {
     loadFromRepo(A,P,K,Txt) |
     loadFromRepo(B,P,K,Txt)).
 
-  public type coreRepo <~ {}.
+  public coreRepo <~ {}.
 
   public coreRepo:coreRepo.
   coreRepo <= {}.

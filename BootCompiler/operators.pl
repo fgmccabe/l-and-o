@@ -15,7 +15,7 @@
   infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
-  infixOp("@@",1004,1005,1004).	 /* guard marker */
+  infixOp("@@",1004,1005,1004).	 /* semantic guard */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=>",949,950,949).	 /* class constructor type */
@@ -38,6 +38,7 @@
   infixOp("//",800,800,799).	 /* map over */
   infixOp("///",800,800,799).	 /* indexed map over */
   infixOp("^/",800,800,799).	 /* filter */
+  infixOp("^//",800,800,799).	 /* filter map */
   infixOp("#",759,760,759).	 /* package separator */
   infixOp("+",720,720,719).	 /* addition */
   infixOp("-",720,720,719).	 /* subtraction */
@@ -67,7 +68,8 @@
   prefixOp("all",1239,1238).	 /* universal quantifier */
   prefixOp("exists",1239,1238).	 /* existential quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
-  prefixOp("@",905,904).	 /* tau pattern */
+  prefixOp("@",905,904).	 /* stream guard */
+  prefixOp("open",900,899).	 /* import object */
   prefixOp("import",900,899).	 /* import module */
   prefixOp("return",899,890).	 /* wrap value in monad */
   prefixOp("raise",899,890).	 /* error return in monad */
@@ -131,6 +133,7 @@
   follows('\\=','=','\\==').
   follows('','^','^').
   follows('^','/','^/').
+  follows('^/','/','^//').
   follows('',':',':').
   follows(':',':','::').
   follows('::','=','::=').
@@ -192,6 +195,7 @@
   final('\\==',"\\==").	 /* not equals */
   final('^',"^").	 /* grammar iterator */
   final('^/',"^/").	 /* filter */
+  final('^//',"^//").	 /* filter map */
   final(':',":").	 /* type annotation */
   final('::',"::").	 /* type coercion */
   final('::=',"::=").	 /* user type definition */
@@ -210,8 +214,8 @@
   final('>=',">=").	 /* greater than or equal */
   final('>>=',">>=").	 /* monadic bind */
   final('?',"?").	 /* conditional operator */
-  final('@',"@").	 /* tau pattern */
-  final('@@',"@@").	 /* guard marker */
+  final('@',"@").	 /* stream guard */
+  final('@@',"@@").	 /* semantic guard */
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */
   final('#',"#").	 /* package separator */

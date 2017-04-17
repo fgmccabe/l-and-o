@@ -86,20 +86,20 @@ lo.comp.compiler{
       (errorFree(Rp0) ?
         Prg = checkProgram(Term,V,Repo,Rp0,Rp1),
         (errorFree(Rp1) ?
-          transformProg(Prg,Opts,TrPrg,Rp1,Rp2),
-          (errorFree(Rp2)?
+          transformProg(Prg,Opts,TrPrg,Rp1,Rp3),
+          (errorFree(Rp3)?
             (Opts.inlining ? OptPrg = inline(TrPrg,loadTermBase(Imps,Repo)) | OptPrg=TrPrg),
             Repo1 = recordTermPkg(addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,OptPrg::string),OptPrg),
             logMsg("transformed program: \(OptPrg)"),
             (Opts.prologOnly ?
               Repox = Repo1 |
-              Code = compileMdl(OptPrg,Rp2,Rp3),
-              (errorFree(Rp3) ?
+              Code = compileMdl(OptPrg,Rp3,Rp4),
+              (errorFree(Rp4) ?
                  Repox = addPackage(Repo1,Pkg,implode(encMdl(Code))),
-                 Rpx = Rp3 |
-                 Rpx = populateContext(Rp3,getUriPath(U),collectSrc(Src,1,emptyArray)),
+                 Rpx = Rp4 |
+                 Rpx = populateContext(Rp4,getUriPath(U),collectSrc(Src,1,emptyArray)),
                  Repox = Rep1)) |
-            Rpx = populateContext(Rp2,getUriPath(U),collectSrc(Src,1,emptyArray))) |
+            Rpx = populateContext(Rp3,getUriPath(U),collectSrc(Src,1,emptyArray))) |
           Rpx = populateContext(Rp1,getUriPath(U),collectSrc(Src,1,emptyArray))) |
         Rpx = populateContext(Rp0,getUriPath(U),collectSrc(Src,1,emptyArray))) |
       reportError("cannot locate \(pkg(P,V)) in catalog",std,Rp,Rpx),

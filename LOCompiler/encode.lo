@@ -40,7 +40,7 @@ lo.comp.encode{
   encSeq(F,[E,..R],L) => F(E,encSeq(F,R,L)).
 
   encodeTLoc:(option[tloc],list[integer]) => list[integer].
-  encodeTLoc(TLc,L) => encodeOptional((tloc(F,T),Lx)=>[0cT,..encInt(F,encInt(T,Lx))],TLc,L).
+  encodeTLoc(TLc,L) => encodeOptional((tloc(Line,Off,Col,Len),Lx)=>[0cT,..encInt(Line,encInt(Off,encInt(Col,encInt(Len,Lx))))],TLc,L).
 
   encodeFall:(fallible,list[integer]) => list[integer].
   encodeFall(fallible,L) => encTerm(enum("lo.core#true"),L).

@@ -4,6 +4,7 @@ lo.comp.genprolog{
   import lo.comp.encode.
   import lo.comp.package.
   import lo.comp.term.
+  import lo.comp.transutils.
   import lo.comp.types.
 
   public implementation coercion[prProg,string] <= {
@@ -17,11 +18,20 @@ lo.comp.genprolog{
   genPrologSig(Spec) => cons(strct("#pkg",1),[packageSig(Spec)]).
 
   convertRel:(term,trel,list[integer]) => list[integer].
-  convertRel(_,trel(_,_,Fall,Clses),Ox) => foldRight(convertClause,Ox,Clses).
+  convertRel(_,trel(Prd,Lc,Fall,Clses),Ox) => foldRight(convertClause,Ox,Clses/*<>genFailsafe(Fall,Prd,Lc)*/).
 
-  convertClause:(clse,list[integer]) => list[integer].
-  convertClause(clse(_,Nm,Args,[]),Ox) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
-  convertClause(clse(_,Nm,Args,[C,..Rest]),Ox) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPred(C,foldRight(convertCall,[0c.,0c\n,..Ox],Rest))]).
+  genFailsafe:(fallible,term,option[tloc]) => list[clse].
+  genFailsafe(fallible,_,_) => [].
+  genFailsafe(infallible,prg(Nm,Ar),Lc) =>
+    [clse([],prg(Nm,Ar),genAnons(Ar),[except(Lc,cons(strct("error",2),[strng(Nm),genLoc(Lc)]))])].
+
+  genLoc:(option[tloc]) => term.
+  genLoc(none) => enum("lo.core#none").
+  genLoc(some(tloc(Line,Off,Col,Len))) => cons(strct("lo.core#some",1),[cons(strct("()4",4),[intgr(Line),intgr(Off),intgr(Col),intgr(Len)])]).
+
+  convertClause:(list[integer],clse) => list[integer].
+  convertClause(Ox,clse(_,Nm,Args,[])) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
+  convertClause(Ox,clse(_,Nm,Args,[C,..Rest])) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPred(C,foldRight(convertCall,[0c.,0c\n,..Ox],Rest))]).
 
   convertHead:(term,list[term],list[integer]) => list[integer].
   convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).
@@ -33,15 +43,15 @@ lo.comp.genprolog{
   convertArgs([],Ox) => Ox.
   convertArgs([A,..L],Ox) => convertTerm(A,foldRight(convertArg,Ox,L)).
 
-  convertArg:(term,list[integer]) => list[integer].
-  convertArg(T,Ox) => [0c,, 0c ,..convertTerm(T,Ox)].
+  convertArg:(list[integer],term) => list[integer].
+  convertArg(Ox,T) => [0c,, 0c ,..convertTerm(T,Ox)].
 
   convertPreds:(list[pred],list[integer],list[integer]) => list[integer].
   convertPreds([],_,L) => L.
   convertPreds([C,..R],Sep,L) => Sep<>convertPred(C,convertPreds(R,[0c,,0c\n,0c ,0c ,0c ,0c ],L)).
 
-  convertCall:(pred,list[integer]) => list[integer].
-  convertCall(C,Ox) => [0c,,0c\n,0c ,0c ,0c ,0c ,..convertPred(C,Ox)].
+  convertCall:(list[integer],pred) => list[integer].
+  convertCall(Ox,C) => [0c,,0c\n,0c ,0c ,0c ,0c ,..convertPred(C,Ox)].
 
   convertPred:(pred,list[integer]) => list[integer].
   convertPred(call(_,Op,Args),Ox) => convertCallOp(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).

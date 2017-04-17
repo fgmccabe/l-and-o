@@ -23,7 +23,7 @@ lo.comp.canon {
            |   cnDefn(location,string,conEntry)
            |   implDef(location,string,string,constraint,list[constraint],canonTerm,canonTerm,tipe).
 
-  public type canonOther ::= integrity(location,canonCond)
+  public canonOther ::= integrity(location,canonCond)
            | expShow(location,canonTerm).
 
   public type

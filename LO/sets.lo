@@ -5,7 +5,7 @@ lo.sets {
   import lo.collection.
   import lo.coerce.
 
-  public type all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
+  public all e ~~ /* equality[k] |: */ set[e] ::= set(map[e,()]).
 
   public nullSet:all e ~~ equality[e] |: set[e].
   nullSet = set([]).
@@ -64,7 +64,7 @@ lo.sets {
   private foldLeftEls:all f,e,x ~~ ((x,e)=>x,x,list[e]) => x.
   foldLeftEls(F,X,S) => foldLeft(F,X,S).
 
-  private foldRightEls:all f,e,x ~~ ((e,x)=>x,x,list[e]) => x.
+  private foldRightEls:all f,e,x ~~ ((x,e)=>x,x,list[e]) => x.
   foldRightEls(F,X,S) => foldRight(F,X,S).
 
   public implementation all e ~~ display[e], equality[e] |: display[set[e]] <= {

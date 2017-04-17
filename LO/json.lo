@@ -1,7 +1,7 @@
 lo.json{
   import lo.
 
-  public type json ::=
+  public json ::=
     jTrue | jFalse | jNull |
     jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) |
     jNum(float).

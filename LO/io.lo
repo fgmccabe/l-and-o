@@ -26,9 +26,9 @@ lo.io {
   public openOutFile:(string,ioEncoding) => outChannel.
   openOutFile(Fn,Enc) => outChannel(Fn,_openOutFile(Fn,Enc::integer)).
 
-  private type fileHandle <~ {}.
+  private fileHandle <~ {}.
 
-  public type inChannel <~ {
+  public inChannel <~ {
     name:string.
     inBytes:(integer)=>list[integer].
     inB:()=>integer.
@@ -59,7 +59,7 @@ lo.io {
     ready() :- _ready(H).
   }
 
-  public type outChannel <~ {
+  public outChannel <~ {
     name:string.
     outCh:(integer){}.
     outB:(integer){}.
@@ -86,7 +86,7 @@ lo.io {
 
   -- Interface declaration of file types
 
-  public type ioEncoding ::= rawEncoding |
+  public ioEncoding ::= rawEncoding |
      utf8Encoding | unknownEncoding.
 
   implementation coercion[ioEncoding,integer] <= {
@@ -131,7 +131,7 @@ lo.io {
   fileList(D) => _ls(D)//((F)=>(F,fileType(F),fmodes(F))).
 
   -- report on the type of a file
-  public type fileType ::= fifoSpecial | directory | charSpecial | blockSpecial
+  public fileType ::= fifoSpecial | directory | charSpecial | blockSpecial
        | plainFile | symlink | socket.
 
   public fileType:(string)=>fileType.
@@ -148,7 +148,7 @@ lo.io {
   }
 
   -- report on the permission modes on a file
-  public type filePerm ::= setUid | setGid | stIcky | rUsr | wUsr | xUsr |
+  public filePerm ::= setUid | setGid | stIcky | rUsr | wUsr | xUsr |
          rGrp | wGrp | xGrp | rOth | wOth | xOth.
   public fmodes:(string)=>list[filePerm].
   fmodes(F) => fileMode(_file_mode(F)).

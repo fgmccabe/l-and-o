@@ -5,8 +5,8 @@ lo.comp.code.code{
   import lo.comp.code.registers.
   import lo.comp.term.
 
-  public type assem ::= assem(term,list[instruction],list[litrl],list[(string,string,tloc)]).
-  public type litrl ::= litrl(string,term).
+  public assem ::= assem(term,list[instruction],list[litrl],list[(string,string,tloc)]).
+  public litrl ::= litrl(string,term).
 
   public implementation display[assem] <= {
     disp(Seg) => dispCodeSeg(Seg).

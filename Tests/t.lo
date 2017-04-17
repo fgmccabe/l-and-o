@@ -1,11 +1,11 @@
 test.t{
   import lo.
 
-  type alpha = (string,integer).
+  alpha = (string,integer).
 
-  type all x ~~ beta[x] = (string,x).
+  all x ~~ beta[x] = (string,x).
 
-  type all x, y/2 ~~ alphabeta[x,y] <~ {}.
+  all x, y/2 ~~ alphabeta[x,y] <~ {}.
 
 /*  f:alpha.
   f=("f",3).

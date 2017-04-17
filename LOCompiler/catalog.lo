@@ -6,7 +6,7 @@ lo.comp.catalog{
   import lo.comp.package.
   import lo.comp.parseutils.
 
-  public type catalog <~ {}.
+  public catalog <~ {}.
 
   private cat:(map[string,uri],uri,version,option[uri]) <=> catalog.
   cat(M,B,V,D) <= {}.
@@ -34,7 +34,7 @@ lo.comp.catalog{
 
   -- Tokenization
 
-  private type token ::= lbrce | rbrce
+  private token ::= lbrce | rbrce
     | thin_arrow | term | period | colon | hash | idn(string) | strg(list[integer]).
 
   tokens:(list[token]) --> list[integer].

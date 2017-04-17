@@ -19,11 +19,11 @@ lo.comp.token{
        |  regTok(string)
        |  period.
 
-  public 
-  type stringSegment ::= segment(location,string) 
+  public
+  stringSegment ::= segment(location,string)
                 | interpolate(location,string,string).
 
-  public type token <~ hasLoc.
+  public token <~ hasLoc.
 
   public tok:(tok,location) <=> token.
   tok(Tk,Loc) <= {

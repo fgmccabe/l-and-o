@@ -5,28 +5,28 @@ lo.comp.term {
   import lo.comp.package.
   import lo.comp.types.
 
-  public type term ::= anon
-                   | varbl(string)
-                   | intgr(integer)
-                   | flot(float)
-                   | enum(string)
-                   | strct(string,integer)
-                   | prg(string,integer)
-                   | strng(string)
-                   | cons(term,list[term]).
+  public term ::= anon
+               | varbl(string)
+               | intgr(integer)
+               | flot(float)
+               | enum(string)
+               | strct(string,integer)
+               | prg(string,integer)
+               | strng(string)
+               | cons(term,list[term]).
 
-  public type tloc ::= tloc(integer,integer).
+  public tloc ::= tloc(integer,integer,integer,integer).
 
-  public type fallible ::= fallible | infallible.
+  public fallible ::= fallible | infallible.
 
-  public type trel <~ { name:term }.
+  public trel <~ { name:term }.
 
   public trel:(term,option[tloc],fallible,list[clse]) <=> trel.
   trel(Nm,_,_,_) <= {
     name = Nm.
   }
 
-  public type clse <~ { name:term. quants:list[term]. args:list[term]. nth:(integer)=>pred.}.
+  public clse <~ { name:term. quants:list[term]. args:list[term]. nth:(integer)=>pred.}.
 
   public clse:(list[term],term,list[term],list[pred]) <=> clse.
   clse(Q,Nm,Args,Body) <= {
@@ -36,7 +36,7 @@ lo.comp.term {
     nth(Ix) => C :- nthEl(Body,Ix,C).
   }.
 
-  public type pred ::= call(option[tloc],term,list[term])
+  public pred ::= call(option[tloc],term,list[term])
                     | ecall(option[tloc],string,list[term])
                     | ocall(option[tloc],term,term,term)
                     | unfy(option[tloc],term,term)
@@ -44,14 +44,14 @@ lo.comp.term {
                     | fail
                     | except(option[tloc],term).
 
-  public type prProg ::= prProg(pkgSpec,map[term,trel]).
+  public prProg ::= prProg(pkgSpec,map[term,trel]).
 
   public implementation display[prProg] <= {
     disp(Prog) => dispProg(Prog).
   }
 
   private dispProg:(prProg)=>ss.
-  dispProg(prProg(_,Rels)) => ssSeq([ss("compiled rules\n"),..values(Rels)//dispRel]).
+  dispProg(prProg(_,Rels)) => ssSeq(values(Rels)//dispRel).
 
   public implementation display[trel] <= {
     disp(R) => dispRel(R).
@@ -159,7 +159,7 @@ lo.comp.term {
   hashTerm(strct(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616. -- 'cos of swi-prolog :('
   hashTerm(prg(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616.
   hashTerm(strng(S1)) => hash(S1).
-  hashTerm(cons(O1,Els)) => foldRight((T,H)=>H*37+hash(T),hash(O1),Els)%18446744073709551616.
+  hashTerm(cons(O1,Els)) => foldRight((H,T)=>H*37+hash(T),hash(O1),Els)%18446744073709551616.
 
   public genVr:(string) => term.
   genVr(Nm) => varbl(_str_gen(Nm)).

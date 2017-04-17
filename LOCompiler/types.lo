@@ -3,9 +3,9 @@ lo.comp.types{
 
   import lo.comp.misc.
 
-  public type typeKind ::= simpleType | typeFun(integer).
+  public typeKind ::= simpleType | typeFun(integer).
 
-  public type tipe ::= anonType
+  public tipe ::= anonType
         | voidType
         | thisType
         | kVar(string)
@@ -28,14 +28,14 @@ lo.comp.types{
         | existType(tipe,tipe).
 
   public
-  type constraint ::= conTract(string,list[tipe],list[tipe])
+  constraint ::= conTract(string,list[tipe],list[tipe])
         |  implementsFace(tipe,list[(string,tipe)])
         |  conCon(constraint,constraint)
         |  univCon(tipe,constraint).
 
-  public type conEntry ::= conEntry(string,string,constraint,tipe).
+  public conEntry ::= conEntry(string,string,constraint,tipe).
 
-  public type implEntry <~ { name:string}.
+  public implEntry <~ { name:string}.
 
   public implEntry:(string,constraint) <=> implEntry.
   implEntry(Nm,C) <= {

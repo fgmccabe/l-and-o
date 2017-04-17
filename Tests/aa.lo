@@ -1,12 +1,12 @@
-aa{
-  public 
+test.aa{
+  public
   contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
     zero : t.
   }
 
-  public 
+  public
   contract all t ~~ arith[t] <~ {
     (*): (t,t)=>t.
     (/): (t,t)=>t.
@@ -21,7 +21,7 @@ aa{
     zero = 0.
   }
 
-  public 
+  public
   implementation arith[integer] <= {
     X*Y => _int_times(X,Y).
     X/Y => _int_div(X,Y).

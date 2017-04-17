@@ -2,7 +2,7 @@ lo.collection{
   import lo.core.
 
   public contract all c,e ~~ folding[c->>e] <~ {
-    foldRight:all x ~~ (((e,x)=>x),x,c) => x.
+    foldRight:all x ~~ (((x,e)=>x),x,c) => x.
     foldLeft:all x ~~ (((x,e)=>x),x,c) => x.
   }
 
@@ -16,6 +16,10 @@ lo.collection{
 
   public contract all m/2 ~~ ixmap[m] <~ {
     (///):all k,e,f ~~ (m[k,e],(k,e)=>f)=>m[k,f].
+  }
+
+  public contract all k,v,m/2 ~~ ixfilter[m->>k,v] <~ {
+    (^//):(m[k,v],(k,v){}) => m[k,v].
   }
 
   public contract all m,k,v ~~ map[m ->> k,v] <~ {

@@ -1,25 +1,26 @@
 lo.comp.typecheck{
   import lo.
   import lo.repo.
+  import lo.uri.
 
-  import lo.comp.location.
   import lo.comp.ast.
   import lo.comp.abstract.
-  import lo.comp.keywords.
   import lo.comp.canon.
-  import lo.comp.types.
-  import lo.comp.parseType.
   import lo.comp.freshen.
-  import lo.comp.unify.
   import lo.comp.dependencies.
   import lo.comp.dict.
   import lo.comp.errors.
-  import lo.comp.macro.
-  import lo.comp.package.
-  import lo.comp.misc.
-  import lo.uri.
   import lo.comp.imports.
+  import lo.comp.keywords.
+  import lo.comp.location.
+  import lo.comp.macro.
+  import lo.comp.misc.
+  import lo.comp.package.
+  import lo.comp.parseType.
   import lo.comp.resolve.
+  import lo.comp.singleton.
+  import lo.comp.types.
+  import lo.comp.unify.
 
   public checkProgram:all r ~~ repository[r] |: (ast,version,r,report,report)=>canonPkg.
   checkProgram(Prog,V,Repo,Rp,Rpx) => canonPkg(pkgSpec(pkg(PkgNm,V),Exports,Types,Enums,Contracts,Impls,Imports),ImportClosure,ODefs,OOthers) :-
@@ -77,6 +78,7 @@ lo.comp.typecheck{
     processImportGroup(Imps,Imports,ImportClosure,Lc,Repo,Base,IBase,Rp1,Rp2),
     checkGroups(Groups,Fields,Annots,Defs,pushFace(Fields,Lc,IBase),TheEnv,Path,Rp2,Rp3),
     checkOthers(Otrs,Others,TheEnv,Path,Rp3,Rpx).
+    -- checkThetaForSingletons(Defs,Others,[],emptySet,Rp4,Rpx).
     -- _logmsg("Checked defs: \(Defs)").
 
   private checkOthers:(list[ast],list[canonOther],list[env],string,report,report){}.

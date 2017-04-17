@@ -9,7 +9,7 @@ lo.comp.code.indexing{
 
   import lo.comp.code.instructions.
 
-  private type ix ::= ix(term,list[(integer,string)]).
+  private ix ::= ix(term,list[(integer,string)]).
 
   implementation display[ix] <= {
     disp(Ix) => dispIx(Ix).
@@ -18,7 +18,7 @@ lo.comp.code.indexing{
   dispIx:(ix) => ss.
   dispIx(ix(T,Ocss)) => ssSeq([ss("ix: "),disp(T),ss("->"),disp(Ocss)]).
 
-  private type aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
+  private aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
 
   implementation display[aoTr] <= {
     disp(T) => showTree(T).

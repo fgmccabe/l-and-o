@@ -4,15 +4,15 @@ lo.comp.code.registers{
   import lo.comp.code.instructions.
   import lo.comp.term.
 
-  public type addr ::= voidAddr | aReg(integer) | yReg(integer,logical) | sReg | notAlloc.
+  public addr ::= voidAddr | aReg(integer) | yReg(integer,logical) | sReg | notAlloc.
 
-  public type varSet ::= varSet(set[integer],set[integer],integer).
+  public varSet ::= varSet(set[integer],set[integer],integer).
 
-  public type initialized ::= notInited | inited.
+  public initialized ::= notInited | inited.
 
-  public type defined ::= notDefined | isDefined.
+  public defined ::= notDefined | isDefined.
 
-  public type varDesc ::= varDesc(string,initialized,defined,addr,option[(integer,integer)]).
+  public varDesc ::= varDesc(string,initialized,defined,addr,option[(integer,integer)]).
 
   public isInitialized:(varDesc){}.
   isInitialized(varDesc(_,inited,_,_,_)).

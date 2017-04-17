@@ -8,13 +8,13 @@ lo.comp.inline{
 
   -- temp def
   public inline:(prProg,map[term,trel]) => prProg.
-  inline(prProg(Spec,P),M) => prProg(Spec,inlineGroups(dependencySort(P),M)) :-
+  inline(prProg(Spec,P),M) => trace("inlined program ",prProg(Spec,inlineGroups(dependencySort(P),M))) :-
     logMsg("inline \(values(P):list[trel]) using \(M)").
 
   dependencySort:(map[term,trel]) => list[list[trel]].
   dependencySort(Prog) => extractGroups(topsort(depends(Prog))).
 
-  private type relEntry ::= rel(list[term],trel).
+  private relEntry ::= rel(list[term],trel).
 
   depends:(map[term,trel]) => list[relEntry].
   depends(M) => values(M) // ( (R) => rel(getRelRefs(R,A),R)) :-
@@ -68,7 +68,7 @@ lo.comp.inline{
   inlineGroups(Groups,I) => foldLeft((M,G)=>inlineGroup(G,M,I),[],Groups).
 
   inlineGroup:(list[trel],map[term,trel],map[term,trel]) => map[term,trel].
-  inlineGroup(Rels,P,I) => foldLeft((M,(R:trel)) => M[R.name->R],P,fixedPoint(trace("inlining ",Rels),P,I)).
+  inlineGroup(Rels,P,I) => foldLeft((M,(R:trel)) => M[R.name->R],P,fixedPoint(Rels,P,I)).
 
   fixedPoint:(list[trel],map[term,trel],map[term,trel]) => list[trel].
   fixedPoint(TR,P,I) => (Any ? fixedPoint(TR1,P,I) | TR) :-
@@ -80,6 +80,7 @@ lo.comp.inline{
 
   inlineRel:(trel,logical,logical,map[term,trel],map[term,trel]) => trel.
   inlineRel(trel(Prg,TLc,Fall,Clses),Any,RReslt,P,I) => trel(Prg,TLc,Fall,OClses) :-
+    logMsg("inlining clauses \(Clses)"),
     Inlined = inlineClauses(Clses,false,Reslt,P,I),
     (Reslt ? Inlined=OClses, RReslt=true | Clses=OClses, RReslt=Any),
     logMsg("result of inlining is \(OClses)").
@@ -97,7 +98,7 @@ lo.comp.inline{
   passOverCond:(clse,logical,integer,integer,map[term,trel],map[term,trel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
     Ix<Mx,
-    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2), logMsg("resolved->\(C2)") ?
+    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2) ?
         NCl = passOverCond(C2,true,0,countBody(C2),P,I) |
         NCl = passOverCond(Cl,Any,Ix+1,Mx,P,I)).
   passOverCond(Cl,true,_,_,_,_) => some(Cl).
@@ -107,7 +108,7 @@ lo.comp.inline{
   countBody(clse(_,_,_,B)) => size(B).
 
   inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
-  inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,filterException(Cls))) :-
+  inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,Cls)) :-
     inlineableCall(Cl.nth(Ix),P,I,Cls).
   inlineable(_,_,_,_) => none.
 
@@ -117,11 +118,6 @@ lo.comp.inline{
     consistentLbl(Pr,Lb),
     (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
   inlineableCall(unfy(_,L,R),_,_,[clse([varbl("X")],prg("=",2),[varbl("X"),varbl("X")],[])]).
-
-  filterException:(list[clse]) => list[clse].
-  filterException([])=>[].
-  filterException([clse(_,_,_,[except(_,_)])]) => [].
-  filterException([Cl,..R]) => [Cl,..filterException(R)].
 
   resolveableClauses:(clse,integer,list[clse]) => list[clse].
   resolveableClauses(Cl,Ix,[]) => [].
@@ -137,30 +133,55 @@ lo.comp.inline{
 
   -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
   public resolve:(clse,integer,clse,clse){}.
-  resolve(clse(Q,Prd,Args,Body),Ix,C2,clse(NQ,Prd,renameEls(Args,Mx),NBody)) :-
-    renameClse(C2,clse(Q2,P2,A2,B2),V),
+  resolve(clse(Q,Prd,Args,Body),Ix,C2,findSingletons(Resolvant)) :-
+    logMsg("resolving \(clse(Q,Prd,Args,Body))@\(Ix) with \(C2)"),
     split(Body,Ix,Lhs,Call,Rhs),
+    -- logMsg("lhs=\(Lhs), rhs=\(Rhs)"),
+    (Call = unfy(_,_,_) ?
+      resolveEquality(Q,Prd,Args,Lhs,Call,Rhs,Resolvant)
+    | resolveCall(Q,Prd,Args,Lhs,Call,Rhs,C2,Resolvant))!,
+    logMsg("resolves to \(Resolvant)").
+
+  resolveEquality:(list[term],term,list[term],list[pred],pred,list[pred],clse){}.
+  resolveEquality(Q,Prd,Args,Lhs,unfy(_,L,R),Rhs,Resolvant) :-
+    (L = anon | \+ containsAnons(L)),
+    (R = anon | \+ containsAnons(R)),
+    unifyTerm(L,R,[],Mx)!,
+    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)),
+    (neck in Lhs ?
+      varbl(Nm) in findVarsInPreds(Lhs,findVarsInList(Args,[])) *> \+ present(Mx,Nm,_)
+    | true),
+    Resolvant = clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs,Mx)<>renamePreds(Rhs,Mx)).
+
+  resolveCall:(list[term],term,list[term],list[pred],pred,list[pred],clse,clse){}.
+  resolveCall(Q,Prd,Args,Lhs,Call,Rhs,C2,Resolvant) :-
+    renameClse(C2,clse(Q2,P2,A2,B2),V),
     checkCall(Call,P2,CArgs),
-    unifyEls(CArgs,A2,[],Mx),
+    unifyEls(CArgs,A2,[],Mx)!,
     NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx+V)),
-    mergeBody(renameGoals(Lhs,V,Mx,predLoc(Call)),renamePreds(B2,Mx),renamePreds(Rhs,Mx),NBody).
+    resolvant(NQ,Prd,Args,Lhs,B2,Rhs,Mx,Resolvant).
 
-  renameGoals:(list[pred],map[string,term],map[string,term],option[tloc]) => list[pred].
-  renameGoals(G,_,Mx,_) => renamePreds(G,Mx) :- \+ neck in G.
-  renameGoals(G,V,Mx,Lc) => renamePreds(Lhs,Mx)<>genEqualities(findVarsInPreds(Lhs,[]),V,Mx,Lc)<>[neck,..renamePreds(Rhs,Mx)]:- concat(Lhs,[neck,..Rhs],G).
+  -- There are many cases to consider when computing the body of the resolvant,
+  -- mostly due to the complex semantics of cut/neck.
 
-  mergeBody:(list[pred],list[pred],list[pred],list[pred]){}.
-  mergeBody(Lhs,[neck,..B],Rhs,Lhs<>B<>Rhs).
-  mergeBody(Lhs,B,Rhs,Lhs<>B<>Rhs) :- \+ neck in B.
-  mergeBody(Lhs,B,Rhs,FL<>BL<>FB<>[neck,..BB]) :- concat(FL,[neck,..BL],Lhs), concat(FB,[neck,..BB],B).
-  mergeBody([],B,Rhs,FB<>BB<>Rhs) :- concat(FR,[neck,..BR],Rhs), concat(FB,[neck,..BB],B).
+  resolvant:(list[term],term,list[term],list[pred],list[pred],list[pred],map[string,term],clse){}.
+  resolvant(NQ,Prd,Args,Lhs,[neck,..B],Rhs,Mx,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs<>B<>Rhs,Mx))) :- \+ neck in Lhs.
+  resolvant(NQ,Prd,Args,Lhs,[neck,..B],Rhs,Mx,clse(merge(NQ,AV),Prd,Args,NBody)) :-
+    concat(FL,[neck,..BL],Lhs),
+    AV = findVarsInList(Args,[]),
+    NBody = FL<>[neck,..genEqualities(findVarsInPreds(FL,AV),Mx)]<>renamePreds(BL,Mx)<>renamePreds(B,Mx)<>renamePreds(Rhs,Mx).
+  resolvant(NQ,Prd,Args,Lhs,B,Rhs,Mx,clse(NQ,Prd,renameEls(Args,Mx),renamePreds(Lhs<>B<>Rhs,Mx))) :- \+ neck in Lhs, \+ neck in B.
+  resolvant(NQ,Prd,Args,Lhs,B,Rhs,Mx,clse(merge(NQ,AV),Prd,Args,NBody)) :-
+    concat(FL,[neck,..BL],Lhs),
+    \+neck in B,
+    AV = findVarsInList(Args,[]),
+    NBody = FL<>[neck,..genEqualities(findVarsInPreds(FL,AV),Mx)]<>renamePreds(BL,Mx)<>renamePreds(B,Mx)<>renamePreds(Rhs,Mx).
 
-  genEqualities:(list[term],map[string,term],map[string,term],option[tloc]) => list[pred].
-  genEqualities([],_,_,_) => [].
-  genEqualities([varbl(Nm),..V],RV,UV,Lc) => [unfy(Lc,varbl(Nm),Nt),..genEqualities(V,RV,UV,Lc)]:-
-    present(RV,Nm,varbl(NwNm)),
-    present(UV,NwNm,Nt).
-  genEqualities([_,..V],RV,UV,Lc) => genEqualities(V,RV,UV,Lc).
+  genEqualities:(list[term],map[string,term]) => list[pred].
+  genEqualities([],_) => [].
+  genEqualities([varbl(Nm),..V],Mx) => [unfy(none,varbl(Nm),renameTerm(Nt,Mx)),..genEqualities(V,Mx)]:-
+    present(Mx,Nm,Nt).
+  genEqualities([_,..V],Mx) => genEqualities(V,Mx).
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
@@ -250,15 +271,50 @@ lo.comp.inline{
   findVarsInList([],V) => V.
   findVarsInList([T,..L],V) => findVarsInList(L,findVars(T,V)).
 
-  findVarsInPred:(pred,list[term]) => list[term].
-  findVarsInPred(call(_,_,A),V) => findVarsInList(A,V).
-  findVarsInPred(ecall(_,_,A),V) => findVarsInList(A,V).
-  findVarsInPred(ocall(_,C,L,T),V) => findVars(C,findVars(L,findVars(T,V))).
-  findVarsInPred(unfy(_,L,T),V) => findVars(L,findVars(T,V)).
-  findVarsInPred(except(_,E),V) => findVars(E,V).
-  findVarsInPred(fail,V) => V.
-  findVarsInPred(neck,V) => V.
+  findVarsInPred:(list[term],pred) => list[term].
+  findVarsInPred(V,call(_,_,A)) => findVarsInList(A,V).
+  findVarsInPred(V,ecall(_,_,A)) => findVarsInList(A,V).
+  findVarsInPred(V,ocall(_,C,L,T)) => findVars(C,findVars(L,findVars(T,V))).
+  findVarsInPred(V,unfy(_,L,T)) => findVars(L,findVars(T,V)).
+  findVarsInPred(V,except(_,E)) => findVars(E,V).
+  findVarsInPred(V,fail) => V.
+  findVarsInPred(V,neck) => V.
 
   findVarsInPreds:(list[pred],list[term]) => list[term].
-  findVarsInPreds(Ps,V) => foldRight(findVarsInPred,V,Ps).
+  findVarsInPreds(Ps,V) => foldLeft(findVarsInPred,V,Ps).
+
+  countVars:(term,map[string,integer]) => map[string,integer].
+  countVars(varbl(Nm),V) => V[Nm->Cnt+1] :- present(V,Nm,Cnt).
+  countVars(varbl(Nm),V) => V[Nm->1].
+  countVars(T,V) => V :- isGroundTerm(T).
+  countVars(anon,V) => V.
+  countVars(cons(_,A),V) => countVarsInList(A,V).
+
+  countVarsInList:(list[term],map[string,integer]) => map[string,integer].
+  countVarsInList([],V) => V.
+  countVarsInList([T,..L],V) => countVarsInList(L,countVars(T,V)).
+
+  countVarsInPreds:(list[pred],map[string,integer]) => map[string,integer].
+  countVarsInPreds(Ps,V) => foldRight(countVarsInPred,V,Ps).
+
+  countVarsInPred:(map[string,integer],pred) => map[string,integer].
+  countVarsInPred(V,call(_,_,A)) => countVarsInList(A,V).
+  countVarsInPred(V,ecall(_,_,A)) => countVarsInList(A,V).
+  countVarsInPred(V,ocall(_,C,L,T)) => countVars(C,countVars(L,countVars(T,V))).
+  countVarsInPred(V,unfy(_,L,T)) => countVars(L,countVars(T,V)).
+  countVarsInPred(V,except(_,E)) => countVars(E,V).
+  countVarsInPred(V,fail) => V.
+  countVarsInPred(V,neck) => V.
+
+  findSingletons:(clse) => clse.
+  findSingletons(clse(Q,Nm,Args,Preds)) => clse(Q^/((varbl(V)) :- present(M,V,Cnt), Cnt>1),Nm,renameEls(Args,Mx),renamePreds(Preds,Mx)) :-
+    M = countVarsInList(Args,countVarsInPreds(Preds,foldLeft((Mp,varbl(Vn))=>Mp[Vn->0],[],Q))),
+    Mx = singletonMap(M).
+
+  singletonMap:(map[string,integer]) => map[string,term].
+  singletonMap(M) => foldMap((Nm,Cnt,Mx) => (Cnt>1 ? Mx | Mx[Nm->anon]),[],M).
+
+  containsAnons:(term){}.
+  containsAnons(anon).
+  containsAnons(cons(_,Els)) :- E in Els, containsAnons(E).
 }

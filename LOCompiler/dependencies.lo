@@ -11,7 +11,7 @@ lo.comp.dependencies{
   import lo.comp.package.
 
   public
-  type defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
+  defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
 
   implementation all x,y ~~ depends[defn->>(string,defnKind)] <= {
     defines(defn(X,K,_,_,_),(X,K)).

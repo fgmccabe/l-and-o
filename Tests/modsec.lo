@@ -8,11 +8,11 @@ test.modsec{
 
   -- import test.parsetools.
 
-  type modSecRule ::= modSecRule(list[msgTgt],string,list[msAct]) | modSecMarker(string).
+  modSecRule ::= modSecRule(list[msgTgt],string,list[msAct]) | modSecMarker(string).
 
-  type msgTgt ::= tgtVar(string) | negTgt(msgTgt) | indexed(msgTgt,string).
+  msgTgt ::= tgtVar(string) | negTgt(msgTgt) | indexed(msgTgt,string).
 
-  type msAct ::= single(string) | id(string) | tag(string) | other(string,string).
+  msAct ::= single(string) | id(string) | tag(string) | other(string,string).
 
   -- Hint to the run-time:
   main:(list[string]){}.
@@ -45,7 +45,7 @@ test.modsec{
   analyseRules([Rl,..l],M,Mx) :-
     analyseRules(l,M.addRule(Rl),Mx).
 
-  type meta <~ { tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta. }
+  meta <~ { tgts:map[string,list[string]]. tags:map[string,list[string]]. addRule:(modSecRule) => meta. }
 
   private meta:(map[string,list[string]],map[string,list[string]]) <=> meta.
   meta(Tgts,Tags) <= {
@@ -228,7 +228,7 @@ test.modsec{
 
   -- Tokenization of modsecurity source
 
-  private type secTkn ::= secRule | secAction | secDefaultAction | secMarker | secRuleUpdate
+  private secTkn ::= secRule | secAction | secDefaultAction | secMarker | secRuleUpdate
    | idn(list[integer]) | strg(list[integer]) | colon | bar | pling | lbra | rbra | amp.
 
   implementation display[secTkn] <= {

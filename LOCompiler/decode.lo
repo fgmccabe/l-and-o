@@ -101,7 +101,7 @@ lo.comp.decode{
   decodeSeq(I,[E,..L],Cx) --> {Cx>0}, I(E), decodeSeq(I,L,Cx-1).
 
   decodeTloc:(tloc) --> list[integer].
-  decodeTloc(tloc(F,T)) --> "T", decInt(F), decInt(T).
+  decodeTloc(tloc(Line,Off,Col,Len)) --> "T", decInt(Line), decInt(Off), decInt(Col), decInt(Len).
 
   decodeClauses:(list[clse]) --> list[integer].
   decodeClauses(Clses) --> decodeSequence(decodeClause,Clses).

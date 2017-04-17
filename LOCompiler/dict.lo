@@ -7,13 +7,13 @@ lo.comp.dict{
   import lo.
 
   public
-  type vr ::= vr(canonTerm,tipe).
+  vr ::= vr(canonTerm,tipe).
 
   public
-  type env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,conEntry],map[string,map[string,implEntry]]).
+  env ::= scope(map[string,typeDef],map[string,vr],list[constraint],map[string,conEntry],map[string,map[string,implEntry]]).
 
   public
-  type typeDef ::= tpDef(location,string,typeKind,tipe).
+  typeDef ::= tpDef(location,string,typeKind,tipe).
 
   public implementation display[env] <= {
     disp(E) => showEnv(E).
@@ -132,6 +132,22 @@ lo.comp.dict{
   isImplemented(conTract(Nm,Args,Deps),Env,Impl) :-
     impInD(Nm,Env,Impls),
     present(Impls,implementationName(conTract(Nm,Args,Deps)),Impl).
+
+  public allDefinedVars:(list[env]) => set[string].
+  allDefinedVars(Env) => allVars(Env,emptySet).
+
+  allVars:(list[env],set[string]) => set[string].
+  allVars([],S) => S.
+  allVars([scope(_,Vrs,_,Cons,Impls),..E],S) => allVars(E,implementations(Impls,varsInScope(Vrs,S))).
+
+  varsInScope:(map[string,vr],set[string]) => set[string].
+  varsInScope(V,E) => foldLeft(addMem,E,keys(V)).
+
+  implementations:(map[string,map[string,implEntry]],set[string]) => set[string].
+  implementations(Impls,Ex) => foldLeft(pickImplName,Ex,values(Impls)).
+
+  pickImplName:(set[string],map[string,implEntry]) => set[string].
+  pickImplName(Ex,M) => foldLeft((E,(I:implEntry))=>addMem(E,I.name),Ex,values(M)).
 
   public stdDict : list[env].
   stdDict = standardType("string",tipe("lo.core*string"),

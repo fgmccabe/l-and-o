@@ -1,5 +1,5 @@
 test.f{
-  type all t ~~ cons[t] ::= nil | pair(t,cons[t]).
+  all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
   contract all t ~~ additive[t] <~ {
     (+): (t,t)=>t.

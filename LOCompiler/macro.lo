@@ -29,7 +29,7 @@ lo.comp.macro{
     macroRewrite(More,Stmts,Rp,Rpx).
 
   private
-  type mark ::= markPublic | markPrivate | noMark.
+  mark ::= markPublic | markPrivate | noMark.
 
   private mark:(mark,location,ast,ast){}.
   mark(markPublic,Lc,Stmt,unary(Lc,"public",Stmt)).

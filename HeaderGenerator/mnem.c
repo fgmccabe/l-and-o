@@ -60,8 +60,8 @@ int main(int argc,char **argv)
   fprintf(out, "  import lo.comp.code.instructions.\n");
   fprintf(out, "  import lo.comp.code.registers.\n\n");
 
-  fprintf(out, "  public type codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).\n");
-  fprintf(out, "  public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).\n\n");
+  fprintf(out, "  public codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).\n");
+  fprintf(out, "  public codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).\n\n");
 
   fprintf(out, "  public asm:(assem)=>codeSeg.\n");
   fprintf(out, "  asm(assem(Nm,Ins,Lits,SrcMap)) => codeSeg(Nm,mnem(Ins,Lbls,genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T),genSrcMap(SrcMap,Lbls)) :-\n"
@@ -86,7 +86,7 @@ int main(int argc,char **argv)
 
   fprintf(out,"  private genSrcMap:(list[(string,string,tloc)],map[string,integer])=>list[term].\n");
   fprintf(out,"  genSrcMap([],_) => [].\n");
-  fprintf(out,"  genSrcMap([(S,E,tloc(St,Ln)),..L],M) => [cons(strct(\"()4\",4),[intgr(Sx),intgr(Ex),intgr(St),intgr(Ln)]),..genSrcMap(L,M)] :-\n");
+  fprintf(out,"  genSrcMap([(S,E,tloc(Line,Off,Col,Ln)),..L],M) => [cons(strct(\"()4\",4),[intgr(Sx),intgr(Ex),intgr(Off),intgr(Ln)]),..genSrcMap(L,M)] :-\n");
   fprintf(out,"    present(M,S,Sx),\n");
   fprintf(out,"    present(M,E,Ex).\n\n");
 

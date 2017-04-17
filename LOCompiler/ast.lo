@@ -4,7 +4,7 @@ lo.comp.ast{
   import lo.comp.keywords.
   import lo.comp.operators.
 
-  public type ast <~ hasLoc.
+  public ast <~ hasLoc.
 
   public implementation display[ast] <= {
     disp(T) => showAst(T,2000).
@@ -53,8 +53,8 @@ lo.comp.ast{
   showAst(intg(_,Ix),_) => disp(Ix).
   showAst(flot(_,Dx),_) => disp(Dx).
   showAst(strg(_,Sx),_) => disp(Sx).
-  showAst(tupl(_,Nm,Els),_) => 
-      ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]) :- 
+  showAst(tupl(_,Nm,Els),_) =>
+      ssSeq([ss(Lft),ssSeq(showEls(Els,Pr,Sep,"")),ss(Rgt)]) :-
     tupleBrackets(Nm,Lft,Rgt,Pr,Sep).
   showAst(appl(_,iden(_,Op),tupl(_,"()",[A])),Pr) =>
       ssSeq([showOpen(Pr,PrOp), ss(Op), ss(" "), showAst(A,PrR), showClose(Pr,PrOp)]) :-

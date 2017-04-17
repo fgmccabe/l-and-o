@@ -2,7 +2,7 @@ lo.either{
   import lo.core.
 
   -- Either or values
-  public type all a,b ~~ either[a,b] ::= either(a) | alternate(b).
+  public all a,b ~~ either[a,b] ::= either(a) | alternate(b).
 
   -- Display either-or values
   public implementation all x,y ~~ display[x], display[y] |: display[either[x,y]] <= {

@@ -3,7 +3,7 @@ test.opts{
   import lo.either.
   import lo.options.
 
-  type testOption ::= test(string,logical).
+  testOption ::= test(string,logical).
 
   implementation display[testOption] <= {
     disp(test(A,L)) => ssSeq([ss("A="),ss(A),ss(", L="),(L?ss("true")|ss("false"))]).

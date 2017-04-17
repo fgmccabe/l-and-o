@@ -1,9 +1,9 @@
 test.mapp{
   -- import lo.
 
-  type all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
+  all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
-  type all k,v ~~ map[k,v] <~ {}.
+  all k,v ~~ map[k,v] <~ {}.
 
   public mapp:all e,f ~~ (list[e],((e)=>f))=>list[f].
   mapp([],_) => [].

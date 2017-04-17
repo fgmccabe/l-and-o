@@ -61,7 +61,7 @@ lo.list{
     foldLeft(f,x,[e,..l]) => foldLeft(f,f(x,e),l).
 
     foldRight(f,x,[]) => x.
-    foldRight(f,x,[e,..l]) => f(e,foldRight(f,x,l)).
+    foldRight(f,x,[e,..l]) => f(foldRight(f,x,l),e).
   }
 
   public implementation all e,f ~~ mapping[list->>e,f] <= {

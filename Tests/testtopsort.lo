@@ -2,7 +2,7 @@ test.topsort{
   import lo.
   import lo.topsort.
 
-  type all x,y ~~ df[x,y] ::= df(x,list[y]).
+  all x,y ~~ df[x,y] ::= df(x,list[y]).
 
   implementation all x ~~ depends[df[x,x]->>x] <= {
     defines(df(X,_),X).
@@ -23,7 +23,7 @@ test.topsort{
     hash(D) => dfHash(D).
   }
 
-  dfEq:all x,y ~~ equality[x], equality[y] |: (df[x,y],df[x,y]){}. 
+  dfEq:all x,y ~~ equality[x], equality[y] |: (df[x,y],df[x,y]){}.
   dfEq(df(X1,Y1),df(X2,Y2)) :- X1==X2, Y1==Y2.
 
   dfHash:all x,y ~~ equality[x], equality[y] |: (df[x,y]) => integer.

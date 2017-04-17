@@ -56,10 +56,10 @@ lo.comp.transform{
     lookupFunName(Map,Nm,Reslt),
     programAccess(Reslt,LclFun,_,Closure,_),
     extraVars(Map,Extra),
-    transformEquations(Map,Opts,LclFun,Ar,Extra,Eqns,1,Clses,P,P0,Rp,Rp0),
+    transformEquations(Map,Opts,LclFun,Ar,Extra,Eqns,1,Clses,P,P0,Rp,Rpx),
     AAr = Ar+size(Extra),
     LPrg = prg(LclFun,AAr),
-    P1 = P0[LPrg->trel(LPrg,some(Lc::tloc),infallible,Clses<>[failSafeEquation(Lc,strng(Nm),LclFun,AAr,Rp0,Rpx)])],
+    P1 = P0[LPrg->trel(LPrg,some(Lc::tloc),infallible,Clses)],
     closureEntry(Map,some(Lc::tloc),LclFun,Closure,Ar,P1,Px).
 
   transformEquations:(list[lyr],trOptions,string,integer,list[term],list[canonRule],integer,list[clse],map[term,trel],map[term,trel],report,report){}.
@@ -71,8 +71,9 @@ lo.comp.transform{
   transformEqn:(canonRule,list[lyr],trOptions,string,integer,list[term],integer,list[clse],list[clse],map[term,trel],map[term,trel],report,report){}.
   transformEqn(equation(Lc,Nm,tpl(A),Value,Cond),Map,Opts,LclFun,Arity,Extra,QNo,[clse(Q,prg(LclFun,Arity+size(Extra)),Args,Guard<>[neck,..Body]),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        -- are we debugging?
-    trPtns(A,Args,[Rep,..Extra],Q0,Q1,PreG,PreGx,PostG,PreV,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
-    trGoal(Cond,PreGx,[],Q1,Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1),   -- condition goals
+    genVarbl("Reslt",Reslt),
+    trPtns(A,Args,[Reslt,..Extra],Q0,Q1,PreG,PreGx,PostG,PreV,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
+    trGoal(Cond,PreGx,[],merge([Reslt],Q1),Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1),   -- condition goals
     trExp(Value,Rep,Q2,Q3,PreV,PVx,PVx,Px,Map,ClOpts,Ex1,Exx,Rp1,Rpx),  -- replacement expression
     labelAccess(Q3,Q,Map,Guard,LbLx),                        -- generate label access goals
     frameDebug(Nm,QNo,Q,FBg,LG,ClOpts),                     -- generate frame entry debugging
@@ -80,13 +81,6 @@ lo.comp.transform{
     deframeDebug(Nm,QNo,Px,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,Body,PostG,ClOpts),                        -- generate break point debugging
     Arity = size(A)+1.
-
-  failSafeEquation:(location,term,string,integer,report,report)=>clse.
-  failSafeEquation(Lc,Nm,LclPrg,Arity,Rp,Rpx) => clse([],prg(LclPrg,Arity),genAnons(Arity),G) :-
-    genRaise(Lc,LclPrg,G,[],Rp,Rpx).
-
-  genRaise:(location,string,list[pred],list[pred],report,report){}.
-  genRaise(Lc,LclName,[except(some(Lc::tloc),cons(strct("error",4),[strng(LclName),intgr(lineOf(Lc)),intgr(columnOf(Lc)),intgr(widthOf(Lc))])),..P],P,Rp,Rp).
 
   transformPredicate:(canonDef,list[lyr],trOptions,map[term,trel],map[term,trel],report,report){}.
   transformPredicate(relDef(Lc,Nm,_,[],Rules),Map,Opts,P,Px,Rp,Rpx) :-
@@ -296,9 +290,9 @@ lo.comp.transform{
     transformClause(clause(Lc,"assert",tpl([]),foldRight(collectGoal,trueCond,Asserts)),Map,Opts,AssertNm,Arity,Extra,1,[ACl],[],P,P0,Rp,Rpx),
     Px = addCl(P0,ACl).
 
-  collectGoal:(canonOther,canonCond)=>canonCond.
-  collectGoal(integrity(_,G),trueCond) => G.
-  collectGoal(integrity(_,G),O) => conjCond(G,O).
+  collectGoal:(canonCond,canonOther)=>canonCond.
+  collectGoal(trueCond,integrity(_,G)) => G.
+  collectGoal(O,integrity(_,G)) => conjCond(G,O).
 
   transformShows:(list[canonOther],list[lyr],trOptions,location,term,map[term,trel],map[term,trel],report,report){}.
   transformShows(Shows,Map,Opts,Lc,prg(ShowNm,Arity),P,Px,Rp,Rpx) :-
@@ -307,9 +301,9 @@ lo.comp.transform{
     transformClause(clause(Lc,"show",tpl([]),(foldRight(collectShow,trueCond,Shows):canonCond)),Map,Opts,ShowNm,Arity,Extra,1,[SCl],[],P,P0,Rp,Rpx),
     Px = addCl(P0,SCl).
 
-  collectShow:(canonOther,canonCond)=>canonCond.
-  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),tpl([S])).
-  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([S])),O).
+  collectShow:(canonCond,canonOther)=>canonCond.
+  collectShow(trueCond,expShow(Lc,S)) => callCond(Lc,v(Lc,"_logmsg"),tpl([S])).
+  collectShow(O,expShow(Lc,S)) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([S])),O).
 
   trLocation:(location) => canonTerm.
   trLocation(Lc) => tpl([int(lineOf(Lc)),int(columnOf(Lc)),int(widthOf(Lc))]).
@@ -400,7 +394,7 @@ lo.comp.transform{
     genVarbl("Lbl",LblVr),
     Q = Args<>[LblVr,ThVr],
     Px = addCl(P,clse(Q,prg(layerName(Map),3),
-          [cons(trCons(Name,Arity),Args),LblVr,ThVr],[neck,call(TLc,prg(Prog,Arity+2),Q)])).
+          [cons(trCons(Name,Arity),Args),LblVr,ThVr],[call(TLc,prg(Prog,Arity+2),Q)])).
 
   closureAccess:(list[lyr],string,map[term,trel],map[term,trel]){}.
   closureAccess(Map,Name,P,Px) :-
@@ -536,7 +530,7 @@ lo.comp.transform{
     genNewName(Map,"condExp",length(LQ)+1,CondPr),
     Cl1 = clse(LQ,CondPr,[LRslt,..LQ],TG<>[neck,..LG]),
     Cl2 = clse(LQ,CondPr,[RRslt,..LQ],RG),
-    Exx = Ex2[CondPr->trel(CondPr,none,infallible,[Cl1,Cl2])].
+    Exx = Ex2[CondPr->trel(CondPr,none,fallible,[Cl1,Cl2])].
   trExp(lambda(Rl),Rslt,Q,Q,Pr,Pr,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trLambda(Rl,Rslt,merge(allLabelArgs(Map,[]),Q),Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(XX,anon,Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex,Rp,Rpx) :-
@@ -616,13 +610,14 @@ lo.comp.transform{
   trLambda(equation(Lc,Nm,tpl(A),Exp,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(equation(Lc,Nm,tpl(A),Exp,Cond),Q,[]),
     genNewName(Map,Nm,3,prg(Lam,_)),
-    trPtns(A,Args,[Rep],[],Q1,Goals,PreGx,PostG,[],Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
+    genVarbl("Reslt",Reslt),
+    trPtns(A,Args,[Reslt],[Reslt],Q1,Goals,PreGx,PostG,[unfy(some(Lc::tloc),Reslt,Rep)],Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
     trGoal(Cond,PreGx,[],Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rp1),       -- condition goals
-    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rp2),      -- replacement expression
+    trExp(Exp,Rep,Q2,Q3,PostGx,PVx,PVx,PostG,Map,Opts,Ex1,Ex2,Rp1,Rpx),      -- replacement expression
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    Code = [clse(merge(FreeVars,Q3),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],Goals<>[neck,..PostGx]),
-           failSafeEquation(Lc,strng(Nm),Lam,3,Rp2,Rpx)],
+    LamBody = (Goals=[] ? PostGx | Goals<>[neck,..PostGx]),
+    Code = [clse(merge(FreeVars,Q3),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],LamBody)],
     Exx = Ex2[LmPrg->trel(LmPrg,none,infallible,Code)].
   trLambda(clause(Lc,Nm,tpl(A),Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(clause(Lc,Nm,tpl(A),Cond),Q,[]),
@@ -831,7 +826,7 @@ lo.comp.transform{
     collectLabelVars(Args,LbVr,ThVr,[(Nm,labelArg(varbl(Nm),LbVr,ThVr)),..List],Lx).
 
   public implementation coercion[location,tloc] <= {
-    _coerce(loc(Line,Off,Col,Len,Pth)) => tloc(Off,Len).
+    _coerce(loc(Line,Off,Col,Len,Pth)) => tloc(Line,Off,Col,Len).
   }
 
   addCl:(map[term,trel],clse)=>map[term,trel].

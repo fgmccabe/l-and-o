@@ -54,7 +54,7 @@ int main(int argc,char **argv)
     fprintf(out, "  import lo.\n\n");
     fprintf(out, "  import lo.comp.term.\n");
 
-    fprintf(out,"  public type instruction ::=              -- type defining the opcodes\n");
+    fprintf(out,"  public instruction ::=              -- type defining the opcodes\n");
     fprintf(out,"     iLbl(string)               -- label in code stream\n");
 
   #include "instructions.h"

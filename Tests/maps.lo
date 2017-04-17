@@ -1,7 +1,7 @@
 test.maps{
   import lo.
 
-  type all u,v ~~ pair[u,v] ::= pair(u,v).
+  all u,v ~~ pair[u,v] ::= pair(u,v).
 
   implementation
   all u,v ~~ display[u], display[v] |: display[pair[u,v]] <= {

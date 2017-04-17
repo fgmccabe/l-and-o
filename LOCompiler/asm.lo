@@ -9,8 +9,8 @@ lo.comp.code.asm{
   import lo.comp.code.instructions.
   import lo.comp.code.registers.
 
-  public type codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).
-  public type codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).
+  public codeSeg ::= codeSeg(term,list[integer],list[term],list[term]).
+  public codeMdl ::= codeMdl(pkgSpec,list[codeSeg]).
 
   public asm:(assem)=>codeSeg.
   asm(assem(Nm,Ins,Lits,SrcMap)) => codeSeg(Nm,mnem(Ins,Lbls,genLitTbl(Lits,0,[]),0),Lits//((litrl(_,T))=>T),genSrcMap(SrcMap,Lbls)) :-
@@ -120,7 +120,7 @@ lo.comp.code.asm{
 
   private genSrcMap:(list[(string,string,tloc)],map[string,integer])=>list[term].
   genSrcMap([],_) => [].
-  genSrcMap([(S,E,tloc(St,Ln)),..L],M) => [cons(strct("()4",4),[intgr(Sx),intgr(Ex),intgr(St),intgr(Ln)]),..genSrcMap(L,M)] :-
+  genSrcMap([(S,E,tloc(Line,Off,Col,Ln)),..L],M) => [cons(strct("()4",4),[intgr(Sx),intgr(Ex),intgr(Off),intgr(Ln)]),..genSrcMap(L,M)] :-
     present(M,S,Sx),
     present(M,E,Ex).
 

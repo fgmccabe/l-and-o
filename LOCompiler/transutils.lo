@@ -9,9 +9,9 @@ lo.comp.transutils {
   import lo.comp.term.
   import lo.comp.types.
 
-  public type trOption ::= debugging | dbgVars(string,term,term) | pkgName(string).
+  public trOption ::= debugging | dbgVars(string,term,term) | pkgName(string).
 
-  public type trOptions ::= trOptions(list[trOption]).
+  public trOptions ::= trOptions(list[trOption]).
 
   public trOpts:(compOption,string) => trOptions.
   trOpts(C,P) => trOptions([pkgName(P),debugging]) :- C.debugging=true.
@@ -26,9 +26,9 @@ lo.comp.transutils {
   public trCons:(string,integer) => term.
   trCons(Nm,Ar) => strct(Nm+"%\(Ar)",Ar).
 
-  public type lyr ::= lyr(string,list[(string,mapEntry)],list[pred],term,term).
+  public lyr ::= lyr(string,list[(string,mapEntry)],list[pred],term,term).
 
-  public type mapEntry ::= moduleFun(string,string,string,string,integer)
+  public mapEntry ::= moduleFun(string,string,string,string,integer)
             | moduleRel(string,string,string,string,integer)
             | moduleVar(string,string,string)
             | moduleClass(string,string,integer)

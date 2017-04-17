@@ -4,7 +4,7 @@ lo.comp.location{
   import lo.json.
 
   public
-  type location <~ {
+  location <~ {
     merge:(location)=>location.
   }.
 
@@ -57,7 +57,7 @@ lo.comp.location{
            "length"->jNum(Len::float)]).
   loc2json(std) => jNull.
 
-  public type hasLoc <~ { loc:location. }.
+  public hasLoc <~ { loc:location. }.
 
   public locationContext:(location,string) => ss.
   locationContext(loc(_,_,Col,Len,_),Line) => ssSeq([ss(Line),ss(implode(showArrow(Col-1,min(Len,size(Line)-Col))))]).

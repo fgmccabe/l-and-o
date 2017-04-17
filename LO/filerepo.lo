@@ -5,7 +5,7 @@ lo.repo.file{
   import lo.uri.
   import lo.resources.
 
-  public type fileRepo ::= repo(uri,manifest).
+  public fileRepo ::= repo(uri,manifest).
 
   public openRepository:(uri) => fileRepo.
   openRepository(Root) => repo(Root,readManifest(RepoUri)) :-
