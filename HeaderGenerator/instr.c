@@ -4,8 +4,6 @@
 #include <getopt.h>
 
 #include "opcodes.h"
-#include "stringBuffer.h"
-#include "formio.h"
 
 #undef instruction
 #define instruction(M,O,A1,A2,cmt)  genIns(out,#M,A1,A2,cmt,term);

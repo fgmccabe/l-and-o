@@ -65,8 +65,6 @@ extern ptrI newProgramLbl(string name, int16 arity);
 extern ptrI programLbl(string name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
-extern ptrI programOfSymbol(objPo o);
-extern ptrI programOfTerm(ptrI x);
 extern void defineProg(ptrI sym, ptrI code);
 
 /*
@@ -147,7 +145,7 @@ static inline long codeLitCount(codePo pc) {
 }
 
 static inline void updateCodeLit(codePo pc, long ix, ptrI lit) {
-  extern void markGrey(objPo o);
+  extern void markGrey(objPo);
   markGrey((objPo) pc);
 
   codeLits(pc)[ix] = lit;
@@ -228,7 +226,7 @@ static inline insPo FirstInstruction(ptrI cl) {
 }
 
 static inline void setCode(programPo lb, ptrI code) {
-  extern void markGrey(objPo p);
+  extern void markGrey(objPo);
   lb->code = code;
   markGrey((objPo) lb);
 }
@@ -241,8 +239,6 @@ extern ptrI newProgLbl(const char *name, int16 arity);
 extern ptrI newProgramLbl(string name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
-extern ptrI programOfSymbol(objPo o);
-extern ptrI programOfTerm(ptrI x);
 extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(uinteger size, uinteger litCnt, packagePo owner);
 extern retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen);
@@ -250,7 +246,6 @@ extern retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen);
 extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize, void *cl);
 
 extern void initCodeClass(void);
-logical isLoaded(ptrI package);
 
 retCode locateSourceFragment(codePo cde, insPo pc, packagePo *pkg, integer *start, integer *size);
 

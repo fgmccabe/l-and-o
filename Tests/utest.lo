@@ -15,11 +15,11 @@ utest {
   base:uri.
   base = parse("file://Foo/bar/").
 
-  rel:uri.
-  rel = parse("alpha/beta").
+  relU:uri.
+  relU = parse("alpha/beta").
 
   res:uri.
-  res = resolveUri(base,rel).
+  res = resolveUri(base,relU).
 
   show res.
 

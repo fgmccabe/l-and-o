@@ -17,13 +17,12 @@ lo.comp.genprolog{
   genPrologSig:(pkgSpec) => term.
   genPrologSig(Spec) => cons(strct("#pkg",1),[packageSig(Spec)]).
 
-  convertRel:(term,trel,list[integer]) => list[integer].
-  convertRel(_,trel(Prd,Lc,Fall,Clses),Ox) => foldRight(convertClause,Ox,Clses/*<>genFailsafe(Fall,Prd,Lc)*/).
+  convertRel:(term,rel,list[integer]) => list[integer].
+  convertRel(_,rel(Prd,Lc,Clses),Ox) => foldRight(convertClause,Ox,Clses).
 
-  genFailsafe:(fallible,term,option[tloc]) => list[clse].
-  genFailsafe(fallible,_,_) => [].
-  genFailsafe(infallible,prg(Nm,Ar),Lc) =>
-    [clse([],prg(Nm,Ar),genAnons(Ar),[except(Lc,cons(strct("error",2),[strng(Nm),genLoc(Lc)]))])].
+  genFailsafe:(term,option[tloc]) => clse.
+  genFailsafe(prg(Nm,Ar),Lc) =>
+    clse([],prg(Nm,Ar),genAnons(Ar),[except(Lc,cons(strct("error",2),[strng(Nm),genLoc(Lc)]))]).
 
   genLoc:(option[tloc]) => term.
   genLoc(none) => enum("lo.core#none").
@@ -32,9 +31,15 @@ lo.comp.genprolog{
   convertClause:(list[integer],clse) => list[integer].
   convertClause(Ox,clse(_,Nm,Args,[])) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
   convertClause(Ox,clse(_,Nm,Args,[C,..Rest])) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPred(C,foldRight(convertCall,[0c.,0c\n,..Ox],Rest))]).
+  convertClause(Ox,eqn(_,Nm,Args,Rep,Body)) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertBody(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
+    genVarbl("R",V).
 
   convertHead:(term,list[term],list[integer]) => list[integer].
   convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).
+
+  convertBody:(list[pred],list[integer],list[integer]) => list[integer].
+  convertBody([],Sep,Tail) => Sep<>Tail.
+  convertBody([C,..B],Sep,Tail) => Sep<>convertPred(C,convertBody(B,[0c,,0c\n,0c ,0c ,0c ,0c ],Tail)).
 
   convertCallOp:(term,list[integer]) => list[integer].
   convertCallOp(prg(Nm,_),Ox) => appId(Nm,Ox).

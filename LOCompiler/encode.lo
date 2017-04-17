@@ -10,18 +10,19 @@ lo.comp.encode{
   public encodeProg:(prProg) => list[integer].
   encodeProg(prProg(Spec,Code)) => encTerm(packageSig(Spec),encodeProgMap(values(Code),[])).
 
-  encodeProgMap:(list[trel],list[integer]) => list[integer].
+  encodeProgMap:(list[rel],list[integer]) => list[integer].
   encodeProgMap([],L) => L.
   encodeProgMap([T,..R],L) => encodeRel(T,encodeProgMap(R,L)).
 
-  encodeRel:(trel,list[integer]) => list[integer].
-  encodeRel(trel(Pred,TLc,Fl,Clses),L) => [0cR,..encTerm(Pred,encodeTLoc(TLc,encodeFall(Fl,encodeClses(Clses,L))))].
+  encodeRel:(rel,list[integer]) => list[integer].
+  encodeRel(rel(Pred,TLc,Clses),L) => [0cR,..encTerm(Pred,encodeTLoc(TLc,encodeClses(Clses,L)))].
 
   encodeClses:(list[clse],list[integer]) => list[integer].
   encodeClses(Clses,L) => encSequence(encClause,Clses,L).
 
   encClause:(clse,list[integer]) => list[integer].
   encClause(clse(Q,Nm,Args,Body),L) => [0cC,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encSequence(encPred,Body,L))))].
+  encClause(eqn(Q,Nm,Args,Rep,Body),L) => [0c>,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encTerm(Rep,encSequence(encPred,Body,L)))))].
 
   encPred:(pred,list[integer]) => list[integer].
   encPred(call(TLc,Op,Args),L) => [0cP,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
@@ -42,10 +43,6 @@ lo.comp.encode{
   encodeTLoc:(option[tloc],list[integer]) => list[integer].
   encodeTLoc(TLc,L) => encodeOptional((tloc(Line,Off,Col,Len),Lx)=>[0cT,..encInt(Line,encInt(Off,encInt(Col,encInt(Len,Lx))))],TLc,L).
 
-  encodeFall:(fallible,list[integer]) => list[integer].
-  encodeFall(fallible,L) => encTerm(enum("lo.core#true"),L).
-  encodeFall(infallible,L) => encTerm(enum("lo.core#false"),L).
-
   public encodeOptional:all t ~~ ((t,list[integer])=>list[integer],option[t],list[integer]) => list[integer].
   encodeOptional(F,none,L) => [0cN,..L].
   encodeOptional(F,some(O),L) => [0c@,..F(O,L)].
@@ -63,6 +60,7 @@ lo.comp.encode{
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
+  encTerm(invoke(Lc,Op,Args),L) => [0cV,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
 
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.

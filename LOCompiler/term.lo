@@ -13,28 +13,21 @@ lo.comp.term {
                | strct(string,integer)
                | prg(string,integer)
                | strng(string)
-               | cons(term,list[term]).
+               | cons(term,list[term])
+               | invoke(option[tloc],term,list[term]).
 
   public tloc ::= tloc(integer,integer,integer,integer).
 
-  public fallible ::= fallible | infallible.
+  public rel <~ { name:term }.
 
-  public trel <~ { name:term }.
-
-  public trel:(term,option[tloc],fallible,list[clse]) <=> trel.
-  trel(Nm,_,_,_) <= {
+  public rel:(term,option[tloc],list[clse]) <=> rel.
+  rel(Nm,_,_) <= {
     name = Nm.
   }
 
-  public clse <~ { name:term. quants:list[term]. args:list[term]. nth:(integer)=>pred.}.
+  public clse ::= clse(list[term],term,list[term],list[pred])
+              | eqn(list[term],term,list[term],term,list[pred]).
 
-  public clse:(list[term],term,list[term],list[pred]) <=> clse.
-  clse(Q,Nm,Args,Body) <= {
-    name = Nm.
-    quants = Q.
-    args = Args.
-    nth(Ix) => C :- nthEl(Body,Ix,C).
-  }.
 
   public pred ::= call(option[tloc],term,list[term])
                     | ecall(option[tloc],string,list[term])
@@ -44,7 +37,7 @@ lo.comp.term {
                     | fail
                     | except(option[tloc],term).
 
-  public prProg ::= prProg(pkgSpec,map[term,trel]).
+  public prProg ::= prProg(pkgSpec,map[term,rel]).
 
   public implementation display[prProg] <= {
     disp(Prog) => dispProg(Prog).
@@ -53,13 +46,13 @@ lo.comp.term {
   private dispProg:(prProg)=>ss.
   dispProg(prProg(_,Rels)) => ssSeq(values(Rels)//dispRel).
 
-  public implementation display[trel] <= {
+  public implementation display[rel] <= {
     disp(R) => dispRel(R).
   }
 
-  private dispRel:(trel) => ss.
-  dispRel(trel(Nm,Lc,F,Rules)) =>
-    ssSeq([disp(Nm),ss(F=fallible ? ": failable" | ": not failsafe"),ss("\n"),..Rules//dispClause]).
+  private dispRel:(rel) => ss.
+  dispRel(rel(Nm,Lc,Rules)) =>
+    ssSeq([disp(Nm),ss("\n"),..Rules//dispClause]).
 
   private dispRules:(list[clse]) => list[ss].
   dispRules([]) => [].
@@ -183,4 +176,15 @@ lo.comp.term {
 
   public mkTpl:(list[term]) => term.
   mkTpl(Els) => cons(tupleSig(size(Els)),Els).
+
+  public clName:(clse) => term.
+  clName(clse(_,Nm,_,_)) => Nm.
+  clName(eqn(_,Nm,_,_,_)) => Nm.
+
+  public nthPred:(clse,integer) => pred.
+  nthPred(clse(_,_,_,Body),Ix) => C :- nthEl(Body,Ix,C).
+
+  public clArgs:(clse) => list[term].
+  clArgs(clse(_,_,Args,_)) => Args.
+  clArgs(eqn(_,_,Args,_,_)) => Args.
 }

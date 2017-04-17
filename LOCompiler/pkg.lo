@@ -19,8 +19,8 @@ lo.comp.code.pkg{
   compileMdl(prProg(Spec,Rels),Rp,Rp) =>
     codeMdl(Spec,pairs(Rels)//(((Nm,Rl)) => asm(compRel(Nm,Rl)))).
 
-  compRel:(term,trel) => assem.
-  compRel(prg(Nm,Ar),trel(_,Lc,Fal,Cls)) => Code :-
+  compRel:(term,rel) => assem.
+  compRel(prg(Nm,Ar),rel(_,Lc,Cls)) => Code :-
     logMsg("Compiling \(Cls)"),
     Prefix = Nm+"_",
     L0 = newLabel(Prefix),

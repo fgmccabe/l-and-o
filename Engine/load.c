@@ -63,10 +63,6 @@ static packagePo markLoaded(string package, string version) {
   }
 }
 
-logical isLoaded(ptrI pkg) {
-  return (logical) (loadedPackage(StringVal(stringV(pkg))) != NULL);
-}
-
 typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen, void *cl);
 
 static retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen);

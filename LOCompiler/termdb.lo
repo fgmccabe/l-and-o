@@ -9,13 +9,13 @@ lo.comp.termbase{
   import lo.comp.encode.
   import lo.comp.decode.
 
-  public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,trel].
+  public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,rel].
   loadTermBase(Pkgs,Repo) => foldRight((M,Pkg)=>loadTermPkg(Pkg,Repo,M),[],Pkgs).
 
-  loadTermPkg:all r ~~ repository[r] |: (pkg,r,map[term,trel]) => map[term,trel].
+  loadTermPkg:all r ~~ repository[r] |: (pkg,r,map[term,rel]) => map[term,rel].
   loadTermPkg(Pkg,R,M) => unpackMdl(decodeMdl(Txt))+M :-
     loadFromRepo(R,Pkg,"term",Txt).
 
-  unpackMdl:(prProg) => map[term,trel].
+  unpackMdl:(prProg) => map[term,rel].
   unpackMdl(prProg(_,Code)) => Code.
 }

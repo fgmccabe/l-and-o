@@ -62,22 +62,24 @@ lo.comp.decode{
   pickupEnums([strng(Nm),..Rest],[Nm,..More],Cls):-
     pickupEnums(Rest,More,Cls).
 
-  decodeRels:(map[term,trel],map[term,trel]) --> list[integer].
+  decodeRels:(map[term,rel],map[term,rel]) --> list[integer].
   decodeRels(M,M) --> eof.
   decodeRels(M,Mx) --> decodeRel(Prg,Rl),decodeRels(M[Prg->Rl],Mx).
 
-  decodeRel:(term,trel) --> list[integer].
-  decodeRel(Prg,trel(Prg,TLc,Fal,Clses)) --> "R", decodeTerm(Prg), decodeOptional(decodeTloc,TLc), decodeFall(Fal), decodeClauses(Clses).
-
-  decodeFall:(fallible) --> list[integer].
-  decodeFall(fallible) --> decodeTerm(enum("lo.core#true")).
-  decodeFall(infallible) --> decodeTerm(enum("lo.core#false")).
+  decodeRel:(term,rel) --> list[integer].
+  decodeRel(Prg,rel(Prg,TLc,Clses)) --> "R", decodeTerm(Prg), decodeOptional(decodeTloc,TLc), decodeClauses(Clses).
 
   decodeClause:(clse) --> list[integer].
   decodeClause(clse(Q,Nm,Args,Body)) --> "C",
       decodeTerm(Nm),
       decodeSequence(decodeTerm,Q),
       decodeSequence(decodeTerm,Args),
+      decodeSequence(decodePred,Body).
+  decodeClause(eqn(Q,Nm,Args,Rep,Body)) --> ">",
+      decodeTerm(Nm),
+      decodeSequence(decodeTerm,Q),
+      decodeSequence(decodeTerm,Args),
+      decodeTerm(Rep),
       decodeSequence(decodePred,Body).
 
   decodePred:(pred) --> list[integer].
@@ -118,6 +120,7 @@ lo.comp.decode{
   decodeTerm(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
   decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
   decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
+  decodeTerm(invoke(Lc,Op,Args)) --> "V", decodeOptional(decodeTloc,Lc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].

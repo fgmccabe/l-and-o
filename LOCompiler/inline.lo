@@ -7,23 +7,23 @@ lo.comp.inline{
   import lo.comp.termbase.
 
   -- temp def
-  public inline:(prProg,map[term,trel]) => prProg.
+  public inline:(prProg,map[term,rel]) => prProg.
   inline(prProg(Spec,P),M) => trace("inlined program ",prProg(Spec,inlineGroups(dependencySort(P),M))) :-
-    logMsg("inline \(values(P):list[trel]) using \(M)").
+    logMsg("inline \(values(P):list[rel]) using \(M)").
 
-  dependencySort:(map[term,trel]) => list[list[trel]].
+  dependencySort:(map[term,rel]) => list[list[rel]].
   dependencySort(Prog) => extractGroups(topsort(depends(Prog))).
 
-  private relEntry ::= rel(list[term],trel).
+  private relEntry ::= relEntry(list[term],rel).
 
-  depends:(map[term,trel]) => list[relEntry].
-  depends(M) => values(M) // ( (R) => rel(getRelRefs(R,A),R)) :-
+  depends:(map[term,rel]) => list[relEntry].
+  depends(M) => values(M) // ( (R) => relEntry(getRelRefs(R,A),R)) :-
     A = keys(M).
 
   implementation depends[relEntry->>term] <= {
-    defines(rel(_,trel(P,_,_,_)),P).
+    defines(relEntry(_,rel(P,_,_)),P).
 
-    references(rel(R,_)) => R.
+    references(relEntry(R,_)) => R.
   }
 
   implementation display[relEntry] <= {
@@ -31,10 +31,10 @@ lo.comp.inline{
   }
 
   dispRelEntry:(relEntry) => ss.
-  dispRelEntry(rel(Refs,Rl)) => ssSeq([disp(Rl.name),ss("->"),ssSeq(Refs//disp),ss("\n")]).
+  dispRelEntry(relEntry(Refs,Rl)) => ssSeq([disp(Rl.name),ss("->"),ssSeq(Refs//disp),ss("\n")]).
 
-  getRelRefs:(trel,list[term]) => list[term].
-  getRelRefs(trel(_,_,_,Clses),All) => foldLeft((Refs,Cl)=>getClRefs(Cl,All,Refs),[],Clses).
+  getRelRefs:(rel,list[term]) => list[term].
+  getRelRefs(rel(_,_,Clses),All) => foldLeft((Refs,Cl)=>getClRefs(Cl,All,Refs),[],Clses).
 
   getClRefs:(clse,list[term],list[term]) => list[term].
   getClRefs(clse(_,_,A,B),All,Refs) => predRefs(B,All,termRefs(A,All,Refs)).
@@ -60,42 +60,42 @@ lo.comp.inline{
   termRefs:(list[term],list[term],list[term]) => list[term].
   termRefs(A,All,Refs) => foldLeft((Rfs,T)=>termRef(T,All,Rfs),Refs,A).
 
-  extractGroups:(list[list[relEntry]]) => list[list[trel]].
+  extractGroups:(list[list[relEntry]]) => list[list[rel]].
   extractGroups([]) => [].
-  extractGroups([G,..L]) => [foldLeft((M,rel(_,R)) => [R,..M],[],G),..extractGroups(L)].
+  extractGroups([G,..L]) => [foldLeft((M,relEntry(_,R)) => [R,..M],[],G),..extractGroups(L)].
 
-  inlineGroups:(list[list[trel]],map[term,trel]) => map[term,trel].
+  inlineGroups:(list[list[rel]],map[term,rel]) => map[term,rel].
   inlineGroups(Groups,I) => foldLeft((M,G)=>inlineGroup(G,M,I),[],Groups).
 
-  inlineGroup:(list[trel],map[term,trel],map[term,trel]) => map[term,trel].
-  inlineGroup(Rels,P,I) => foldLeft((M,(R:trel)) => M[R.name->R],P,fixedPoint(Rels,P,I)).
+  inlineGroup:(list[rel],map[term,rel],map[term,rel]) => map[term,rel].
+  inlineGroup(Rels,P,I) => foldLeft((M,(R:rel)) => M[R.name->R],P,fixedPoint(Rels,P,I)).
 
-  fixedPoint:(list[trel],map[term,trel],map[term,trel]) => list[trel].
+  fixedPoint:(list[rel],map[term,rel],map[term,rel]) => list[rel].
   fixedPoint(TR,P,I) => (Any ? fixedPoint(TR1,P,I) | TR) :-
     TR1 = sweep(TR,false,Any,P,I).
 
-  sweep:(list[trel],logical,logical,map[term,trel],map[term,trel]) => list[trel].
+  sweep:(list[rel],logical,logical,map[term,rel],map[term,rel]) => list[rel].
   sweep([],Any,Any,_,_) => [].
   sweep([R,..L],Any,Res,P,I) => [inlineRel(R,Any,Any0,P,I),..sweep(L,Any0,Res,P,I)].
 
-  inlineRel:(trel,logical,logical,map[term,trel],map[term,trel]) => trel.
-  inlineRel(trel(Prg,TLc,Fall,Clses),Any,RReslt,P,I) => trel(Prg,TLc,Fall,OClses) :-
+  inlineRel:(rel,logical,logical,map[term,rel],map[term,rel]) => rel.
+  inlineRel(rel(Prg,TLc,Clses),Any,RReslt,P,I) => rel(Prg,TLc,OClses) :-
     logMsg("inlining clauses \(Clses)"),
     Inlined = inlineClauses(Clses,false,Reslt,P,I),
     (Reslt ? Inlined=OClses, RReslt=true | Clses=OClses, RReslt=Any),
     logMsg("result of inlining is \(OClses)").
 
-  inlineClauses:(list[clse],logical,logical,map[term,trel],map[term,trel]) => list[clse].
+  inlineClauses:(list[clse],logical,logical,map[term,rel],map[term,rel]) => list[clse].
   inlineClauses([],Any,Any,_,_) => [].
   inlineClauses([Cl,..Cls],SoFar,Any,P,I) =>
     (some(NCl) = inlineClause(Cl,P,I) ?
       [NCl,..inlineClauses(Cls,true,Any,P,I)] |
       [Cl,..inlineClauses(Cls,SoFar,Any,P,I)]).
 
-  inlineClause:(clse,map[term,trel],map[term,trel]) => option[clse].
+  inlineClause:(clse,map[term,rel],map[term,rel]) => option[clse].
   inlineClause(Cl,P,I) =>  passOverCond(Cl,false,0,countBody(Cl),P,I).
 
-  passOverCond:(clse,logical,integer,integer,map[term,trel],map[term,trel]) => option[clse].
+  passOverCond:(clse,logical,integer,integer,map[term,rel],map[term,rel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
     Ix<Mx,
     ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2) ?
@@ -107,16 +107,16 @@ lo.comp.inline{
   countBody:(clse) => integer.
   countBody(clse(_,_,_,B)) => size(B).
 
-  inlineable:(clse,integer,map[term,trel],map[term,trel]) => option[list[clse]].
+  inlineable:(clse,integer,map[term,rel],map[term,rel]) => option[list[clse]].
   inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,Cls)) :-
-    inlineableCall(Cl.nth(Ix),P,I,Cls).
+    inlineableCall(nthPred(Cl,Ix),P,I,Cls).
   inlineable(_,_,_,_) => none.
 
-  inlineableCall:(pred,map[term,trel],map[term,trel],list[clse]){}.
-  inlineableCall(call(_,Pr,_),P,I,Cls) :- (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
+  inlineableCall:(pred,map[term,rel],map[term,rel],list[clse]){}.
+  inlineableCall(call(_,Pr,_),P,I,Cls) :- (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))).
   inlineableCall(ocall(_,_,Lb,_),P,I,Cls) :-
     consistentLbl(Pr,Lb),
-    (present(P,Pr,trel(_,_,Fall,Cls)) | present(I,Pr,trel(_,_,Fall,Cls))).
+    (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))).
   inlineableCall(unfy(_,L,R),_,_,[clse([varbl("X")],prg("=",2),[varbl("X"),varbl("X")],[])]).
 
   resolveableClauses:(clse,integer,list[clse]) => list[clse].
@@ -128,8 +128,8 @@ lo.comp.inline{
   resolveable:(clse,integer,clse){}.
   resolveable(C1,Ix,C2) :-
     renameClse(C2,NC2,_),
-    checkCall(C1.nth(Ix),NC2.name,A2),
-    unifyEls(A2,NC2.args,[],_).
+    checkCall(nthPred(C1,Ix),clName(NC2),A2),
+    unifyEls(A2,clArgs(NC2),[],_).
 
   -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
   public resolve:(clse,integer,clse,clse){}.
