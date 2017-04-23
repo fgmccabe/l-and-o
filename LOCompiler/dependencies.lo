@@ -118,6 +118,7 @@ lo.comp.dependencies{
   headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
   headName(H) =>  "()\(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
+  headName(H) => Nm :- isBraceTerm(H,_,O,_), isIden(O,_,Nm).
 
   contractName:(ast,string){}.
   contractName(S,Nm) :-

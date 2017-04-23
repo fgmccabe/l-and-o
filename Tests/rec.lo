@@ -1,0 +1,11 @@
+test.rec{
+  import lo.
+
+  -- Test record types
+
+  address ::= addr{
+    street:string.
+    city:string.
+    valid:(address){}.
+  }
+}

@@ -74,7 +74,7 @@ lo.comp.transform{
     genVarbl("Reslt",Reslt),
     trPtns(A,Args,[Reslt,..Extra],Q0,Q1,PreG,PreGx,PostG,PreV,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
     trGoal(Cond,PreGx,[],merge([Reslt],Q1),Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1),   -- condition goals
-    trExp(Value,Rep,Q2,Q3,PreV,PVx,PVx,Px,Map,ClOpts,Ex1,Exx,Rp1,Rpx),  -- replacement expression
+    trExp(Value,Rep,Q2,Q3,PreV,PVx,PVx,[unfy(none,Reslt,Rep),..Px],Map,ClOpts,Ex1,Exx,Rp1,Rpx),  -- replacement expression
     labelAccess(Q3,Q,Map,Guard,LbLx),                        -- generate label access goals
     frameDebug(Nm,QNo,Q,FBg,LG,ClOpts),                     -- generate frame entry debugging
     lineDebug(Lc,LG,PreG,ClOpts),                           -- line debug after setting up frame

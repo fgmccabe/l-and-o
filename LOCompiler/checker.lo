@@ -333,6 +333,7 @@ lo.comp.typecheck{
   private splitHead:(ast,location,string,ast){}.
   splitHead(T,Lc,Nm,A) :- isRound(T,Lc,N,A), isIden(N,_,Nm).
   splitHead(T,Lc,Nm,roundTuple(Lc,[])) :- isIden(T,Lc,Nm).
+  splitHead(T,Lc,Nm,A) :- isBrace(T,Lc,N,A),isIden(N,_,Nm).
 
   private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
   checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Exp,Cond),..Defs],Defs,E,Rp,Rpx) :-

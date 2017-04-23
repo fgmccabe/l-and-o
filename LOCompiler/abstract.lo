@@ -69,6 +69,11 @@ lo.comp.abstract{
   isBraceTerm:(ast,location,ast,list[ast]){}.
   isBraceTerm(appl(Lc,Op,tupl(_,"{}",A)),Lc,Op,A).
 
+
+  public
+  isBrace:(ast,location,ast,ast){}.
+  isBrace(appl(Lc,Op,A),Lc,Op,A) :- \+ keyword(Op), isBraceTuple(A,_,_).
+
   public braceTerm:(location,ast,list[ast]) => ast.
   braceTerm(Lc,Op,Els) => appl(Lc,Op,tupl(Lc,"{}",Els)).
 

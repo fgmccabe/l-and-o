@@ -30,6 +30,7 @@ catalog{
     test.p3 -> "p3.lo".
     test.parsetools -> "parsetools.lo".
     test.r -> "r.lo".
+    test.rec -> "rec.lo".
     test.s -> "s.lo".
     test.st -> "st.lo".
     test.t -> "t.lo".

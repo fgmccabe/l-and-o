@@ -62,20 +62,20 @@ lo.comp.macro{
     mark(Mark,Lc,binary(Lc,":",Nm,QTp),TpRule),
     bodyRule(Lc,Nm,[],BodyRule).
   convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
-    isRoundTerm(Con,Lc,Op,ArgTypes), /* Construct con:(T1,..,Tn)<=>Tp */
-    classType(Lc,ArgTypes,Tp,ClassType),
-    wrapConstraints(Constraints,Lc,ClassType,CTp),
+    isRoundTerm(Con,Lc,Op,ArgTypes),    /* Construct con:(T1,..,Tn)<=>Tp */
+    wrapConstraints(Constraints,Lc,binary(Lc,"<=>",roundTuple(Lc,ArgTypes),Tp),CTp),
     wrapQuants(Quants,Lc,CTp,QTp),
     mark(Mark,Lc,binary(Lc,":",Op,QTp),TpRule),
-    genAnonArgs(ArgTypes,Args),       /* Construct con(_,..,_) <= thing */
+    genAnonArgs(ArgTypes,Args),         /* Construct con(_,..,_) <= {} */
     bodyRule(Lc,roundTerm(Lc,Op,Args),[],BodyRule).
   convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
-    isBraceTerm(Con,_,Op,FldTps),
+    isBraceTerm(Con,Lc,Op,FldTps),      -- Construct con:{F1:T1,..Fn:Tn} <=>Tp
     wrapConstraints(Constraints,Lc,binary(Lc,"<=>",braceTuple(Lc,FldTps),Tp),CTp),
     wrapQuants(Quants,Lc,CTp,QTp),
     mark(Mark,Lc,binary(Lc,":",Op,QTp),TpRule),
     genFieldArgs(FldTps,Args,Defs),
-    bodyRule(Lc,roundTerm(Lc,Op,Args),Defs,BodyRule).
+    bodyRule(Lc,braceTerm(Lc,Op,Defs),Defs,BodyRule),
+    logMsg("brace constructor rule: \(BodyRule)").
 
   algebraicFace:(ast,list[ast],list[ast],report,report){}.
   algebraicFace(T,SoFar,Face,Rp,Rpx) :-
@@ -143,9 +143,6 @@ lo.comp.macro{
 
   hasType:(location,string,ast,ast){}.
   hasType(Lc,Nm,Tp,binary(Lc,":",iden(Lc,Nm),Tp)).
-
-  classType:(location,list[ast],ast,ast){}.
-  classType(Lc,Args,Res,binary(Lc,"<=>",A,Res)) :- isRoundTuple(A,Lc,Args).
 
   funType:(location,list[ast],ast,ast){}.
   funType(Lc,Args,Res,binary(Lc,"=>",A,Res)) :- isRoundTuple(A,Lc,Args).
