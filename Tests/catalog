@@ -15,6 +15,7 @@ catalog{
     test.gp -> "gp.lo".
     test.gt -> "gt.lo".
     test.i -> "i.lo".
+    test.inn -> "inner.lo".
     test.j -> "j.lo".
     test.l -> "l.lo".
     test.lambda -> "lambda.lo".
@@ -29,6 +30,8 @@ catalog{
     test.p2 -> "p2.lo".
     test.p3 -> "p3.lo".
     test.parsetools -> "parsetools.lo".
+    test.person -> "person.lo".
+    test.px -> "p.lo".
     test.r -> "r.lo".
     test.rec -> "rec.lo".
     test.s -> "s.lo".

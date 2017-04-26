@@ -103,7 +103,7 @@ lo.comp.unify{
   mergeCons([implementsFace(V,F),..C],Env,Tp,So) => mergeCons(C,Env,Tp,mergeFields(F,Env,So)) :- isIdenticalType(V,Tp).
   mergeCons([_,..C],Env,Tp,So) => mergeCons(C,Env,Tp,So).
 
-  mergeFields:(list[(string,tipe)],list[env],list[(string,tipe)]) => list[(string,tipe)].
+  public mergeFields:(list[(string,tipe)],list[env],list[(string,tipe)]) => list[(string,tipe)].
   mergeFields([],_,SoFar) => SoFar.
   mergeFields([(Nm,F),..Els],Env,SoFar) => mergeFields(Els,Env,SoFar) :- ((Nm,V) in SoFar,sameType(F,V,Env)).
   mergeFields([(Nm,F),..Els],Env,SoFar) => mergeFields(Els,Env,[(Nm,F),..SoFar]).

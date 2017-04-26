@@ -199,6 +199,7 @@ lo.comp.transutils {
   programAccess(localRel(Prog,Access,Closure,Arity,_,_),Prog,Access,Closure,Arity).
   programAccess(moduleVar(_,Prog,Access),Prog,Access,Access,1).
   programAccess(localVar(Prog,Access,_,_),Prog,Access,Access,1).
+  programAccess(localClass(Prog,Access,Arity,_,_),Prog,Access,Access,Arity).
 
   public extraVars:(list[lyr],list[term]){}.
   extraVars([lyr(_,_,_,anon,anon),.._],[]).

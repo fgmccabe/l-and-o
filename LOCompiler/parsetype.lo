@@ -108,6 +108,7 @@ lo.comp.parseType{
     isBraceTuple(T,Lc,L),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     prsTypeFields(L,Env,Q,C,Cx,AT,Rp0,Rpx).
+
   prsType(T,K,_,_,Cx,Cx,anonType,Rp,Rpx) :-
     reportError("cannot understand type \(T), expecting a \(K)",T.loc,Rp,Rpx).
 

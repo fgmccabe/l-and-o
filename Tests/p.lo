@@ -1,12 +1,12 @@
-px{
-  -- Test simple inheritance
+test.px{
+  -- Test simple classes
 
   p <~ {
     name:string.
   }.
-  s <~ p.
   s <~ {
-    studies:string.
+    name:string.
+    studies:(string){}.
     first:string.
   }.
 
@@ -26,7 +26,7 @@ px{
 
   s:(string,string) <=> s.
   s(S,_) <= {
-    studies = S.
+    studies(S).
     first = name.
   }.
   s(_,N) <= p(N).
@@ -49,6 +49,8 @@ px{
 
   assert fred.name="fred".
   assert fred.first="fred".
+
+  assert fred.studies("math").
 
   /*
   Should translate to:

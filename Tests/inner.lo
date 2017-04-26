@@ -1,21 +1,20 @@
-inEnums{
+test.inn{
   -- Test inner classes
-  import lo.arith.
-  import lo.thing.
+  import lo.
 
   basic <~ {
     id:integer.
   }.
 
-  better <~ basic.
   better <~ {
+    id:integer.
     inner:basic.
   }.
 
   outer:better.
-  outer<=>{
+  outer<={
     inner:basic.
-    inner<=>{
+    inner<={
       id = o.
     }.
 

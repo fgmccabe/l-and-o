@@ -52,11 +52,7 @@ lo.comp.term {
 
   private dispRel:(rel) => ss.
   dispRel(rel(Nm,Lc,Rules)) =>
-    ssSeq([disp(Nm),ss("\n"),..Rules//dispClause]).
-
-  private dispRules:(list[clse]) => list[ss].
-  dispRules([]) => [].
-  dispRules([Cl,..Rls]) => [disp(Cl),..dispRules(Rls)].
+    ssSeq(Rules//dispClause).
 
   public implementation display[clse] <= {
     disp(Cl) => dispClause(Cl).
@@ -64,6 +60,7 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,Rep,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
 
   public implementation display[term] <= {
     disp(T) => dispTerm(T,[]).
@@ -80,6 +77,7 @@ lo.comp.term {
   dispTerm(prg(Nm,Ar),_) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(strng(Sx),_) => disp(Sx).
   dispTerm(cons(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
+  dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
 
   dispArgs:(list[term],list[term]) => ss.
   dispArgs(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).

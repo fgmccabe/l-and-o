@@ -381,7 +381,7 @@ lo.comp.transform{
   transformClassDef(varDef(Lc,Nm,_,_,Value,Cond),Map,Opts,P,Px,Rp,Rpx) :-
     transformDefn(Map,Opts,Lc,Nm,Cond,Value,P,P0,Rp,Rpx),
     entryClause(Map,Nm,some(Lc::tloc),P0,Px).
-  transformClassDef(classDef(Lc,Nm,Tp,Cx,Defs,Face),Map,Opts,P1,Px,Rp,Rpx) :-
+  transformClassDef(classDef(Lc,Nm,Tp,Cx,Defs,Face),Map,Opts,P,Px,Rp,Rpx) :-
     transformClass(Lc,Nm,Defs,Face,Map,Opts,P,P0,Rp,Rpx),
     entryClause(Map,Nm,some(Lc::tloc),P0,Px).
 

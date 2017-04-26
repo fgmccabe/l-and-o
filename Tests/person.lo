@@ -1,4 +1,4 @@
-person{
+test.person{
   place <~ { name:()=>string }.
 
   person <~ { age:()=>integer. spouse:()=>person }.
