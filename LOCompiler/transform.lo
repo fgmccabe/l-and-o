@@ -111,28 +111,13 @@ lo.comp.transform{
     Arity = size(Args).
 
   transformDefn:(list[lyr],trOptions,location,string,canonCond,canonTerm,map[term,rel],map[term,rel],report,report){}.
-  transformDefn(Map,Opts,Lc,Nm,Cond,lambda(equation(_,_,tpl(CVars),Value,_)),P,Px,Rp,Rpx) :-
-    extraVars(Map,Extra),
-    trPtns(CVars,Args,[Rep,..Extra],Extra,Q0,PreG,G0,G7,G8,Map,Opts,P,P0,Rp,Rp0), -- head args
-    LclPrg = prg(LclName,length(Extra)+1),
-    lookupVarName(Map,Nm,Reslt),
-    programAccess(Reslt,LclName,_,_,_),                    -- extra variables coming from labels
-    debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),          -- are we debugging?
-    trGoal(Cond,G4,[],Q0,Q2,Map,ClOpts,P0,P1,Rp0,Rp1), -- condition goals
-    trExp(Value,Rep,Q2,Q3,Body,G6,G6,G7,Map,ClOpts,P1,P2,Rp1,Rpx),         -- replacement expression
-    labelAccess(Q3,Q,Map,Guard,PreG),                        -- generate label access goals
-    frameDebug(Nm,0,Q,G1,G2,ClOpts),                      -- generate frame entry debugging
-    lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
-    deframeDebug(Nm,0,G8,[],ClOpts),                      -- generate frame exit debugging
-    breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    Px = P2[LclPrg->rel(LclPrg,some(Lc::tloc),[clse(Q,LclPrg,Args,Guard<>Body)])].
   transformDefn(Map,Opts,Lc,Nm,Cond,Value,P,Px,Rp,Rpx) :-
     extraVars(Map,Extra),
-    LclPrg = prg(LclName,length(Extra)+1),
     lookupVarName(Map,Nm,Reslt),
-    programAccess(Reslt,LclName,_,_,_),                    -- extra variables coming from labels
-    debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),          -- are we debugging?
-    trGoal(Cond,G4,[],Q0,Q2,Map,ClOpts,P,P0,Rp,Rp0), -- condition goals
+    programAccess(Reslt,LclName,_,Closure,_),             -- extra variables coming from labels
+    LclPrg = prg(LclName,length(Extra)+1),
+    debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),         -- are we debugging?
+    trGoal(Cond,G4,[],Q0,Q2,Map,ClOpts,P,P0,Rp,Rp0),      -- condition goals
     trExp(Value,Rep,Q2,Q3,Body,G6,G6,G7,Map,ClOpts,P0,P1,Rp0,Rpx),         -- replacement expression
     labelAccess(Q3,Q,Map,Guard,G0),                        -- generate label access goals
     frameDebug(Nm,0,Q,G1,G2,ClOpts),                      -- generate frame entry debugging
@@ -140,6 +125,18 @@ lo.comp.transform{
     deframeDebug(Nm,0,G7,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
     Px = P1[LclPrg->rel(LclPrg,some(Lc::tloc),[clse(Q,LclPrg,[Rep,..Extra],Guard<>Body)])].
+
+  varAccess:(list[lyr],string,map[term,rel],map[term,rel]){}.
+  varAccess(Map,Nm,P,Px) :-
+    lookupVarName(Map,Nm,Reslt),
+    programAccess(Reslt,LclName,_,_,_),
+    LclPrg = prg(LclName,3),
+    genVarbl("_X",ResVr),
+    genVarbl("This",ThVr),
+    genVarbl("Lbl",LblVr),
+    Vars = [ResVr,LblVr,ThVr],
+    VarCl = clse(Vars,prg(layerName(Map),3),[cons(trCons(Nm,1),[ResVr]),LblVr,ThVr],[call(none,LclPrg,Vars)]),
+    Px = addCl(P,VarCl).
 
   transformGrammar:(canonDef,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   transformGrammar(grammDef(Lc,Nm,_,[],Rls),Map,Opts,P,Px,Rp,Rpx) :-
@@ -314,8 +311,8 @@ lo.comp.transform{
 
   transformClass:(location,string,list[canonRule],tipe,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   transformClass(Lc,Nm,Defs,Face,Map,Opts,P,Px,Rp,Rpx) :-
-    P0 = addCl(P,labelDefn(Map,Nm,LclName)),
-    genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,P0,P1,Rp,Rp0)!,
+    labelName(Map,Nm,LclName),
+    genClassMap(Map,Opts,Lc,LclName,Defs,Face,CMap,P,P1,Rp,Rp0)!,
     transformClassBody(Defs,CMap,Opts,P1,Px,Rp0,Rpx).
 
   enumAccess:(list[lyr],string,list[clse],list[clse]){}.
@@ -326,12 +323,10 @@ lo.comp.transform{
     (Extra=[] ? LamCons=enum(LclName) | LamCons=cons(strct(LclName,size(Extra)),Extra)).
   enumAccess(_,_,Rls,Rls).
 
-  labelDefn:(list[lyr],string,string) => clse.
-  labelDefn(Map,Nm,LclName) => clse(Extra,prg(Access,size(Extra)+1),[cons(trCons(Nm,1),[LblTerm]),..Extra],[]) :-
+  labelName:(list[lyr],string,string){}.
+  labelName(Map,Nm,LclName) :-
     lookupVarName(Map,Nm,Spec),
-    extraVars(Map,Extra),                                   -- extra variables coming from labels
-    extraArity(1,Extra,ArA),
-    makeLabelTerm(Spec,Access,LblTerm,LclName).
+    makeLabelTerm(Spec,_,_,LclName).
 
   makeLabelTerm:(mapEntry,string,term,string){}.
   makeLabelTerm(localClass(LclName,Strct,_,LblVr,ThVr),LclName,cons(strct(Strct,2),[LblVr,ThVr]),LclName).
@@ -368,22 +363,31 @@ lo.comp.transform{
   transformClassDef:(canonDef,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   transformClassDef(funDef(Lc,Nm,Tp,Cx,Eqns),Map,Opts,P,Px,Rp,Rpx) :-
     transformFunction(funDef(Lc,Nm,Tp,Cx,Eqns),Map,Opts,P,P0,Rp,Rpx),
-    entryClause(Map,Nm,some(Lc::tloc),P0,P1),
-    closureAccess(Map,Nm,P1,Px).
+    -- entryClause(Map,Nm,some(Lc::tloc),P0,P1),
+    closureAccess(Map,Nm,P0,Px).
   transformClassDef(relDef(Lc,Nm,Tp,Cx,Clses),Map,Opts,P,Px,Rp,Rpx) :-
     transformPredicate(relDef(Lc,Nm,Tp,Cx,Clses),Map,Opts,P,P0,Rp,Rpx),
-    entryClause(Map,Nm,some(Lc::tloc),P0,P1),
-    closureAccess(Map,Nm,P1,Px).
+    -- entryClause(Map,Nm,some(Lc::tloc),P0,P1),
+    closureAccess(Map,Nm,P0,Px).
   transformClassDef(grammDef(Lc,Nm,Tp,Cx,Clses),Map,Opts,P,Px,Rp,Rpx) :-
     transformGrammar(grammDef(Lc,Nm,Tp,Cx,Clses),Map,Opts,P,P0,Rp,Rpx),
-    entryClause(Map,Nm,some(Lc::tloc),P0,P1),
-    closureAccess(Map,Nm,P1,Px).
+    -- entryClause(Map,Nm,some(Lc::tloc),P0,P1),
+    closureAccess(Map,Nm,P0,Px).
   transformClassDef(varDef(Lc,Nm,_,_,Value,Cond),Map,Opts,P,Px,Rp,Rpx) :-
     transformDefn(Map,Opts,Lc,Nm,Cond,Value,P,P0,Rp,Rpx),
-    entryClause(Map,Nm,some(Lc::tloc),P0,Px).
+    varAccess(Map,Nm,P0,Px).
+    -- entryClause(Map,Nm,some(Lc::tloc),P0,Px).
   transformClassDef(classDef(Lc,Nm,Tp,Cx,Defs,Face),Map,Opts,P,Px,Rp,Rpx) :-
     transformClass(Lc,Nm,Defs,Face,Map,Opts,P,P0,Rp,Rpx),
-    entryClause(Map,Nm,some(Lc::tloc),P0,Px).
+    classAccess(Map,Nm,P0,Px).
+    -- entryClause(Map,Nm,some(Lc::tloc),P0,Px).
+
+  classAccess:(list[lyr],string,map[term,rel],map[term,rel]){}.
+  classAccess(Map,Nm,P,Px) :-
+    lookupVarName(Map,Nm,Spec),
+    makeLabelTerm(Spec,Access,LblTerm,LclName),
+    extraVars(Map,Extra),                              -- extra variables coming from labels
+    Px = addCl(P,clse([ThVr,LblVr]<>Extra,prg(layerName(Map),3),[cons(trCons(Nm,1),[LblTerm]),..Extra],[])).
 
   entryClause:(list[lyr],string,option[tloc],map[term,rel],map[term,rel]){}.
   entryClause(Map,Name,TLc,P,Px) :-
@@ -794,11 +798,10 @@ lo.comp.transform{
 
   inheritClause:(string,tipe,option[tloc],string,list[lyr],term,map[term,rel],map[term,rel]){}.
   inheritClause(Name,Tp,TLc,Prefix,Map,Super,P,Px) :-
-    Arity = (isProgramType(Tp) ? effectiveArity(Tp,0) | 1),
-    Args = genVars(Arity),
+    genVarbl("Clos",ClV),
     genVarbl("This",ThVr),
     genVarbl("Lbl",LbVr),
-    Con = cons(trCons(Name,Arity),Args),
+    Con = cons(trCons(Name,1),[ClV]),
     Px =addCl(P,clse(Args<>[LblVr,ThVr],prg(Prefix,3),[Con,LbVr,ThVr],[call(TLc,Super,[Con,LbVr,ThVr])])).
 
   collectMtds:(list[canonDef],string,term,term,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)]){}.
@@ -816,9 +819,9 @@ lo.comp.transform{
         [(Nm,localRel(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),localName(OuterNm,"^",Nm),effectiveArity(Tp,0),Lbl,ThV)),..List]).
   collectMtd(varDef(_,Nm,_,_,_,_),OuterNm,Lbl,ThV,List,[(Nm,localVar(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),Lbl,ThV)),..List]).
   collectMtd(classDef(_,Nm,Tp,_,_,_),OuterNm,Lbl,ThV,List,
-        [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),0,Lbl,ThV)),..List]) :- \+ isClassType(Tp).
+        [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"@",Nm),0,Lbl,ThV)),..List]) :- \+ isClassType(Tp).
   collectMtd(classDef(_,Nm,Tp,_,_,_),OuterNm,Lbl,ThV,List,
-        [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"%",Nm),effectiveArity(Tp,0),Lbl,ThV)),..List]).
+        [(Nm,localClass(localName(OuterNm,"@",Nm),localName(OuterNm,"@",Nm),effectiveArity(Tp,0),Lbl,ThV)),..List]).
 
   collectLabelVars:(list[term],term,term,list[(string,mapEntry)],list[(string,mapEntry)]){}.
   collectLabelVars([],_,_,List,List).

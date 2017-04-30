@@ -1,0 +1,76 @@
+lo.comp.flatten{
+  import lo.
+
+  import lo.comp.misc.
+  import lo.comp.package.
+  import lo.comp.term.
+  import lo.comp.types.
+
+  -- Flatten a program - eliminating nested function calls
+
+  public flattenProg:(prProg) => prProg.
+  flattenProg(prProg(Spec,Rels)) => prProg(Spec,Rels///((Nm,Rel)=>flattenRel(Rel))).
+
+  flattenRel:(rel) => rel.
+  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>trace("Flatten \(Rl)",flattenRule(Rl)))).
+
+  flattenRule:(clse) => clse.
+  flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
+    flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
+    flattenBody(Body,Q1,NBody,NQ).
+  flattenRule(eqn(Q,Nm,Args,Rep,Body)) => eqn(NQ,Nm,NArgs,NRep,Guard<>NBody<>PrR) :-
+    flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q0)!,
+    flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],Q1),
+    flattenBody(Body,Q1,NBody,NQ).
+
+  flattenTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  flattenTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
+  flattenTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
+  flattenTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
+  flattenTerm(cons(Op,Els),Q,cons(Op,NEls),Pre,Prx,Post,Psx,Qx) :-
+    flattenTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
+  flattenTerm(invoke(Lc,Op,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
+    genVarbl("_R",Res),
+    flattenTerm(Op,[Res,..Q],NOp,Pre,Pre0,Post,Pst0,Q0),
+    flattenTerms(Args,Q0,NArgs,Pre0,Prx,Pst0,[unfy(Lc,Res,invoke(Lc,NOp,NArgs)),..Psx],Qx).
+
+  flattenTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  flattenTerms([],Q,[],Pre,Pre,Post,Post,Q).
+  flattenTerms([A,..L],Q,[NA,..NL],Pr,Prx,Po,Psx,Qx) :-
+    flattenTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    flattenTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
+
+  flattenBody:(list[pred],list[term],list[pred],list[term]){}.
+  flattenBody([],Q,[],Q).
+  flattenBody([P,..L],Q,Pre,NQ) :-
+    flattenPred(P,Q,NP,Pre,Ps,Ps,[NP,..Psx],Q1),
+    flattenBody(L,Q1,Psx,NQ).
+
+  flattenPred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  flattenPred(call(TLc,Op,Args),Q,call(TLc,NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-
+    flattenTerm(Op,Q,NOp,Pre,Pr0,Post,Ps0,Q0),
+    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
+  flattenPred(ecall(TLc,Op,Args),Q,ecall(TLc,Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
+    flattenTerms(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
+  flattenPred(ocall(TLc,Cl,Lb,Th),Q,ocall(TLc,NCl,NLb,NTh),Pre,Prx,Post,Psx,Qx) :-
+    flattenTerm(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
+    flattenTerm(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
+    flattenTerm(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
+  flattenPred(unfy(TLc,L,R),Q,NP,Pre,Prx,Post,Psx,Qx) :-
+    flattenUnify(TLc,L,R,Q,NP,Pre,Prx,Post,Psx,Qx).
+  flattenPred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
+  flattenPred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
+  flattenPred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
+    flattenTerm(E,Q,NE,Pre,Prx,Post,Psx,Qx).
+
+  flattenUnify:(option[tloc],term,term,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  flattenUnify(Lc,varbl(V),invoke(ILc,Op,Args),Q,unfy(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
+    flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
+    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
+  flattenUnify(Lc,invoke(ILc,Op,Args),varbl(V),Q,unfy(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
+    flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
+    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
+  flattenUnify(Lc,L,R,Q,unfy(Lc,NL,NR),Pre,Prx,Pst,Pstx,Qx) :-
+    flattenTerm(L,Q,NL,Pre,Pr0,Pst,Pst0,Q0),
+    flattenTerm(R,Q0,NR,Pr0,Prx,Pst0,Pstx,Qx).
+}

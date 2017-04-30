@@ -224,9 +224,6 @@ lo.comp.transutils {
   labelArgs([(_,labelArg(V,_,_)),..M],L) => labelArgs(M,[V,..L]).
   labelArgs([_,..M],L) => labelArgs(M,L).
 
-  public genVarbl:(string,term){}.
-  genVarbl(Prefix,varbl(_str_gen(Prefix))).
-
   public genNewName:(list[lyr],string,integer,term){}.
   genNewName(Map,Variant,Ar,prg(localName(layerName(Map),"@",_str_gen(Variant)),Ar)).
 

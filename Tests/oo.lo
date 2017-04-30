@@ -1,0 +1,18 @@
+test.oo{
+  foo <~ {id:all e ~~(e)=>e. kk:integer}.
+
+  bar: (integer) <=> foo.
+  bar(X) <= {
+    id(Y) => Y.
+    kk = X.
+  }
+
+  foo:(integer) <=> foo.
+  foo(A) <= bar(A).
+  foo(A) <= {
+    kk = 2.
+  }
+
+  assert foo(3).id(4) = 4.
+  assert foo(2).kk = 2.
+}

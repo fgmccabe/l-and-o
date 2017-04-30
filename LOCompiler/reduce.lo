@@ -40,7 +40,7 @@ lo.comp.reduce{
   reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(none,VV,cons(Op,NEls)),..Post],Psx,Qx) :-
-    VV = genVr("$%"),
+    genVarbl("$%",VV),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
   reduceBody:(list[pred],list[term],list[pred],list[term]){}.
@@ -91,6 +91,6 @@ lo.comp.reduce{
   reduceBildTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceBildTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
-    VV = genVr("$%"),
+    genVarbl("$%",VV),
     reduceBildTerms(Els,Q,NEls,Pre,[unfy(none,VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
 }

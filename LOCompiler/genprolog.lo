@@ -2,13 +2,14 @@ lo.comp.genprolog{
   import lo.
 
   import lo.comp.encode.
+  import lo.comp.flatten.
   import lo.comp.package.
   import lo.comp.term.
   import lo.comp.transutils.
   import lo.comp.types.
 
   public implementation coercion[prProg,string] <= {
-    _coerce(P) => implode(prog2code(P,[])).
+    _coerce(P) => implode(prog2code(flattenProg(P),[])).
   }
 
   prog2code:(prProg,list[integer]) => list[integer].

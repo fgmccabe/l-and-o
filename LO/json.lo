@@ -63,7 +63,7 @@ lo.json{
   }
 
   public parseJson:all s ~~ stream[s->>integer] |: (json) --> s.
-  parseJson(J) --> skipBlanks(), jP(J).
+  parseJson(J) --> skipBlanks(), jP(J), skipBlanks().
 
   private skipBlanks:all s ~~ stream[s->>integer] |: () --> s.
   skipBlanks() --> [0c ],skipBlanks().

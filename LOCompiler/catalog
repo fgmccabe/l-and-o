@@ -26,6 +26,7 @@ catalog{
     lo.comp.encode -> "encode.lo".
     lo.comp.errors -> "errors.lo".
     lo.comp.escapes -> "escapes.lo".
+    lo.comp.flatten -> "flatten.lo".
     lo.comp.freevars -> "freevars.lo".
     lo.comp.freshen -> "freshen.lo".
     lo.comp.genprolog -> "genprolog.lo".

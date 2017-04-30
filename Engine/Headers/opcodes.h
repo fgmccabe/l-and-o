@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-/* All these assume a 32-bit word; anything else must be re-engineered */
+/* All these assume a 32-bit instruction word; anything else must be re-engineered */
 
 #define op_mask  0x000000ff	/* Mask for the opcode of an instruction */
 #define vl_mask  0xffffff00	/* Mask for the value field */
