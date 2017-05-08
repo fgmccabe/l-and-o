@@ -29,7 +29,7 @@ lo.comp.freevars{
   freeVars(apply(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
   freeVars(dot(_,Rc,_),Q,F) =>freeVars(Rc,Q,F).
   freeVars(whre(T,C),Q,F) => freeVars(T,Q,freeVarsInGoal(C,Q,F)).
-  freeVars(condExp(C,T,E),Q,F) => freeVars(T,Q,freeVars(E,Q,freeVarsInGoal(C,Q,F))).
+  freeVars(condExp(_,C,T,E),Q,F) => freeVars(T,Q,freeVars(E,Q,freeVarsInGoal(C,Q,F))).
   freeVars(lambda(Rl),Q,F) => freeVarsInRule(Rl,Q,F).
   freeVars(theta(Defs,_),Q,F) => freeVarsInDefs(Defs,filterDefs(Defs,Q),F).
 

@@ -102,3 +102,4 @@ getCWDUri(WD) :-
   parseURI(DT,WD).
 
 ocall(Call,Lbl,ThVr) :- functor(Lbl,P,_), call(P,Call,Lbl,ThVr).
+ofun(Call,Lbl,ThVr,Res) :- functor(Lbl,P,_), call(P,Call,Lbl,ThVr,Res).

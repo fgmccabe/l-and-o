@@ -568,7 +568,7 @@ lo.comp.typecheck{
     isBinary(Term,".",Lc,L,F),
     isIden(F,FLc,Fld),
     recordAccessExp(FLc,L,Fld,Tp,Env,Ev,Exp,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,condExp(Test,Then,Else),Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Ev,condExp(Lc,Test,Then,Else),Rp,Rpx) :-
     isBinary(Term,"|",Lc,L,El),
     isBinary(L,"?",_,Tst,Th),
     checkCond(Tst,Env,E0,Test,Rp,Rp0),

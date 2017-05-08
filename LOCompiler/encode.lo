@@ -61,6 +61,8 @@ lo.comp.encode{
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
   encTerm(invoke(Lc,Op,Args),L) => [0cV,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
+  encTerm(escvoke(Lc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encSequence(encTerm,Args,L)))].
+  encTerm(ovoke(TLc,O,S,I),L) => [0cO,..encodeTLoc(TLc,encTerm(O,encTerm(S,encTerm(I,L))))].
 
   private encInt:(integer,list[integer]) => list[integer].
   encInt(N,L) => [0c-,..encInt(-N,L)] :- N<0.

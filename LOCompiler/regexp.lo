@@ -1,7 +1,7 @@
 lo.comp.regexp{
   -- Parse a regular expression
   import lo.
-  import lo.comp.lexer.
+  import lo.comp.parseutils.
 
   public
   regExp ::= reChars(list[integer])
@@ -14,7 +14,7 @@ lo.comp.regexp{
          | reEof
          | reStart
          | reLiteral(integer)
-         | reSeq(list[regExp]).
+         | reCat(regExp,regExp).
 
   public implementation display[regExp] <= {
     disp(RE) => dispRegexp(RE).
@@ -32,17 +32,17 @@ lo.comp.regexp{
   dispRegexp(reEof) => ss("$").
   dispRegexp(reStart) => ss("^").
   dispRegexp(reLiteral(Code)) => ss(implode([Code])).
-  dispRegexp(reSeq(A)) => ssSeq(dispSeq(A)).
+  dispRegexp(reCat(L,R)) => ssSeq([dispRegexp(L),dispRegexp(R)]).
 
   private dispSeq:(list[regExp]) => list[ss].
   dispSeq([]) => [].
   dispSeq([R,..M]) => [dispRegexp(R),..dispSeq(M)].
 
   -- Parse regular expressions
-  regularExp:(regExp) --> tokenState.
+  regularExp:(regExp) --> list[integer].
   regularExp(R) --> reExp(F), reFollow(F,R).
 
-  reExp:(regExp) --> tokenState.
+  reExp:(regExp) --> list[integer].
   reExp(rePeriod) --> ".".
   reExp(reStart) --> "^".
   reExp(reEof) --> "$".
@@ -51,22 +51,40 @@ lo.comp.regexp{
   reExp(reGroup(R,V)) --> "(", regularExp(R), groupVar(V), ")".
   reExp(reLiteral(Ch)) --> charRef(Ch).
 
-  groupVar:(string) --> tokenState.
-  groupVar(implode(I)) --> ":", readIden(I).
+  groupVar:(string) --> list[integer].
+  groupVar(implode(I)) --> ":", iden(I).
   groupVar("") --> ")"+.
 
-  charClass:(list[integer]) --> tokenState.
+  charClass:(list[integer]) --> list[integer].
   charClass([]) --> "]"+.
   charClass(Chrs) --> charRef(St), "-", charRef(En), charClass(More), { Chrs = merge(More,charRange(St,End))}.
   charClass([Ch,..More]) --> charRef(Ch), charClass(More).
 
-  reFollow:(regExp,regExp) --> tokenState.
+  reFollow:(regExp,regExp) --> list[integer].
   reFollow(R,F) --> "*", reFollow(reStar(R),F).
   reFollow(R,F) --> "+", reFollow(rePlus(R),F).
   reFollow(R,reChoice(R,N)) --> "|", regularExp(N).
-  reFollow(R,R) --> [].
+  reFollow(R,R) --> ([0c:]+ | [0c)]+ | eof).
+  reFollow(L,O) --> reExp(R), reFollow(reCat(L,R),O).
 
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].
   charRange(St,En) => [St,..charRange(St+1,En)] :-  St<En.
+
+  charRef:(integer) --> list[integer].
+  charRef(Chr) --> [0c\\], backSlashRef(Chr).
+  charRef(Chr) --> [Chr].
+
+  backSlashRef:(integer) --> list[integer].
+  backSlashRef(0c\a) --> [0ca].
+  backSlashRef(0c\b) --> [0cb].
+  backSlashRef(0c\t) --> [0ct].
+  backSlashRef(0c\n) --> [0cn].
+  backSlashRef(0c\r) --> [0cr].
+  backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
+  backSlashRef(Ch) --> [Ch].
+
+  hexChars:(integer,integer)-->list[integer].
+  hexChars(SoFar,Ch) --> [C], { hexDigitVal(D,N) }, hexChars(SoFar*16+N,Ch).
+  hexChars(SoFar,SoFar) --> [0c;].
 }

@@ -8,6 +8,7 @@ catalog{
     test.bench -> "bench.lo".
     test.c -> "c.lo".
     test.cc -> "cc.lo".
+    test.e -> "e.lo".
     test.f -> "f.lo".
     test.fib -> "fib.lo".
     test.format -> "fo.lo".
@@ -33,6 +34,7 @@ catalog{
     test.parsetools -> "parsetools.lo".
     test.person -> "person.lo".
     test.px -> "p.lo".
+    test.q -> "q.lo".
     test.r -> "r.lo".
     test.rec -> "rec.lo".
     test.s -> "s.lo".

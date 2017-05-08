@@ -2,6 +2,10 @@ test.eq{
   contract all a ~~ equality[a] <~ {
     (==): (a,a){}.
   }
+
+  public (\==):all x ~~ equality[x] |: (x,x){}.
+  x \== y :- \+ x==y.
+
   -- We need the list type in the core
   all t ~~ list[t] ::= '[]' | ',..'(t,list[t]).
 
@@ -21,4 +25,6 @@ test.eq{
   }
 
   assert [1,2,3] == [1,2,3].
+
+  assert [1,2,3] \== [1,3,2].
 }

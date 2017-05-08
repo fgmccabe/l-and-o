@@ -121,6 +121,8 @@ lo.comp.decode{
   decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
   decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
   decodeTerm(invoke(Lc,Op,Args)) --> "V", decodeOptional(decodeTloc,Lc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
+  decodeTerm(escvoke(Lc,Op,Args)) --> "E", decodeOptional(decodeTloc,Lc), decodeName(Op), decodeSequence(decodeTerm,Args).
+  decodeTerm(ovoke(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].
@@ -146,11 +148,7 @@ lo.comp.decode{
   collectQuoted(C,[Ch,..L]) --> [Ch], collectQuoted(C,L).
 
   private decodeName:(string) --> list[integer].
-  decodeName(implode(Text)) --> [C], collectUntil(C,Text).
-
-  private collectUntil:(integer,list[integer]) --> list[integer].
-  collectUntil(C,[]) --> [C].
-  collectUntil(C,[Ch,..L]) --> [Ch], collectUntil(C,L).
+  decodeName(implode(Text)) --> [C], collectQuoted(C,Text).
 
   public decodeType:(tipe) --> list[integer].
   decodeType(anonType) --> "_".

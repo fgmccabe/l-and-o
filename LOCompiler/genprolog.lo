@@ -62,6 +62,9 @@ lo.comp.genprolog{
   convertPred:(pred,list[integer]) => list[integer].
   convertPred(call(_,Op,Args),Ox) => convertCallOp(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
   convertPred(ecall(_,Op,Args),Ox) => appId(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
+  convertPred(unfy(_,L,invoke(Lc,Op,Args)),Ox) => convertPred(call(Lc,Op,Args<>[L]),Ox).
+  convertPred(unfy(_,L,escvoke(Lc,Op,Args)),Ox) => convertPred(ecall(Lc,Op,Args<>[L]),Ox).
+  convertPred(unfy(_,L,ovoke(Lc,Cl,Lb,Th)),Ox) => appStr("ofun(",convertTerm(Cl,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c,,..convertTerm(L,[0c),..Ox])])])])).
   convertPred(unfy(_,L,R),Ox) => convertTerm(L,[0c ,0c=, 0c ,..convertTerm(R,Ox)]).
   convertPred(ocall(_,Call,Lb,Th),Ox) => appStr("ocall(",convertTerm(Call,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c),..Ox])])])).
   convertPred(neck,Ox) => [0c!,..Ox].

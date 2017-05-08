@@ -101,8 +101,8 @@ lo.comp.resolve{
   resolveTerm(dot(Lc,Rc,Fld),Dict,Rp,Rpx) => dot(Lc,resolveTerm(Rc,Dict,Rp,Rpx),Fld).
   resolveTerm(tpl(Args),Dict,Rp,Rpx) => tpl(resolveTerms(Args,Dict,Rp,Rpx)).
   resolveTerm(whre(Trm,Cond),Dict,Rp,Rpx) => whre(resolveTerm(Trm,Dict,Rp,Rp0),resolveCond(Cond,Dict,Rp0,Rpx)).
-  resolveTerm(condExp(Cond,Then,Else),Dict,Rp,Rpx) =>
-      condExp(resolveCond(Cond,Dict,Rp,Rp0),resolveTerm(Then,Dict,Rp0,Rp1),resolveTerm(Else,Dict,Rp1,Rpx)).
+  resolveTerm(condExp(Lc,Cond,Then,Else),Dict,Rp,Rpx) =>
+      condExp(Lc,resolveCond(Cond,Dict,Rp,Rp0),resolveTerm(Then,Dict,Rp0,Rp1),resolveTerm(Else,Dict,Rp1,Rpx)).
   resolveTerm(apply(Lc,over(_,T,Cx),tpl(Args)),Dict,Rp,Rpx) => apply(Lc,OverOp,tpl(RArgs)) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
     overloadRef(T,DTerms,resolveTerms(Args,Dict,Rp0,Rpx),OverOp,RArgs).

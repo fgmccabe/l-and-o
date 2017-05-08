@@ -1,6 +1,5 @@
 test.inn{
   -- Test inner classes
-  import lo.
 
   basic <~ {
     id:integer.
@@ -30,5 +29,5 @@ test.inn{
   I:basic.
   I = O.inner.
 
-  assert I.id = 47.
+  assert O.inner.id = 47.
 }

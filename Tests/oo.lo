@@ -11,6 +11,9 @@ test.oo{
   foo(A) <= bar(A).
   foo(A) <= {
     kk = 2.
+
+    check:integer.
+    check = id(A).
   }
 
   assert foo(3).id(4) = 4.

@@ -1,0 +1,5 @@
+test.e{
+  import test.q.
+
+  assert 1\==2.
+}

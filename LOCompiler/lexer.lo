@@ -4,8 +4,8 @@ lo.comp.lexer{
   import lo.resources.
 
   import lo.comp.location.
-  import lo.comp.token.
   import lo.comp.operators.
+  import lo.comp.token.
 
   -- Define the lexer for the L&O syntax
 

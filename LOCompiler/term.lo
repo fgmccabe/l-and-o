@@ -16,7 +16,7 @@ lo.comp.term {
                | cons(term,list[term])
                | invoke(option[tloc],term,list[term])
                | escvoke(option[tloc],string,list[term])
-               | objvoke(option[tloc],term,term,term).
+               | ovoke(option[tloc],term,term,term).
 
   public tloc ::= tloc(integer,integer,integer,integer).
 
@@ -81,7 +81,7 @@ lo.comp.term {
   dispTerm(cons(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
   dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
   dispTerm(escvoke(_,Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
-  dispTerm(objvoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
+  dispTerm(ovoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
 
   dispArgs:(list[term],list[term]) => ss.
   dispArgs(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).

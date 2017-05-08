@@ -82,6 +82,7 @@ lo.comp.bootstrap{
       (errorFree(Rp0) ?
         Prg = checkProgram(Term,V,Repo,Rp0,Rp1),
         (errorFree(Rp1) ?
+          logMsg("checked program: \(Prg)"),
           transformProg(Prg,Opts,TPrg,Rp1,Rpx),
           (Opts.inlining ? TrPrg = inline(TPrg,loadTermBase(Imps,Repo)) | TrPrg = TPrg),
           Repo1 = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),

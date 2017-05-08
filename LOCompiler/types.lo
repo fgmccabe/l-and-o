@@ -224,6 +224,7 @@ lo.comp.types{
   public typeNm:(tipe) => string.
   typeNm(anonType) => "_".
   typeNm(tVar(_,_,_)) => "_".
+  typeNm(tFun(_,Ar,_,_)) => "_\(Ar)".
   typeNm(voidType) => "void".
   typeNm(tipe(Nm)) => Nm.
   typeNm(tpFun(Nm,_)) => Nm.

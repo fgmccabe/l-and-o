@@ -2,13 +2,15 @@ lo.comp.grammar{
   import lo.
   import lo.uri.
   import lo.resources.
-  import lo.comp.token.
-  import lo.comp.operators.
-  import lo.comp.location.
-  import lo.comp.ast.
+
   import lo.comp.abstract.
-  import lo.comp.lexer.
+  import lo.comp.ast.
   import lo.comp.errors.
+  import lo.comp.lexer.
+  import lo.comp.location.
+  import lo.comp.operators.
+  import lo.comp.regexp.
+  import lo.comp.token.
 
   public parseFile:(uri,report,report) => ast.
   parseFile(U,Rp,Rpx) => Term :-

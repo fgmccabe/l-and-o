@@ -20,7 +20,7 @@ lo.comp.parseutils{
 
   lowAlpha:(integer) --> list[integer].
   lowAlpha(C) --> [C], { isLowAlpha(C) }.
- 
+
   upAlpha:(integer) --> list[integer].
   upAlpha(C) --> [C], { isUpAlpha(C) }.
 
@@ -37,8 +37,8 @@ lo.comp.parseutils{
   public alphanum:(integer) --> list[integer].
   alphanum(C) --> (alpha(C) | digit(C)).
 
-  hex:(integer) --> list[integer].
-  hex(C) --> [C], { isHexDigit(C)! }.
+  public hex:(integer) --> list[integer].
+  hex(C) --> [C], { hexDigitVal(C,_)! }.
 
   public spaces:()-->list[integer].
   spaces() --> space(), spaces().
@@ -139,18 +139,18 @@ lo.comp.parseutils{
   digitVal(0c8,8).
   digitVal(0c9,9).
 
-  isHexDigit:(integer){}.
-  isHexDigit(X) :- isDigit(X).
-  isHexDigit(0ca).
-  isHexDigit(0cb).
-  isHexDigit(0cc).
-  isHexDigit(0cd).
-  isHexDigit(0ce).
-  isHexDigit(0cf).
-  isHexDigit(0cA).
-  isHexDigit(0cB).
-  isHexDigit(0cC).
-  isHexDigit(0cD).
-  isHexDigit(0cE).
-  isHexDigit(0cF).
+  public hexDigitVal:(integer,integer){}.
+  hexDigitVal(X,D) :- digitVal(X,D).
+  hexDigitVal(0ca,10).
+  hexDigitVal(0cb,11).
+  hexDigitVal(0cc,12).
+  hexDigitVal(0cd,13).
+  hexDigitVal(0ce,14).
+  hexDigitVal(0cf,15).
+  hexDigitVal(0cA,10).
+  hexDigitVal(0cB,11).
+  hexDigitVal(0cC,12).
+  hexDigitVal(0cD,13).
+  hexDigitVal(0cE,14).
+  hexDigitVal(0cF,15).
 }

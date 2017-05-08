@@ -1,27 +1,14 @@
-q{
-  public 
+test.q{
+  public
   contract all x ~~ equality[x] <~ {
     (==): (x,x){}.
-    hash:(x)=>integer.
   }
 
-  public 
-  contract all x ~~ equality[x] |: comp[x] <~ {
-    (<): (x,x){}.
-    (>=): (x,x){}.
-  }
+  public (\==):all x ~~ equality[x] |: (x,x){}.
+  x \== y :- \+ x==y.
 
   public
   implementation equality[integer] <= {
     X == X.
-    hash(X) => X.
   }
-
-  public
-  implementation comp[integer] <= {
-    X<Y :- _int_lt(X,Y).
-    X>=Y :- _int_ge(X,Y).
-  }
-
-  assert 1<2+2.
 }
