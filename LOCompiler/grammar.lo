@@ -83,6 +83,7 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(idQTok(_),_)].
   followsInfix(_) --> [tok(intTok(_),_)].
   followsInfix(_) --> [tok(fltTok(_),_)].
+  followsInfix(_) --> [tok(regTok(_),_)].
 
   private
   term0:(ast,tokMark,report,report) --> list[token].
@@ -207,4 +208,4 @@ lo.comp.grammar{
     term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
   interpolateSegment(Lc,Text,Fmt,Rp,Rpx) => binary(Lc,"frmt",Arg,strg(Lc,Fmt)) :-
     term(2000,Arg,_,Rp,Rpx) %% subTokenize(Lc,Text).
- }
+}
