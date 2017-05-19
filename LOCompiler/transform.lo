@@ -512,9 +512,9 @@ lo.comp.transform{
     trExpCallOp(Lc,Op,Args,Exp,Q0,Qx,APre,APx,APost,APostx,Pre,Px,Post,Pstx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trExp(dot(Lc,Rec,Fld),Exp,Q,merge([X],Qx),Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trDotExp(Lc,Rec,enum(Fld),Exp,Q,Qx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx,Rp,Rpx).
-  trExp(whre(P,C),Ptn,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trExp(P,Ptn,Q,Q0,Pre,P0,Post,Pstx,Map,Opts,Ex,Ex0,Rp,Rp0),
-    trGoal(C,P0,Px,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
+  trExp(whre(E,C),guarded(Ce,Cx),Q,Qx,Pre,Pre,Post,Pstx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    trExp(E,Ce,Q,Q0,Cx,C0,Post,Pstx,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trGoal(C,C0,[],Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trExp(condExp(Lc,T,L,R),invoke(some(Lc::tloc),CondFn,LQ),Q,merge(LQ,Q),Pre,Prx,Post,Post,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lineDebug(Lc,Pre,Prx,Opts),
     trGoal(T,TG,[],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),

@@ -2,9 +2,9 @@ lo.comp.regexp{
   -- Parse a regular expression
   import lo.
 
+  import lo.comp.ast.
   import lo.comp.lexer.
   import lo.comp.location.
-  import lo.comp.parseutils.
 
   public
   regExp ::= reChars(location,list[integer])
@@ -41,6 +41,20 @@ lo.comp.regexp{
   dispSeq([]) => [].
   dispSeq([R,..M]) => [dispRegexp(R),..dispSeq(M)].
 
+  public implementation located[regExp] <= {
+    locOf(reChars(Lc,_)) => Lc.
+    locOf(reNegChars(Lc,_)) => Lc.
+    locOf(reGroup(Lc,_,_)) => Lc.
+    locOf(reChoice(Lc,_,_)) => Lc.
+    locOf(rePlus(Lc,_)) => Lc.
+    locOf(reStar(Lc,_)) => Lc.
+    locOf(rePeriod(Lc)) => Lc.
+    locOf(reEof(Lc)) => Lc.
+    locOf(reStart(Lc)) => Lc.
+    locOf(reLiteral(Lc,_)) => Lc.
+    locOf(reCat(Lc,_,_)) => Lc.
+  }
+
   -- Parse regular expressions
   regularExp:(regExp) --> tokenState.
   regularExp(R) --> @currentLocation(Start),reExp(F,Start), reFollow(F,R).
@@ -55,7 +69,7 @@ lo.comp.regexp{
   reExp(reLiteral(makeLocation(Start,End),Ch),Start) --> charRef(Ch), @currentLocation(End).
 
   groupVar:(string) --> tokenState.
-  groupVar(implode(I)) --> ":", iden(I).
+  groupVar(implode(I)) --> ":", readIden(I).
   groupVar("") --> ")"+.
 
   charClass:(list[integer]) --> tokenState.
@@ -64,30 +78,13 @@ lo.comp.regexp{
   charClass([Ch,..More]) --> charRef(Ch), charClass(More).
 
   reFollow:(regExp,regExp) --> tokenState.
-  reFollow(R,F) --> "*", reFollow(reStar(R),F).
-  reFollow(R,F) --> "+", reFollow(rePlus(R),F).
-  reFollow(R,reChoice(R,N)) --> "|", regularExp(N).
+  reFollow(R,F) --> "*", @currentLocation(End), reFollow(reStar(extendLocation(locOf(R),End),R),F).
+  reFollow(R,F) --> "+", @currentLocation(End), reFollow(rePlus(extendLocation(locOf(R),End),R),F).
+  reFollow(R,reChoice(Lc,R,N)) --> "|", regularExp(N), @currentLocation(End), {Lc=extendLocation(locOf(R),End)}.
   reFollow(R,R) --> ([0c:]+ | [0c)]+ | eof).
-  reFollow(L,O) --> reExp(R), reFollow(reCat(L,R),O).
+  reFollow(L,O) --> @currentLocation(Start),reExp(R,Start), @currentLocation(End), reFollow(reCat(extendLocation(locOf(R),End),L,R),O).
 
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].
   charRange(St,En) => [St,..charRange(St+1,En)] :-  St<En.
-
-  charRef:(integer) --> tokenState.
-  charRef(Chr) --> [0c\\], backSlashRef(Chr).
-  charRef(Chr) --> [Chr].
-
-  backSlashRef:(integer) --> tokenState.
-  backSlashRef(0c\a) --> [0ca].
-  backSlashRef(0c\b) --> [0cb].
-  backSlashRef(0c\t) --> [0ct].
-  backSlashRef(0c\n) --> [0cn].
-  backSlashRef(0c\r) --> [0cr].
-  backSlashRef(Ch) --> [0cu], hexChars(0,Ch). -- implement \uXXX; form of unicode reference
-  backSlashRef(Ch) --> [Ch].
-
-  hexChars:(integer,integer)-->tokenState.
-  hexChars(SoFar,Ch) --> [C], { hexDigitVal(D,N) }, hexChars(SoFar*16+N,Ch).
-  hexChars(SoFar,SoFar) --> [0c;].
 }

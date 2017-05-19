@@ -17,11 +17,11 @@ lo.comp.flatten{
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
-    flattenBody(Body,Q1,NBody,NQ).
+    flattenBody(Body,Q1,NBody,[],NQ).
   flattenRule(eqn(Q,Nm,Args,Rep,Body)) => eqn(NQ,Nm,NArgs,NRep,Guard<>NBody<>PrR) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q0)!,
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],Q1),
-    flattenBody(Body,Q1,NBody,NQ).
+    flattenBody(Body,Q1,NBody,[],NQ).
 
   flattenTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
@@ -41,6 +41,9 @@ lo.comp.flatten{
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),
     flattenTerm(Lb,Q0,NLb,Pre0,Pre1,Pst0,Pst1,Q1),
     flattenTerm(Th,Q0,NTh,Pre1,Prx,Pst1,[unfy(Lc,Res,ovoke(Lc,NCall,NLb,NTh)),..Psx],Qx).
+  flattenTerm(guarded(T,C),Q,Res,Pre,Prx,Post,Psx,Qx) :-
+    flattenTerm(T,Q,Res,Pr0,Prx,Post,Psx,Q1),
+    flattenBody(C,Q1,Pre,Pr0,Qx).
 
   flattenTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -48,11 +51,11 @@ lo.comp.flatten{
     flattenTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
     flattenTerms(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
-  flattenBody:(list[pred],list[term],list[pred],list[term]){}.
-  flattenBody([],Q,[],Q).
-  flattenBody([P,..L],Q,Pre,NQ) :-
-    flattenPred(P,Q,NP,Pre,Ps,Ps,[NP,..Psx],Q1),
-    flattenBody(L,Q1,Psx,NQ).
+  flattenBody:(list[pred],list[term],list[pred],list[pred],list[term]){}.
+  flattenBody([],Q,Pr,Pr,Q).
+  flattenBody([P,..L],Q,Pre,Prx,NQ) :-
+    flattenPred(P,Q,NP,Pre,Ps,Ps,[NP,..P2],Q1),
+    flattenBody(L,Q1,P2,Prx,NQ).
 
   flattenPred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenPred(call(TLc,Op,Args),Q,call(TLc,NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-

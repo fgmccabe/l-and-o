@@ -32,7 +32,7 @@ lo.comp.lexer{
   }.
 
   public tkStFromLoc:(location,list[integer]) => tokenState.
-  tkStFromLoc(loc(Line,Off,Col,Len,Pth),Txt) => tkState(Txt,Line,Off,Col).
+  tkStFromLoc(loc(Line,Off,Col,Len,Pth),Txt) => tkState(Txt,Line,Off,Col,Pth).
 
   public implementation stream[tokenState ->> integer] <= {
     _eof(tkState([],_,_,_,_)).
@@ -41,10 +41,14 @@ lo.comp.lexer{
     _hdtl(tkState([Ch,..Rest],Line,Off,Col,Pth),Ch,tkState(Rest,Line,Off+1,Col+1,Pth)) :- \+ Ch = 0c\n.
   }
 
-  private
+  public
   makeLocation:((integer,integer,integer,string),(integer,integer,integer,string)) => location.
   makeLocation((StartLine,StartOff,StartCol,Pth),(_,EndOff,_,_)) =>
       loc(StartLine,StartOff,StartCol,EndOff-StartOff,Pth).
+
+  public extendLocation:(location,(integer,integer,integer,string)) => location.
+  extendLocation(loc(StartLine,StartOff,StartCol,_,Pth),(_,Off,_,_)) =>
+    loc(StartLine,StartOff,StartCol,Off-StartOff,Pth).
 
   public
   tokenize:(list[token]) --> tokenState.

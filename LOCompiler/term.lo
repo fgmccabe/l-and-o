@@ -16,7 +16,8 @@ lo.comp.term {
                | cons(term,list[term])
                | invoke(option[tloc],term,list[term])
                | escvoke(option[tloc],string,list[term])
-               | ovoke(option[tloc],term,term,term).
+               | ovoke(option[tloc],term,term,term)
+               | guarded(term,list[pred]).
 
   public tloc ::= tloc(integer,integer,integer,integer).
 
@@ -62,6 +63,7 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body),[])) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
   dispClause(eqn(Q,Hd,Args,Rep,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
 
   public implementation display[term] <= {
@@ -82,6 +84,7 @@ lo.comp.term {
   dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
   dispTerm(escvoke(_,Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
   dispTerm(ovoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
+  dispTerm(guarded(T,C),Q) => ssSeq([dispTerm(T,Q),..dispPreds("::",", ",C,Q)]).
 
   dispArgs:(list[term],list[term]) => ss.
   dispArgs(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).

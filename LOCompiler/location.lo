@@ -8,6 +8,10 @@ lo.comp.location{
     merge:(location)=>location.
   }.
 
+  public contract all t ~~ located[t] <~ {
+    locOf:(t)=>location.
+  }
+
   public std:location.
   std <= {
     merge(Lc) => Lc.

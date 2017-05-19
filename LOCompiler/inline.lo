@@ -38,6 +38,7 @@ lo.comp.inline{
 
   getClRefs:(clse,list[term],list[term]) => list[term].
   getClRefs(clse(_,_,A,B),All,Refs) => predRefs(B,All,termRefs(A,All,Refs)).
+  getClRefs(eqn(_,_,A,R,B),All,Refs) => predRefs(B,All,termRefs(A,All,termRef(R,All,Refs))).
 
   predRefs:(list[pred],list[term],list[term]) => list[term].
   predRefs([],_,Refs) => Refs.
@@ -55,6 +56,10 @@ lo.comp.inline{
   termRef(strct(Nm,_),All,Refs) => merge(Refs,[Prg]):- Prg = prg(Nm,3), Prg in All.
   termRef(Prg,All,Refs) => merge(Refs,[Prg]):- Prg = prg(Nm,Ar), Prg in All.
   termRef(cons(O,A),All,Refs) => termRefs(A,All,termRef(O,All,Refs)).
+  termRef(invoke(_,O,A),All,Refs) => termRefs(A,All,termRef(O,All,Refs)).
+  termRef(ovoke(_,C,L,T),All,Refs) => termRef(C,All,termRef(L,All,termRef(T,All,Refs))).
+  termRef(escvoke(_,_,A),All,Refs) => termRefs(A,All,Refs).
+  termRef(guarded(T,C),All,Refs) => termRef(T,All,predRefs(C,All,Refs)).
   termRef(_,_,Refs) => Refs.
 
   termRefs:(list[term],list[term],list[term]) => list[term].
@@ -68,10 +73,10 @@ lo.comp.inline{
   inlineGroups(Groups,I) => foldLeft((M,G)=>inlineGroup(G,M,I),[],Groups).
 
   inlineGroup:(list[rel],map[term,rel],map[term,rel]) => map[term,rel].
-  inlineGroup(Rels,P,I) => foldLeft((M,(R:rel)) => M[R.name->R],P,fixedPoint(Rels,P,I)).
+  inlineGroup(Rels,P,I) => foldLeft((M,(R:rel)) => M[R.name->R],P,relFxPt(Rels,P,I)).
 
-  fixedPoint:(list[rel],map[term,rel],map[term,rel]) => list[rel].
-  fixedPoint(TR,P,I) => (Any ? fixedPoint(TR1,P,I) | TR) :-
+  relFxPt:(list[rel],map[term,rel],map[term,rel]) => list[rel].
+  relFxPt(TR,P,I) => (Any ? relFxPt(TR1,P,I) | TR) :-
     TR1 = sweep(TR,false,Any,P,I).
 
   sweep:(list[rel],logical,logical,map[term,rel],map[term,rel]) => list[rel].
@@ -98,7 +103,7 @@ lo.comp.inline{
   passOverCond:(clse,logical,integer,integer,map[term,rel],map[term,rel]) => option[clse].
   passOverCond(Cl,Any,Ix,Mx,P,I) => NCl :-
     Ix<Mx,
-    ( inlineable(Cl,Ix,P,I) = some([Cand]),resolve(Cl,Ix,Cand,C2) ?
+    ( inlineable(nthPred(Cl,Ix),P,I,Cand),resolve(Cl,Ix,Cand,C2) ?
         NCl = passOverCond(C2,true,0,countBody(C2),P,I) |
         NCl = passOverCond(Cl,Any,Ix+1,Mx,P,I)).
   passOverCond(Cl,true,_,_,_,_) => some(Cl).
@@ -107,10 +112,75 @@ lo.comp.inline{
   countBody:(clse) => integer.
   countBody(clse(_,_,_,B)) => size(B).
 
-  inlineable:(clse,integer,map[term,rel],map[term,rel]) => option[list[clse]].
-  inlineable(Cl,Ix,P,I) => some(resolveableClauses(Cl,Ix,Cls)) :-
-    inlineableCall(nthPred(Cl,Ix),P,I,Cls).
-  inlineable(_,_,_,_) => none.
+  inlineRules:(list[clse],logical,logical,map[term,rel],map[term,rel]) => list[clse].
+  inlineRules([],Any,Any,_,_) => [].
+  inlineRules([Cl,..Cls],SoFar,Any,P,I) => [fixedPoint(((Cin,Cout) :- inlineRule(Cin,Cout,P,I,true)),Cl,0,Cnt),..inlineRules(Cls,(Cnt>0?true|SoFar),Any,P,I)].
+
+  inlineRule:(clse,clse,map[term,rel],map[term,rel],logical){}.
+  inlineRule(clse(Q,Nm,A,B),Cout,P,I,Fx) :-
+    Cout = tidyUpRule(clse(Q,Nm,A,inlinePreds(B,P,I,false,F0,[],Ux)),F,F0,Fx,Ux).
+  inlineRule(eqn(Q,Nm,A,R,B),Cout,P,I,Fx) :-
+    Cout = tidyUpRule(eqn(Q,Nm,A,inlineTerm(R,P,I,false,F0,[],U0),inlinePreds(B,P,I,F0,F1,U0,Ux)),F,F1,Fx,Ux).
+
+  tidyUpRule:(clse,logical,logical,logical,map[string,term]) => clse.
+  tidyUpRule(Cl,_,true,true,Ux) => renameClse(Cl,Ux).
+  tidyUpRule(Cl,F,false,F,_) => Cl.
+
+  inlineTerm:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
+  inlineTerm(T,_,_,S,S,U,U) => T :- isGroundTerm(T).
+  inlineTerm(varbl(Nm),_,_,S,S,U,U) => varbl(Nm).
+  inlineTerm(cons(Op,A),P,I,S,O,U,Ux) => cons(Op,inlineTerms(A,P,I,S,O,U,Ux)).
+  inlineTerm(escvoke(Lc,Op,A),P,I,S,O,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,S,O,U,Ux)).
+  inlineTerm(invoke(Lc,Op,A),P,I,S,O,U,Ux) => checkInline(invoke(Lc,Op,inlineTerms(A,P,I,S,S0,U,U0)),P,I,S0,O,U0,Ux).
+  inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,S,O,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,S,S0,U,U0),inlineTerm(Lb,P,I,S0,S1,U0,U1),inlineTerm(Th,P,I,S1,S2,U1,U2)),P,I,S2,O,U2,Ux).
+  inlineTerm(guarded(T,C),P,I,S,O,U,Ux) => guarded(inlineTerm(renameTerm(T,U),P,I,S,S0,U,U0),inlinePreds(C,P,I,S0,O,U0,Ux)).
+
+  inlineTerms:(list[term],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[term].
+  inlineTerms([],_,_,S,S,U,U) => [].
+  inlineTerms([T,..A],P,I,S,O,U,Ux) => [inlineTerm(renameTerm(T,U),P,I,S,S0,U,U0),..inlineTerms(A,P,I,S0,O,U0,Ux)].
+
+  checkInline:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
+  checkInline(T,P,I,S,O,U,Ux) => inlineTerm(Nt,P,I,true,O,U+Th,Ux):-
+    inlineableTerm(T,P,I,[(Nt,Th)]).
+  checkInline(T,_,_,S,S,U,U) => T.
+
+  inlineableTerm:(term,map[term,rel],map[term,rel],list[(term,map[string,term])]){}.
+  inlineableTerm(invoke(Lc,Op,Args),P,I,Choices) :-
+    (present(P,Op,rel(_,_,Cls)) | present(I,Op,rel(_,_,Cls))),
+    attemptRewrites(Args,Cls,[],Choices).
+  inlineableTerm(ovoke(Lc,Call,Lb,Th),P,I,Choices) :-
+    consistentLbl(Pr,Lb),
+    (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))),
+    attemptRewrites([Call,Lb,Th],Cls,[],Choices).
+
+  attemptRewrites:(list[term],list[clse],list[(term,map[string,term])],list[(term,map[string,term])]){}.
+  attemptRewrites(_,[],Rew,Rew).
+  attemptRewrites(Args,[Eq,..L],S,C) :-
+    attemptEqn(Args,Eq,S,S0),
+    attemptRewrites(Args,L,S0,C).
+
+  attemptEqn:(list[term],clse,list[(term,map[string,term])],list[(term,map[string,term])]){}.
+  attemptEqn(Args,Eq,SoFar,[(guarded(renameTerm(R,Th),renamePreds(B,Th)),Th),..SoFar]) :-
+    stdApart(Eq,eqn(_,_,NA,R,B),_),
+    unifyEls(Args,NA,[],Th).
+  attemptEqn(_,_,SoFar,SoFar).
+
+  inlinePreds:(list[pred],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[pred].
+  inlinePreds([],_,_,S,S,U,U) => [].
+  inlinePreds([Pr,..L],P,I,S,O,U,Ux) => inlinePred(renamePred(Pr,U),P,I,S,S0,U,U0)<>inlinePreds(L,P,I,S0,O,U0,Ux).
+
+  inlinePred:(pred,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[pred].
+  inlinePred(Pr,P,I,_,true,U,Ux) => renamePreds(B,Ux):-
+    inlineable(Pr,P,I,Cls),
+    checkCall(Pr,clName(Cls),A2),
+    stdApart(Cls,clse(_,_,NA,B),_),
+    unifyEls(A2,NA,U,Ux).
+  inlinePred(Pr,_,_,S,S,U,U) => [Pr].
+
+  inlineable:(pred,map[term,rel],map[term,rel],clse){}.
+  inlineable(Pr,P,I,Cls) :-
+    inlineableCall(Pr,P,I,Clses),
+    [Cls] = resolveableClauses(Pr,Clses).
 
   inlineableCall:(pred,map[term,rel],map[term,rel],list[clse]){}.
   inlineableCall(call(_,Pr,_),P,I,Cls) :- (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))).
@@ -119,16 +189,16 @@ lo.comp.inline{
     (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))).
   inlineableCall(unfy(_,L,R),_,_,[clse([varbl("X")],prg("=",2),[varbl("X"),varbl("X")],[])]).
 
-  resolveableClauses:(clse,integer,list[clse]) => list[clse].
-  resolveableClauses(Cl,Ix,[]) => [].
-  resolveableClauses(Cl,Ix,[C,..L]) => [C,..resolveableClauses(Cl,Ix,L)] :-
-    resolveable(Cl,Ix,C).
-  resolveableClauses(Cl,Ix,[_,..L]) => resolveableClauses(Cl,Ix,L).
+  resolveableClauses:(pred,list[clse]) => list[clse].
+  resolveableClauses(_,[]) => [].
+  resolveableClauses(Pr,[C,..L]) => [C,..resolveableClauses(Pr,L)] :-
+    resolveable(Pr,C).
+  resolveableClauses(Pr,[_,..L]) => resolveableClauses(Pr,L).
 
-  resolveable:(clse,integer,clse){}.
-  resolveable(C1,Ix,C2) :-
-    renameClse(C2,NC2,_),
-    checkCall(nthPred(C1,Ix),clName(NC2),A2),
+  resolveable:(pred,clse){}.
+  resolveable(Pr,C2) :-
+    stdApart(C2,NC2,_),
+    checkCall(Pr,clName(NC2),A2),
     unifyEls(A2,clArgs(NC2),[],_).
 
   -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
@@ -155,7 +225,7 @@ lo.comp.inline{
 
   resolveCall:(list[term],term,list[term],list[pred],pred,list[pred],clse,clse){}.
   resolveCall(Q,Prd,Args,Lhs,Call,Rhs,C2,Resolvant) :-
-    renameClse(C2,clse(Q2,P2,A2,B2),V),
+    stdApart(C2,clse(Q2,P2,A2,B2),V),
     checkCall(Call,P2,CArgs),
     unifyEls(CArgs,A2,[],Mx)!,
     NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx+V)),
@@ -209,6 +279,11 @@ lo.comp.inline{
   renameTerm(anon,_) => anon.
   renameTerm(T,_) => T :- isGroundTerm(T).
   renameTerm(cons(Op,Els),V) => cons(renameTerm(Op,V),renameEls(Els,V)).
+  renameTerm(invoke(Lc,Op,A),V) => invoke(Lc,Op,renameEls(A,V)).
+  renameTerm(ovoke(Lc,C,L,T),V) => ovoke(Lc,renameTerm(C,V),renameTerm(L,V),renameTerm(T,V)).
+  renameTerm(escvoke(Lc,Op,A),V) => escvoke(Lc,Op,renameEls(A,V)).
+  renameTerm(guarded(T,[]),V) => renameTerm(T,V).
+  renameTerm(guarded(T,C),V) => guarded(renameTerm(T,V),renamePreds(C,V)).
 
   renameEls:(list[term],map[string,term])=> list[term].
   renameEls([],_) => [].
@@ -227,8 +302,14 @@ lo.comp.inline{
   renamePreds([],_) => [].
   renamePreds([T,..L],V) => [renamePred(T,V),..renamePreds(L,V)].
 
-  renameClse:(clse,clse,map[string,term]){}.
-  renameClse(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V)),V) :-
+  renameClse:(clse,map[string,term]) => clse.
+  renameClse(clse(Q,Nm,A,B),Ux) => clse(renameEls(Q,Ux),Nm,renameEls(A,Ux),renamePreds(B,Ux)).
+  renameClse(eqn(Q,Nm,A,R,B),Ux) => eqn(renameEls(Q,Ux),Nm,renameEls(A,Ux),renameTerm(R,Ux),renamePreds(B,Ux)).
+
+  stdApart:(clse,clse,map[string,term]){}.
+  stdApart(clse(Q,Nm,A,B),clse(renameEls(Q,V),Nm,renameEls(A,V),renamePreds(B,V)),V) :-
+    V = mkVars(Q).
+  stdApart(eqn(Q,Nm,A,R,B),eqn(renameEls(Q,V),Nm,renameEls(A,V),renameTerm(R,V),renamePreds(B,V)),V) :-
     V = mkVars(Q).
 
   unifyTerm:(term,term,map[string,term],map[string,term]){}.
@@ -317,4 +398,8 @@ lo.comp.inline{
   containsAnons:(term){}.
   containsAnons(anon).
   containsAnons(cons(_,Els)) :- E in Els, containsAnons(E).
+
+  fixedPoint:all t ~~ ((t,t){},t,integer,integer) => t.
+  fixedPoint(F,X,Ix,Ixx) => fixedPoint(F,X0,Ix+1,Ixx) :- F(X,X0).
+  fixedPoint(_,X,Ix,Ix) => X.
 }
