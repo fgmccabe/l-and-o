@@ -75,12 +75,11 @@ lo.comp.decode{
       decodeSequence(decodeTerm,Q),
       decodeSequence(decodeTerm,Args),
       decodeSequence(decodePred,Body).
-  decodeClause(eqn(Q,Nm,Args,Rep,Body)) --> ">",
+  decodeClause(eqn(Q,Nm,Args,Rep)) --> ">",
       decodeTerm(Nm),
       decodeSequence(decodeTerm,Q),
       decodeSequence(decodeTerm,Args),
-      decodeTerm(Rep),
-      decodeSequence(decodePred,Body).
+      decodeTerm(Rep).
 
   decodePred:(pred) --> list[integer].
   decodePred(call(TLc,Op,Args)) --> "P", decodeOptional(decodeTloc,TLc), decodeTerm(Op), decodeSequence(decodeTerm,Args).

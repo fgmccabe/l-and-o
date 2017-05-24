@@ -29,7 +29,7 @@ lo.comp.term {
   }
 
   public clse ::= clse(list[term],term,list[term],list[pred])
-              | eqn(list[term],term,list[term],term,list[pred]).
+              | eqn(list[term],term,list[term],term).
 
 
   public pred ::= call(option[tloc],term,list[term])
@@ -63,8 +63,8 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
-  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body),[])) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
-  dispClause(eqn(Q,Hd,Args,Rep,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body))) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ssSeq(dispPreds(":-","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,Rep)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(".\n")]).
 
   public implementation display[term] <= {
     disp(T) => dispTerm(T,[]).
@@ -184,12 +184,16 @@ lo.comp.term {
 
   public clName:(clse) => term.
   clName(clse(_,Nm,_,_)) => Nm.
-  clName(eqn(_,Nm,_,_,_)) => Nm.
+  clName(eqn(_,Nm,_,_)) => Nm.
 
   public nthPred:(clse,integer) => pred.
   nthPred(clse(_,_,_,Body),Ix) => C :- nthEl(Body,Ix,C).
 
   public clArgs:(clse) => list[term].
   clArgs(clse(_,_,Args,_)) => Args.
-  clArgs(eqn(_,_,Args,_,_)) => Args.
+  clArgs(eqn(_,_,Args,_)) => Args.
+
+  public simplifyGuard:(term) => term.
+  simplifyGuard(guarded(T,[])) => simplifyGuard(T).
+  simplifyGuard(T) => T.
 }

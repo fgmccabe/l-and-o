@@ -32,8 +32,10 @@ lo.comp.genprolog{
   convertClause:(list[integer],clse) => list[integer].
   convertClause(Ox,clse(_,Nm,Args,[])) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
   convertClause(Ox,clse(_,Nm,Args,[C,..Rest])) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPred(C,foldRight(convertCall,[0c.,0c\n,..Ox],Rest))]).
-  convertClause(Ox,eqn(_,Nm,Args,Rep,Body)) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertBody(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
+  convertClause(Ox,eqn(_,Nm,Args,guarded(Rep,Body))) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertBody(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
     genVarbl("R",V).
+  convertClause(Ox,eqn(_,Nm,Args,Rep)) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])]) :-
+      genVarbl("R",V).
 
   convertHead:(term,list[term],list[integer]) => list[integer].
   convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).
