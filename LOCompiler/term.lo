@@ -82,7 +82,7 @@ lo.comp.term {
   dispTerm(strng(Sx),_) => disp(Sx).
   dispTerm(cons(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
   dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
-  dispTerm(escvoke(_,Op,Args),Q) => ssSeq([disp(Op),dispArgs(Args,Q)]).
+  dispTerm(escvoke(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   dispTerm(ovoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
   dispTerm(guarded(T,C),Q) => ssSeq([dispTerm(T,Q),..dispPreds("::",", ",C,Q)]).
 

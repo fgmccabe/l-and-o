@@ -8,11 +8,11 @@ lo.comp.inline{
 
   -- temp def
   public inline:(prProg,map[term,rel]) => prProg.
-  inline(prProg(Spec,P),M) => trace("inlined program ",prProg(Spec,inlineGroups(dependencySort(P),M))) :-
-    logMsg("inline \(values(P):list[rel]) using \(M)").
+  inline(prProg(Spec,P),M) => trace("inlined program:\n",prProg(Spec,inlineGroups(dependencySort(P),M))) :-
+    logMsg("inline:\n\(prProg(Spec,P))])\nusing \(M)").
 
   dependencySort:(map[term,rel]) => list[list[rel]].
-  dependencySort(Prog) => trace("inline groups",extractGroups(topsort(depends(Prog)))).
+  dependencySort(Prog) => extractGroups(topsort(depends(Prog))).
 
   private relEntry ::= relEntry(list[term],rel).
 
@@ -107,35 +107,41 @@ lo.comp.inline{
     Cout = tidyUpRule(eqn(Q,Nm,NA,NR),Ux).
 
   tidyUpRule:(clse,map[string,term]) => clse.
-  tidyUpRule(Cl,Ux) => renameClse(Cl,Ux).
+  tidyUpRule(Cl,Ux) => requant(applyUxToClse(Cl,Ux)).
+
+  requant:(clse) => clse.
+  requant(clse(Q,Nm,A,B)) => clse(findVarsInClse(clse(Q,Nm,A,B)),Nm,A,B).
+  requant(eqn(Q,Nm,A,R)) => eqn(findVarsInClse(eqn(Q,Nm,A,R)),Nm,A,R).
 
   inlineTerm:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
   inlineTerm(T,_,_,S,S,U,U) => T :- isGroundTerm(T).
+  inlineTerm(varbl(Nm),P,I,F,Fx,U,Ux) => inlineTerm(Rep,P,I,true,Fx,U,Ux) :- present(U,Nm,Rep).
   inlineTerm(varbl(Nm),_,_,S,S,U,U) => varbl(Nm).
   inlineTerm(anon,_,_,S,S,U,U) => anon.
   inlineTerm(cons(Op,A),P,I,S,O,U,Ux) => cons(Op,inlineTerms(A,P,I,S,O,U,Ux)).
   inlineTerm(escvoke(Lc,Op,A),P,I,S,O,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,S,O,U,Ux)).
   inlineTerm(invoke(Lc,Op,A),P,I,S,O,U,Ux) => checkInline(invoke(Lc,Op,inlineTerms(A,P,I,S,S0,U,U0)),P,I,S0,O,U0,Ux).
   inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,S,O,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,S,S0,U,U0),inlineTerm(Lb,P,I,S0,S1,U0,U1),inlineTerm(Th,P,I,S1,S2,U1,U2)),P,I,S2,O,U2,Ux).
-  inlineTerm(guarded(T,C),P,I,S,O,U,Ux) => simplifyGuard(guarded(inlineTerm(applyToTerm(T,U),P,I,S,S0,U,U0),inlinePreds(C,P,I,S0,O,U0,Ux))).
+  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(checkInline(inlineTerm(T,P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),inlinePreds(C,P,I,F1,Fx,U1,Ux))).
 
   inlineTerms:(list[term],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[term].
-  inlineTerms([],_,_,S,S,U,U) => [].
-  inlineTerms([T,..A],P,I,S,O,U,Ux) => [inlineTerm(applyToTerm(T,U),P,I,S,S0,U,U0),..inlineTerms(A,P,I,S0,O,U0,Ux)].
+  inlineTerms([],_,_,Fx,Fx,U,U) => [].
+  inlineTerms([T,..A],P,I,F,Fx,U,Ux) => [checkInline(inlineTerm(applyToTerm(T,U),P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),..inlineTerms(A,P,I,F1,Fx,U1,Ux)].
 
   checkInline:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
-  checkInline(T,P,I,S,O,U,Ux) => inlineTerm(Nt,P,I,true,O,U+Th,Ux):-
-    inlineableTerm(T,P,I,[(Nt,Th)]).
+  checkInline(T,P,I,S,O,U,Ux) => inlineTerm(applyToTerm(Nt,U),P,I,true,O,mergeTheta(Th,U),Ux):-
+    inlineableTerm(T,P,I) = [(Nt,Th)].
   checkInline(T,_,_,S,S,U,U) => T.
 
-  inlineableTerm:(term,map[term,rel],map[term,rel],list[(term,map[string,term])]){}.
-  inlineableTerm(invoke(Lc,Op,Args),P,I,Choices) :-
+  inlineableTerm:(term,map[term,rel],map[term,rel]) => list[(term,map[string,term])].
+  inlineableTerm(invoke(Lc,Op,Args),P,I) => Choices :-
     (present(P,Op,rel(_,_,Cls)) | present(I,Op,rel(_,_,Cls))),
     attemptRewrites(Args,Cls,[],Choices).
-  inlineableTerm(ovoke(Lc,Call,Lb,Th),P,I,Choices) :-
+  inlineableTerm(ovoke(Lc,Call,Lb,Th),P,I) => Choices :-
     consistentLbl(Pr,Lb),
     (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))),
     attemptRewrites([Call,Lb,Th],Cls,[],Choices).
+  inlineableTerm(_,_,_) => [].
 
   attemptRewrites:(list[term],list[clse],list[(term,map[string,term])],list[(term,map[string,term])]){}.
   attemptRewrites(_,[],Rew,Rew).
@@ -145,7 +151,7 @@ lo.comp.inline{
 
   attemptEqn:(list[term],clse,list[(term,map[string,term])],list[(term,map[string,term])]){}.
   attemptEqn(Args,Eq,SoFar,[(applyToTerm(R,Th),Th),..SoFar]) :-
-    stdApart(Eq,eqn(_,_,NA,R),_),
+    renameClse(Eq,eqn(_,_,NA,R),_),
     unifyEls(Args,NA,[],Th).
   attemptEqn(_,_,SoFar,SoFar).
 
@@ -157,7 +163,7 @@ lo.comp.inline{
   inlinePred(Pr,P,I,_,true,U,Ux) => applyToPreds(B,Ux):-
     inlineable(Pr,P,I,Cls),
     checkCall(Pr,clName(Cls),A2),
-    stdApart(Cls,clse(_,_,NA,B),_),
+    renameClse(Cls,clse(_,_,NA,B),_),
     unifyEls(A2,NA,U,Ux).
   inlinePred(Pr,_,_,S,S,U,U) => [Pr].
 
@@ -181,61 +187,9 @@ lo.comp.inline{
 
   resolveable:(pred,clse){}.
   resolveable(Pr,C2) :-
-    stdApart(C2,NC2,_),
+    renameClse(C2,NC2,_),
     checkCall(Pr,clName(NC2),A2),
     unifyEls(A2,clArgs(NC2),[],_).
-
-  -- resolve the Ixth goal in C1 with the head of C2, resulting in the new clause C3.
-  public resolve:(clse,integer,clse,clse){}.
-  resolve(clse(Q,Prd,Args,Body),Ix,C2,findSingletons(Resolvant)) :-
-    logMsg("resolving \(clse(Q,Prd,Args,Body))@\(Ix) with \(C2)"),
-    split(Body,Ix,Lhs,Call,Rhs),
-    -- logMsg("lhs=\(Lhs), rhs=\(Rhs)"),
-    (Call = unfy(_,_,_) ?
-      resolveEquality(Q,Prd,Args,Lhs,Call,Rhs,Resolvant)
-    | resolveCall(Q,Prd,Args,Lhs,Call,Rhs,C2,Resolvant))!,
-    logMsg("resolves to \(Resolvant)").
-
-  resolveEquality:(list[term],term,list[term],list[pred],pred,list[pred],clse){}.
-  resolveEquality(Q,Prd,Args,Lhs,unfy(_,L,R),Rhs,Resolvant) :-
-    (L = anon | \+ containsAnons(L)),
-    (R = anon | \+ containsAnons(R)),
-    unifyTerm(L,R,[],Mx)!,
-    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx)),
-    (neck in Lhs ?
-      varbl(Nm) in findVarsInPreds(Lhs,findVarsInList(Args,[])) *> \+ present(Mx,Nm,_)
-    | true),
-    Resolvant = clse(NQ,Prd,applyToTerms(Args,Mx),applyToPreds(Lhs,Mx)<>applyToPreds(Rhs,Mx)).
-
-  resolveCall:(list[term],term,list[term],list[pred],pred,list[pred],clse,clse){}.
-  resolveCall(Q,Prd,Args,Lhs,Call,Rhs,C2,Resolvant) :-
-    stdApart(C2,clse(Q2,P2,A2,B2),V),
-    checkCall(Call,P2,CArgs),
-    unifyEls(CArgs,A2,[],Mx)!,
-    NQ = foldLeft(collectVar,otherVars(Q,Mx),pairs(Mx+V)),
-    resolvant(NQ,Prd,Args,Lhs,B2,Rhs,Mx,Resolvant).
-
-  -- There are many cases to consider when computing the body of the resolvant,
-  -- mostly due to the complex semantics of cut/neck.
-
-  resolvant:(list[term],term,list[term],list[pred],list[pred],list[pred],map[string,term],clse){}.
-  resolvant(NQ,Prd,Args,Lhs,[neck,..B],Rhs,Mx,clse(NQ,Prd,applyToTerms(Args,Mx),applyToPreds(Lhs<>B<>Rhs,Mx))) :- \+ neck in Lhs.
-  resolvant(NQ,Prd,Args,Lhs,[neck,..B],Rhs,Mx,clse(merge(NQ,AV),Prd,Args,NBody)) :-
-    concat(FL,[neck,..BL],Lhs),
-    AV = findVarsInList(Args,[]),
-    NBody = FL<>[neck,..genEqualities(findVarsInPreds(FL,AV),Mx)]<>applyToPreds(BL,Mx)<>applyToPreds(B,Mx)<>applyToPreds(Rhs,Mx).
-  resolvant(NQ,Prd,Args,Lhs,B,Rhs,Mx,clse(NQ,Prd,applyToTerms(Args,Mx),applyToPreds(Lhs<>B<>Rhs,Mx))) :- \+ neck in Lhs, \+ neck in B.
-  resolvant(NQ,Prd,Args,Lhs,B,Rhs,Mx,clse(merge(NQ,AV),Prd,Args,NBody)) :-
-    concat(FL,[neck,..BL],Lhs),
-    \+neck in B,
-    AV = findVarsInList(Args,[]),
-    NBody = FL<>[neck,..genEqualities(findVarsInPreds(FL,AV),Mx)]<>applyToPreds(BL,Mx)<>applyToPreds(B,Mx)<>applyToPreds(Rhs,Mx).
-
-  genEqualities:(list[term],map[string,term]) => list[pred].
-  genEqualities([],_) => [].
-  genEqualities([varbl(Nm),..V],Mx) => [unfy(none,varbl(Nm),applyToTerm(Nt,Mx)),..genEqualities(V,Mx)]:-
-    present(Mx,Nm,Nt).
-  genEqualities([_,..V],Mx) => genEqualities(V,Mx).
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
@@ -246,13 +200,6 @@ lo.comp.inline{
   consistentLbl:(term,term){}.
   consistentLbl(prg(Nm,3),enum(Nm)).
   consistentLbl(prg(Nm,3),cons(strct(Nm,_),_)).
-
-  collectVar:(list[term],(string,term)) => list[term].
-  collectVar(Q,(Nm,varbl(XX))) => [varbl(XX),..Q].
-  collectVar(Q,_) => Q.
-
-  otherVars:(list[term],map[string,term])=>list[term].
-  otherVars(Q,Mx) => Q^/((varbl(Nm)):-\+present(Mx,Nm,_)). -- select variables not in unify map.
 
   mkVars:(list[term]) => map[string,term].
   mkVars(Els) => foldLeft((M,varbl(Nm))=>M[Nm->varbl(_str_gen(Nm))],[],Els).
@@ -286,14 +233,14 @@ lo.comp.inline{
   applyToPreds([],_) => [].
   applyToPreds([T,..L],V) => [applyToPred(T,V),..applyToPreds(L,V)].
 
-  renameClse:(clse,map[string,term]) => clse.
-  renameClse(clse(Q,Nm,A,B),Ux) => clse(applyToTerms(Q,Ux),Nm,applyToTerms(A,Ux),applyToPreds(B,Ux)).
-  renameClse(eqn(Q,Nm,A,R),Ux) => eqn(applyToTerms(Q,Ux),Nm,applyToTerms(A,Ux),applyToTerm(R,Ux)).
+  applyUxToClse:(clse,map[string,term]) => clse.
+  applyUxToClse(clse(Q,Nm,A,B),Ux) => clse(applyToTerms(Q,Ux),Nm,applyToTerms(A,Ux),applyToPreds(B,Ux)).
+  applyUxToClse(eqn(Q,Nm,A,R),Ux) => eqn(applyToTerms(Q,Ux),Nm,applyToTerms(A,Ux),applyToTerm(R,Ux)).
 
-  stdApart:(clse,clse,map[string,term]){}.
-  stdApart(clse(Q,Nm,A,B),clse(applyToTerms(Q,V),Nm,applyToTerms(A,V),applyToPreds(B,V)),V) :-
+  renameClse:(clse,clse,map[string,term]){}.
+  renameClse(clse(Q,Nm,A,B),clse(applyToTerms(Q,V),Nm,applyToTerms(A,V),applyToPreds(B,V)),V) :-
     V = mkVars(Q).
-  stdApart(eqn(Q,Nm,A,R),eqn(applyToTerms(Q,V),Nm,applyToTerms(A,V),applyToTerm(R,V)),V) :-
+  renameClse(eqn(Q,Nm,A,R),eqn(applyToTerms(Q,V),Nm,applyToTerms(A,V),applyToTerm(R,V)),V) :-
     V = mkVars(Q).
 
   unifyTerm:(term,term,map[string,term],map[string,term]){}.
@@ -317,6 +264,13 @@ lo.comp.inline{
     unifyTerm(E1,E2,M,M1),
     unifyEls(L1,L2,M1,Mx).
 
+  mergeTheta:(map[string,term],map[string,term]) => map[string,term].
+  mergeTheta(T1,T2) => foldMap(mergeBind,T2,T1).
+
+  mergeBind:(string,term,map[string,term]) => map[string,term].
+  mergeBind(Nm,T,Th) => Th1[Nm->T]:- present(Th,Nm,T2), unifyT(T,T2,Th,Th1).
+  mergeBind(Nm,T,Th) => Th[Nm->T].
+
   bind:(string,term,map[string,term],map[string,term]){}.
   bind(Nm,varbl(Nm),M,M).
   bind(Nm,T,M,M[Nm->T]) :- T\=varbl(Nm).
@@ -326,11 +280,19 @@ lo.comp.inline{
   deRef(T,_) => T.
 
   -- Finding variables
+  findVarsInClse:(clse) => list[term].
+  findVarsInClse(clse(_,_,A,B)) => findVarsInPreds(B,findVarsInList(A,[])).
+  findVarsInClse(eqn(_,_,A,R)) => findVars(R,findVarsInList(A,[])).
+
   findVars:(term,list[term]) => list[term].
   findVars(varbl(Nm),V) => mergeEl(V,varbl(Nm)).
   findVars(T,V) => V :- isGroundTerm(T).
   findVars(anon,V) => V.
   findVars(cons(_,A),V) => findVarsInList(A,V).
+  findVars(invoke(_,O,A),V) => findVarsInList(A,findVars(O,V)).
+  findVars(escvoke(_,O,A),V) => findVarsInList(A,V).
+  findVars(ovoke(_,C,L,T),V) => findVars(C,findVars(L,findVars(T,V))).
+  findVars(guarded(T,G),V) => findVars(T,findVarsInPreds(G,V)).
 
   findVarsInList:(list[term],list[term]) => list[term].
   findVarsInList([],V) => V.

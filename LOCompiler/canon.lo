@@ -147,7 +147,7 @@ lo.comp.canon {
 
   private dispRules:(list[canonRule]) => list[ss].
   dispRules([]) => [].
-  dispRules([Rl,..L]) => [dispRule(Rl),..dispRules(L)].
+  dispRules([Rl,..L]) => [dispRule(Rl),ss(".\n"),..dispRules(L)].
 
   private dispOther:(canonOther) => ss.
   dispOther(integrity(Lc,C)) => ssSeq([ss(" assert@ "),disp(Lc),ss("\n"),dispCond(C),ss("\n")]).

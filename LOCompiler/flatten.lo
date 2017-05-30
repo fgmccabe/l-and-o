@@ -12,7 +12,7 @@ lo.comp.flatten{
   flattenProg(prProg(Spec,Rels)) => prProg(Spec,Rels///((Nm,Rel)=>flattenRel(Rel))).
 
   flattenRel:(rel) => rel.
-  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>trace("Flatten \(Rl)",flattenRule(Rl)))).
+  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>flattenRule(Rl))).
 
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
@@ -34,7 +34,7 @@ lo.comp.flatten{
     flattenTerms(Args,Q0,NArgs,Pre0,Prx,Pst0,[unfy(Lc,Res,invoke(Lc,NOp,NArgs)),..Psx],Qx).
   flattenTerm(escvoke(Lc,Es,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
-    flattenTerms(Args,Q0,NArgs,Pre,Prx,Post,[unfy(Lc,Res,escvoke(Lc,Es,NArgs)),..Psx],Qx).
+    flattenTerms(Args,[Res,..Q],NArgs,Pre,Prx,Post,[unfy(Lc,Res,escvoke(Lc,Es,NArgs)),..Psx],Qx).
   flattenTerm(ovoke(Lc,Call,Lb,Th),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),
