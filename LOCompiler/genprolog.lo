@@ -31,18 +31,14 @@ lo.comp.genprolog{
 
   convertClause:(list[integer],clse) => list[integer].
   convertClause(Ox,clse(_,Nm,Args,[])) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
-  convertClause(Ox,clse(_,Nm,Args,Body)) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertBody(Body,[],[0c.,0c\n,..Ox])]).
-  convertClause(Ox,eqn(_,Nm,Args,guarded(Rep,Body))) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertBody(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
+  convertClause(Ox,clse(_,Nm,Args,Body)) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPreds(Body,[],[0c.,0c\n,..Ox])]).
+  convertClause(Ox,eqn(_,Nm,Args,guarded(Rep,Body))) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertPreds(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
     genVarbl("R",V).
   convertClause(Ox,eqn(_,Nm,Args,Rep)) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])]) :-
       genVarbl("R",V).
 
   convertHead:(term,list[term],list[integer]) => list[integer].
   convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).
-
-  convertBody:(list[pred],list[integer],list[integer]) => list[integer].
-  convertBody([],Sep,Tail) => Sep<>Tail.
-  convertBody([C,..B],Sep,Tail) => Sep<>convertPred(C,convertBody(B,[0c,,0c\n,0c ,0c ,0c ,0c ],Tail)).
 
   convertCallOp:(term,list[integer]) => list[integer].
   convertCallOp(prg(Nm,_),Ox) => appId(Nm,Ox).
@@ -71,10 +67,10 @@ lo.comp.genprolog{
   convertPred(except(_,E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
 
   convertFunCall:(term,term,list[integer]) => list[integer].
-  convertFunCall(L,guarded(R,P),Ox) => convertPreds(P,[],convertFunCall(L,R,Ox)).
+  convertFunCall(L,guarded(R,P),Ox) => convertPreds(P,[],[0c,,0c\n,0c ,0c ,0c ,0c ,..convertFunCall(L,R,Ox)]).
   convertFunCall(L,invoke(Lc,Op,Args),Ox) => convertPred(call(Lc,Op,Args<>[L]),Ox).
   convertFunCall(L,escvoke(Lc,Op,Args),Ox) => convertPred(ecall(Lc,Op,Args<>[L]),Ox).
-  convertFunCall(L,ovoke(Lc,Cl,Lb,Th),Ox) => appStr("ofun(",convertTerm(Cl,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c,,..convertTerm(L,[0c),..Ox])])])])).
+  convertFunCall(L,ovoke(Lc,Cl,Lb,Th),Ox) => appStr("ofun(",convertTerm(Cl,[0c,,0c\n,0c ,0c ,0c ,0c ,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c,,..convertTerm(L,[0c),..Ox])])])])).
   convertFunCall(L,R,Ox) => convertTerm(L,[0c ,0c=, 0c ,..convertTerm(R,Ox)]).
 
   convertTerm:(term,list[integer]) => list[integer].
