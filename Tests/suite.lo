@@ -1,0 +1,7 @@
+test.suite{
+  import lo.
+
+  import test.a.
+  import test.aa.
+  import test.ancestor.
+}

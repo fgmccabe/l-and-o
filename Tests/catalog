@@ -39,6 +39,7 @@ catalog{
     test.rec -> "rec.lo".
     test.s -> "s.lo".
     test.st -> "st.lo".
+    test.suite -> "suite.lo".
     test.t -> "t.lo".
   }
   default: "../LO/catalog".

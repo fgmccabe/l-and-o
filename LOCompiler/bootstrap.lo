@@ -84,6 +84,7 @@ lo.comp.bootstrap{
         (errorFree(Rp1) ?
           -- logMsg("checked program: \(Prg)"),
           transformProg(Prg,Opts,TPrg,Rp1,Rpx),
+          logMsg("transformed program: \(TPrg)"),
           (Opts.inlining ? TrPrg = inline(TPrg,loadTermBase(Imps,Repo)) | TrPrg = TPrg),
           Repo1 = addPrologPackage(addSource(Repo,Pkg,U::string),Pkg,TrPrg::string),
           Repox = recordTermPkg(Repo1,TrPrg) |

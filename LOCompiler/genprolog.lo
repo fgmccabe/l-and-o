@@ -9,17 +9,18 @@ lo.comp.genprolog{
   import lo.comp.types.
 
   public implementation coercion[prProg,string] <= {
-    _coerce(P) => implode(prog2code(flattenProg(P),[])).
+    _coerce(P) => formatSS(prog2code(flattenProg(P))).
   }
 
-  prog2code:(prProg,list[integer]) => list[integer].
-  prog2code(prProg(Spec,Rels),Ox) => convertTerm(genPrologSig(Spec),[0c.,0c\n,..foldMap(convertRel,Ox,Rels)]).
+  prog2code:(prProg) => ss.
+  prog2code(prProg(Spec,Rels)) => ssSeq([genTerm(genPrologSig(Spec)),ss(".\n"),..values(Rels)//genRel]).
 
   genPrologSig:(pkgSpec) => term.
   genPrologSig(Spec) => cons(strct("#pkg",1),[packageSig(Spec)]).
 
-  convertRel:(term,rel,list[integer]) => list[integer].
-  convertRel(_,rel(Prd,Lc,Clses),Ox) => foldRight(convertClause,Ox,Clses).
+  genRel:(rel) => ss.
+  genRel(rel(Nm,Lc,Clses)) => ssSeq((Clses<>[genFailsafe(Nm,Lc)])//genCl) :- eqn(_,_,_,_) in Clses.
+  genRel(rel(Nm,Lc,Clses)) => ssSeq(Clses//genCl).
 
   genFailsafe:(term,option[tloc]) => clse.
   genFailsafe(prg(Nm,Ar),Lc) =>
@@ -29,74 +30,61 @@ lo.comp.genprolog{
   genLoc(none) => enum("lo.core#none").
   genLoc(some(tloc(Line,Off,Col,Len))) => cons(strct("lo.core#some",1),[cons(strct("()4",4),[intgr(Line),intgr(Off),intgr(Col),intgr(Len)])]).
 
-  convertClause:(list[integer],clse) => list[integer].
-  convertClause(Ox,clse(_,Nm,Args,[])) => convertHead(Nm,Args,[0c.,0c\n,..Ox]).
-  convertClause(Ox,clse(_,Nm,Args,Body)) => convertHead(Nm,Args,[0c:,0c-,0c ,..convertPreds(Body,[],[0c.,0c\n,..Ox])]).
-  convertClause(Ox,eqn(_,Nm,Args,guarded(Rep,Body))) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,..convertPreds(Body,[],[0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])])]) :-
-    genVarbl("R",V).
-  convertClause(Ox,eqn(_,Nm,Args,Rep)) => convertHead(Nm,Args<>[V],[0c:,0c-,0c ,0c!,0c,,..convertPred(unfy(none,V,Rep),[0c.,0c\n,..Ox])]) :-
-      genVarbl("R",V).
+  genCl:(clse) => ss.
+  genCl(clse(_,Nm,Args,[])) => ssSeq([genTerm(Nm),ss("("),genArgs(Args),ss(")"),ss(".\n")]).
+  genCl(clse(_,Nm,Args,Body)) => ssSeq([genTerm(Nm),ss("("),genArgs(Args),ss("):-"),ssSeq(genPreds(Body,"",_)),ss(".\n")]).
+  genCl(eqn(_,Nm,Args,guarded(Rep,Body))) =>
+    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- "),
+          ssSeq(genPreds(Body,"",Sep)),ss(Sep),ss("!,"),genPred(unfy(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
+  genCl(eqn(_,Nm,Args,Rep)) =>
+    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- !,\n    "),genPred(unfy(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
 
-  convertHead:(term,list[term],list[integer]) => list[integer].
-  convertHead(Nm,Args,Ox) => convertCallOp(Nm,[0c(,..convertArgs(Args,[0c),..Ox])]).
+  genPreds:(list[pred],string,string) => list[ss].
+  genPreds([],S,S) => [].
+  genPreds([P,..L],S,Sx) => [ss(S),genPred(P),..genPreds(L,",\n    ",Sx)].
 
-  convertCallOp:(term,list[integer]) => list[integer].
-  convertCallOp(prg(Nm,_),Ox) => appId(Nm,Ox).
+  genPred:(pred) => ss.
+  genPred(call(_,Op,Args)) => ssSeq([genTerm(Op),ss("("),genArgs(Args),ss(")")]).
+  genPred(ecall(_,Op,Args)) => ssSeq([genId(Op),ss("("),genArgs(Args),ss(")")]).
+  genPred(unfy(Lc,L,R)) => genFunCall(unfy(Lc,L,R)).
+  genPred(ocall(_,Call,Lb,Th)) => ssSeq([ss("ocall("),genTerm(Call),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(")")]).
+  genPred(neck) => ss("!").
+  genPred(fail) => ss("fail").
+  genPred(except(_,E)) => ssSeq([ss("raise_exception"),ss("("),genTerm(E),ss(")")]).
 
-  convertArgs:(list[term],list[integer]) => list[integer].
-  convertArgs([],Ox) => Ox.
-  convertArgs([A,..L],Ox) => convertTerm(A,foldRight(convertArg,Ox,L)).
+  genFunCall:(pred) => ss.
+  genFunCall(unfy(Lc,L,guarded(R,P))) => ssSeq(genPreds(P,"",Sep)<>[ss(Sep),genFunCall(unfy(Lc,L,R))]).
+  genFunCall(unfy(_,L,invoke(Lc,Op,Args))) => ssSeq([genTerm(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
+  genFunCall(unfy(_,L,escvoke(Lc,Op,Args))) => ssSeq([genId(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
+  genFunCall(unfy(_,L,ovoke(Lc,Cl,Lb,Th))) => ssSeq([ss("ofun("),genTerm(Cl),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(","),genTerm(L),ss(")")]).
+  genFunCall(unfy(_,L,R)) => ssSeq([genTerm(L),ss(" = "),genTerm(R)]).
 
-  convertArg:(list[integer],term) => list[integer].
-  convertArg(Ox,T) => [0c,, 0c ,..convertTerm(T,Ox)].
+  genTerm:(term) => ss.
+  genTerm(anon) => ss("_").
+  genTerm(varbl(Nm)) => ssSeq([ss("_"),ss(Nm)]).
+  genTerm(intgr(Ix)) => disp(Ix).
+  genTerm(flot(Dx)) => disp(Dx).
+  genTerm(strng(Sx)) => ssSeq([ss("\""),ss(implode(genQuoted(explode(Sx),0c"))),ss("\"")]).
+  genTerm(enum(Nm)) => genId(Nm).
+  genTerm(strct(Nm,_)) => genId(Nm).
+  genTerm(prg(Nm,_)) => genId(Nm).
+  genTerm(cons(Op,Args)) => ssSeq([genTerm(Op),ss("("),genArgs(Args),ss(")")]).
 
-  convertPreds:(list[pred],list[integer],list[integer]) => list[integer].
-  convertPreds([],_,L) => L.
-  convertPreds([C,..R],Sep,L) => Sep<>convertPred(C,convertPreds(R,[0c,,0c\n,0c ,0c ,0c ,0c ],L)).
+  genArgs:(list[term]) => ss.
+  genArgs([]) => ssSeq([]).
+  genArgs([T,..L]) => ssSeq([genTerm(T),..genMoreArgs(L)]).
 
-  convertCall:(list[integer],pred) => list[integer].
-  convertCall(Ox,C) => [0c,,0c\n,0c ,0c ,0c ,0c ,..convertPred(C,Ox)].
+  genMoreArgs:(list[term]) => list[ss].
+  genMoreArgs([]) => [].
+  genMoreArgs([T,..L]) => [ss(", "),genTerm(T),..genMoreArgs(L)].
 
-  convertPred:(pred,list[integer]) => list[integer].
-  convertPred(call(_,Op,Args),Ox) => convertCallOp(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-  convertPred(ecall(_,Op,Args),Ox) => appId(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-  convertPred(unfy(_,L,R),Ox) => convertFunCall(L,R,Ox).
-  convertPred(ocall(_,Call,Lb,Th),Ox) => appStr("ocall(",convertTerm(Call,[0c,,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c),..Ox])])])).
-  convertPred(neck,Ox) => [0c!,..Ox].
-  convertPred(fail,Ox) => appStr("fail",Ox).
-  convertPred(except(_,E),Ox) => appStr("raise_exception",[0c(,..convertTerm(E,[0c),..Ox])]).
+  genId:(string) => ss.
+  genId(Id) => ssSeq([ss("'"),ss(implode(genQuoted(explode(Id),0c'))),ss("'")]).
 
-  convertFunCall:(term,term,list[integer]) => list[integer].
-  convertFunCall(L,guarded(R,P),Ox) => convertPreds(P,[],[0c,,0c\n,0c ,0c ,0c ,0c ,..convertFunCall(L,R,Ox)]).
-  convertFunCall(L,invoke(Lc,Op,Args),Ox) => convertPred(call(Lc,Op,Args<>[L]),Ox).
-  convertFunCall(L,escvoke(Lc,Op,Args),Ox) => convertPred(ecall(Lc,Op,Args<>[L]),Ox).
-  convertFunCall(L,ovoke(Lc,Cl,Lb,Th),Ox) => appStr("ofun(",convertTerm(Cl,[0c,,0c\n,0c ,0c ,0c ,0c ,..convertTerm(Lb,[0c,,..convertTerm(Th,[0c,,..convertTerm(L,[0c),..Ox])])])])).
-  convertFunCall(L,R,Ox) => convertTerm(L,[0c ,0c=, 0c ,..convertTerm(R,Ox)]).
-
-  convertTerm:(term,list[integer]) => list[integer].
-  convertTerm(anon,Ox) => [0c_,..Ox].
-  convertTerm(varbl(Nm),Ox) => [0cX,..appStr(Nm,Ox)].
-  convertTerm(intgr(Ix),Ox) => appStr(Ix::string,Ox).
-  convertTerm(flot(Dx),Ox) => appStr(Dx::string,Ox).
-  convertTerm(strng(Sx),Ox) => appQuoted(Sx,0c",Ox).
-  convertTerm(enum(Ex),Ox) => appId(Ex,Ox).
-  convertTerm(strct(Nm,Ar),Ox) => appId(Nm,Ox).
-  convertTerm(prg(Nm,Ar),Ox) => appId(Nm,Ox).
-  convertTerm(cons(Op,Args),Ox) => convertTerm(Op,[0c(,..convertArgs(Args,[0c),..Ox])]).
-
-  appStr:(string,list[integer]) => list[integer].
-  appStr(S,Ox) => explode(S)<>Ox.
-
-  appQuoted:(string,integer,list[integer]) => list[integer].
-  appQuoted(S,Qt,Ox) => [Qt,..quoteConcat(explode(S),Qt,[Qt,..Ox])].
-
-  appId:(string,list[integer]) => list[integer].
-  appId(Nm,Ox) => appQuoted(Nm,0c',Ox).
-
-  quoteConcat:(list[integer],integer,list[integer]) => list[integer].
-  quoteConcat([],_,Ox) => Ox.
-  quoteConcat([Qt,..L],Qt,Ox) => [0c\\,Qt,..quoteConcat(L,Qt,Ox)].
-  quoteConcat([0c",..L],Qt,Ox) => [0c\\,0c",..quoteConcat(L,Qt,Ox)].
-  quoteConcat([0c\\,..L],Qt,Ox) => [0c\\,0c\\,..quoteConcat(L,Qt,Ox)].
-  quoteConcat([C,..L],Qt,Ox) => [C,..quoteConcat(L,Qt,Ox)].
+  genQuoted:(list[integer],integer) => list[integer].
+  genQuoted([],_) => [].
+  genQuoted([Qt,..L],Qt) => [0c\\,Qt,..genQuoted(L,Qt)].
+  genQuoted([0c",..L],Qt) => [0c\\,0c",..genQuoted(L,Qt)].
+  genQuoted([0c\\,..L],Qt) => [0c\\,0c\\,..genQuoted(L,Qt)].
+  genQuoted([C,..L],Qt) => [C,..genQuoted(L,Qt)].
 }

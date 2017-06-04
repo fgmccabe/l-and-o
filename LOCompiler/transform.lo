@@ -740,14 +740,14 @@ lo.comp.transform{
     makeLblTerm(enum(LclName),Extra,LblTerm),
     (Extra =[] ? LblGl = [] | LblGl = [unfy(some(Lc::tloc),LbVr,LblTerm)]),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
-  makeClassMtdMap([clRule(Lc,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  makeClassMtdMap([clRule(Lc,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,[unfy(some(Lc::tloc),LbVr,LblTerm)],List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     trPtn(Hd,Lbl,[],Vs,Map,Opts,Ex,Ex0,Rp,Rp0),
     collectLabelVars(Vs,LbVr,ThVr,L0,L1),
     extraVars(Map,Extra),
     makeLblTerm(Lbl,Extra,LblTerm),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  makeClassMtdMap([clRule(Lc,_,_,_,_,_),..Rules],LclName,LbVr,ThVr,[unfy(some(Lc::tloc),LbVr,LblTerm)],List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  makeClassMtdMap([clRule(Lc,_,_,_,_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
 
   makeLblTerm:(term,list[term],term){}.
@@ -787,7 +787,7 @@ lo.comp.transform{
     genVarbl("This",ThVr),
     genVarbl("Lbl",LbVr),
     Con = cons(trCons(Name,1),[ClV]),
-    Px =addCl(P,clse(Args<>[LblVr,ThVr],prg(Prefix,3),[Con,LbVr,ThVr],[call(TLc,Super,[Con,LbVr,ThVr])])).
+    Px =addCl(P,eqn(Args<>[LblVr,ThVr],prg(Prefix,3),[enum(Name),LbVr,ThVr],invoke(TLc,Super,[enum(Name),LbVr,ThVr]))).
 
   collectMtds:(list[canonDef],string,term,term,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)]){}.
   collectMtds([],_,_,_,List,List,_).
