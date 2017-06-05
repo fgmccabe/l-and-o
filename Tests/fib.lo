@@ -1,19 +1,24 @@
 test.fib{
   -- Implement fibonacci sequence
   import lo.
+  import lo.unit.
 
   fib:(integer) => integer.
   fib(0) => 0.
   fib(1) => 1.
   fib(N) => fib(N-1) + fib(N-2).
 
-  fibList:(integer,integer,list[integer]) => list[integer].
-  fibList(Curr,Mx,L) =>  L :-  Curr>Mx .
+  fibList:(integer,integer,list[integer]) => integer.
+  fibList(Curr,Mx,L) =>  Curr :-  Mx=<size(L) .
   fibList(Curr,Max,[N1,N2,..L]) => fibList(N1+N2,Max,[N1+N2,N1,N2,..L]).
 
-  main:(integer){}.
-  main(Cnt) :-
-    logMsg("Fib of \(Cnt) is \(fib(Cnt))").
+  show "Fib of 6 is \(fib(6))".
 
-  -- show "\(fibList(0,4000000,[1,0]))".
+  fibtest:(integer) <=> harness.
+  fibtest(i)<={
+    desc = "fibonacci test".
+    doTest() :- fib(i) == fibList(1,i+1,[1,0]).
+  }.
+
+  assert checkUnit(fibtest(10)).
 }

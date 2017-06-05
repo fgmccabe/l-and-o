@@ -54,7 +54,7 @@ lo.index{
     M1-M2 => subtractTree(M1,M2).
   }
 
-  public find:all m,k,v ~~ equality[k] |: (map[k,v],k) => v.
+  public find:all m,k,v ~~ equality[k], map[m->>k,v] |: (m,k) => v.
   find(M,K) => V :- present(M,K,V).
 
   public foldMap:all k,v,u ~~ ((k,v,u)=>u,u,map[k,v]) => u.

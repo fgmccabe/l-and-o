@@ -4,4 +4,11 @@ test.suite{
   import test.a.
   import test.aa.
   import test.ancestor.
+  import test.anon2.
+  import test.append.
+  import test.bench.
+  import test.cc.
+  import test.e.
+  import test.eq.
+  import test.f.
 }

@@ -1,7 +1,7 @@
-lo.arithmetic{
+test.arithmetic{
   -- Lay out the arithmetic contracts
 
-  public 
+  public
   contract all t ~~ equality[t] <~ { -- A contract rather than a regular interface
     eq: (t,t){}.
     hash: (t)=>integer.
@@ -11,19 +11,19 @@ lo.arithmetic{
   nameOf:all t,v ~~ t<~{name:()=>v} |: (t)=>v.
   nameOf(R) => R.name().
 
-  public 
+  public
   contract all t ~~ equality[t] |: comp[t] <~ { -- another contract
     lt: (t,t){}.
     ge: (t,t){}.
   }
 
-  public 
+  public
   contract all t ~~ additive[t] <~ {
     pl:  (t,t)=>t.
     mns: (t,t)=>t.
   }
 
-  public 
+  public
   contract all t ~~ additive[t] |: arith[t] <~ {
     tms: (t,t)=>t.
     dv:  (t,t)=>t.

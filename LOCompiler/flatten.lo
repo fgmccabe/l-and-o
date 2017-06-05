@@ -18,6 +18,10 @@ lo.comp.flatten{
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
     flattenBody(Body,Q1,NBody,[],NQ).
+  flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,PrR)),Guard)) :-
+    flattenTerms(Args,Q,NArgs,G0,Post,Post,[],Q0)!,
+    flattenBody(G,Q0,Guard,G0,Q1),
+    flattenTerm(Rep,Q1,NRep,PrR,PsR,PsR,[],NQ).
   flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,PrR)),Guard)) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q0)!,
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).

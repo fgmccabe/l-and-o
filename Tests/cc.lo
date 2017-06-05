@@ -5,11 +5,16 @@ test.cc{
     (-): (x,x)=>x.
     zero: x.
   }
-  
+
   public implementation additive[float] <= {
     X+Y => _flt_plus(X,Y).
     X-Y => _flt_minus(X,Y).
 
     zero = 0.0.
   }
+
+  x:float.
+  x = zero.
+
+  assert x = 0.0.
 }
