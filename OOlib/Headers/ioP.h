@@ -59,7 +59,7 @@ typedef struct _io_class_ {
 extern IoClassRec IoClass;              /* the standard pointer to an IO class record */
 
 typedef struct _io_part_{
-  byte filename[MAXFILELEN];            /* File name */
+  char filename[MAXFILELEN];            /* File name */
   retCode status;                       /* current status of the io object */
   ioDirection mode;                         /* Mode that file is opened for */
   ioEncoding encoding;			            /* What is the mode for string encoding */

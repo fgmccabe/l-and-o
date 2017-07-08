@@ -36,9 +36,9 @@ lo.repo.manifest{
   entryJson:(string,manifestEntry) => json.
   entryJson(P,manifestEntry(_,V)) => jColl(foldRight(versionJson,[],V)).
 
-  versionJson:(map[string,json],(version,map[string,string])) => map[string,json].
-  versionJson(M,(defltVersion,R)) => M["*"->jColl(R///((_,S)=>jTxt(S)))].
-  versionJson(M,(vers(V),R)) => M[V->jColl(R///((_,S)=>jTxt(S)))].
+  versionJson:((version,map[string,string]),map[string,json]) => map[string,json].
+  versionJson((defltVersion,R),M) => M["*"->jColl(R///((_,S)=>jTxt(S)))].
+  versionJson((vers(V),R),M) => M[V->jColl(R///((_,S)=>jTxt(S)))].
 
   -- Displaying a manifest
   public implementation display[manifest] <= {

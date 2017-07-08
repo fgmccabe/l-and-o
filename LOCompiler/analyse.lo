@@ -93,27 +93,27 @@ lo.comp.code.analyse{
   usageTable(Occs,Arity,Parts) => buildRegUsage(Occs,Occs,Parts,Arity,[]).
 
   checkOtherRegVars:(string,integer,set[integer],list[occMap]) => set[integer].
-  checkOtherRegVars(Nm,Gp,U,O) => foldLeft((A,occ(N,Occs))=>(N=Nm?A|checkOtherOccs(U,Gp,Occs,A)),nullSet,O).
+  checkOtherRegVars(Nm,Gp,U,O) => foldLeft((occ(N,Occs),A)=>(N=Nm?A|checkOtherOccs(U,Gp,Occs,A)),nullSet,O).
 
   checkOtherOccs:(set[integer],integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
-  checkOtherOccs(Use,RGp,Occs,Avoid) => foldLeft((A,(Form,Gp,Rg)) => checkOccForArg(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
+  checkOtherOccs(Use,RGp,Occs,Avoid) => foldLeft(((Form,Gp,Rg),A) => checkOccForArg(Form,RGp,Gp,Rg,Use,A),Avoid,Occs).
 
   checkOccForArg:(occForm,integer,integer,integer,set[integer],set[integer]) => set[integer].
-  checkOccForArg(hArg,Gp,Gp,Rg,U,A) => addMem(A,Rg).
-  checkOccForArg(oTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg).
-  checkOccForArg(hTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForArg(lTerm,Gp,Gp,Rg,U,A) => addMem(A,Rg).
-  checkOccForArg(lArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
-  checkOccForArg(oArg,Gp,Gp,Rg,U,A) => addMem(A,Rg) :- \+ Rg in U.
+  checkOccForArg(hArg,Gp,Gp,Rg,U,A) => addMem(Rg,A).
+  checkOccForArg(oTerm,Gp,Gp,Rg,U,A) => addMem(Rg,A).
+  checkOccForArg(hTerm,Gp,Gp,Rg,U,A) => addMem(Rg,A) :- \+ Rg in U.
+  checkOccForArg(lTerm,Gp,Gp,Rg,U,A) => addMem(Rg,A).
+  checkOccForArg(lArg,Gp,Gp,Rg,U,A) => addMem(Rg,A) :- \+ Rg in U.
+  checkOccForArg(oArg,Gp,Gp,Rg,U,A) => addMem(Rg,A) :- \+ Rg in U.
   checkOccForArg(_,_,_,_,_,A) => A.
 
   conflictSet:(occMap,integer,integer) => set[integer].
-  conflictSet(occ(Nm,Occs),Gp,Arity) => foldLeft((C,Rg) => checkArgPos(Gp,Rg,Occs,C),nullSet,iota(1,Arity)) :- ((lArg,Gp,_) in Occs | (oArg,Gp,_) in Occs).
+  conflictSet(occ(Nm,Occs),Gp,Arity) => foldLeft((Rg,C) => checkArgPos(Gp,Rg,Occs,C),nullSet,iota(1,Arity)) :- ((lArg,Gp,_) in Occs | (oArg,Gp,_) in Occs).
   conflictSet(occ(Nm,Occs),Gp,Arity) => nullSet.
 
   checkArgPos:(integer,integer,list[(occForm,integer,integer)],set[integer]) => set[integer].
-  checkArgPos(Gp,Rg,Occs,CS) => addMem(CS,Rg) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs.
-  checkArgPos(Gp,Rg,Occs,CS) => addMem(CS,Rg) :- ((lTerm,Gp,Rg) in Occs | (oTerm,Gp,Rg) in Occs).
+  checkArgPos(Gp,Rg,Occs,CS) => addMem(Rg,CS) :- \+(lArg,Gp,Rg) in Occs, \+(oArg,Gp,Rg) in Occs.
+  checkArgPos(Gp,Rg,Occs,CS) => addMem(Rg,CS) :- ((lTerm,Gp,Rg) in Occs | (oTerm,Gp,Rg) in Occs).
   checkArgPos(_,_,_,CS) => CS.
 
   buildRgUsage:(occMap,list[occMap],list[list[pred]],integer,list[usageMap]) => list[usageMap].
@@ -146,20 +146,20 @@ lo.comp.code.analyse{
   registersOccupied:(list[(occForm,integer,integer)]) => set[integer].
   registersOccupied(Occs) => foldLeft(argRegUsed,nullSet,Occs).
 
-  argRegUsed:(set[integer],(occForm,integer,integer)) => set[integer].
-  argRegUsed(Regs,(hArg,_,Ix)) => addMem(Regs,Ix).
-  argRegUsed(Regs,(lArg,_,Ix)) => addMem(Regs,Ix).
-  argRegUsed(Regs,_) => Regs.
+  argRegUsed:((occForm,integer,integer),set[integer]) => set[integer].
+  argRegUsed((hArg,_,Ix),Regs) => addMem(Ix,Regs).
+  argRegUsed((lArg,_,Ix),Regs) => addMem(Ix,Regs).
+  argRegUsed(_,Regs) => Regs.
 
   otherUsers:(list[occMap],integer,list[(occForm,integer,integer)])=>set[integer].
   otherUsers(OM,Gp,Use) => foldLeft((C,M) => checkHeadUses(M,Gp,C,Use),nullSet,OM).
 
   checkHeadUses:(occMap,integer,set[integer],list[(occForm,integer,integer)]) => set[integer].
-  checkHeadUses(occ(_,Occs),Gp,C,Use) => foldLeft((CS,(Form,G,Rg)) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs).
+  checkHeadUses(occ(_,Occs),Gp,C,Use) => foldLeft(((Form,G,Rg),CS) => checkHeadUse(Form,G,Gp,Rg,CS,Use),C,Occs).
 
   checkHeadUse:(occForm,integer,integer,integer,set[integer],list[(occForm,integer,integer)]) => set[integer].
-  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg).
-  checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Cs,Rg) :- \+(_,Gp,Rg) in Use.
+  checkHeadUse(hTerm,Gp,Gp,Rg,Cs,Use) => addMem(Rg,Cs).
+  checkHeadUse(hArg,Gp,Gp,Rg,Cs,Use) => addMem(Rg,Cs) :- \+(_,Gp,Rg) in Use.
   checkHeadUse(_,_,_,_,Cs,_) => Cs.
 
   classifyVr:(list[(occForm,integer,integer)],addr,option[integer]){}.
@@ -184,8 +184,8 @@ lo.comp.code.analyse{
     ((hArg,_,Rg) in Occs ?
       ( \+Rg in Avoid ?
         D0 = D[Nm->varDesc(Nm,inited,isDefined,aReg(Rg),lastOcc(Occs))],
-        U0 = addMem(Ur,Rg),
-        F0 = delMem(Fr,Rg) |
+        U0 = addMem(Rg,Ur),
+        F0 = delMem(Rg,Fr) |
         D0 = D,
         U0=Ur,
         F0=Fr) |
@@ -196,7 +196,7 @@ lo.comp.code.analyse{
 
   avoidIota:(list[integer],integer) => list[integer].
   avoidIota(Fr,0) => Fr.
-  avoidIota(Fr,Ix) => avoidIota(delMem(Fr,Ix),Ix-1).
+  avoidIota(Fr,Ix) => avoidIota(delMem(Ix,Fr),Ix-1).
 
   -- allocate registers not already spoken for - based on body
   allocateRegs:(list[usageMap],list[integer],list[integer],map[string,varDesc],
@@ -207,10 +207,10 @@ lo.comp.code.analyse{
     allocateRegs(Tble,Ur,Fr,D,Ux,Fx,Dx).
   allocateRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     (lArg,_,Rg) in Occs, Rg in Fr, \+Rg in Conflict,
-    allocateRegs(Tble,addMem(Ur,Rg),delMem(Fr,Rg),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
+    allocateRegs(Tble,addMem(Rg,Ur),delMem(Rg,Fr),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
   allocateRegs([usage(Nm,occ(_,Occs),aReg(_),Use,Conflict),..Tble],Ur,Fr,D,Ux,Fx,Dx) :-
     Rg in Fr, \+Rg in Conflict,
-    allocateRegs(Tble,addMem(Ur,Rg),delMem(Fr,Rg),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
+    allocateRegs(Tble,addMem(Rg,Ur),delMem(Rg,Fr),D[Nm->varDesc(Nm,notInited,isDefined,aReg(Rg),lastOcc(Occs))],Ux,Fx,Dx).
   allocateRegs([U,..L],Ur,Fr,D,Ux,Fx,Dx) :-
     allocateRegs(L,Ur,Fr,D,Ux,Fx,Dx).
 
@@ -221,7 +221,7 @@ lo.comp.code.analyse{
   findOccupiedRegs([],Us,Us,Fr,Fr).
   findOccupiedRegs([usage(_,occ(_,Occs),_,_,_),..Usage],Us0,Usx,Fr,Frx) :-
     ((hArg,_,Rg) in Occs,Rg in Fr ?
-      findOccupiedRegs(Usage,addMem(Us0,Rg),Usx,delMem(Fr,Rg),Frx) |
+      findOccupiedRegs(Usage,addMem(Rg,Us0),Usx,delMem(Rg,Fr),Frx) |
       findOccupiedRegs(Usage,Us0,Usx,Fr,Frx)).
 
   -- find last occurrence
@@ -256,5 +256,5 @@ lo.comp.code.analyse{
   allocPerms:(list[(string,option[(integer,integer)],addr,defined)],map[string,varDesc],integer,set[integer],set[integer]) => map[string,varDesc].
   allocPerms([],M,_,Lcls,Lcls) => M.
   allocPerms([(Nm,U,yReg(_,Sfe),D),..T],M,vNo,Lc0,Lcx) =>
-    allocPerms(T,M[Nm->varDesc(Nm,notInited,D,yReg(vNo,Sfe),U)],vNo-1,addMem(Lc0,vNo),Lcx).
+    allocPerms(T,M[Nm->varDesc(Nm,notInited,D,yReg(vNo,Sfe),U)],vNo-1,addMem(vNo,Lc0),Lcx).
 }

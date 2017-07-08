@@ -150,8 +150,8 @@ static void defineResumeProgs(void) {
 
 /* Top-level bootstrap sequence, load the initial boot program and enter with standard entry point */
 
-void bootstrap(string entry, string bootPkg, string version) {
-  byte errorMsg[MAX_MSG_LEN];
+void bootstrap(char * entry, char * bootPkg, char * version) {
+  char errorMsg[MAX_MSG_LEN];
 
   defineExitProg();
   defineDieProg();

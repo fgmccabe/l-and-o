@@ -13,7 +13,7 @@ lo.comp.code.code{
   }
 
   dispCodeSeg:(assem) => ss.
-  dispCodeSeg(assem(Nm,Ins,Lits,SrcMap)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins,foldLeft((M,litrl(N,T))=>M[N->T],[],Lits))),ssSeq(anyLits(Lits))]).
+  dispCodeSeg(assem(Nm,Ins,Lits,SrcMap)) => ssSeq([ss("program: "),disp(Nm),ss("\n"),ssSeq(dispIns(Ins,foldLeft((litrl(N,T),M)=>M[N->T],[],Lits))),ssSeq(anyLits(Lits))]).
 
   dispIns:(list[instruction],map[string,term]) => list[ss].
   dispIns([],_) => [].

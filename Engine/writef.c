@@ -86,14 +86,14 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
       }
 
       if (class == integerClass)
-        r = outInteger(f, integerVal((integerPo) p), 10, 0, prec, ' ', False, (string) "", False);
+        r = outInteger(f, integerVal((integerPo) p), 10, 0, prec, ' ', False,  "", False);
       else if (class == floatClass)
         r = outFloat(f, floatVal((floatPo) p));
       else if (class == stringClass) {
         stringPo str = (stringPo)p;
         long pos = 0;
         long end = stringLen(str);
-        string src = stringVal(str);
+        char * src = stringVal(str);
 
         r = outChar(f, '\"');
 
@@ -108,13 +108,13 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
           r = outChar(f, '\"');
       } else if (class == classClass) {
         clssPo cl = (clssPo) p;
-        string clName = className(cl);
+        char * clName = className(cl);
 
         r = outText(f, clName, uniStrLen(clName));
         if (r == Ok)
           r = outChar(f, '/');
         if (r == Ok)
-          r = outInteger(f, classArity(cl), 10, 0, prec, ' ', False, (string) "", False);
+          r = outInteger(f, classArity(cl), 10, 0, prec, ' ', False,  "", False);
       } else if (class == consClass) {
         if (depth > 0) {
           long maxLen = (prec != 0 ? prec * 2 : INT_MAX); /* How many elements to show */
@@ -168,7 +168,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
         } else
           r = outStr(f, "(...)");
       } else if (IsTermClass(class)) {
-        string name = objectClassName(p);
+        char * name = objectClassName(p);
 
         r = outMsg(f, "%U", name);
 

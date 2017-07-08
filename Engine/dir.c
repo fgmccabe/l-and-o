@@ -30,7 +30,7 @@ retCode g__cwd(processPo P, ptrPo a) {
   switchProcessState(P, wait_io);
   char *cwd = getcwd(NULL, 0);           /* compute current working directory */
   setProcessRunnable(P);
-  byte wd[MAXFILELEN];
+  char wd[MAXFILELEN];
 
   strMsg(wd,NumberOf(wd),"file:%s/",cwd);
 
@@ -53,7 +53,7 @@ retCode g__cd(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *strData = (char *) stringVal(stringV(t1));
+    char *strData =  stringVal(stringV(t1));
 
     if (chdir(strData) != -1) {
       setProcessRunnable(P);
@@ -92,7 +92,7 @@ retCode g__rm(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *strData = (char *) stringVal(stringV(t1));
+    char *strData =  stringVal(stringV(t1));
     if (unlink(strData) != -1) {
       setProcessRunnable(P);
       return Ok;
@@ -126,8 +126,8 @@ retCode g__mv(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *fn1 = (char *) stringVal(stringV(t1));
-    char *fn2 = (char *) stringVal(stringV(t2));
+    char *fn1 =  stringVal(stringV(t1));
+    char *fn2 =  stringVal(stringV(t2));
 
     if (rename(fn1, fn2) != -1) {
       setProcessRunnable(P);
@@ -165,7 +165,7 @@ retCode g__mkdir(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (mkdir(str, acmode) == -1) {
       setProcessRunnable(P);
@@ -196,7 +196,7 @@ retCode g__rmdir(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (rmdir(str) == 0) {
       setProcessRunnable(P);
@@ -235,7 +235,7 @@ retCode g__chmod(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (chmod(str, acmode) == -1) {
       setProcessRunnable(P);
@@ -271,7 +271,7 @@ retCode g__file_mode(processPo P, ptrPo a) {
 
     tryAgain:
     switchProcessState(P, wait_io);
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (stat(str, &buf) == -1) {
       setProcessRunnable(P);
@@ -332,7 +332,7 @@ retCode g__file_type(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
     if (stat(str, &buf) == -1) {
       setProcessRunnable(P);
 
@@ -428,7 +428,7 @@ retCode g__file_size(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (stat(str, &buf) == -1) {
       setProcessRunnable(P);
@@ -479,7 +479,7 @@ retCode g__file_date(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (stat(str, &buf) == -1) {
       setProcessRunnable(P);
@@ -541,7 +541,7 @@ retCode g__file_modified(processPo P, ptrPo a) {
     tryAgain:
     switchProcessState(P, wait_io);
 
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if (stat(str, &buf) == -1) {
       setProcessRunnable(P);
@@ -589,7 +589,7 @@ retCode g__ls(processPo P, ptrPo a) {
     DIR *directory;
 
     switchProcessState(P, wait_io);
-    char *str = (char *) stringVal(stringV(t1));
+    char *str =  stringVal(stringV(t1));
 
     if ((directory = opendir(str)) == NULL) {
       setProcessRunnable(P);

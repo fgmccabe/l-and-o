@@ -2,8 +2,8 @@ lo.collection{
   import lo.core.
 
   public contract all c,e ~~ folding[c->>e] <~ {
-    foldRight:all x ~~ (((x,e)=>x),x,c) => x.
-    foldLeft:all x ~~ (((x,e)=>x),x,c) => x.
+    foldRight:all x ~~ (((e,x)=>x),x,c) => x.
+    foldLeft:all x ~~ (((e,x)=>x),x,c) => x.
   }
 
   public contract all c,e ~~ filter[c->>e] <~ {
@@ -34,8 +34,8 @@ lo.collection{
 
   public contract all k,e ~~ membership[k->>e] <~ {
     empty: k.
-    addMem:(k,e)=>k.
-    delMem:(k,e)=>k.
+    addMem:(e,k)=>k.
+    delMem:(e,k)=>k.
     (in):(e,k){}.
   }
 

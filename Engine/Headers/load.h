@@ -8,16 +8,16 @@
 #include "word.h"
 
 typedef struct _package_record_ {
-  byte packageName[1024];
-  byte version[1024];
+  char packageName[1024];
+  char version[1024];
 } PackageRec, *packagePo;
 
 void initPackages();
 
-packagePo loadedPackage(string package);
+packagePo loadedPackage(char * package);
 
-string pkgName(packagePo pkg);
-string pkgVers(packagePo pkg);
-string loadedVersion(string package);
+char * pkgName(packagePo pkg);
+char * pkgVers(packagePo pkg);
+char * loadedVersion(char * package);
 
 #endif //LANDO_LOAD_H

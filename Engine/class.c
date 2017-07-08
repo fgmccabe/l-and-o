@@ -13,7 +13,7 @@
  permissions and limitations under the License.
  */
 
-#include "config.h"		/* pick up standard configuration header */
+#include "config.h"    /* pick up standard configuration header */
 #include <string.h>
 #include <stdlib.h>
 
@@ -184,14 +184,14 @@ void standardClasses(void) {
   initProcessClss();
 }
 
-ptrI newClassDef(const string name, long arity) {
+ptrI newClassDef(char *name, long arity) {
   struct {  // This needs to have the same memory layout as a PrgLabel
     long arity;
-    byte nm[MAX_SYMB_LEN];
+    char nm[MAX_SYMB_LEN];
   } lbl;
 
   lbl.arity = arity;
-  uniCpy((string) &lbl.nm, NumberOf(lbl.nm), name);
+  uniCpy((char *) &lbl.nm, NumberOf(lbl.nm), name);
 
   ptrI def = (ptrI) hashGet(classes, (void *) &lbl);
 
@@ -201,7 +201,7 @@ ptrI newClassDef(const string name, long arity) {
     clssPo new = (clssPo) permAllocate(len);
 
     new->class = classClass;
-    new->hash = uniHash(name)*37+arity;
+    new->hash = uniHash(name) * 37 + arity;
     new->lbl.arity = arity;
 
     memcpy(new->lbl.name, name, (symlen + 1) * sizeof(byte));
@@ -225,7 +225,7 @@ void installClass(clssPo class) {
 }
 
 ptrI newClassDf(const char *name, long arity) {
-  return newClassDef((string) name, arity);
+  return newClassDef((char *) name, arity);
 }
 
 ptrI newEnumSym(const char *fun) {
@@ -234,8 +234,8 @@ ptrI newEnumSym(const char *fun) {
   return objP(allocateObject(&globalHeap, eClass));
 }
 
-ptrI newEnumSymbol(const string fun) {
-  ptrI eClass = newClassDef(fun, 0);
+ptrI newEnumSymbol(const char *fun) {
+  ptrI eClass = newClassDef((char*)fun, 0);
 
   return objP(allocateObject(&globalHeap, eClass));
 }
@@ -243,7 +243,7 @@ ptrI newEnumSymbol(const string fun) {
 ptrI newSpecialClass(const char *name, classSizeFun sizeFun, classCompFun compFun, classOutFun outFun,
                      classCpyFun copyFun, classScanFun scanFun, classHashFun hashFun) {
   size_t slen = strlen(name);
-  byte buff[slen + 1];
+  char buff[slen + 1];
 
   strncpy((char *) buff, name, slen);
 

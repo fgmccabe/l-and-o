@@ -44,13 +44,13 @@ static void parseError(char *msg,int lineNo);
 static long parseLong(char *text)
 {
   long len = strlen(text);
-  return parseInteger((string)text,len);
+  return parseInteger(text,len);
 }
 
 static double parseFloat(char *text)
 {
   long len = strlen(text);
-  return parseNumber((string)text,len);
+  return parseNumber(text,len);
 }
 
 static long octtoi(char *text);

@@ -32,7 +32,7 @@ retCode g__listen(processPo P, ptrPo a) {
     return liberror(P, "_listen", eVARNEEDD);
   else {
     integer port = integerVal(intV(Port));
-    byte nBuff[MAX_MSG_LEN];
+    char nBuff[MAX_MSG_LEN];
     ioPo listen;
 
     strMsg(nBuff, NumberOf(nBuff), "listen@%ld", port);
@@ -74,9 +74,9 @@ retCode g__accept(processPo P, ptrPo a) {
     switch (ret) {
       case Ok: {
         int port;
-        byte pBuff[MAX_MSG_LEN];
-        string peerN = peerName(O_SOCK(inC), &port);
-        string peerI = peerIP(O_SOCK(inC), &port, &pBuff[0], NumberOf(pBuff));
+        char pBuff[MAX_MSG_LEN];
+        char *peerN = peerName(O_SOCK(inC), &port);
+        char *peerI = peerIP(O_SOCK(inC), &port, &pBuff[0], NumberOf(pBuff));
         ptrI peerNme;
 
         if (peerN == NULL || peerI == NULL) {
@@ -102,7 +102,8 @@ retCode g__accept(processPo P, ptrPo a) {
 
         return Ok;
       }
-      default:return liberror(P, "_accept", eIOERROR);
+      default:
+        return liberror(P, "_accept", eIOERROR);
     }
   }
 }
@@ -130,7 +131,7 @@ retCode g__connect(processPo P, ptrPo a) {
     if (port == 0)
       return liberror(P, "_connect", eINVAL);
 
-    byte host[MAX_MSG_LEN];
+    char host[MAX_MSG_LEN];
 
     copyString2Buff(host, NumberOf(host), stringV(Host));
 
@@ -146,7 +147,8 @@ retCode g__connect(processPo P, ptrPo a) {
         equal(P, &a[4], &RemIn);
         return equal(P, &a[5], &RemOut);
       }
-      default:logMsg(logFile, "Failed to establish connection: %U", host);
+      default:
+        logMsg(logFile, "Failed to establish connection: %U", host);
         return liberror(P, "_connect", eCONNECT);
     }
   }
@@ -226,7 +228,7 @@ retCode g__udpPort(processPo P, ptrPo a) {
     return liberror(P, "_udpPort", eVARNEEDD);
   else {
     int portNo = (int) integerVal(intV(Port));
-    byte nBuff[MAX_MSG_LEN];
+    char nBuff[MAX_MSG_LEN];
 
     strMsg(nBuff, NumberOf(nBuff), "udpPort:%d", portNo);
     udpPo sock = newUDPPort(nBuff, portNo, ioREAD | ioWRITE);
@@ -279,7 +281,7 @@ retCode g__udpSend(processPo P, ptrPo a) {
       return liberror(P, "_udpSend", eSTRNEEDD);
     else {
       stringPo str = stringV(a2);
-      string text = stringVal(str);
+      char *text = stringVal(str);
       long tLen = stringLen(str);
 
       ptrI a3 = deRefI(&a[3]);
@@ -292,7 +294,7 @@ retCode g__udpSend(processPo P, ptrPo a) {
         str = stringV(a3);
         long peerLn = stringLen(str);
 
-        byte peer[peerLn + 1];
+        char peer[peerLn + 1];
         copyString2Buff(peer, NumberOf(peer), str);
 
         if (isvar(t1 = deRefI(&a[4])) || !isInteger(objV(t1)))
@@ -300,10 +302,12 @@ retCode g__udpSend(processPo P, ptrPo a) {
         else {
           uint16 port = (uint16) integerVal(intV(t1));
 
-          switch (udpSend(file, text, tLen, peer, port)) {
-            case Ok:return Ok;
+          switch (udpSend(file, (byte *) text, tLen, peer, port)) {
+            case Ok:
+              return Ok;
 
-            default:return liberror(P, "__udpSend", eIOERROR);
+            default:
+              return liberror(P, "__udpSend", eIOERROR);
           }
         }
       }
@@ -320,14 +324,15 @@ retCode g__udpGet(processPo P, ptrPo a) {
     return liberror(P, "_udpGet", eINVAL);
   else {
     udpPo file = udpPtr(t1);
-    byte txt[16384];                 // Maximum size of
+    char txt[16384];                 // Maximum size of
     long len = NumberOf(txt);
-    byte peer[1024];
+    char peer[1024];
     long plen = NumberOf(peer);
     int port = 0;
 
-    switch (udpRead(file, txt, &len, peer, plen, &port)) {
-      case Eof:return liberror(P, "__udpGet", eEOF);
+    switch (udpRead(file, (byte*)txt, &len, peer, plen, &port)) {
+      case Eof:
+        return liberror(P, "__udpGet", eEOF);
       case Ok: {
         ptrI el = allocateString(&P->proc.heap, txt, len);
 
@@ -343,7 +348,8 @@ retCode g__udpGet(processPo P, ptrPo a) {
 
         return equal(P, &el, &a[4]);
       }
-      default:return liberror(P, "__intext", eIOERROR);
+      default:
+        return liberror(P, "__intext", eIOERROR);
     }
   }
 }
@@ -357,11 +363,11 @@ retCode g_hosttoip(processPo P, ptrPo a) {
     return liberror(P, "hosttoip", eSTRNEEDD);
   else {
     long i;
-    byte ip[MAX_MSG_LEN];
+    char ip[MAX_MSG_LEN];
     ptrI l = emptyList;
     ptrI el = kvoid;
     rootPo root = gcAddRoot(&P->proc.heap, &l);
-    string host = stringVal(stringV(Host));
+    char *host = stringVal(stringV(Host));
 
     gcAddRoot(&P->proc.heap, &el);
 
@@ -383,8 +389,8 @@ retCode g_iptohost(processPo P, ptrPo a) {
   if (!IsString(IP))
     return liberror(P, "iptohost", eSTRNEEDD);
   else {
-    string ip = stringVal(stringV(IP));
-    string host = getHostname(ip);
+    char *ip = stringVal(stringV(IP));
+    char *host = getHostname(ip);
 
     if (host != NULL) {
       ptrI Host = allocateString(&P->proc.heap, host, uniStrLen(host));

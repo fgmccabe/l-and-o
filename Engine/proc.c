@@ -231,7 +231,7 @@ retCode processProcesses(procProc proc, void *cl) {
   return processAll(processClass, (manageProc) proc, cl);
 }
 
-processPo rootProcess(ptrI thread, string pkg) {
+processPo rootProcess(ptrI thread, char * pkg) {
   processPo P = O_PROCESS(newObject(processClass, thread));
   heapPo H = &P->proc.heap;
   rootPo root = gcAddRoot(H, &thread);

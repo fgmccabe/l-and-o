@@ -20,7 +20,7 @@
 
 typedef struct {
   void *handle;			/* The dl handle */
-  string sig;			/* The signature key of the module */
+  char * sig;			/* The signature key of the module */
   long sigLen;			/* The length of the signature */
   long modLen;			/* How many functions are exported? */
   struct {

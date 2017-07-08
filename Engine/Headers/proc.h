@@ -110,7 +110,7 @@ typedef struct {
   ptrI trigger;                         /* triggered variables */
   uint16 F;                             /* Trigger flag */
 
-  byte errorMsg[1024];    // Current error message
+  char errorMsg[1024];    // Current error message
   ptrI errorCode;      /* Error code of this process */
 
   pthread_t threadID;      /* What is the posix thread ID? */
@@ -180,8 +180,8 @@ process_state ps_state(processPo p);
 
 processPo runerr(processPo); /* non-fatal error */
 
-processPo rootProcess(ptrI thread, string pkg);
-void bootstrap(string entry, string bootPkg, string version);
+processPo rootProcess(ptrI thread, char * pkg);
+void bootstrap(char * entry, char * bootPkg, char * version);
 
 void displayProcesses(void);
 void displayProcess(processPo p);

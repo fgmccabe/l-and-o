@@ -20,7 +20,7 @@
 typedef struct _string_record_ {
   ptrI class;                             // == stringClass
   long size;                              // Length of the string
-  byte data[ZEROARRAYSIZE];               // The string contents
+  char data[ZEROARRAYSIZE];               // The string contents
 } stringRec, *stringPo;
 
 extern ptrI stringClass;
@@ -40,13 +40,13 @@ static inline stringPo stringV(ptrI x) {
   return (stringPo) objV(x);
 }
 
-static inline string stringVal(stringPo p) {
+static inline char * stringVal(stringPo p) {
   assert(isString((objPo) p));
 
   return p->data;
 }
 
-static inline string StringVal(stringPo p) {
+static inline char * StringVal(stringPo p) {
   assert(isString((objPo) p));
 
   return p->data;
@@ -66,13 +66,13 @@ static inline uinteger stringHash(objPo p) {
   return sClass->hashFun(sClass, p);
 }
 
-ptrI allocateString(heapPo H, string buff, long len);
+ptrI allocateString(heapPo H, const char *buff, long len);
 ptrI allocateCString(heapPo H, const char *buff);
 
-retCode copyString2Buff(byte *buffer, long bLen, stringPo s);
-retCode strPrepare(string tgt, long tLen, string src, long sLen, codePoint pad, logical left, long width);
+retCode copyString2Buff(char *buffer, long bLen, stringPo s);
+retCode strPrepare(char * tgt, long tLen, char * src, long sLen, codePoint pad, logical left, long width);
 retCode closeOutString(ioPo f, heapPo P, ptrPo tgt);
 
-retCode explodeString(processPo P, byte *text, long length, ptrPo a);
+retCode explodeString(processPo P, char *text, long length, ptrPo a);
 retCode implodeString(ptrPo l, ioPo out);
 #endif

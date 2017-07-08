@@ -22,7 +22,6 @@
 #include "logical.h"
 
 typedef unsigned int32 codePoint; /* underlying code point is actually up to 20 bits */
-typedef byte *string;  /* A string is a pointer to a utf8 sequence */
 
 typedef enum {
   rawEncoding,
@@ -70,45 +69,45 @@ int digitValue(codePoint ch);
 codePoint lowerOf(codePoint ch);
 codePoint upperOf(codePoint ch);
 
-long countCodePoints(string src, long start, long end);
-long uniCodeCount(string src);
+long countCodePoints(char * src, long start, long end);
+long uniCodeCount(char * src);
 
-long advanceCodePoint(string src, long start, long end, long count);
-codePoint nextCodePoint(string src, long *start, long end);
-retCode nxtPoint(string src, long *start, long end, codePoint *code);
-retCode prevPoint(string src, long *pos, codePoint *code);
+long advanceCodePoint(char * src, long start, long end, long count);
+codePoint nextCodePoint(char * src, long *start, long end);
+retCode nxtPoint(char * src, long *start, long end, codePoint *code);
+retCode prevPoint(char * src, long *pos, codePoint *code);
 
 int codePointSize(codePoint pt);
 
-logical isUniIdentifier(string id);
+logical isUniIdentifier(char * id);
 
-unsigned long uniStrLen(const string s);
-retCode uniCpy(string dest, long len, const string src);
-retCode uniNCpy(string dest, long len, const string src, long sLen);
-comparison uniCmp(string s1, string s2);
-comparison uniNCmp(string s1, string s2, long l);
-retCode uniInsert(string dest, long len, const string src);
-retCode appendCodePoint(string dest, long *pos, long len, codePoint ch);
-retCode uniTack(string dest, long len, const char *src);
-retCode uniAppend(string dest, long *pos, long len, string src);
-retCode uniNAppend(string dest, long *pos, long len, string src, long sLen);
-retCode uniReverse(string dest,long len);
+unsigned long uniStrLen(const char * s);
+retCode uniCpy(char * dest, long len, const char * src);
+retCode uniNCpy(char * dest, long len, const char * src, long sLen);
+comparison uniCmp(char * s1, char * s2);
+comparison uniNCmp(char * s1, char * s2, long l);
+retCode uniInsert(char * dest, long len, const char * src);
+retCode appendCodePoint(char * dest, long *pos, long len, codePoint ch);
+retCode uniTack(char * dest, long len, const char *src);
+retCode uniAppend(char * dest, long *pos, long len, char * src);
+retCode uniNAppend(char * dest, long *pos, long len, char * src, long sLen);
+retCode uniReverse(char * dest,long len);
 
-long uniIndexOf(string s, long len, long from, codePoint c);
-long uniLastIndexOf(string s, long len, codePoint c);
-string uniSubStr(string s, long len, long from, long cnt, string buff, long bLen);
+long uniIndexOf(char * s, long len, long from, codePoint c);
+long uniLastIndexOf(char * s, long len, codePoint c);
+char * uniSubStr(char * s, long len, long from, long cnt, char * buff, long bLen);
 
-long uniSearch(string src, long len, long start, string tgt, long tlen);
-string uniSearchAny(string s, long len, string term);
-codePoint uniSearchDelims(string s, long len, string t);
-string uniLast(string s, long l, codePoint c);
-string uniDuplicate(string s);
-logical uniIsLit(string s1, char *s2);
-logical uniIsLitPrefix(string s1, char *s2);
-string uniEndStr(string s);
-uinteger uniHash(const string name);
-uinteger uniNHash(const string name, long len);
-retCode uniLower(string s, long sLen, string d, long dLen);
+long uniSearch(char * src, long len, long start, char * tgt, long tlen);
+char * uniSearchAny(char * s, long len, char * term);
+codePoint uniSearchDelims(char * s, long len, char * t);
+char * uniLast(char * s, long l, codePoint c);
+char * uniDuplicate(char * s);
+logical uniIsLit(char * s1, char *s2);
+logical uniIsLitPrefix(char * s1, char *s2);
+char * uniEndStr(char * s);
+uinteger uniHash(const char * name);
+uinteger uniNHash(const char * name, long len);
+retCode uniLower(char * s, long sLen, char * d, long dLen);
 
 #ifndef uniEOF
 #define uniEOF (0xffff)

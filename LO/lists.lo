@@ -58,10 +58,10 @@ lo.list{
 
   public implementation all e ~~ folding[list[e]->>e] <= {
     foldLeft(f,x,[]) => x.
-    foldLeft(f,x,[e,..l]) => foldLeft(f,f(x,e),l).
+    foldLeft(f,x,[e,..l]) => foldLeft(f,f(e,x),l).
 
     foldRight(f,x,[]) => x.
-    foldRight(f,x,[e,..l]) => f(foldRight(f,x,l),e).
+    foldRight(f,x,[e,..l]) => f(e,foldRight(f,x,l)).
   }
 
   public implementation all e,f ~~ mapping[list->>e,f] <= {
@@ -101,8 +101,8 @@ lo.list{
 
   public implementation all e ~~ membership[list[e] ->> e] <= {
     empty = [].
-    addMem(L,e) => [e,..L].
-    delMem(L,e) => subtract(e,L).
+    addMem(e,L) => [e,..L].
+    delMem(e,L) => subtract(e,L).
     e in L :- listEl(e,L).
   }
 

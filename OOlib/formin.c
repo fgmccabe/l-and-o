@@ -21,7 +21,7 @@
 /* 
  * Scan a unicode string, looking for a number of a given base
  */
-integer parseInteger(string s,long l)
+integer parseInteger(char * s,long l)
 {
   logical positive = True;
   integer x = 0;
@@ -47,7 +47,7 @@ integer parseInteger(string s,long l)
     return -x;
 }
 
-double parseNumber(string s,long l)
+double parseNumber(char * s,long l)
 {
   logical positive = True;
   double x = 0;

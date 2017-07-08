@@ -89,7 +89,7 @@ static void BufferInit(objectPo o, va_list *args) {
   // Set up the buffer pointers
   f->buffer.pos = 0;
   setEncoding(O_IO(f), va_arg(*args, ioEncoding)); /* set up the encoding */
-  f->buffer.buffer = va_arg(*args, string);
+  f->buffer.buffer = va_arg(*args, char *);
   f->buffer.bufferSize = va_arg(*args, long); /* set up the buffer */
   f->io.mode = va_arg(*args, ioDirection); /* set up the access mode */
   f->buffer.resizeable = va_arg(*args, logical); /* is this buffer resizeable? */
@@ -141,7 +141,7 @@ static retCode ensureSpace(bufferPo f, long count) {
   if (f->buffer.pos + count >= f->buffer.bufferSize) {
     if (f->buffer.resizeable) {
       long nlen = f->buffer.bufferSize + (f->buffer.bufferSize >> 1) + count; /* allow for some growth */
-      byte *nbuff = realloc(f->buffer.buffer, sizeof(byte) * nlen);
+      char *nbuff = (char *) realloc(f->buffer.buffer, sizeof(char) * nlen);
       if (nbuff != NULL) {
         f->buffer.buffer = nbuff;
         f->buffer.bufferSize = nlen;
@@ -186,15 +186,14 @@ static retCode bufferMark(ioPo io, long *mark) {
     return Error;
 }
 
-static retCode bufferReset(ioPo io, long mark){
+static retCode bufferReset(ioPo io, long mark) {
   bufferPo f = O_BUFFER(io);
 
   if (f->buffer.pos > 0) {
-    if(mark>=0 && mark<f->buffer.size){
+    if (mark >= 0 && mark < f->buffer.size) {
       f->buffer.pos = mark;
       return Ok;
-    }
-    else
+    } else
       return Fail;
   } else
     return Error;
@@ -262,12 +261,12 @@ bufferPo newStringBuffer() {
   return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, 128, ioWRITE, True));
 }
 
-bufferPo fixedStringBuffer(string buffer, long len) {
+bufferPo fixedStringBuffer(char *buffer, long len) {
   byte name[] = {'<', 'b', 'u', 'f', 'f', 'e', 'r', '>', 0};
   return O_BUFFER(newObject(bufferClass, name, utf8Encoding, buffer, len, ioWRITE, False));
 }
 
-string getTextFromBuffer(long *actual, bufferPo s) {
+char *getTextFromBuffer(long *actual, bufferPo s) {
   *actual = s->buffer.pos;
 
   ensureSpace(s, 1);

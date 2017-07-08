@@ -229,7 +229,7 @@ void showSeg(segPo seg) {
 
 #endif
 
-static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
+static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, char *errorMsg, long msgLen) {
   switch (A) {
     case nOp:                             // No operand
     case iAh:                             // input argument register in upper slot (0..255)
@@ -287,9 +287,9 @@ static retCode testBreak(segPo seg, long pc, insWord pcx, opAndSpec A, byte *err
     continue;
 
 static retCode
-checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, byte *errorMsg, long msgLen);
+checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, char *errorMsg, long msgLen);
 
-static retCode checkSegment(segPo seg, string name, byte *errorMsg, long msgLen) {
+static retCode checkSegment(segPo seg, char * name, char *errorMsg, long msgLen) {
   long pc = seg->pc;
   long limit = pc + seg->insCount;
   retCode ret = Ok;
@@ -333,7 +333,7 @@ int noOfSegments(segPo root) {
   return i;
 }
 
-static retCode mergeSegVars(segPo seg, segPo next, byte *errorMsg, long msgLen) {
+static retCode mergeSegVars(segPo seg, segPo next, char *errorMsg, long msgLen) {
   unsigned int i;
 
   if (next->locals == NULL && seg->locals != NULL) {
@@ -359,7 +359,7 @@ static retCode mergeSegVars(segPo seg, segPo next, byte *errorMsg, long msgLen) 
   return Ok;
 }
 
-static retCode checkSegments(segPo root, string name, byte *errorMsg, long msgLen) {
+static retCode checkSegments(segPo root, char * name, char *errorMsg, long msgLen) {
   int count = noOfSegments(root);
   segPo stack[count];
   int top = 0;
@@ -407,7 +407,7 @@ static retCode checkSegments(segPo root, string name, byte *errorMsg, long msgLe
   return Ok;
 }
 
-static retCode checkInOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
+static retCode checkInOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, char *errorMsg, long msgLen) {
   switch (A) {
     case nOp:                             // No operand
       return Ok;
@@ -572,7 +572,7 @@ static retCode checkInOperand(segPo seg, long opc, long pc, insWord pcx, opAndSp
   }
 }
 
-static retCode checkOutOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, byte *errorMsg, long msgLen) {
+static retCode checkOutOperand(segPo seg, long opc, long pc, insWord pcx, opAndSpec A, char *errorMsg, long msgLen) {
   switch (A) {
     case nOp:                             // No operand
       return Ok;
@@ -718,7 +718,7 @@ static retCode checkOutOperand(segPo seg, long opc, long pc, insWord pcx, opAndS
 }
 
 static retCode
-checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, byte *errorMsg, long msgLen) {
+checkInstruction(segPo seg, long opc, long pc, insWord pcx, opAndSpec A1, opAndSpec A2, char *errorMsg, long msgLen) {
   opCode op = op_code(pcx);
 
   retCode ret = checkInOperand(seg, opc, pc, pcx, A1, errorMsg, msgLen);
@@ -830,7 +830,7 @@ static pthread_mutex_t verifyMutex = PTHREAD_MUTEX_INITIALIZER;
         ret=testBreak(segs,pc,pcx,A2,errorMsg,msgLen);\
       continue;
 
-retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen) {
+retCode verifyCode(ptrI prog, char *name, char *errorMsg, long msgLen) {
   pthread_mutex_lock(&verifyMutex);  //  We synchronize all verification
 
   codePo cde = codeV(prog);

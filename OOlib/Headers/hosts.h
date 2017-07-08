@@ -20,13 +20,13 @@
 #include "unicode.h"
 
 /* Host name management and interface */
-string getHostname(string name);
-struct in_addr *getHostIP(string name,int i);
-string getNthHostIP(string name,unsigned long i,string buffer,unsigned long len);
-string machineName(void);
-string machineIP(void);
-logical isIPofHost(string name,unsigned long ip);
-void markHostUnavail(string name);
+char * getHostname(char * name);
+struct in_addr *getHostIP(char * name,int i);
+char * getNthHostIP(char * name,unsigned long i,char * buffer,unsigned long len);
+char * machineName(void);
+char * machineIP(void);
+logical isIPofHost(char * name,unsigned long ip);
+void markHostUnavail(char * name);
 
 // The public part of the host class interface
 

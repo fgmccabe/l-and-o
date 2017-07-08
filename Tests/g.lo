@@ -1,4 +1,4 @@
-g{
+test.g{
   -- stream contract
   public
   contract all S,E ~~ stream[S ->> E] <~ {
@@ -27,7 +27,7 @@ g{
   }.
 
   brackets:all s ~~ stream[s->>integer] |: (integer)-->s.
-  brackets(N+1) --> "[", brackets(N), "]".
+  brackets(N1) --> "[", brackets(N), { N1 = N+1}, "]".
   brackets(0) --> [].
 
   assert brackets(C)%%pair(0c[,pair(0c[,pair(0c],pair(0c],nil)))).

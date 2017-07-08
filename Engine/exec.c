@@ -47,7 +47,7 @@ retCode g__shell(processPo P, ptrPo a) {
   else {
     stringPo str = stringV(pth);
 
-    byte cmd[MAX_MSG_LEN];
+    char cmd[MAX_MSG_LEN];
     copyString2Buff(cmd,NumberOf(cmd),str);
 
     if (access((char *) cmd, F_OK | R_OK | X_OK) != 0) {
@@ -62,12 +62,12 @@ retCode g__shell(processPo P, ptrPo a) {
       int pid;
       long i;
 
-      argv[0] = (char *) cmd;
+      argv[0] =  cmd;
 
       for (i = 1; IsList(ags); i++, ags = deRefI(listTail(objV(ags)))) {
         ptrPo l = listHead(objV(ags));
         stringPo sp = stringV(deRefI(l));
-        string s = stringVal(sp);
+        char * s = stringVal(sp);
         long al = stringLen(sp);
 
         if (al < 0)
@@ -89,13 +89,13 @@ retCode g__shell(processPo P, ptrPo a) {
           return liberror(P, "__shell", eINSUFARG);
         else {
           stringPo kp = stringV(deRefI(&var));
-          string k = stringVal(kp);
+          char * k = stringVal(kp);
           long kl = stringLen(kp);
           stringPo vp = stringV(deRefI(&val));
-          string v = stringVal(vp);
+          char * v = stringVal(vp);
           long vl = stringLen(vp);
           long bSize = kl+vl + 10;
-          byte str[bSize];
+          char str[bSize];
 
           strMsg(str, bSize, "%U = %U", k, v);
 

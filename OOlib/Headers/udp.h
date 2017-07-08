@@ -10,10 +10,10 @@
 
 typedef struct _udp_object_ *udpPo;
 
-udpPo newUDPPort(byte *name, int port, ioDirection dir);
-retCode udpRead(udpPo u,byte *msg,long *blen,string peer,long len,int *port);
-retCode udpSend(udpPo u,byte *msg,long blen,string peer,int port);
-string udpName(udpPo f);
+udpPo newUDPPort(char *name, int port, ioDirection dir);
+retCode udpRead(udpPo u,byte *msg,long *blen,char * peer,long len,int *port);
+retCode udpSend(udpPo u,byte *msg,long blen,char * peer,int port);
+char * udpName(udpPo f);
 uint16 udpPortNo(udpPo u);
 retCode closeUDP(udpPo u);
 

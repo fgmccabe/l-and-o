@@ -7,7 +7,7 @@
 void initDict();			/* Initialize the dictionary */
 
 ptrI newEnumSym(const char *name);
-ptrI newEnumSymbol(const string name);
+ptrI newEnumSymbol(const char * name);
 
 void restartDictionary(globalGcPo G);
 

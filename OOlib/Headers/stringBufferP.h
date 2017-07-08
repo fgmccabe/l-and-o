@@ -24,7 +24,7 @@ typedef struct _buffer_class_ {
 extern BufferClassRec BufferClass;  /* the standard pointer to an buffer class record */
 
 typedef struct _buffer_part_{
-  byte *buffer;                         /* The data buffer */
+  char *buffer;                         /* The data buffer */
   long bufferSize;
   long pos;
   long size;

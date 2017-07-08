@@ -12,8 +12,8 @@ lo.sets {
 
   public implementation all e ~~ equality[e] |: membership[set[e]->>e] <= {
     empty = nullSet.
-    addMem(set(S),E) => set(S[E->()]).
-    delMem(set(S),E) => set(S[\+E]).
+    addMem(E,set(S)) => set(S[E->()]).
+    delMem(E,set(S)) => set(S[\+E]).
     k in set(M1) :- (ground(k) ? listEl(k,keys(M1)) | present(M1,k,_)).
   }
 
@@ -28,7 +28,7 @@ lo.sets {
   }
 
   public implementation all e ~~ equality[e] |: coercion[list[e],set[e]] <= {
-    _coerce(Els) => set(foldLeft((M,E)=>M[E->()],[],Els)).
+    _coerce(Els) => set(foldLeft((E,M)=>M[E->()],[],Els)).
   }
 
   public implementation all e ~~ equality[e] |: additive[set[e]] <= {
@@ -54,17 +54,17 @@ lo.sets {
   }
 
   public setMap:all e,f ~~ equality[e],equality[f] |: (set[e],(e)=>f)=>set[f].
-  setMap(set(Els),F) => set(foldLeft((M,k)=>M[F(k)->()],[],keys(Els))).
+  setMap(set(Els),F) => set(foldLeft((k,M)=>M[F(k)->()],[],keys(Els))).
 
   public implementation all e ~~ equality[e] |: folding[set[e]->>e] <= {
     foldRight(F,X,S) => foldRightEls(F,X,S::list[e]).
     foldLeft(F,X,S) => foldLeftEls(F,X,S::list[e]).
   }
 
-  private foldLeftEls:all f,e,x ~~ ((x,e)=>x,x,list[e]) => x.
+  private foldLeftEls:all f,e,x ~~ ((e,x)=>x,x,list[e]) => x.
   foldLeftEls(F,X,S) => foldLeft(F,X,S).
 
-  private foldRightEls:all f,e,x ~~ ((x,e)=>x,x,list[e]) => x.
+  private foldRightEls:all f,e,x ~~ ((e,x)=>x,x,list[e]) => x.
   foldRightEls(F,X,S) => foldRight(F,X,S).
 
   public implementation all e ~~ display[e], equality[e] |: display[set[e]] <= {

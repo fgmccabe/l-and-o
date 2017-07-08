@@ -27,10 +27,10 @@ lo.comp.code.registers{
   initVarSet(Arity) => varSet(iota(1,Arity)::set[integer],nullSet,0).
 
   public locUsed:(varSet,integer) => varSet.
-  locUsed(varSet(A,L,G),Lc) => varSet(A,addMem(L,Lc),G).
+  locUsed(varSet(A,L,G),Lc) => varSet(A,addMem(Lc,L),G).
 
   public regUsed:(varSet,integer) => varSet.
-  regUsed(varSet(A,L,G),Rg) => varSet(addMem(A,Rg),L,G).
+  regUsed(varSet(A,L,G),Rg) => varSet(addMem(Rg,A),L,G).
 
   public usedRegs:(varSet) => set[integer].
   usedRegs(varSet(A,_,_)) => A.
@@ -42,10 +42,10 @@ lo.comp.code.registers{
   maxReg(varSet(A,_,_)) => foldRight((X,Y)=>max(X,Y),0,A).
 
   public freeAReg:(varSet,integer) => varSet.
-  freeAReg(varSet(A,L,G),Rg) => varSet(delMem(A,Rg),L,G).
+  freeAReg(varSet(A,L,G),Rg) => varSet(delMem(Rg,A),L,G).
 
   public pickAreg:(varSet,varSet,addr){}.
-  pickAreg(varSet(A,L,G),varSet(addMem(A,Rg),L,G),aReg(Rg)) :-
+  pickAreg(varSet(A,L,G),varSet(addMem(Rg,A),L,G),aReg(Rg)) :-
     (inRange(1,numRegisters,Rg), \+Rg in A)!.
 
   private inRange:(integer,integer,integer){}.

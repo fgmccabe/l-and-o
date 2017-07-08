@@ -287,7 +287,7 @@ retCode g__popen(processPo P, ptrPo a) {
     long len = stringLen(stringV(Cmd)) + 1;
     char cmd[3 * len];
     ioPo inPipe, outPipe, errPipe;
-    strncpy(cmd, (char *) stringVal(stringV(Cmd)), NumberOf(cmd));
+    strncpy(cmd,  stringVal(stringV(Cmd)), NumberOf(cmd));
 
     if (access(cmd, F_OK | R_OK | X_OK) != 0) {
       setProcessRunnable(P);
@@ -310,7 +310,7 @@ retCode g__popen(processPo P, ptrPo a) {
           return liberror(P, "_popen", eINSUFARG);
         } else {
           stringPo ap = stringV(Arg);
-          string arg = stringVal(ap);
+          char * arg = stringVal(ap);
           long al = stringLen(ap);
 
           argv[i] = strndup((const char *) arg, (size_t) al);
@@ -330,7 +330,7 @@ retCode g__popen(processPo P, ptrPo a) {
           stringPo kp = stringV(envKey);
           stringPo vp = stringV(envVal);
           long al = stringLen(kp) + stringLen(vp) + 4;
-          byte buffer[al];
+          char buffer[al];
 
           strMsg(buffer, al, "%S = %S", kp, vp);
 
@@ -583,9 +583,9 @@ retCode g__inbytes(processPo P, ptrPo a) {
   else {
     ioPo file = filePtr(t1);
     long ix = 0;
-    byte buff[MAX_SYMB_LEN];
-    byte *buffer = (count > NumberOf(buff) ?
-                    (byte *) malloc(sizeof(byte) * count) :
+    char buff[MAX_SYMB_LEN];
+    char *buffer = (count > NumberOf(buff) ?
+                    (char *) malloc(sizeof(char) * count) :
                     buff);
     long remaining = count;
 
@@ -596,7 +596,7 @@ retCode g__inbytes(processPo P, ptrPo a) {
       long bytesRead;
       again:        /* come back in case of interrupt */
       switchProcessState(P, wait_io);
-      retCode ret = inBytes(file, &buffer[ix], remaining, &bytesRead);
+      retCode ret = inBytes(file, (byte*)&buffer[ix], remaining, &bytesRead);
       setProcessRunnable(P);
 
       switch (ret) {
@@ -713,7 +713,7 @@ retCode g__get_file(processPo P, ptrPo a) {
 
   /* grab the result */
   long length;
-  string text = getTextFromBuffer(&length, O_BUFFER(outBuff));
+  char * text = getTextFromBuffer(&length, O_BUFFER(outBuff));
   ptrI reslt = allocateString(&P->proc.heap, text, length);
 
   closeFile(file);
@@ -723,7 +723,7 @@ retCode g__get_file(processPo P, ptrPo a) {
 }
 
 /*
- * Put the contents of a string into a file.
+ * Put the contents of a char * into a file.
  */
 
 retCode g__put_file(processPo P, ptrPo a) {
@@ -775,9 +775,9 @@ retCode g__inchars(processPo P, ptrPo a) {
   else {
     ioPo file = filePtr(t1);
     long ix = 0;
-    byte buff[MAX_SYMB_LEN];
-    string buffer = (count > NumberOf(buff) ?
-                     (byte *) malloc(sizeof(byte) * count) :
+    char buff[MAX_SYMB_LEN];
+    char * buffer = (count > NumberOf(buff) ?
+                     (char *) malloc(sizeof(char) * count) :
                      buff);
 
     if (isReadingFile(file) != Ok)
@@ -944,7 +944,7 @@ retCode g__inline(processPo P, ptrPo a) {
             return liberror(P, "__inline", eEOF);    /* cant read past the end of the file */
           } else {
             long len;
-            string buff = getTextFromBuffer(&len, O_BUFFER(str));
+            char * buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -996,7 +996,7 @@ retCode g__intext(processPo P, ptrPo a) {
 
     stringPo sp = stringV(t2);
     long tlen = stringLen(sp);
-    byte term[tlen + 1];
+    char term[tlen + 1];
 
     copyString2Buff(term, NumberOf(term), sp);
 
@@ -1017,7 +1017,7 @@ retCode g__intext(processPo P, ptrPo a) {
             return liberror(P, "__intext", eEOF);    /* cant read past the end of the file */
           } else {
             long len;
-            string buff = getTextFromBuffer(&len, O_BUFFER(str));
+            char * buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI reslt = allocateString(&P->proc.heap, buff, (size_t) len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1035,7 +1035,7 @@ retCode g__intext(processPo P, ptrPo a) {
             return ret;
           } else if (chr == EOF_CHAR && bufferSize(O_BUFFER(str)) == 0) {
             long len;
-            string buff = getTextFromBuffer(&len, O_BUFFER(str));
+            char * buff = getTextFromBuffer(&len, O_BUFFER(str));
             ptrI result = allocateString(&P->proc.heap, buff, len); /* grab the result */
 
             closeFile(str);    /* we are done reading */
@@ -1155,7 +1155,7 @@ retCode g__outbytes(processPo P, ptrPo a) {
       if (ret == Ok) {
         switchProcessState(P, wait_io);
         long len;
-        string s = getTextFromBuffer(&len, buff);
+        char * s = getTextFromBuffer(&len, buff);
 
         ret = outText(file, s, len);
 
@@ -1196,7 +1196,7 @@ retCode g__outtext(processPo P, ptrPo a) {
     else {
       switchProcessState(P, wait_io);
       stringPo sp = stringV(deRefI(&a[2]));
-      string s = stringVal(sp);
+      char * s = stringVal(sp);
       long len = stringLen(sp);
 
       retCode ret = outText(file, s, len);
@@ -1321,7 +1321,7 @@ static retCode stringMsg(ioPo f, void *data, long depth, long precision, logical
     if (precision <= 0)
       precision = 32767;
     stringPo s = stringV(*ptr);
-    string str = stringVal(s);
+    char * str = stringVal(s);
     long len = stringLen(s);
 
     return outText(f, str, len);

@@ -23,7 +23,7 @@ ptrI permitedAmount(ptrI perms,ptrI perm);
 ptrI defaultPerms(ptrI baseURI);
 
 ptrI generateKey(char *prefix);
-ptrI generateUniKey(string prefix);
+ptrI generateUniKey(char * prefix);
 
 extern ptrI
   pFORK,			// Permission to fork

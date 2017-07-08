@@ -285,9 +285,9 @@ lo.comp.transform{
     transformClause(clause(Lc,"assert",tpl([]),foldRight(collectGoal,trueCond,Asserts)),Map,Opts,AssertNm,Arity,Extra,1,[ACl],[],P,P0,Rp,Rpx),
     Px = addCl(P0,ACl).
 
-  collectGoal:(canonCond,canonOther)=>canonCond.
-  collectGoal(trueCond,integrity(_,G)) => G.
-  collectGoal(O,integrity(_,G)) => conjCond(G,O).
+  collectGoal:(canonOther,canonCond)=>canonCond.
+  collectGoal(integrity(_,G),trueCond) => G.
+  collectGoal(integrity(_,G),O) => conjCond(G,O).
 
   transformShows:(list[canonOther],list[lyr],trOptions,location,term,map[term,rel],map[term,rel],report,report){}.
   transformShows(Shows,Map,Opts,Lc,prg(ShowNm,Arity),P,Px,Rp,Rpx) :-
@@ -296,9 +296,9 @@ lo.comp.transform{
     transformClause(clause(Lc,"show",tpl([]),(foldRight(collectShow,trueCond,Shows):canonCond)),Map,Opts,ShowNm,Arity,Extra,1,[SCl],[],P,P0,Rp,Rpx),
     Px = addCl(P0,SCl).
 
-  collectShow:(canonCond,canonOther)=>canonCond.
-  collectShow(trueCond,expShow(Lc,S)) => callCond(Lc,v(Lc,"_logmsg"),tpl([S])).
-  collectShow(O,expShow(Lc,S)) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([S])),O).
+  collectShow:(canonOther,canonCond)=>canonCond.
+  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),tpl([S])).
+  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),tpl([S])),O).
 
   trLocation:(location) => canonTerm.
   trLocation(Lc) => tpl([int(lineOf(Lc)),int(columnOf(Lc)),int(widthOf(Lc))]).

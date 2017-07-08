@@ -259,7 +259,7 @@ void runGo(register processPo P) {
   choicePo cSB;        /* continuation cut */
   choicePo T;        /* Trap recovery point */
 
-  byte errorMsg[MAX_MSG_LEN];
+  char errorMsg[MAX_MSG_LEN];
 
   restRegs();
 
@@ -2669,7 +2669,7 @@ void recoverFromException(processPo P) {
 
 retCode raiseException(processPo P, ptrI E) {
   rootPo root = gcAddRoot(&P->proc.heap, &E);
-  byte errorMsg[256];
+  char errorMsg[256];
 
   freezeTerm(&P->proc.heap, &E, E, errorMsg, NumberOf(errorMsg));
 
@@ -2682,7 +2682,7 @@ retCode raiseException(processPo P, ptrI E) {
   return Error;
 }
 
-retCode raiseError(processPo P, string error, ptrI code) {
+retCode raiseError(processPo P, char * error, ptrI code) {
   rootPo root = gcAddRoot(&P->proc.heap, &code);
 
   recoverFromException(P);
@@ -2707,7 +2707,7 @@ retCode raiseError(processPo P, string error, ptrI code) {
 }
 
 retCode liberror(processPo P, char *name, ptrI code) {
-  byte n[1024];
+  char n[1024];
 
   strncpy((char *) n, name, NumberOf(n) - 1);
 

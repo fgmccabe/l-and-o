@@ -13,7 +13,6 @@
   permissions and limitations under the License.
 */
 
-#include "config.h"		/* pick up standard configuration header */
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -61,7 +60,7 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
 
 static retCode strOutFun(specialClassPo class, ioPo out, objPo o) {
   stringPo s = (stringPo) o;
-  string str = StringVal(s);
+  char * str = StringVal(s);
   long len = stringLen(s);
   retCode r = outChar(out, '\'');
 
@@ -97,10 +96,10 @@ static uinteger strHashFun(specialClassPo class, objPo o) {
 }
 
 ptrI allocateCString(heapPo H, const char *m) {
-  return allocateString(H, (string) m, strlen(m));
+  return allocateString(H,  m, strlen(m));
 }
 
-ptrI allocateString(heapPo H, string m, long count) {
+ptrI allocateString(heapPo H, const char *m, long count) {
   size_t len = CellCount(sizeof(stringRec) + (count + 1) * sizeof(byte));
   stringPo new = (stringPo) allocate(H, len);
 
@@ -110,7 +109,7 @@ ptrI allocateString(heapPo H, string m, long count) {
   return objP(new);
 }
 
-retCode copyString2Buff(byte *buffer, long bLen, stringPo s) {
+retCode copyString2Buff(char *buffer, long bLen, stringPo s) {
   long sLen = stringLen(s);
   long len = min(sLen, bLen - 1);
 
@@ -136,8 +135,8 @@ retCode g__stringOf(processPo P, ptrPo a) {
   else {
     long width = (long) integerVal(intV(Width));
     long prec = (long) integerVal(intV(Prec));
-    string buffer = (prec < 0 ?
-                     (byte *) malloc(sizeof(byte) * (-prec + 1))
+    char * buffer = (prec < 0 ?
+                     (char *) malloc(sizeof(char) * (-prec + 1))
                               : NULL);
     ioPo str = O_IO(newStringBuffer());
     retCode ret = outCell(str, &Data, prec == 0 ? INT_MAX / 4 : prec, 0, False);
@@ -149,14 +148,14 @@ retCode g__stringOf(processPo P, ptrPo a) {
       return liberror(P, "__stringOf", eINVAL);
     } else {
       long len;
-      string txt = getTextFromBuffer(&len, O_BUFFER(str));
+      char * txt = getTextFromBuffer(&len, O_BUFFER(str));
 
       if (width != 0) {
         long sLen = labs(width) + 1;
-        byte text[sLen];
+        char text[sLen];
 
         if (width > 0) {                    /* right padded */
-          string p;
+          char * p;
           long w = width - len;
 
           uniNCpy(text, sLen, txt, len);
@@ -165,7 +164,7 @@ retCode g__stringOf(processPo P, ptrPo a) {
             *p++ = ' ';                   /* pad out with spaces */
           *p = 0;
         } else {
-          string p = text;
+          char * p = text;
           long w = -width - (integer) len;
           while (w-- > 0)
             *p++ = ' ';                   /* left pad with spaces */
@@ -216,7 +215,7 @@ retCode g__trim(processPo P, ptrPo a) {
   else {
     long width = integerVal(intV(Width));
     stringPo D = stringV(Data);
-    string data = stringVal(D);
+    char * data = stringVal(D);
     long len = stringLen(D);
     long awidth = labs(width);
     heapPo H = &P->proc.heap;
@@ -224,12 +223,12 @@ retCode g__trim(processPo P, ptrPo a) {
     if (width == 0 || awidth == len)
       return equal(P, &a[1], &a[3]);      /* just return the string itself */
     else {
-      byte buff[MAX_SYMB_LEN];
-      string buffer = (width > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * awidth) : buff);
+      char buff[MAX_SYMB_LEN];
+      char * buffer = (width > NumberOf(buff) ? (char *) malloc(sizeof(char) * awidth) : buff);
 
       if (width < 0) {                      /* right justified */
         long cnt = len - awidth;           /* how much we have to step into the string */
-        string l = &data[cnt];
+        char * l = &data[cnt];
 
         cnt = awidth - len;               /* the number of pad characters */
         while (cnt > 0)
@@ -237,9 +236,9 @@ retCode g__trim(processPo P, ptrPo a) {
         cnt = awidth - len;
         if (cnt < 0)
           cnt = 0;
-        strncpy((char *) &buffer[cnt], (char *) l, awidth - cnt);     // plop in the string contents
+        strncpy((char *) &buffer[cnt],  l, awidth - cnt);     // plop in the string contents
       } else {
-        strncpy((char *) buffer, (char *) data, awidth);
+        strncpy((char *) buffer,  data, awidth);
 
         if (len < width) {
           for (long i = len; i < width; i++)
@@ -261,7 +260,7 @@ retCode g__trim(processPo P, ptrPo a) {
 
 // Prepare a string to be formatted in a differently sized field
 
-retCode strPrepare(string tgt, long tLen, string src, long sLen, codePoint pad, logical left, long width) {
+retCode strPrepare(char * tgt, long tLen, char * src, long sLen, codePoint pad, logical left, long width) {
   long i, j;
 
   if (width == 0)
@@ -309,13 +308,13 @@ retCode g_explode(processPo P, ptrPo a) {
     return liberror(P, "explode", eINVAL);
   else {
     stringPo s = stringV(Str);
-    string src = stringVal(s);
+    char * src = stringVal(s);
     long strLen = stringLen(s);
 
-    byte buff[MAX_SYMB_LEN];
-    string buffer = (strLen > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * strLen) : buff);
+    char buff[MAX_SYMB_LEN];
+    char * buffer = (strLen > NumberOf(buff) ? (char *) malloc(sizeof(char) * strLen) : buff);
 
-    strncpy((char *) buffer, (char *) src, strLen); // Copy out the string in case of GC
+    strncpy((char *) buffer,  src, strLen); // Copy out the string in case of GC
 
     ptrI out = emptyList;
     ptrI el = kvoid;
@@ -342,10 +341,10 @@ retCode g_explode(processPo P, ptrPo a) {
   }
 }
 
-retCode explodeString(processPo P, byte *text, long length, ptrPo a) {
-  byte buff[MAX_SYMB_LEN];
-  string buffer = (length > NumberOf(buff) ? (byte *) malloc(sizeof(byte) * length) : buff);
-  strncpy((char *) buffer, (char *) text, length); // Copy out the string in case of GC
+retCode explodeString(processPo P, char *text, long length, ptrPo a) {
+  char buff[MAX_SYMB_LEN];
+  char * buffer = (length > NumberOf(buff) ? (char *) malloc(sizeof(char) * length) : buff);
+  strncpy((char *) buffer,  text, length); // Copy out the string in case of GC
 
   *a = emptyList;
   ptrI el = kvoid;
@@ -379,7 +378,7 @@ retCode g_implode(processPo P, ptrPo a) {
   else {
     long sLen = 4 * ListLen(Ls) + 1; // Over estimate of string size.
     long pos = 0;
-    byte text[sLen];
+    char text[sLen];
 
     while (IsList(Ls)) {
       ptrPo h = listHead(objV(Ls));
@@ -452,7 +451,7 @@ retCode g__str_hash(processPo P, ptrPo a) {
     return liberror(P, "_str_hash", eSTRNEEDD);
   else {
     stringPo str = stringV(a1);
-    string s = stringVal(str);
+    char * s = stringVal(str);
     long len = stringLen(str);
 
     integer hash = uniNHash(s, len);
@@ -479,13 +478,13 @@ retCode g__str_concat(processPo P, ptrPo a) {
     return liberror(P, "_str_concat", eINVAL);
   else {
     stringPo str1 = stringV(a1);
-    string s1 = stringVal(str1);
+    char * s1 = stringVal(str1);
     stringPo str2 = stringV(a2);
-    string s2 = stringVal(str2);
+    char * s2 = stringVal(str2);
     long slen1 = stringLen(str1);
     long slen2 = stringLen(str2);
     long tlen = slen1 + slen2;
-    byte catted[tlen + 1];
+    char catted[tlen + 1];
 
     uniCpy(catted, tlen + 1, s1);
     uniCpy(&catted[slen1], slen2 + 1, s2);
@@ -523,7 +522,7 @@ retCode g__str_multicat(processPo P, ptrPo a) {
       }
     }
     long len;
-    string txt = getTextFromBuffer(&len, b);
+    char * txt = getTextFromBuffer(&len, b);
     ptrI rslt = allocateString(&P->proc.heap, txt, len);
     closeFile(O_IO(b));
     return funResult(P, a, 2, rslt);
@@ -539,8 +538,8 @@ retCode g__str_lt(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_lt", eINVAL);
   else {
-    string s1 = stringVal(stringV(a1));
-    string s2 = stringVal(stringV(a2));
+    char * s1 = stringVal(stringV(a1));
+    char * s2 = stringVal(stringV(a2));
 
     if (uniCmp(s1, s2) == smaller)
       return Ok;
@@ -558,8 +557,8 @@ retCode g__str_ge(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_ge", eINVAL);
   else {
-    string s1 = stringVal(stringV(a1));
-    string s2 = stringVal(stringV(a2));
+    char * s1 = stringVal(stringV(a1));
+    char * s2 = stringVal(stringV(a2));
 
     if (uniCmp(s1, s2) != smaller)
       return Ok;
@@ -580,8 +579,8 @@ retCode g__str_start(processPo P, ptrPo a) {
     stringPo str = stringV(a1);
     stringPo tgt = stringV(a2);
 
-    string s1 = stringVal(str);
-    string s2 = stringVal(tgt);
+    char * s1 = stringVal(str);
+    char * s2 = stringVal(tgt);
 
     if (uniNCmp(s1, s2, stringLen(tgt)) == same)
       return Ok;
@@ -629,7 +628,7 @@ retCode g__str_split(processPo P, ptrPo a) {
     return liberror(P, "_str_split", eINSUFARG);
   else {
     stringPo S = stringV(a1);
-    string src = stringVal(S);
+    char * src = stringVal(S);
     integer start = integerVal(intV(a2));
     long len = stringLen(S);
 
@@ -640,7 +639,7 @@ retCode g__str_split(processPo P, ptrPo a) {
         ptrI left = allocateString(&P->proc.heap, src, start);
         bindVar(P, deRef(&a[3]), left);
       } else {
-        string left = stringVal(stringV(a3));
+        char * left = stringVal(stringV(a3));
         if (uniNCmp(src, left, start) != same)
           return Fail;
       }
@@ -649,7 +648,7 @@ retCode g__str_split(processPo P, ptrPo a) {
         bindVar(P, deRef(&a[4]), right);
         return Ok;
       } else {
-        string right = stringVal(stringV(a4));
+        char * right = stringVal(stringV(a4));
 
         if (uniNCmp(&src[start], right, len - start) == same)
           return Ok;
@@ -670,7 +669,7 @@ retCode g__sub_str(processPo P, ptrPo a) {
     return liberror(P, "_sub_str", eINSUFARG);
   else {
     stringPo str = stringV(a1);
-    string src = stringVal(str);
+    char * src = stringVal(str);
     long len = stringLen(str);
     integer start = integerVal(intV(a2));
     integer end = integerVal(intV(a3));
@@ -684,7 +683,7 @@ retCode g__sub_str(processPo P, ptrPo a) {
       bindVar(P, deRef(&a[4]), sub);
       return Ok;
     } else {
-      string sub = stringVal(stringV(a4));
+      char * sub = stringVal(stringV(a4));
       if (uniNCmp(&src[start], sub, end - start) != same)
         return Fail;
       else
@@ -702,8 +701,8 @@ retCode g__str_gen(processPo P, ptrPo a) {
   else if (!isvar(a2))
     return liberror(P, "_str_gen", eVARNEEDD);
   else {
-    string prefix = stringVal(stringV(a1));
-    byte buff[128];
+    char * prefix = stringVal(stringV(a1));
+    char buff[128];
     strMsg(buff, NumberOf(buff), "%s%ld", prefix, random());
 
     ptrI sub = allocateString(&P->proc.heap, buff, uniStrLen(buff));
@@ -714,7 +713,7 @@ retCode g__str_gen(processPo P, ptrPo a) {
 
 retCode closeOutString(ioPo f, heapPo H, ptrPo tgt) {
   long len;
-  string buff = getTextFromBuffer(&len, O_BUFFER(f));
+  char * buff = getTextFromBuffer(&len, O_BUFFER(f));
   ptrI str = allocateString(H, buff, len);
 
   *deRef(tgt) = str;

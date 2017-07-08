@@ -21,13 +21,13 @@
 
 typedef struct _sock_object_ *sockPo;
 
-sockPo listeningPort(string name, uint16 port);
+sockPo listeningPort(char * name, uint16 port);
 retCode acceptConnection(sockPo listen,ioEncoding encoding,
 			 ioPo *inC,ioPo *outC);
 
-string peerName(sockPo stream,int *port);
-string peerIP(sockPo stream,int *port,string buff,long len);
-retCode connectRemote(string where,int port,
+char * peerName(sockPo stream,int *port);
+char * peerIP(sockPo stream,int *port,char * buff,long len);
+retCode connectRemote(char * where,int port,
 		      ioEncoding encoding,logical waitForMe,
 		      ioPo *inC,ioPo *outC);
 

@@ -1,5 +1,6 @@
 lo.comp.flatten{
   import lo.
+  import lo.topsort.
 
   import lo.comp.misc.
   import lo.comp.package.
@@ -12,8 +13,9 @@ lo.comp.flatten{
   flattenProg(prProg(Spec,Rels)) => prProg(Spec,Rels///((Nm,Rel)=>flattenRel(Rel))).
 
   flattenRel:(rel) => rel.
-  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>flattenRule(Rl))).
+  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>flowRewrite(flattenRule(Rl)))).
 
+  -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
@@ -87,4 +89,65 @@ lo.comp.flatten{
   flattenUnify(Lc,L,R,Q,unfy(Lc,NL,NR),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(L,Q,NL,Pre,Pr0,Pst,Pst0,Q0),
     flattenTerm(R,Q0,NR,Pr0,Prx,Pst0,Pstx,Qx).
+
+  flowRewrite:(clse) => clse.
+  flowRewrite(clse(Q,Nm,Args,Body)) => clse(Q,Nm,Args,reflowPreds(topsort(flowDepends(Body)))).
+  flowRewrite(eqn(Q,Nm,Args,guarded(Rep,Body))) => eqn(Q,Nm,Args,guarded(Rep,reflowPreds(topsort(flowDepends(Body))))).
+
+  varDep ::= vars(pred,list[term],list[term]).
+
+  implementation depends[varDep->>term] <= {
+    defines(vars(_,Vs,_),V) :- V in Vs.
+
+    references(vars(_,_,Vs)) => Vs.
+  }
+
+  reflowPreds:(list[list[varDep]]) => list[pred].
+  reflowPreds([]) => [].
+  reflowPreds([Gp,..Gps]) => (Gp//((vars(P,_,_))=>P))<>reflowPreds(Gps).
+
+  flowDepends:(list[pred]) => list[varDep].
+  flowDepends(L) => flowPreds(L,[]).
+
+  flowPreds:(list[pred],list[term]) =>list[varDep].
+  flowPreds([],_) => [].
+  flowPreds([P,..L],V) => [flowPred(P,V,V0),..flowPreds(L,V0)].
+
+  flowPred:(pred,list[term],list[term]) => varDep.
+  flowPred(call(Lc,Op,Args),V,Vx) => vars(call(Lc,Op,Args),VS,findVarsInTerms(Args,[])) :-
+    VS = toplevelVars(Args,[]),
+    Vx = merge(V,VS).
+  flowPred(ecall(Lc,Op,Args),V,Vx) => vars(ecall(Lc,Op,Args),VS,findVarsInTerms(Args,[])) :-
+    VS = toplevelVars(Args,[]),
+    Vx = merge(V,VS).
+  flowPred(ocall(Lc,C,L,T),V,Vx) => vars(ocall(Lc,C,L,T),VS,findVarsInTerms(Args,[])) :-
+    Args = [C,L,T],
+    VS = toplevelVars(Args,[]),
+    Vx = merge(V,VS).
+  flowPred(unfy(Lc,L,R),V,Vx) => vars(unfy(Lc,L,R),VS,findVarsInTerms(Args,[])) :-
+    Args = [L,R],
+    VS = toplevelVars(Args,[]),
+    Vx = merge(V,VS).
+  flowPred(fail,Vs,Vs) => vars(fail,[],Vs).
+  flowPred(neck,Vs,Vs) => vars(neck,[],Vs).
+  flowPred(except(Lc,E),Vx,Vx) => vars(except(Lc,E),[],findVarsInTerm(E,[])).
+
+  toplevelVars:(list[term],list[term]) => list[term].
+  toplevelVars(Ts,Vs) => foldLeft(toplevelVrs,Vs,Ts).
+
+  toplevelVrs:(term,list[term]) => list[term].
+  toplevelVrs(anon,Vs) => Vs.
+  toplevelVrs(varbl(Nm),Vs) => Vs :- varbl(Nm) in Vs.
+  toplevelVrs(varbl(Nm),Vs) => [varbl(Nm),..Vs].
+  toplevelVrs(intgr(_),Vs) => Vs.
+  toplevelVrs(flot(_),Vs) => Vs.
+  toplevelVrs(strng(_),Vs) => Vs.
+  toplevelVrs(enum(_),Vs) => Vs.
+  toplevelVrs(strct(_,_),Vs) => Vs.
+  toplevelVrs(prg(_,_),Vs) => Vs.
+  toplevelVrs(cons(_,A),Vs) => toplevelVars(A,Vs).
+  toplevelVrs(invoke(_,_,_),Vs) => Vs.
+  toplevelVrs(escvoke(_,_,_),Vs) => Vs.
+  toplevelVrs(ovoke(_,_,_,_),Vs) => Vs.
+  toplevelVrs(guarded(T,G),Vs) => toplevelVrs(T,Vs).
 }

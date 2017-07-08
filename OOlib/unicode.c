@@ -18,11 +18,11 @@
 #include <memory.h>
 #include "unicodeP.h"
 
-retCode nxtPoint(string src, long *start, long end, codePoint *code) {
+retCode nxtPoint(char *src, long *start, long end, codePoint *code) {
   long pos = *start;
 
   if (pos < end) {
-    byte b = src[pos++];
+    char b = src[pos++];
 
     if (b <= 0x7f) {
       *code = (codePoint) b;
@@ -30,7 +30,7 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
       return Ok;
     } else if (UC80(b)) {
       if (pos < end) {
-        byte nb = src[pos++];
+        char nb = src[pos++];
         codePoint ch = (codePoint) (UX80(b) << 6 | UXR(nb));
 
         if (ch < 0x7ff) {
@@ -43,8 +43,8 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
         return Eof;
     } else if (UC800(b)) {
       if (pos + 2 < end) {
-        byte md = src[pos++];
-        byte up = src[pos++];
+        char md = src[pos++];
+        char up = src[pos++];
 
         codePoint ch = (codePoint) ((UX800(b) << 12) | (UXR(md) << 6) | (UXR(up)));
 
@@ -58,9 +58,9 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
         return Eof;
     } else if (UC1000(b)) {
       if (pos + 3 < end) {
-        byte md = src[pos++];
-        byte up = src[pos++];
-        byte lo = src[pos++];
+        char md = src[pos++];
+        char up = src[pos++];
+        char lo = src[pos++];
 
         codePoint ch = (codePoint) ((UX1000(b) << 18) | (UXR(md) << 12) | (UXR(up) << 6) | (UXR(lo)));
 
@@ -78,11 +78,11 @@ retCode nxtPoint(string src, long *start, long end, codePoint *code) {
     return Eof;
 }
 
-retCode prevPoint(string src, long *start, codePoint *code) {
+retCode prevPoint(char *src, long *start, codePoint *code) {
   long pos = *start;
 
   if (pos > 0) {
-    byte b = src[--pos];
+    char b = src[--pos];
 
     if (b <= 0x7f) {
       *code = (codePoint) b;
@@ -115,7 +115,7 @@ retCode prevPoint(string src, long *start, codePoint *code) {
     return Eof;
 }
 
-long countCodePoints(string src, long start, long end) {
+long countCodePoints(char *src, long start, long end) {
   long count = 0;
 
   while (start < end) {
@@ -140,13 +140,13 @@ int codePointSize(codePoint ch) {
     return 4;
 }
 
-long uniCodeCount(string src) {
+long uniCodeCount(char *src) {
   long end = uniByteLen(src);
 
   return countCodePoints(src, 0, end);
 }
 
-long advanceCodePoint(string src, long start, long end, long count) {
+long advanceCodePoint(char *src, long start, long end, long count) {
   while (count-- > 0 && start < end) {
     codePoint ch;
     if (nxtPoint(src, &start, end, &ch) == Ok)
@@ -157,7 +157,7 @@ long advanceCodePoint(string src, long start, long end, long count) {
   return start;
 }
 
-codePoint nextCodePoint(string src, long *start, long end) {
+codePoint nextCodePoint(char *src, long *start, long end) {
   codePoint ch;
   if (nxtPoint(src, start, end, &ch) == Ok)
     return ch;
@@ -165,15 +165,15 @@ codePoint nextCodePoint(string src, long *start, long end) {
     return (codePoint) 0;
 }
 
-unsigned long uniStrLen(const string s) {
-  byte *str = s;
+unsigned long uniStrLen(const char *s) {
+  char *str = (char *) s;
   unsigned long count = 0;
   while (*str++ != 0)
     count++;
   return count;
 }
 
-logical isUniIdentifier(string str) {
+logical isUniIdentifier(char *str) {
   long pos = 0;
   long end = uniByteLen(str);
   logical first = True;
@@ -190,9 +190,9 @@ logical isUniIdentifier(string str) {
   return first ? False : True; // empty strings are not identifiers
 }
 
-long uniByteLen(const string s) {
+long uniByteLen(const char *s) {
   long len = 0;
-  byte *p = s;
+  char *p = (char *) s;
 
   assert(s != NULL);
 
@@ -201,9 +201,9 @@ long uniByteLen(const string s) {
   return len;
 }
 
-retCode uniCat(string dest, long len, const string src) {
+retCode uniCat(char *dest, long len, const char *src) {
   int pos = 0;
-  string tst = src;
+  char *tst = (char *) src;
 
   while (pos < len - 1 && dest[pos] != 0)
     pos++;
@@ -218,7 +218,7 @@ retCode uniCat(string dest, long len, const string src) {
     return Eof;
 }
 
-retCode uniTackOn(string dest, long len, codePoint ch) {
+retCode uniTackOn(char *dest, long len, codePoint ch) {
   long pos = 0;
   while (pos < len - 1 && dest[pos] != 0)
     pos++;
@@ -233,7 +233,7 @@ retCode uniTackOn(string dest, long len, codePoint ch) {
     return Error;
 }
 
-retCode uniAppend(string dest, long *pos, long len, string src) {
+retCode uniAppend(char *dest, long *pos, long len, char *src) {
   for (; *src != 0 && *pos < len;)
     dest[(*pos)++] = *src++;
   if (*pos < len - 1) {
@@ -244,7 +244,7 @@ retCode uniAppend(string dest, long *pos, long len, string src) {
   }
 }
 
-retCode uniNAppend(string dest, long *pos, long len, string src, long sLen) {
+retCode uniNAppend(char *dest, long *pos, long len, char *src, long sLen) {
   for (long sx = 0; sx < sLen && *pos < len;)
     dest[(*pos)++] = *src++;
   if (*pos < len - 1) {
@@ -255,7 +255,7 @@ retCode uniNAppend(string dest, long *pos, long len, string src, long sLen) {
   }
 }
 
-retCode appendCodePoint(string dest, long *pos, long len, codePoint ch) {
+retCode appendCodePoint(char *dest, long *pos, long len, codePoint ch) {
   if (ch <= 0x7f) {
     if ((*pos) < len - 1) {
       dest[(*pos)++] = (byte) ((ch) & 0x7f);
@@ -290,18 +290,18 @@ retCode appendCodePoint(string dest, long *pos, long len, codePoint ch) {
     return Error;
 }
 
-retCode uniReverse(string dest, long len) {
+retCode uniReverse(char *dest, long len) {
   for (long ix = 0; ix < len / 2; ix++) {
-    byte b = dest[ix];
+    char b = dest[ix];
     dest[ix] = dest[len - ix - 1];
     dest[len - ix - 1] = b;
   }
   return Ok;
 }
 
-retCode uniCpy(string dest, long len, const string src) {
+retCode uniCpy(char *dest, long len, const char *src) {
   int pos = 0;
-  byte *s = src;
+  char *s = (char *) src;
 
   while (pos < len - 1 && *src != 0)
     dest[pos++] = *s++;
@@ -309,10 +309,10 @@ retCode uniCpy(string dest, long len, const string src) {
   return pos < len ? Ok : Eof;
 }
 
-retCode uniNCpy(string dest, long len, const string src, long sLen) {
+retCode uniNCpy(char *dest, long len, const char *src, long sLen) {
   long pos = 0;
   long max = (sLen < len - 1 ? sLen : len - 1);
-  byte *s = src;
+  char *s = (char *) src;
 
   while (pos < max && *src != 0)
     dest[pos++] = *s++;
@@ -320,7 +320,7 @@ retCode uniNCpy(string dest, long len, const string src, long sLen) {
   return pos < len ? Ok : Eof;
 }
 
-comparison uniCmp(string s1, string s2) {
+comparison uniCmp(char *s1, char *s2) {
   long pos = 0;
   assert(s1 != NULL && s2 != NULL);
 
@@ -336,9 +336,9 @@ comparison uniCmp(string s1, string s2) {
     return bigger;
 }
 
-logical uniIsTail(string s1, string s2) {
+logical uniIsTail(char *s1, char *s2) {
   long len = 0;
-  string eS1 = uniEndStr(s1);
+  char *eS1 = uniEndStr(s1);
 
   while (*s2 != 0) {
     s2++;
@@ -352,7 +352,7 @@ logical uniIsTail(string s1, string s2) {
   return True;
 }
 
-retCode uniInsert(string dest, long len, const string src) {
+retCode uniInsert(char *dest, long len, const char *src) {
   long iLen = uniStrLen(src);
   long dLen = uniStrLen(dest) + 1;
 
@@ -372,7 +372,7 @@ retCode uniInsert(string dest, long len, const string src) {
   return Error;                  /* Bomb out */
 }
 
-comparison uniNCmp(string s1, string s2, long l) {
+comparison uniNCmp(char *s1, char *s2, long l) {
   long pos = 0;
   while (pos < l && s1[pos] == s2[pos]) {
     if (s1[pos] == 0)
@@ -390,7 +390,7 @@ comparison uniNCmp(string s1, string s2, long l) {
 
 /* Tack on an ASCII string to the end of a unicode string */
 /* This is only necessary 'cos C is not codePoint friendle */
-retCode uniTack(string dest, long len, const char *src) {
+retCode uniTack(char *dest, long len, const char *src) {
   int pos = 0;
   char *s = (char *) src;
 
@@ -405,7 +405,7 @@ retCode uniTack(string dest, long len, const char *src) {
   return pos < len ? Ok : Eof;
 }
 
-long uniIndexOf(string s, long len, long from, codePoint c) {
+long uniIndexOf(char *s, long len, long from, codePoint c) {
   long pos = from;
 
   while (pos < len) {
@@ -419,7 +419,7 @@ long uniIndexOf(string s, long len, long from, codePoint c) {
   return -1;
 }
 
-long uniLastIndexOf(string s, long len, codePoint c) {
+long uniLastIndexOf(char *s, long len, codePoint c) {
   long lx = -1;
   long pos = 0;
 
@@ -436,8 +436,8 @@ long uniLastIndexOf(string s, long len, codePoint c) {
   return lx;
 }
 
-string uniSubStr(string s, long len, long from, long cnt, string buff, long bLen) {
-  string src = &s[from];
+char *uniSubStr(char *s, long len, long from, long cnt, char *buff, long bLen) {
+  char *src = &s[from];
   long ix;
   for (ix = 0; ix < cnt && ix < bLen; ix++) {
     buff[ix] = src[ix];
@@ -449,7 +449,7 @@ string uniSubStr(string s, long len, long from, long cnt, string buff, long bLen
   return buff;
 }
 
-string uniSearchAny(string s, long len, string term) {
+char *uniSearchAny(char *s, long len, char *term) {
   long pos = 0;
   long termSize = uniStrLen(term);
 
@@ -464,8 +464,7 @@ string uniSearchAny(string s, long len, string term) {
   return NULL;
 }
 
-codePoint uniSearchDelims(string s, long len, string t) {
-  long pos = 0;
+codePoint uniSearchDelims(char *s, long len, char *t) {
   long tlen = uniStrLen(t);
   long tSize = countCodePoints(t, 0, tlen);
 
@@ -494,7 +493,7 @@ codePoint uniSearchDelims(string s, long len, string t) {
 }
 
 // This is a poor algorithm. Fix me with Boyer-Moore or better
-long uniSearch(string src, long len, long start, string tgt, long tlen) {
+long uniSearch(char *src, long len, long start, char *tgt, long tlen) {
   long pos = start;
 
   while (pos < len - tlen) {
@@ -506,7 +505,7 @@ long uniSearch(string src, long len, long start, string tgt, long tlen) {
   return -1;
 }
 
-string uniLast(string s, long l, codePoint c) {
+char *uniLast(char *s, long l, codePoint c) {
   long last = uniLastIndexOf(s, l, c);
 
   if (last >= 0)
@@ -515,7 +514,7 @@ string uniLast(string s, long l, codePoint c) {
     return NULL;
 }
 
-logical uniIsLit(string s1, char *s2) {
+logical uniIsLit(char *s1, char *s2) {
   long pos = 0;
   while (s2[pos] != 0 && s1[pos] == s2[pos])
     pos++;
@@ -523,7 +522,7 @@ logical uniIsLit(string s1, char *s2) {
   return (logical) (s2[pos] == 0 && s1[pos] == 0);
 }
 
-logical uniIsLitPrefix(string s1, char *s2) {
+logical uniIsLitPrefix(char *s1, char *s2) {
   long pos = 0;
   while (s2[pos] != '\0' && s1[pos] == s2[pos])
     pos++;
@@ -531,9 +530,9 @@ logical uniIsLitPrefix(string s1, char *s2) {
   return (logical) (s2[pos] == 0);
 }
 
-uinteger uniHash(const string name) {
+uinteger uniHash(const char *name) {
   register uinteger hash = 0;
-  byte *s = name;
+  char *s = (char *) name;
 
   while (*s) {
     hash = hash * 37 + *s++;
@@ -542,9 +541,9 @@ uinteger uniHash(const string name) {
   return hash;
 }
 
-uinteger uniNHash(const string name, long len) {
+uinteger uniNHash(const char *name, long len) {
   register uinteger hash = 0;
-  byte *s = name;
+  char *s = (char *) name;
 
   for (long ix = 0; ix < len; ix++)
     hash = hash * 37 + *s++;
@@ -552,13 +551,13 @@ uinteger uniNHash(const string name, long len) {
   return hash;
 }
 
-string uniEndStr(string s) {
+char *uniEndStr(char *s) {
   while (*s != 0)
     s++;
   return s;
 }
 
-retCode uniLower(string s, long sLen, string d, long dLen) {
+retCode uniLower(char *s, long sLen, char *d, long dLen) {
   long sPos = 0;
   long dPos = 0;
 
@@ -576,9 +575,9 @@ retCode uniLower(string s, long sLen, string d, long dLen) {
     return Eof;
 }
 
-string uniDuplicate(string s) {
+char *uniDuplicate(char *s) {
   size_t len = uniStrLen(s);
-  string copy = (string) malloc((len + 1) * sizeof(byte));
+  char *copy = (char *) malloc((len + 1) * sizeof(byte));
 
   memcpy(copy, s, len + 1);
   return copy;

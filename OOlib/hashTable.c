@@ -435,6 +435,6 @@ uinteger strhash(void *n) {
 }
 
 comparison strcomp(void *n1, void *n2) {
-  return uniCmp((string)n1,(string)n2);
+  return uniCmp((char *)n1,(char *)n2);
 }
 

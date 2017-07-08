@@ -174,7 +174,7 @@ static ioPo activeSet = NULL;
 
 static void IoInit(objectPo o, va_list *args) {
   ioPo f = O_IO(o);
-  string name = va_arg(*args, string);
+  char *name = va_arg(*args, char *);
 
   lockClass(ioClass);
 
@@ -426,7 +426,7 @@ retCode inChar(ioPo io, codePoint *ch) {
 retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
 {
   if (ch != uniEOF) {
-    byte chbuff[8];                       /* We are going to re-encode the byte */
+    char chbuff[8];                       /* We are going to re-encode the byte */
     long len = 0;
     retCode ret = Ok;
 
@@ -441,7 +441,7 @@ retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
     }
 
     while (ret == Ok && len-- > 0) {
-      ret = ((IoClassRec *) io->object.class)->ioPart.backByte(io, chbuff[len]);
+      ret = ((IoClassRec *) io->object.class)->ioPart.backByte(io, (byte) chbuff[len]);
     }
     return ret;
   } else
@@ -450,7 +450,7 @@ retCode unGetChar(ioPo io, codePoint ch)   /* put a single character back */
 
 // Push a string back into the input channel.
 // String is assumed to be allocated in order of arrival, so its pushed back in reverse order
-retCode pushBack(ioPo f, string str, long from, long len) {
+retCode pushBack(ioPo f, char *str, long from, long len) {
   if (f != NULL) {
     if (from < len) {
       codePoint ch;
@@ -471,7 +471,7 @@ retCode pushBack(ioPo f, string str, long from, long len) {
  * read a line ... up to a terminating character 
  * len should be at least 2 ... one for the final NULL byte
  */
-retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term) {
+retCode inLine(ioPo f, char *buffer, long len, long *actual, char *term) {
   retCode ret = Ok;
   long tlen = uniStrLen(term);
   objectPo o = O_OBJECT(f);
@@ -507,7 +507,7 @@ retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term) {
 /* Character-level output */
 
 retCode outChar(ioPo io, codePoint ch) {
-  byte chbuff[8];                       /* We are going to re-encode the byte */
+  char chbuff[8];                       /* We are going to re-encode the byte */
   long len = 0;
   long actual;
   retCode ret = Ok;
@@ -523,19 +523,19 @@ retCode outChar(ioPo io, codePoint ch) {
   }
 
   if (ret == Ok)
-    return ((IoClassRec *) io->object.class)->ioPart.write(io, chbuff, len, &actual);
+    return ((IoClassRec *) io->object.class)->ioPart.write(io, (byte *) chbuff, len, &actual);
   else
     return ret;
 }
 
-retCode outText(ioPo f, byte *text, long len) {
+retCode outText(ioPo f, char *text, long len) {
   long remaining = len;
   long pos = 0;
   retCode ret = Ok;
 
   while (ret == Ok && remaining > 0) {
     long count;
-    ret = ((IoClassRec *) f->object.class)->ioPart.write(f, &text[pos], remaining, &count);
+    ret = ((IoClassRec *) f->object.class)->ioPart.write(f, (byte *) &text[pos], remaining, &count);
     remaining -= count;
     pos += count;
   }
@@ -544,7 +544,7 @@ retCode outText(ioPo f, byte *text, long len) {
 }
 
 retCode outCText(ioPo f, char *text, unsigned long len) {
-  return outText(f, (byte *) text, len);
+  return outText(f, text, len);
 }
 
 retCode outStr(ioPo f, char *str) {
@@ -797,7 +797,7 @@ ioDirection fileMode(ioPo f) {
   return mode;
 }
 
-string fileName(ioPo f) {
+char *fileName(ioPo f) {
   return f->io.filename;
 }
 

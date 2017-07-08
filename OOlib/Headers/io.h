@@ -59,12 +59,12 @@ retCode isLookingAt(ioPo f, char *prefix);    /* Is prefix the first thing in th
 
 retCode inChar(ioPo f, codePoint *ch);     /* read a character */
 retCode unGetChar(ioPo f, codePoint ch);   /* put a single character back */
-retCode inLine(ioPo f, byte *buffer, long len, long *actual, string term);
+retCode inLine(ioPo f, char *buffer, long len, long *actual, char *term);
 
 retCode inBlock(ioPo f, byte *buffer, long len);
 retCode inBytes(ioPo f, byte *buffer, long len, long *act);
 
-retCode pushBack(ioPo f, string str, long from, long len);
+retCode pushBack(ioPo f, char * str, long from, long len);
 retCode skipBlanks(ioPo f);
 
 retCode outByte(ioPo f, byte c);
@@ -72,7 +72,7 @@ retCode outChar(ioPo f, codePoint ch);
 retCode outBlock(ioPo f, byte *data, long len);
 retCode outBytes(ioPo f, byte *data, long len, long *actual);
 
-retCode outText(ioPo f, string text, long len);
+retCode outText(ioPo f, char * text, long len);
 retCode outStr(ioPo f, char *str);
 long outColumn(ioPo f);                 /* return number of chars since lf */
 
@@ -90,7 +90,7 @@ retCode isOutReady(ioPo f);
 retCode isFileAtEof(ioPo f);
 retCode fileStatus(ioPo f);
 
-string fileName(ioPo f);
+char * fileName(ioPo f);
 ioDirection fileMode(ioPo f);
 long inBPos(ioPo f);
 long inCPos(ioPo f);

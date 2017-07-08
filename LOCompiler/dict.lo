@@ -146,8 +146,8 @@ lo.comp.dict{
   implementations:(map[string,map[string,implEntry]],set[string]) => set[string].
   implementations(Impls,Ex) => foldLeft(pickImplName,Ex,values(Impls)).
 
-  pickImplName:(set[string],map[string,implEntry]) => set[string].
-  pickImplName(Ex,M) => foldLeft((E,(I:implEntry))=>addMem(E,I.name),Ex,values(M)).
+  pickImplName:(map[string,implEntry],set[string]) => set[string].
+  pickImplName(M,Ex) => foldLeft(((I:implEntry),E)=>addMem(I.name,E),Ex,values(M)).
 
   public stdDict : list[env].
   stdDict = standardType("string",tipe("lo.core*string"),

@@ -61,8 +61,8 @@ typedef struct _code_record_ {
 
 extern void initPrograms(void);
 extern ptrI newProgLbl(const char *name, int16 arity);
-extern ptrI newProgramLbl(string name, int16 arity);
-extern ptrI programLbl(string name, int16 arity);
+extern ptrI newProgramLbl(char * name, int16 arity);
+extern ptrI programLbl(char * name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
 extern void defineProg(ptrI sym, ptrI code);
@@ -236,14 +236,14 @@ extern ptrI loObject(heapPo H, ptrI T);
 
 extern void initPrograms(void);
 extern ptrI newProgLbl(const char *name, int16 arity);
-extern ptrI newProgramLbl(string name, int16 arity);
+extern ptrI newProgramLbl(char * name, int16 arity);
 extern ptrI defineSpecialProg(const char *name);
 extern ptrI programOfClass(objPo o);
 extern void defineProg(ptrI sym, ptrI code);
 extern ptrI permCode(uinteger size, uinteger litCnt, packagePo owner);
-extern retCode verifyCode(ptrI prog, string name, byte *errorMsg, long msgLen);
+extern retCode verifyCode(ptrI prog, char *name, char *errorMsg, long msgLen);
 
-extern retCode loadPackage(string pkg, string version, string errorMsg, long msgSize, void *cl);
+extern retCode loadPackage(char * pkg, char * version, char * errorMsg, long msgSize, void *cl);
 
 extern void initCodeClass(void);
 

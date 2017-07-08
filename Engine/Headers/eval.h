@@ -101,7 +101,7 @@ static inline int16 argArity(insPo pc) {
   return op_h_val(*pc);
 }
 
-retCode raiseError(processPo P, string name, ptrI code);
+retCode raiseError(processPo P, char * name, ptrI code);
 retCode raiseException(processPo P, ptrI exc);
 void recoverFromException(processPo P);
 

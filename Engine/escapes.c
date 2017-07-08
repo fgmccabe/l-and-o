@@ -212,7 +212,7 @@ logical validEscape(uint16 code, unsigned short arity) {
 
 void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity, char *suffx) {
   int i;
-  byte buffer[1024];
+  char buffer[1024];
   ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
   outMsg(out, "%s%w: ", prefix, &P->proc.thread);
@@ -224,7 +224,7 @@ void showEscape(processPo P, char *prefix, int code, ptrPo args, long arity, cha
   outMsg(out, ")%s%_",suffx);
 
   long len;
-  string text = getTextFromBuffer(&len,O_BUFFER(out));
+  char * text = getTextFromBuffer(&len,O_BUFFER(out));
 
   outText(logFile, text, len);
   closeFile(out);

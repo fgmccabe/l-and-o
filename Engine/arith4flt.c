@@ -303,7 +303,7 @@ retCode g__str2flt(processPo P, ptrPo a) {
   ptrI y = deRefI(&a[2]);
 
   if (IsString(x)) {
-    string src = stringVal(stringV(x));
+    char * src = stringVal(stringV(x));
     double reslt = parseNumber(src, uniStrLen(src));
 
     if (isvar(y)) {    /* check the output argument */
@@ -334,7 +334,7 @@ retCode g__flt2str(processPo P, ptrPo a) {
     integer width = integerVal(intV(a2));
     integer prec = integerVal(intV(a3));
     logical left = (logical) (width > 0);
-    byte buffer[128];
+    char buffer[128];
     FloatDisplayMode displayMode;
 
     switch (integerVal(intV(a4))) {
@@ -345,7 +345,7 @@ retCode g__flt2str(processPo P, ptrPo a) {
       default:displayMode = general;
     }
 
-    retCode res = formatDouble(buffer, NumberOf(buffer), FloatVal(objV(a1)), displayMode, (int) prec, (string) "",
+    retCode res = formatDouble(buffer, NumberOf(buffer), FloatVal(objV(a1)), displayMode, (int) prec,  "",
                                identical(a4, trueClass));
 
     if (res == Ok) {
@@ -370,10 +370,10 @@ retCode g__flt_format(processPo P, ptrPo a) {
   else if (!isvar(a3))
     return liberror(P, "_flt_format", eVARNEEDD);
   else {
-    byte buffer[MAX_MSG_LEN];
+    char buffer[MAX_MSG_LEN];
 
     stringPo frmtP = stringV(a2);
-    string format = stringVal(frmtP);
+    char * format = stringVal(frmtP);
     long fLen = stringLen(frmtP);
     long endPos;
 

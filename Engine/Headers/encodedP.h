@@ -10,7 +10,7 @@
 typedef struct _encoding_support_ {
   ptrPo vars;       /* The table of variables */
   long maxvar;      /* How big is the variable table */
-  string errorMsg;  /* Place to put error messages */
+  char * errorMsg;  /* Place to put error messages */
   long msgSize;     /* How big is that buffer */
   heapPo R;         /* Where should the roots go? */
 } EncodeSupport, *encodePo;
@@ -24,9 +24,9 @@ retCode decodeName(ioPo in, bufferPo buffer);
 
 typedef retCode (*intProc)(integer ix, void *cl);
 typedef retCode (*fltProc)(double dx, void *cl);
-typedef retCode (*nameProc)(string sx,void*cl);
-typedef retCode (*stringProc)(string sx,integer len,void*cl);
-typedef retCode (*strctProc)(string nm,integer ar,void*cl);
+typedef retCode (*nameProc)(char * sx,void*cl);
+typedef retCode (*stringProc)(char * sx,integer len,void*cl);
+typedef retCode (*strctProc)(char * nm,integer ar,void*cl);
 typedef retCode (*flagProc)(void *cl);
 
 typedef struct {

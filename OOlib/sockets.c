@@ -84,7 +84,7 @@ FileClassRec SocketClass = {
 
 classPo sockClass = (classPo) &SocketClass;
 
-sockPo listeningPort(string name, uint16 port) {
+sockPo listeningPort(char *name, uint16 port) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sock == INVALID_SOCKET)
@@ -93,17 +93,16 @@ sockPo listeningPort(string name, uint16 port) {
     /* Set the socket to reuse addresses */
     int one = 1, len = sizeof(int);
 
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, (socklen_t) len) != 0) {
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, (socklen_t) len) != 0) {
       close(sock);
       return NULL;
-    }
-    else {
+    } else {
       struct sockaddr_in addr;  //  Internet-domain protocol
 
       memset((char *) &addr, 0, sizeof(addr));
       addr.sin_family = AF_INET;
       addr.sin_addr.s_addr = htonl(INADDR_ANY);
-      addr.sin_port = htons( port);
+      addr.sin_port = htons(port);
 
       if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
         close(sock);
@@ -139,9 +138,8 @@ retCode acceptConnection(sockPo listen, ioEncoding encoding, ioPo *inC, ioPo *ou
       default:
         return Error;
     }
-  }
-  else {
-    byte cl_name[MAXLINE];
+  } else {
+    char cl_name[MAXLINE];
     struct in_addr addr = *(struct in_addr *) &cli_addr;
     strMsg(cl_name, NumberOf(cl_name), "%s:%d", inet_ntoa(addr), ntohs(cli_addr.sin_port));
 
@@ -156,12 +154,12 @@ retCode acceptConnection(sockPo listen, ioEncoding encoding, ioPo *inC, ioPo *ou
    specified as a pair: hostname(or ip address)/port
 */
 
-retCode connectRemote(string where, int port,
+retCode connectRemote(char *where, int port,
                       ioEncoding encoding, logical waitForMe,
                       ioPo *inC, ioPo *outC) {
   int sock;
   struct sockaddr_in serv_addr;
-  string host = getHostname(where);
+  char *host = getHostname(where);
   struct in_addr *addr = host != NULL ? getHostIP(host, 0) : NULL;
 
   if (addr != NULL) {
@@ -174,8 +172,7 @@ retCode connectRemote(string where, int port,
     /* Create the socket ... */
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
       return Error;
-    }
-    else {
+    } else {
       ioPo conn = O_IO(newObject(sockClass, host, sock, encoding, ioREAD | ioWRITE));
 
       configureIo(O_FILE(conn), (waitForMe ? turnOnBlocking : turnOffBlocking));
@@ -221,8 +218,7 @@ retCode connectRemote(string where, int port,
       *outC = conn;
       return Ok;
     }
-  }
-  else {
+  } else {
     outMsg(logFile, "cant resolve host %U", where);
     return Error;
   }
@@ -239,14 +235,12 @@ static retCode sockFill(filePo f) {
       f->file.in_pos = 0;
       f->file.in_len = (int16) nBytes;
       return Ok;
-    }
-    else if (nBytes == 0) {    //  End of file
+    } else if (nBytes == 0) {    //  End of file
       f->file.in_pos = 0;
       f->file.in_len = 0;
       f->io.status = Eof;
       return Eof;
-    }
-    else {
+    } else {
       switch (locErr) {
         case EINTR:    //  Interrupted
           goto again;
@@ -264,8 +258,7 @@ static retCode sockFill(filePo f) {
           return Error;  //  Something unspecific
       }
     }
-  }
-  else
+  } else
     return Ok;
 }
 
@@ -304,8 +297,7 @@ static retCode sockFlush(ioPo io, long count) {
               sockConfigure(f, turnOffBlocking);
               f->file.out_pos = 0;
               return Ok;
-            }
-            else
+            } else
               return Fail;
           }
           default:
@@ -313,8 +305,7 @@ static retCode sockFlush(ioPo io, long count) {
             //	 strerror(errno),errno,actual,f->filename,f->client);
             return Error;
         }
-      }
-      else {
+      } else {
         cp += nBytes;
         actual -= nBytes;
       }
@@ -344,7 +335,7 @@ static retCode sockConfigure(filePo conn, ioConfigOpt mode) {
       if (fcntl(sock, F_SETFL, fd_flags) == -1)
         return Error;
       /* Set the socket to non-delay mode to avoid buffering problems */
-      setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *) &SokOpt, sizeof(SokOpt));
+      setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &SokOpt, sizeof(SokOpt));
       return Ok;
     }
 
@@ -404,7 +395,7 @@ static retCode sockConfigure(filePo conn, ioConfigOpt mode) {
 }
 
 /* return the peername of a connection */
-string peerName(sockPo stream, int *port) {
+char *peerName(sockPo stream, int *port) {
   struct sockaddr_in cli_addr;
   socklen_t cli_len = sizeof(cli_addr);
   int sock = stream->file.fno;
@@ -415,13 +406,12 @@ string peerName(sockPo stream, int *port) {
       *port = ntohs(cli_addr.sin_port);
 
     return fileName(O_IO(stream));
-  }
-  else
+  } else
     return NULL;
 }
 
 /* return the peername IP of a connection */
-string peerIP(sockPo stream, int *port, string buff, long len) {
+char *peerIP(sockPo stream, int *port, char *buff, long len) {
   struct sockaddr_in cli_addr;
   socklen_t cli_len = sizeof(cli_addr);
   int sock = stream->file.fno;
@@ -431,11 +421,10 @@ string peerIP(sockPo stream, int *port, string buff, long len) {
     if (port != NULL)
       *port = ntohs(cli_addr.sin_port);
 
-    strncpy((char *) buff, inet_ntoa(cli_addr.sin_addr), len);
+    strncpy(buff, inet_ntoa(cli_addr.sin_addr), len);
 
     return buff;
-  }
-  else
+  } else
     return NULL;
 }
 

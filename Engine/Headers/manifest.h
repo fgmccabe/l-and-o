@@ -11,12 +11,12 @@ typedef struct _manifest_entry_ *manifestEntryPo;
 typedef struct _manifest_version_ *manifestVersionPo;
 typedef struct _manifest_file_name_ *manifestFilePo;
 
-manifestEntryPo manifestEntry(string package);
+manifestEntryPo manifestEntry(char * package);
 
-string packageCodeFile(string package, string version, byte *flNm, long flLen);
+char * packageCodeFile(char *package, char *version, char *flNm, long flLen);
 
-string manifestResource(string package,string version,string kind,byte *fl,long flLen);
+char * manifestResource(char *package, char *version, char *kind, char *fl, long flLen);
 
-retCode loadManifest(string dir);
+retCode loadManifest(char * dir);
 
 #endif //LANDO_MANIFEST_H

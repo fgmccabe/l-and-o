@@ -932,7 +932,7 @@ retCode g__term(processPo P, ptrPo a) {
 
   pthread_once(&once, initCodeGen);
 
-  byte name[MAX_SYMB_LEN];
+  char name[MAX_SYMB_LEN];
 
   /* generate a randomized symbol  */
   strMsg(name, NumberOf(name), "@%ld", random());
@@ -976,7 +976,7 @@ retCode g__term(processPo P, ptrPo a) {
   ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
   ptrI xx = kvoid;
   retCode ret = Ok;
-  byte eMsg[MAX_SYMB_LEN];
+  char eMsg[MAX_SYMB_LEN];
 
   gcAddRoot(H, &xx);
   gcAddRoot(H, &code);
@@ -1094,7 +1094,7 @@ retCode g__assert(processPo P, ptrPo a) {
   ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
   ptrI xx = kvoid;
   retCode ret = Ok;
-  byte eMsg[MAX_SYMB_LEN];
+  char eMsg[MAX_SYMB_LEN];
 
   gcAddRoot(H, &xx);
   gcAddRoot(H, &code);
@@ -1245,7 +1245,7 @@ ptrI loObject(heapPo H, ptrI T) {
       ptrI code = permCode((unsigned) size, (unsigned) litCount, NULL);
       ptrI xx = kvoid;
       retCode ret = Ok;
-      byte eMsg[MAX_SYMB_LEN];
+      char eMsg[MAX_SYMB_LEN];
 
       gcAddRoot(H, &code);
       gcAddRoot(H, &xx);

@@ -19,34 +19,33 @@
 #include "io.h"
 
 retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
-                   codePoint pad, logical left, string prefix, logical sign);
+                   codePoint pad, logical left, char *prefix, logical sign);
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
-                  codePoint pad, logical left, string prefix, logical sign);
-retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string frmt, long formatLen);
-retCode formattedLong(integer ix, byte *out, long *endPos, long outLen, string frmt, long formatLen);
+                  codePoint pad, logical left, char *prefix, logical sign);
+retCode formattedFloat(double dx, char *out, long *endPos, long outLen, char *frmt, long formatLen);
+retCode formattedLong(integer ix, char *out, long *endPos, long outLen, char *frmt, long formatLen);
 retCode outMsg(ioPo f, char *fmt, ...);
 retCode logMsg(ioPo out, char *fmt, ...);
 
-retCode outUniString(ioPo f, string str, long len, long width, int precision,
+retCode outUniString(ioPo f, char *str, long len, long width, int precision,
                      codePoint pad, logical leftPad, logical alt);
 retCode outInt(ioPo f, integer i);
 retCode outFloat(ioPo out, double x);
-retCode outUStr(ioPo f, string str);
+retCode outUStr(ioPo f, char *str);
 
-long int2StrByBase(byte *str, integer i, long pos, uint16 base);
-
+long int2StrByBase(char *str, integer i, long pos, uint16 base);
 
 typedef enum {
   fractional, scientific, general
 } FloatDisplayMode;
 
-retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayMode, int precision, string prefix,
+retCode formatDouble(char *out, long outLen, double x, FloatDisplayMode displayMode, int precision, char *prefix,
                      logical sign);
 
-integer parseInteger(string s, long len);
-double parseNumber(string s, long len);
+integer parseInteger(char *s, long len);
+double parseNumber(char *s, long len);
 
-string strMsg(byte *buffer, long len, char *fmt, ...);
-string strAppend(byte *buffer, long len, char *fmt, ...);
+char *strMsg(char *buffer, long len, char *fmt, ...);
+char *strAppend(char *buffer, long len, char *fmt, ...);
 
 #endif

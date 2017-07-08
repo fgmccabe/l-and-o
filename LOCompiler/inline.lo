@@ -34,7 +34,7 @@ lo.comp.inline{
   dispRelEntry(relEntry(Refs,Rl)) => ssSeq([disp(Rl.name),ss("->"),ssSeq(Refs//disp),ss("\n")]).
 
   getRelRefs:(rel,list[term]) => list[term].
-  getRelRefs(rel(_,_,Clses),All) => foldLeft((Refs,Cl)=>getClRefs(Cl,All,Refs),[],Clses).
+  getRelRefs(rel(_,_,Clses),All) => foldLeft((Cl,Refs)=>getClRefs(Cl,All,Refs),[],Clses).
 
   getClRefs:(clse,list[term],list[term]) => list[term].
   getClRefs(clse(_,_,A,B),All,Refs) => predRefs(B,All,termRefs(A,All,Refs)).
@@ -64,17 +64,17 @@ lo.comp.inline{
   termRef(_,_,Refs) => Refs.
 
   termRefs:(list[term],list[term],list[term]) => list[term].
-  termRefs(A,All,Refs) => foldLeft((Rfs,T)=>termRef(T,All,Rfs),Refs,A).
+  termRefs(A,All,Refs) => foldLeft((T,Rfs)=>termRef(T,All,Rfs),Refs,A).
 
   extractGroups:(list[list[relEntry]]) => list[list[rel]].
   extractGroups([]) => [].
-  extractGroups([G,..L]) => [foldLeft((M,relEntry(_,R)) => [R,..M],[],G),..extractGroups(L)].
+  extractGroups([G,..L]) => [foldLeft((relEntry(_,R),M) => [R,..M],[],G),..extractGroups(L)].
 
   inlineGroups:(list[list[rel]],map[term,rel]) => map[term,rel].
-  inlineGroups(Groups,I) => foldLeft((M,G)=>inlineGroup(G,M,I),[],Groups).
+  inlineGroups(Groups,I) => foldLeft((G,M)=>inlineGroup(G,M,I),[],Groups).
 
   inlineGroup:(list[rel],map[term,rel],map[term,rel]) => map[term,rel].
-  inlineGroup(Rels,P,I) => foldLeft((M,(R:rel)) => M[R.name->R],P,relFxPt(Rels,P,I)).
+  inlineGroup(Rels,P,I) => foldLeft(((R:rel),M) => M[R.name->R],P,relFxPt(Rels,P,I)).
 
   relFxPt:(list[rel],map[term,rel],map[term,rel]) => list[rel].
   relFxPt(TR,P,I) => (Any ? relFxPt(TR1,P,I) | TR) :-
@@ -202,7 +202,7 @@ lo.comp.inline{
   consistentLbl(prg(Nm,3),cons(strct(Nm,_),_)).
 
   mkVars:(list[term]) => map[string,term].
-  mkVars(Els) => foldLeft((M,varbl(Nm))=>M[Nm->varbl(_str_gen(Nm))],[],Els).
+  mkVars(Els) => foldLeft((varbl(Nm),M)=>M[Nm->varbl(_str_gen(Nm))],[],Els).
 
   applyToTerm:(term,map[string,term]) => term.
   applyToTerm(varbl(Nm),V) => applyToTerm(VV,V) :- present(V,Nm,VV).
@@ -279,37 +279,6 @@ lo.comp.inline{
   deRef(varbl(Nm),M) => deRef(V,M) :- present(M,Nm,V).
   deRef(T,_) => T.
 
-  -- Finding variables
-  findVarsInClse:(clse) => list[term].
-  findVarsInClse(clse(_,_,A,B)) => findVarsInPreds(B,findVarsInList(A,[])).
-  findVarsInClse(eqn(_,_,A,R)) => findVars(R,findVarsInList(A,[])).
-
-  findVars:(term,list[term]) => list[term].
-  findVars(varbl(Nm),V) => mergeEl(V,varbl(Nm)).
-  findVars(T,V) => V :- isGroundTerm(T).
-  findVars(anon,V) => V.
-  findVars(cons(_,A),V) => findVarsInList(A,V).
-  findVars(invoke(_,O,A),V) => findVarsInList(A,findVars(O,V)).
-  findVars(escvoke(_,O,A),V) => findVarsInList(A,V).
-  findVars(ovoke(_,C,L,T),V) => findVars(C,findVars(L,findVars(T,V))).
-  findVars(guarded(T,G),V) => findVars(T,findVarsInPreds(G,V)).
-
-  findVarsInList:(list[term],list[term]) => list[term].
-  findVarsInList([],V) => V.
-  findVarsInList([T,..L],V) => findVarsInList(L,findVars(T,V)).
-
-  findVarsInPred:(list[term],pred) => list[term].
-  findVarsInPred(V,call(_,_,A)) => findVarsInList(A,V).
-  findVarsInPred(V,ecall(_,_,A)) => findVarsInList(A,V).
-  findVarsInPred(V,ocall(_,C,L,T)) => findVars(C,findVars(L,findVars(T,V))).
-  findVarsInPred(V,unfy(_,L,T)) => findVars(L,findVars(T,V)).
-  findVarsInPred(V,except(_,E)) => findVars(E,V).
-  findVarsInPred(V,fail) => V.
-  findVarsInPred(V,neck) => V.
-
-  findVarsInPreds:(list[pred],list[term]) => list[term].
-  findVarsInPreds(Ps,V) => foldLeft(findVarsInPred,V,Ps).
-
   countVars:(term,map[string,integer]) => map[string,integer].
   countVars(varbl(Nm),V) => V[Nm->Cnt+1] :- present(V,Nm,Cnt).
   countVars(varbl(Nm),V) => V[Nm->1].
@@ -324,18 +293,18 @@ lo.comp.inline{
   countVarsInPreds:(list[pred],map[string,integer]) => map[string,integer].
   countVarsInPreds(Ps,V) => foldRight(countVarsInPred,V,Ps).
 
-  countVarsInPred:(map[string,integer],pred) => map[string,integer].
-  countVarsInPred(V,call(_,_,A)) => countVarsInList(A,V).
-  countVarsInPred(V,ecall(_,_,A)) => countVarsInList(A,V).
-  countVarsInPred(V,ocall(_,C,L,T)) => countVars(C,countVars(L,countVars(T,V))).
-  countVarsInPred(V,unfy(_,L,T)) => countVars(L,countVars(T,V)).
-  countVarsInPred(V,except(_,E)) => countVars(E,V).
-  countVarsInPred(V,fail) => V.
-  countVarsInPred(V,neck) => V.
+  countVarsInPred:(pred,map[string,integer]) => map[string,integer].
+  countVarsInPred(call(_,_,A),V) => countVarsInList(A,V).
+  countVarsInPred(ecall(_,_,A),V) => countVarsInList(A,V).
+  countVarsInPred(ocall(_,C,L,T),V) => countVars(C,countVars(L,countVars(T,V))).
+  countVarsInPred(unfy(_,L,T),V) => countVars(L,countVars(T,V)).
+  countVarsInPred(except(_,E),V) => countVars(E,V).
+  countVarsInPred(fail,V) => V.
+  countVarsInPred(neck,V) => V.
 
   findSingletons:(clse) => clse.
   findSingletons(clse(Q,Nm,Args,Preds)) => clse(Q^/((varbl(V)) :- present(M,V,Cnt), Cnt>1),Nm,applyToTerms(Args,Mx),applyToPreds(Preds,Mx)) :-
-    M = countVarsInList(Args,countVarsInPreds(Preds,foldLeft((Mp,varbl(Vn))=>Mp[Vn->0],[],Q))),
+    M = countVarsInList(Args,countVarsInPreds(Preds,foldLeft((varbl(Vn),Mp)=>Mp[Vn->0],[],Q))),
     Mx = singletonMap(M).
 
   singletonMap:(map[string,integer]) => map[string,term].

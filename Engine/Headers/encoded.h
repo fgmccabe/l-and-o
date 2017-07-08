@@ -20,16 +20,16 @@ typedef enum {
   trmCns = 'n'
 } trmSig;
 
-retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg, long msgSize);
-retCode skipEncoded(ioPo in, string errorMsg, long msgLen);
-retCode copyEncoded(ioPo in, ioPo out, string errorMsg, long msgLen);
+retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, char * errorMsg, long msgSize);
+retCode skipEncoded(ioPo in, char * errorMsg, long msgLen);
+retCode copyEncoded(ioPo in, ioPo out, char * errorMsg, long msgLen);
 
 retCode encodeInt(ioPo out,integer ix);
 retCode encodeFlt(ioPo out,double dx);
-retCode encodeEnum(ioPo out,string sx);
-retCode encodeStrng(ioPo out,string dx,integer len);
-retCode encodeStrct(ioPo out, string sx, integer ar);
-retCode encodePrg(ioPo out, string sx, integer ar);
+retCode encodeEnum(ioPo out,char * sx);
+retCode encodeStrng(ioPo out,char * dx,integer len);
+retCode encodeStrct(ioPo out, char * sx, integer ar);
+retCode encodePrg(ioPo out, char * sx, integer ar);
 retCode encodeCons(ioPo out, integer ar);
 
 #endif

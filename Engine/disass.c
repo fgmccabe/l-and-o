@@ -27,8 +27,8 @@ static insPo outIns(ioPo out, char *Nm, opAndSpec A1, opAndSpec A2, codePo code,
     ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B, ptrPo hBase, ptrPo hLimit);
 
 /* disassemble instruction at pc */
-insPo dissass(byte *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B,
-    ptrPo hBase, ptrPo hLimit) {
+insPo dissass(char *pref, codePo code, insPo pc, ptrPo a, ptrPo y, ptrPo S, rwmode mode, choicePo B,
+              ptrPo hBase, ptrPo hLimit) {
   register insWord pcx = *pc;
 
   if (pref != NULL)

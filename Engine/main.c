@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <stdlib.h>
-#include "lo.h"		/* Main header file */
+#include "lo.h"    /* Main header file */
 #include "fileio.h"
 #include "tpl.h"
 #include "clock.h"
@@ -36,12 +36,12 @@ logical tracePut = False;  // true if tracing term freeze
 logical traceLock = False;  /* true if tracing locks */
 logical traceResource = False;
 
-static byte loCWD[MAX_MSG_LEN] = {0};
-static byte repoDir[MAX_MSG_LEN] = {0};
-static byte bootPkg[MAX_MSG_LEN] = {'l', 'o', '.', 'b', 'o', 'o', 't', 0};  // boot package
-static byte bootVer[MAX_SYMB_LEN] = {'*', 0};
-static byte entryPoint[MAX_MSG_LEN] = {0};  // Go entry point class 
-static byte debugPkg[MAX_MSG_LEN] = {0};  // Standard debug package 
+static char loCWD[MAX_MSG_LEN] = "";
+static char repoDir[MAX_MSG_LEN] = "";
+static char bootPkg[MAX_MSG_LEN] = "lo.boot";  // boot package
+static char bootVer[MAX_SYMB_LEN] = "*";
+static char entryPoint[MAX_MSG_LEN] = "";  // Go entry point class
+static char debugPkg[MAX_MSG_LEN] = "";  // Standard debug package
 
 static struct {
   codePoint option; // The name of the option
@@ -49,7 +49,7 @@ static struct {
 } Options[32];  // An array of them 
 static int optCount = 0;                /* How many do we have? */
 
-#include "version.h"		/* Version ID for the evaluator */
+#include "version.h"    /* Version ID for the evaluator */
 
 char copyRight[] = "(c) 2017 F.G.McCabe\nApache 2.0 licence";
 
@@ -120,15 +120,15 @@ static void splitFirstArg(int argc, char **argv, int *newArgc, char ***newArgv) 
   }
 }
 
-static void parsePkgOpt(char *opt, byte pkg[], long pkgLen, byte ver[], long verLen) {
-  long colonPos = uniIndexOf((string) opt, strlen(opt), 0, ':');
+static void parsePkgOpt(char *opt, char pkg[], long pkgLen, char ver[], long verLen) {
+  long colonPos = uniIndexOf(opt, strlen(opt), 0, ':');
 
   if (colonPos > 0) {
-    uniNCpy(pkg, pkgLen, (string) opt, colonPos);
-    uniCpy(ver, verLen, (string) &opt[colonPos + 1]);
+    uniNCpy(pkg, pkgLen, opt, colonPos);
+    uniCpy(ver, verLen, &opt[colonPos + 1]);
   } else {
-    uniCpy(pkg, pkgLen, (string) opt);
-    uniCpy(ver, verLen, (string) "*");
+    uniCpy(pkg, pkgLen, opt);
+    uniCpy(ver, verLen, "*");
   }
 }
 
@@ -281,7 +281,7 @@ int getOptions(int argc, char **argv) {
       }
 
       case 'm': {                          /* modify the entry point */
-        uniCpy(entryPoint, NumberOf(entryPoint), (string) optarg);
+        uniCpy(entryPoint, NumberOf(entryPoint), optarg);
         break;
       }
 
@@ -306,7 +306,7 @@ int getOptions(int argc, char **argv) {
       }
 
       case 'L': {
-        byte fn[MAX_MSG_LEN];
+        char fn[MAX_MSG_LEN];
         strncpy((char *) fn, optarg, NumberOf(fn));
 
         if (initLogfile(fn) != Ok) {
@@ -355,7 +355,7 @@ int main(int argc, char **argv) {
   textdomain(PACKAGE);
 #endif
 
-  initLogfile((string) "-");
+  initLogfile((char *) "-");
   initFileIo();        /* Set up special file handling */
 
   strMsg(entryPoint, NumberOf(entryPoint), "lo.boot@__boot"); /* standard entry point */
@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
     char *dir = getenv("LO_DIR"); /* pick up the installation directory */
     if (dir == NULL)
       dir = LODIR;                  /* Default installation path */
-    uniCpy(repoDir, NumberOf(repoDir), (string) dir);
+    uniCpy(repoDir, NumberOf(repoDir), dir);
   }
 
   // set up working directory

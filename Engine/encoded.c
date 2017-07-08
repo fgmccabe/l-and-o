@@ -17,7 +17,6 @@
 #include <string.h>
 #include <base64.h>
 #include "lo.h"
-#include "term.h"
 #include "encodedP.h"             /* pick up the term encoding definitions */
 
 /* Decode a term encoded message ... from a file stream */
@@ -29,7 +28,7 @@
 
 static retCode estimate(ioPo in, integer *amnt, integer *perm);
 
-retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
+retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, char * errorMsg,
                    long msgSize) {
   EncodeSupport support = {NULL, 0, errorMsg, msgSize, R};
 
@@ -85,7 +84,7 @@ retCode decodeTerm(ioPo in, heapPo H, heapPo R, ptrPo tgt, string errorMsg,
                         res = reserveSpace(&globalHeap, (size_t) (perm + amnt));
                     }
                     if (res == Ok) {
-                      rewindBuffer(buffer); /* re-read from string buffer */
+                      rewindBuffer(buffer); /* re-read from char * buffer */
                       bufferPo tmpBuffer = newStringBuffer();
 
                       res = decode(O_IO(buffer), &support, H, tgt, tmpBuffer);
@@ -278,7 +277,7 @@ retCode decode(ioPo in, encodePo S, heapPo H, ptrPo tgt, bufferPo tmpBuffer) {
     case trmString: { /* A literal string */
       if ((res = decodeText(in, tmpBuffer)) == Ok) {
         long len;
-        string buff = getTextFromBuffer(&len, tmpBuffer);
+        char * buff = getTextFromBuffer(&len, tmpBuffer);
         *tgt = allocateString(H, buff, len);
       }
       return res;
@@ -422,7 +421,7 @@ static retCode estimateFlt(double dx, void *cl) {
   return Ok;
 }
 
-static retCode estimateName(string nm, void *cl) {
+static retCode estimateName(char * nm, void *cl) {
   Estimation *info = (Estimation *) cl;
 
   long length = uniStrLen(nm);
@@ -431,14 +430,14 @@ static retCode estimateName(string nm, void *cl) {
   return Ok;
 }
 
-static retCode estimateString(string nm, integer size, void *cl) {
+static retCode estimateString(char * nm, integer size, void *cl) {
   Estimation *info = (Estimation *) cl;
 
   info->perm += CellCount(sizeof(stringRec) + (size + 1) * sizeof(byte));
   return Ok;
 }
 
-static retCode estimateStrct(string nm, integer arity, void *cl) {
+static retCode estimateStrct(char * nm, integer arity, void *cl) {
   Estimation *info = (Estimation *) cl;
 
   long length = uniStrLen(nm);
@@ -447,7 +446,7 @@ static retCode estimateStrct(string nm, integer arity, void *cl) {
   return Ok;
 }
 
-static retCode estimatePrg(string nm, integer arity, void *cl) {
+static retCode estimatePrg(char * nm, integer arity, void *cl) {
   Estimation *info = (Estimation *) cl;
 
   long length = uniStrLen(nm);
@@ -496,9 +495,9 @@ static retCode display(ioPo in, encodePo S, ioPo out);
 static retCode displayName(ioPo in, ioPo out);
 static retCode displayText(ioPo in, ioPo out);
 
-retCode displayEncoded(ioPo out, byte *buffer, long len) {
+retCode displayEncoded(ioPo out, char *buffer, long len) {
   ioPo str = O_IO(fixedStringBuffer(buffer, len));
-  byte errorMsg[1024];
+  char errorMsg[1024];
   long msgSize = NumberOf(errorMsg);
   EncodeSupport support = {NULL, 0, errorMsg, msgSize, &globalHeap};
   retCode ret = display(str, &support, out);
@@ -509,7 +508,7 @@ retCode displayEncoded(ioPo out, byte *buffer, long len) {
   return ret;
 }
 
-retCode sE(byte *buffer, long len) {
+retCode sE(char *buffer, long len) {
   return displayEncoded(logFile, buffer, len);
 }
 
@@ -547,7 +546,7 @@ static retCode display(ioPo in, encodePo S, ioPo out) {
       return displayName(in, out);
     }
 
-    case trmString: { /* A literal string */
+    case trmString: { /* A literal char * */
       res = outChar(out, '\"');
       if (res == Ok)
         res = displayText(in, out);
@@ -721,7 +720,7 @@ static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buf
 
       if (res == Ok) {
         long len;
-        string nm = getTextFromBuffer(&len, buff);
+        char * nm = getTextFromBuffer(&len, buff);
         res = cb->decEnum(nm, cl);
       }
       return res;
@@ -733,7 +732,7 @@ static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buf
 
       if (res == Ok) {
         long len;
-        string nm = getTextFromBuffer(&len, buff);
+        char * nm = getTextFromBuffer(&len, buff);
         res = cb->decString(nm, len, cl);
       }
       return res;
@@ -750,7 +749,7 @@ static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buf
 
       if (res == Ok) {
         long len;
-        string nm = getTextFromBuffer(&len, buff);
+        char * nm = getTextFromBuffer(&len, buff);
         res = cb->decStruct(nm, arity, cl);
       }
       return res;
@@ -767,7 +766,7 @@ static retCode decodeStream(ioPo in, decodeCallBackPo cb, void *cl, bufferPo buf
 
       if (res == Ok) {
         long len;
-        string nm = getTextFromBuffer(&len, buff);
+        char * nm = getTextFromBuffer(&len, buff);
         res = cb->decPrg(nm, arity, cl);
       }
       return res;
@@ -812,15 +811,15 @@ static retCode skipFlt(double dx, void *cl) {
   return Ok;
 }
 
-static retCode skipString(string sx, integer len, void *cl) {
+static retCode skipString(char * sx, integer len, void *cl) {
   return Ok;
 }
 
-static retCode skipName(string sx,void *cl){
+static retCode skipName(char * sx,void *cl){
   return Ok;
 }
 
-static retCode skipStrct(string nm, integer ar, void *cl) {
+static retCode skipStrct(char * nm, integer ar, void *cl) {
   return Ok;
 }
 
@@ -837,7 +836,7 @@ static DecodeCallBacks skipCB = {
   skipInt             // decCons
 };
 
-retCode skipEncoded(ioPo in, string errorMsg, long msgLen) {
+retCode skipEncoded(ioPo in, char * errorMsg, long msgLen) {
   switch (streamDecode(in, &skipCB, NULL)) {
     case Ok:
       return Ok;
@@ -880,8 +879,8 @@ static retCode copyFlt(double dx, void *cl) {
   return encodeFlt(out, dx);
 }
 
-static retCode encodeName(ioPo out, string sx, integer len) {
-  codePoint delim = uniSearchDelims(sx, len, (string) ";\"|/%");
+static retCode encodeName(ioPo out, char * sx, integer len) {
+  codePoint delim = uniSearchDelims(sx, len,  ";\"|/%");
   if (delim == 0)
     delim = '"';
 
@@ -903,22 +902,22 @@ static retCode encodeName(ioPo out, string sx, integer len) {
   return ret;
 }
 
-static retCode copyString(string sx, integer len, void *cl) {
+static retCode copyString(char * sx, integer len, void *cl) {
   ioPo out = ((CopyRec *) cl)->out;
   return encodeStrng(out, sx, len);
 }
 
-static retCode copyEnum(string sx, void *cl) {
+static retCode copyEnum(char * sx, void *cl) {
   ioPo out = ((CopyRec *) cl)->out;
   return encodeEnum(out, sx);
 }
 
-static retCode copyStrct(string nm, integer ar, void *cl) {
+static retCode copyStrct(char * nm, integer ar, void *cl) {
   ioPo out = ((CopyRec *) cl)->out;
   return encodeStrct(out,nm,ar);
 }
 
-static retCode copyPrg(string nm, integer ar, void *cl) {
+static retCode copyPrg(char * nm, integer ar, void *cl) {
   ioPo out = ((CopyRec *) cl)->out;
   return encodePrg(out,nm,ar);
 }
@@ -941,7 +940,7 @@ static DecodeCallBacks copyCB = {
   copyCons            // decCons
 };
 
-retCode copyEncoded(ioPo in, ioPo out, string errorMsg, long msgLen) {
+retCode copyEncoded(ioPo in, ioPo out, char * errorMsg, long msgLen) {
   CopyRec rc = {out};
 
   switch (streamDecode(in, &skipCB, &rc)) {
@@ -967,17 +966,17 @@ retCode encodeFlt(ioPo out, double dx) {
   return outFloat(out, dx);
 }
 
-retCode encodeEnum(ioPo out, string sx) {
+retCode encodeEnum(ioPo out, char * sx) {
   outChar(out, trmSym);
   return encodeName(out, sx, (integer) uniStrLen(sx));
 }
 
-retCode encodeStrng(ioPo out, string sx, integer len) {
+retCode encodeStrng(ioPo out, char * sx, integer len) {
   outChar(out, trmString);
   return encodeName(out, sx, len);
 }
 
-retCode encodeStrct(ioPo out, string nm, integer ar){
+retCode encodeStrct(ioPo out, char * nm, integer ar){
   retCode ret = outChar(out, trmStrct);
   if (ret == Ok)
     ret = encodeInt(out, ar);
@@ -986,7 +985,7 @@ retCode encodeStrct(ioPo out, string nm, integer ar){
 
   return ret;
 }
-retCode encodePrg(ioPo out, string nm, integer ar){
+retCode encodePrg(ioPo out, char * nm, integer ar){
   retCode ret = outChar(out, trmPrg);
   if (ret == Ok)
     ret = encodeInt(out, ar);

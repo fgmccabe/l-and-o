@@ -577,7 +577,7 @@ int fileNumber(filePo f) {
 }
 
 /* Open a file for input only */
-ioPo openInFile(string name, ioEncoding encoding) {
+ioPo openInFile(char * name, ioEncoding encoding) {
   if (isRegularFile(name) == Ok) {
     int inFileRefNum = open((const char *) name, O_RDONLY);
 
@@ -589,7 +589,7 @@ ioPo openInFile(string name, ioEncoding encoding) {
     return NULL;
 }
 
-ioPo openOutFile(string name, ioEncoding encoding) {
+ioPo openOutFile(char * name, ioEncoding encoding) {
   switch (isRegularFile(name)) {
     case Ok:
     case Fail: {      // File not previously found
@@ -606,7 +606,7 @@ ioPo openOutFile(string name, ioEncoding encoding) {
 }
 
 /* Open a file for input and output */
-ioPo openInOutFile(string name, ioEncoding encoding) {
+ioPo openInOutFile(char * name, ioEncoding encoding) {
   switch (isRegularFile(name)) {
     case Ok:
     case Fail: {      // File not previously found
@@ -623,7 +623,7 @@ ioPo openInOutFile(string name, ioEncoding encoding) {
 }
 
 /* create and/or truncate existing file */
-ioPo newOutFile(string name, ioEncoding encoding) {
+ioPo newOutFile(char * name, ioEncoding encoding) {
   switch (isRegularFile(name)) {
     case Ok:
     case Fail: {      // File not previously found
@@ -639,7 +639,7 @@ ioPo newOutFile(string name, ioEncoding encoding) {
   }
 }
 
-ioPo openAppendFile(string name, ioEncoding encoding) {
+ioPo openAppendFile(char * name, ioEncoding encoding) {
   switch (isRegularFile(name)) {
     case Ok:
     case Fail: {      // File not previously found
@@ -655,7 +655,7 @@ ioPo openAppendFile(string name, ioEncoding encoding) {
   }
 }
 
-ioPo openInOutAppendFile(string name, ioEncoding encoding) {
+ioPo openInOutAppendFile(char * name, ioEncoding encoding) {
   switch (isRegularFile(name)) {
     case Ok:
     case Fail: {      // File not previously found
@@ -671,7 +671,7 @@ ioPo openInOutAppendFile(string name, ioEncoding encoding) {
   }
 }
 
-retCode isRegularFile(string fname) {
+retCode isRegularFile(char * fname) {
   struct stat buf;
 
   if (stat((const char *) fname, &buf) == -1)
@@ -682,7 +682,7 @@ retCode isRegularFile(string fname) {
     return Ok;
 }
 
-retCode isDirectory(string fname) {
+retCode isDirectory(char * fname) {
   struct stat buf;
 
   if (stat((const char *) fname, &buf) == -1)
@@ -697,7 +697,7 @@ retCode isDirectory(string fname) {
 #define FILE_ACCESS_MODE F_OK|R_OK
 
 /* Check if a file is present or not */
-retCode filePresent(string name) {
+retCode filePresent(char * name) {
   if (access((const char *) name, FILE_ACCESS_MODE) == 0)
     return Ok;
   else
@@ -795,7 +795,7 @@ ioPo OpenStderr(void) {
   return stdErr;
 }
 
-retCode initLogfile(string name) {
+retCode initLogfile(char * name) {
   if (uniIsLit(name, "-"))
     logFile = OpenStderr();
   else
@@ -839,7 +839,7 @@ retCode rewindFile(filePo f) {
   }
 }
 
-void pU(string p) {
+void pU(char * p) {
   retCode ret = Ok;
   while (ret == Ok && *p != 0)
     ret = outChar(logFile, *p++);

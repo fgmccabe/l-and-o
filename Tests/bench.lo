@@ -95,9 +95,6 @@ test.bench{
   lots().
 
   eg_count:(integer){}.
-  eg_count(10).
-  eg_count(20).
-  eg_count(50).
   eg_count(100).
   eg_count(200).
   eg_count(500).

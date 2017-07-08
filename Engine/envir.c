@@ -27,7 +27,7 @@ retCode g_getenv(processPo P, ptrPo a) {
   else if (!IsString(k))
     return liberror(P, "getenv", eINVAL);
   else {
-    string key = stringVal(stringV(k));
+    char * key = stringVal(stringV(k));
     char *val = getenv((char*)key);
 
     if (val != NULL) {
@@ -47,10 +47,10 @@ retCode g_setenv(processPo P, ptrPo a) {
   if (isvar(k) || !IsString(k) || !IsString(v))
     return liberror(P, "setenv", eINVAL);
   else {
-    string key = stringVal(stringV(k));
-    string val = stringVal(stringV(v));
+    char * key = stringVal(stringV(k));
+    char * val = stringVal(stringV(v));
 
-    if (setenv((char *) key, (char *) val, 1) == 0)
+    if (setenv((char *) key,  val, 1) == 0)
       return Ok;
     else
       return liberror(P, "setenv", eSPACE);

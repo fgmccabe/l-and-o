@@ -151,7 +151,7 @@ typedef objPo (*classCpyFun)(specialClassPo class, objPo dst, objPo src);
 
 typedef struct _program_label_ {
   long arity;                   // Arity of program
-  byte name[ZEROARRAYSIZE];     // Program's print name
+  char name[ZEROARRAYSIZE];     // Program's print name
 } PrgLabel, *prgLabelPo;
 
 
@@ -175,7 +175,7 @@ typedef struct _special_class_ {
   classScanFun scanFun;        /* Function to scan object */
   classHashFun hashFun;        /* Function to compute hash function */
   ptrI program;                /* Program that responds to this type */
-  byte name[ZEROARRAYSIZE];    /* the class's print name */
+  char name[ZEROARRAYSIZE];    /* the class's print name */
 } specialClassRec;
 
 #define PTRSZE sizeof(ptrI)
@@ -307,12 +307,12 @@ static inline void updateArg(objPo o, long ix, ptrI val) {
   args[ix] = val;
 }
 
-static inline string objectClassName(objPo p) {
+static inline char * objectClassName(objPo p) {
   clssPo class = classOf(p);
   return class->lbl.name;
 }
 
-static inline string className(clssPo class) {
+static inline char * className(clssPo class) {
   return class->lbl.name;
 }
 
@@ -330,7 +330,7 @@ static inline integer classSize(clssPo clss){
 
 extern logical IsBinOp(ptrPo p, ptrI key, ptrPo a1, ptrPo a2);
 
-extern ptrI newClassDef(string name, long arity);
+extern ptrI newClassDef(char * name, long arity);
 extern ptrI newClassDf(const char *name, long arity);
 
 extern ptrI newSpecialClass(const char *name,
@@ -344,7 +344,7 @@ extern void standardClasses(void);
 
 extern void installClass(clssPo class);
 
-extern ptrI classPresent(string name);
+extern ptrI classPresent(char * name);
 
 
 #endif

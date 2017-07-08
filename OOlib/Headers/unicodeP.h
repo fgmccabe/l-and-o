@@ -73,7 +73,7 @@
 
 extern UniCharCategory genCatTbl[];
 
-extern long uniByteLen(const string s);
+extern long uniByteLen(const char * s);
 
 #define MAXUNICODE (1<<20)
 

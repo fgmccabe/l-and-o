@@ -10,8 +10,6 @@
 #include "encodedP.h"             /* pick up the term encoding definitions */
 #include "manifestP.h"
 #include "tpl.h"
-#include "hashTable.h"
-#include "load.h"
 
 static poolPo packagePool = NULL;
 static hashPo loadedPackages = NULL;
@@ -21,60 +19,60 @@ void initPackages() {
   loadedPackages = NewHash(128, (hashFun) uniHash, (compFun) uniCmp, NULL);
 }
 
-packagePo loadedPackage(string package) {
+packagePo loadedPackage(char *package) {
   return (packagePo) hashGet(loadedPackages, package);
 }
 
-string loadedVersion(string package) {
+char *loadedVersion(char *package) {
   packagePo pkg = loadedPackage(package);
 
   if (pkg != NULL)
-    return (string) &pkg->version;
+    return (char *) &pkg->version;
 
   return NULL;
 }
 
-string pkgName(packagePo pkg) {
-  return (string) &pkg->packageName;
+char *pkgName(packagePo pkg) {
+  return (char *) &pkg->packageName;
 }
 
-string pkgVers(packagePo pkg) {
-  return (string) &pkg->version;
+char *pkgVers(packagePo pkg) {
+  return (char *) &pkg->version;
 }
 
-static logical compatiblVersion(string rqVer, string ver) {
-  return (logical) (uniCmp(rqVer, (string) "*") == same || uniCmp(rqVer, ver) == same);
+static logical compatiblVersion(char *rqVer, char *ver) {
+  return (logical) (uniCmp(rqVer, "*") == same || uniCmp(rqVer, ver) == same);
 }
 
-static packagePo markLoaded(string package, string version) {
+static packagePo markLoaded(char *package, char *version) {
   packagePo pkg = loadedPackage(package);
 
   if (pkg != NULL) {
-    if (!compatiblVersion((string) &pkg->version, version))
+    if (!compatiblVersion((char *) &pkg->version, version))
       return Null;
     else
       return pkg;
   } else {
     pkg = (packagePo) allocPool(packagePool);
-    uniCpy((byte *) &pkg->packageName, NumberOf(pkg->packageName), package);
-    uniCpy((byte *) &pkg->version, NumberOf(pkg->version), version);
+    uniCpy((char *) &pkg->packageName, NumberOf(pkg->packageName), package);
+    uniCpy((char *) &pkg->version, NumberOf(pkg->version), version);
     hashPut(loadedPackages, &pkg->packageName, pkg);
     return pkg;
   }
 }
 
-typedef retCode (*pickupPkg)(string pkgNm, string vers, string errorMsg, long msgLen, void *cl);
+typedef retCode (*pickupPkg)(char *pkgNm, char *vers, char *errorMsg, long msgLen, void *cl);
 
-static retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen);
-static retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity);
-static retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer);
-static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen, pickupPkg pickup, void *cl);
+static retCode decodePkgName(ioPo in, char *nm, long nmLen, char *v, long vLen);
+static retCode decodePrgName(ioPo in, char *nm, long nmLen, integer *arity);
+static retCode decodeLoadedPkg(char *pkgNm, long nmLen, char *vrNm, long vrLen, bufferPo sigBuffer);
+static retCode decodeImportsSig(bufferPo sigBuffer, char *errorMsg, long msgLen, pickupPkg pickup, void *cl);
 
-static retCode loadSegments(ioPo file, packagePo owner, string errorMsg, long msgLen);
+static retCode loadSegments(ioPo file, packagePo owner, char *errorMsg, long msgLen);
 
-static retCode ldPackage(string pkgName, string vers, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
-  byte flNm[MAXFILELEN];
-  string fn = packageCodeFile(pkgName, vers, flNm, NumberOf(flNm));
+static retCode ldPackage(char *pkgName, char *vers, char *errorMsg, long msgSize, pickupPkg pickup, void *cl) {
+  char flNm[MAXFILELEN];
+  char *fn = packageCodeFile(pkgName, vers, flNm, NumberOf(flNm));
   retCode ret = Ok;
 
   if (fn == NULL) {
@@ -103,8 +101,8 @@ static retCode ldPackage(string pkgName, string vers, string errorMsg, long msgS
       putBackByte(file, ch);
 
     if (fileStatus(file) == Ok) {
-      byte pkgNm[MAX_SYMB_LEN];
-      byte vrNm[MAX_SYMB_LEN];
+      char pkgNm[MAX_SYMB_LEN];
+      char vrNm[MAX_SYMB_LEN];
       bufferPo sigBuffer = newStringBuffer();
 
       if ((ret = isLookingAt(file, "s")) == Ok)
@@ -113,8 +111,8 @@ static retCode ldPackage(string pkgName, string vers, string errorMsg, long msgS
       if (ret == Ok)
         ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
 
-      if (ret == Ok && uniCmp((string) pkgNm, pkgName) != same) {
-        outMsg(logFile, "loaded package: %s not what was expected %w\n", (string) pkgNm, pkgName);
+      if (ret == Ok && uniCmp((char *) pkgNm, pkgName) != same) {
+        outMsg(logFile, "loaded package: %s not what was expected %w\n", pkgNm, pkgName);
         return Error;
       }
 
@@ -147,8 +145,8 @@ static retCode ldPackage(string pkgName, string vers, string errorMsg, long msgS
   }
 }
 
-retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize, void *cl) {
-  string version = loadedVersion(pkg);
+retCode loadPackage(char *pkg, char *vers, char *errorMsg, long msgSize, void *cl) {
+  char *version = loadedVersion(pkg);
 
   if (version != NULL) {
     if (!compatiblVersion(vers, version)) {
@@ -162,12 +160,12 @@ retCode loadPackage(string pkg, string vers, string errorMsg, long msgSize, void
 }
 
 static retCode
-installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pickupPkg pickup, void *cl) {
+installPackage(char *pkgText, long pkgTxtLen, char *errorMsg, long msgSize, pickupPkg pickup, void *cl) {
   bufferPo inBuff = fixedStringBuffer(pkgText, pkgTxtLen);
 
   retCode ret;
-  byte pkgNm[MAX_SYMB_LEN];
-  byte vrNm[MAX_SYMB_LEN];
+  char pkgNm[MAX_SYMB_LEN];
+  char vrNm[MAX_SYMB_LEN];
   bufferPo sigBuffer = newStringBuffer();
 
   if ((ret = isLookingAt(O_IO(inBuff), "s")) == Ok)
@@ -177,8 +175,9 @@ installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pi
     ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
 
   packagePo pkg = markLoaded(pkgNm, vrNm);
-
-  ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
+  
+  if (ret == Ok)
+    ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 
   if (ret == Ok)
     ret = loadSegments(O_IO(inBuff), pkg, errorMsg, msgSize);
@@ -203,7 +202,7 @@ installPackage(string pkgText, long pkgTxtLen, string errorMsg, long msgSize, pi
  * We are only interested in the first two the pkg and the imports.
  */
 
-retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferPo sigBuffer) {
+retCode decodeLoadedPkg(char *pkgNm, long nmLen, char *vrNm, long vrLen, bufferPo sigBuffer) {
   rewindBuffer(sigBuffer);
 
   if (isLookingAt(O_IO(sigBuffer), "n7o7'()7'") == Ok)
@@ -212,7 +211,7 @@ retCode decodeLoadedPkg(byte *pkgNm, long nmLen, byte *vrNm, long vrLen, bufferP
     return Error;
 }
 
-static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen, pickupPkg pickup, void *cl) {
+static retCode decodeImportsSig(bufferPo sigBuffer, char *errorMsg, long msgLen, pickupPkg pickup, void *cl) {
   rewindBuffer(sigBuffer);
   ioPo in = O_IO(sigBuffer);
 
@@ -236,8 +235,8 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
         if (ret == Ok)
           ret = skipEncoded(in, errorMsg, msgLen);  // skip the private/public flag
 
-        byte pkgNm[MAX_SYMB_LEN];
-        byte vrNm[MAX_SYMB_LEN];
+        char pkgNm[MAX_SYMB_LEN];
+        char vrNm[MAX_SYMB_LEN];
 
         if (ret == Ok)
           ret = decodePkgName(in, &pkgNm[0], NumberOf(pkgNm), &vrNm[0], NumberOf(vrNm));
@@ -254,7 +253,7 @@ static retCode decodeImportsSig(bufferPo sigBuffer, string errorMsg, long msgLen
     return Error;
 }
 
-retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen) {
+retCode decodePkgName(ioPo in, char *nm, long nmLen, char *v, long vLen) {
   if (isLookingAt(in, "n2o2'pkg's") == Ok) {
     bufferPo pkgB = fixedStringBuffer(nm, nmLen);
     bufferPo vrB = fixedStringBuffer(v, vLen);
@@ -279,7 +278,7 @@ retCode decodePkgName(ioPo in, byte *nm, long nmLen, byte *v, long vLen) {
     return Error;
 }
 
-retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity) {
+retCode decodePrgName(ioPo in, char *nm, long nmLen, integer *arity) {
   if (isLookingAt(in, "p") == Ok) {
     retCode ret = decInt(O_IO(in), arity);
 
@@ -296,9 +295,9 @@ retCode decodePrgName(ioPo in, byte *nm, long nmLen, integer *arity) {
     return Error;
 }
 
-static retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize);
+static retCode loadCodeSegment(ioPo in, packagePo owner, char *errorMsg, long msgSize);
 
-retCode loadSegments(ioPo file, packagePo owner, string errorMsg, long msgLen) {
+retCode loadSegments(ioPo file, packagePo owner, char *errorMsg, long msgLen) {
   retCode ret = Ok;
 
   while (ret == Ok) {
@@ -340,12 +339,12 @@ static retCode in32(ioPo in, int32 *tgt) {
 // Decode a code segment.
 // Each segment consists of
 // a. The program structure object being defined
-// b. A string containing the code as a base64 encoded string.
+// b. A char * containing the code as a base64 encoded string.
 // c. A tuple of literals associated with the code segment
 // d. A tuple of source map entries
 // All wrapped up as a #code structure.
 
-retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize) {
+retCode loadCodeSegment(ioPo in, packagePo owner, char *errorMsg, long msgSize) {
   EncodeSupport sp = {
     NULL,
     0,
@@ -363,7 +362,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
       strMsg(errorMsg, msgSize, "invalid code stream");
       return Error;
     }
-    byte prgName[MAX_SYMB_LEN];
+    char prgName[MAX_SYMB_LEN];
     integer arity;
 
     ret = decodePrgName(in, prgName, NumberOf(prgName), &arity);
@@ -376,7 +375,7 @@ retCode loadCodeSegment(ioPo in, packagePo owner, string errorMsg, long msgSize)
     if (ret == Ok && isLookingAt(in, "s") == Ok) {
       bufferPo buff = newStringBuffer();
 
-      ret = decodeText(in, buff); // Pick up the code - as base64 string
+      ret = decodeText(in, buff); // Pick up the code - as base64 char *
 
       if (ret != Ok || isLookingAt(in, "n") != Ok) { // Look for the tuple of literals
         closeFile(O_IO(buff));
@@ -503,11 +502,11 @@ typedef struct {
   ptrPo vr;
 } BuildSupportRec;
 
-static retCode buildImport(string pkg, string ver, string errorMsg, long msgLen, void *cl) {
+static retCode buildImport(char *pkg, char *ver, char *errorMsg, long msgLen, void *cl) {
   BuildSupportRec *x = (BuildSupportRec *) cl;
 
-  *x->pk = allocateCString(x->H, (char *) pkg);
-  *x->vr = allocateCString(x->H, (char *) ver);
+  *x->pk = allocateCString(x->H, pkg);
+  *x->vr = allocateCString(x->H, ver);
   *x->el = tuplePair(x->H, *x->pk, *x->vr);
   *x->lst = consLsPair(x->H, *x->el, *x->lst);
   return Ok;

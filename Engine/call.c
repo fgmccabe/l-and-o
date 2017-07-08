@@ -32,12 +32,12 @@ retCode g__call(processPo P, ptrPo a) {
     return liberror(P, "__call", eINVAL);
   else {
     stringPo pS = stringV(PRG);
-    byte prog[MAX_SYMB_LEN];
+    char prog[MAX_SYMB_LEN];
     copyString2Buff(prog, NumberOf(prog), pS);
 
     uint16 arity = (uint16) integerVal(intV(AR));
 
-    ptrI PROG = programLbl((string) prog, arity);
+    ptrI PROG = programLbl((char *) prog, arity);
 
     if (PROG != 0 && IsProgram(PROG)) {
       retCode ret = populateArgs(ARGS, (ptrPo) &P->proc.A[1], arity);
@@ -54,8 +54,8 @@ retCode g__call(processPo P, ptrPo a) {
         return Error;       /* We cant use OK, because that checks for GCmap */
       }
     }
-    strMsg((string) &P->proc.errorMsg, NumberOf(P->proc.errorMsg), "%s/%d not defined", prog, arity);
-    return raiseError(P, (string) &P->proc.errorMsg, eCODE);
+    strMsg((char *) &P->proc.errorMsg, NumberOf(P->proc.errorMsg), "%s/%d not defined", prog, arity);
+    return raiseError(P,  (char*)&P->proc.errorMsg, eCODE);
   }
 }
 
@@ -82,7 +82,7 @@ retCode g__is(processPo P, ptrPo a) {
   if (isvar(prog))
     return liberror(P, "__is", eINSUFARG);
   else if (!IsProgram(prog)) {
-    byte msg[MAX_SYMB_LEN];
+    char msg[MAX_SYMB_LEN];
     strMsg(msg, NumberOf(msg), "%w not defined", &prog);
     return raiseError(P, msg, eCODE);
   } else {
@@ -113,7 +113,7 @@ retCode g__defined(processPo P, ptrPo a) {
   else if (!IsString(entry) || !IsInt(ar))
     return liberror(P, "__defined", eINVAL);
   else {
-    byte resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
+    char resolved[MAX_MSG_LEN];      /* compute the entrypoint symbol */
 
     copyString2Buff(resolved,NumberOf(resolved),stringV(entry));
 
@@ -137,7 +137,7 @@ retCode g__defined(processPo P, ptrPo a) {
  */
 void showCall(processPo P, char *prefix, ptrI prog, ptrPo args, long arity) {
   int i;
-  byte buffer[1024];
+  char buffer[1024];
   ioPo out = O_IO(fixedStringBuffer(buffer, NumberOf(buffer)));
 
   outMsg(out, "%s %w: %w(", prefix, &P->proc.thread, &prog);
@@ -148,7 +148,7 @@ void showCall(processPo P, char *prefix, ptrI prog, ptrPo args, long arity) {
   outMsg(out, ")\n%_");
 
   long len;
-  string text = getTextFromBuffer(&len, O_BUFFER(out));
+  char * text = getTextFromBuffer(&len, O_BUFFER(out));
 
   outText(logFile, text, len);
   closeFile(out);

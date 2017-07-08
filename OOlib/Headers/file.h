@@ -33,16 +33,16 @@ extern classPo fileClass;
 typedef enum { regularFileType, dirFileType, 
 	       linkFileType, socketFileType, unknownFileType } fileType;
 
-ioPo openInFile(string file,ioEncoding encoding);
-ioPo openOutFile(string file,ioEncoding encoding);
-ioPo openInOutFile(string file,ioEncoding encoding);
-ioPo openAppendFile(string file,ioEncoding encoding);
-ioPo openInOutAppendFile(string file,ioEncoding encoding);
-ioPo newOutFile(string file,ioEncoding encoding);
+ioPo openInFile(char * file,ioEncoding encoding);
+ioPo openOutFile(char * file,ioEncoding encoding);
+ioPo openInOutFile(char * file,ioEncoding encoding);
+ioPo openAppendFile(char * file,ioEncoding encoding);
+ioPo openInOutAppendFile(char * file,ioEncoding encoding);
+ioPo newOutFile(char * file,ioEncoding encoding);
 
-retCode filePresent(string name);
-retCode isRegularFile(string fname);
-retCode isDirectory(string fname);
+retCode filePresent(char * name);
+retCode isRegularFile(char * fname);
+retCode isDirectory(char * fname);
 
   ioPo OpenStdin(void);
 ioPo OpenStdout(void);
@@ -57,7 +57,7 @@ logical isFileAsynch(filePo f);
 
 void setup_stdin(void);
 void reset_stdin(void);
-retCode initLogfile(string name);
+retCode initLogfile(char * name);
 extern ioPo logFile;		/* The standard place to write logging msgs */
 
 #ifdef VERIFY_OBJECT

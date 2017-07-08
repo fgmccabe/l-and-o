@@ -52,7 +52,7 @@ static comparison intCompFun(specialClassPo class, objPo o1, objPo o2) {
 static retCode inOutFun(specialClassPo class, ioPo out, objPo o) {
   integer i = integerVal((integerPo) o);
 
-  return outInteger(out, i, 10, 0, 0, ' ', False, (string) "", False);
+  return outInteger(out, i, 10, 0, 0, ' ', False,  "", False);
 }
 
 static retCode inScanFun(specialClassPo class, specialHelperFun helper, void *c, objPo o) {
@@ -84,10 +84,10 @@ retCode g__int_format(processPo P, ptrPo a) {
   else if (!isvar(a3))
     return liberror(P, "_int_format", eVARNEEDD);
   else {
-    byte buffer[MAX_MSG_LEN];
+    char buffer[MAX_MSG_LEN];
 
     stringPo frmtP = stringV(a2);
-    string format = stringVal(frmtP);
+    char * format = stringVal(frmtP);
     long fLen = stringLen(frmtP);
     long endPos;
 
@@ -355,8 +355,8 @@ retCode g__int2str(processPo P, ptrPo a) {
     integer width = integerVal(intV(a3));
     codePoint pad = (codePoint) IntVal(a4);
     logical left = (logical) (width < 0);
-    byte buffer[128];
-    byte result[128];
+    char buffer[128];
+    char result[128];
 
     long len = int2StrByBase(buffer, val, 0, 10);
 
@@ -376,7 +376,7 @@ retCode g__str2int(processPo P, ptrPo a) {
   ptrI y = deRefI(&a[2]);
 
   if (IsString(x)) {
-    string src = stringVal(stringV(x));
+    char * src = stringVal(stringV(x));
     integer reslt = parseInteger(src, uniStrLen(src));
 
     if (isvar(y)) {    /* check the output argument */

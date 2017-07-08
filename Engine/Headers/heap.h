@@ -147,7 +147,7 @@ static inline long totalHeapSize(heapPo H) {
 }
 
 retCode localCopy(ptrPo dst, heapPo H, ptrPo src);
-retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, byte *eMsg, long len);
+retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, char *eMsg, long len);
 logical isGroundTerm(ptrPo p);
 void markStandardClasses(globalGcPo G);
 

@@ -10,10 +10,11 @@ catalog{
     test.c -> "c.lo".
     test.cc -> "cc.lo".
     test.e -> "e.lo".
+    test.eq -> "eq.lo".
     test.f -> "f.lo".
     test.fib -> "fib.lo".
     test.format -> "fo.lo".
-    test.eq -> "eq.lo".
+    test.g -> "g.lo".
     test.gp -> "gp.lo".
     test.gt -> "gt.lo".
     test.i -> "i.lo".

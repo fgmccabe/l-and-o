@@ -23,13 +23,13 @@ typedef struct _break_point_ *breakPointPo;
 
 typedef struct _break_point_ {
   short arity;
-  byte name[MAX_SYMB_LEN];
+  char name[MAX_SYMB_LEN];
 } BreakPoint;
 
 static retCode addBreakPoint(breakPointPo bp);
-static logical breakPointHit(string name, short arity);
+static logical breakPointHit(char *name, short arity);
 static retCode clearBreakPoint(breakPointPo bp);
-static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp);
+static retCode parseBreakPoint(char *buffer, long bLen, breakPointPo bp);
 
 retCode g__ins_debug(processPo P, ptrPo a) {
   debugging = interactive = True;
@@ -67,7 +67,7 @@ long cmdCounter = 0;
 
 #ifdef EXECTRACE
 
-static long cmdCount(string cmdLine) {
+static long cmdCount(char *cmdLine) {
   long count = (long) parseInteger(cmdLine, strlen((char *) cmdLine));
   if (count == 0)
     return 1; /* never return 0 */
@@ -79,7 +79,7 @@ static processPo focus = NULL;
 
 static pthread_mutex_t debugMutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void clrCmdLine(byte *cmdLine, long len) {
+static void clrCmdLine(char *cmdLine, long len) {
   strMsg(cmdLine, len, "n\n"); /* default to next instruction */
 }
 
@@ -92,8 +92,8 @@ static unsigned long stackSpace(processPo P, callPo C, choicePo B) {
 retCode
 debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptrPo y, ptrPo S, long Svalid, rwmode mode,
            callPo C, choicePo B, choicePo SB, choicePo T) {
-  byte ch;
-  static byte cmdLine[256] = "n";
+  char ch;
+  static char cmdLine[256] = "n";
   codePo code = codeV(prog);
   codePo ccode = codeV(cprog);
   ptrPo Lits = codeLits(code);
@@ -113,7 +113,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
       case dlkawl: {
         objPo prg = objV(Lits[op_o_val(PCX)]);
         prgLabelPo lbl = programName(prg);
-        string name = lbl->name;
+        char *name = lbl->name;
         long arity = lbl->arity;
 
         if (breakPointHit(name, (short) arity)) {
@@ -126,7 +126,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
       case lkawlO:
       case dlkawlO: {
         objPo prg = objV(deRefI(&a[1]));
-        string name = objectClassName(prg);
+        char *name = objectClassName(prg);
         long arity = objectArity(prg);
 
         if (breakPointHit(name, (short) arity)) {
@@ -143,7 +143,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
       cmdCounter--;
 
     if (tracing || cmdCounter <= 0) {
-      byte pref[MAX_SYMB_LEN];
+      char pref[MAX_SYMB_LEN];
 
       strMsg(pref, NumberOf(pref), "%w "RED_ESC_ON "[%d]" RED_ESC_OFF " %w", &p->proc.thread, pcCount, &Lits[0]);
       dissass(pref, code, pc, a, y, S, mode, B, hBase, hCreate);
@@ -162,16 +162,16 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 
     if (cmdCounter <= 0) { /* do we need to stop? */
       while (debugging && cmdCounter <= 0) { /* prompt the user */
-        byte *ln = cmdLine;
+        char *ln = cmdLine;
         outMsg(logFile, " => ");
         flushOut();
 
-        retCode res = inByte(stdIn, &ch);
+        retCode res = inByte(stdIn, (byte *) &ch);
 
         if (ch != '\n' && res == Ok) {
           do {
             *ln++ = ch;
-            res = inByte(stdIn, &ch);
+            res = inByte(stdIn, (byte *) &ch);
           } while (ch != '\n' && res == Ok);
           *ln++ = '\0';
         }
@@ -313,7 +313,7 @@ debug_stop(processPo p, ptrI prog, insPo pc, ptrI cprog, insPo cpc, ptrPo a, ptr
 
           case 'r': { /* show all registers */
             unsigned int i;
-            int Ylen = envSize(cpc);
+//            int Ylen = envSize(cpc);
 
             for (i = 1; i <= B->AX; i++)
               outMsg(logFile, "A[%d]=%w\n", i, &a[i]);
@@ -418,7 +418,7 @@ retCode addBreakPoint(breakPointPo bp) {
     return Fail;
 }
 
-logical breakPointHit(string name, short arity) {
+logical breakPointHit(char *name, short arity) {
   for (int ix = 0; ix < breakPointCount; ix++) {
     if (breakPoints[ix].arity == arity && uniCmp(breakPoints[ix].name, name) == same)
       return True;
@@ -444,7 +444,7 @@ retCode clearBreakPoint(breakPointPo bp) {
   return Fail;
 }
 
-static retCode parseBreakPoint(byte *buffer, long bLen, breakPointPo bp) {
+static retCode parseBreakPoint(char *buffer, long bLen, breakPointPo bp) {
   long b = 0;
   long ix = 0;
 

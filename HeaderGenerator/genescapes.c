@@ -352,7 +352,7 @@ static void genLoEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cm
   outStr(O_IO(buffer), ".\n");
 
   long len;
-  char *text = (char *) getTextFromBuffer(&len, buffer);
+  char *text =  getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -377,7 +377,7 @@ static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
   outStr(O_IO(buffer), ").\n");
 
   long len;
-  char *text = (char *) getTextFromBuffer(&len, buffer);
+  char *text =  getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -400,7 +400,7 @@ static void genLoIsEsc(FILE *out, bufferPo buffer, char *name) {
   outStr(O_IO(buffer), ").\n");
 
   long len;
-  char *text = (char *) getTextFromBuffer(&len, buffer);
+  char *text =  getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -426,7 +426,7 @@ static void genPrologEsc(FILE *out, bufferPo buffer, char *name, char *sig, char
   outStr(O_IO(buffer), ").\n");
 
   long len;
-  char *text = (char *) getTextFromBuffer(&len, buffer);
+  char *text =  getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -450,7 +450,7 @@ static void genEscCode(FILE *out, bufferPo buffer, char *name, int opCode) {
   outMsg(O_IO(buffer), ") => %d.\n",opCode);
 
   long len;
-  char *text = (char *) getTextFromBuffer(&len, buffer);
+  char *text =  getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }

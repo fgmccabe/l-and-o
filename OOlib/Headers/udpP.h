@@ -27,7 +27,7 @@ extern UdpClassRec UdpClass; /* the standard pointer to a socket class record */
 typedef struct _udp_part_ {
   uint16 port;
   uint16 sock;
-  byte name[MAXFILELEN];                /* File name */
+  char name[MAXFILELEN];                /* File name */
   retCode status;                       /* current status of the io object */
   ioDirection mode;                     /* Mode that file is opened for */
   ioEncoding encoding;			            /* What is the mode for string encoding */

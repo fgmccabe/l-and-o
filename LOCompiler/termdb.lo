@@ -10,7 +10,7 @@ lo.comp.termbase{
   import lo.comp.decode.
 
   public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,rel].
-  loadTermBase(Pkgs,Repo) => foldRight((M,Pkg)=>loadTermPkg(Pkg,Repo,M),[],Pkgs).
+  loadTermBase(Pkgs,Repo) => foldRight((Pkg,M)=>loadTermPkg(Pkg,Repo,M),[],Pkgs).
 
   loadTermPkg:all r ~~ repository[r] |: (pkg,r,map[term,rel]) => map[term,rel].
   loadTermPkg(Pkg,R,M) => unpackMdl(decodeMdl(Txt))+M :-

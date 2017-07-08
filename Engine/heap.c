@@ -212,7 +212,7 @@ retCode localCopy(ptrPo dst, heapPo H, ptrPo src) {
     return Error;
 }
 
-static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
+static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, char * eMsg, long len) {
   ptrI S = deRefI(src);
 
   switch (ptg(S)) {
@@ -260,7 +260,7 @@ static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, string eMsg, long len) {
   }
 }
 
-retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, string eMsg, long len) {
+retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, char * eMsg, long len) {
   long vCount = 0;
   rootPo root = gcAddRoot(H, &src);
   ptrI xx = kvoid;

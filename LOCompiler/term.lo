@@ -157,7 +157,7 @@ lo.comp.term {
   hashTerm(strct(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616. -- 'cos of swi-prolog :('
   hashTerm(prg(N1,Ar)) => (hash(N1)*37+Ar)%18446744073709551616.
   hashTerm(strng(S1)) => hash(S1).
-  hashTerm(cons(O1,Els)) => foldRight((H,T)=>H*37+hash(T),hash(O1),Els)%18446744073709551616.
+  hashTerm(cons(O1,Els)) => foldRight((T,H)=>H*37+hash(T),hash(O1),Els)%18446744073709551616.
 
   public genVarbl:(string,term){}.
   genVarbl(Prefix,varbl(_str_gen(Prefix))).
@@ -196,4 +196,36 @@ lo.comp.term {
   public simplifyGuard:(term) => term.
   simplifyGuard(guarded(T,[])) => simplifyGuard(T).
   simplifyGuard(T) => T.
+
+
+  -- Finding variables
+  public findVarsInClse:(clse) => list[term].
+  findVarsInClse(clse(_,_,A,B)) => findVarsInPreds(B,findVarsInTerms(A,[])).
+  findVarsInClse(eqn(_,_,A,R)) => findVarsInTerm(R,findVarsInTerms(A,[])).
+
+  public findVarsInTerm:(term,list[term]) => list[term].
+  findVarsInTerm(varbl(Nm),V) => mergeEl(V,varbl(Nm)).
+  findVarsInTerm(T,V) => V :- isGroundTerm(T).
+  findVarsInTerm(anon,V) => V.
+  findVarsInTerm(cons(_,A),V) => findVarsInTerms(A,V).
+  findVarsInTerm(invoke(_,O,A),V) => findVarsInTerms(A,findVarsInTerm(O,V)).
+  findVarsInTerm(escvoke(_,O,A),V) => findVarsInTerms(A,V).
+  findVarsInTerm(ovoke(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
+  findVarsInTerm(guarded(T,G),V) => findVarsInTerm(T,findVarsInPreds(G,V)).
+
+  public findVarsInTerms:(list[term],list[term]) => list[term].
+  findVarsInTerms([],V) => V.
+  findVarsInTerms([T,..L],V) => findVarsInTerms(L,findVarsInTerm(T,V)).
+
+  findVarsInPred:(pred,list[term]) => list[term].
+  findVarsInPred(call(_,_,A),V) => findVarsInTerms(A,V).
+  findVarsInPred(ecall(_,_,A),V) => findVarsInTerms(A,V).
+  findVarsInPred(ocall(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
+  findVarsInPred(unfy(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).
+  findVarsInPred(except(_,E),V) => findVarsInTerm(E,V).
+  findVarsInPred(fail,V) => V.
+  findVarsInPred(neck,V) => V.
+
+  findVarsInPreds:(list[pred],list[term]) => list[term].
+  findVarsInPreds(Ps,V) => foldLeft(findVarsInPred,V,Ps).
 }

@@ -52,7 +52,7 @@ classPo hostClass = (classPo) &HostClass;
 
 /* Hash table of hosts */
 
-static hostPo locateHost(string name);
+static hostPo locateHost(char *name);
 
 static void initHostClass(classPo class, classPo request) {
   ((hostClassPo) request)->hostPart.hostTable = NewHash(MAXHOST, (hashFun) uniHash, (compFun) uniCmp, NULL);
@@ -83,7 +83,7 @@ static void destroyHost(objectPo o) {
 }
 
 /* This will have to be upgraded to IPv6 */
-static logical ipAddr(const string addr, struct in_addr *ip) {
+static logical ipAddr(const char *addr, struct in_addr *ip) {
   int16 quads[4];
   char *p = (char *) addr;
   int i;
@@ -102,8 +102,8 @@ static logical ipAddr(const string addr, struct in_addr *ip) {
   return True;
 }
 
-static hostPo locateHost(string nme) {
-  byte nameBuff[MAXLINE], *name = nameBuff;
+static hostPo locateHost(char *nme) {
+  char nameBuff[MAXLINE], *name = nameBuff;
 
   uniLower(nme, uniStrLen(nme), nameBuff, NumberOf(nameBuff));
   hashPo htble = HostClass.hostPart.hostTable;
@@ -143,7 +143,7 @@ static hostPo locateHost(string nme) {
     h->host.ip_count = 0;
     h->host.when = now.tv_sec + SECSINDAY;
     h->host.avail = True;
-    strncpy((char*)h->host.host, he->h_name, NumberOf(h->host.host));
+    strncpy((char *) h->host.host, he->h_name, NumberOf(h->host.host));
 
     lockClass(hostClass);       /* gethostbyname etc are not thread safe */
     hashPut(HostClass.hostPart.hostTable, h->host.host, h);
@@ -151,7 +151,7 @@ static hostPo locateHost(string nme) {
     he = gethostbyname(he->h_name); /* make sure that we get the proper name */
 
     for (al = he->h_aliases; *al != NULL && a < NumberOf(h->host.aliases); al++, a++) {
-      h->host.aliases[a] = uniDuplicate((string) al);
+      h->host.aliases[a] = uniDuplicate((char *) al);
       hashPut(HostClass.hostPart.hostTable, h->host.aliases[a], h);
     }
 
@@ -159,7 +159,7 @@ static hostPo locateHost(string nme) {
     for (al = he->h_addr_list; *al != NULL && h->host.ip_count < NumberOf(h->host.ip)
                                && a < NumberOf(h->host.aliases); al++) {
       h->host.ip[h->host.ip_count++] = *(struct in_addr *) (*al);
-      h->host.aliases[a] = uniDuplicate((string) inet_ntoa(*(struct in_addr *) (*al)));
+      h->host.aliases[a] = uniDuplicate(inet_ntoa(*(struct in_addr *) (*al)));
       hashPut(HostClass.hostPart.hostTable, h->host.aliases[a++], h); // put the IP in as an alias
     }
 
@@ -168,11 +168,10 @@ static hostPo locateHost(string nme) {
     unlockClass(hostClass);
 
     return h;
-  }
-  else {
+  } else {
     /* We must now use the DNS to get the name */
     lockClass(hostClass);    /* a lot of non-thread safe stuff  */
-    he = gethostbyname((char*)name);  /* first stab ... */
+    he = gethostbyname(name);  /* first stab ... */
 
     if (he != NULL && he->h_addr_list[0] != NULL) {
       unsigned int a = 0, i;
@@ -184,12 +183,12 @@ static hostPo locateHost(string nme) {
       h->host.when = now.tv_sec + SECSINDAY;
       h->host.avail = True;
 
-      strncpy((char*)h->host.host, he->h_name, NumberOf(h->host.host));
+      strncpy((char *) h->host.host, he->h_name, NumberOf(h->host.host));
       hashPut(htble, h->host.host, h);
 
       for (al = he->h_aliases; *al != NULL && a < NumberOf(h->host.aliases); al++, a++) {
-        h->host.aliases[a] = uniDuplicate((string) *al);
-        hashPut(htble,h->host.aliases[a],h);
+        h->host.aliases[a] = uniDuplicate(*al);
+        hashPut(htble, h->host.aliases[a], h);
       }
 
       /* extract the IP numbers */
@@ -197,11 +196,11 @@ static hostPo locateHost(string nme) {
                                  h->host.ip_count < NumberOf(h->host.ip) &&
                                  a < NumberOf(h->host.aliases); al++) {
         h->host.ip[h->host.ip_count++] = *(struct in_addr *) (*al);
-        h->host.aliases[a] = uniDuplicate((string)inet_ntoa(*(struct in_addr *) (*al)));
-        hashPut(htble,h->host.aliases[a++],h);
+        h->host.aliases[a] = uniDuplicate(inet_ntoa(*(struct in_addr *) (*al)));
+        hashPut(htble, h->host.aliases[a++], h);
       }
 
-      if (uniIndexOf(h->host.host, uniStrLen(h->host.host), 0, '.') <0) { /* Use IP to get canonical name */
+      if (uniIndexOf(h->host.host, uniStrLen(h->host.host), 0, '.') < 0) { /* Use IP to get canonical name */
         for (i = 0; i < h->host.ip_count; i++) { /* We check each IP address ... */
           he = gethostbyaddr((char *) &h->host.ip[0], sizeof(struct in_addr), AF_INET);
 
@@ -218,8 +217,8 @@ static hostPo locateHost(string nme) {
               }
 
               if (!found && a < MAXALIAS) {
-                h->host.aliases[a] = uniDuplicate((string) *al);
-                hashPut(htble,h->host.aliases[a++],h);
+                h->host.aliases[a] = uniDuplicate(*al);
+                hashPut(htble, h->host.aliases[a++], h);
               }
             }
           }
@@ -229,13 +228,12 @@ static hostPo locateHost(string nme) {
       h->host.aliases[a] = NULL;
       unlockClass(hostClass);
       return h;
-    }
-    else
+    } else
       return NULL;
   }
 }
 
-void markHostUnavail(string name) {
+void markHostUnavail(char *name) {
   hostPo h;
 
   if ((h = locateHost(name)) != NULL) {
@@ -248,7 +246,7 @@ void markHostUnavail(string name) {
   }
 }
 
-string getHostname(string name) {
+char *getHostname(char *name) {
   hostPo h;
 
   if ((h = locateHost(name)) == NULL)
@@ -257,7 +255,7 @@ string getHostname(string name) {
     return h->host.host;
 }
 
-struct in_addr *getHostIP(string name, int i) {
+struct in_addr *getHostIP(char *name, int i) {
   hostPo h;
 
   if ((h = locateHost(name)) == NULL)
@@ -268,30 +266,29 @@ struct in_addr *getHostIP(string name, int i) {
     return NULL;
 }
 
-string getNthHostIP(string name, unsigned long i, string buffer, unsigned long len) {
+char *getNthHostIP(char *name, unsigned long i, char *buffer, unsigned long len) {
   hostPo h;
 
   if ((h = locateHost(name)) == NULL)
     return NULL;
   else if (i < h->host.ip_count) {
-    strncpy((char*)buffer,inet_ntoa(h->host.ip[i]),len);
+    strncpy(buffer, inet_ntoa(h->host.ip[i]), len);
 
     return buffer;
-  }
-  else
+  } else
     return NULL;
 }
 
 /* What is our name? */
-string machineName(void) {
+char *machineName(void) {
   if (HostClass.hostPart.ourHost == NULL) {
-    byte hostNm[MAXHOSTNAMELEN + 1];
+    char hostNm[MAXHOSTNAMELEN + 1];
 
-    if (gethostname((char*)hostNm, NumberOf(hostNm)) != 0)
-      strcpy((char*)hostNm,"localhost");
+    if (gethostname((char *) hostNm, NumberOf(hostNm)) != 0)
+      strcpy((char *) hostNm, "localhost");
 
     if ((HostClass.hostPart.ourHost = locateHost(hostNm)) == NULL)
-      HostClass.hostPart.ourHost = locateHost((string)"localhost");
+      HostClass.hostPart.ourHost = locateHost((char *) "localhost");
   }
 
   if (HostClass.hostPart.ourHost != NULL)
@@ -301,12 +298,11 @@ string machineName(void) {
 }
 
 /* What is our first IP number? */
-string machineIP(void) {
+char *machineIP(void) {
   if (HostClass.hostPart.ourHost == NULL) {
     return NULL;
-  }
-  else {
-    return ((string) inet_ntoa(HostClass.hostPart.ourHost->host.ip[0]));
+  } else {
+    return inet_ntoa(HostClass.hostPart.ourHost->host.ip[0]);
   }
 }
 

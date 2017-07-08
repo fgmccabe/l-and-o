@@ -16,7 +16,7 @@
 #include "io.h"
 #include "formioP.h"
 
-#include <float.h>		/* For fp conversion */
+#include <float.h>    /* For fp conversion */
 #include <limits.h>
 #include <math.h>
 #include <ctype.h>
@@ -24,11 +24,11 @@
 #include <file.h>
 #include <stringBuffer.h>
 
-static retCode outString(ioPo f, byte *str, long len, long width, int precision,
+static retCode outString(ioPo f, char *str, long len, long width, int precision,
                          codePoint pad, logical leftPad);
 
 retCode outInt(ioPo f, integer i) {
-  byte buff[64];
+  char buff[64];
   long len = int2StrByBase(buff, i, 0, 10);
 
   return outText(f, buff, len);
@@ -41,9 +41,9 @@ static inline byte hxDgit(integer h) {
     return (byte) (h + 'a' - 10);
 }
 
-static long natural2StrByBase(byte *str, uinteger i, long pos, uint16 base);
+static long natural2StrByBase(char *str, uinteger i, long pos, uint16 base);
 
-long int2StrByBase(byte *str, integer i, long pos, uint16 base) {
+long int2StrByBase(char *str, integer i, long pos, uint16 base) {
   if (i < 0) {
     str[pos++] = '-';
     return natural2StrByBase(str, (uinteger) -i, pos, base);
@@ -51,7 +51,7 @@ long int2StrByBase(byte *str, integer i, long pos, uint16 base) {
     return natural2StrByBase(str, (uinteger) i, pos, base);
 }
 
-static long natural2StrByBase(byte *str, uinteger i, long pos, uint16 base) {
+static long natural2StrByBase(char *str, uinteger i, long pos, uint16 base) {
   if (i < base)
     str[pos++] = hxDgit(i);
   else {
@@ -62,14 +62,14 @@ static long natural2StrByBase(byte *str, uinteger i, long pos, uint16 base) {
 }
 
 retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
-                   codePoint pad, logical left, string prefix, logical sign) {
-  byte iBuff[128];
+                   codePoint pad, logical left, char *prefix, logical sign) {
+  char iBuff[128];
   retCode ret;
 
   if (i >= 0 && sign)
-    prefix = (string) "+";
+    prefix = "+";
   else if (i < 0) {
-    prefix = (string) "-";
+    prefix = "-";
     i = -i;
   }
 
@@ -78,20 +78,20 @@ retCode outInteger(ioPo f, integer i, uint16 base, int width, int precision,
   ret = outUStr(f, prefix);
 
   if (ret == Ok)
-    ret = outString(f, iBuff, (int) len, width - (int) strlen((char *) prefix), precision, pad, left);
+    ret = outString(f, iBuff, (int) len, width - (int) strlen(prefix), precision, pad, left);
 
   return ret;
 }
 
 static retCode outOctal(ioPo f, integer i, int width, int precision, codePoint pad,
-                        logical left, byte *prefix, logical sign, logical alt) {
-  byte iBuff[64];
+                        logical left, char *prefix, logical sign, logical alt) {
+  char iBuff[64];
 
   if (i < 0) {
     i = -i;
-    prefix = (string) "-";
+    prefix = "-";
   } else if (i >= 0 && sign)
-    prefix = (string) "+";
+    prefix = "+";
 
   long len = natural2StrByBase(iBuff, (uinteger) i, 0, 8);
 
@@ -107,13 +107,13 @@ static retCode outOctal(ioPo f, integer i, int width, int precision, codePoint p
 }
 
 static retCode outHex(ioPo f, long i, int width, int precision, codePoint pad,
-                      logical left, string prefix, logical sign, logical alt) {
-  byte iBuff[64];
+                      logical left, char *prefix, logical sign, logical alt) {
+  char iBuff[64];
 
   long len = natural2StrByBase(iBuff, (uinteger) i, 0, 16);
 
   if (alt)
-    prefix = (string) "0x";
+    prefix = "0x";
 
   if (!left)
     pad = ' ';      /* We dont put trailing zeroes */
@@ -133,11 +133,11 @@ static const double bit_values[] = {
   1.0E1, 1.0E2, 1.0E4, 1.0E8, 1.0E16, 1.0E32, 1.0E64, 1.0E128, 1.0E256
 };
 
-static int number2Str(double x, int precision, byte *dec, long *exp) {
+static int number2Str(double x, int precision, char *dec, long *exp) {
   int exp2;
   long exp10;
   int len = 0;
-  byte *digits = dec;
+  char *digits = dec;
 
 /*
  *	We first deal with the special cases of zeroes, infinities and NaNs
@@ -146,9 +146,9 @@ static int number2Str(double x, int precision, byte *dec, long *exp) {
   *exp = 0;
 
   if (x == 0.0L)
-    return (int) strlen(strcpy((char *) digits, "0"));
+    return (int) strlen(strcpy(digits, "0"));
   else if (x > DBL_MAX)
-    return (int) strlen(strcpy((char *) digits, "Infinity"));
+    return (int) strlen(strcpy(digits, "Infinity"));
   else {
     frexp(x, &exp2);    /* Get the scale of the number */
 
@@ -198,7 +198,7 @@ static int number2Str(double x, int precision, byte *dec, long *exp) {
   }
 }
 
-static int countSignificants(string frmt, long from, long limit, string test) {
+static int countSignificants(char *frmt, long from, long limit, char *test) {
   int cx = 0;
   long tLen = uniStrLen(test);
   for (long ix = from; ix < limit;) {
@@ -210,10 +210,10 @@ static int countSignificants(string frmt, long from, long limit, string test) {
 }
 
 static retCode
-formatDigits(logical isSigned, string digits, long precision, string format, long fLen, byte *out, long outLen,
+formatDigits(logical isSigned, char *digits, long precision, char *format, long fLen, char *out, long outLen,
              long *outPos);
 
-retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string frmt, long formatLen) {
+retCode formattedFloat(double dx, char *out, long *endPos, long outLen, char *frmt, long formatLen) {
   logical isSigned = False;
 
   if (dx < 0) {
@@ -229,10 +229,10 @@ retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string f
     if (ePos < 0)
       ePos = uniIndexOf(frmt, formatLen, 0, 'E');
 
-    int beforePeriod = countSignificants(frmt, 0, dotPos, (string) "09 ");
-    int afterPeriod = countSignificants(frmt, dotPos, ePos >= 0 ? ePos : formatLen, (string) "09 ");
+    int beforePeriod = countSignificants(frmt, 0, dotPos, "09 ");
+    int afterPeriod = countSignificants(frmt, dotPos, ePos >= 0 ? ePos : formatLen, "09 ");
     int precision = beforePeriod + afterPeriod;
-    byte digits[MAXFILELEN];
+    char digits[MAXFILELEN];
     long exp10;
 
     int len = number2Str(dx, precision, digits, &exp10);
@@ -248,7 +248,7 @@ retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string f
       else
         return formatDigits(isSigned, digits, precision, frmt, formatLen, out, outLen, endPos);
     } else {
-      byte mnBf[128], expBf[128];
+      char mnBf[128], expBf[128];
       long mnLn, expLn;
 
       formatDigits(isSigned, digits, len, frmt, ePos, mnBf, NumberOf(mnBf), &mnLn);
@@ -257,14 +257,14 @@ retCode formattedFloat(double dx, byte *out, long *endPos, long outLen, string f
 
       *endPos = 0;
       uniAppend(out, endPos, outLen, mnBf);
-      appendCodePoint(out, endPos, outLen, frmt[ePos]);
+      appendCodePoint(out, endPos, outLen, (codePoint) frmt[ePos]);
       return uniNAppend(out, endPos, outLen, expBf, expLn);
     }
   }
 }
 
-retCode formattedLong(integer ix, byte *out, long *endPos, long outLen, string frmt, long formatLen) {
-  byte digits[256];
+retCode formattedLong(integer ix, char *out, long *endPos, long outLen, char *frmt, long formatLen) {
+  char digits[256];
   uint16 base = (uint16) (uniIndexOf(frmt, formatLen, 0, 'X') >= 0 ? 16 : 10);
   logical isSigned = False;
   if (ix < 0) {
@@ -279,11 +279,11 @@ retCode formattedLong(integer ix, byte *out, long *endPos, long outLen, string f
 #define attachChar(O, P, L, Ch) do{ if((*P)>=L) return Error; else O[(*P)++] = Ch; } while(False)
 
 retCode
-formatDigits(logical isSigned, string digits, long precision, string format, long formatLen, byte *out, long outLen,
+formatDigits(logical isSigned, char *digits, long precision, char *format, long formatLen, char *out, long outLen,
              long *pos) {
-  int formSigDigits = countSignificants(format, 0, formatLen, (string) "09X ");
+  int formSigDigits = countSignificants(format, 0, formatLen, "09X ");
   logical encounteredSign = False;
-  int zeroDigits = countSignificants(format, 0, formatLen, (string) "0 ");
+  int zeroDigits = countSignificants(format, 0, formatLen, "0 ");
 
   if (precision > formSigDigits)
     return Error;
@@ -362,28 +362,28 @@ formatDigits(logical isSigned, string digits, long precision, string format, lon
   return uniReverse(out, *pos);
 }
 
-retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayMode, int precision, string prefix,
+retCode formatDouble(char *out, long outLen, double x, FloatDisplayMode displayMode, int precision, char *prefix,
                      logical sign) {
-  byte dec[DBL_DIG * 2];    /* buffer for the decimal mantissae */
-  byte *d = dec;
-  byte buff[1024];    /* buffer to represent the number string */
-  byte *p = buff;
-  byte *eP = &buff[NumberOf(buff) - 1]; /* end marker */
+  char dec[DBL_DIG * 2];    /* buffer for the decimal mantissae */
+  char *d = dec;
+  char buff[1024];    /* buffer to represent the number string */
+  char *p = buff;
+  char *eP = &buff[NumberOf(buff) - 1]; /* end marker */
 
   long exp, len, sig;
 
   if (x < 0) {
-    prefix = (string) "-";
+    prefix = "-";
     x = -x;
   } else if (sign)
-    prefix = (string) "+";      /* Is the number signed? */
+    prefix = "+";      /* Is the number signed? */
 
   len = sig = number2Str(x, DBL_DIG + 1, dec, &exp);
 
   while (sig > 0 && dec[sig - 1] == '0')
     sig--;      /* chop off trailing zeroes */
 
-  if (uniIsLit((string) dec, "Infinity") == same) {
+  if (uniIsLit((char *) dec, "Infinity") == same) {
     uniCpy(out, outLen, dec);
     return Ok;
   } else {
@@ -494,8 +494,8 @@ retCode formatDouble(byte *out, long outLen, double x, FloatDisplayMode displayM
 }
 
 retCode outDouble(ioPo out, double x, char mode, int width, int precision,
-                  codePoint pad, logical left, string prefix, logical sign) {
-  byte buffer[256];
+                  codePoint pad, logical left, char *prefix, logical sign) {
+  char buffer[256];
 
   FloatDisplayMode displayMode;
 
@@ -518,14 +518,14 @@ retCode outDouble(ioPo out, double x, char mode, int width, int precision,
 }
 
 retCode outFloat(ioPo out, double x) {
-  return outDouble(out, x, 'g', 0, 0, ' ', True, (string) "", False);
+  return outDouble(out, x, 'g', 0, 0, ' ', True, "", False);
 }
 
-retCode outUStr(ioPo f, string str) {
+retCode outUStr(ioPo f, char *str) {
   return outText(f, str, uniStrLen(str));
 }
 
-retCode outString(ioPo f, byte *str, long len, long width, int precision,
+retCode outString(ioPo f, char *str, long len, long width, int precision,
                   codePoint pad, logical leftPad) {
   long gaps;
   retCode ret = Ok;
@@ -637,16 +637,16 @@ static retCode quoteChar(ioPo f, codePoint ch, long *gaps) {
   return ret;
 }
 
-static retCode dumpText(ioPo f, string str, long len) {
+static retCode dumpText(ioPo f, char *str, long len) {
   long gaps = 0;
   retCode ret = Ok;
   int ix;
   for (ix = 0; ret == Ok && ix < len; ix++)
-    ret = quoteChar(f, str[ix], &gaps);
+    ret = quoteChar(f, (codePoint) str[ix], &gaps);
   return ret;
 }
 
-retCode outUniString(ioPo f, string str, long len, long width, int precision,
+retCode outUniString(ioPo f, char *str, long len, long width, int precision,
                      codePoint pad, logical leftPad, logical alt) {
   long gaps;
   retCode ret = Ok;
@@ -665,8 +665,8 @@ retCode outUniString(ioPo f, string str, long len, long width, int precision,
 
       if (alt) {
         while (ret == Ok && len-- > 0) {
-          byte ch = *str++;
-          quoteChar(f, ch, &gaps);
+          char ch = *str++;
+          quoteChar(f, (codePoint) ch, &gaps);
         }
       } else
         ret = outText(f, str, len);
@@ -728,7 +728,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
         int precision = 0;    /* Minimum width or precision of field */
         long depth = LONG_MAX;      /* Maximum depth of structure */
         codePoint pad = ' ';
-        string prefix = (string) "";
+        char *prefix = "";
         logical sign = False;
         logical alternate = False;
         logical leftPad = True;
@@ -743,7 +743,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
               pad = '0';
               continue;
             case ' ':
-              prefix = (string) " ";
+              prefix = " ";
               continue;
             case '+':
               sign = True;
@@ -799,7 +799,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
             }
             case 'u': {    /* Display a number as unsigned */
               uinteger i = (uinteger) (longValue ? va_arg(args, uinteger) : va_arg(args, unsigned int));
-              byte iBuff[64];
+              char iBuff[64];
 
               if (!leftPad)
                 pad = ' ';    /* We dont put trailing zeroes */
@@ -843,7 +843,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
               break;
             }
             case 's': {    /* Display a string */
-              string str = (string) va_arg(args, string);
+              char *str = va_arg(args, char *);
 
               if (str != NULL)
                 ret = outString(f, str, uniStrLen(str), width, precision, ' ', leftPad);
@@ -854,7 +854,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
 
             case 'S': {    /* Display a data block */
               long len = (long) va_arg(args, long);
-              char *str = (char *) va_arg(args, char *);
+              char *str = va_arg(args, char *);
 
               if (str != NULL) {
                 int i;
@@ -870,7 +870,7 @@ retCode __voutMsg(ioPo f, unsigned char *fmt, va_list args) {
             }
 
             case 'U': {    /* Display a uniCode string */
-              string str = (string) va_arg(args, string);
+              char *str = (char *) va_arg(args, char *);
 
               if (str != NULL) {
                 ret = outUStr(f, prefix);
@@ -949,7 +949,7 @@ retCode logMsg(ioPo out, char *fmt, ...) {
   return ret;
 }
 
-string strMsg(string buffer, long len, char *fmt, ...) {
+char *strMsg(char *buffer, long len, char *fmt, ...) {
   bufferPo f = fixedStringBuffer(buffer, len);
 
   va_list args;      /* access the generic arguments */

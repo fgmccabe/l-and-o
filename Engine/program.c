@@ -77,17 +77,17 @@ static uinteger pHashFun(specialClassPo class, objPo o) {
   return cl->hash;
 }
 
-static uinteger prgHash(const string name, int16 arity) {
-  byte fullLbl[MAX_SYMB_LEN];
+static uinteger prgHash(const char * name, int16 arity) {
+  char fullLbl[MAX_SYMB_LEN];
   strMsg(fullLbl, NumberOf(fullLbl), "%s/%d", name, arity);
-  return uniHash((string) fullLbl);
+  return uniHash((char *) fullLbl);
 }
 
-static ptrI allocateProgramLabel(heapPo H, const string name, int16 arity, ptrI code) {
+static ptrI allocateProgramLabel(heapPo H, const char * name, int16 arity, ptrI code) {
   rootPo root = gcAddRoot(H, &code);
 
   long symlen = uniStrLen(name);
-  long len = CellCount(sizeof(programRec) + sizeof(byte) * (symlen + 1));
+  long len = CellCount(sizeof(programRec) + sizeof(char) * (symlen + 1));
   programPo new = (programPo) permAllocate(len);
 
   new->class = programClass;
@@ -95,20 +95,20 @@ static ptrI allocateProgramLabel(heapPo H, const string name, int16 arity, ptrI 
   new->code = code;
   new->hash = prgHash(name, arity);
 
-  memcpy(new->lbl.name, name, (symlen + 1) * sizeof(byte));
+  memcpy(new->lbl.name, name, (symlen + 1) * sizeof(char));
   gcRemoveRoot(H, root);
 
   return objP(new);
 }
 
-ptrI newProgramLbl(string name, int16 arity) {
+ptrI newProgramLbl(char * name, int16 arity) {
   struct {
     long arity;
-    byte nm[MAX_SYMB_LEN];
+    char nm[MAX_SYMB_LEN];
   } lbl;
 
   lbl.arity = arity;
-  uniCpy((string) &lbl.nm, NumberOf(lbl.nm), name);
+  uniCpy((char *) &lbl.nm, NumberOf(lbl.nm), name);
 
   ptrI def = (ptrI) hashGet(programs, (void *) &lbl);
 
@@ -124,20 +124,20 @@ ptrI newProgramLbl(string name, int16 arity) {
   }
 }
 
-ptrI programLbl(string name, int16 arity) {
+ptrI programLbl(char * name, int16 arity) {
   struct {
     long arity;
-    byte nm[MAX_SYMB_LEN];
+    char nm[MAX_SYMB_LEN];
   } lbl;
 
   lbl.arity = arity;
-  uniCpy((string) &lbl.nm, NumberOf(lbl.nm), name);
+  uniCpy((char *) &lbl.nm, NumberOf(lbl.nm), name);
 
   return (ptrI) hashGet(programs, (void *) &lbl);
 }
 
 ptrI newProgLbl(const char *name, int16 arity) {
-  return newProgramLbl((string) name, arity);
+  return newProgramLbl((char *) name, arity);
 }
 
 comparison compPrgLabel(PrgLabel *p1, PrgLabel *p2) {
@@ -158,7 +158,7 @@ ptrI programOfClass(objPo o) {
   ptrI pr = (ptrI) hashGet(programs, className(cl));
 
   if (pr == 0) {
-    byte buff[MAX_SYMB_LEN];
+    char buff[MAX_SYMB_LEN];
     uniCpy(buff, NumberOf(buff), className(cl));
     return newProgramLbl(buff, OBJECT_ARITY);
   } else

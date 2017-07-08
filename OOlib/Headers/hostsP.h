@@ -53,8 +53,8 @@ typedef struct _host_class_ {
 #define MAXLINE 1024
 
 typedef struct _host_part{
-  byte host[MAXLINE];		/* Canonical name of this host */
-  string aliases[MAXALIAS];	        /* list of aliases for this host */
+  char host[MAXLINE];		/* Canonical name of this host */
+  char * aliases[MAXALIAS];	        /* list of aliases for this host */
   struct in_addr ip[MAXIP];	        /* ip address list for this host */
   unsigned int ip_count;	        /* How many addresses are there? */
   logical avail;		        /* True if this is a `positive' entry */

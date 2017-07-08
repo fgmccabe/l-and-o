@@ -76,13 +76,13 @@ lo.comp.singleton {
   excludeDefs([D,..L],Excl) => excludeDefs(L,declareDef(D,Excl)).
 
   declareDef:(canonDef,set[string]) => set[string].
-  declareDef(funDef(_,Nm,_,_,_),Excl) => addMem(Excl,Nm).
-  declareDef(relDef(_,Nm,_,_,_),Excl) => addMem(Excl,Nm).
-  declareDef(grammDef(_,Nm,_,_,_),Excl) => addMem(Excl,Nm).
-  declareDef(classDef(_,Nm,_,_,_,_),Excl) => addMem(Excl,Nm).
-  declareDef(varDef(_,Nm,_,_,_,_),Excl) => addMem(Excl,Nm).
-  declareDef(cnDefn(_,_,conEntry(_,_,_,faceType(Fields))),Excl) => foldLeft((XX,(Nm,_)) => addMem(XX,Nm),Excl,Fields).
-  declareDef(implDef(_,_,Nm,_,_,_,_,_),Excl) => addMem(Excl,Nm).
+  declareDef(funDef(_,Nm,_,_,_),Excl) => addMem(Nm,Excl).
+  declareDef(relDef(_,Nm,_,_,_),Excl) => addMem(Nm,Excl).
+  declareDef(grammDef(_,Nm,_,_,_),Excl) => addMem(Nm,Excl).
+  declareDef(classDef(_,Nm,_,_,_,_),Excl) => addMem(Nm,Excl).
+  declareDef(varDef(_,Nm,_,_,_,_),Excl) => addMem(Nm,Excl).
+  declareDef(cnDefn(_,_,conEntry(_,_,_,faceType(Fields))),Excl) => foldLeft(((Nm,_),XX) => addMem(Nm,XX),Excl,Fields).
+  declareDef(implDef(_,_,Nm,_,_,_,_,_),Excl) => addMem(Nm,Excl).
   declareDef(_,Excl) => Excl.
 
   checkVarsInDefs:(list[canonDef],map[string,(location,integer)],set[string],report,report){}.

@@ -122,7 +122,7 @@ static void initUDPClass(classPo class, classPo request) {
 
 static void UdpInit(objectPo o, va_list *args) {
   udpPo f = O_UDP(o);
-  string name = va_arg(*args, string);
+  char * name = va_arg(*args, char *);
 
   lockClass(udpClass);
 
@@ -144,7 +144,7 @@ static void UdpInit(objectPo o, va_list *args) {
   unlockClass(udpClass);
 }
 
-udpPo newUDPPort(byte *name, int port, ioDirection dir) {
+udpPo newUDPPort(char *name, int port, ioDirection dir) {
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (sock == INVALID_SOCKET)
@@ -153,7 +153,7 @@ udpPo newUDPPort(byte *name, int port, ioDirection dir) {
     /* Set the socket to reuse addresses */
     int one = 1, len = sizeof(int);
 
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, (socklen_t) len) != 0) {
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,  &one, (socklen_t) len) != 0) {
       close(sock);
       return NULL;
     } else {
@@ -195,7 +195,7 @@ retCode closeUDP(udpPo f) {
   return Ok;
 }
 
-string udpName(udpPo f) {
+char * udpName(udpPo f) {
   return f->udp.name;
 }
 
@@ -204,7 +204,7 @@ uint16 udpPortNo(udpPo u) {
 }
 
 /* reading from a UDP Socket */
-retCode udpRead(udpPo u, byte *buff, long *blen, string peer, long peerLen, int *port) {
+retCode udpRead(udpPo u, byte *buff, long *blen, char * peer, long peerLen, int *port) {
   assert(isUDPport(O_OBJECT(u)));
 
   again:
@@ -219,7 +219,7 @@ retCode udpRead(udpPo u, byte *buff, long *blen, string peer, long peerLen, int 
 
       if (port != NULL)
         *port = ntohs(from.sin_port);
-      uniCpy(peer, peerLen, (string) inet_ntoa(from.sin_addr));
+      uniCpy(peer, peerLen,  inet_ntoa(from.sin_addr));
       return setUdpStatus(u, Ok);
     } else {
       switch (locErr) {
@@ -237,7 +237,7 @@ retCode udpRead(udpPo u, byte *buff, long *blen, string peer, long peerLen, int 
   }
 }
 
-retCode udpSend(udpPo u, byte *buff, long blen, string peer, int port) {
+retCode udpSend(udpPo u, byte *buff, long blen, char * peer, int port) {
   assert(isUDPport(O_OBJECT(u)));
 
   byte *cp = buff;
@@ -245,7 +245,7 @@ retCode udpSend(udpPo u, byte *buff, long blen, string peer, int port) {
   size_t actual = (size_t) (blen * sizeof(byte));
   int16 sock = u->udp.sock;
   struct sockaddr_in serv_addr;
-  string host = getHostname(peer);
+  char * host = getHostname(peer);
   struct in_addr *addr = host != NULL ? getHostIP(host, 0) : NULL;
 
   if (addr != NULL) {

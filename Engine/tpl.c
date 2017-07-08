@@ -16,7 +16,7 @@
 #include "tpl.h"
 
 ptrI tupleClass(integer arity) {
-  byte lbl[MAX_SYMB_LEN];
+  char lbl[MAX_SYMB_LEN];
   strMsg(lbl, NumberOf(lbl), "()%d", arity);
   return newClassDef(lbl, arity);
 }
@@ -70,11 +70,11 @@ ptrPo nthTplEl(objPo tpl, integer pos) {
 }
 
 logical isTplClass(clssPo cl) {
-  string clName = className(cl);
+  char * clName = className(cl);
   if (uniIsLitPrefix(clName, "()")) {
-    string ar = clName + strlen("()");
+    char * ar = clName + strlen("()");
     while (*ar) {
-      byte ch = *ar++;
+      char ch = *ar++;
       if (!(ch >= '0' && ch <= '9'))
         return False;
     }
