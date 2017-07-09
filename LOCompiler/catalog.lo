@@ -1,5 +1,6 @@
 lo.comp.catalog{
   import lo.
+  import lo.json.
   import lo.uri.
   import lo.resources.
   import lo.comp.misc.
@@ -28,80 +29,17 @@ lo.comp.catalog{
   resolveVersion(V,_,V).
 
   parseCatalog:(string,uri,catalog){}.
-  parseCatalog(Chrs,Uri,cat(Map,Base,Vers,Deflt)) :-
-    tokens(Toks) %% explode(Chrs),
-    parseCat([],Uri,defltVersion,none,Map,Base,Vers,Deflt) %% Toks.
+  parseCatalog(Chrs,Uri,Cat) :-
+    parseJson(jColl(j)) %% explode(Chrs),
+    Cat = foldMap(jsonStmt,cat([],Uri,defltVersion,none),j).
 
-  -- Tokenization
+  jsonStmt:(string,json,catalog) => catalog.
+  jsonStmt("content",jColl(jE),cat(M,U,V,B)) => cat(foldMap(jsonEntry,M,jE),U,V,B).
+  jsonStmt("base",jTxt(tB),cat(M,_,V,D)) => cat(M,U,V,D) :- uriParse(U) %% explode(tB).
+  jsonStmt("version",jTxt(V),cat(M,U,_,B)) => cat(M,U,vers(V),B).
+  jsonStmt("default",jTxt(tD),cat(M,B,V,_)) => cat(M,U,V,some(D)) :- uriParse(D) %% explode(tD).
+  jsonStmt(_,_,Cat) => Cat.
 
-  private token ::= lbrce | rbrce
-    | thin_arrow | term | period | colon | hash | idn(string) | strg(list[integer]).
-
-  tokens:(list[token]) --> list[integer].
-  tokens(Toks) --> spaces(), moreToks(Toks).
-
-  moreToks:(list[token]) --> list[integer].
-  moreToks([]) --> eof.
-  moreToks([Tok,..More]) --> token(Tok), tokens(More).
-
-  token:(token) --> list[integer].
-  token(lbrce) --> "{".
-  token(rbrce) --> "}".
-  token(thin_arrow) --> "->".
-  token(T) --> ".", ((eof | " " | "\n") ? {T=term} | {T=period}).
-  token(colon) --> ":".
-  token(hash) --> "#".
-  token(strg(Seq)) --> "\"", stringText(Seq), "\"".
-  token(idn(implode(Text))) --> iden(Text).
-
-  stringText:(list[integer]) --> list[integer].
-  stringText([]) --> [].
-  stringText([C,..More]) --> "\\", quote(C), stringText(More).
-  stringText([C,..More]) --> [C], { C \= 0c" }, stringText(More).
-
-  quote:(integer) --> list[integer].
-  quote(0c\n) --> "n".
-  quote(0c") --> "\"".
-  quote(0c') --> "'".
-  quote(0c\t) --> "t".
-  quote(C) --> [C].
-
-  private parseCat:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
-  parseCat(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do) -->
-    [idn("catalog"), lbrce], catStmts(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do), [rbrce].
-
-  private catStmts:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
-  catStmts(Mi,Bi,Vi,Di,Mx,Bx,Vx,Dx) --> catStmt(Mi,Bi,Vi,Di,Mo,Bo,Vo,Do), catStmts(Mo,Bo,Vo,Do,Mx,Bx,Vx,Dx).
-  catStmts(Mi,Bi,Vi,Di,Mi,Bi,Vi,Di) --> [].
-
-  catStmt:(map[string,uri],uri,version,option[uri],map[string,uri],uri,version,option[uri]) --> list[token].
-  catStmt(Mi,Bi,Vi,Di,Mx,Bi,Vi,Di) --> [idn("content"), lbrce], contents(Mi,Mx), [rbrce].
-  catStmt(Mi,_,Vi,Di,Mi,Bx,Vi,Di) --> [idn("base"), colon, strg(Base)], { parseableUri(Base,Bx) }, [term].
-  catStmt(Mi,Bi,_,Di,Mi,Bi,vers(implode(Vx)),Di) --> [idn("version"), colon, strg(Vx), term].
-  catStmt(Mi,Bi,Vi,_,Mi,Bi,Vi,some(Dx)) --> [idn("default"), colon, strg(U)], { uriParse(Dx)%%U }, [term].
-
-  parseableUri:(list[integer],uri){}.
-  parseableUri(Chrs,U) :- uriParse(U)%%Chrs.
-
-  contents:(map[string,uri],map[string,uri]) --> list[token].
-  contents(C,Cx) --> entry(C,C0), contents(C0,Cx).
-  contents(C,C) --> [].
-
-  entry:(map[string,uri],map[string,uri]) --> list[token].
-  entry(C,C1) --> package(Key), [thin_arrow,strg(U),term], {uriParse(Uri)%%U, C1 = C[Key->Uri]}.
-
-  package:(string) --> list[token].
-  package(stringify([Id,..Suf],".")) --> [idn(Id)], suffixes(Suf).
-
-  suffixes:(list[string]) --> list[token].
-  suffixes([Id,..More]) --> [period, idn(Id)], suffixes(More).
-  suffixes([]) --> [].
-
-  stringify:(list[string],string)=>string.
-  stringify(L,S) =>
-    collapse(interleave(L,S),"").
-
-  collapse:(list[string],string) => string.
-  collapse([],S) => S.
-  collapse([S1,..L],F) => collapse(L,F+S1).
+  jsonEntry:(string,json,map[string,uri]) => map[string,uri].
+  jsonEntry(P,jTxt(tU),M) => M[P->U] :- uriParse(U) %% explode(tU).
 }

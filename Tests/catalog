@@ -1,49 +1,49 @@
-catalog{
-  content{
-    test.aa -> "aa.lo".
-    test.a -> "a.lo".
-    test.anon2 -> "anon2.lo".
-    test.append -> "append.lo".
-    test.ancestor -> "ancestor.lo".
-    test.arithmetic -> "arithmetic.lo".
-    test.bench -> "bench.lo".
-    test.c -> "c.lo".
-    test.cc -> "cc.lo".
-    test.e -> "e.lo".
-    test.eq -> "eq.lo".
-    test.f -> "f.lo".
-    test.fib -> "fib.lo".
-    test.format -> "fo.lo".
-    test.g -> "g.lo".
-    test.gp -> "gp.lo".
-    test.gt -> "gt.lo".
-    test.i -> "i.lo".
-    test.inn -> "inner.lo".
-    test.j -> "j.lo".
-    test.l -> "l.lo".
-    test.lambda -> "lambda.lo".
-    test.modsec -> "modsec.lo".
-    test.mapp -> "mapp.lo".
-    test.maps -> "maps.lo".
-    test.gr -> "gr.lo".
-    test.m -> "m.lo".
-    test.o -> "o.lo".
-    test.oo -> "oo.lo".
-    test.opts -> "opts.lo".
-    test.p1 -> "p1.lo".
-    test.p2 -> "p2.lo".
-    test.p3 -> "p3.lo".
-    test.parsetools -> "parsetools.lo".
-    test.person -> "person.lo".
-    test.px -> "p.lo".
-    test.q -> "q.lo".
-    test.r -> "r.lo".
-    test.rec -> "rec.lo".
-    test.s -> "s.lo".
-    test.st -> "st.lo".
-    test.suite -> "suite.lo".
-    test.t -> "t.lo".
-  }
-  default: "../LO/catalog".
-  version: "0.0.2".
+{
+	"content": {
+		"test.aa": "aa.lo",
+		"test.a": "a.lo",
+		"test.anon2": "anon2.lo",
+		"test.append": "append.lo",
+		"test.ancestor": "ancestor.lo",
+		"test.arithmetic": "arithmetic.lo",
+		"test.bench": "bench.lo",
+		"test.c": "c.lo",
+		"test.cc": "cc.lo",
+		"test.e": "e.lo",
+		"test.eq": "eq.lo",
+		"test.f": "f.lo",
+		"test.fib": "fib.lo",
+		"test.format": "fo.lo",
+		"test.g": "g.lo",
+		"test.gp": "gp.lo",
+		"test.gt": "gt.lo",
+		"test.i": "i.lo",
+		"test.inn": "inner.lo",
+		"test.j": "j.lo",
+		"test.l": "l.lo",
+		"test.lambda": "lambda.lo",
+		"test.modsec": "modsec.lo",
+		"test.mapp": "mapp.lo",
+		"test.maps": "maps.lo",
+		"test.gr": "gr.lo",
+		"test.m": "m.lo",
+		"test.o": "o.lo",
+		"test.oo": "oo.lo",
+		"test.opts": "opts.lo",
+		"test.p1": "p1.lo",
+		"test.p2": "p2.lo",
+		"test.p3": "p3.lo",
+		"test.parsetools": "parsetools.lo",
+		"test.person": "person.lo",
+		"test.px": "p.lo",
+		"test.q": "q.lo",
+		"test.r": "r.lo",
+		"test.rec": "rec.lo",
+		"test.s": "s.lo",
+		"test.st": "st.lo",
+		"test.suite": "suite.lo",
+		"test.t": "t.lo"
+	},
+	"default": "../LO/catalog",
+	"version": "0.0.2"
 }

@@ -1,62 +1,62 @@
-catalog{
-  content {
-    lo.comp.abstract -> "abstract.lo".
-    lo.comp.args -> "args.lo".
-    lo.comp.ast -> "ast.lo".
-    lo.comp.base64 -> "base64.lo".
-    lo.comp.bootstrap -> "bootstrap.lo".
-    lo.comp.canon -> "canon.lo".
-    lo.comp.catalog -> "catalog.lo".
-    lo.comp.code.analyse -> "analyse.lo".
-    lo.comp.code.asm -> "asm.lo".
-    lo.comp.code.clause -> "clause.lo".
-    lo.comp.code.code -> "code.lo".
-    lo.comp.code.estimate -> "estimate.lo".
-    lo.comp.code.gencode -> "gencode.lo".
-    lo.comp.code.indexing -> "indexing.lo".
-    lo.comp.code.instructions -> "instructions.lo".
-    lo.comp.code.pkg -> "pkg.lo".
-    lo.comp.code.registers -> "registers.lo".
-    lo.comp.code.unify -> "compunify.lo".
-    lo.comp.compiler -> "compiler.lo".
-    lo.comp.decode -> "decode.lo".
-    lo.comp.dependencies -> "dependencies.lo".
-    lo.comp.debug -> "debug.lo".
-    lo.comp.dict -> "dict.lo".
-    lo.comp.encode -> "encode.lo".
-    lo.comp.errors -> "errors.lo".
-    lo.comp.escapes -> "escapes.lo".
-    lo.comp.flatten -> "flatten.lo".
-    lo.comp.freevars -> "freevars.lo".
-    lo.comp.freshen -> "freshen.lo".
-    lo.comp.genprolog -> "genprolog.lo".
-    lo.comp.grammar -> "grammar.lo".
-    lo.comp.grapher -> "grapher.lo".
-    lo.comp.imports -> "imports.lo".
-    lo.comp.inline -> "inline.lo".
-    lo.comp.keywords -> "keywords.lo".
-    lo.comp.lexer -> "lexer.lo".
-    lo.comp.location -> "location.lo".
-    lo.comp.macro -> "macro.lo".
-    lo.comp.misc -> "misc.lo".
-    lo.comp.operators -> "operators.lo".
-    lo.comp.package -> "package.lo".
-    lo.comp.parseType -> "parsetype.lo".
-    lo.comp.parseutils -> "parseutils.lo".
-    lo.comp.reduce -> "reduce.lo".
-    lo.comp.regexp -> "regexp.lo".
-    lo.comp.repo -> "reposrc.lo".
-    lo.comp.resolve -> "resolve.lo".
-    lo.comp.singleton -> "singleton.lo".
-    lo.comp.term -> "term.lo".
-    lo.comp.termbase -> "termdb.lo".
-    lo.comp.token -> "token.lo".
-    lo.comp.transform -> "transform.lo".
-    lo.comp.transutils -> "transutils.lo".
-    lo.comp.typecheck -> "checker.lo".
-    lo.comp.types -> "types.lo".
-    lo.comp.unify -> "unify.lo".
-  }
-  default: "../LO/catalog".
-  version: "0.0.1".
+{
+	"content": {
+		"lo.comp.abstract": "abstract.lo",
+		"lo.comp.args": "args.lo",
+		"lo.comp.ast": "ast.lo",
+		"lo.comp.base64": "base64.lo",
+		"lo.comp.bootstrap": "bootstrap.lo",
+		"lo.comp.canon": "canon.lo",
+		"lo.comp.catalog": "catalog.lo",
+		"lo.comp.code.analyse": "analyse.lo",
+		"lo.comp.code.asm": "asm.lo",
+		"lo.comp.code.clause": "clause.lo",
+		"lo.comp.code.code": "code.lo",
+		"lo.comp.code.estimate": "estimate.lo",
+		"lo.comp.code.gencode": "gencode.lo",
+		"lo.comp.code.indexing": "indexing.lo",
+		"lo.comp.code.instructions": "instructions.lo",
+		"lo.comp.code.pkg": "pkg.lo",
+		"lo.comp.code.registers": "registers.lo",
+		"lo.comp.code.unify": "compunify.lo",
+		"lo.comp.compiler": "compiler.lo",
+		"lo.comp.decode": "decode.lo",
+		"lo.comp.dependencies": "dependencies.lo",
+		"lo.comp.debug": "debug.lo",
+		"lo.comp.dict": "dict.lo",
+		"lo.comp.encode": "encode.lo",
+		"lo.comp.errors": "errors.lo",
+		"lo.comp.escapes": "escapes.lo",
+		"lo.comp.flatten": "flatten.lo",
+		"lo.comp.freevars": "freevars.lo",
+		"lo.comp.freshen": "freshen.lo",
+		"lo.comp.genprolog": "genprolog.lo",
+		"lo.comp.grammar": "grammar.lo",
+		"lo.comp.grapher": "grapher.lo",
+		"lo.comp.imports": "imports.lo",
+		"lo.comp.inline": "inline.lo",
+		"lo.comp.keywords": "keywords.lo",
+		"lo.comp.lexer": "lexer.lo",
+		"lo.comp.location": "location.lo",
+		"lo.comp.macro": "macro.lo",
+		"lo.comp.misc": "misc.lo",
+		"lo.comp.operators": "operators.lo",
+		"lo.comp.package": "package.lo",
+		"lo.comp.parseType": "parsetype.lo",
+		"lo.comp.parseutils": "parseutils.lo",
+		"lo.comp.reduce": "reduce.lo",
+		"lo.comp.regexp": "regexp.lo",
+		"lo.comp.repo": "reposrc.lo",
+		"lo.comp.resolve": "resolve.lo",
+		"lo.comp.singleton": "singleton.lo",
+		"lo.comp.term": "term.lo",
+		"lo.comp.termbase": "termdb.lo",
+		"lo.comp.token": "token.lo",
+		"lo.comp.transform": "transform.lo",
+		"lo.comp.transutils": "transutils.lo",
+		"lo.comp.typecheck": "checker.lo",
+		"lo.comp.types": "types.lo",
+		"lo.comp.unify": "unify.lo"
+	},
+	"default": "../LO/catalog",
+	"version": "0.0.1"
 }

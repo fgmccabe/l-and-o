@@ -175,7 +175,7 @@ installPackage(char *pkgText, long pkgTxtLen, char *errorMsg, long msgSize, pick
     ret = decodeLoadedPkg(pkgNm, NumberOf(pkgNm), vrNm, NumberOf(vrNm), sigBuffer);
 
   packagePo pkg = markLoaded(pkgNm, vrNm);
-  
+
   if (ret == Ok)
     ret = decodeImportsSig(sigBuffer, errorMsg, msgSize, pickup, cl);
 

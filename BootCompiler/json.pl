@@ -4,7 +4,7 @@
 
 string2json(S,J) :- string_chars(S,C), phrase(parseJson(J),C).
 
-parseJson(J) --> skipBlanks(), jP(J).
+parseJson(J) --> skipBlanks(), jP(J), skipBlanks().
 
 jP(jTrue) --> ['t','r','u','e'].
 jP(jFalse) --> ['f','a','l','s','e'].
