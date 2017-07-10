@@ -8,8 +8,8 @@ lo.comp.inline{
 
   -- temp def
   public inline:(prProg,map[term,rel]) => prProg.
-  inline(prProg(Spec,P),M) => trace("inlined program:\n",prProg(Spec,inlineGroups(dependencySort(P),M))) :-
-    logMsg("inline:\n\(prProg(Spec,P))])\nusing \(M)").
+  inline(prProg(Spec,P),M) => trace("inlined program:\n",prProg(Spec,inlineGroups(dependencySort(P),M))).
+--    logMsg("inline:\n\(prProg(Spec,P))])\nusing \(M)").
 
   dependencySort:(map[term,rel]) => list[list[rel]].
   dependencySort(Prog) => extractGroups(topsort(depends(Prog))).
@@ -50,6 +50,8 @@ lo.comp.inline{
   predRef(ocall(_,C,L,S),All,Refs) => termRef(C,All,termRef(L,All,termRef(S,All,Refs))).
   predRef(except(_,E),All,Refs) => termRef(E,All,Refs).
   predRef(unfy(_,L,R),All,Refs) => termRef(L,All,termRef(R,All,Refs)).
+  predRef(conj(_,L),All,Refs) => predRefs(L,All,Refs).
+  predRef(cond(_,T,L,R),All,Refs) => predRef(T,All,predRef(L,All,predRef(R,All,Refs))).
   predRef(_,_,Refs) => Refs.
 
   termRef:(term,list[term],list[term]) => list[term].
@@ -60,7 +62,7 @@ lo.comp.inline{
   termRef(invoke(_,O,A),All,Refs) => termRefs(A,All,termRef(O,All,Refs)).
   termRef(ovoke(_,C,L,T),All,Refs) => termRef(C,All,termRef(L,All,termRef(T,All,Refs))).
   termRef(escvoke(_,_,A),All,Refs) => termRefs(A,All,Refs).
-  termRef(guarded(T,C),All,Refs) => termRef(T,All,predRefs(C,All,Refs)).
+  termRef(guarded(T,C),All,Refs) => termRef(T,All,predRef(C,All,Refs)).
   termRef(_,_,Refs) => Refs.
 
   termRefs:(list[term],list[term],list[term]) => list[term].
@@ -88,8 +90,7 @@ lo.comp.inline{
   inlineRel(rel(Prg,TLc,Clses),Any,RReslt,P,I) => rel(Prg,TLc,OClses) :-
     logMsg("inlining clauses \(Clses)"),
     Inlined = inlineRules(Clses,false,Reslt,P,I),
-    (Reslt ? Inlined=OClses, RReslt=true | Clses=OClses, RReslt=Any),
-    logMsg("result of inlining is \(OClses)").
+    (Reslt ? Inlined=OClses, RReslt=true, logMsg("result of inlining is \e[31m\(OClses)\e[0m") | Clses=OClses, RReslt=Any).
 
   inlineRules:(list[clse],logical,logical,map[term,rel],map[term,rel]) => list[clse].
   inlineRules([],Fx,Fx,_,_) => [].
@@ -122,7 +123,7 @@ lo.comp.inline{
   inlineTerm(escvoke(Lc,Op,A),P,I,S,O,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,S,O,U,Ux)).
   inlineTerm(invoke(Lc,Op,A),P,I,S,O,U,Ux) => checkInline(invoke(Lc,Op,inlineTerms(A,P,I,S,S0,U,U0)),P,I,S0,O,U0,Ux).
   inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,S,O,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,S,S0,U,U0),inlineTerm(Lb,P,I,S0,S1,U0,U1),inlineTerm(Th,P,I,S1,S2,U1,U2)),P,I,S2,O,U2,Ux).
-  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(checkInline(inlineTerm(T,P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),inlinePreds(C,P,I,F1,Fx,U1,Ux))).
+  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(checkInline(inlineTerm(T,P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),simplifyCond(conj(none,inlinePred(C,P,I,F1,Fx,U1,Ux))))).
 
   inlineTerms:(list[term],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[term].
   inlineTerms([],_,_,Fx,Fx,U,U) => [].
@@ -213,8 +214,7 @@ lo.comp.inline{
   applyToTerm(invoke(Lc,Op,A),V) => invoke(Lc,Op,applyToTerms(A,V)).
   applyToTerm(ovoke(Lc,C,L,T),V) => ovoke(Lc,applyToTerm(C,V),applyToTerm(L,V),applyToTerm(T,V)).
   applyToTerm(escvoke(Lc,Op,A),V) => escvoke(Lc,Op,applyToTerms(A,V)).
-  applyToTerm(guarded(T,[]),V) => applyToTerm(T,V).
-  applyToTerm(guarded(T,C),V) => guarded(applyToTerm(T,V),applyToPreds(C,V)).
+  applyToTerm(guarded(T,C),V) => simplifyGuard(guarded(applyToTerm(T,V),applyToPred(C,V))).
 
   applyToTerms:(list[term],map[string,term])=> list[term].
   applyToTerms([],_) => [].
@@ -228,6 +228,8 @@ lo.comp.inline{
   applyToPred(except(TLc,A),V) => except(TLc,applyToTerm(A,V)).
   applyToPred(neck,_) => neck.
   applyToPred(fail,_) => fail.
+  applyToPred(conj(Lc,L),V) => conj(Lc,applyToPreds(L,V)).
+  applyToPred(cond(Lc,T,L,R),V) => cond(Lc,applyToPred(T,V),applyToPred(L,V),applyToPred(R,V)).
 
   applyToPreds:(list[pred],map[string,term])=> list[pred].
   applyToPreds([],_) => [].

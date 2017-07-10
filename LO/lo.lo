@@ -9,7 +9,7 @@ lo{
   public import lo.sets.
   public import lo.trie.
 
-  public flatten : (ss) => list[string].
+  flatten : (ss) => list[string].
   flatten(D) => flttn(D,[]).
 
   flttn : (ss,list[string]) => list[string].
@@ -23,4 +23,8 @@ lo{
 
   public formatSS:(ss) => string.
   formatSS(S) => _str_multicat(flatten(S)). -- temporary definition.
+
+  public implementation coercion[ss,string] <= {
+    _coerce(S) => formatSS(S).
+  }
 }

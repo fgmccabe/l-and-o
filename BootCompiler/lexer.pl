@@ -156,6 +156,7 @@ charRef(St,Nxt,Chr) :- nextSt(St,Nxt,Chr).
 
 backslashRef(St,St,'a','\a').
 backslashRef(St,St,'b','\b').
+backslashRef(St,St,'e','\e').
 backslashRef(St,St,'t','\t').
 backslashRef(St,St,'n','\n').
 backslashRef(St,St,'r','\r').

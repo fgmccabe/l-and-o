@@ -20,11 +20,7 @@ lo.comp.flatten{
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
     flattenBody(Body,Q1,NBody,[],NQ).
-  flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,PrR)),Guard)) :-
-    flattenTerms(Args,Q,NArgs,G0,Post,Post,[],Q0)!,
-    flattenBody(G,Q0,Guard,G0,Q1),
-    flattenTerm(Rep,Q1,NRep,PrR,PsR,PsR,[],NQ).
-  flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,PrR)),Guard)) :-
+  flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,conj(none,PrR))),conj(none,Guard))) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q0)!,
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
 
@@ -47,8 +43,8 @@ lo.comp.flatten{
     flattenTerm(Lb,Q0,NLb,Pre0,Pre1,Pst0,Pst1,Q1),
     flattenTerm(Th,Q0,NTh,Pre1,Prx,Pst1,[unfy(Lc,Res,ovoke(Lc,NCall,NLb,NTh)),..Psx],Qx).
   flattenTerm(guarded(T,C),Q,Res,Pre,Prx,Post,Psx,Qx) :-
-    flattenTerm(T,Q,Res,Pr0,Prx,Post,Psx,Q1),
-    flattenBody(C,Q1,Pre,Pr0,Qx).
+    flattenTerm(T,Q,Res,Pr0,Prx,Post,Ps0,Q1),
+    flattenPred(C,Q1,C1,Pre,[C1,..Pr0],Ps0,Psx,Qx).
 
   flattenTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -78,6 +74,14 @@ lo.comp.flatten{
   flattenPred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
   flattenPred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
     flattenTerm(E,Q,NE,Pre,Prx,Post,Psx,Qx).
+  flattenPred(cond(Lc,T,L,R),Q,cond(Lc,T1,simplifyCond(conj(Lc,LPs)),simplifyCond(conj(Lc,RPs))),Pre,Prx,Pos,Psx,Qx) :-
+    flattenPred(T,Q,T1,Pre,Prx,Pos,Psx,Q0),
+    flattenPred(L,Q0,L1,LPs,[L1,..LPx],LPx,[],Q1),
+    flattenPred(R,Q1,R1,RPs,[R1,..RPx],RPx,[],Qx).
+  flattenPred(conj(_,[P]),Q,Fp,Pre,Prx,Post,Psx,Qx) :-
+    flattenPred(P,Q,Fp,Pre,Prx,Post,Psx,Qx).
+  flattenPred(conj(Lc,L),Q,conj(Lc,FL),Pre,Pre,Post,Post,Qx) :-
+    flattenBody(L,Q,FL,[],Qx).
 
   flattenUnify:(option[tloc],term,term,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenUnify(Lc,varbl(V),invoke(ILc,Op,Args),Q,unfy(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
@@ -92,7 +96,7 @@ lo.comp.flatten{
 
   flowRewrite:(clse) => clse.
   flowRewrite(clse(Q,Nm,Args,Body)) => clse(Q,Nm,Args,reflowPreds(topsort(flowDepends(Body)))).
-  flowRewrite(eqn(Q,Nm,Args,guarded(Rep,Body))) => eqn(Q,Nm,Args,guarded(Rep,reflowPreds(topsort(flowDepends(Body))))).
+  flowRewrite(eqn(Q,Nm,Args,guarded(Rep,Body))) => eqn(Q,Nm,Args,guarded(Rep,reflowPred(Body))).
 
   varDep ::= vars(pred,list[term],list[term]).
 
@@ -101,6 +105,10 @@ lo.comp.flatten{
 
     references(vars(_,_,Vs)) => Vs.
   }
+
+  reflowPred:(pred)=>pred.
+  reflowPred(conj(Lc,L)) => simplifyCond(conj(Lc,reflowPreds(topsort(flowDepends(L))))).
+  reflowPred(P)=>P.
 
   reflowPreds:(list[list[varDep]]) => list[pred].
   reflowPreds([]) => [].

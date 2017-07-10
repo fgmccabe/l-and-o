@@ -17,7 +17,7 @@ lo.comp.term {
                | invoke(option[tloc],term,list[term])
                | escvoke(option[tloc],string,list[term])
                | ovoke(option[tloc],term,term,term)
-               | guarded(term,list[pred]).
+               | guarded(term,pred).
 
   public tloc ::= tloc(integer,integer,integer,integer).
 
@@ -36,6 +36,8 @@ lo.comp.term {
                     | ecall(option[tloc],string,list[term])
                     | ocall(option[tloc],term,term,term)
                     | unfy(option[tloc],term,term)
+                    | conj(option[tloc],list[pred])
+                    | cond(option[tloc],pred,pred,pred)
                     | neck
                     | fail
                     | except(option[tloc],term).
@@ -63,7 +65,7 @@ lo.comp.term {
 
   private dispClause:(clse) => ss.
   dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
-  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body))) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ssSeq(dispPreds(":-","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body))) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),displayPred(Body,Q),ss(".\n")]).
   dispClause(eqn(Q,Hd,Args,Rep)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(".\n")]).
 
   public implementation display[term] <= {
@@ -84,7 +86,11 @@ lo.comp.term {
   dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
   dispTerm(escvoke(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   dispTerm(ovoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
-  dispTerm(guarded(T,C),Q) => ssSeq([dispTerm(T,Q),..dispPreds("::",", ",C,Q)]).
+  dispTerm(guarded(T,C),Q) => ssSeq([dispTerm(T,Q),ss("::"),displayPred(C,Q)]).
+
+  dispGuard:(list[pred],string,list[term]) => list[ss].
+  dispGuard([],_,_) => [].
+  dispGuard(G,M,V) => dispPreds(M,", ",G,V).
 
   dispArgs:(list[term],list[term]) => ss.
   dispArgs(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).
@@ -103,21 +109,14 @@ lo.comp.term {
   displayPred(ecall(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   displayPred(ocall(_,Rc,Lb,Th),Q) => ssSeq([dispTerm(Lb,Q),ss("."),dispTerm(Rc,Q)]).
   displayPred(unfy(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
+  displayPred(conj(_,L),Q) => ssSeq(dispPreds("",", ",L,Q)).
+  displayPred(cond(_,T,L,R),Q) => ssSeq([ss("("),displayPred(T,Q),ss("?"),displayPred(L,Q),ss("|"),displayPred(R,Q),ss(")")]).
   displayPred(fail,_) => ss("fail").
   displayPred(except(_,T),Q) => ssSeq([ss("raise "),dispTerm(T,Q)]).
 
   private dispPreds:(string,string,list[pred],list[term]) => list[ss].
   dispPreds(_,_,[],_) => [].
   dispPreds(Sep,Alt,[C,..L],Q) => [ss(Sep),displayPred(C,Q),..dispPreds(Alt,Alt,L,Q)].
-
-  public predArity:(pred) => integer.
-  predArity(neck) => 0.
-  predArity(fail) => 0.
-  predArity(except(_,_)) => 1.
-  predArity(call(_,_,Args)) => size(Args).
-  predArity(ocall(_,_,_,_)) => 3.
-  predArity(unfy(_,_,_)) => 2.
-  predArity(ecall(_,_,Args)) => size(Args).
 
   public predLoc:(pred) => option[tloc].
   predLoc(neck) => none.
@@ -127,6 +126,7 @@ lo.comp.term {
   predLoc(ocall(Lc,_,_,_)) => Lc.
   predLoc(ecall(Lc,_,_)) => Lc.
   predLoc(unfy(Lc,_,_)) => Lc.
+  predLoc(cond(Lc,_,_,_)) => Lc.
 
   public implementation equality[term] <= {
     T1 == T2 :- eqTerm(T1,T2).
@@ -186,17 +186,17 @@ lo.comp.term {
   clName(clse(_,Nm,_,_)) => Nm.
   clName(eqn(_,Nm,_,_)) => Nm.
 
-  public nthPred:(clse,integer) => pred.
-  nthPred(clse(_,_,_,Body),Ix) => C :- nthEl(Body,Ix,C).
-
   public clArgs:(clse) => list[term].
   clArgs(clse(_,_,Args,_)) => Args.
   clArgs(eqn(_,_,Args,_)) => Args.
 
   public simplifyGuard:(term) => term.
-  simplifyGuard(guarded(T,[])) => simplifyGuard(T).
+  simplifyGuard(guarded(T,conj(_,[]))) => simplifyGuard(T).
   simplifyGuard(T) => T.
 
+  public simplifyCond:(pred) => pred.
+  simplifyCond(conj(_,[P])) => simplifyCond(P).
+  simplifyCond(P) => P.
 
   -- Finding variables
   public findVarsInClse:(clse) => list[term].
@@ -211,7 +211,7 @@ lo.comp.term {
   findVarsInTerm(invoke(_,O,A),V) => findVarsInTerms(A,findVarsInTerm(O,V)).
   findVarsInTerm(escvoke(_,O,A),V) => findVarsInTerms(A,V).
   findVarsInTerm(ovoke(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
-  findVarsInTerm(guarded(T,G),V) => findVarsInTerm(T,findVarsInPreds(G,V)).
+  findVarsInTerm(guarded(T,G),V) => findVarsInTerm(T,findVarsInPred(G,V)).
 
   public findVarsInTerms:(list[term],list[term]) => list[term].
   findVarsInTerms([],V) => V.
@@ -225,6 +225,8 @@ lo.comp.term {
   findVarsInPred(except(_,E),V) => findVarsInTerm(E,V).
   findVarsInPred(fail,V) => V.
   findVarsInPred(neck,V) => V.
+  findVarsInPred(conj(_,L),V) => findVarsInPreds(L,V).
+  findVarsInPred(cond(_,T,L,R),V) => findVarsInPred(R,findVarsInPred(L,findVarsInPred(T,V))).
 
   findVarsInPreds:(list[pred],list[term]) => list[term].
   findVarsInPreds(Ps,V) => foldLeft(findVarsInPred,V,Ps).

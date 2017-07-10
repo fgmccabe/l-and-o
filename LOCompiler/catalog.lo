@@ -37,7 +37,7 @@ lo.comp.catalog{
   jsonStmt("content",jColl(jE),cat(M,U,V,B)) => cat(foldMap(jsonEntry,M,jE),U,V,B).
   jsonStmt("base",jTxt(tB),cat(M,_,V,D)) => cat(M,U,V,D) :- uriParse(U) %% explode(tB).
   jsonStmt("version",jTxt(V),cat(M,U,_,B)) => cat(M,U,vers(V),B).
-  jsonStmt("default",jTxt(tD),cat(M,B,V,_)) => cat(M,U,V,some(D)) :- uriParse(D) %% explode(tD).
+  jsonStmt("default",jTxt(tD),cat(M,B,V,_)) => cat(M,B,V,some(D)) :- uriParse(D) %% explode(tD).
   jsonStmt(_,_,Cat) => Cat.
 
   jsonEntry:(string,json,map[string,uri]) => map[string,uri].

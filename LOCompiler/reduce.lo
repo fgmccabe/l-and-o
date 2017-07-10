@@ -66,6 +66,10 @@ lo.comp.reduce{
   reducePred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
   reducePred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
     reduceBildArg(E,Q,NE,Pre,Prx,Post,Psx,Qx).
+  reducePred(cond(Lc,T,L,R),Q,cond(Lc,T1,L1,R1),Pre,Prx,Pos,Psx,Qx) :-
+    reducePred(T,Q,T1,Pre,Prx,Pos,Psx,Q0),
+    reduceBody(L,Q0,L1,Q1),
+    reduceBody(R,Q1,R1,Qx).
 
   reduceBildArgs:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   reduceBildArgs([],Q,[],Pre,Pre,Post,Post,Q).

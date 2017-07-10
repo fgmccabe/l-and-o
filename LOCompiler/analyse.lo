@@ -139,6 +139,16 @@ lo.comp.code.analyse{
   maxArity([]) => 0.
   maxArity([C,..L]) => max(predArity(C),maxArity(L)).
 
+  predArity:(pred) => integer.
+  predArity(neck) => 0.
+  predArity(fail) => 0.
+  predArity(except(_,_)) => 1.
+  predArity(call(_,_,Args)) => size(Args).
+  predArity(ocall(_,_,_,_)) => 3.
+  predArity(unfy(_,_,_)) => 2.
+  predArity(ecall(_,_,Args)) => size(Args).
+  predArity(cond(_,T,L,R)) => max(predArity(T),max(maxArity(L),maxArity(R))).
+
   maxHeadArity:(list[list[pred]]) => integer.
   maxHeadArity([]) => 0.
   maxHeadArity([P,.._]) => maxArity(P).

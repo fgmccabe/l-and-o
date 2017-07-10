@@ -35,7 +35,7 @@ lo.comp.genprolog{
   genCl(clse(_,Nm,Args,Body)) => ssSeq([genTerm(Nm),ss("("),genArgs(Args),ss("):-"),ssSeq(genPreds(Body,"",_)),ss(".\n")]).
   genCl(eqn(_,Nm,Args,guarded(Rep,Body))) =>
     ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- "),
-          ssSeq(genPreds(Body,"",Sep)),ss(Sep),ss("!,"),genPred(unfy(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
+          genPred(Body),ss(",!,"),genPred(unfy(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
   genCl(eqn(_,Nm,Args,Rep)) =>
     ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- !,\n    "),genPred(unfy(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
 
@@ -48,12 +48,15 @@ lo.comp.genprolog{
   genPred(ecall(_,Op,Args)) => ssSeq([genId(Op),ss("("),genArgs(Args),ss(")")]).
   genPred(unfy(Lc,L,R)) => genFunCall(unfy(Lc,L,R)).
   genPred(ocall(_,Call,Lb,Th)) => ssSeq([ss("ocall("),genTerm(Call),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(")")]).
+  genPred(conj(_,[])) => ss("true").
+  genPred(conj(_,L)) => ssSeq(genPreds(L,", ",_)).
+  genPred(cond(_,T,L,R)) => ssSeq([ss("("),genPred(T),ss("->"),genPred(L),ss(";"),genPred(R),ss(")")]).
   genPred(neck) => ss("!").
   genPred(fail) => ss("fail").
   genPred(except(_,E)) => ssSeq([ss("raise_exception"),ss("("),genTerm(E),ss(")")]).
 
   genFunCall:(pred) => ss.
-  genFunCall(unfy(Lc,L,guarded(R,P))) => ssSeq(genPreds(P,"",Sep)<>[ss(Sep),genFunCall(unfy(Lc,L,R))]).
+  genFunCall(unfy(Lc,L,guarded(R,P))) => ssSeq([genPred(P),ss(", "),genFunCall(unfy(Lc,L,R))]).
   genFunCall(unfy(_,L,invoke(Lc,Op,Args))) => ssSeq([genTerm(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
   genFunCall(unfy(_,L,escvoke(Lc,Op,Args))) => ssSeq([genId(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
   genFunCall(unfy(_,L,ovoke(Lc,Cl,Lb,Th))) => ssSeq([ss("ofun("),genTerm(Cl),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(","),genTerm(L),ss(")")]).

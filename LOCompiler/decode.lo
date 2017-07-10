@@ -88,7 +88,8 @@ lo.comp.decode{
   decodePred(unfy(TLc,L,R)) --> "=", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
   decodePred(next) --> "!".
   decodePred(fail) --> "#".
-  decodePred(except(TLc,E)) --> "^", decodeOptional(decodeTloc,TLc), decodeTerm(E).
+  decodePred(conj(Lc,L)) --> "&", decodeOptional(decodeTloc,Lc),decodeSequence(decodePred,L).
+  decodePred(cond(Lc,T,L,R)) --> "?",decodeOptional(decodeTloc,Lc),decodePred(T),decodePred(L),decodePred(R).
 
   decodeOptional:all t ~~ (((t)-->list[integer]),option[t]) --> list[integer].
   decodeOptional(_,none) --> "N".
@@ -122,7 +123,7 @@ lo.comp.decode{
   decodeTerm(invoke(Lc,Op,Args)) --> "V", decodeOptional(decodeTloc,Lc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
   decodeTerm(escvoke(Lc,Op,Args)) --> "E", decodeOptional(decodeTloc,Lc), decodeName(Op), decodeSequence(decodeTerm,Args).
   decodeTerm(ovoke(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
-  decodeTerm(guarded(T,C)) --> "g", decodeTerm(T), decodeSequence(decodePred,C).
+  decodeTerm(guarded(T,C)) --> "g", decodeTerm(T), decodePred(C).
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].

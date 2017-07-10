@@ -194,7 +194,7 @@ lo.comp.grammar{
   parseString(Lc,[],Rp,Rp) => strg(Lc,"").
   parseString(_,[segment(Lc,Str)],Rp,Rp) => strg(Lc,Str).
   parseString(Lc,Segments,Rp,Rpx) =>
-    unary(Lc,"formatSS",unary(Lc,"ssSeq",tupl(Lc,"[]",parseSegments(Segments,Rp,Rpx)))).
+    binary(Lc,"::",unary(Lc,"ssSeq",tupl(Lc,"[]",parseSegments(Segments,Rp,Rpx))),iden(Lc,"string")).
 
   parseSegments:(list[stringSegment],report,report) => list[ast].
   parseSegments([],Rp,Rp) => [].

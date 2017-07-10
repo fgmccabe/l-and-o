@@ -18,6 +18,10 @@
  * instruction template field.
 */
 
+#ifndef instruction
+#define instruction(op,cde,a1,a2,cmt)
+#define lastInstruction
+#endif
 
 /* program control instructions */
 instruction(halt,0,nOp,nOp,"stop execution")

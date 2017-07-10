@@ -203,6 +203,7 @@ lo.comp.lexer{
   backSlashRef:(integer) --> tokenState.
   backSlashRef(0c\a) --> [0ca].
   backSlashRef(0c\b) --> [0cb].
+  backSlashRef(0c\e) --> [0ce].
   backSlashRef(0c\t) --> [0ct].
   backSlashRef(0c\n) --> [0cn].
   backSlashRef(0c\r) --> [0cr].
