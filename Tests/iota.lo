@@ -1,0 +1,13 @@
+test.iota{
+  import lo.
+
+  implementation additive[integer] <= {
+    X+Y => _int_plus(X,Y).
+    X-Y => _int_minus(X,Y).
+    zero = 0.
+  }
+
+  iota:(integer,integer)=>list[integer].
+  iota(F,T) => [] :- F>T.
+  iota(F,T) => [F,..iota(F+1,T)] :- F=<T.
+}

@@ -13,15 +13,19 @@ lo.comp.flatten{
   flattenProg(prProg(Spec,Rels)) => prProg(Spec,Rels///((Nm,Rel)=>flattenRel(Rel))).
 
   flattenRel:(rel) => rel.
-  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Rl)=>flowRewrite(flattenRule(Rl)))).
+  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//flattenRule).
 
   -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
     flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
     flattenBody(Body,Q1,NBody,[],NQ).
-  flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,conj(none,PrR))),conj(none,Guard))) :-
-    flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q0)!,
+  flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(conj(none,PrR)))),simplifyCond(conj(none,Guard)))) :-
+    flattenTerms(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
+    flattenPred(G,Q0,G1,Pr,[G1,..Pr0],Pr0,Prx,Q1),
+    flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
+  flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,simplifyGuard(guarded(NRep,conj(none,Guard)))) :-
+    flattenTerms(Args,Q,NArgs,Guard,Prx,Prx,PrR,Q0)!,
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
 
   flattenTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
@@ -72,6 +76,7 @@ lo.comp.flatten{
     flattenUnify(TLc,L,R,Q,NP,Pre,Prx,Post,Psx,Qx).
   flattenPred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
   flattenPred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
+  flattenPred(succ,Q,succ,Pr,Pr,Ps,Ps,Q).
   flattenPred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
     flattenTerm(E,Q,NE,Pre,Prx,Post,Psx,Qx).
   flattenPred(cond(Lc,T,L,R),Q,cond(Lc,T1,simplifyCond(conj(Lc,LPs)),simplifyCond(conj(Lc,RPs))),Pre,Prx,Pos,Psx,Qx) :-
@@ -137,6 +142,7 @@ lo.comp.flatten{
     VS = toplevelVars(Args,[]),
     Vx = merge(V,VS).
   flowPred(fail,Vs,Vs) => vars(fail,[],Vs).
+  flowPred(succ,Vs,Vs) => vars(succ,[],Vs).
   flowPred(neck,Vs,Vs) => vars(neck,[],Vs).
   flowPred(except(Lc,E),Vx,Vx) => vars(except(Lc,E),[],findVarsInTerm(E,[])).
 

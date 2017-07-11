@@ -69,6 +69,7 @@ lo.comp.code.clause{
 
   compGoal:(pred,integer,map[string,varDesc],list[litrl],list[(string,string,tloc)],varSet,logical,logical,list[instruction],map[string,varDesc],list[litrl],varSet,list[(string,string,tloc)]){}.
   compGoal(fail,_,D,Lt,SM,Vs,_,_,[iFayl],D,Lt,Vs,SM).
+  compGoal(succ,_,D,Lt,SM,Vs,_,_,[],D,Lt,Vs,SM).
   compGoal(neck,_,D,Lt,SM,Vs,true,Alloc,Code,D,Lt,Vs,SM) :-
     ((Alloc | maxLocals(Vs)>0) ?
       Code = [iCut,iDealloc,iGcmap(0,0)] |

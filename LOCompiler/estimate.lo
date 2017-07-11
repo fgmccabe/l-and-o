@@ -25,5 +25,8 @@ lo.comp.code.estimate{
   estimateGoalSpace(ocall(_,C,T,L)) => estimateUnifySpace(C,true)+estimateUnifySpace(T,true)+estimateUnifySpace(L,true).
   estimateGoalSpace(neck) => 0.
   estimateGoalSpace(fail) => 0.
+  estimateGoalSpace(succ) => 0.
+  estimateGoalSpace(cond(_,T,L,R)) => estimateGoalSpace(T)+estimateGoalSpace(L)+estimateGoalSpace(R).
+  estimateGoalSpace(conj(_,L)) => foldLeft((g,s)=>s+estimateGoalSpace(g),0,L).
   estimateGoalSpace(except(_,T)) => estimateUnifySpace(T,true).
 }

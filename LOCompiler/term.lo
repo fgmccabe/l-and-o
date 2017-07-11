@@ -40,6 +40,7 @@ lo.comp.term {
                     | cond(option[tloc],pred,pred,pred)
                     | neck
                     | fail
+                    | succ
                     | except(option[tloc],term).
 
   public prProg ::= prProg(pkgSpec,map[term,rel]).
@@ -112,6 +113,7 @@ lo.comp.term {
   displayPred(conj(_,L),Q) => ssSeq(dispPreds("",", ",L,Q)).
   displayPred(cond(_,T,L,R),Q) => ssSeq([ss("("),displayPred(T,Q),ss("?"),displayPred(L,Q),ss("|"),displayPred(R,Q),ss(")")]).
   displayPred(fail,_) => ss("fail").
+  displayPred(succ,_) => ss("succ").
   displayPred(except(_,T),Q) => ssSeq([ss("raise "),dispTerm(T,Q)]).
 
   private dispPreds:(string,string,list[pred],list[term]) => list[ss].
@@ -121,6 +123,7 @@ lo.comp.term {
   public predLoc:(pred) => option[tloc].
   predLoc(neck) => none.
   predLoc(fail) => none.
+  predLoc(succ) => none.
   predLoc(except(Lc,_)) => Lc.
   predLoc(call(Lc,_,_)) => Lc.
   predLoc(ocall(Lc,_,_,_)) => Lc.
@@ -195,6 +198,7 @@ lo.comp.term {
   simplifyGuard(T) => T.
 
   public simplifyCond:(pred) => pred.
+  simplifyCond(conj(_,[])) => succ.
   simplifyCond(conj(_,[P])) => simplifyCond(P).
   simplifyCond(P) => P.
 
@@ -224,6 +228,7 @@ lo.comp.term {
   findVarsInPred(unfy(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).
   findVarsInPred(except(_,E),V) => findVarsInTerm(E,V).
   findVarsInPred(fail,V) => V.
+  findVarsInPred(succ,V) => V.
   findVarsInPred(neck,V) => V.
   findVarsInPred(conj(_,L),V) => findVarsInPreds(L,V).
   findVarsInPred(cond(_,T,L,R),V) => findVarsInPred(R,findVarsInPred(L,findVarsInPred(T,V))).

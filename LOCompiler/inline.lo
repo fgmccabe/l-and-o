@@ -228,6 +228,7 @@ lo.comp.inline{
   applyToPred(except(TLc,A),V) => except(TLc,applyToTerm(A,V)).
   applyToPred(neck,_) => neck.
   applyToPred(fail,_) => fail.
+  applyToPred(succ,_) => succ.
   applyToPred(conj(Lc,L),V) => conj(Lc,applyToPreds(L,V)).
   applyToPred(cond(Lc,T,L,R),V) => cond(Lc,applyToPred(T,V),applyToPred(L,V),applyToPred(R,V)).
 
@@ -302,6 +303,7 @@ lo.comp.inline{
   countVarsInPred(unfy(_,L,T),V) => countVars(L,countVars(T,V)).
   countVarsInPred(except(_,E),V) => countVars(E,V).
   countVarsInPred(fail,V) => V.
+  countVarsInPred(succ,V) => V.
   countVarsInPred(neck,V) => V.
 
   findSingletons:(clse) => clse.

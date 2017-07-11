@@ -17,6 +17,7 @@ lo.comp.code.analyse{
   isSafeGoal:(pred){}.
   isSafeGoal(neck).
   isSafeGoal(fail).
+  isSafeGoal(succ).
   isSafeGoal(unfy(_,_,_)).
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
@@ -63,6 +64,7 @@ lo.comp.code.analyse{
   findOccsInGoal(except(_,T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
   findOccsInGoal(neck,M,_) => M.
   findOccsInGoal(fail,M,_) => M.
+  findOccsInGoal(succ,M,_) => M.
 
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
   findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
@@ -142,6 +144,7 @@ lo.comp.code.analyse{
   predArity:(pred) => integer.
   predArity(neck) => 0.
   predArity(fail) => 0.
+  predArity(succ) => 0.
   predArity(except(_,_)) => 1.
   predArity(call(_,_,Args)) => size(Args).
   predArity(ocall(_,_,_,_)) => 3.

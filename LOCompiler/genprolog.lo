@@ -49,10 +49,11 @@ lo.comp.genprolog{
   genPred(unfy(Lc,L,R)) => genFunCall(unfy(Lc,L,R)).
   genPred(ocall(_,Call,Lb,Th)) => ssSeq([ss("ocall("),genTerm(Call),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(")")]).
   genPred(conj(_,[])) => ss("true").
-  genPred(conj(_,L)) => ssSeq(genPreds(L,", ",_)).
+  genPred(conj(_,L)) => ssSeq(genPreds(L,"",_)).
   genPred(cond(_,T,L,R)) => ssSeq([ss("("),genPred(T),ss("->"),genPred(L),ss(";"),genPred(R),ss(")")]).
   genPred(neck) => ss("!").
   genPred(fail) => ss("fail").
+  genPred(succ) => ss("true").
   genPred(except(_,E)) => ssSeq([ss("raise_exception"),ss("("),genTerm(E),ss(")")]).
 
   genFunCall:(pred) => ss.

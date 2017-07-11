@@ -88,6 +88,7 @@ lo.comp.decode{
   decodePred(unfy(TLc,L,R)) --> "=", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
   decodePred(next) --> "!".
   decodePred(fail) --> "#".
+  decodePred(succ) --> "+".
   decodePred(conj(Lc,L)) --> "&", decodeOptional(decodeTloc,Lc),decodeSequence(decodePred,L).
   decodePred(cond(Lc,T,L,R)) --> "?",decodeOptional(decodeTloc,Lc),decodePred(T),decodePred(L),decodePred(R).
 

@@ -33,6 +33,7 @@ lo.comp.encode{
   encPred(conj(Lc,L),Ls) => [0c&,..encodeTLoc(Lc,encSequence(encPred,L,Ls))].
   encPred(neck,L) => [0c!,..L].
   encPred(fail,L) => [0c#,..L].
+  encPred(succ,L) => [0c+,..L].
   encPred(except(TLc,E),L) => [0c^,..encodeTLoc(TLc,encTerm(E,L))].
 
   encSequence:all t ~~ ((t,list[integer])=>list[integer],list[t],list[integer])=>list[integer].
