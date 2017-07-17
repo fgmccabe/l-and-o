@@ -43,7 +43,7 @@ void init_time(void) {
  * reset the interval timer for the new period
  */
 
-retCode g_delay(processPo P, ptrPo a) {
+retCode g__delay(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (isvar(x))
@@ -81,7 +81,7 @@ retCode g_delay(processPo P, ptrPo a) {
   }
 }
 
-retCode g_sleep(processPo P, ptrPo a) {
+retCode g__sleep(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (isvar(x))
@@ -139,7 +139,7 @@ retCode g_sleep(processPo P, ptrPo a) {
 }
 
 /* Return the current time */
-retCode g_now(processPo P, ptrPo a) {
+retCode g__now(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (!isvar(x))
@@ -152,7 +152,7 @@ retCode g_now(processPo P, ptrPo a) {
 }
 
 /* Return the time at midnight */
-retCode g_today(processPo P, ptrPo a) {
+retCode g__today(processPo P, ptrPo a) {
   ptrI x = deRefI(&a[1]);
 
   if (!isvar(x))
@@ -172,7 +172,7 @@ double get_ticks(void) {
   return ((double) clock()) / CLOCKS_PER_SEC;
 }
 
-retCode g_ticks(processPo p, ptrPo a) {
+retCode g__ticks(processPo p, ptrPo a) {
   ptrI T = allocateFloat(&p->proc.heap, get_ticks());
 
   return equal(p, &T, &a[1]);

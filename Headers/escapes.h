@@ -35,7 +35,7 @@ escape(var,False,False,":k't'P1k't'","test for variable")
 escape(ground,False,False,":k't'P1k't'","test for grounded-ness")
 
 escape(_call,True,False,"P3SiLLS","dynamic call")
-escape(_defined,True,False,"P2Si","test for defined name")
+escape(_defined,False,False,"P2Si","test for defined name")
 
 escape(_int_plus,False,False,"F2iii","add two integers")
 escape(_int_minus,False,False,"F2iii","subtract two integers")
@@ -99,7 +99,7 @@ escape(_basr,False,False,"F2iii","arithmetic right shift")
 escape(_bnot,False,False,"F1ii","bitwise negate number")
 escape(_nthb,False,False,"P2ii","is nth bit set?")
 
-escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bound")
+escape(_suspend,True,False,":k'u'P2k'u'P0","suspend handler if variable not bound")
 
 /*
 
@@ -120,7 +120,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_get_file,True,False,"F1SS","Get the contents of a file as a string")
   escape(_put_file,True,False,"P2SS","write a file from a string")
   escape(_cwd,True,False,"F0S","return url of current working directory")
-  escape(_cd,False,False,"P1S","change current working directory")
+  escape(_cd,True,False,"P1S","change current working directory")
   escape(_rm,True,False,"P1S","remove file")
   escape(_mv,True,False,"P2SS","rename file")
   escape(_mkdir,True,False,"P2Si","create directory")
@@ -166,7 +166,7 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_install_pkg,True,False,"F1SLT2SS","define package from string contents")
   escape(_pkg_is_present,True,False,"P4SSSS","True if an identified resource is available")
 
-  escape(_logmsg,False,False,"P1S","log a message in logfile or console")
+  escape(_logmsg,True,False,"P1S","log a message in logfile or console")
 
   // Socket handling functions
   escape(_connect,True,False,"P5Sii"fileType fileType,"connect to remote host")
@@ -182,11 +182,11 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(iptohost,False,False,"F1SS","host name from IP")
 
 // Timing and delaying
-  escape(delay,False,False,"P1f","delay for period of time")
-  escape(sleep,False,False,"P1f","sleep until a definite time")
-  escape(now,False,False,"F0f","current time")
-  escape(today,False,False,"F0f","time at midnight")
-  escape(ticks,False,False,"F0f","used CPU time")
+  escape(_delay,True,False,"P1f","delay for period of time")
+  escape(_sleep,True,False,"P1f","sleep until a definite time")
+  escape(_now,True,False,"F0f","current time")
+  escape(_today,True,False,"F0f","time at midnight")
+  escape(_ticks,True,False,"F0f","used CPU time")
   escape(_time2date,False,False,"P10fiiiiiifii", "convert a time to a date")
   escape(_time2utc,False,False, "P10fiiiiiifii", "convert a time to UTC date")
   escape(_date2time,False,False,"F7iiiiifif", "convert a date to a time")
@@ -258,28 +258,28 @@ escape(_suspend,False,False,":k'u'P2k'u'P0","suspend handler if variable not bou
   escape(_str_start,False,False,"P2SS","True if second string starts with first")
   escape(_str_multicat,False,False,"F1LSS","Concatenate a list of strings into one")
 
-  escape(getenv,False,False,"F2SSS","get an environment variable")
+  escape(getenv,True,False,"F2SSS","get an environment variable")
   escape(setenv,True,False,"P2SS","set an environment variable")
   escape(envir,False,False,"F0LT2SS","return entire environment")
   escape(getlogin,False,False,"F0S","return user's login")
 
 // Process manipulation
-  escape(_fork,False,False,"F1P0"threadType,"fork new process")
-  escape(_thread,False,False,"F0"threadType"","report thread of current process")
+  escape(_fork,True,False,"F1P0"threadType,"fork new process")
+  escape(_thread,True,False,"F0"threadType"","report thread of current process")
   escape(kill,True,False,"P1"threadType ,"kill off a process")
-  escape(thread_state,False,False,"F1"threadType processState,"state of process")
-  escape(waitfor,False,False,"P1"threadType,"wait for other thread to terminate")
+  escape(thread_state,True,False,"F1"threadType processState,"state of process")
+  escape(waitfor,True,False,"P1"threadType,"wait for other thread to terminate")
 
   escape(_shell,True,False,"F3SLSLT2SSi","Run a shell cmd")
 
  // Lock management
-  escape(_newLock,False,False,"F0"lockType,"create a new lock")
-  escape(_acquireLock,False,False,"P2"lockType"f","acquire lock")
-  escape(_waitLock,False,False,"P2"lockType"f","release and wait on a lock")
-  escape(_releaseLock,False,False,"P1"lockType,"release a lock")
+  escape(_newLock,True,False,"F0"lockType,"create a new lock")
+  escape(_acquireLock,True,False,"P2"lockType"f","acquire lock")
+  escape(_waitLock,True,False,"P2"lockType"f","release and wait on a lock")
+  escape(_releaseLock,True,False,"P1"lockType,"release a lock")
 
-  escape(_ins_debug,False,False,"P0","set instruction-level")
-  escape(_stackTrace,False,False,"P0","Print a stack trace")
+  escape(_ins_debug,True,False,"P0","set instruction-level")
+  escape(_stackTrace,True,False,"P0","Print a stack trace")
 
 #undef processState
 #undef threadType

@@ -67,7 +67,7 @@ lo.comp.code.analyse{
   findOccsInGoal(succ,M,_) => M.
 
   findOccsInTerm:(term,map[string,occMap],integer,integer,occForm,occForm) => map[string,occMap].
-  findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm).
+  findOccsInTerm(varbl(Nm),M,Gp,Ix,Key,iKey) => updateOccurrence(Nm,M,Key,Gp,Ix) :- \+isEscape(Nm,_).
   findOccsInTerm(anon,M,Gp,Ix,Key,_) => M.
   findOccsInTerm(T,M,Gp,Ix,Key,_) => updateOccurrence("",M,Key,Gp,Ix) :- isGroundTerm(T). -- special for ground
   findOccsInTerm(cons(_,Els),M,Gp,Ix,_,iKey) => findOccsInTerms(Els,M,Gp,Ix,iKey,iKey).

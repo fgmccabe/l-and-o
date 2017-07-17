@@ -15,7 +15,7 @@ lo.comp.singleton {
 
   countVars:(canonTerm,map[string,(location,integer)],set[string],report,report) => map[string,(location,integer)].
   countVars(v(_,"_"),M,_,Rp,Rp) => M.
-  countVars(v(_,Nm),M,Excl,Rp,Rp) => M :- (Nm in Excl | isEscape(Nm)).
+  countVars(v(_,Nm),M,Excl,Rp,Rp) => M :- (Nm in Excl | isEscape(Nm,_)).
   countVars(v(_,Nm),M,_,Rp,Rp) => M[Nm->(Lc,Cnt+1)] :- present(M,Nm,(Lc,Cnt)).
   countVars(v(Lc,Nm),M,Excl,Rp,Rp) => M[Nm->(Lc,1)] :- \+Nm in Excl, \+present(M,Nm,_).
   countVars(int(_),M,_,Rp,Rp) => M.

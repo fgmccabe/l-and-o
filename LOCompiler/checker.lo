@@ -152,14 +152,6 @@ lo.comp.typecheck{
   importTypes([],_,Env)=>Env.
   importTypes([(Nm,Rule),..More],Lc,Env) => importTypes(More,Lc,declareType(Nm,Lc,Rule,Env)).
 
-  pickTypeTemplate:(tipe)=>tipe.
-  pickTypeTemplate(univType(B,Tp)) => pickTypeTemplate(Tp).
-  pickTypeTemplate(typeRule(Lhs,_)) => pickTypeTemplate(Lhs).
-  pickTypeTemplate(tpLambda(Lhs,_)) => pickTypeTemplate(Lhs).
-  pickTypeTemplate(constrained(Tp,_)) => pickTypeTemplate(Tp).
-  pickTypeTemplate(tipe(Nm)) => tipe(Nm).
-  pickTypeTemplate(typeExp(Op,_)) => Op.
-
   importContracts:(list[conEntry],location,list[env])=>list[env].
   importContracts([],_,Env)=>Env.
   importContracts([C,..L],Lc,E)=>importContracts(L,Lc,E1) :-

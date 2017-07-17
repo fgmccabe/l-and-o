@@ -36,7 +36,7 @@ lo.comp.bootstrap{
       processGroups(makeGraph(Opts.pkgs,Repo,Cat,reportBase,Rp0),Repo,Cat,Opts,[],Rp0,Rpx)! |
       compilePkgs(Opts.pkgs,Repo,Cat,Opts,reportBase,Rpx)),
     _logmsg(formatSS(fullReport(Rpx))).
-  processArgs(alternate(M)) :-
+  processArgs(other(M)) :-
     _logmsg(M).
 
   processGroups:(list[list[(pkg,list[pkg])]],fileRepo,catalog,compOption,list[pkg],report,report){}.

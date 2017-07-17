@@ -10,4 +10,11 @@ lo.option {
 
     raise () => none.
   }
+
+  public implementation execution[option->>()] <= {
+    _perform(some(X)) => X.
+    _handle(some(X),_) => some(X).
+    _handle(none,E) => E(()).
+  }
+
 }

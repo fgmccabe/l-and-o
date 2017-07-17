@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
     switch (genMode) {
       case genProlog:
-        fprintf(out, ":-module(escapes,[isEscape/1,escapeType/2]).\n\n");
+        fprintf(out, ":-module(escapes,[isEscape/2,escapeType/2]).\n\n");
         prologEscapeTypes(out);
         prologIsEscape(out);
         break;
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
 static void dumpStdType(char *name, bufferPo out);
 static void dumpStr(char *str, bufferPo out);
-static char *dInt(char *sig,int *len) ;
+static char *dInt(char *sig, int *len);
 static char *dName(char *sig, bufferPo out);
 static char *dSequence(char *sig, bufferPo out);
 static char *dFields(char *sig, bufferPo out);
@@ -103,14 +103,14 @@ static char *dumpSig(char *sig, bufferPo out) {
       sig = dName(sig, out);
       outStr(O_IO(out), ")");
       break;
-    case kfun_sig:{
-      outStr(O_IO(out),"kFun(");
+    case kfun_sig: {
+      outStr(O_IO(out), "kFun(");
       int ar;
-      sig = dInt(sig,&ar);
-      sig = dName(sig,out);
-      outStr(O_IO(out),",");
-      outInt(O_IO(out),ar);
-      outStr(O_IO(out),")");
+      sig = dInt(sig, &ar);
+      sig = dName(sig, out);
+      outStr(O_IO(out), ",");
+      outInt(O_IO(out), ar);
+      outStr(O_IO(out), ")");
       break;
     }
 
@@ -134,14 +134,14 @@ static char *dumpSig(char *sig, bufferPo out) {
       }
       break;
 
-    case tpfun_sig:{
-      outStr(O_IO(out),"tpFun(");
+    case tpfun_sig: {
+      outStr(O_IO(out), "tpFun(");
       int ar;
-      sig = dInt(sig,&ar);
-      sig = dName(sig,out);
-      outStr(O_IO(out),",");
-      outInt(O_IO(out),ar);
-      outStr(O_IO(out),")");
+      sig = dInt(sig, &ar);
+      sig = dName(sig, out);
+      outStr(O_IO(out), ",");
+      outInt(O_IO(out), ar);
+      outStr(O_IO(out), ")");
       break;
     }
 
@@ -229,9 +229,9 @@ static char *dumpSig(char *sig, bufferPo out) {
       break;
     case list_sig:
       outStr(O_IO(out), "typeExp(");
-      outStr(O_IO(out),"tpFun(");
+      outStr(O_IO(out), "tpFun(");
       dumpStr("lo.core*list", out);
-      outStr(O_IO(out),",1),[");
+      outStr(O_IO(out), ",1),[");
       sig = dumpSig(sig, out);
       outStr(O_IO(out), "])");
       break;
@@ -267,14 +267,14 @@ static void dumpStdType(char *name, bufferPo out) {
       outMsg(O_IO(out), "tipe(");
       dumpStr(name, out);
       outMsg(O_IO(out), ")");
-    }
+  }
 }
 
-static char *dInt(char *sig,int *len) {
+static char *dInt(char *sig, int *len) {
   char K = *sig;
   int Ln = 0;
-  while(isdigit(K)){
-    Ln = Ln*10+digittoint(K);
+  while (isdigit(K)) {
+    Ln = Ln * 10 + digittoint(K);
     K = *++sig;
   }
   *len = Ln;
@@ -283,7 +283,7 @@ static char *dInt(char *sig,int *len) {
 
 static char *dSequence(char *sig, bufferPo out) {
   int ar;
-  sig = dInt(sig,&ar);
+  sig = dInt(sig, &ar);
   char *sep = "";
   outStr(O_IO(out), "[");
   while (ar-- > 0) {
@@ -297,7 +297,7 @@ static char *dSequence(char *sig, bufferPo out) {
 
 static char *dFields(char *sig, bufferPo out) {
   int ar;
-  sig = dInt(sig,&ar);
+  sig = dInt(sig, &ar);
   char *sep = "";
   outStr(O_IO(out), "[");
   while (ar-- > 0) {
@@ -335,10 +335,10 @@ static char *dName(char *sig, bufferPo out) {
   char delim = *sig++;
   outByte(O_IO(out), '"');
   while (*sig != delim && *sig != '\0') {
-    outByte(O_IO(out), (byte)*sig++);
+    outByte(O_IO(out), (byte) *sig++);
   }
   outByte(O_IO(out), '"');
-  return sig+1;
+  return sig + 1;
 }
 
 #undef escape
@@ -352,7 +352,7 @@ static void genLoEsc(FILE *out, bufferPo buffer, char *name, char *sig, char *cm
   outStr(O_IO(buffer), ".\n");
 
   long len;
-  char *text =  getTextFromBuffer(&len, buffer);
+  char *text = getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -367,19 +367,23 @@ static void loEscapeTypes(FILE *out) {
   closeFile(O_IO(buffer));
 }
 
-
 #undef escape
-#define escape(name, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name);
+#define escape(name, priv, secr, type, cmt) genPrIsEsc(out,buffer,#name,priv,secr);
 
-static void genPrIsEsc(FILE *out, bufferPo buffer, char *name) {
-  outStr(O_IO(buffer), "isEscape(");
-  dumpStr(name, buffer);
-  outStr(O_IO(buffer), ").\n");
+static void genPrIsEsc(FILE *out, bufferPo buffer, char *name, logical isPriv, logical isHidden) {
+  if (!isHidden) {
+    outStr(O_IO(buffer), "isEscape(");
+    dumpStr(name, buffer);
 
-  long len;
-  char *text =  getTextFromBuffer(&len, buffer);
-  fprintf(out, "%s", text);
-  clearBuffer(buffer);
+    outStr(O_IO(buffer), (isPriv ? ",true" : ",false"));
+
+    outStr(O_IO(buffer), ").\n");
+
+    long len;
+    char *text = getTextFromBuffer(&len, buffer);
+    fprintf(out, "%s", text);
+    clearBuffer(buffer);
+  }
 }
 
 static void prologIsEscape(FILE *out) {
@@ -390,25 +394,29 @@ static void prologIsEscape(FILE *out) {
   closeFile(O_IO(buffer));
 }
 
-
 #undef escape
-#define escape(name, priv, secr, type, cmt) genLoIsEsc(out,buffer,#name);
+#define escape(name, priv, secr, type, cmt) genLoIsEsc(out,buffer,#name,priv,secr);
 
-static void genLoIsEsc(FILE *out, bufferPo buffer, char *name) {
-  outStr(O_IO(buffer), "  isEscape(");
-  dumpStr(name, buffer);
-  outStr(O_IO(buffer), ").\n");
+static void genLoIsEsc(FILE *out, bufferPo buffer, char *name, logical isPriv, logical isHidden) {
+  if (!isHidden) {
+    outStr(O_IO(buffer), "  isEscape(");
+    dumpStr(name, buffer);
 
-  long len;
-  char *text =  getTextFromBuffer(&len, buffer);
-  fprintf(out, "%s", text);
-  clearBuffer(buffer);
+    outStr(O_IO(buffer), (isPriv ? ",true" : ",false"));
+
+    outStr(O_IO(buffer), ").\n");
+
+    long len;
+    char *text = getTextFromBuffer(&len, buffer);
+    fprintf(out, "%s", text);
+    clearBuffer(buffer);
+  }
 }
 
 static void loIsEscape(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out, "\n  public isEscape:(string){}.\n");
+  fprintf(out, "\n  public isEscape:(string,logical){}.\n");
 
 #include "escapes.h"
 
@@ -426,7 +434,7 @@ static void genPrologEsc(FILE *out, bufferPo buffer, char *name, char *sig, char
   outStr(O_IO(buffer), ").\n");
 
   long len;
-  char *text =  getTextFromBuffer(&len, buffer);
+  char *text = getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
@@ -447,19 +455,20 @@ static void prologEscapeTypes(FILE *out) {
 static void genEscCode(FILE *out, bufferPo buffer, char *name, int opCode) {
   outStr(O_IO(buffer), "  escCode(");
   dumpStr(name, buffer);
-  outMsg(O_IO(buffer), ") => %d.\n",opCode);
+  outMsg(O_IO(buffer), ") => %d.\n", opCode);
 
   long len;
-  char *text =  getTextFromBuffer(&len, buffer);
+  char *text = getTextFromBuffer(&len, buffer);
   fprintf(out, "%s", text);
   clearBuffer(buffer);
 }
 
-static void genEscCodes(FILE *out){
+static void genEscCodes(FILE *out) {
   bufferPo buffer = newStringBuffer();
 
-  fprintf(out,"\n  public escCode:(string)=>integer.\n");
-  #include "escapes.h"
+  fprintf(out, "\n  public escCode:(string)=>integer.\n");
 
-    closeFile(O_IO(buffer));
+#include "escapes.h"
+
+  closeFile(O_IO(buffer));
 }

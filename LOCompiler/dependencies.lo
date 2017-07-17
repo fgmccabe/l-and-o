@@ -324,7 +324,7 @@ lo.comp.dependencies{
   refsInTerm(T,All,So) => refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,":-",_,L,R).
   refsInTerm(T,All,So) => refsInNT(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"-->",_,L,R).
   refsInTerm(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
-  refsInTerm(T,All,So) => So. -- ignore errors for now
+  refsInTerm(T,All,So) => So. -- ignore errors for _now
 
   refsInTerms:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTerms([],_,So) => So.

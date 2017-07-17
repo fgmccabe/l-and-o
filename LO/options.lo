@@ -30,7 +30,7 @@ lo.options{
   checkOption(Args,O,none,setter,Specs,SoFar) => processAll(Args,Specs,setter(O,SoFar)).
   checkOption([A,..Args],O,some(V),Setter,Specs,SoFar) =>
         processAll(Args,Specs,Setter(A,SoFar)) :- V(A).
-  checkOption(_,_,_,_,Specs,_) => alternate(collectUsage(Specs)).
+  checkOption(_,_,_,_,Specs,_) => other(collectUsage(Specs)).
 
   collectUsage:all o ~~ (list[optionsProcessor[o]]) => string.
   collectUsage(Specs) => formatSS(ssSeq([ss("Usage: \n"),..interleave(Specs//((O)=>O.usage),"\n")//((X)=>ss(X))])).

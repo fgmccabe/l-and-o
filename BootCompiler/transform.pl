@@ -460,7 +460,7 @@ implementVarPtn(notInMap,Nm,_,idnt(Nm),Q,Qx,Pre,Pre,Post,Post) :-               
   merge([idnt(Nm)],Q,Qx).
 
 trPtnCallOp(Nm,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
-  isEscape(Nm),!,
+  isEscape(Nm,_),!,
   genVar("X",X),
   concat(Args,[X],XArgs),
   merge([X],Q,Qx).
@@ -595,7 +595,7 @@ implementVarExp(_Other,Lc,Nm,_,idnt(Nm),Q,Q,Pre,Pre,Tail,Tail) :-
 trExpCallOp(v(_,Nm),X,Args,X,Q,Qx,Pre,Px,Tail,[ecall(Nm,XArgs)|Tailx],Pre,Px,Tail,Tailx,_,_,Ex,Ex) :-
   concat(Args,[X],XArgs),
   merge([X],Q,Qx),
-  isEscape(Nm),!.
+  isEscape(Nm,_),!.
 trExpCallOp(v(Lc,Nm),X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx) :-
   lookupFunName(Map,Nm,Reslt),
   implementFunCall(Reslt,Lc,Nm,X,Args,Exp,Q,Qx,APre,APx,APost,APstx,Pre,Px,Tail,Tailx,Map,Opts,Ex,Exx).
@@ -766,7 +766,7 @@ trGoal(isTrue(Lc,E),G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
 trLocation(loc(Ln,Col,_,Sz),tpl([intgr(Ln),intgr(Col),intgr(Sz)]),G,G,Q,Q,_,_,Ex,Ex).
 
 trGoalCall(v(_,Nm),Args,[ecall(Nm,Args)|Tail],Tail,Q,Q,_,_,Ex,Ex) :-
-  isEscape(Nm),!.
+  isEscape(Nm,_),!.
 trGoalCall(v(Lc,Nm),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   lookupRelName(Map,Nm,RSpec),
   implementGoalCall(RSpec,Lc,Nm,Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx).

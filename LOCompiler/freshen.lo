@@ -59,7 +59,7 @@ lo.comp.freshen{
   frshn(univType(kFun(Nm,Ar),T),B) => univType(kFun(Nm,Ar),frshnType(dT,B[\+Nm])).
   frshn(constrained(T,C),B) => constrained(frshnType(T,B),frshnConstraint(C,B)).
   frshn(typeRule(S,T),B) => typeRule(frshnType(S,B),frshnType(T,B)).
-  frshn(tpLambda(S,T),B) => tpLambda(frshnType(S,B),frshnType(T,B)).
+  frshn(tpLambda(A,T),B) => tpLambda(frshnTypes(A,B),frshnType(T,B)).
   frshn(Tp,_) => Tp.
 
   private
@@ -128,7 +128,7 @@ lo.comp.freshen{
     freeze(A,B,FA),
     freeze(R,B,FR).
   frze(tpLambda(A,R),B,tpLambda(FA,FR)) :-
-    freeze(A,B,FA),
+    freezeTypes(A,B,FA),
     freeze(R,B,FR).
   frze(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
     freeze(Tp,B,FTp),

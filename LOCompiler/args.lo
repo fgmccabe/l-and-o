@@ -106,7 +106,7 @@ lo.comp.args {
 
   handleCmdLineOpts:(either[(compOption,list[string]),string]) => either[compOption,string].
   handleCmdLineOpts(either((Opts,PkgNms))) => either(updatePkgs(Opts,locatePkgs(Opts,PkgNms))).
-  handleCmdLineOpts(alternate(M)) => alternate(M).
+  handleCmdLineOpts(other(M)) => other(M).
 
   locatePkgs:(compOption,list[string]) => list[pkg].
   locatePkgs(Opts,[]) => [].

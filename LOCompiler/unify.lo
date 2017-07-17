@@ -27,7 +27,7 @@ lo.comp.unify{
   sm(T1,V2,Env) :- isUnbound(V2), checkBinding(V2,T1,Env).
   sm(tipe(Nm),tipe(Nm),_).
   sm(tpFun(Nm,Ar),tpFun(Nm,Ar),_).
-  sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sm(deRef(O1),deRef(O2),Env), smList(A1,A2,Env).
+  sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- smTypeExp(deRef(O1),A1,deRef(O2),A2,Env).
   sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
   sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(A1,A2,Env), sameType(R1,R2,Env).
   sm(predType(A1),predType(A2),Env) :- sameType(A1,A2,Env).
@@ -43,10 +43,26 @@ lo.comp.unify{
   smFields([],_,_).
   smFields([(F,E1),..L1],L2,Env) :- (F,E2) in L2, sameType(E1,E2,Env), smFields(L1,L2,Env).
 
+  smTypeExp:(tipe,list[tipe],tipe,list[tipe],list[env]){}.
+  smTypeExp(univType(X,O1),A1,O2,A2,E) :-
+    (_,OO1) = freshen(univType(X,O1),[]),
+    smTypeExp(OO1,A1,O2,A2,E).
+  smTypeExp(O1,A1,univType(X,O2),A2,E) :-
+    (_,OO2) = freshen(univType(X,O2),[]),
+    smTypeExp(O1,A1,OO2,A2,E).
+  smTypeExp(tpLambda(LA,LT),A1,O2,A2,E) :-
+    sm(applyTpLambda(LA,LT,A1,E),typeExp(O2,A2),E).
+  smTypeExp(O1,A1,tpLambda(RA,RT),A2,E) :-
+    sm(typeExp(O1,A1),applyTpLambda(RA,RT,A2,E),E).
+  smTypeExp(O1,A1,O2,A2,Env) :- sm(deRef(O1),deRef(O2),Env), smList(A1,A2,Env).
+
   varBinding:(tipe,tipe,list[env]){}.
   varBinding(T1,T2,_) :- isIdenticalVar(T1,T2).
   varBinding(V1,V2,Env) :- \+ isIdenticalVar(T1,T2),
     bind(V1,V2).
+
+  applyTpLambda:(list[tipe],tipe,list[tipe],list[env]) => tipe.
+  applyTpLambda(V,T,A,E) => T :- smList(V,A,E).
 
   checkBinding:(tipe,tipe,list[env]){}.
   checkBinding(V,Tp,_) :-

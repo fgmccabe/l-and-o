@@ -1,0 +1,25 @@
+lo.action {
+  import lo.
+  import lo.monad.
+
+  public all a,e ~~ action[a,e] ::= done(a) | delay(()=>action[a,e]) | err(e).
+
+  public implementation all e ~~ monad[action[$,e]->>e] <= {
+    err(E) >>= _ => err(E).
+    done(A) >>= F => delay(()=>F(A)).
+    delay(G) >>= F => delay(()=>G()>>=F).
+
+    return X => delay(()=>done(X)).
+
+    raise E => err(E).
+  }
+
+  public implementation all e ~~ execution[action[$,e]->>e] <= {
+    _perform(done(X)) => X.
+    _perform(delay(F)) => _perform(F()).
+
+    _handle(done(X),_) => done(X).
+    _handle(delay(A),E) => _handle(A(),E).
+    _handle(err(X),E) => E(X).
+  }
+}

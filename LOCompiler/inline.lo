@@ -2,6 +2,7 @@ lo.comp.inline{
   import lo.
   import lo.topsort.
 
+  import lo.comp.escapes.
   import lo.comp.misc.
   import lo.comp.term.
   import lo.comp.termbase.

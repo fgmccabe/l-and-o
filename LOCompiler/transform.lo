@@ -464,7 +464,7 @@ lo.comp.transform{
 
   trPtnCallOp:(string,option[tloc],list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trPtnCallOp(Nm,TLc,Args,guarded(X,unfy(TLc,X,escvoke(TLc,Nm,Args))),Q,merge([X],Q),_,_,Ex,Ex,Rp,Rp) :-
-    isEscape(Nm),
+    isEscape(Nm,_),
     genVarbl("Xa",X).
   trPtnCallOp(Nm,TLc,Args,Ptn,Q,Qx,Map,_,Ex,Ex,Rp,Rpx) :-
     lookupFunName(Map,Nm,Reslt),
@@ -569,7 +569,7 @@ lo.comp.transform{
 
   trExpCallOp:(location,canonTerm,list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trExpCallOp(Lc,v(_,Nm),Args,escvoke(some(Lc::tloc),Nm,Args),Q,Q,_,_,Ex,Ex,Rp,Rp) :-
-    isEscape(Nm).
+    isEscape(Nm,_).
   trExpCallOp(Lc,v(_,Nm),Args,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lookupFunName(Map,Nm,Reslt),
     implementFunCall(Reslt,Lc,Nm,Args,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
@@ -695,7 +695,7 @@ lo.comp.transform{
 
   trGoalCall:(canonTerm,list[term],list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trGoalCall(v(Lc,Nm),Args,[ecall(some(Lc::tloc),Nm,Args),..Tail],Tail,Q,Q,_,_,Ex,Ex,Rp,Rp) :-
-    isEscape(Nm).
+    isEscape(Nm,_).
   trGoalCall(v(Lc,Nm),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lookupRelName(Map,Nm,RSpec),
     implementGoalCall(RSpec,Lc,Nm,Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).

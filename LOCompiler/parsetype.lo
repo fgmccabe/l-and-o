@@ -40,9 +40,10 @@ lo.comp.parseType{
     parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
     prsType(R,simpleType,Env,B,C0,Cx,Tp,Rp0,Rpx),
     faceOfType(Tp,Env,Rhs).
-  parseTpRule(St,B,Env,Lhs,tpLambda(Lhs,Rhs),Path,Rp,Rpx) :-
+  parseTpRule(St,B,Env,Lhs,tpLambda(Args,Rhs),Path,Rp,Rpx) :-
     isBinary(St,"~>",_,L,R),
-    parseTypeHead(L,B,Lhs,Path,Rp,Rp0),
+    isRoundTuple(L,_,LArgs),
+    parseHeadArgs(LArgs,B,Args,Rp,Rp0),
     prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
 
   private prsArgType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
@@ -72,7 +73,10 @@ lo.comp.parseType{
     isIden(Op,_,Nm),
     checkKind(K,typeExpForm(Args),Lc,Rp,Rp0),
     prsTypes(Args,Env,Q,C,Cx,ArgTps,Rp0,Rp1),
-    parseTypeExp(Nm,Lc,Q,Env,ArgTps,Type,Rp1,Rpx)!.
+    (some(CTp) = findCurryDollar(ArgTps) ?
+      parseTypeExp(Nm,Lc,Q,Env,ArgTps,TpResult,Rp1,Rpx),
+      Type = univType(CTp,tpLambda([CTp],TpResult))
+    | parseTypeExp(Nm,Lc,Q,Env,ArgTps,Type,Rp1,Rpx)).
   prsType(F,K,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
@@ -117,18 +121,19 @@ lo.comp.parseType{
   prsTypeName(_,"_",typeFun(Ar),_,_,newTFun("_",Ar),Rp,Rp).
   prsTypeName(Lc,"void",K,_,_,voidType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
   prsTypeName(Lc,"this",K,_,_,thisType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
-  prsTypeName(Lc,Id,K,Env,B,Tp,Rp,Rp) :-
-    present(B,Id,Tp),
-    checkKind(K,typeKind(Tp),Lc,Rp,Rpx).
-  prsTypeName(Lc,Id,K,Env,_,Type,Rp,Rpx) :-
-    typeInDict(Id,Env,_,_,TpK,Tp),
-    checkKind(K,TpK,Lc,Rp,Rpx),
-    (_,FrTp) = freshen(Tp,[]),
-    (FrTp = tpLambda(_,Type) ? true |
-     FrTp = typeRule(Lhs,_) ? Type = typeOp(Lhs) |
-     typeOp(FrTp) = Type).
-  prsTypeName(Lc,Id,_,_,_,anonType,Rp,Rpx) :-
-    reportError("type \(Id) not declared",Lc,Rp,Rpx).
+  prsTypeName(_,"$",simpleType,_,_,kVar("$"),Rp,Rp).
+  prsTypeName(_,"$",typeFun(Ar),_,_,kFun("$",Ar),Rp,Rp).
+  prsTypeName(Lc,Id,K,Env,B,Tp,Rp,Rx) :-
+    ( present(B,Id,Tp) ?
+        checkKind(K,typeKind(Tp),Lc,Rp,Rpx)
+    | typeInDict(Id,Env,_,_,TpK,Tp0) ?
+        checkKind(K,TpK,Lc,Rp,Rpx),
+        (_,FrTp) = freshen(Tp0,[]),
+        (FrTp = tpLambda(_,Type) ? true |
+        FrTp = typeRule(Lhs,_) ? Tp = typeOp(Lhs) |
+        typeOp(FrTp) = Tp)
+    | reportError("type \(Id) not declared",Lc,Rp,Rpx),
+      Tp = anonType).
 
   private checkCurrying:(list[ast]) => integer.
   checkCurrying([]) => 0.
@@ -141,11 +146,17 @@ lo.comp.parseType{
     Ar>0.
   typeExpForm(_) => simpleType.
 
+  private findCurryDollar:(list[tipe]) => option[tipe].
+  findCurryDollar([]) => none.
+  findCurryDollar([V,.._]) => some(V) :- isDollarVar(deRef(V)).
+  findCurryDollar([_,..L]) => findCurryDollar(L).
+
   private parseTypeExp:(string,location,map[string,tipe],list[env],list[tipe],tipe,report,report){}.
   parseTypeExp(Nm,Lc,Q,_,Args,Type,Rp,Rpx) :-
     present(Q,Nm,Tp),
     checkKind(typeFun(size(Args)),typeKind(Tp),Lc,Rp,Rp0),
-    applyTypeExp(Tp,Args,Env,Type,Lc,Rp0,Rpx).
+    (_,FrTp) = freshen(Tp,[]),
+    applyTypeExp(FrTp,Args,Env,Type,Lc,Rp0,Rpx).
   parseTypeExp(Nm,Lc,_,Env,Args,Type,Rp,Rpx) :-
     typeInDict(Nm,Env,_,_,K,Tp),
     (_,FrTp) = freshen(Tp,[]),
@@ -154,7 +165,7 @@ lo.comp.parseType{
 
   private applyTypeExp:(tipe,list[tipe],list[env],tipe,location,report,report){}.
   applyTypeExp(tpLambda(Ax,Reslt),Args,Env,Reslt,Lc,Rp,Rpx) :-
-    (sameType(Ax,typeExp(newTFun("_",size(Args)),Args),Env) ?
+    (sameType(tupleType(Ax),tupleType(Args),Env) ?
         Rp=Rpx |
         reportError("could not apply type \(Ax) to \(Args)",Lc,Rp,Rpx)).
   applyTypeExp(typeRule(Ax,Reslt),Args,Env,Ax,Lc,Rp,Rpx) :-
@@ -224,11 +235,11 @@ lo.comp.parseType{
     parseContractHead(L,Q,C,Cx,Env,Spec,Nm,ConNm,Path,Rp,Rpx).
 
   private parseContractHead:(ast,map[string,tipe],list[constraint],list[constraint],list[env],constraint,string,string,string,report,report){}.
-  parseContractHead(T,Q,C,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path,Rp,Rpx) :-
+  parseContractHead(T,Q,C,Cx,Env,conTract(ConNm,ArgTps,DepTps),Nm,ConNm,Path,Rp,Rpx) :-
     isSquareTerm(T,Lc,Op,A),
     isIden(Op,_,Nm),
     ConNm = subPath(Path,marker(con),Nm),
-    parseContractArgs(A,Env,Q,C,Cx,ArgTps,Deps,Rp,Rpx).
+    parseContractArgs(A,Env,Q,C,Cx,ArgTps,DepTps,Rp,Rpx).
 
   public parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint],report,report){}.
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
@@ -245,8 +256,8 @@ lo.comp.parseType{
     isSquareTerm(Sq,Lc,Op,Args),
     isIden(Op,Lc0,Nm),
     parseContractName(Lc0,Nm,Env,conTract(ConNm,_ATs,_Dps),Rp,Rp0),
-    parseContractArgs(Args,Env,B,C0,C1,ArgTps,Deps,Rp0,Rpx),
-    addConstraint(conTract(ConNm,ArgTps,Deps),C1,Cx).
+    parseContractArgs(Args,Env,B,C0,C1,ArgTps,DepTps,Rp0,Rpx),
+    addConstraint(conTract(ConNm,ArgTps,DepTps),C1,Cx).
   parseConstraint(T,_,B,C,C,Rp,Rpx) :-
     reportError("invalid type constraint \(T)",T.loc,Rp,Rpx).
 
@@ -268,10 +279,10 @@ lo.comp.parseType{
     reportError("contract \(Id) not declared",Lc,Rp,Rpx).
 
   parseContractArgs:(list[ast],list[env],map[string,tipe],list[constraint],list[constraint],list[tipe],list[tipe],report,report){}.
-  parseContractArgs([A],Env,B,C0,Cx,Args,Deps,Rp,Rpx) :-
+  parseContractArgs([A],Env,B,C0,Cx,Args,DepTps,Rp,Rpx) :-
     isBinary(A,"->>",_,L,R),
     prsTypes(deComma(L),Env,B,C0,C1,Args,Rp,Rp0),
-    prsTypes(deComma(R),Env,B,C1,Cx,Deps,Rp0,Rpx).
+    prsTypes(deComma(R),Env,B,C1,Cx,DepTps,Rp0,Rpx).
   parseContractArgs(A,Env,B,C0,Cx,Args,[],Rp,Rpx) :-
     prsTypes(A,Env,B,C0,Cx,Args,Rp,Rpx).
 
@@ -290,13 +301,13 @@ lo.comp.parseType{
     isBinary(Tp,"|:",_,L,R),
     parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
     parseContractCon(R,Env,B,C1,Cx,N,Cn,Rp0,Rpx).
-  parseContractCon(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,Deps),Rp,Rpx) :-
+  parseContractCon(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,DepTps),Rp,Rpx) :-
     isSquareTerm(Sq,Lc,Nm,Args),
     isIden(Nm,_,N),
-    parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,Deps,Rp,Rp0),
+    parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,DepTps,Rp,Rp0),
     ( parseContractName(Lc,N,Env,conTract(Op,ATs,Dps),Rp0,Rpx) ?
         sameType(tupleType(ATs),tupleType(ArgTps),Env),
-        sameType(tupleType(Dps),tupleType(Deps),Env)
+        sameType(tupleType(Dps),tupleType(DepTps),Env)
       | reportError("contract \(N) not declared",Lc,Rp0,Rpx), Op = N).
 
   public parseConBound:(ast,map[string,tipe],map[string,tipe],list[env],constraint,constraint){}.

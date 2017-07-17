@@ -1,6 +1,7 @@
 {
 	"content": {
 		"lo": "lo.lo",
+		"lo.action" : "action.lo",
 		"lo.array": "arrays.lo",
 		"lo.boot": "boot.lo",
 		"lo.collection": "collection.lo",
