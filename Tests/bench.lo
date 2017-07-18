@@ -51,16 +51,16 @@ test.bench{
       T2 = get_cpu_time(),
       report(Count,T0,T1,T2).
 
-  benchTest:(integer)=>(action[float,string],action[float,string]).
+  benchTest:(integer)=>(action[float],action[float]).
   benchTest(Count) => (timeTest((():-dodummy(Count))),timeTest((():-dobench(Count)))).
 
-  timeTest:((){}) => action[float,string].
+  timeTest:((){}) => action[float].
   timeTest(F) => return get_cpu_time() >>= runTest(F).
 
-  runTest:((){}) => ((float)=>action[float,string]).
+  runTest:((){}) => ((float)=>action[float]).
   runTest(T) => ((St)=>delta(St) :- T()).
 
-  delta:(float) => action[float,string].
+  delta:(float) => action[float].
   delta(St) => return (get_cpu_time()-St).
 
   dobench:(integer){}.

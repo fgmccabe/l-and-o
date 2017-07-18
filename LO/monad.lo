@@ -13,5 +13,4 @@ lo.monad{
   public contract all m/1,n/1 ~~ injection[m,n] <~ {
     _inject:all t ~~ (m[t])=>n[t].
   }
-
 }

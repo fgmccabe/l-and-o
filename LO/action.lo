@@ -2,9 +2,9 @@ lo.action {
   import lo.
   import lo.monad.
 
-  public all a,e ~~ action[a,e] ::= done(a) | delay(()=>action[a,e]) | err(e).
+  public all a ~~ action[a] ::= done(a) | delay(()=>action[a]) | err(string).
 
-  public implementation all e ~~ monad[action[$,e]->>e] <= {
+  public implementation monad[action->>string] <= {
     err(E) >>= _ => err(E).
     done(A) >>= F => delay(()=>F(A)).
     delay(G) >>= F => delay(()=>G()>>=F).
@@ -14,7 +14,7 @@ lo.action {
     raise E => err(E).
   }
 
-  public implementation all e ~~ execution[action[$,e]->>e] <= {
+  public implementation execution[action->>string] <= {
     _perform(done(X)) => X.
     _perform(delay(F)) => _perform(F()).
 
