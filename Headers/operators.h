@@ -95,8 +95,11 @@ prefixOp(".",1,0,"label prefix")
 
 postfixOp(". ",1899,1900,"statement terminator")
 postfixOp(";",1149,1150,"action terminator")
-postfixOp("+",759,760,"lookahead in grammar rule")
-lastPostOp
 postfixOp("!",904,905,"one solution operator")
+postfixOp("+",759,760,"lookahead in grammar rule")
+postfixOp("&",299,300,"input type mode")
+postfixOp("^",299,300,"output type mode")
+lastPostOp
+postfixOp("?",299,300,"bidirectional type mode")
 
 token("$","Used for curried functions and types")

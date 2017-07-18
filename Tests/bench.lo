@@ -42,17 +42,10 @@ test.bench{
   eg_count(5000).
   eg_count(10000).
 
-  bench:(integer){}.
-  bench(Count) :-
-      T0 = get_cpu_time(),
-      dodummy(Count),
-      T1 = get_cpu_time(),
-      dobench(Count),
-      T2 = get_cpu_time(),
-      report(Count,T0,T1,T2).
-
-  benchTest:(integer)=>(action[float],action[float]).
-  benchTest(Count) => (timeTest((():-dodummy(Count))),timeTest((():-dobench(Count)))).
+  benchTest:(integer)=>string.
+  benchTest(Count) => calculate_lips(Count,testTime-dummyTime):-
+    dummyTime = _perform(timeTest((():-dodummy(Count)))),
+    testTime = _perform(timeTest((():-dobench(Count)))).
 
   timeTest:((){}) => action[float].
   timeTest(F) => return get_cpu_time() >>= runTest(F).
@@ -86,22 +79,21 @@ test.bench{
   repeat(_).
   repeat(N) :- N > 1, repeat(N-1).
 
-  report:(integer,float,float,float){}.
-  report(Count,T0,T1,T2) :-
-      Time1 = T1-T0,
-      Time2 = T2-T1,
-      Time  = Time2-Time1,		/* Time spent on nreving lists */
-      calculate_lips(Count,Time,Lips,Units),
-      _logmsg("\(Lips)\(Units) lips for \(Count) iterations, taking \(Time) seconds").
+  calculate_lips:(integer,float) => string.
+  calculate_lips(Count,Time) => "\(Sp)\(Units) lips for \(Count) iterations, taking \(Time) seconds":- megaLip((496*Count)::float/Time,Sp,Units).
 
-  calculate_lips:(integer,float,float,string){}.
-  calculate_lips(Count,Time,Sp,Units) :- megaLip((496*Count)::float/Time,Sp,Units).
+  scale ::= unit | kilo | mega.
+  implementation display[scale] <= {
+    disp(unit) => ss("").
+    disp(kilo) => ss("K").
+    disp(mega) => ss("M").
+  }
 
-  megaLip:(float,float,string){}.
-  megaLip(0.0,0.0,"").
-  megaLip(L,L,"") :- L<1000.0.
-  megaLip(L,L/1000.0,"K") :- L>=1000.0,L<1000000.0.
-  megaLip(L,L/1000000.0,"M") :- L>=1000000.0.
+  megaLip:(float,float,scale){}.
+  megaLip(0.0,0.0,unit).
+  megaLip(L,L,unit) :- L<1000.0.
+  megaLip(L,L/1000.0,kilo) :- L>=1000.0,L<1000000.0.
+  megaLip(L,L/1000000.0,mega) :- L>=1000000.0.
 
-  assert lots().
+  show "\(benchTest(10))".
 }

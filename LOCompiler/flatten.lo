@@ -14,6 +14,7 @@ lo.comp.flatten{
 
   flattenRel:(rel) => rel.
   flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//flattenRule).
+  -- flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Cl)=>flowRewrite(flattenRule(Cl)))).
 
   -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
@@ -102,6 +103,7 @@ lo.comp.flatten{
   flowRewrite:(clse) => clse.
   flowRewrite(clse(Q,Nm,Args,Body)) => clse(Q,Nm,Args,reflowPreds(topsort(flowDepends(Body)))).
   flowRewrite(eqn(Q,Nm,Args,guarded(Rep,Body))) => eqn(Q,Nm,Args,guarded(Rep,reflowPred(Body))).
+  flowRewrite(eqn(Q,Nm,Args,Rep)) => eqn(Q,Nm,Args,Rep).
 
   varDep ::= vars(pred,list[term],list[term]).
 

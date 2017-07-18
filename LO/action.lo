@@ -22,4 +22,19 @@ lo.action {
     _handle(delay(A),E) => _handle(A(),E).
     _handle(err(X),E) => E(X).
   }
+
+  public implementation all e ~~ coercion[e,string] |: coercion[action[e],string] <= {
+    _coerce(A) => _action_to_string(A).
+  }
+
+  _action_to_string:all a ~~ coercion[a,string] |: (action[a])=>string.
+  _action_to_string(A) => _perform(A)::string.
+
+  public implementation all e ~~ display[e] |: display[action[e]] <= {
+    disp(A) => dispAction(A).
+  }
+
+  dispAction:all a ~~ display[a] |: (action[a])=>ss.
+  dispAction(A) => disp(_perform(A)).
+
 }

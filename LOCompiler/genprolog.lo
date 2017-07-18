@@ -41,6 +41,7 @@ lo.comp.genprolog{
 
   genPreds:(list[pred],string,string) => list[ss].
   genPreds([],S,S) => [].
+  genPreds([succ,..L],S,Sx) => genPreds(L,S,Sx).
   genPreds([P,..L],S,Sx) => [ss(S),genPred(P),..genPreds(L,",\n    ",Sx)].
 
   genPred:(pred) => ss.
