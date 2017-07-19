@@ -19,8 +19,8 @@ lo.comp.flatten{
   -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
-    flattenTerms(Args,Q,NArgs,Guard,Post,Post,[],Q1)!,
-    flattenBody(Body,Q1,NBody,[],NQ).
+    flattenTerms(Args,Q,NArgs,Guard,[],NBody,Pst,Q1)!,
+    flattenBody(Body,Q1,Pst,[],NQ).
   flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(conj(none,PrR)))),simplifyCond(conj(none,Guard)))) :-
     flattenTerms(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
     flattenPred(G,Q0,G1,Pr,[G1,..Pr0],Pr0,Prx,Q1),
@@ -38,10 +38,10 @@ lo.comp.flatten{
   flattenTerm(invoke(Lc,Op,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Op,[Res,..Q],NOp,Pre,Pre0,Post,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pre0,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Prx],Pst0,Psx,Qx).
+    flattenTerms(Args,Q0,NArgs,Pre0,Prx,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Pst0],Psx,Qx).
   flattenTerm(escvoke(Lc,Es,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
-    flattenTerms(Args,[Res,..Q],NArgs,Pre,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Prx],Post,Psx,Qx).
+    flattenTerms(Args,[Res,..Q],NArgs,Pre,Prx,Post,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Psx],Qx).
   flattenTerm(ovoke(Lc,Call,Lb,Th),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),
@@ -60,7 +60,7 @@ lo.comp.flatten{
   flattenBody:(list[pred],list[term],list[pred],list[pred],list[term]){}.
   flattenBody([],Q,Pr,Pr,Q).
   flattenBody([P,..L],Q,Pre,Prx,NQ) :-
-    flattenPred(P,Q,NP,Pre,Ps,Ps,[NP,..P2],Q1),
+    flattenPred(P,Q,NP,Pre,[NP,..Ps],Ps,P2,Q1),
     flattenBody(L,Q1,P2,Prx,NQ).
 
   flattenPred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.

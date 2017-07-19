@@ -87,4 +87,6 @@ lo.comp.regexp{
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].
   charRange(St,En) => [St,..charRange(St+1,En)] :-  St<En.
+
+
 }

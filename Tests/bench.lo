@@ -95,5 +95,5 @@ test.bench{
   megaLip(L,L/1000.0,kilo) :- L>=1000.0,L<1000000.0.
   megaLip(L,L/1000000.0,mega) :- L>=1000000.0.
 
-  show "\(benchTest(10))".
+  assert eg_count(C) *> _logmsg(benchTest(C)).
 }
