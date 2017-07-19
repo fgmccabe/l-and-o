@@ -29,6 +29,7 @@ lo.comp.encode{
   encPred(ecall(TLc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encSequence(encTerm,Args,L)))].
   encPred(ocall(TLc,O,S,I),L) => [0cO,..encodeTLoc(TLc,encTerm(O,encTerm(S,encTerm(I,L))))].
   encPred(unfy(TLc,Lf,Rg),L) => [0c=,..encodeTLoc(TLc,encTerm(Lf,encTerm(Rg,L)))].
+  encPred(dfne(TLc,Lf,Rg),L) => [0c$,..encodeTLoc(TLc,encTerm(Lf,encTerm(Rg,L)))].
   encPred(cond(Lc,T,L,R),Ls) => [0c?,..encodeTLoc(Lc,encPred(T,encPred(L,encPred(R,Ls))))].
   encPred(conj(Lc,L),Ls) => [0c&,..encodeTLoc(Lc,encSequence(encPred,L,Ls))].
   encPred(neck,L) => [0c!,..L].

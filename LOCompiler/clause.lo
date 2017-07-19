@@ -155,6 +155,8 @@ lo.comp.code.clause{
         Code = [iLbl(SLb),..aCode]<>bCode<>[iSucc,iLbl(ELb)]) |
       Code = [iLbl(SLb),..aCode]<>bCode<>[iLbl(ELb)]),
     addToSrcMap(TLc,SLb,ELb,SM,SMx).
+  compGoal(dfne(TLc,varbl(Nm),R),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
+    compGoal(unfy(TLc,varbl(Nm),R),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx).
   compGoal(except(TLc,E),Gp,D,Lt,SM,Vs,Last,Alloc,Code,Dx,Ltx,Vsx,SMx) :-
     SLb = newLabel("Src"),
     ELb = newLabel("Src"),

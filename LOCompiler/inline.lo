@@ -226,6 +226,7 @@ lo.comp.inline{
   applyToPred(ecall(TLc,O,A),V) => ecall(TLc,O,applyToTerms(A,V)).
   applyToPred(ocall(TLc,O,A,T),V) => ocall(TLc,applyToTerm(O,V),applyToTerm(A,V),applyToTerm(T,V)).
   applyToPred(unfy(TLc,L,R),V) => unfy(TLc,applyToTerm(L,V),applyToTerm(R,V)).
+  applyToPred(dfne(TLc,L,R),V) => dfne(TLc,applyToTerm(L,V),applyToTerm(R,V)).
   applyToPred(except(TLc,A),V) => except(TLc,applyToTerm(A,V)).
   applyToPred(neck,_) => neck.
   applyToPred(fail,_) => fail.

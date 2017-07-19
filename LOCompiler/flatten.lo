@@ -38,15 +38,15 @@ lo.comp.flatten{
   flattenTerm(invoke(Lc,Op,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Op,[Res,..Q],NOp,Pre,Pre0,Post,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pre0,Prx,Pst0,[unfy(Lc,Res,invoke(Lc,NOp,NArgs)),..Psx],Qx).
+    flattenTerms(Args,Q0,NArgs,Pre0,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Prx],Pst0,Psx,Qx).
   flattenTerm(escvoke(Lc,Es,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
-    flattenTerms(Args,[Res,..Q],NArgs,Pre,Prx,Post,[unfy(Lc,Res,escvoke(Lc,Es,NArgs)),..Psx],Qx).
+    flattenTerms(Args,[Res,..Q],NArgs,Pre,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Prx],Post,Psx,Qx).
   flattenTerm(ovoke(Lc,Call,Lb,Th),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),
     flattenTerm(Lb,Q0,NLb,Pre0,Pre1,Pst0,Pst1,Q1),
-    flattenTerm(Th,Q0,NTh,Pre1,Prx,Pst1,[unfy(Lc,Res,ovoke(Lc,NCall,NLb,NTh)),..Psx],Qx).
+    flattenTerm(Th,Q0,NTh,Pre1,[dfne(Lc,Res,ovoke(Lc,NCall,NLb,NTh)),..Prx],Pst1,Psx,Qx).
   flattenTerm(guarded(T,C),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     flattenTerm(T,Q,Res,Pr0,Prx,Post,Ps0,Q1),
     flattenPred(C,Q1,C1,Pre,[C1,..Pr0],Ps0,Psx,Qx).
@@ -75,6 +75,8 @@ lo.comp.flatten{
     flattenTerm(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
   flattenPred(unfy(TLc,L,R),Q,NP,Pre,Prx,Post,Psx,Qx) :-
     flattenUnify(TLc,L,R,Q,NP,Pre,Prx,Post,Psx,Qx).
+  flattenPred(dfne(TLc,L,R),Q,NP,Pre,Prx,Post,Psx,Qx) :-
+    flattenUnify(TLc,L,R,Q,NP,Pre,Prx,Post,Psx,Qx).
   flattenPred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
   flattenPred(fail,Q,fail,Pr,Pr,Ps,Ps,Q).
   flattenPred(succ,Q,succ,Pr,Pr,Ps,Ps,Q).
@@ -90,13 +92,16 @@ lo.comp.flatten{
     flattenBody(L,Q,FL,[],Qx).
 
   flattenUnify:(option[tloc],term,term,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
-  flattenUnify(Lc,varbl(V),invoke(ILc,Op,Args),Q,unfy(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
+  flattenUnify(Lc,varbl(V),invoke(ILc,Op,Args),Q,dfne(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
     flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
-  flattenUnify(Lc,invoke(ILc,Op,Args),varbl(V),Q,unfy(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
+  flattenUnify(Lc,invoke(ILc,Op,Args),varbl(V),Q,dfne(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
     flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
   flattenUnify(Lc,L,R,Q,unfy(Lc,NL,NR),Pre,Prx,Pst,Pstx,Qx) :-
+    flattenTerm(L,Q,NL,Pre,Pr0,Pst,Pst0,Q0),
+    flattenTerm(R,Q0,NR,Pr0,Prx,Pst0,Pstx,Qx).
+  flattenUnify(Lc,L,R,Q,dfne(Lc,NL,NR),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(L,Q,NL,Pre,Pr0,Pst,Pst0,Q0),
     flattenTerm(R,Q0,NR,Pr0,Prx,Pst0,Pstx,Qx).
 
@@ -129,17 +134,21 @@ lo.comp.flatten{
   flowPreds([P,..L],V) => [flowPred(P,V,V0),..flowPreds(L,V0)].
 
   flowPred:(pred,list[term],list[term]) => varDep.
-  flowPred(call(Lc,Op,Args),V,Vx) => vars(call(Lc,Op,Args),VS,findVarsInTerms(Args,[])) :-
+  flowPred(call(Lc,Op,Args),V,Vx) => vars(call(Lc,Op,Args),[],findVarsInTerms(Args,[])) :-
     VS = toplevelVars(Args,[]),
     Vx = merge(V,VS).
-  flowPred(ecall(Lc,Op,Args),V,Vx) => vars(ecall(Lc,Op,Args),VS,findVarsInTerms(Args,[])) :-
+  flowPred(ecall(Lc,Op,Args),V,Vx) => vars(ecall(Lc,Op,Args),[],findVarsInTerms(Args,[])) :-
     VS = toplevelVars(Args,[]),
     Vx = merge(V,VS).
-  flowPred(ocall(Lc,C,L,T),V,Vx) => vars(ocall(Lc,C,L,T),VS,findVarsInTerms(Args,[])) :-
+  flowPred(ocall(Lc,C,L,T),V,Vx) => vars(ocall(Lc,C,L,T),[],findVarsInTerms(Args,[])) :-
     Args = [C,L,T],
     VS = toplevelVars(Args,[]),
     Vx = merge(V,VS).
-  flowPred(unfy(Lc,L,R),V,Vx) => vars(unfy(Lc,L,R),VS,findVarsInTerms(Args,[])) :-
+  flowPred(dfne(Lc,L,R),V,Vx) => vars(dfne(Lc,L,R),VS,findVarsInTerms(Args,[])) :-
+    Args = [L,R],
+    VS = toplevelVars([L],[]),
+    Vx = merge(V,VS).
+  flowPred(unfy(Lc,L,R),V,Vx) => vars(unfy(Lc,L,R),[],findVarsInTerms(Args,[])) :-
     Args = [L,R],
     VS = toplevelVars(Args,[]),
     Vx = merge(V,VS).

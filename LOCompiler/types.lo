@@ -5,8 +5,6 @@ lo.comp.types{
 
   public typeKind ::= simpleType | typeFun(integer).
 
-  public typeFlow ::= inType(tipe) | outType(tipe) | biType(tipe).
-
   public tipe ::= anonType
         | voidType
         | thisType

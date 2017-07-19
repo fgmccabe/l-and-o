@@ -39,7 +39,7 @@ lo.comp.reduce{
   reduceTerm(anon,Q,anon,Pre,Pre,Post,Post,Q).
   reduceTerm(varbl(Id),Q,varbl(Id),Pre,Pre,Post,Post,Q).
   reduceTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
-  reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[unfy(none,VV,cons(Op,NEls)),..Post],Psx,Qx) :-
+  reduceTerm(cons(Op,Els),Q,VV,Pre,Prx,[dfne(none,VV,cons(Op,NEls)),..Post],Psx,Qx) :-
     genVarbl("$%",VV),
     reduceTerms(Els,Q,NEls,Pre,Prx,Post,Psx,Qx).
 
@@ -60,6 +60,9 @@ lo.comp.reduce{
     reduceBildArg(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
     reduceBildArg(Th,Q1,NTh,Pr1,Prx,Ps1,Psx,Qx).
   reducePred(unfy(TLc,L,R),Q,unfy(TLc,NL,NR),Pre,Prx,Post,Psx,Qx) :-
+    reduceBildArg(L,Q,NL,Pre,Pr0,Post,Ps0,Q0),
+    reduceBildArg(R,Q0,NR,Pr0,Prx,Ps0,Psx,Qx).
+  reducePred(dfne(TLc,L,R),Q,dfne(TLc,NL,NR),Pre,Prx,Post,Psx,Qx) :-
     reduceBildArg(L,Q,NL,Pre,Pr0,Post,Ps0,Q0),
     reduceBildArg(R,Q0,NR,Pr0,Prx,Ps0,Psx,Qx).
   reducePred(neck,Q,neck,Pr,Pr,Ps,Ps,Q).
@@ -97,5 +100,5 @@ lo.comp.reduce{
   reduceBildTerm(T,Q,T,Pre,Pre,Post,Post,Q) :- isGroundTerm(T).
   reduceBildTerm(cons(Op,Els),Q,VV,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("$%",VV),
-    reduceBildTerms(Els,Q,NEls,Pre,[unfy(none,VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
+    reduceBildTerms(Els,Q,NEls,Pre,[dfne(none,VV,cons(Op,NEls)),..Prx],Post,Psx,Qx).
 }

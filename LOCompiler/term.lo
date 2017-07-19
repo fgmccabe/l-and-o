@@ -36,6 +36,7 @@ lo.comp.term {
                     | ecall(option[tloc],string,list[term])
                     | ocall(option[tloc],term,term,term)
                     | unfy(option[tloc],term,term)
+                    | dfne(option[tloc],term,term)
                     | conj(option[tloc],list[pred])
                     | cond(option[tloc],pred,pred,pred)
                     | neck
@@ -110,6 +111,7 @@ lo.comp.term {
   displayPred(ecall(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   displayPred(ocall(_,Rc,Lb,Th),Q) => ssSeq([dispTerm(Lb,Q),ss("."),dispTerm(Rc,Q)]).
   displayPred(unfy(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
+  displayPred(dfne(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("<-"),dispTerm(R,Q)]).
   displayPred(conj(_,L),Q) => ssSeq(dispPreds("",", ",L,Q)).
   displayPred(cond(_,T,L,R),Q) => ssSeq([ss("("),displayPred(T,Q),ss("?"),displayPred(L,Q),ss("|"),displayPred(R,Q),ss(")")]).
   displayPred(fail,_) => ss("fail").
@@ -129,6 +131,7 @@ lo.comp.term {
   predLoc(ocall(Lc,_,_,_)) => Lc.
   predLoc(ecall(Lc,_,_)) => Lc.
   predLoc(unfy(Lc,_,_)) => Lc.
+  predLoc(dfne(Lc,_,_)) => Lc.
   predLoc(cond(Lc,_,_,_)) => Lc.
 
   public implementation equality[term] <= {
@@ -226,6 +229,7 @@ lo.comp.term {
   findVarsInPred(ecall(_,_,A),V) => findVarsInTerms(A,V).
   findVarsInPred(ocall(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
   findVarsInPred(unfy(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).
+  findVarsInPred(dfne(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).
   findVarsInPred(except(_,E),V) => findVarsInTerm(E,V).
   findVarsInPred(fail,V) => V.
   findVarsInPred(succ,V) => V.

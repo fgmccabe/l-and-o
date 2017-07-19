@@ -86,6 +86,7 @@ lo.comp.decode{
   decodePred(ecall(TLc,Op,Args)) --> "E", decodeOptional(decodeTloc,TLc), decodeName(Op), decodeSequence(decodeTerm,Args).
   decodePred(ocall(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
   decodePred(unfy(TLc,L,R)) --> "=", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
+  decodePred(dfne(TLc,L,R)) --> "$", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
   decodePred(next) --> "!".
   decodePred(fail) --> "#".
   decodePred(succ) --> "+".

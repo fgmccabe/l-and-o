@@ -19,6 +19,7 @@ lo.comp.code.analyse{
   isSafeGoal(fail).
   isSafeGoal(succ).
   isSafeGoal(unfy(_,_,_)).
+  isSafeGoal(dfne(_,_,_)).
 
   /* This is where we analyse the structure of a clause in order to perform register and local variable allocations */
 
@@ -61,6 +62,7 @@ lo.comp.code.analyse{
   findOccsInGoal(ecall(_,Op,Args),M,Gp) => findOccsInArgs(Args,M,Gp,1,lArg,lTerm).
   findOccsInGoal(ocall(_,C,L,T),M,Gp) => findOccsInArgs([C,L,T],M,Gp,1,lArg,lTerm).
   findOccsInGoal(unfy(_,L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
+  findOccsInGoal(dfne(_,L,R),M,Gp) => findOccsInTerm(R,findOccsInTerm(L,M,Gp,1,oArg,oTerm),Gp,2,oArg,oTerm).
   findOccsInGoal(except(_,T),M,Gp) => findOccsInTerm(T,M,Gp,1,lArg,lTerm).
   findOccsInGoal(neck,M,_) => M.
   findOccsInGoal(fail,M,_) => M.
@@ -149,6 +151,7 @@ lo.comp.code.analyse{
   predArity(call(_,_,Args)) => size(Args).
   predArity(ocall(_,_,_,_)) => 3.
   predArity(unfy(_,_,_)) => 2.
+  predArity(dfne(_,_,_)) => 2.
   predArity(ecall(_,_,Args)) => size(Args).
   predArity(cond(_,T,L,R)) => max(predArity(T),max(maxArity(L),maxArity(R))).
 

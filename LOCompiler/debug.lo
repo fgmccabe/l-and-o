@@ -17,7 +17,7 @@ lo.comp.debug{
   public frameDebug:(string,integer,list[term],list[pred],list[pred],trOptions){}.
   frameDebug(Nm,QNo,Q,G,Gx,Opts) :-
     isOption(dbgVars(Nm,DgVr,FrVr),Opts),
-    G=[unfy(none,FrVr,constructFrameList(Q)),
+    G=[dfne(none,FrVr,constructFrameList(Q)),
         ocall(none,cons(trCons("frame",3),[strng(Nm),intgr(QNo),FrVr]),DgVr,DgVr),..Gx].
   frameDebug(_,_,_,F,F,_).
 

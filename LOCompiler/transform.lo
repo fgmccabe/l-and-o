@@ -453,17 +453,17 @@ lo.comp.transform{
     reportError("'\(Nm)' not defined",Lc,Rp,Rpx).
 
   implementVarPtn:(mapEntry,string,option[tloc],term,list[term],list[term],report,report){}.
-  implementVarPtn(localVar(Vn,_,ClVr,TVr),Nm,TLc,guarded(X,unfy(TLc,X,invoke(TLc,prg(Vn,2),[ClVr,TVr]))),Q,merge([X,ClVr,TVr],Q),Rp,Rp) :- genVarbl(Nm,X).  -- instance var
-  implementVarPtn(moduleVar(_,Vn,_),Nm,TLc,guarded(X,unfy(TLc,X,invoke(TLc,prg(Vn,0),[]))),Q,[X,..Q],Rp,Rp) :- genVarbl(Nm,X). -- module variable
+  implementVarPtn(localVar(Vn,_,ClVr,TVr),Nm,TLc,guarded(X,dfne(TLc,X,invoke(TLc,prg(Vn,2),[ClVr,TVr]))),Q,merge([X,ClVr,TVr],Q),Rp,Rp) :- genVarbl(Nm,X).  -- instance var
+  implementVarPtn(moduleVar(_,Vn,_),Nm,TLc,guarded(X,dfne(TLc,X,invoke(TLc,prg(Vn,0),[]))),Q,[X,..Q],Rp,Rp) :- genVarbl(Nm,X). -- module variable
   implementVarPtn(labelArg(N,ClVr,TVr),_,_,N,Q,merge([N,ClVr,TVr],Q),Rp,Rp).            -- argument from label
   implementVarPtn(moduleClass(Enum,_,0),_,_,enum(Enum),Q,Q,Rp,Rp).
   implementVarPtn(localClass(Enum,_,0,LbVr,ThVr),_,_,cons(strct(Enum,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
   implementVarPtn(inherit(Nm,_,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
-  implementVarPtn(inheritField(Super,LblVr,ThVr),Nm,Lc,guarded(X,unfy(Lc,X,invoke(Lc,Super,[enum(Nm),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
+  implementVarPtn(inheritField(Super,LblVr,ThVr),Nm,Lc,guarded(X,dfne(Lc,X,invoke(Lc,Super,[enum(Nm),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
   implementVarPtn(notInMap,Nm,_,varbl(Nm),Q,merge([varbl(Nm)],Q),Rp,Rp).                -- variable local to clause
 
   trPtnCallOp:(string,option[tloc],list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
-  trPtnCallOp(Nm,TLc,Args,guarded(X,unfy(TLc,X,escvoke(TLc,Nm,Args))),Q,merge([X],Q),_,_,Ex,Ex,Rp,Rp) :-
+  trPtnCallOp(Nm,TLc,Args,guarded(X,dfne(TLc,X,escvoke(TLc,Nm,Args))),Q,merge([X],Q),_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm,_),
     genVarbl("Xa",X).
   trPtnCallOp(Nm,TLc,Args,Ptn,Q,Qx,Map,_,Ex,Ex,Rp,Rpx) :-
@@ -472,9 +472,9 @@ lo.comp.transform{
     implementPtnCall(Reslt,Nm,TLc,X,Args,Ptn,Q,Qx,Rp,Rpx).
 
   implementPtnCall:(mapEntry,string,option[tloc],term,list[term],term,list[term],list[term],report,report){}.
-  implementPtnCall(localFun(Fn,_,_,Ar,LblVr,ThVr),_,TLc,X,Args,guarded(X,unfy(TLc,X,invoke(TLc,prg(Fn,size(Args)+2),Args<>[LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
-  implementPtnCall(moduleFun(_,Fn,_,_,Ar),_,TLc,X,Args,guarded(X,unfy(TLc,X,invoke(TLc,prg(Fn,size(Args)),Args))),Q,merge([X],Q),Rp,Rp).
-  implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,TLc,X,Args,guarded(X,unfy(TLc,X,invoke(TLc,Super,[cons(trCons(Nm,length(Args)),Args),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
+  implementPtnCall(localFun(Fn,_,_,Ar,LblVr,ThVr),_,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,prg(Fn,size(Args)+2),Args<>[LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
+  implementPtnCall(moduleFun(_,Fn,_,_,Ar),_,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,prg(Fn,size(Args)),Args))),Q,merge([X],Q),Rp,Rp).
+  implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,Super,[cons(trCons(Nm,length(Args)),Args),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
   implementPtnCall(moduleClass(Mdl,_,_),_,_,_,Args,cons(strct(Mdl,size(Args)),Args),Q,Q,Rp,Rp).
   implementPtnCall(localClass(Acc,_,_,LbVr,ThVr),_,_,_,Args,
         cons(strct(Acc,size(Args)+2),Args<>[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
@@ -483,7 +483,7 @@ lo.comp.transform{
   implementPtnCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,Args),Q,Q,Rp,Rp).
 
   implementPkgRefPtn:(mapEntry,location,string,string,term,term,list[term],list[term],report,report){}.
-  implementPkgRefPtn(moduleVar(_,Vn,_),Lc,_,_,Xi,guarded(Xi,unfy(none,Xi,invoke(some(Lc::tloc),prg(Vn,0),[]))),Q,[Xi,..Q],Rp,Rp).
+  implementPkgRefPtn(moduleVar(_,Vn,_),Lc,_,_,Xi,guarded(Xi,dfne(none,Xi,invoke(some(Lc::tloc),prg(Vn,0),[]))),Q,[Xi,..Q],Rp,Rp).
   implementPkgRefPtn(moduleClass(Enum,_,0),_,_,_,_,enum(Enum),Q,Q,Rp,Rp).
   implementPkgRefPtn(_,Lc,Pkg,Rf,_,anon,Q,Q,Rp,Rpx) :-
     reportError("illegal access to \(Pkg)#\(Rf)",Lc,Rp,Rpx).
@@ -531,7 +531,7 @@ lo.comp.transform{
     implementDotExp(Reslt,v(Lc,Nm),some(Lc::tloc),C,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trDotExp(Lc,v(_,Nm),C,ovoke(some(Lc::tloc),C,Rc,Rc),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Nm),Rc,Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx).
-  trDotExp(Lc,R,C,guarded(ovoke(some(Lc::tloc),C,Rec,Rec),unfy(some(Lc::tloc),Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trDotExp(Lc,R,C,guarded(ovoke(some(Lc::tloc),C,Rec,Rec),dfne(some(Lc::tloc),Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("R",Rec),
     trExp(R,Rc,[Rec,..Q],Q0,Map,Opts,Ex,Exx,Rp,Rpx).
 
@@ -539,7 +539,7 @@ lo.comp.transform{
   implementDotExp(inherit(_,Super,ClVr,ThVr),_,TLc,C,invoke(TLc,C,[ClVr,ThVr]),Q,merge([ClVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementDotExp(_,v(Lc,Nm),TLc,C,ovoke(TLc,C,Rc,Rc),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Nm),Rc,Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx).
-  implementDotExp(_,R,TLc,C,guarded(ovoke(TLc,C,Rec,Rec),unfy(TLc,Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  implementDotExp(_,R,TLc,C,guarded(ovoke(TLc,C,Rec,Rec),dfne(TLc,Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("R",Rec),
     trExp(R,Rc,[Rec,..Q],Q0,Map,Opts,Ex,Exx,Rp,Rpx).
 
