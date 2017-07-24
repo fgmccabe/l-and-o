@@ -53,6 +53,10 @@ lo.core{
     frmt:(t,string) => ss.
   }
 
+  public implementation display[ss] <= {
+    disp(X) => X
+  }
+
   -- stream contract
   public
   contract all S,E ~~ stream[S ->> E] <~ {

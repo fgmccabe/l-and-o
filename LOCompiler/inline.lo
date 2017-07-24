@@ -116,31 +116,31 @@ lo.comp.inline{
   requant(eqn(Q,Nm,A,R)) => eqn(findVarsInClse(eqn(Q,Nm,A,R)),Nm,A,R).
 
   inlineTerm:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
-  inlineTerm(T,_,_,S,S,U,U) => T :- isGroundTerm(T).
+  inlineTerm(T,_,_,Fx,Fx,U,U) => T :- isGroundTerm(T).
   inlineTerm(varbl(Nm),P,I,F,Fx,U,Ux) => inlineTerm(Rep,P,I,true,Fx,U,Ux) :- present(U,Nm,Rep).
-  inlineTerm(varbl(Nm),_,_,S,S,U,U) => varbl(Nm).
-  inlineTerm(anon,_,_,S,S,U,U) => anon.
-  inlineTerm(cons(Op,A),P,I,S,O,U,Ux) => cons(Op,inlineTerms(A,P,I,S,O,U,Ux)).
-  inlineTerm(escvoke(Lc,Op,A),P,I,S,O,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,S,O,U,Ux)).
-  inlineTerm(invoke(Lc,Op,A),P,I,S,O,U,Ux) => checkInline(invoke(Lc,Op,inlineTerms(A,P,I,S,S0,U,U0)),P,I,S0,O,U0,Ux).
-  inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,S,O,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,S,S0,U,U0),inlineTerm(Lb,P,I,S0,S1,U0,U1),inlineTerm(Th,P,I,S1,S2,U1,U2)),P,I,S2,O,U2,Ux).
-  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(checkInline(inlineTerm(T,P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),simplifyCond(conj(none,inlinePred(C,P,I,F1,Fx,U1,Ux))))).
+  inlineTerm(varbl(Nm),_,_,Fx,Fx,U,U) => varbl(Nm).
+  inlineTerm(anon,_,_,Fx,Fx,U,U) => anon.
+  inlineTerm(cons(Op,A),P,I,F,Fx,U,Ux) => cons(Op,inlineTerms(A,P,I,F,Fx,U,Ux)).
+  inlineTerm(escvoke(Lc,Op,A),P,I,F,Fx,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,F,Fx,U,Ux)).
+  inlineTerm(invoke(Lc,Op,A),P,I,F,Fx,U,Ux) => checkInline(invoke(Lc,inlineTerm(Op,P,I,F,F0,U,U0),inlineTerms(A,P,I,F0,F1,U0,U1)),P,I,F1,Fx,U1,Ux).
+  inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,F,Fx,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,F,F0,U,U0),inlineTerm(Lb,P,I,F0,F1,U0,U1),inlineTerm(Th,P,I,F1,F2,U1,U2)),P,I,F2,Fx,U2,Ux).
+  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(inlineTerm(T,P,I,F,F0,U,U0),simplifyCond(conj(none,inlinePred(C,P,I,F0,Fx,U0,Ux))))).
 
   inlineTerms:(list[term],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[term].
   inlineTerms([],_,_,Fx,Fx,U,U) => [].
-  inlineTerms([T,..A],P,I,F,Fx,U,Ux) => [checkInline(inlineTerm(applyToTerm(T,U),P,I,F,F0,U,U0),P,I,F0,F1,U0,U1),..inlineTerms(A,P,I,F1,Fx,U1,Ux)].
+  inlineTerms([T,..A],P,I,F,Fx,U,Ux) => [inlineTerm(applyToTerm(T,U),P,I,F,F0,U,U0),..inlineTerms(A,P,I,F0,Fx,U0,Ux)].
 
   checkInline:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
-  checkInline(T,P,I,S,O,U,Ux) => inlineTerm(applyToTerm(Nt,U),P,I,true,O,mergeTheta(Th,U),Ux):-
+  checkInline(T,P,I,_,Fx,U,Ux) => inlineTerm(applyToTerm(Nt,U),P,I,true,Fx,mergeTheta(Th,U),Ux):-
     inlineableTerm(T,P,I) = [(Nt,Th)].
-  checkInline(T,_,_,S,S,U,U) => T.
+  checkInline(T,_,_,Fx,Fx,U,U) => T.
 
   inlineableTerm:(term,map[term,rel],map[term,rel]) => list[(term,map[string,term])].
   inlineableTerm(invoke(Lc,Op,Args),P,I) => Choices :-
     (present(P,Op,rel(_,_,Cls)) | present(I,Op,rel(_,_,Cls))),
     attemptRewrites(Args,Cls,[],Choices).
   inlineableTerm(ovoke(Lc,Call,Lb,Th),P,I) => Choices :-
-    consistentLbl(Pr,Lb),
+    objLbl(Pr,Lb),
     (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))),
     attemptRewrites([Call,Lb,Th],Cls,[],Choices).
   inlineableTerm(_,_,_) => [].
@@ -167,6 +167,11 @@ lo.comp.inline{
     checkCall(Pr,clName(Cls),A2),
     renameClse(Cls,clse(_,_,NA,B),_),
     unifyEls(A2,NA,U,Ux).
+  inlinePred(call(Lc,Pr,Args),P,I,S,Sx,U,Ux) => [call(Lc,checkInline(Pr,P,I,S,S0,U,U0),inlineTerms(Args,P,I,S0,Sx,U0,Ux))].
+  inlinePred(ecall(Lc,Pr,Args),P,I,S,Sx,U,Ux) => [ecall(Lc,Pr,inlineTerms(Args,P,I,S,Sx,U,Ux))].
+  inlinePred(ocall(Lc,Cl,Lb,Th),P,I,S,Sx,U,Ux) => [ocall(Lc,inlineTerm(Cl,P,I,S,S0,U,U0),inlineTerm(Lb,P,I,S0,S1,U0,U1),inlineTerm(Th,P,I,S1,Sx,U1,Ux))].
+  inlinePred(unfy(Lc,L,R),P,I,S,Sx,U,Ux) => [unfy(Lc,inlineTerm(L,P,I,S,S0,U,U0),inlineTerm(R,P,I,S0,Sx,U0,Ux))].
+  inlinePred(dfne(Lc,L,R),P,I,S,Sx,U,Ux) => [dfne(Lc,inlineTerm(L,P,I,S,S0,U,U0),inlineTerm(R,P,I,S0,Sx,U0,Ux))].
   inlinePred(Pr,_,_,S,S,U,U) => [Pr].
 
   inlineable:(pred,map[term,rel],map[term,rel],clse){}.
@@ -179,7 +184,6 @@ lo.comp.inline{
   inlineableCall(ocall(_,_,Lb,_),P,I,Cls) :-
     consistentLbl(Pr,Lb),
     (present(P,Pr,rel(_,_,Cls)) | present(I,Pr,rel(_,_,Cls))).
-  inlineableCall(unfy(_,L,R),_,_,[clse([varbl("X")],prg("=",2),[varbl("X"),varbl("X")],[])]).
 
   resolveableClauses:(pred,list[clse]) => list[clse].
   resolveableClauses(_,[]) => [].
@@ -202,6 +206,10 @@ lo.comp.inline{
   consistentLbl:(term,term){}.
   consistentLbl(prg(Nm,3),enum(Nm)).
   consistentLbl(prg(Nm,3),cons(strct(Nm,_),_)).
+
+  objLbl:(term,term){}.
+  objLbl(prg(Nm,3),enum(Nm)).
+  objLbl(prg(Nm,3),cons(strct(Nm,_),_)).
 
   mkVars:(list[term]) => map[string,term].
   mkVars(Els) => foldLeft((varbl(Nm),M)=>M[Nm->varbl(_str_gen(Nm))],[],Els).

@@ -50,6 +50,12 @@ lo.comp.term {
     disp(Prog) => dispProg(Prog).
   }
 
+  public mdlImports:(prProg) => list[pkg].
+  mdlImports(prProg(Spec,_)) => pkgImports(Spec)//(((_,P))=>P).
+
+  public mdlCode:(prProg) => map[term,rel].
+  mdlCode(prProg(Spec,Code)) => Code.
+
   private dispProg:(prProg)=>ss.
   dispProg(prProg(_,Rels)) => ssSeq(values(Rels)//dispRel).
 
@@ -197,8 +203,12 @@ lo.comp.term {
   clArgs(eqn(_,_,Args,_)) => Args.
 
   public simplifyGuard:(term) => term.
-  simplifyGuard(guarded(T,conj(_,[]))) => simplifyGuard(T).
+  simplifyGuard(guarded(T,conj(_,G))) => simplifyGuard(T) :- isTrivialConj(G).
   simplifyGuard(T) => T.
+
+  isTrivialConj:(list[pred]){}.
+  isTrivialConj([]).
+  isTrivialConj([succ,..G]) :- isTrivialConj(G).
 
   public simplifyCond:(pred) => pred.
   simplifyCond(conj(_,[])) => succ.

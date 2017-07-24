@@ -45,7 +45,6 @@ locOfToken(rqpar(Lc),Lc).
 locOfToken(integerTok(_,Lc),Lc).
 locOfToken(floatTok(_,Lc),Lc).
 locOfToken(stringTok(_,Lc),Lc).
-locOfToken(regTok(_,Lc),Lc).
 locOfToken(term(Lc),Lc).
 locOfToken(terminal,missing).
 
@@ -62,7 +61,6 @@ dispToken(rqpar(_),['|','>']).
 dispToken(integerTok(Ix,_),Str) :- number_string(Ix,St),string_chars(St,Str).
 dispToken(floatTok(Dx,_),Str) :- number_string(Dx,St),string_chars(St,Str).
 dispToken(stringTok(St,_),Str) :- string_chars(St,Str).
-dispToken(regTok(Rg,_),['.','/'|Str]) :- string_chars(Rg,Chrs), concat(Chrs,['/','.'],Str).
 dispToken(term(_),['.',' ']).
 dispToken(terminal,[]).
 
@@ -119,7 +117,6 @@ nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.',' '],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\t'],Lc).
 nxTok(St,NxSt,term(Lc)) :- lookingAt(St,NxSt,['.','\n'],Lc).
 nxTok(St,NxSt,term(Lc)) :- nextSt(St,NxSt,'.'), nextSt(NxSt,_,'}'), makeLoc(St,NxSt,Lc).
-nxTok(St,NxSt,regTok(Rg,Lc)) :- lookingAt(St,St0,['`'],_), readRegexp(St0,NxSt,Rg), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,idTok(Id,Lc)) :- nextSt(St,St1,Ch), follows('',Ch,_), followGraph(Ch,Id,St1,NxSt), !, makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :-
   nextSt(St,St1,Ch),
@@ -214,8 +211,6 @@ bracketCount(_,St1,NxSt,Ch,Stk,[Ch|Chrs]) :- nextSt(St1,St2,Chr), bracketCount(S
 
 readFormat(St,NxSt,Chrs) :- nextSt(St,St1,':'), readUntil(St1,NxSt,';',Chrs).
 readFormat(St,St,[]) :- \+ hedChar(St,':').
-
-readRegexp(St,NxSt,Id) :- readUntil(St,NxSt,'`',Chrs), string_chars(Id,Chrs).
 
 idStart(L) :- char_type(L,alpha).
 idStart('_').

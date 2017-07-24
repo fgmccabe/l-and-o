@@ -9,13 +9,21 @@ lo.comp.termbase{
   import lo.comp.encode.
   import lo.comp.decode.
 
-  public loadTermBase:all r ~~ repository[r] |: (list[pkg],r) => map[term,rel].
-  loadTermBase(Pkgs,Repo) => foldRight((Pkg,M)=>loadTermPkg(Pkg,Repo,M),[],Pkgs).
+  public loadTermBase:all r ~~ repository[r] |: (prProg,r) => map[term,rel].
+  loadTermBase(Prog,Repo) => Code :-
+    (_,Code) = loadMdlImports(mdlImports(Prog),empty,Repo,[]),
+    _logmsg("code tree: \(dumpTree(Code,0))").
 
-  loadTermPkg:all r ~~ repository[r] |: (pkg,r,map[term,rel]) => map[term,rel].
-  loadTermPkg(Pkg,R,M) => unpackMdl(decodeMdl(Txt))+M :-
+  loadMdlImports:all r ~~ repository[r] |: (list[pkg],set[pkg],r,map[term,rel]) => (set[pkg],map[term,rel]).
+  loadMdlImports(Pkgs,SoFar,R,M) => foldLeft(((P,(S,Ms))=>loadTermPkg(P,S,R,Ms)),(SoFar,M),Pkgs).
+
+  loadTermPkg:all r ~~ repository[r] |: (pkg,set[pkg],r,map[term,rel]) => (set[pkg],map[term,rel]).
+  loadTermPkg(Pkg,SoFar,R,M) => (SoFar,M) :- Pkg in SoFar.
+  loadTermPkg(Pkg,SoFar,R,M) => loadMdlImports(mdlImports(Mdl),addMem(Pkg,SoFar),R,M+mdlCode(Mdl)) :-
+    -- _logmsg("Loading \(Pkg)"),
+    Mdl = loadMdlFromRepo(Pkg,R).
+
+  loadMdlFromRepo:all r ~~ repository[r] |: (pkg,r) => prProg.
+  loadMdlFromRepo(Pkg,R) => decodeMdl(Txt) :-
     loadFromRepo(R,Pkg,"term",Txt).
-
-  unpackMdl:(prProg) => map[term,rel].
-  unpackMdl(prProg(_,Code)) => Code.
 }

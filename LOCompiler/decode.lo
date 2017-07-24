@@ -13,7 +13,8 @@ lo.comp.decode{
 
   public decodeMdl:(string) => prProg.
   decodeMdl(Txt) => prProg(Spec,Code) :-
-    (decodePkgSpec(Spec), decodeRels([],Code)) %% explode(Txt).
+    (decodeTerm(strng(MTxt)), decodeRels([],Code)) %% explode(Txt),
+    decodePkgSpec(Spec) %% explode(MTxt).
 
   decodePkgSpec:(pkgSpec) --> list[integer].
   decodePkgSpec(unwrapSpec(S)) --> decodeTerm(S).
@@ -115,6 +116,7 @@ lo.comp.decode{
 
   private decodeTerm:(term) --> list[integer].
   decodeTerm(anon) --> "a".
+  decodeTerm(varbl(Nm)) --> "v", decodeName(Nm).
   decodeTerm(intgr(Ix)) --> "x", decInt(Ix).
   decodeTerm(flot(Dx)) --> "d", decFloat(Dx).
   decodeTerm(enum(Nm)) --> "e", decodeName(Nm).

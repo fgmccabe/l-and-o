@@ -38,10 +38,10 @@ lo.comp.flatten{
   flattenTerm(invoke(Lc,Op,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Op,[Res,..Q],NOp,Pre,Pre0,Post,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pre0,Prx,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Pst0],Psx,Qx).
+    flattenTerms(Args,Q0,NArgs,Pre0,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Prx],Pst0,Psx,Qx).
   flattenTerm(escvoke(Lc,Es,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
-    flattenTerms(Args,[Res,..Q],NArgs,Pre,Prx,Post,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Psx],Qx).
+    flattenTerms(Args,[Res,..Q],NArgs,Pre,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Prx],Post,Psx,Qx).
   flattenTerm(ovoke(Lc,Call,Lb,Th),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),

@@ -26,13 +26,6 @@ test.bench{
   data([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
         21,22,23,24,25,26,27,28,29,30]).
 
-  lots:(){}.
-  lots() :-
-      eg_count(Count),
-      bench(Count),
-      false.
-  lots().
-
   eg_count:(integer){}.
   eg_count(100).
   eg_count(200).
@@ -45,7 +38,9 @@ test.bench{
   benchTest:(integer)=>string.
   benchTest(Count) => calculate_lips(Count,testTime-dummyTime):-
     dummyTime = _perform(timeTest((():-dodummy(Count)))),
-    testTime = _perform(timeTest((():-dobench(Count)))).
+    -- _logmsg("dummy time for \(Count) is \(dummyTime)"),
+    testTime = _perform(timeTest((():-dobench(Count)))),
+    _logmsg("test time is \(testTime)").
 
   timeTest:((){}) => action[float].
   timeTest(F) => return get_cpu_time() >>= runTest(F).

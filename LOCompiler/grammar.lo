@@ -9,7 +9,6 @@ lo.comp.grammar{
   import lo.comp.lexer.
   import lo.comp.location.
   import lo.comp.operators.
-  import lo.comp.regexp.
   import lo.comp.token.
 
   public parseFile:(uri,report,report) => ast.
@@ -83,7 +82,6 @@ lo.comp.grammar{
   followsInfix(_) --> [tok(idQTok(_),_)].
   followsInfix(_) --> [tok(intTok(_),_)].
   followsInfix(_) --> [tok(fltTok(_),_)].
-  followsInfix(_) --> [tok(regTok(_),_)].
 
   private
   term0:(ast,tokMark,report,report) --> list[token].

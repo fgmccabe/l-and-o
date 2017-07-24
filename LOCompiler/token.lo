@@ -16,7 +16,6 @@ lo.comp.token{
        |  intTok(integer)
        |  fltTok(float)
        |  stringTok(list[stringSegment])
-       |  regTok(string)
        |  period.
 
   public
@@ -55,7 +54,6 @@ lo.comp.token{
   tokDisp(intTok(Ix)) => disp(Ix).
   tokDisp(fltTok(Dx)) => disp(Dx).
   tokDisp(stringTok(Sx)) => disp(Sx).
-  tokDisp(regTok(Rg)) => ssSeq([ss("`"),ss(Rg),ss("`")]).
   tokDisp(period) => ss(". ").
 
   private

@@ -3,6 +3,7 @@ lo.index{
 
   import lo.core.
   import lo.list.
+  import lo.coerce.
   import lo.collection.
 
   public
@@ -50,7 +51,7 @@ lo.index{
 
   public
   implementation all k,v ~~ equality[k] |: additive[map[k,v]] <= {
-    M1+M2 => mergeTree(M1,M2).
+    M1+M2 => addTree(M1,M2).
     M1-M2 => subtractTree(M1,M2).
   }
 
@@ -212,6 +213,21 @@ lo.index{
   reformNode(trNode(_,_,L,trEmpty)) => L.
   reformNode(N) => N.
 
+  addTree:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
+  addTree(trEmpty,T) => T.
+  addTree(T,trEmpty) => T.
+  addTree(T1,T2) => addNodes(T1,T2).
+
+  addNodes:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
+  addNodes(T1,trLeaf(H,Leaves)) => addLeafs(T1,Leaves).
+  addNodes(T1,trNode(Msk2,Ln2,L2,R2)) =>
+    addNodes(addNodes(T1,L2),R2).
+
+  addLeafs:all k,v ~~ equality[k] |: (map[k,v],list[(k,v)])=>map[k,v].
+  addLeafs(T,[]) => T.
+  addLeafs(T,[(K,V),..Lvs]) =>
+    addLeafs(insrt(K,V,T),Lvs).
+
   subtractTree:all k,v ~~ equality[k] |: (map[k,v],map[k,v])=>map[k,v].
   subtractTree(trEmpty,T) => T.
   subtractTree(T,trEmpty) => T.
@@ -303,4 +319,20 @@ lo.index{
   private dropEntry:all e~~(list[e],e,list[e]){}.
   dropEntry([e,..l],e,l).
   dropEntry([f,..l],e,[f,..m]) :- dropEntry(l,e,m).
+
+  public dumpTree:all k,v ~~ display[k] |: (map[k,v],integer) => ss.
+  dumpTree(trLeaf(Msk,Entries),Lvl) => ssSeq([ssSeq(spaces(Lvl)),ss(Msk::string),ss(":"),ssSeq(showKeys(Entries)),ss("\n")]).
+  dumpTree(trNode(Msk,Len,L,R),Lvl) =>
+    ssSeq([ssSeq(spaces(Lvl)),ss(Msk::string),ss(":"),ss(Len::string),ss("\n"),
+    dumpTree(L,Lvl+1),
+    dumpTree(R,Lvl+1)]).
+  dumpTree(trEmpty,Lvl) => ssSeq([ssSeq(spaces(Lvl)),ss("*\n")]).
+
+  showKeys:all k,v ~~ display[k] |: (list[(k,v)]) => list[ss].
+  showKeys([]) => [].
+  showKeys([(K,_),..L]) => [disp(K),ss(", "),..showKeys(L)].
+
+  spaces:(integer) => list[ss].
+  spaces(0) => [].
+  spaces(X) => [ss(" "),..spaces(X-1)].
 }

@@ -87,7 +87,6 @@ lo.comp.lexer{
   nxtTok(rqpar) --> [0c|, 0c>].
   nxtTok(period) --> [0c.], whiteSpace().
   nxtTok(period) --> [0c.], [0c}]+.
-  nxtTok(regTok(Rg)) --> "`", regExp(Chars), "`", { Rg = implode(Chars) }.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
   nxtTok(idQTok(Id)) --> [0c'], readQuoted(Q), [0c'], { Id = implode(Q)}.
   nxtTok(stringTok(Text)) --> [0c"], readStringSegments(Text), [0c"].
@@ -112,11 +111,6 @@ lo.comp.lexer{
   alphaNum:(integer) --> tokenState.
   alphaNum(Ch) --> idStart(Ch).
   alphaNum(Ch) --> [Ch] , {_isNdChar(Ch) | _isMnChar(Ch) | _isMcChar(Ch) | _isPcChar(Ch) | _isCfChar(Ch) }!.
-
-  regExp:(list[integer]) --> tokenState.
-  regExp([]) --> "`"+.
-  regExp([0c\\,Ch,..More]) --> [0c\\], [Ch], regExp(More).
-  regExp([Ch,..More]) --> [Ch], regExp(More).
 
   readStringSegments:(list[stringSegment]) --> tokenState.
   readStringSegments([]) --> [0c"]+.

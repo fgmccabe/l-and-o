@@ -10,4 +10,7 @@ lo.comp.package{
 
   public pkgSpecPkg:(pkgSpec)=>pkg.
   pkgSpecPkg(pkgSpec(P,_,_,_,_,_,_))=>P.
+
+  public pkgImports:(pkgSpec) => list[(visibility,pkg)].
+  pkgImports(pkgSpec(_,_,_,_,_,_,Imps)) => Imps.
 }
