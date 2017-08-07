@@ -1,0 +1,124 @@
+lo.redblack.impl{
+  import lo.core.
+
+  public all k,v ~~ redblack[k,v] <~ {
+    color:trColor.
+  }.
+
+  private eTree: all k,v ~~ redblack[k,v].
+  eTree <= { color = Bk }.
+
+  private dTree: all k,v ~~ redblack[k,v].
+  dTree <= { color = Dbl }.
+
+  private node: all k,v ~~ (redblack[k,v],k,v,trColor,redblack[k,v]) <=> redblack[k,v].
+  node(L,K,V,C,R) <= {
+    color = C.
+  }
+
+  private trColor ::= Rd | Bk | Dbl.
+
+  private implementation display[trColor] <= {
+    disp(Rd) => ss("red").
+    disp(Bk) => ss("black").
+    disp(Dbl) => ss("dbl-black").
+  }
+
+  public emptyRb:all k,v ~~ redblack[k,v].
+  emptyRb = eTree.
+
+  public inRB: all k,v ~~ comp[k],equality[k] |: (redblack[k,v],k,v){}.
+  inRB(node(_,Tk,V,_,_),K,V) :- Tk==K.
+  inRB(node(L,Tk,_,_,_),K,V) :- K<Tk, inRB(L,K,V).
+  inRB(node(_,Tk,_,_,R),K,V) :- K>Tk, inRB(R,K,V).
+
+  public insertRB: all k,v ~~ comp[k],equality[k] |: (redblack[k,v],k,v) => redblack[k,v].
+  insertRB(T,K,V) => blacken(insrt(T,K,V)).
+
+  private insrt: all k,v ~~ comp[k],equality[k] |: (redblack[k,v],k,v) => redblack[k,v].
+  insrt(eTree,k,v) => node(eTree,k,v,Rd,eTree).
+  insrt(node(L,Tk,_,C,R),K,V) => node(L,Tk,V,C,R) :- Tk==K.
+  insrt(node(L,Tk,Tv,Tc,R),K,V) => balance(insrt(L,K,V),Tk,Tv,Tc,R) :- K<Tk.
+  insrt(node(L,Tk,Tv,Tc,R),K,V) => balance(L,Tk,Tv,Tc,insrt(R,K,V)) :- K>Tk.
+
+  private blacken: all k,v ~~ (redblack[k,v]) => redblack[k,v].
+  blacken(node(node(a,xk,xv,Rd,b),yk,yv,Rd,c)) => node(node(a,xk,xv,Rd,b),yk,yv,Bk,c).
+  blacken(node(a,xk,xv,Rd,node(b,yk,yv,Rd,c))) => node(a,xk,xv,Bk,node(b,yk,yv,Rd,c)).
+  blacken(Tr) => Tr.
+
+  private balance: all k,v ~~ (redblack[k,v],k,v,trColor,redblack[k,v]) => redblack[k,v].
+  balance(node(node(a,kx,vx,Rd,b),ky,vy,Rd,c),kz,vz,Bk,d) => node(node(a,kx,vx,Bk,b),ky,vy,Rd,node(c,kz,vz,Bk,d)).
+  balance(node(a,kx,vx,Rd,node(b,ky,vy,Rd,c)),kz,vz,Bk,d) => node(node(a,kx,vx,Bk,b),ky,vy,Rd,node(c,kz,vz,Bk,d)).
+  balance(a,kx,vx,Bk,node(node(b,ky,vy,Rd,c),kz,vz,Rd,d)) => node(node(a,kx,vx,Bk,b),ky,vy,Rd,node(c,kz,vz,Bk,d)).
+  balance(a,kx,vx,Bk,node(b,ky,vy,Rd,node(c,kz,vz,Rd,d))) => node(node(a,kx,vx,Bk,b),ky,vy,Rd,node(c,kz,vz,Bk,d)).
+  balance(a,kx,vx,Dbl,node(node(b,yk,yv,Rd,c),zk,zv,Rd,d)) => node(node(a,kx,vx,Bk,b),ky,vy,Bk,node(c,kz,vz,Bk,d)).
+  balance(node(a,kx,vx,Rd,node(b,yk,yv,Rd,c)),zk,zv,Dbl,d) => node(node(a,kx,vx,Bk,b),ky,vy,Bk,node(c,kz,vz,Bk,d)).
+  balance(a,k,v,c,b) => node(a,k,v,c,b).
+
+  public removeRB:all k,v ~~ comp[k],equality[k] |: (redblack[k,v],k) => redblack[k,v].
+  removeRB(T,K) => del(lighten(T),K).
+
+  private lighten: all k,v ~~ (redblack[k,v]) => redblack[k,v].
+  lighten(node(a,yk,yv,Bk,b)) => node(a,yk,yv,Rd,b) :- a.color=Bk, b.color=Bk.
+  lighten(T) => T.
+
+  private del:all k,v ~~ comp[k],equality[k] |: (redblack[k,v],k) => redblack[k,v].
+  del(eTree,_) => eTree.
+  del(node(eTree,Kt,_,Rd,eTree),K) => eTree :- K==Kt.
+  del(node(eTree,Kt,V,Rd,eTree),K) => node(eTree,Kt,V,Rd,eTree) :- K\==Kt.
+  del(node(eTree,Kt,_,Bk,eTree),K) => dTree :- K==Kt.
+  del(node(eTree,Kt,V,Bk,eTree),K) => node(eTree,Kt,V,Bk,eTree) :- K\==Kt.
+  del(node(node(eTree,yk,yv,Rd,eTree),zk,zv,Bk,eTree),xk) => node(del(node(eTree,yk,yv,Rd,eTree),xk),zk,zv,Bk,eTree) :- xk < zk.
+  del(node(node(eTree,yk,yv,Rd,eTree),zk,zv,Bk,eTree),xk) => node(eTree,yk,yv,Bk,eTree) :- xk == zk.
+  del(node(node(eTree,yk,yv,Rd,eTree),zk,zv,Bk,eTree),xk) => node(node(eTree,yk,yv,Rd,eTree),zk,zv,Bk,eTree) :- xk > zk.
+  del(node(a,yk,yv,Cx,b),xk) => rotate(Cx, del(a,xk), yk,yv, b) :- xk < yk.
+  del(node(a,yk,yv,Cx,b),xk) => rotate(Cx, a, y1k,y1v, b1) :- xk == yk, (y1k,y1v,b1) = delMin(b).
+  del(node(a,yk,yv,Cx,b),xk) => rotate(Cx, a, yk,yv, del(b,xk)) :- xk > yk.
+
+  private delMin:all k,v ~~ comp[k],equality[k] |: (redblack[k,v]) => (k,v,redblack[k,v]).
+  delMin(node(eTree,K,V,Rd,eTree)) => (K,V,eTree).
+  delMin(node(eTree,K,V,Bk,eTree)) => (K,V,dTree).
+  delMin(node(eTree,K,V,Bk,node(eTree,yk,yv,Rd,eTree))) => (K,V,node(eTree,yk,yv,Bk,eTree)).
+  delMin(node(a,xk,xv,Cx,b)) => (x1k,x1v,rotate(Cx,a1,xk,xv,b)) :-
+    delMin(a) = (x1k,x1v,a1).
+
+  rotate: all k,v ~~ (trColor,redblack[k,v],k,v,redblack[k,v]) => redblack[k,v].
+  rotate(Rd, node(a,xk,xv,Dbl,b), yk,yv, node(c,zk,zv,Bk,d)) => balance(node(node(a,xk,xv,Bk,b),yk,yv,Bk,c),zk,zv,Bk,d).
+  rotate(Rd, dTree, yk,yv, node(c,zk,zv,Bk,d)) => balance(node(eTree,yk,yv,Rd,c),zk,zv,Bk,d).
+  rotate(Rd, node(a,xk,xv,Bk,b), yk,yv, node(c,zk,zv,Dbl,d)) => balance(a, xk, xv, Bk, node(b,yk,yv,Rd,node(c,zk,zv,Bk,d))).
+  rotate(Rd, node(a,xk,xv,Bk,b), yk,yv, dTree) => balance(a, xk, xv, Bk, node(b,yk,yv,Rd,eTree)).
+  rotate(Bk, node(a,xk,xv,Dbl,b), yk,yv, node(c,zk,zv,Bk,d)) => balance(node(node(a, xk, xv, Bk,b), yk,yv,Rd,c), zk,zv,Bk,d).
+  rotate(Bk, dTree, yk, yv, node(c,zk,zv,Bk,d)) => balance(node(eTree,yk,yv,Rd,c),zk,zv,Dbl,d).
+  rotate(Bk, node(a,xk,xv,Bk,b), yk,yv, node(c,zk,zv,Dbl,d)) => balance(a, xk, xv, Dbl,node(b, yk,yv,Rd,node(c, zk,zv,Bk,d))).
+  rotate(Bk, node(a,xk,xv,Bk,b), yk,yv, dTree) => balance(a, xk, xv, Dbl, node(b,yk,yv,Rd,eTree)).
+  rotate(Bk, node(a, wk, wv, Dbl, b), xk, xv, node(node(c,yk,yv,Bk,d),zk,zv,Rd,e)) =>
+    node(balance(node(node(a,wk,wv,Bk,b),xk,xv,Rd,c), yk,yv, Bk, d),zk,zv,Bk,e).
+  rotate(Bk, dTree, xk,xv, node(node(c,yk,yv,Bk,d),zk,zv,Rd,e)) => node(balance(node(eTree,xk,xv,Rd,c),yk,yv,Bk,d),zk,zv,Bk,e).
+  rotate(Bk, node(a,wk,wv,Rd,node(b,xk,xv,Bk,c)),yk,yv,node(d,zk,zv,Bk,e)) => node(a,wk,wv,Bk,balance(b, xk,xv,Bk, node(c,yk,yv,Rd,node(d,zk,zv,Bk,e)))).
+  rotate(Bk, node(a,wk,wv,Rd,node(b,xk,xv,Bk,c)),yk,yv,dTree) => node(a,wk,wv,Bk,balance(b,xk,xv,Bk,node(c,yk,yv,Rd,eTree))).
+  rotate(Cx, a,xk,xv,b) => node(a,xk,xv,Cx,b).
+
+  public foldRb:all k,v,x ~~ ((k,v,x)=>x,x,redblack[k,v]) => x.
+  foldRb(_,X,eTree) => X.
+  foldRb(F,X,node(L,k,v,_,R)) => foldRb(F,F(k,v,foldRb(F,X,L)),R).
+
+  public mapRb:all k,v,x ~~ ((k,v)=>x, redblack[k,v]) => redblack[k,x].
+  mapRb(_,eTree) => eTree.
+  mapRb(F,node(L,xk,xv,Cx,R)) => node(mapRb(F,L),xk,F(xk,xv),Cx,mapRb(F,R)).
+
+  public implementation all k,v ~~ display[k], display[v] |: display[redblack[k,v]] <= {
+    disp(Tr) => ssSeq([ss("["),ssSeq(dRb(Tr,"",_)),ss("]")]).
+  }
+
+  dRb: all k,v ~~ display[k], display[v] |: (redblack[k,v],string,string) => list[ss].
+  dRb(eTree,Sep,Sep) => [].
+  dRb(node(L,k,v,_,R),Sep,Sx) => [ssSeq(dRb(L,Sep,S0)),ss(S0),disp(k),ss("->"),disp(v),ssSeq(dRb(R,", ",Sx))].
+
+  public implementation all k,v ~~ dump[k], dump[v] |: dump[redblack[k,v]] <= {
+    _dump(Tr,Lvl) => dumpRb(Tr,Lvl).
+  }
+
+  dumpRb:all k,v ~~ dump[k], dump[v] |: (redblack[k,v],integer) => ss.
+  dumpRb(eTree,_) => ss("ø").
+  dumpRb(node(L,k,v,Cx,R),Lvl) => ssSeq([ss("("),dump(L,Lv1),ss("|"),disp(Cx),ss(":"),dump(k,Lvl),ss("->"),dump(v,Lvl),ss("|"),dump(R,Lv1),ss(")")]) :- Lv1=Lvl-1.
+}

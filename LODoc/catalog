@@ -1,0 +1,9 @@
+{
+	"content": {
+	  "lo.doc.gen" : "docgen.lo",
+	  "lo.doc.parse" : "docparse.lo",
+		"lo.doc.template" : "template.lo"
+	},
+	"default": "../LOCompiler/catalog",
+	"version": "0.0.1"
+}

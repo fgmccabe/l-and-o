@@ -11,8 +11,8 @@ lo.comp.termbase{
 
   public loadTermBase:all r ~~ repository[r] |: (prProg,r) => map[term,rel].
   loadTermBase(Prog,Repo) => Code :-
-    (_,Code) = loadMdlImports(mdlImports(Prog),empty,Repo,[]),
-    _logmsg("code tree: \(dumpTree(Code,0))").
+    (_,Code) = loadMdlImports(mdlImports(Prog),empty,Repo,[]).
+    -- _logmsg("code tree: \(dumpTree(Code,0))").
 
   loadMdlImports:all r ~~ repository[r] |: (list[pkg],set[pkg],r,map[term,rel]) => (set[pkg],map[term,rel]).
   loadMdlImports(Pkgs,SoFar,R,M) => foldLeft(((P,(S,Ms))=>loadTermPkg(P,S,R,Ms)),(SoFar,M),Pkgs).

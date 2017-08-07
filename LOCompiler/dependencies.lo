@@ -154,22 +154,22 @@ lo.comp.dependencies{
   astImplName(S,Nm) :-
     isConstrained(S,_,I),
     astImplName(I,Nm).
-  astImplName(S,formatSS(ssSeq([ss(Nm),..surfaceNames(A,marker(con))]))) :-
+  astImplName(S,formatSS(ssSeq([ss(Nm),..sfcNames(A,marker(con))]))) :-
     isSquareTerm(S,_,Op,A),
     isIden(Op,_,Nm).
   astImplName(T,"()\(length(A))") :-
     isRoundTuple(T,_,A).
 
-  surfaceNames:(list[ast],string) => list[ss].
-  surfaceNames([T,.._],Sep) => surfaceNames(deComma(L),Sep) :-
+  sfcNames:(list[ast],string) => list[ss].
+  sfcNames([T,.._],Sep) => sfcNames(deComma(L),Sep) :-
     isBinary(T,"->>",_,L,_).
-  surfaceNames([],_)=>[].
-  surfaceNames([T,..Els],Sep) => [ss(Sep),surfaceName(T),..surfaceNames(Els,Sep)].
+  sfcNames([],_)=>[].
+  sfcNames([T,..Els],Sep) => [ss(Sep),sfcName(T),..sfcNames(Els,Sep)].
 
-  surfaceName:(ast)=>ss.
-  surfaceName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
-  surfaceName(S) =>  ss(Nm) :-  (isSquareTerm(S,_,Op,_), isIden(Op,_,Nm)).
-  surfaceName(T) => ss("()\(length(Els))") :- isRoundTuple(T,_,Els).
+  sfcName:(ast)=>ss.
+  sfcName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
+  sfcName(S) =>  ss(Nm) :-  (isSquareTerm(S,_,Op,_), isIden(Op,_,Nm)).
+  sfcName(T) => ss("()\(length(Els))") :- isRoundTuple(T,_,Els).
 
   collectDefines:(list[ast],string,defnKind,list[ast],list[ast]){}.
   collectDefines([],_,_,[],[]).

@@ -1,0 +1,13 @@
+#// Template for generating MD for function definitions
+
+#(Lvl) #(Name)
+
+#(Intro)
+
+````
+#(Signature)
+````
+
+##(ParamDescs)
+
+#(Blurb)

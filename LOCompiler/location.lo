@@ -48,6 +48,15 @@ lo.comp.location{
     isEmpty(std).
   }
 
+  public implementation comp[location] <= {
+    L1 < L2 :- lessLoc(L1,L2).
+    L1 >= L2 :- L1 = L2.
+    L1 >= L2 :- lessLoc(L2,L1).
+  }
+
+  lessLoc:(location,location){}.
+  lessLoc(loc(_,O1,_,L1,P),loc(_,O2,_,_,P)) :- O1+L1<O2.
+
   public implementation coercion[location,json] <= {
     _coerce(lc) => loc2json(lc).
   }
@@ -83,4 +92,6 @@ lo.comp.location{
   findLine([],[],[]).
   findLine([0c\n,..L],[0c\n],L).
   findLine([Ch,..L],[Ch,..Ln],Rest) :- findLine(L,Ln,Rest).
+
+  public commentStyle ::= lineCmt | blockCmt | docCmt.
 }

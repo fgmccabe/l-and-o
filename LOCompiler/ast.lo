@@ -68,6 +68,11 @@ lo.comp.ast{
   showAst(appl(_,Op,Args),_) =>
     ssSeq([showAst(Op,0), showAst(Args,0)]).
 
+  showComment:((commentStyle,string),ss) => ss.
+  showComment((lineCmt,Txt),S) => ssSeq([S,ss(" -- "),ss(Txt),ss("\n")]).
+  showComment((blockCmt,Txt),S) => ssSeq([ss("/*"),ss(Txt),ss("*/"),S]).
+  showComment((docCmt,Txt),S) => ssSeq([ss("/**"),ss(Txt),ss("*/"),S]).
+
   private dumpAst:(ast){}.
   dumpAst(A) :-
     _logmsg("\(A)").

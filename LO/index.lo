@@ -6,11 +6,18 @@ lo.index{
   import lo.coerce.
   import lo.collection.
 
+  /**
+   * The map type describes the core dictionary mapping.
+   * Implemented as an index hash tree.
+   * @typeParam k The type of a key. map is generic in both key type and value type.
+   * @typeParam v The type of a value.
+   */
+
   public
   all k,v ~~ /* equality[k] |: */map[k,v] ::=
-      trEmpty
-    | trLeaf(integer,list[(k,v)])
-    | trNode(integer,integer,map[k,v],map[k,v]).
+      trEmpty                                       -- @enum empty dictionary
+    | trLeaf(integer,list[(k,v)])                   -- @con leaf entries
+    | trNode(integer,integer,map[k,v],map[k,v]).    -- @con non-leaf dictionary
 
   public implementation all k,v ~~ equality[k] |: map[map[k,v] ->> k,v] <= {
     present(M,K,V) :- lookIn(hash(K),M,K,V).

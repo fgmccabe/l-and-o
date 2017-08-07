@@ -69,7 +69,6 @@ lo.comp.abstract{
   isBraceTerm:(ast,location,ast,list[ast]){}.
   isBraceTerm(appl(Lc,Op,tupl(_,"{}",A)),Lc,Op,A).
 
-
   public
   isBrace:(ast,location,ast,ast){}.
   isBrace(appl(Lc,Op,A),Lc,Op,A) :- \+ keyword(Op), isBraceTuple(A,_,_).
@@ -216,4 +215,6 @@ lo.comp.abstract{
   tupleize(P,Op,tupl(Lc,Op,[L,..deComma(R)])) :-
     isBinary(P,",",Lc,L,R).
   tupleize(P,Op,tupl(P.loc,Op,[P])).
+
+
 }

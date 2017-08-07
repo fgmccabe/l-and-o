@@ -53,6 +53,16 @@ lo.core{
     frmt:(t,string) => ss.
   }
 
+  -- _dump function contract is intended to show the structure of its argument
+  public contract all t ~~ dump[t] <~ {
+    _dump:(t,integer)=>ss.
+  }
+
+  -- The dump function only displays down to a given depth
+  public dump:all a ~~ dump[a] |: (a,integer) => ss.
+  dump(_,Lvl) => ss("...") :- Lvl=<0.
+  dump(T,Lvl) => _dump(T,Lvl).
+
   public implementation display[ss] <= {
     disp(X) => X
   }
@@ -97,6 +107,10 @@ lo.core{
 
   public implementation format[integer] <= {
     frmt(X,F) => ss(_int_format(X,F)).
+  }
+
+  public implementation dump[integer] <= {
+    _dump(Ix,_) => ss(_int2str(Ix,10,0,0c ))
   }
 
   -- implement standard contracts for floats
@@ -151,6 +165,10 @@ lo.core{
     frmt(X,F) => ss(_flt_format(X,F)).
   }
 
+  public implementation dump[float] <= {
+    _dump(X,_) => ss(_flt2str(X,0,8,0cg,false))
+  }
+
   -- and strings ...
   public implementation additive[string] <= {
     X+Y => _str_concat(X,Y).
@@ -184,6 +202,10 @@ lo.core{
   qtChr(0c",l) => [sc(0c\\),sc(0c"),..l].
   qtChr(0c\\,l) => [sc(0c\\),sc(0c\\),..l].
   qtChr(c,l) => [sc(c),..l].
+
+  public implementation dump[string] <= {
+    _dump(X,_) => displayString(X).
+  }
 
   public implementation sizeable[string] <= {
     size(S) => _str_len(S).
@@ -234,6 +256,15 @@ lo.core{
   listDisp([],_) => [ss("]")].
   listDisp([E,..L],Sep) => [ss(Sep),disp(E),..listDisp(L,",")].
 
+  public implementation all a ~~ dump[a] |: dump[list[a]] <= {
+    _dump(T,Lvl) => ssSeq([ss("["),ssSeq(dumpList(T,"",Lvl-1)),ss("]")]).
+  }
+
+  dumpList:all a ~~ dump[a] |: (list[a],string,integer) => list[ss].
+  dumpList(X,_,Lvl) => [ss(",.."),dump(X,Lvl),ss("]")] :- var(X).
+  dumpList([],_,_) => [].
+  dumpList([A,..L],Sep,Lvl) => [ss(Sep),dump(A,Lvl),..dumpList(L,", ",Lvl)].
+
   -- display optional values
   public implementation all x ~~ display[x] |: display[option[x]] <= {
     disp(O) => dispOptional(O).
@@ -255,6 +286,20 @@ lo.core{
   private optionHash:all x ~~ equality[x] |: (option[x]) => integer.
   optionHash(some(X)) => hash("some")*37+hash(X).
   optionHash(none) => hash("none").
+
+  -- Some basic stuff for tuples
+  public implementation display[()] <= {
+    disp(_) => ss("()").
+  }
+
+  public implementation dump[()] <= {
+    _dump(_,_) => ss("()").
+  }
+
+  public implementation equality[()] <= {
+    () == ().
+    hash(()) => 0.
+  }
 
   -- Display 2-tuples
   public implementation all x,y ~~ display[x], display[y] |: display[(x,y)] <= {

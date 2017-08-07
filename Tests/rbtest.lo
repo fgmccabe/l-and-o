@@ -1,0 +1,51 @@
+test.rb{
+  import lo.
+  import lo.unit.
+  import lo.redblack.
+
+  tr1 : redblack[integer,()].
+  tr1 = insertRB(insertRB(insertRB(insertRB(insertRB(insertRB(insertRB(_empty,6,()),4,()),8,()),5,()),2,()),7,()),9,()).
+
+  tr2 : redblack[integer,()].
+  tr2 = [(1,()),(2,()),(3,())]::redblack[integer,()].
+
+  show "tr1: \(dump(tr1,10))".
+
+  show "tr2: \(dump(tr2,10))".
+
+  rbtest:harness.
+  rbtest <= {
+    desc = "red black test".
+
+    doTest() :-
+      size(tr1) = 7,
+      T2 = removeRB(tr1,9),
+      size(T2) = 6,
+      _logmsg("remove 9 =\(dump(T2,10))"),
+      T3 = removeRB(T2,9),
+      T2 == T3,
+      size(T3) = 6,
+      _logmsg("remove 9=\(dump(T3,10))"),
+      T2=T3,
+      T4 = removeRB(T3,2),
+      size(T4) = 5,
+      _logmsg("remove 2=\(dump(T4,10))"),
+      T5 = removeRB(T4,6),
+      size(T5) = 4,
+      _logmsg("remove 6=\(dump(T5,10))"),
+      T6 = removeRB(T5,4),
+      size(T6) = 3,
+      _logmsg("remove 4=\(dump(T6,10))"),
+      T7 = removeRB(T6,7),
+      size(T7) = 2,
+      _logmsg("remove 7=\(dump(T7,10))"),
+      T8 = removeRB(T7,5),
+      size(T8) = 1,
+      _logmsg("remove 5=\(dump(T8,10))"),
+      T9 = removeRB(T8,8),
+      _logmsg("remove 8=\(dump(T9,10))"),
+      size(T9) = 0.
+  }
+
+  assert checkUnit(rbtest).
+}

@@ -1,0 +1,124 @@
+lo.finger{
+  import lo.coerce.
+  import lo.core.
+  import lo.collection.
+  import lo.list.
+
+  private all a ~~ node[a] ::= node2(a,a) | node3(a,a,a).
+  public all a ~~ finger[a] ::= emp | single(a) | deep(list[a],finger[node[a]],list[a]).
+
+  contract all f/1 ~~ reduce[f] <~ {
+    reducer : all a,b ~~ ((a,b)=>b, f[a], b) => b.
+    reducel : all a,b ~~ ((b,a)=>b, b, f[a]) => b.
+  }
+
+  implementation reduce[list] <= {
+    reducer(F,x,z) => foldRight(F,z,x).
+    reducel(F,x,z) => foldLeft((b,a)=>F(a,b),x,z).
+  }
+
+  implementation reduce[node] <= {
+    reducer(F,node2(a,b),z) => F(a,F(b,z)).
+    reducer(F,node3(a,b,c),z) => F(a,F(b,F(c,z))).
+
+    reducel(F,z,node2(a,b)) => F(F(z,b),a).
+    reducel(F,z,node3(a,b,c)) => F(F(F(z,c),b),a).
+  }
+
+  implementation reduce[finger] <= {
+    reducer(F,x,z) => fingerRedr(F,x,z).
+    reducel(F,x,z) => fingerRedl(F,x,z).
+  }
+
+  private fingerRedr:all a,b ~~ ((a,b)=>b,finger[a],b) => b.
+  fingerRedr(_,emp,z) => z.
+  fingerRedr(F,single(x),z) => F(x,z).
+  fingerRedr(F,deep(Pr,m,Sf),z) => F1(F,Pr,F2(F,m,F1(F,Sf,z))).
+
+  private F1:all a,b ~~ ((a,b)=>b,list[a],b) => b.
+  F1(F,Ls,X) => reducer(F,Ls,X).
+
+  private F2:all a,b ~~ ((a,b)=>b,finger[node[a]],b) => b.
+  F2(F,Ls,X) => reducer((e,z)=>reducer(F,e,z),Ls,X).
+
+  private fingerRedl:all a,b ~~ ((b,a)=>b,b,finger[a]) => b.
+  fingerRedl(_,z,emp) => z.
+  fingerRedl(F,z,single(x)) => F(z,x).
+  fingerRedl(F,z,deep(Pr,m,Sf)) => L1(F,L2(F,L1(F,z,Pr),m),Sf).
+
+  private L1:all a,b ~~ ((b,a)=>b,b,list[a]) => b.
+  L1(F,X,Y) => reducel(F,X,Y).
+
+  private L2:all a,b ~~ ((b,a)=>b,b,finger[node[a]]) => b.
+  L2(F,Ls,X) => reducel((z,e)=>reducel(F,z,e),Ls,X).
+
+  private addLeft:all a ~~ (a,finger[a]) => finger[a].
+  addLeft(a,emp) => single(a).
+  addLeft(a,single(b)) => deep([a],emp,[b]).
+  addLeft(a,deep([b,c,d,e],m,Sf)) => deep([a,b],addLeft(node3(c,d,e),m),Sf).
+  addLeft(a,deep(Pr,m,Sf)) => deep([a,..Pr],m,Sf).
+
+  private addRight:all a ~~ (finger[a],a) => finger[a].
+  addRight(emp,a) => single(a).
+  addRight(single(b),a) => deep([b],emp,[a]).
+  addRight(deep(Pr,m,[e,d,c,b]),a) => deep(Pr,addRight(m,node3(e,d,c)),[b,a]).
+  addRight(deep(Pr,m,Sf),a) => deep(Pr,m,Sf<>[a]).
+
+  private leftLift:all a,f/1 ~~ reduce[f] |: (f[a],finger[a]) => finger[a].
+  leftLift(S,D) => reducer(addLeft,S,D).
+
+  private rightLift:all a,f/1 ~~ reduce[f] |: (finger[a],f[a]) => finger[a].
+  rightLift(S,D) => reducel(addRight,S,D).
+
+  public implementation all a ~~ coercion[list[a],finger[a]] <= {
+    _coerce(L) => leftLift(L,emp).
+  }
+
+  public implementation all a ~~ coercion[finger[a],list[a]] <= {
+    _coerce(T) => toList(T).
+  }
+
+  private toList:all a,f/1 ~~ reduce[f] |: (f[a]) => list[a].
+  toList(T) => reducer((X,L)=>[X,..L],T,[]).
+
+  public hdtlFinger:all a ~~ (finger[a],a,finger[a]){}.
+  hdtlFinger(single(X),X,emp).
+  hdtlFinger(deep([X,..Pr],M,Sf),X,fingerTl(Pr,M,Sf)).
+
+  fingerTl:all a ~~ (list[a],finger[node[a]],list[a])=>finger[a].
+  fingerTl([],emp,Sf) => Sf::finger[a].
+  fingerTl([],M,Sf) => deep(toList(f),M1,Sf) :-
+    hdtlFinger(M,f,M1).
+  fingerTl(Pr,M,Sf) => deep(Pr,M,Sf).
+
+  public implementation all a ~~ stream[finger[a]->>a] <= {
+    _eof(emp).
+
+    _hdtl(T,E,R) :- hdtlFinger(T,E,R).
+  }
+
+  public implementation all a ~~ display[a] |: display[finger[a]] <= {
+    disp(T) => ssSeq([ss("["),ssSeq(L),ss("]")]) :- (L,_) = reducer((A,B)=>dispEl(B,A),T,([],"")).
+  }
+
+  dispEl:all a ~~ display[a] |: ((list[ss],string),a) => (list[ss],string).
+  dispEl((L,Sep),E) => ([disp(E),ss(Sep),..L],", ").
+
+  public implementation all a ~~ dump[a] |: dump[finger[a]] <= {
+    _dump(T,Lvl) => dumpFinger(T,Lvl).
+  }
+
+  dumpFinger:all a ~~ dump[a] |: (finger[a],integer) => ss.
+  dumpFinger(emp,_) => ss("ø").
+  dumpFinger(single(X),Lvl) => ssSeq([ss("["),dump(X,Lvl-1),ss("]")]).
+  dumpFinger(deep(Pr,M,Sf),Lvl) => ssSeq([ss("<"),dump(Pr,Lv1),ss("|"),dump(M,Lv1),ss("|"),dump(Sf,Lv1),ss(">")]) :-
+    Lv1 = Lvl-1.
+
+  implementation all a ~~ dump[a] |: dump[node[a]] <= {
+    _dump(T,Lvl) => dumpNode(T,Lvl).
+  }
+
+  public dumpNode:all a ~~ dump[a] |: (node[a],integer) => ss.
+  dumpNode(node2(A,B),Lvl) => ssSeq([ss("("),dump(A,Lv1),ss(":"),dump(B,Lv1),ss(")")]) :- Lv1=Lvl-1.
+  dumpNode(node3(A,B,C),Lvl) => ssSeq([ss("("),dump(A,Lv1),ss(":"),dump(B,Lv1),ss(":"),dump(C,Lv1),ss(")")]) :- Lv1=Lvl-1.
+}

@@ -1,0 +1,50 @@
+test.rb.speed{
+  import lo.
+  import lo.action.
+  import lo.monad.
+  import lo.redblack.
+  import lo.unit.
+
+  rbspeed:(integer)<=>harness.
+  rbspeed(Cnt) <= {
+    desc = "test speed of redblack trees".
+
+    buildRb:(list[integer],redblack[integer,()]) => redblack[integer,()].
+    buildRb(Io,Strt) => foldLeft((Ix,R)=>insertRB(R,Ix,()),Strt,Io).
+
+    buildHsh:(list[integer],map[integer,()]) => map[integer,()].
+    buildHsh(Io,Strt) => foldLeft((Ix,R)=>R[Ix->()],Strt,Io).
+
+    get_cpu_time:()=>float.
+    get_cpu_time() => _ticks().
+
+    timeTest:((){}) => action[float].
+    timeTest(F) => return get_cpu_time() >>= runTest(F).
+
+    runTest:((){}) => ((float)=>action[float]).
+    runTest(T) => ((St)=>delta(St) :- T()).
+
+    delta:(float) => action[float].
+    delta(St) => return (get_cpu_time()-St).
+
+    rbOk:(redblack[integer,()],list[integer]){}.
+    rbOk(Tr,Io) :- E in Io *> inRB(Tr,E,_).
+
+    ixOk:(map[integer,()],list[integer]){}.
+    ixOk(Tr,Io) :- E in Io *> present(Tr,E,_).
+
+    doTest()  :-
+      Io = iota(0,Cnt),
+      RevIo = reverse(Io),
+      testTime = _perform(timeTest((():- rbOk(buildRb(RevIo,buildRb(Io,emptyRb)),Io)))),
+      _logmsg("redblack time is \(testTime)"),
+      hashTime = _perform(timeTest((():- ixOk(buildHsh(RevIo,buildHsh(Io,[])),Io)))),
+      _logmsg("hash time is \(hashTime)"),
+      _logmsg("rb/hash = \(testTime/hashTime)").
+  }
+
+  assert checkUnit(rbspeed(100)).
+
+  main:(integer){}.
+  main(Cnt) :- checkUnit(rbspeed(Cnt)).
+}

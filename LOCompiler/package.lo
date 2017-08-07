@@ -11,6 +11,12 @@ lo.comp.package{
   public pkgSpecPkg:(pkgSpec)=>pkg.
   pkgSpecPkg(pkgSpec(P,_,_,_,_,_,_))=>P.
 
+  public pkgDefs:(pkgSpec) => list[(string,tipe)].
+  pkgDefs(pkgSpec(_,D,_,_,_,_,_)) => D.
+
+  public pkgTypes:(pkgSpec) => list[(string,tipe)].
+  pkgTypes(pkgSpec(_,_,T,_,_,_,_)) => T.
+
   public pkgImports:(pkgSpec) => list[(visibility,pkg)].
   pkgImports(pkgSpec(_,_,_,_,_,_,Imps)) => Imps.
 }

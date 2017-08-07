@@ -123,7 +123,7 @@ lo.comp.parseType{
   prsTypeName(Lc,"this",K,_,_,thisType,Rp,Rpx) :- checkKind(K,simpleType,Lc,Rp,Rpx).
   prsTypeName(_,"$",simpleType,_,_,kVar("$"),Rp,Rp).
   prsTypeName(_,"$",typeFun(Ar),_,_,kFun("$",Ar),Rp,Rp).
-  prsTypeName(Lc,Id,K,Env,B,Tp,Rp,Rx) :-
+  prsTypeName(Lc,Id,K,Env,B,Tp,Rp,Rpx) :-
     ( present(B,Id,Tp) ?
         checkKind(K,typeKind(Tp),Lc,Rp,Rpx)
     | typeInDict(Id,Env,_,_,TpK,Tp0) ?

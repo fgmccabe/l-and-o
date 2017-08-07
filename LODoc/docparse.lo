@@ -1,0 +1,63 @@
+lo.doc.parse{
+  import lo.
+  import lo.uri.
+  import lo.resources.
+
+  import lo.comp.abstract.
+  import lo.comp.ast.
+  import lo.comp.errors.
+  import lo.comp.grammar.
+  import lo.comp.lexer.
+  import lo.comp.location.
+  import lo.comp.operators.
+  import lo.comp.token.
+
+  public parseFileDoc:(uri,report,report) => ast.
+  parseFileDoc(U,Rp,Rpx) => Term :-
+    AllToks = tokenizeFile(U),
+    TToks = AllToks ^/((token(T,_)) :- T\=cmtTok(_,_)),
+    parse(Term,Rp,Rp0) %%  TToks ~ Rest,
+    (Rest=[],Rp0=Rpx | Rest=[Tk,.._],reportError("extra tokens found in file",Tk.loc,Rp0,Rpx)).
+
+  tokenizeFile:(uri) => list[token].
+  tokenizeFile(U) => Toks :-  tokenizeForDoc(Toks) %% startState(explode(getResource(U)),getUriPath(U)).
+
+  textPar ::= txt(string).
+
+  docSpec::= varSpec(location,string,ast,textPar)
+         | typeSpec(location,string,ast,textPar)
+         | contractSpec(location,string,ast,textPar)
+         | implSpec(location,string,ast,textPar)
+         | pkgSpec(string,textPar,list[docSpec]).
+
+  genPkgDoc:(ast,list[token]) => docSpec.
+  genPkg(P,Toks) => pkgSpec(PkgNm,Intro,Defs) :-
+    isBraceTerm(P,Lc,Pk,Els),
+    PkgNm = packageName(Pk),
+    findDocCmt(Toks,Intro,Lc,RToks),
+    genThetaContents(Els,RToks,Defs).
+
+  /**
+   Find either the last doc token before the target location or the first one after it
+   */
+  findDocCmt:(list[token],string,location,list[token]){}.
+  findDocCmt:(Toks,Txt,Lc,RToks) :-
+    findCmt(Toks,none,Found,Lc,RToks).
+
+  findCmt:(list[token],option[(string,location)],option[(string,location)],location,list[token]){}.
+  findCmt([],SoFar,SoFar,_,[]).
+  findCmt([])
+
+  collectLineComment:(ast,ast) --> list[token].
+  collectLineComment(A,docAst([(lineCmt,Txt)],A)) --> [tok(cmtTok(lineCmt,Txt),_)].
+  collectLineComment(A,A) --> [].
+
+  collectComments:(list[(commentStyle,string)]) --> list[token].
+  collectComments([(St,Tx),..C]) --> [tok(cmtTok(St,Tx),_)], collectComments(C).
+  collectComments([]) --> \+[tok(cmtTok(_,_),_)].
+
+  attachComments:(list[(commentStyle,string)],ast) => ast.
+  attachComments([],A) => A.
+  attachComments(C,A) => docAst(C,A).
+
+}

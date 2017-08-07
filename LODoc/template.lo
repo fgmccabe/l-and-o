@@ -1,0 +1,47 @@
+lo.doc.template{
+  import lo.
+  import lo.resources.
+  import lo.uri.
+
+  /**
+   Implement template processing.
+
+   Fragments of the form #(Id) are replaced by values in map. Fragments of the
+   form ##(Id) represent references to dynamic templates: the template is in the
+   dictionary.
+
+   @1 map of variables to replacement values
+   @2 default function in case that variable not in map
+   @3 template string
+   @return a string constructed by replacing #(V) by values in map.
+   */
+  public stringTemplate:(map[string,string],(string)=>string,string) => string.
+  stringTemplate(M,D,T) => implode(procTemplate(M,D,explode(T))).
+
+  public uriTemplate:(map[string,string],(string)=>string,uri) => string.
+  uriTemplate(M,D,U) => stringTemplate(M,D,getResource(U)).
+
+  procTemplate:(map[string,string],(string)=>string,list[integer]) => list[integer].
+  procTemplate(_,_,[]) => [].
+  procTemplate(M,D,[0c#,0c#,0c(,..L]) => procTemplate(M,D,lookup(Id,M,D))<>procTemplate(M,D,L1) :-
+          (Id,L1) = collectId(L,[]).
+  procTemplate(M,D,[0c#,0c(,..L]) => lookup(Id,M,D)<>procTemplate(M,D,L1) :-
+          (Id,L1) = collectId(L,[]).
+  procTemplate(M,D,[0c#,0c/,0c/,..L]) => procTemplate(M,D,skipLine(L)).
+  procTemplate(M,D,[0c\\,C,..L]) => [C,..procTemplate(M,D,L)].
+  procTemplate(M,D,[C,..L]) => [C,..procTemplate(M,D,L)].
+
+  collectId:(list[integer],list[integer]) => (string,list[integer]).
+  collectId([],Id) => (implode(reverse(Id)),[]).
+  collectId([0c),..L],Id) => (implode(reverse(Id)),L).
+
+  skipLine:(list[integer]) => list[integer].
+  skipLine([]) => [].
+  skipLine([0c\n,..L]) => L.
+  skipLine([_,..L]) => skipLine(L).
+
+  lookup:(string,map[string,string],(string)=>string) => list[integer].
+  lookup(V,M,_) => explode(Vl) :-
+    present(M,V,Vl).
+  lookup(V,_,D) => explode(D(V)).
+}

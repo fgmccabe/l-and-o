@@ -69,6 +69,24 @@ lo.comp.lexer{
     allTokens(More,Cx-1).
 
   public
+  tokenizeForDoc:(list[token]) --> tokenState.
+  tokenizeForDoc(AllTokens) -->
+    docSpaces(AllTokens,R),
+    allDocTokens(R,-1).
+
+  private
+  allDocTokens : (list[token],integer) --> tokenState.
+  allDocTokens([],0) --> [].
+  allDocTokens([],_) --> eof.
+  allDocTokens([tok(Tk,Lc),..More],Cx) -->
+    @currentLocation(Start),
+    nxtTok(Tk)!,
+    @currentLocation(End),
+    Lc = makeLocation(Start,End),
+    docSpaces(More,R),
+    allDocTokens(R,Cx-1).
+
+  public
   subTokenize:(location,string) => list[token].
   subTokenize(loc(Ln,Off,Col,_,Pth),Text) => Toks :-
     tokenize(Toks) %% tkState(explode(Text),Ln,Off,Col,Pth).
@@ -232,16 +250,47 @@ lo.comp.lexer{
 
   skipSpaces: () --> tokenState.
   skipSpaces() --> whiteSpace(), skipSpaces().
-  skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(), skipSpaces().
-  skipSpaces() --> [0c/, 0c*], blockComment(), skipSpaces().
+  skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(_), skipSpaces().
+  skipSpaces() --> [0c/, 0c*, 0c*], docComment(_), skipSpaces().
+  skipSpaces() --> [0c/, 0c*], blockComment(_), skipSpaces().
   skipSpaces() --> [].
 
-  lineComment:() --> tokenState.
-  lineComment() --> [0c\n].
-  lineComment() --> [_], lineComment().
+  lineComment:(list[integer]) --> tokenState.
+  lineComment([]) --> [0c\n].
+  lineComment([]) --> eof.
+  lineComment([Ch,..L]) --> [Ch], lineComment(L).
 
-  blockComment:() --> tokenState.
-  blockComment() --> eof.
-  blockComment() --> [0c*, 0c/].
-  blockComment() --> [_], blockComment().
+  blockComment:(list[integer]) --> tokenState.
+  blockComment([]) --> eof.
+  blockComment([]) --> [0c*, 0c/].
+  blockComment([Ch,..C]) --> [Ch], blockComment(C).
+
+  docComment:(list[integer]) --> tokenState.
+  docComment([]) --> eof.
+  docComment([]) --> [0c*, 0c/].
+  docComment(C) --> [0c\n], whiteSpace(), ([0c*],docComment(C) | docComment(C)).
+  docComment([Ch,..C]) --> [Ch], docComment(C).
+
+  -- docSpaces is used when parsing for loDoc generation
+  docSpaces: (list[token],list[token]) --> tokenState.
+  docSpaces(L,T) --> whiteSpace(), docSpaces(L,T).
+  docSpaces([tok(cmtTok(lineCmt,implode(Text)),Lc),..T],Tx) --> [0c-, 0c-], ([0c ] | [0c\t]),
+      @currentLocation(Start),
+      lineComment(Text)!,
+      @currentLocation(End),
+      Lc = makeLocation(Start,End),
+      docSpaces(T,Tx).
+  docSpaces([tok(cmtTok(docCmt,implode(Text)),Lc),..T],Tx) --> [0c/, 0c*, 0c*],
+      @currentLocation(Start),
+      docComment(Text)!,
+      @currentLocation(End),
+      Lc = makeLocation(Start,End),
+      docSpaces(T,Tx).
+  docSpaces([tok(cmtTok(blockCmt,implode(Text)),Lc),..T],Tx) --> [0c/, 0c*],
+      @currentLocation(Start),
+      blockComment(Text)!,
+      @currentLocation(End),
+      Lc = makeLocation(Start,End),
+      docSpaces(T,Tx).
+  docSpaces(Tx,Tx) --> [].
 }

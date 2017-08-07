@@ -19,6 +19,7 @@
 		"lo.comp.code.registers": "registers.lo",
 		"lo.comp.code.unify": "compunify.lo",
 		"lo.comp.compiler": "compiler.lo",
+		"lo.comp.dead" : "dead.lo",
 		"lo.comp.decode": "decode.lo",
 		"lo.comp.dependencies": "dependencies.lo",
 		"lo.comp.debug": "debug.lo",

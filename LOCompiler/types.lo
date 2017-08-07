@@ -10,7 +10,7 @@ lo.comp.types{
         | thisType
         | kVar(string)
         | kFun(string,integer)
-        | tVar(tipe,string,string)
+        | tVar(tipe,string)
         | tFun(tipe,integer,string,string)
         | tipe(string)
         | tpFun(string,integer)
@@ -59,8 +59,8 @@ lo.comp.types{
   dispType(thisType) => ss("this").
   dispType(kVar(Nm)) => ss(Nm).
   dispType(kFun(Nm,Ar)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
-  dispType(tVar(Curr,_,_)) =>  dispType(Curr) :-  \+var(Curr).
-  dispType(tVar(_,_,Id)) => ss(Id).
+  dispType(tVar(Curr,_)) =>  dispType(Curr) :-  \+var(Curr).
+  dispType(tVar(_,Id)) => ss(Id).
   dispType(tFun(Curr,_,_,_)) => dispType(Curr) :- \+var(Curr).
   dispType(tFun(_,Ar,_,Nm)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispType(tipe(Nm)) =>ss(Nm).
@@ -124,21 +124,21 @@ lo.comp.types{
 
   public
   deRef:(tipe)=>tipe.
-  deRef(tVar(Curr,_,_)) =>  deRef(Curr) :-  \+var(Curr) .
+  deRef(tVar(Curr,_)) =>  deRef(Curr) :-  \+var(Curr) .
   deRef(tFun(Curr,_,_,_)) =>  deRef(Curr) :-  \+var(Curr) .
   deRef(T) => T.
 
   public
   isUnbound:(tipe){}.
-  isUnbound(T) :- deRef(T) = tVar(Curr,_,_), var(Curr).
+  isUnbound(T) :- deRef(T) = tVar(Curr,_), var(Curr).
   isUnbound(T) :- deRef(T) = tFun(Curr,_,_,_), var(Curr).
 
   public isTypeVar:(tipe){}.
-  isTypeVar(T) :- D=deRef(T), (D=tVar(_,_,_) | D=kVar(_)).
+  isTypeVar(T) :- D=deRef(T), (D=tVar(_,_) | D=kVar(_)).
 
   public
   isIdenticalVar:(tipe,tipe){}.
-  isIdenticalVar(tVar(_,_,Id),tVar(_,_,Id)).
+  isIdenticalVar(tVar(_,Id),tVar(_,Id)).
   isIdenticalVar(tFun(_,_,_,Id),tFun(_,_,_,Id)).
 
   public isIdenticalType:(tipe,tipe){}.
@@ -162,7 +162,7 @@ lo.comp.types{
   isProgramType(univType(_,T)) :- isProgramType(T).
   isProgramType(existType(_,T)) :- isProgramType(T).
   isProgramType(constrained(T,_)) :- isProgramType(T).
-  isProgramType(tVar(Curr,_,_)) :-  \+var(Curr), isProgramType(Curr).
+  isProgramType(tVar(Curr,_)) :-  \+var(Curr), isProgramType(Curr).
   isProgramType(funType(_,_)).
   isProgramType(predType(_)).
   isProgramType(grammarType(_,_)).
@@ -196,7 +196,7 @@ lo.comp.types{
 
   public
   newVar:(string) => tipe.
-  newVar(Nm) => tVar(_,Nm,_str_gen(Nm)).
+  newVar(Nm) => tVar(_,_str_gen(Nm)).
 
   public newTFun:(string,integer)=>tipe.
   newTFun(Nm,Ar) => tFun(_,Ar,Nm,_str_gen(Nm)).
@@ -225,7 +225,7 @@ lo.comp.types{
 
   public typeNm:(tipe) => string.
   typeNm(anonType) => "_".
-  typeNm(tVar(_,_,_)) => "_".
+  typeNm(tVar(_,_)) => "_".
   typeNm(tFun(_,Ar,_,_)) => "_\(Ar)".
   typeNm(voidType) => "void".
   typeNm(tipe(Nm)) => Nm.
@@ -241,21 +241,21 @@ lo.comp.types{
   typeNm(constrained(Tp,_)) => typeNm(Tp).
 
   private bnd:(tipe,tipe){}.
-  bnd(tVar(Tp,_,_),Tp).
+  bnd(tVar(Tp,_),Tp).
   bnd(tFun(Tp,_,_,_),Tp).
 
   public
   occursIn:(tipe,tipe){}.
-  occursIn(T,Tp) :- (T = tVar(Curr,_,Id) ? ( var(Curr) ? \+sameVar(Id,deRef(Tp)), idOccIn(Id,deRef(Tp)) | occursIn(Curr,Tp)) | false).
+  occursIn(T,Tp) :- (T = tVar(Curr,Id) ? ( var(Curr) ? \+sameVar(Id,deRef(Tp)), idOccIn(Id,deRef(Tp)) | occursIn(Curr,Tp)) | false).
 
   private
   sameVar:(string,tipe){}.
-  sameVar(Id,tVar(_,_,Id)).
+  sameVar(Id,tVar(_,Id)).
 
   private
   idOccIn:(string,tipe){}.
-  idOccIn(Id,tVar(Curr,_,_)) :- \+var(Curr), idOccIn(Id,Curr).
-  idOccIn(Id,tVar(Curr,_,Id)) :- var(Curr).
+  idOccIn(Id,tVar(Curr,_)) :- \+var(Curr), idOccIn(Id,Curr).
+  idOccIn(Id,tVar(Curr,Id)) :- var(Curr).
   idOccIn(Id,typeExp(Op,A)) :- (idOccIn(Id,Op) | T in A, idOccIn(Id,T)).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).
@@ -286,7 +286,7 @@ lo.comp.types{
 
   surfaceName:(tipe) => string.
   surfaceName(anonType) => "_".
-  surfaceName(tVar(_,_,_)) => "_".
+  surfaceName(tVar(_,_)) => "_".
   surfaceName(voidType) => "void".
   surfaceName(tipe(Nm)) => Nm.
   surfaceName(tpFun(Nm,_)) => Nm.

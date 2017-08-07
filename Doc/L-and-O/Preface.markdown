@@ -1,20 +1,36 @@
 # Preface
 
-Since the widespread adoption of the Internet the world has changed irrevocably for computer systems – no longer can applications be built in a stand-alone fashion, working in private. Even though there are countless private sub-domains protected by firewalls, the Internet is an inherently public environment and software should be expected to operate in the open, as it were. This brings enormous opportunities to use the interconnectedness between applications to enhance their power and effectiveness.
-
-The Internet also carries significant potential risks for malicious persons to compromise your security. These risks go far beyond the risk of crashing software or even overwriting files on your hard disks – you could lose money, life or your business if an improperly written application exposes information it should not have.
-
-Consider the task of a designer building a system that is intended to find the best price for an airline ticket – by searching the available services on the Internet. The ticket agent must not only cope with ordinary issues in distributed systems – such as systems not being available when expected – but also with potentially malicious systems – such as systems attempting to acquire personal financial information without delivering any service at all.
-
-In addition, potential buyers of this airline ticket agent may need persuading that the ticket agent is itself safe and effective – that it will not bias ticket recommendations to particular airlines and that it will not divulge critical information to malicious third parties. This is, of course, in addition to common security concerns arising from third parties feeding the agent data in order to circumvent the ticket agent’s *implementation technology* – such as so-called buffer overrun attacks.
-
-Whatever the risks, the reality is that applications will routinely interconnect with others’ applications in ways that are not easily foreseen by their designers. It is our task, as software developers, to make this experience as safe and painless as possible. L&O is a Logic Programming based language designed from scratch to enable the development of safe, effective and secure applications that routinely interact with other applications on the Internet.
+Developing applications in a logic programming language is subject to the same issues as that face developers in other programming languages: programming is still a team sport; and safety is nearly always critical. L&O is a logic programming language that is oriented to development of complex applications that must be similarly safe and effective.
 
 ## Software Engineering
 
 Developing any kind of software is a complex task, made more difficult by the possibilities and risks offered by the Internet. Such complexity is not removed simply by adopting logic as the foundation of one’s languages. Integration, reliability, security, modularization, evolvability, versioning, safety are all qualities that are important for software systems that are independent of the underlying technology. For knowledge intensive applications the list continues – we also require flexibility, explainability, awareness of context. The design of L&O is guided by a strong desire to gain the benefits of modern software engineering best practice as well as that of knowledge engineering.
 
-L&O is a *multi-paradigm* language – it has a strong foundation in object oriented programming, functional programming and procedural programming as well as logic programming. In addition, it is a multi-threaded language with communication capabilities. This is a powerful combination aiming to solve the hard issues of complex software development.
+L&O is a *multi-paradigm* language – it has a strong foundation in object oriented programming, functional programming and logic programming. In addition, it is a multi-threaded language with communication capabilities. This is a powerful combination aiming to solve the hard issues of complex software development.
+
+## Static types
+
+L&O is a strongly statically typed programming language. The purpose of using a static type system is to enhance programmers’ confidence in the correctness of the program – it cannot replace a formal proof of correctness.
+
+The type system of L&O is quite rich and expressive; this is intentional -- in order to reduce the _temptation_ to step outside the strict confines of type safety. Some of the features of L&O types include:
+
+* Higher-order type terms that can denote function and other program values
+* Universally and existentially quantified types
+* Contracts and implementations
+* Structural and nominative type terms
+
+
+For example, the L&O version of `find` above really needs a *type annotation* before it is complete:
+
+	find: all u,t ~~ searchable[u] |: (u,t){}.
+
+where we both give an explicit (quantified) type and require that the entity being search is `searchable`.
+
+We use an approach based on Hindley & Milner’s @hindley:69 type term approach for representing types. However, type unification is augmented with a sub-type relation – permitting types and classes to be defined as extensions of other types. In addition we require all programs and top-level variables and constants to have explicit type declarations. Variables in rules do not need type declarations – although they are permitted.
+
+Having a static typed language can be quite constrictive compared to the untyped freedom one gets in languages such as **Prolog**. However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.
+
+In addition to being statically typed, the reader might have noticed that the `find` program we introduced above had a *type annotation*. We believe that explicitly annotating program types is an effective compromise between declaring the type of *every* variable and declaring none of them.
 
 ## Object orientation
 
@@ -54,23 +70,7 @@ L&O has some features that distinguish it from some OO languages such as Java\tm
 
 ## Ontologies
 
-Since L&O is a Logic Programming language, it makes sense to ask how suitable it is for developing Ontologies. 
-
-## Static types
-
-L&O is a strongly statically typed programming language. The purpose of using a static type system is to enhance programmers’ confidence in the correctness of the program – it cannot replace a formal proof of correctness.
-
-For example, the L&O version of `find` above really needs a *type annotation* before it is complete:
-
-	find: all u,t <~ searchable[u] ~~ (u,t){}.
-
-where we both give an explicit (quantified) type and require that the entity being search is `searchable`.
-
-We use an approach based on Hindley & Milner’s @hindley:69 type term approach for representing types. However, type unification is augmented with a sub-type relation – permitting types and classes to be defined as extensions of other types. In addition we require all programs and top-level variables and constants to have explicit type declarations. Variables in rules do not need type declarations – although they are permitted.
-
-Having a static typed language can be quite constrictive compared to the untyped freedom one gets in languages such as **Prolog**. However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.
-
-In addition to being statically typed, the reader might have noticed that the `find` program we introduced above had a *type annotation*. We believe that explicitly annotating program types is an effective compromise between declaring the type of *every* variable and declaring none of them.
+Since L&O is a Logic Programming language, it makes sense to ask how suitable it is for developing Ontologies.
 
 ## Meta-order and object-order
 

@@ -2,8 +2,7 @@ lo.comp.token{
   import lo.comp.location.
   import lo.
 
-  public type
-  tok ::= lpar
+  public tok ::= lpar
        |  rpar
        |  lbra
        |  rbra
@@ -16,7 +15,8 @@ lo.comp.token{
        |  intTok(integer)
        |  fltTok(float)
        |  stringTok(list[stringSegment])
-       |  period.
+       |  period
+       |  cmtTok(commentStyle,string).
 
   public
   stringSegment ::= segment(location,string)
@@ -55,6 +55,7 @@ lo.comp.token{
   tokDisp(fltTok(Dx)) => disp(Dx).
   tokDisp(stringTok(Sx)) => disp(Sx).
   tokDisp(period) => ss(". ").
+  tokDisp(cmtTok(_,T)) => ssSeq([ss("-- "),ss(T)]).
 
   private
   implementation display[stringSegment] <= {

@@ -1,0 +1,71 @@
+lo.redblack{
+  import lo.core.
+  import lo.coerce.
+  import lo.collection.
+  import lo.list.
+
+  public import lo.redblack.impl.
+
+  public implementation all k,v ~~ equality[k],comp[k] |: map[redblack[k,v] ->> k,v] <= {
+    present(M,K,V) :- inRB(M,K,V).
+    _remove(M,K) => removeRB(M,K).
+    _put(M,K,V) => insertRB(M,K,V).
+    keys(M) => getKeys(M).
+    pairs(M) => getPairs(M).
+    values(M) => getValues(M).
+    _empty = emptyRb.
+
+    getKeys:all k,v ~~ (redblack[k,v]) => list[k].
+    getKeys(M) => foldRb((K,_,L)=>[K,..L],[],M).
+
+    getPairs:all k,v ~~ (redblack[k,v]) => list[(k,v)].
+    getPairs(M) => foldRb((K,V,L) => [(K,V),..L],[],M).
+
+    getValues:all k,v ~~ (redblack[k,v]) => list[v].
+    getValues(M) => foldRb((K,V,L) => [V,..L],[],M).
+  }
+
+  public implementation all k,v ~~ equality[k],comp[k], equality[v] |: equality[redblack[k,v]] <= {
+    M1 == M2 :- sameMaps(M1,M2).
+    hash(M) => rbHash(M).
+  }
+
+  sameMaps:all k,v ~~ equality[k],comp[k], equality[v] |: (redblack[k,v],redblack[k,v]){}.
+  sameMaps(M1,M2) :- (pairs(M1):list[(k,v)]) == pairs(M2). -- FIX ME: should not need the annotation
+
+  rbHash:all k,v ~~ equality[k], equality[v] |: (redblack[k,v]) => integer.
+  rbHash(M) => foldRb((K,V,H) => (H*37+hash(K))*37+hash(V),0,M).
+
+  public implementation all k,v ~~ sizeable[redblack[k,v]] <= {
+    size(M) => foldRb((_,_,C)=>C+1,0,M).
+    isEmpty(emptyRb).
+  }
+
+  public implementation all k,v ~~ equality[k],comp[k] |: additive[redblack[k,v]] <= {
+    M1+M2 => addRb(M1,M2).
+    M1-M2 => subRb(M1,M2).
+
+    addRb:(redblack[k,v],redblack[k,v])=>redblack[k,v].
+    addRb(T1,T2) => foldRb((K,V,M)=>insertRB(M,K,V),T2,T1).
+
+    subRb:(redblack[k,v],redblack[k,v])=>redblack[k,v].
+    subRb(T1,T2) => foldRb((K,_,M)=>removeRB(M,K),T1,T2).
+  }
+
+  public implementation all k,v ~~ equality[k],comp[k] |: folding[redblack[k,v]->>v] <= {
+    foldRight(F,U,M) => foldRb((_,V,X)=>F(V,X),U,M).
+    foldLeft(F,U,M) => foldRb((_,V,X)=>F(V,X),U,M).
+  }
+
+  public implementation ixmap[redblack] <= {
+    M///f => mapRb(f,M).
+  }
+
+  public implementation all k,v ~~ equality[k],comp[k] |: ixfilter[redblack->>k,v] <= {
+    M^//p => foldRb((K,V,X)=>(p(K,V) ? insertRB(X,K,V) | X), emptyRb, M).
+  }
+
+  public implementation all k,v ~~ equality[k],comp[k] |: coercion[list[(k,v)],redblack[k,v]] <= {
+    _coerce(L) => foldLeft(((k,v),x)=>insertRB(x,k,v),emptyRb,L).
+  }
+}

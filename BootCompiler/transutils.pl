@@ -97,10 +97,10 @@ makeMdlEntry(Pkg,enum(_,Nm,_,_,_,_),[(Nm,moduleClass(LclName,AccessName,0))|Mx],
   localName(Pkg,"@",Nm,AccessName).
 makeMdlEntry(Pkg,typeDef(_,Nm,Tp,_),[(Nm,moduleType(Pkg,LclName,Tp))|Mx],Mx,Clx,Clx) :-
   localName(Pkg,"*",Nm,LclName).
-makeMdlEntry(Pkg,contract(Nm,CNm,ConTp,_,_),[(Nm,moduleContract(Pkg,CNm,ConTp))|Mx],Mx,Clx,Clx).
 makeMdlEntry(_,impl(_,_,ImplNm,0,_,_,_,_,_),[(ImplNm,moduleImpl(ImplNm,enum(ImplNm)))|Mx],Mx,Clx,Clx).
 makeMdlEntry(_,impl(_,_,ImplNm,Arity,_,_,_,_,_),[(ImplNm,moduleImpl(ImplNm,strct(ImplNm,Arity)))|Mx],Mx,Clx,Clx).
-  
+makeMdlEntry(_,_,Mx,Mx,Clx,Clx).
+
 makeImportsMap([Import|Rest],Map,Mx) :-
   makeImportMap(Import,Map,M0),
   makeImportsMap(Rest,M0,Mx).
@@ -244,4 +244,3 @@ genVars(K,[V|Rest]) :-
   K1 is K-1,
   genVar("V",V),
   genVars(K1,Rest).
-

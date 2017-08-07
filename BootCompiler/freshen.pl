@@ -5,7 +5,7 @@
 :- use_module(misc).
 :- use_module(types).
 
-freshen(Tp,ThisType,B,FTp) :- 
+freshen(Tp,ThisType,B,FTp) :-
   addThisType(ThisType,[],B0),
   deQuant(Tp,B0,B,T0),
   freshn(T0,B,FTp),!.
@@ -18,7 +18,7 @@ addThisType(voidType,B,B).
 addThisType(Tp,B,[(thisType,Tp)|B]).
 
 hasQuants(univType(_,_)).
-  
+
 deQuant(univType(kVar(V),Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
 deQuant(univType(kFun(V,_),Tp),B,BV,FTp) :- newTypeVar(V,TV),deQuant(Tp,[(V,TV)|B],BV,FTp).
 deQuant(Tp,B,B,Tp).
@@ -34,6 +34,7 @@ freshn(Tp,[],Tp) :- !.
 freshn(Tp,Binding,FTp) :- deRef(Tp,T),frshn(T,Binding,FTp),!.
 
 skolemize(univType(kVar(V),Tp),B,BV,FTp) :- readOnlyTypeVar(V,TV),skolemize(Tp,[(V,TV)|B],BV,FTp).
+skolemize(univType(kFun(V,Ar),Tp),B,BV,FTp) :- skolemFun(V,Ar,TV),skolemize(Tp,[(V,TV)|B],BV,FTp).
 skolemize(Tp,B,B,Tp).
 
 rewriteType(T,Q,WTp) :-
@@ -61,6 +62,9 @@ frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
 frshn(typeExp(O,A),B,typeExp(FO,FA)) :- frshn(O,B,FO),frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
+  subtract((V,_),B,B0),
+  rewriteType(Tp,B0,FTp).
+frshn(univType(kFun(V,Ar),Tp),B,univType(kFun(V,Ar),FTp)) :-
   subtract((V,_),B,B0),
   rewriteType(Tp,B0,FTp).
 frshn(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
@@ -186,8 +190,8 @@ freezeTypes([],_,[]).
 freezeTypes([A|L],B,[FA|FL]) :- freeze(A,B,FA), freezeTypes(L,B,FL).
 
 reQuant([],_,T,T).
-reQuant([(_,Tp)|R],BB,T,FZT) :- 
-  deRef(Tp,V), isUnbound(V),!, 
+reQuant([(_,Tp)|R],BB,T,FZT) :-
+  deRef(Tp,V), isUnbound(V),!,
   constraints(V,C),
   freezeConstraints(C,BB,T,FT),
   reQuant(R,BB,FT,FZT).

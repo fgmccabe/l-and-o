@@ -1,0 +1,7 @@
+lo.doc.gen{
+  import lo.
+
+  import lo.doc.parse.
+  import lo.doc.template.
+
+}
