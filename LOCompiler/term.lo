@@ -202,6 +202,9 @@ lo.comp.term {
   clArgs(clse(_,_,Args,_)) => Args.
   clArgs(eqn(_,_,Args,_)) => Args.
 
+  public clBody:(clse) => list[pred].
+  clBody(clse(_,_,_,B)) => B.
+
   public simplifyGuard:(term) => term.
   simplifyGuard(guarded(T,conj(_,G))) => simplifyGuard(T) :- isTrivialConj(G).
   simplifyGuard(guarded(T,succ)) => simplifyGuard(T).

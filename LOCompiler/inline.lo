@@ -89,9 +89,8 @@ lo.comp.inline{
 
   inlineRel:(rel,logical,logical,map[term,rel],map[term,rel]) => rel.
   inlineRel(rel(Prg,TLc,Clses),Any,RReslt,P,I) => rel(Prg,TLc,OClses) :-
-    logMsg("inlining clauses \(Clses)"),
     Inlined = inlineRules(Clses,false,Reslt,P,I),
-    (Reslt ? Inlined=OClses, RReslt=true, logMsg("result of inlining is \e[31m\(OClses)\e[0m") | Clses=OClses, RReslt=Any).
+    (Reslt ? Inlined=OClses, RReslt=true /*, logMsg("result of inlining is \e[31m\(OClses)\e[0m")*/ | Clses=OClses, RReslt=Any).
 
   inlineRules:(list[clse],logical,logical,map[term,rel],map[term,rel]) => list[clse].
   inlineRules([],Fx,Fx,_,_) => [].
@@ -207,7 +206,8 @@ lo.comp.inline{
   resolveable(Pr,C2) :-
     renameClse(C2,NC2,_),
     checkCall(Pr,clName(NC2),A2),
-    unifyEls(A2,clArgs(NC2),[],_).
+    unifyEls(A2,clArgs(NC2),[],_),
+    validateCond(conj(_,clBody(NC2))).
 
   checkCall:(pred,term,list[term]){}.
   checkCall(call(_,Prd,Els),Prd,Els).
