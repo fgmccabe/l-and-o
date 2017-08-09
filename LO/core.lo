@@ -252,16 +252,19 @@ lo.core{
 
   private
   listDisp:all x ~~ display[x] |: (list[x],string) => list[ss].
-  listDisp(X,_) => [ss(",.."),disp(X),ss("]")] :- var(X).
+  listDisp(X,_) => [ss(",.."),dispVar(X),ss("]")] :- var(X).
   listDisp([],_) => [ss("]")].
   listDisp([E,..L],Sep) => [ss(Sep),disp(E),..listDisp(L,",")].
+
+  public dispVar:all x ~~ (x)=>ss.
+  dispVar(X) => ss(_stringOf(X,0,0)).
 
   public implementation all a ~~ dump[a] |: dump[list[a]] <= {
     _dump(T,Lvl) => ssSeq([ss("["),ssSeq(dumpList(T,"",Lvl-1)),ss("]")]).
   }
 
   dumpList:all a ~~ dump[a] |: (list[a],string,integer) => list[ss].
-  dumpList(X,_,Lvl) => [ss(",.."),dump(X,Lvl),ss("]")] :- var(X).
+  dumpList(X,_,Lvl) => [ss(",.."), dispVar(X), ss("]")] :- var(X).
   dumpList([],_,_) => [].
   dumpList([A,..L],Sep,Lvl) => [ss(Sep),dump(A,Lvl),..dumpList(L,", ",Lvl)].
 

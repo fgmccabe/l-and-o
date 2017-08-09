@@ -44,6 +44,7 @@
 		"test.rb.speed" : "rbspeed.lo",
 		"test.rec": "rec.lo",
 		"test.s": "s.lo",
+		"test.sieve" : "sieve.lo",
 		"test.st": "st.lo",
 		"test.suite": "suite.lo",
 		"test.t": "t.lo"

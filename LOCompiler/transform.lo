@@ -531,7 +531,7 @@ lo.comp.transform{
     implementDotExp(Reslt,v(Lc,Nm),some(Lc::tloc),C,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trDotExp(Lc,v(_,Nm),C,ovoke(some(Lc::tloc),C,Rc,Rc),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Nm),Rc,Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx).
-  trDotExp(Lc,R,C,guarded(ovoke(some(Lc::tloc),C,Rec,Rec),dfne(some(Lc::tloc),Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trDotExp(Lc,R,C,guarded(ovoke(some(Lc::tloc),C,Rec,Rec),unfy(some(Lc::tloc),Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("R",Rec),
     trExp(R,Rc,[Rec,..Q],Q0,Map,Opts,Ex,Exx,Rp,Rpx).
 
@@ -539,7 +539,7 @@ lo.comp.transform{
   implementDotExp(inherit(_,Super,ClVr,ThVr),_,TLc,C,invoke(TLc,C,[ClVr,ThVr]),Q,merge([ClVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementDotExp(_,v(Lc,Nm),TLc,C,ovoke(TLc,C,Rc,Rc),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Nm),Rc,Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx).
-  implementDotExp(_,R,TLc,C,guarded(ovoke(TLc,C,Rec,Rec),dfne(TLc,Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  implementDotExp(_,R,TLc,C,guarded(ovoke(TLc,C,Rec,Rec),unfy(TLc,Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     genVarbl("R",Rec),
     trExp(R,Rc,[Rec,..Q],Q0,Map,Opts,Ex,Exx,Rp,Rpx).
 

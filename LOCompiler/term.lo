@@ -204,6 +204,7 @@ lo.comp.term {
 
   public simplifyGuard:(term) => term.
   simplifyGuard(guarded(T,conj(_,G))) => simplifyGuard(T) :- isTrivialConj(G).
+  simplifyGuard(guarded(T,succ)) => simplifyGuard(T).
   simplifyGuard(T) => T.
 
   isTrivialConj:(list[pred]){}.

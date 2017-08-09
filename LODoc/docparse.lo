@@ -24,7 +24,7 @@ lo.doc.parse{
 
   textPar ::= txt(string).
 
-  docSpec::= varSpec(location,string,ast,textPar)
+  docSpec ::= varSpec(location,string,ast,textPar)
          | typeSpec(location,string,ast,textPar)
          | contractSpec(location,string,ast,textPar)
          | implSpec(location,string,ast,textPar)
