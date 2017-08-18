@@ -57,16 +57,16 @@ lo.comp.regexp{
 
   -- Parse regular expressions
   regularExp:(regExp) --> tokenState.
-  regularExp(R) --> @currentLocation(Start),reExp(F,Start), reFollow(F,R).
+  regularExp(R) --> { stream.currentLocation(Start)},reExp(F,Start), reFollow(F,R).
 
   reExp:(regExp,(integer,integer,integer,string)) --> tokenState.
-  reExp(rePeriod(makeLocation(Start,End)),Start) --> ".", @currentLocation(End).
-  reExp(reStart(makeLocation(Start,End)),Start) --> "^", @currentLocation(End).
-  reExp(reEof(makeLocation(Start,End)),Start) --> "$", @currentLocation(End).
-  reExp(reNegChars(makeLocation(Start,End),Chrs),Start) --> "[^", charClass(Chrs), "]", @currentLocation(End).
-  reExp(reChars(makeLocation(Start,End),Chrs),Start) --> "[", charClass(Chrs), "]", @currentLocation(End).
-  reExp(reGroup(makeLocation(Start,End),R,V),Start) --> "(", regularExp(R), groupVar(V), ")", @currentLocation(End).
-  reExp(reLiteral(makeLocation(Start,End),Ch),Start) --> charRef(Ch), @currentLocation(End).
+  reExp(rePeriod(makeLocation(Start,End)),Start) --> ".", { stream.currentLocation(End)}.
+  reExp(reStart(makeLocation(Start,End)),Start) --> "^", { stream.currentLocation(End)}.
+  reExp(reEof(makeLocation(Start,End)),Start) --> "$", { stream.currentLocation(End)}.
+  reExp(reNegChars(makeLocation(Start,End),Chrs),Start) --> "[^", charClass(Chrs), "]", { stream.currentLocation(End)}.
+  reExp(reChars(makeLocation(Start,End),Chrs),Start) --> "[", charClass(Chrs), "]", { stream.currentLocation(End)}.
+  reExp(reGroup(makeLocation(Start,End),R,V),Start) --> "(", regularExp(R), groupVar(V), ")", { stream.currentLocation(End)}.
+  reExp(reLiteral(makeLocation(Start,End),Ch),Start) --> charRef(Ch), { stream.currentLocation(End)}.
 
   groupVar:(string) --> tokenState.
   groupVar(implode(I)) --> ":", readIden(I).
@@ -78,11 +78,11 @@ lo.comp.regexp{
   charClass([Ch,..More]) --> charRef(Ch), charClass(More).
 
   reFollow:(regExp,regExp) --> tokenState.
-  reFollow(R,F) --> "*", @currentLocation(End), reFollow(reStar(extendLocation(locOf(R),End),R),F).
-  reFollow(R,F) --> "+", @currentLocation(End), reFollow(rePlus(extendLocation(locOf(R),End),R),F).
-  reFollow(R,reChoice(Lc,R,N)) --> "|", regularExp(N), @currentLocation(End), {Lc=extendLocation(locOf(R),End)}.
+  reFollow(R,F) --> "*", { stream.currentLocation(End)}, reFollow(reStar(extendLocation(locOf(R),End),R),F).
+  reFollow(R,F) --> "+", { stream.currentLocation(End)}, reFollow(rePlus(extendLocation(locOf(R),End),R),F).
+  reFollow(R,reChoice(Lc,R,N)) --> "|", regularExp(N), { stream.currentLocation(End)}, {Lc=extendLocation(locOf(R),End)}.
   reFollow(R,R) --> ([0c:]+ | [0c)]+ | eof).
-  reFollow(L,O) --> @currentLocation(Start),reExp(R,Start), @currentLocation(End), reFollow(reCat(extendLocation(locOf(R),End),L,R),O).
+  reFollow(L,O) --> { stream.currentLocation(Start)},reExp(R,Start), { stream.currentLocation(End)}, reFollow(reCat(extendLocation(locOf(R),End),L,R),O).
 
   charRange:(integer,integer) => list[integer].
   charRange(St,St) => [St].

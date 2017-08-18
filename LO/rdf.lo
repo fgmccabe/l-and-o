@@ -1,0 +1,35 @@
+lo.rdf{
+  import lo.
+  import lo.uri.
+
+  public rdfResource ::= rdfRes(string) | rdfUri(uri) | rdfText(string).
+  public rdfTriple ::= rdfTriple(rdfResource,rdfResource,rdfResource).
+
+  rdfId ~> integer.
+
+  public rdfStore::=rdfStore(map[rdfResource,list[rdfId]],map[rdfResource,list[rdfId]],map[rdfResource,list[rdfId]],map[rdfId,rdfTriple],rdfId).
+
+  public addTriple:(rdfTriple,rdfStore) => rdfStore.
+  addTriple(rdfTriple(Sbj,Prd,Obj),rdfStore(Sbjs,Prds,Objs,Trpls,Ix)) =>
+    rdfStore(addRes(Sbjs,Ix,Sbj),addRes(Prds,Ix,Prd),addRes(Objs,Ix,Obj),Trpls[Ix->rdfTriple(Sbj,Prd,Obj)],Ix+1).
+
+  addRes:(map[rdfResource,list[rdfId]],rdfId,rdfResource) => map[rdfResource,list[rdfId]].
+  addRes(Concepts,Id,Res) => Concepts[Res->[Id,..Others]] :- present(Concepts,Res,Others).
+  addRes(Concepts,Id,Res) => Concepts[Res->[Id]] :- \+present(Concepts,Res,_).
+
+  public implementation equality[rdfResource] <= {
+    L==R :- resEqual(L,R).
+    hash(R) => resHash(R).
+  }
+
+  resEqual:(rdfResource,rdfResource){}.
+  resEqual(rdfRes(C1),rdfRes(C2)) :- C1==C2.
+  resEqual(rdfUri(U1),rdfUri(U2)) :- U1==U2.
+  resEqual(rdfText(T1),rdfText(t2)) :- T1==T2.
+
+  resHash:(rdfResource)=>integer.
+  resHash(rdfRes(C)) => hash(C).
+  resHash(rdfUri(U)) => hash(U).
+  resHash(rdfText(S)) => hash(S).
+
+}

@@ -9,21 +9,21 @@ lo.comp.macro{
   macroRewrite([],[],Rp,Rp).
   macroRewrite([St,..More],Stmts,Rp,Rpx) :-
     isUnary(St,"public",_,Inner),
-    isAlgebraicTypeDef(Inner,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,markPublic,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    isAlgebraicTypeDef(Inner,Lc,Q,Constraints,Head,Body),
+    convertAlgebraic(Lc,markPublic,Q,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
     macroRewrite(More,S0,Rp0,Rpx).
   macroRewrite([St,..More],Stmts,Rp,Rpx) :-
     isUnary(St,"private",_,Inner),
-    isAlgebraicTypeDef(Inner,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,markPrivate,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    isAlgebraicTypeDef(Inner,Lc,Q,Constraints,Head,Body),
+    convertAlgebraic(Lc,markPrivate,Q,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
     macroRewrite(More,S0,Rp0,Rpx).
   macroRewrite([St,..More],Stmts,Rp,Rpx) :-
-    isAlgebraicTypeDef(St,Lc,Quants,Constraints,Head,Body),
-    convertAlgebraic(Lc,noMark,Quants,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
+    isAlgebraicTypeDef(St,Lc,Q,Constraints,Head,Body),
+    convertAlgebraic(Lc,noMark,Q,Constraints,Head,Body,Stmts,S0,Rp,Rp0),
     macroRewrite(More,S0,Rp0,Rpx).
   macroRewrite([St,..More],[St,..Stmts],Rp,Rpx) :-
-    isContractSpec(St,_,Quants,Constraints,Con,Els),
-    generateAnnotations(Els,Quants,[Con,..Constraints],Stmts,S0),
+    isContractSpec(St,_,Q,Constraints,Con,Els),
+    generateAnnotations(Els,Q,[Con,..Constraints],Stmts,S0),
     macroRewrite(More,S0,Rp,Rpx).
   macroRewrite([St,..More],[St,..Stmts],Rp,Rpx) :-
     macroRewrite(More,Stmts,Rp,Rpx).
@@ -39,40 +39,34 @@ lo.comp.macro{
   -- super simple conversion. Maybe later add support for auto generation of interfaces
 
   convertAlgebraic:(location,mark,list[ast],list[ast],ast,ast,list[ast],list[ast],report,report){}.
-  convertAlgebraic(Lc,Mark,Quants,Constraints,Head,Body,[TypeRule,..Elements],Tail,Rp,Rpx) :-
+  convertAlgebraic(Lc,Mark,Q,Constraints,Head,Body,[TypeRule,..Elements],Tail,Rp,Rpx) :-
     algebraicFace(Body,[],Els,Rp,Rpx),
     isBraceTuple(Face,Lc,Els),
-    typeRule(Lc,Quants,Constraints,Head,Face,FaceRule),
+    typeRule(Lc,Q,Constraints,Head,Face,FaceRule),
     mark(Mark,Lc,FaceRule,TypeRule),
-    convertConstructors(Body,Head,Mark,Quants,Constraints,Elements,Tail).
+    convertConstructors(Body,Head,Mark,Q,Constraints,Elements,Tail).
 
   convertConstructors:(ast,ast,mark,list[ast],list[ast],list[ast],list[ast]){}.
-  convertConstructors(Pair,Head,Mark,Quants,Constraints,Elements,Tail) :-
+  convertConstructors(Pair,Head,Mark,Q,Constraints,Elements,Tail) :-
     isBinary(Pair,"|",_,L,R),
-    convertConstructors(L,Head,Mark,Quants,Constraints,Elements,L1),
-    convertConstructors(R,Head,Mark,Quants,Constraints,L1,Tail).
-  convertConstructors(Term,Head,Mark,Quants,Constraints,Elements,Tail) :-
-    convertConstructor(Term,Head,Mark,Quants,Constraints,Elements,Tail).
+    convertConstructors(L,Head,Mark,Q,Constraints,Elements,L1),
+    convertConstructors(R,Head,Mark,Q,Constraints,L1,Tail).
+  convertConstructors(Term,Head,Mark,Q,Constraints,Elements,Tail) :-
+    convertConstructor(Term,Head,Mark,Q,Constraints,Elements,Tail).
 
   convertConstructor:(ast,ast,mark,list[ast],list[ast],list[ast],list[ast]){}.
-  convertConstructor(Nm,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
+  convertConstructor(Nm,Tp,Mark,Q,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
     isIden(Nm,Lc,_),
-    wrapConstraints(Constraints,Lc,Tp,TpCon),
-    wrapQuants(Quants,Lc,TpCon,QTp),
-    mark(Mark,Lc,binary(Lc,":",Nm,QTp),TpRule),
+    mark(Mark,Lc,binary(Lc,":",Nm,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,Tp))),TpRule),
     bodyRule(Lc,Nm,[],BodyRule).
-  convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
+  convertConstructor(Con,Tp,Mark,Q,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
     isRoundTerm(Con,Lc,Op,ArgTypes),    /* Construct con:(T1,..,Tn)<=>Tp */
-    wrapConstraints(Constraints,Lc,binary(Lc,"<=>",roundTuple(Lc,ArgTypes),Tp),CTp),
-    wrapQuants(Quants,Lc,CTp,QTp),
-    mark(Mark,Lc,binary(Lc,":",Op,QTp),TpRule),
+    mark(Mark,Lc,binary(Lc,":",Op,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,binary(Lc,"<=>",roundTuple(Lc,ArgTypes),Tp)))),TpRule),
     genAnonArgs(ArgTypes,Args),         /* Construct con(_,..,_) <= {} */
     bodyRule(Lc,roundTerm(Lc,Op,Args),[],BodyRule).
-  convertConstructor(Con,Tp,Mark,Quants,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
+  convertConstructor(Con,Tp,Mark,Q,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
     isBraceTerm(Con,Lc,Op,FldTps),      -- Construct con:{F1:T1,..Fn:Tn} <=>Tp
-    wrapConstraints(Constraints,Lc,binary(Lc,"<=>",braceTuple(Lc,FldTps),Tp),CTp),
-    wrapQuants(Quants,Lc,CTp,QTp),
-    mark(Mark,Lc,binary(Lc,":",Op,QTp),TpRule),
+    mark(Mark,Lc,binary(Lc,":",Op,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,binary(Lc,"<=>",braceTuple(Lc,FldTps),Tp)))),TpRule),
     genFieldArgs(FldTps,Args,Defs),
     bodyRule(Lc,braceTerm(Lc,Op,Defs),Defs,BodyRule),
     logMsg("brace constructor rule: \(BodyRule)").
@@ -111,24 +105,8 @@ lo.comp.macro{
     checkSoFar(Nm,T,L,LL,Rp,Rpx).
 
   typeRule:(location,list[ast],list[ast],ast,ast,ast){}.
-  typeRule(Lc,Quants,Constraints,Hd,Body,Rule) :-
-    wrapConstraints(Constraints,Lc,binary(Lc,"<~",Hd,Body),ConRl),
-    wrapQuants(Quants,Lc,ConRl,Rule).
-
-  wrapQuants:(list[ast],location,ast,ast){}.
-  wrapQuants([],_,Rule,Rule).
-  wrapQuants(Q,Lc,Rl,binary(Lc,"~~",unary(Lc,"all",QV),Rl)) :-
-    listComma(Q,Lc,QV).
-
-  wrapConstraints:(list[ast],location,ast,ast){}.
-  wrapConstraints([],_,Tp,Tp).
-  wrapConstraints(Con,Lc,Tp,binary(Lc,"|:",CTp,Tp)) :-
-    listComma(Con,Lc,CTp).
-
-  listComma:(list[ast],location,ast){}.
-  listComma([T],_,T).
-  listComma([T,..R],Lc,binary(Lc,",",T,RR)) :-
-    listComma(R,Lc,RR).
+  typeRule(Lc,Q,Constraints,Hd,Body,Rule) :-
+    Rule = wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,binary(Lc,"<~",Hd,Body))).
 
   genAnonArgs:(list[ast],list[ast]){}.
   genAnonArgs([],[]).
@@ -155,11 +133,9 @@ lo.comp.macro{
 
   generateAnnotations:(list[ast],list[ast],list[ast],list[ast],list[ast]){}.
   generateAnnotations([],_,_,Stmts,Stmts).
-  generateAnnotations([Def,..Els],Quants,Constraints,[binary(Lc,":",N,MTp),..Stmts],S0) :-
+  generateAnnotations([Def,..Els],Q,Constraints,[binary(Lc,":",N,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,Tp))),..Stmts],S0) :-
     isBinary(Def,":",Lc,N,Tp),
-    wrapConstraints(Constraints,Lc,Tp,CTp),
-    wrapQuants(Quants,Lc,CTp,MTp),
-    generateAnnotations(Els,Quants,Constraints,Stmts,S0).
-  generateAnnotations([_,..Els],Quants,Constraints,Stmts,S0) :- -- ignore things like assertions
-    generateAnnotations(Els,Quants,Constraints,Stmts,S0).
+    generateAnnotations(Els,Q,Constraints,Stmts,S0).
+  generateAnnotations([_,..Els],Q,Constraints,Stmts,S0) :- -- ignore things like assertions
+    generateAnnotations(Els,Q,Constraints,Stmts,S0).
 }

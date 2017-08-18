@@ -44,6 +44,10 @@ collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Expor
   isBinary(Inner,"<=",Im,_),
   implementationName(Im,Nm),
   call(Export,Nm,P,Px).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,Px,Px,A,A,I,I,O,O,_) :-
+  isBinary(St,"@",_,_).
+collectDefinition(St,Stmts,Stmts,Defs,Defs,Px,Px,A,A,I,I,O,O,_) :-
+  isUnary(St,"@",_).
 collectDefinition(St,Stmts,Stx,[(Nm,Lc,[St|Defn])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
   ruleName(St,Nm,Kind),
   locOfAst(St,Lc),
@@ -162,9 +166,6 @@ headOfRule(St,St) :-
   isRound(St,Nm,_), \+ isRuleKeyword(Nm).
 
 headName(Head,Nm) :-
-  isBinary(Head,"@@",H,_),
-  headName(H,Nm).
-headName(Head,Nm) :-
   isRoundTerm(Head,Op,_),
   headName(Op,Nm).
 headName(Head,Nm) :-
@@ -240,9 +241,6 @@ collRefs(St,All,Annots,SoFar,Refs) :-
   collectHeadRefs(H,All,R0,R1),
   collectCondRefs(Exp,All,R1,Refs).
 collRefs(St,All,_,R0,Refs) :-
-  isUnary(St,"type",SSt),
-  collRefs(SSt,All,_,R0,Refs).
-collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
 collRefs(St,All,_,R0,Refs) :-
@@ -308,9 +306,6 @@ collectNTRefs(T,All,Rf,Refs) :-
   isBinary(T,"@@",L,R),
   collectNTRefs(L,All,Rf,R0),
   collectCondRefs(R,All,R0,Refs).
-collectNTRefs(T,All,Rf,Refs) :-
-  isUnary(T,"@",L),
-  collectCondRefs(L,All,Rf,Refs).
 collectNTRefs(T,All,Rf,Refs) :-
   isBinary(T,"=",L,R),
   collectExpRefs(L,All,Rf,R0),
@@ -496,6 +491,10 @@ collectTypeRefs(T,All,SoFar,Refs) :-
   isSquare(T,Nm,A),
   collectTypeName(Nm,All,SoFar,R0),
   collectTypeList(A,All,R0,Refs).
+collectTypeRefs(St,_,SoFar,SoFar) :-
+  isBinary(St,"@",_,_).
+collectTypeRefs(St,_,SoFar,SoFar) :-
+  isUnary(St,"@",_,_).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBinary(T,"=>",L,R),
   isTuple(L,A),

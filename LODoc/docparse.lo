@@ -7,57 +7,67 @@ lo.doc.parse{
   import lo.comp.ast.
   import lo.comp.errors.
   import lo.comp.grammar.
-  import lo.comp.lexer.
   import lo.comp.location.
-  import lo.comp.operators.
-  import lo.comp.token.
 
-  public parseFileDoc:(uri,report,report) => ast.
-  parseFileDoc(U,Rp,Rpx) => Term :-
-    AllToks = tokenizeFile(U),
-    TToks = AllToks ^/((token(T,_)) :- T\=cmtTok(_,_)),
-    parse(Term,Rp,Rp0) %%  TToks ~ Rest,
-    (Rest=[],Rp0=Rpx | Rest=[Tk,.._],reportError("extra tokens found in file",Tk.loc,Rp0,Rpx)).
 
-  tokenizeFile:(uri) => list[token].
-  tokenizeFile(U) => Toks :-  tokenizeForDoc(Toks) %% startState(explode(getResource(U)),getUriPath(U)).
+  public docSpec ::= varSpec(string,ast,option[string])
+         | typeSpec(string,ast,option[string])
+         | contractSpec(string,ast,option[string],map[string,docSpec])
+         | implSpec(string,ast,option[string])
+         | pkgSpec(string,option[string],map[string,docSpec]).
 
-  textPar ::= txt(string).
-
-  docSpec ::= varSpec(location,string,ast,textPar)
-         | typeSpec(location,string,ast,textPar)
-         | contractSpec(location,string,ast,textPar)
-         | implSpec(location,string,ast,textPar)
-         | pkgSpec(string,textPar,list[docSpec]).
-
-  genPkgDoc:(ast,list[token]) => docSpec.
-  genPkg(P,Toks) => pkgSpec(PkgNm,Intro,Defs) :-
-    isBraceTerm(P,Lc,Pk,Els),
+  public genPkgDoc:(ast) => docSpec.
+  genPkgDoc(P) => pkgSpec(PkgNm,findDescription(M,PkgNm),processStmts(Els,id,M,[])) :-
+    isBraceTerm(P,_,Pk,Els),
     PkgNm = packageName(Pk),
-    findDocCmt(Toks,Intro,Lc,RToks),
-    genThetaContents(Els,RToks,Defs).
+    M = collectDescriptions(Els,PkgNm,[]).
 
-  /**
-   Find either the last doc token before the target location or the first one after it
-   */
-  findDocCmt:(list[token],string,location,list[token]){}.
-  findDocCmt:(Toks,Txt,Lc,RToks) :-
-    findCmt(Toks,none,Found,Lc,RToks).
+  collectDescriptions:(list[ast],string,map[string,string])=>map[string,string].
+  collectDescriptions([],_,M)=>M.
+  collectDescriptions([El,..L],Deflt,M) => collectDescriptions(L,Deflt,M[Deflt->Desc]) :-
+      isUnary(El,"@",_,E), isDescription(E,Desc).
+  collectDescriptions([El,..L],Deflt,M) => collectDescriptions(L,Deflt,M[Nm->Desc]) :-
+      isBinary(El,"@",_,N,E),
+      isIden(N,_,Nm),
+      isDescription(E,Desc).
+  collectDescriptions([_,..L],Deflt,M) => collectDescriptions(L,Deflt,M).
 
-  findCmt:(list[token],option[(string,location)],option[(string,location)],location,list[token]){}.
-  findCmt([],SoFar,SoFar,_,[]).
-  findCmt([])
+  findDescription:(map[string,string],string) => option[string].
+  findDescription(D,Ky) => some(Txt) :- present(D,Ky,Txt).
+  findDescription(_,_) => none.
 
-  collectLineComment:(ast,ast) --> list[token].
-  collectLineComment(A,docAst([(lineCmt,Txt)],A)) --> [tok(cmtTok(lineCmt,Txt),_)].
-  collectLineComment(A,A) --> [].
+  isDescription:(ast,string){}.
+  isDescription(A,Txt) :-
+    isRoundTerm(A,_,Op,[T]),
+    isIden(Op,_,"description"),
+    isString(T,_,Txt).
 
-  collectComments:(list[(commentStyle,string)]) --> list[token].
-  collectComments([(St,Tx),..C]) --> [tok(cmtTok(St,Tx),_)], collectComments(C).
-  collectComments([]) --> \+[tok(cmtTok(_,_),_)].
+  processStmts:(list[ast],(ast)=>ast,map[string,string],map[string,docSpec]) => map[string,docSpec].
+  processStmts([],_,_,M) => M.
+  processStmts([El,..L],F,D,M) => processStmts(L,F,D,processStmt(El,F,D,M)).
 
-  attachComments:(list[(commentStyle,string)],ast) => ast.
-  attachComments([],A) => A.
-  attachComments(C,A) => docAst(C,A).
+  processStmt:(ast,(ast)=>ast,map[string,string],map[string,docSpec]) => map[string,docSpec].
+  processStmt(St,TF,Descs,M) => M[Nm->varSpec(Nm,TF(TpSpec),findDescription(Descs,Nm))] :-
+    isTypeAnnotation(St,_,Nm,Spec).
+  processStmt(St,TF,Descs,M) => M[Nm->typeSpec(Nm,St,findDescription(Descs,Nm))] :-
+    isAlgebraicTypeDef(St,_,_,_,Hd,_),
+    typeName(Hd,Nm).
+  processStmt(St,TF,Descs,M) => M[Nm->contractSpec(Nm,TF(wrapQuants(Q,Lc,wrapConstraints(C,Lc,Con))),
+        findDescription(Descs,Nm),
+        processStmts(Els,(Tp)=>TF(wrapQuants(Q,Lc,wrapConstraints(C,Lc,Tp))),ConDescs,[]))] :-
+    isContractSpec(St,Lc,Q,C,Con,Els),
+    typeName(Con,Nm),
+    ConDescs = collectDescriptions(Els,Nm,[]).
+  processStmt(St,TF,Descs,M) => M[Nm->implSpec(Nm,TF(Con),findDescription(Descs,Nm))] :-
+    isImplementation(St,_,Con,_).
+  processStmt(_,_,_,M) => M.
+
+  typeName:(ast,string){}.
+  typeName(St,Nm) :- isIden(St,_,Nm).
+  typeName(St,Nm) :- isSquareTerm(St,_,O,_), isIden(O,_,Nm).
+
+  isPublic:(ast,ast){}.
+  isPublic(St,Inn) :-
+    isUnary(St,"public",_,Inn).
 
 }

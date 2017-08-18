@@ -4,16 +4,14 @@ lo.comp.canon {
   import lo.comp.types.
   import lo.comp.package.
 
-  public type
-  canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
+  public canonPkg ::= canonPkg(pkgSpec,list[pkgSpec],list[canonDef],list[canonOther]).
 
   public implVar:(string,canonTerm) <=> implEntry.
   implVar(Nm,T) <= {
     name = Nm.
   }
 
-  public type
-  canonDef ::= funDef(location,string,tipe,list[constraint],list[canonRule])
+  public canonDef ::= funDef(location,string,tipe,list[constraint],list[canonRule])
            |   relDef(location,string,tipe,list[constraint],list[canonRule])
            |   grammDef(location,string,tipe,list[constraint],list[canonRule])
            |   classDef(location,string,tipe,list[constraint],list[canonRule],tipe)
@@ -26,16 +24,14 @@ lo.comp.canon {
   public canonOther ::= integrity(location,canonCond)
            | expShow(location,canonTerm).
 
-  public type
-  canonRule ::= clause(location,string,canonTerm,canonCond)
+  public canonRule ::= clause(location,string,canonTerm,canonCond)
             | equation(location,string,canonTerm,canonTerm,canonCond)
             | vrDef(location,string,canonTerm,canonCond)
             | clRule(location,string,canonTerm,canonTerm,canonCond,tipe)
             | grRule(location,string,canonTerm,canonNT,canonNT)
             | tpRule(location,tipe).
 
-  public type
-  canonTerm ::= v(location,string)
+  public canonTerm ::= v(location,string)
             | int(integer)
             | flt(float)
             | str(string)
@@ -49,8 +45,7 @@ lo.comp.canon {
             | over(location,canonTerm,list[constraint])
             | mtd(location,string).
 
-  public type
-  canonCond ::= trueCond
+  public canonCond ::= trueCond
             | falseCond
             | conjCond(canonCond,canonCond)
             | disjCond(canonCond,canonCond)
@@ -63,8 +58,7 @@ lo.comp.canon {
             | isTrue(canonTerm)
             | phraseCond(location,canonNT,canonTerm,canonTerm).
 
-  public type
-  canonNT ::= grTerms(list[(location,canonTerm,canonTerm)])
+  public canonNT ::= grTerms(list[(location,canonTerm,canonTerm)])
           | grCall(location,canonTerm,canonTerm)
           | grTest(canonCond)
           | grOne(canonNT)
@@ -72,8 +66,7 @@ lo.comp.canon {
           | grAhed(canonNT)
           | grDisj(canonNT,canonNT)
           | grConj(canonNT,canonNT)
-          | grCond(canonNT,canonNT,canonNT)
-          | grDip(canonTerm,canonCond).
+          | grCond(canonNT,canonNT,canonNT).
 
   public implementation display[canonPkg] <= {
     disp(P) => dispPkg(P)

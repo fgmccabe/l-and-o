@@ -57,7 +57,6 @@ lo.comp.singleton {
   countNTVars(grDisj(L,R),M,Excl,Rp,Rpx) => countNTVars(L,countNTVars(R,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countNTVars(grConj(L,R),M,Excl,Rp,Rpx) => countNTVars(L,countNTVars(R,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countNTVars(grCond(T,L,R),M,Excl,Rp,Rpx) => countNTVars(T,countNTVars(L,countNTVars(R,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
-  countNTVars(grDip(T,C),M,Excl,Rp,Rpx) => countVars(T,countCondVars(C,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
 
   countVarsInTerms:(list[(location,canonTerm,canonTerm)],map[string,(location,integer)],set[string],report,report) => map[string,(location,integer)].
   countVarsInTerms([],M,_,Rp,Rp) => M.

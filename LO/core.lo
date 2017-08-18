@@ -1,13 +1,20 @@
 lo.core{
-  -- Core definitions of types and interfaces that are really part of the language
+  @description("Core definitions of types and interfaces that are really part of the language").
 
   public thing ::= thing.
 
+  equality@description("defines functions associated with semantic equality").
+
   public contract all x ~~ equality[x] <~ {
+    (==)@description("unlike syntactic equality, semantic equality is defined explicitly").
+
     (==): (x,x){}.
+
+    hash@description("hash is an essential part of semantic equality").
     hash:(x)=>integer.
   }
 
+  (\==)@description("semantic inequality defined in terms of equality").
   public (\==):all x ~~ equality[x] |: (x,x){}.
   x \== y :- \+ x==y.
 
@@ -17,6 +24,7 @@ lo.core{
     (>=): (x,x){}.
   }
 
+  option@description("the option type is useful when a value is not always available").
   public
   all t ~~ option[t] ::= none | some(t).
 
@@ -245,8 +253,7 @@ lo.core{
   }
 
   -- display contract for lists
-  public
-  implementation all x ~~ display[x] |: display[list[x]] <= {
+  public implementation all x ~~ display[x] |: display[list[x]] <= {
     disp(L) => ssSeq([ss("["),..listDisp(L,"")]).
   }
 
@@ -289,6 +296,10 @@ lo.core{
   private optionHash:all x ~~ equality[x] |: (option[x]) => integer.
   optionHash(some(X)) => hash("some")*37+hash(X).
   optionHash(none) => hash("none").
+
+  public maybe:all x ~~ ((x){}) => option[x].
+  maybe(P) => some(x) :- P(x).
+  maybe(_) => none.
 
   -- Some basic stuff for tuples
   public implementation display[()] <= {

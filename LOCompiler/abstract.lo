@@ -120,6 +120,10 @@ lo.comp.abstract{
   deComma(T) => [L,..deComma(R)] :-  isBinary(T,",",_,L,R).
   deComma(T) => [T].
 
+  public reComma:(list[ast]) => ast.
+  reComma([A]) => A.
+  reComma([A,..R]) => binary(A.loc,",",A,reComma(R)).
+
   public sameTerm:(ast,ast){}.
   sameTerm(iden(_,Nm),iden(_,Nm)).
   sameTerm(intg(_,Ix),intg(_,Ix)).
@@ -137,10 +141,12 @@ lo.comp.abstract{
     sameTerm(A,B),
     sameTerms(L1,L2).
 
+  public isTypeAnnotation:(ast,location,string,ast){}.
+  isTypeAnnotation(St,Lc,Nm,Tp) :-
+    isBinary(St,":",Lc,L,Tp),
+    isIden(L,_,Nm).
+
   public isAlgebraicTypeDef:(ast,location,list[ast],list[ast],ast,ast){}.
-  isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
-    isUnary(Stmt,"type",Lc,Term),
-    isAlgebraicTypeDef(Term,_,Quants,Constraints,Head,Body).
   isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
     getQuantifiers(Stmt,Quants,Inner),
     getConstraints(Inner,Constraints,TpStmt),
@@ -167,11 +173,10 @@ lo.comp.abstract{
   getQuantifiers(T,deComma(V),B) :- isQuantified(T,V,B).
   getQuantifiers(T,[],T).
 
-  public
-  isContractSpec:(ast,location,list[ast],list[ast],ast,list[ast]){}.
+  public isContractSpec:(ast,location,list[ast],list[ast],ast,list[ast]){}.
   isContractSpec(St,Lc,Quants,Constraints,Con,Body) :-
     isUnary(St,"contract",Lc,I),
-    isBinary(I,"<~",_,L,R),
+    isBinary(I,"<~",_,Con,R),
     isBraceTuple(R,_,Body),
     contractSpec(L,Quants,Constraints,Con).
 
@@ -192,8 +197,28 @@ lo.comp.abstract{
     isBinary(T,"|:",_,L,R).
   getConstraints(T,[],T).
 
-  public
-  packageName:(ast) => string.
+  public wrapQuants:(list[ast],location,ast)=>ast.
+  wrapQuants([],_,Rule) => Rule.
+  wrapQuants(Q,Lc,Rl) => binary(Lc,"~~",unary(Lc,"all",QV),Rl) :-
+    listComma(Q,Lc,QV).
+
+  public wrapConstraints:(list[ast],location,ast) => ast.
+  wrapConstraints([],_,Tp) => Tp.
+  wrapConstraints(Con,Lc,Tp) => binary(Lc,"|:",CTp,Tp) :-
+    listComma(Con,Lc,CTp).
+
+  listComma:(list[ast],location,ast){}.
+  listComma([T],_,T).
+  listComma([T,..R],Lc,binary(Lc,",",T,RR)) :-
+    listComma(R,Lc,RR).
+
+  public isImplementation:(ast,location,ast,list[ast]){}.
+  isImplementation(St,Lc,Con,Els) :-
+    isUnary(St,"implementation",Lc,R),
+    isBinary(R,"<=",_,Con,RR),
+    isBraceTuple(RR,_,Els).
+
+  public packageName:(ast) => string.
   packageName(T) =>  Pkg :-  isIden(T,_,Pkg).
   packageName(T) =>  Pkg :-  isString(T,_,Pkg).
   packageName(T) => packageName(L)+"."+packageName(R) :- isBinary(T,".",_,L,R).

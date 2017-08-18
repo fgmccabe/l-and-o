@@ -18,9 +18,6 @@ lo.comp.parseType{
     moveConstraints(Type,Cons,Tp).
 
   public parseTypeDefinition:(string,location,ast,list[canonDef],list[canonDef],list[env],string,report,report){}.
-  parseTypeDefinition(N,Lc,St,Defs,Dfs,Env,Path,Rp,Rpx) :-
-    isUnary(St,"type",_,InSt),
-    parseTypeDefinition(N,Lc,InSt,Defs,Dfs,Env,Path,Rp,Rpx).
   parseTypeDefinition(N,Lc,St,[typeDef(Lc,N,Type,FaceRule),..Defs],Defs,Env,Path,Rp,Rpx) :-
     parseTpRule(St,[],Env,Type,FaceRule,Path,Rp,Rpx).
 
@@ -191,6 +188,9 @@ lo.comp.parseType{
     isIden(L,_,Fld),
     prsType(R,simpleType,Env,Q,C,C0,FldTp,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C0,Cx,ArgTypes,Rp0,Rpx).
+  prsTypeFields([A,..AT],Env,Q,C,Cx,ArgTypes,Rp,Rp) :-
+    isBinary(A,"@",_,_,_),
+    prsTypeFields(AT,Env,Q,C0,Cx,ArgTypes,Rp,Rpx).
   prsTypeFields([A,..AT],Env,Q,C,Cx,ArgTypes,Rp,Rpx) :-
     reportError("\(A) is not a valid field designator",A.loc,Rp,Rp0),
     prsTypeFields(AT,Env,Q,C,Cx,ArgTypes,Rp0,Rpx).
@@ -323,9 +323,6 @@ lo.comp.parseType{
     isIden(V,_,Nm).
 
   public parseTypeCore:(ast,tipe,string){}.
-  parseTypeCore(St,Type,Path) :-
-    isUnary(St,"type",_,L),
-    parseTypeCore(L,Type,Path).
   parseTypeCore(St,Type,Path) :-
     isQuantified(St,_,Body),
     parseTypeCore(Body,Type,Path).

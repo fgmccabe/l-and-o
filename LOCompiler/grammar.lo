@@ -177,7 +177,6 @@ lo.comp.grammar{
   checkForTerminator(_,Rp,Rp) --> eof.
   checkForTerminator(_,Rp,Rp) --> [tok(rbrce,_)]+.
   checkForTerminator(endBrce,Rp,Rp) --> [].
-  checkForTerminator(M,Rp,Rpx) --> [tok(cmtTok(_,_),_)], checkForTerminator(M,Rp,Rpx).
   checkForTerminator(_,Rp,Rpx) -->
     [tok(_,Lc)]+,
     checkFor(period,Lc,"missing terminator",Rp,Rpx).

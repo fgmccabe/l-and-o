@@ -13,6 +13,8 @@ lo.index{
    * @typeParam v The type of a value.
    */
 
+  -- map @ has_param ! k, "The type of a key. map is generic in both key type and value type".
+
   public
   all k,v ~~ /* equality[k] |: */map[k,v] ::=
       trEmpty                                       -- @enum empty dictionary

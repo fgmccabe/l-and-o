@@ -69,6 +69,10 @@ lo.comp.dependencies{
     isBinary(St,":",_,L,_),
     isIden(L,_,Nm),
     checkPublic(Viz,Nm,valu,P,Px).
+  collectDefn(St,_,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rp) :-
+    isBinary(St,"@",_,_,_).
+  collectDefn(St,_,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rp) :-
+    isUnary(St,"@",_,_).
   collectDefn(St,_,Stmts,Stx,[defn(Nm,K,St.loc,[],[St,..DfSts]),..Defs],Defs,P,Px,A,A,I,I,Oth,Oth,Viz,Rp,Rp) :-
     ruleNameKind(St,K,Nm),
     collectDefines(Stmts,Nm,K,Stx,DfSts),
@@ -95,9 +99,6 @@ lo.comp.dependencies{
     isBinary(I,"<=",_,L,_),
     astImplName(L,Nm).
   ruleNameKind(S,tpe,Nm) :-
-    isUnary(S,"type",_,I),
-    typeRuleName(I,Nm).
-  ruleNameKind(S,tpe,Nm) :-
     typeRuleName(S,Nm).
   ruleNameKind(S,K,Nm) :- isUnary(S,"public",_,I), ruleNameKind(I,K,Nm).
   ruleNameKind(S,K,Nm) :- isUnary(S,"private",_,I), ruleNameKind(I,K,Nm).
@@ -113,7 +114,6 @@ lo.comp.dependencies{
   ruleHead(S,S) :- isRoundTerm(S,_,_,_).
 
   headName:(ast)=>string.
-  headName(H) =>  headName(L) :-  isBinary(H,"@@",_,L,_).
   headName(H) =>  Nm :-  isRoundTerm(H,_,O,_), isIden(O,_,Nm).
   headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
@@ -200,7 +200,6 @@ lo.comp.dependencies{
   stmtRefs:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"private",_,I).
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"public",_,I).
-  stmtRefs(S,All,So) =>  refsInType(I,All,So) :-  isUnary(S,"type",_,I).
   stmtRefs(S,All,So) =>  refsInType(S,All,So) :-  isTypeRule(S).
   stmtRefs(S,All,So) =>  refsInContract(I,All,So) :-  isUnary(S,"contract",_,I).
   stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"<=",_,L,R)).
@@ -217,13 +216,10 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) => refsInType(I,All,So) :- isBinary(S,":",_,_,I).
 
   refsInHead:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
-  refsInHead(S,All,So) => refsInHead(L,All,refsInCond(R,All,So)) :-  isBinary(S,"@@",_,L,R).
   refsInHead(S,All,So) => refsInTerms(A,All,So) :-  isRoundTerm(S,_,_,A).
   refsInHead(S,All,So) => So :- isIden(S,_,_).
   refsInHead(S,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :- isBinary(A,_,_,L,R).
   refsInHead(S,All,So) => refsInTerm(R,All,So) :- isUnary(A,_,_,R).
-
-
 
   refsInType:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).
@@ -249,6 +245,8 @@ lo.comp.dependencies{
   refsInScope:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInScope([],_,So) => So.
   refsInScope([E,..L],All,So) =>  refsInScope(L,All,refsInType(T,All,So)) :-  isBinary(E,":",_,_,T).
+  refsInScope([E,..L],All,So) =>  refsInScope(L,All,So) :-  isBinary(E,"@",_,_,_).
+  refsInScope([E,..L],All,So) =>  refsInScope(L,All,So) :-  isUnary(E,"@",_,_).
 
   refsInContract:(ast,list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInContract(C,All,So) => refsInContract(I,All,So) :- isQuantified(C,_,I).
@@ -290,7 +288,6 @@ lo.comp.dependencies{
   refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"!",_,L).
   refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"\\+",_,L).
   refsInNT(T,All,So) => refsInNT(L,All,So) :-  isUnary(T,"+",_,L).
-  refsInNT(T,All,So) => refsInNT(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
   refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"=",_,L,R).
   refsInNT(T,All,So) => refsInTerm(L,All,refsInTerm(R,All,So)) :-  isBinary(T,"\\=",_,L,R).
   refsInNT(T,All,So) => refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
@@ -310,8 +307,7 @@ lo.comp.dependencies{
   refsInTerm(T,_,So) =>  So :-  isScalar(T).
   refsInTerm(T,All,So) => refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,":",_,L,R).
   refsInTerm(T,All,So) => refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,"::",_,L,R).
-  refsInTerm(T,All,So) => refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,"@@",_,L,R).
-  refsInTerm(T,All,So) => refsInCond(L,All,So) :-  isUnary(T,"@",_,L).
+  refsInTerm(T,All,So) => refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,":-",_,L,R).
   refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
   refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
   refsInTerm(T,All,So) => refsInIndex(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
@@ -322,6 +318,7 @@ lo.comp.dependencies{
   refsInTerm(T,All,So) => thetaRefs(Els,All,So) :-  isBraceTuple(T,_,Els).
   refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"=>",_,L,R).
   refsInTerm(T,All,So) => refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,":-",_,L,R).
+  refsInTerm(T,All,So) => refsInCond(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"@@",_,L,R).
   refsInTerm(T,All,So) => refsInNT(R,All,refsInTerm(L,All,So)) :-  isBinary(T,"-->",_,L,R).
   refsInTerm(T,All,So) => refsInTerms(Args,All,refsInTerm(Op,All,So)) :-  isRoundTerm(T,_,Op,Args).
   refsInTerm(T,All,So) => So. -- ignore errors for _now

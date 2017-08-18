@@ -51,7 +51,6 @@ lo.comp.freevars{
   freeVarsInNT(grTerms(Terms),Q,F) => freeVarsInTerminals(Terms,Q,F).
   freeVarsInNT(grCall(_,Op,A),Q,F) =>freeVars(Op,Q,freeVars(A,Q,F)).
   freeVarsInNT(grTest(C),Q,F) => freeVarsInGoal(C,Q,F).
-  freeVarsInNT(grDip(T,C),Q,F) => freeVarsInGoal(C,Q,freeVars(T,Q,F)).
   freeVarsInNT(grOne(C),Q,F) => freeVarsInNT(C,Q,F).
   freeVarsInNT(grNeg(C),Q,F) => freeVarsInNT(C,Q,F).
   freeVarsInNT(grAhed(C),Q,F) => freeVarsInNT(C,Q,F).

@@ -34,8 +34,9 @@ retCode reserveSpace(heapPo P, size_t size) {
   if (P->create + size > P->end)
     gcCollect(P, size);    /* this aborts if there is no memory */
 
-  if (P->create + size <= P->end)
+  if (P->create + size <= P->end) {
     return Ok;
+  }
   else
     return Space;
 }
@@ -111,8 +112,9 @@ static long termSize(ptrI src, long *vCount, heapPo H, logical deep) {
     case objTg: {
       objPo p = objV(src);
 
-      if (!deep && inHeap(H, p))    /* already in the heap */
+      if (!deep && inHeap(H, p)) {    /* already in the heap */
         return 0;
+      }
       else if (isObjct(p)) {
         long arity = objectArity(p);
         long size = objectSize(p);
@@ -163,7 +165,7 @@ static retCode copyTermToHeap(ptrPo dst, ptrPo src, varTablePo vT) {
           long arity = objectArity(p);
           retCode res = Ok;
 
-          objPo xx = allocateObject(vT->H,p->class);
+          objPo xx = allocateObject(vT->H, p->class);
           *dst = objP(xx);
 
           int ix;
@@ -212,7 +214,7 @@ retCode localCopy(ptrPo dst, heapPo H, ptrPo src) {
     return Error;
 }
 
-static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, char * eMsg, long len) {
+static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, char *eMsg, long len) {
   ptrI S = deRefI(src);
 
   switch (ptg(S)) {
@@ -260,7 +262,7 @@ static retCode freezeT(ptrPo dst, ptrPo src, heapPo H, char * eMsg, long len) {
   }
 }
 
-retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, char * eMsg, long len) {
+retCode freezeTerm(heapPo H, ptrPo dst, ptrI src, char *eMsg, long len) {
   long vCount = 0;
   rootPo root = gcAddRoot(H, &src);
   ptrI xx = kvoid;
@@ -468,9 +470,9 @@ static void verifyTerm(ptrPo ptr, heapPo P) {
 
 /* We check the argument registers to see if they represent valid data */
 static logical validPtr(processPo P, ptrPo x) {
-  if (x == NULL)
+  if (x == NULL) {
     return False;
-  else if (inHeap(&P->proc.heap, (objPo) x) || inGlobalHeap((objPo) x))
+  } else if (inHeap(&P->proc.heap, (objPo) x) || inGlobalHeap((objPo) x))
     return True;
   else {
     register callPo C = P->proc.C;

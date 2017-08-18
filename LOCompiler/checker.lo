@@ -352,7 +352,7 @@ lo.comp.typecheck{
   checkGrammarRule(Lc,L,R,grammarType(AT,Tp),[grRule(Lc,Nm,Args,grTerms(PB),Body),..Defs],Defs,E,Rp,Rpx) :-
     splitGrHead(L,Nm,A,P),
     ElTp=newVar("_E"),
-    typeOfArg(A,AT,declareVar("stream$X",vr(v(Lc,"stream$X"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
+    typeOfArg(A,AT,declareVar("stream",vr(v(Lc,"stream"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
     checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
     typeOfTerm(iden(Lc,"_hdtl"),predType(tupleType([StrmTp,ElTp,StrmTp])),E3,_,HDTL,Rp1,Rp2),
     checkTerminals(P,HDTL,PB,ElTp,E3,_,Rp2,Rpx).
@@ -480,7 +480,7 @@ lo.comp.typecheck{
     checkGrammarType(Lc,Env,StrmTp,ElTp,Rp,Rp0),
     typeOfTerm(S,StrmTp,Env,E0,Strm,Rp0,Rp1),
     typeOfTerm(M,StrmTp,E0,E1,Rest,Rp1,Rp2),
-    checkNonTerminal(L,StrmTp,ElTp,declareVar(streamVar,vr(v(Lc,streamVar),StrmTp),E1),Ev,NT,Rp2,Rpx).
+    checkNonTerminal(L,StrmTp,ElTp,declareVar("stream",vr(v(Lc,"stream"),StrmTp),E1),Ev,NT,Rp2,Rpx).
   checkCond(Term,Env,Ev,phraseCond(Lc,NT,Strm,Rest),Rp,Rpx) :-
     isBinary(Term,"%%",Lc,L,R),
     StrmTp = newVar("_S"),
@@ -489,7 +489,7 @@ lo.comp.typecheck{
     typeOfTerm(R,StrmTp,Env,E0,Strm,Rp0,Rp1),
     M = iden(Lc,_str_gen("_")),
     typeOfTerm(M,StrmTp,E0,E1,Rest,Rp1,Rp2),
-    checkNonTerminal(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,ElTp,declareVar("stream_X",vr(v(Lc,"stream_X"),StrmTp),E1),Ev,NT,Rp2,Rpx).
+    checkNonTerminal(binary(Lc,",",L,iden(Lc,"eof")),StrmTp,ElTp,declareVar("stream",vr(v(Lc,"stream"),StrmTp),E1),Ev,NT,Rp2,Rpx).
   checkCond(Term,Env,Ev,Call,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     PrTp = newVar("_P"),
@@ -551,7 +551,7 @@ lo.comp.typecheck{
     typeOfTerm(L,Tp,Env,E0,Ptn,Rp,Rp0),
     checkCond(R,E0,Ex,Cond,Rp0,Rpx).
   typeOfTerm(Call,Tp,Env,Ev,whre(V,Cond),Rp,Rpx) :-
-    isUnary(Call,"@",Lc,Test), -- @Test = NV @@ NV.Test where NV is a new name
+    isUnary(Call,"?",Lc,Test), -- ?Test = NV ::- NV.Test where NV is a new name
     isRoundTerm(Test,_,_,_),
     NV = iden(Lc,_str_gen("_")),
     typeOfTerm(NV,Tp,Env,E0,V,Rp,Rp0),
@@ -765,11 +765,6 @@ lo.comp.typecheck{
     TV = newVar("_"),
     typeOfTerm(L,TV,Env,E0,Lhs,Rp,Rp0),
     typeOfTerm(R,TV,E0,Ev,Rhs,Rp0,Rpx).
-  checkNonTerminal(Term,Tp,_,Env,Ev,grDip(v(Lc,NV),Cond),Rp,Rpx) :-
-    isUnary(Term,"@",Lc,Test),
-    isRoundTerm(Test,_,Op,Args),
-    NV = _str_gen("_"),
-    checkCond(appl(Lc,binary(Lc,".",iden(Lc,NV),Op),tupl(Lc,"()",Args)),declareVar(NV,vr(v(Lc,NV),Tp),Env),Ev,Cond,Rp,Rpx).
   checkNonTerminal(Term,Tp,_,Env,Ev,NT,Rp,Rpx) :-
     isRound(Term,Lc,F,A),
     GrTp = newVar("_G"),
@@ -783,10 +778,9 @@ lo.comp.typecheck{
       reportError("\(F) : \(GrTp) not a grammar",Lc,Rp0,Rpx),
       NT = grTerms([]),
       Ev = Env).
-  checkNonTerminal(Term,StreamTp,ElTp,Env,Ev,grDip(v(Lc,NV),Cond),Rp,Rpx) :-
+  checkNonTerminal(Term,StreamTp,ElTp,Env,Ev,grTest(Cond),Rp,Rpx) :-
     isIden(Term,Lc,"eof"),
-    NV = _str_gen("_"),
-    checkCond(unary(Lc,"_eof",iden(Lc,NV)),declareVar(NV,vr(v(Lc,NV),StreamTp),Env),Ev,Cond,Rp,Rpx).
+    checkCond(unary(Lc,"_eof",iden(Lc,"stream")),Env,Ev,Cond,Rp,Rpx).
   checkNonTerminal(Term,_,_,Env,Ex,grTest(Cond),Rp,Rpx) :-
     isBraceTuple(Term,Lc,Els),
     checkConds(Els,Env,Ex,Cond,Rp,Rpx).
@@ -881,9 +875,6 @@ lo.comp.typecheck{
   private makeIntList:(list[integer],location) => list[ast].
   makeIntList([],_) => [].
   makeIntList([Code,..L],Lc) => [intg(Lc,Code),..makeIntList(L,Lc)].
-
-  private streamVar:string.
-  streamVar = "stream_X".
 
   private typeOfVar:(location,vr,tipe,list[env],canonTerm,report,report){}.
   typeOfVar(Lc,vr(V,VT),Tp,Env,Term,Rp,Rpx) :-

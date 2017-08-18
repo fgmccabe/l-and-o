@@ -367,7 +367,7 @@ splitHead(Term,Nm,Args,Cond) :-
   splitHd(Term,Nm,Args,Cond).
 
 splitHd(Term,Nm,Args,Cond) :-
-  isBinary(Term,"@@",L,Cond),!,
+  isBinary(Term,":-",L,Cond),!,
   splitHead(L,Nm,Args,_).
 splitHd(Term,Nm,Args,name(Lc,"true")) :-
   isRound(Term,Nm,Args),
@@ -540,7 +540,7 @@ typeOfTerm(P,Tp,Env,Ex,where(Ptn,Cond)) :-
   typeOfTerm(L,Tp,Env,E0,Ptn),
   checkCond(R,E0,Ex,Cond).
 typeOfTerm(Call,Tp,Env,Ev,where(V,Cond)) :-
-  isUnary(Call,Lc,"@",Test), % @Test = NV @@ NV.Test where NV is a new name
+  isUnary(Call,Lc,"?",Test), % ?Test = NV @@ NV.Test where NV is a new name
   isRoundTerm(Test,_,_,_),
   genstr("_",NV),
   typeOfTerm(name(Lc,NV),Tp,Env,E0,V),
@@ -840,10 +840,10 @@ checkCond(Term,Env,Ev,phrase(Lc,NT,Strm,Rest)) :-
   checkGrammarType(Lc,Env,StrmTp,ElTp),
   typeOfTerm(S,StrmTp,Env,E0,Strm),
   typeOfTerm(M,StrmTp,E0,E1,Rest),
-  currentVar("stream$X",E1,OV),
-  declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
+  currentVar("stream",E1,OV),
+  declareVar("stream",vr("stream",Lc,StrmTp),E1,E2),
   checkNonTerminal(L,StrmTp,ElTp,E2,E3,NT),
-  restoreVar("stream$X",E3,OV,Ev).
+  restoreVar("stream",E3,OV,Ev).
 checkCond(Term,Env,Ev,Goal) :-
   isBinary(Term,Lc,"%%",L,R),
   checkInvokeGrammar(Lc,L,R,Env,Ev,Goal).
@@ -874,10 +874,10 @@ checkInvokeGrammar(Lc,L,R,Env,Ev,phrase(Lc,NT,Strm)) :-
   checkGrammarType(Lc,Env,StrmTp,ElTp),
   typeOfTerm(R,StrmTp,Env,E1,Strm),
   binary(Lc,",",L,name(Lc,"eof"),Phrase),
-  currentVar("stream$X",E1,OV),
-  declareVar("stream$X",vr("stream$X",Lc,StrmTp),E1,E2),
+  currentVar("stream",E1,OV),
+  declareVar("stream",vr("stream",Lc,StrmTp),E1,E2),
   checkNonTerminal(Phrase,StrmTp,ElTp,E2,E3,NT),
-  restoreVar("stream$X",E3,OV,Ev).
+  restoreVar("stream",E3,OV,Ev).
 
 checkGrammarType(Lc,Env,Tp,ElTp) :-
   getContract("stream",Env,contract(_,_,Spec,_,_)),
@@ -895,7 +895,7 @@ checkConds([C|More],Env,Ex,conj(L,R)) :-
 processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|Defs],Defs,E,_) :-
   splitGrHead(L,Nm,A,P),
   pushScope(E,E0),
-  declareVar("stream$X",vr("stream$X",Lc,Tp),E0,E1),
+  declareVar("stream",vr("stream",Lc,Tp),E0,E1),
   newTypeVar("_E",ElTp),
   typeOfTerms(A,AT,E1,E2,Lc,Args),!,
   checkNonTerminal(R,Tp,ElTp,E2,E3,Body),
@@ -941,23 +941,6 @@ checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,neg(Lc,unify(Lc,Lhs,Rhs)))) :-
   newTypeVar("_#",TV),
   typeOfTerm(L,TV,Env,E0,Lhs),
   typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,match(Lc,Lhs,Rhs))) :-
-  isBinary(Term,Lc,".=",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,TV,Env,E0,Lhs),
-  typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminal(Term,_,_,Env,Ev,goal(Lc,match(Lc,Rhs,Lhs))) :-
-  isBinary(Term,Lc,"=.",L,R),!,
-  newTypeVar("_#",TV),
-  typeOfTerm(L,TV,Env,E0,Lhs),
-  typeOfTerm(R,TV,E0,Ev,Rhs).
-checkNonTerminal(Term,Tp,_,Env,Ev,dip(Lc,v(Lc,NV),Cond)) :-
-  isUnary(Term,Lc,"@",Test),
-  isRoundTerm(Test,Op,Args),
-  genstr("_",NV),
-  declareVar(NV,vr(NV,Lc,Tp),Env,E0),
-  binary(Lc,".",name(Lc,NV),Op,NOp),
-  checkCond(app(Lc,NOp,tuple(Lc,"()",Args)),E0,Ev,Cond).
 checkNonTerminal(Term,Tp,_,Env,Ev,NT) :-
   isRoundTerm(Term,Lc,F,A),
   newTypeVar("_G",GrTp),
@@ -966,7 +949,7 @@ checkNonTerminal(Term,Tp,_,Env,Ev,NT) :-
   checkGrCall(Lc,Pred,A,Tp,GrType,NT,E0,Ev).
 checkNonTerminal(Term,_,_,Env,Env,eof(Lc,Op)) :-
   isIden(Term,Lc,"eof"),
-  unary(Lc,"_eof",name(Lc,"stream$X"),EO),
+  unary(Lc,"_eof",name(Lc,"stream"),EO),
   checkCond(EO,Env,_,call(_,Op,_)).
 checkNonTerminal(Term,_,_,Env,Ex,goal(Lc,Cond)) :-
   isBraceTuple(Term,Lc,Els),
@@ -994,7 +977,7 @@ checkGrCall(Lc,Pred,_,StrmTp,Tp,terminals(Lc,[]),Env,Env) :-
 checkTerminals([],_,[],_,Env,Env) :- !.
 checkTerminals([T|More],V,[term(Lc,Op,TT)|Out],ElTp,Env,Ex) :-
   locOfAst(T,Lc),
-  ternary(Lc,V,name(Lc,"stream$X"),T,name(Lc,"stream$X"),C),
+  ternary(Lc,V,name(Lc,"stream"),T,name(Lc,"stream"),C),
   checkCond(C,Env,E1,call(_,Op,[_,TT,_])),
   checkTerminals(More,V,Out,ElTp,E1,Ex).
 

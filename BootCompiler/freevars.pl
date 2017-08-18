@@ -55,7 +55,6 @@ freeVarsInNT(neg(_,L),Q,F,FV) :- freeVarsInNT(L,Q,F,FV).
 freeVarsInNT(ahead(_,L),Q,F,FV) :- freeVarsInNT(L,Q,F,FV).
 freeVarsInNT(guard(_,L,T),Q,F,FV) :- freeVarsInNT(L,Q,F,F0),freeVarsInGoal(T,Q,F0,FV).
 freeVarsInNT(goal(_,T),Q,F,FV) :- freeVarsInGoal(T,Q,F,FV).
-freeVarsInNT(dip(_,L,T),Q,F,FV) :- freeVars(L,Q,F,F0),freeVarsInGoal(T,Q,F0,FV).
 freeVarsInNT(call(_,O,A),Q,F,FV) :- freeVars(O,Q,F,F0),freeVarsList(A,Q,F0,FV).
 
 freeVarsInTerms([],_,F,F).

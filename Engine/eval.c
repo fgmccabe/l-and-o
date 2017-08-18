@@ -209,18 +209,18 @@ void chainSuspension(processPo P, ptrPo p) {
   register callPo nC;                                           \
                                                                 \
   if((ptrPo)C<(ptrPo)B)                                         \
-    nC = (callPo)((ptrPo)(C-1)-len);                            \
+    nC = (callPo)((ptrPo)(C-1)-(len));                            \
   else                                                          \
     nC = ((callPo)B)-1;                                         \
                                                                 \
-  if(((trailPo)(((ptrPo)nC)-ln))-TRAIL_FUDGE<=P->proc.trail){   \
+  if(((trailPo)(((ptrPo)nC)-(ln)))-TRAIL_FUDGE<=P->proc.trail){   \
     saveRegs(PC);                                               \
     if(extendStack(P,2,2,0)!=Ok)  /* grow the stack */          \
       syserr("Unable to grow process stack");                   \
     restRegs();                                                 \
                                                                 \
     if((ptrPo)C<(ptrPo)B)                                       \
-      nC = (callPo)((ptrPo)(C-1)-len);                          \
+      nC = (callPo)((ptrPo)(C-1)-(len));                          \
     else if((ptrPo)B<(ptrPo)T)                                  \
       nC = ((callPo)B)-1;                                       \
     }                                                           \
@@ -354,7 +354,6 @@ void runGo(register processPo P) {
           PC = codeIns(code);
           Lits = codeLits(code);
           SB = B;
-          continue;
         } else {
           ptrI prog = Lits[op_o_val(PCX)];
 
@@ -376,15 +375,14 @@ void runGo(register processPo P) {
               showCall(P, "call", prog, &A[1], ar);
 #endif
 
-            continue;
           } else {
             strMsg(errorMsg, NumberOf(errorMsg), "%w undefined", &prog);
             saveRegs(PC);
             raiseError(P, errorMsg, eCODE);
             restRegs();
-            continue;
           }
         }
+        continue;
       }
 
       case lkawl: {                  /* Depth,Lit tail recursive call to program */
@@ -404,15 +402,13 @@ void runGo(register processPo P) {
           if (traceCalls)
             showCall(P, "lcall", prog, &A[1], codeArity(code));
 #endif
-
-          continue;
         } else {
           strMsg(errorMsg, NumberOf(errorMsg), "%w not legal or not defined", &prog);
           saveRegs(PC);
           raiseError(P, errorMsg, eCODE);
           restRegs();
-          continue;
         }
+        continue;
       }
 
       case dlkawl: {                       /* deallocating last call */
@@ -443,15 +439,13 @@ void runGo(register processPo P) {
           if (traceCalls)
             showCall(P, "dlcall", prog, &A[1], ar);
 #endif
-
-          continue;
         } else {
           strMsg(errorMsg, NumberOf(errorMsg), "%w not defined or not legal", &prog);
           saveRegs(PC);
           raiseError(P, errorMsg, eCODE);
           restRegs();
-          continue;
         }
+        continue;
       }
 
       case kawlO: {                        /* call O(Gl,Ob,Th) call program */

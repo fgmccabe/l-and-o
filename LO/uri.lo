@@ -19,45 +19,45 @@ lo.uri {
   public parseUri:(string) => uri.
   parseUri(S) => U :- uriParse(U) %% explode(S).
 
-  public uriParse:(uri) --> list[integer].
+  public uriParse:all s ~~ stream[s->>integer] |: (uri) --> s.
   uriParse(absUri(Scheme,Hier,Query)) --> absoluteUri(Scheme,Hier,Query).
   uriParse(relUri(Hier,Query)) --> relativeUri(Hier,Query).
 
-  absoluteUri:(string,rsrcName,query) --> list[integer].
+  absoluteUri:all s ~~ stream[s->>integer] |: (string,rsrcName,query) --> s.
   absoluteUri(Scheme,Hier,Query) --> scheme(Scheme), ":", hierPart(Hier,Query).
 
-  scheme:(string) --> list[integer].
+  scheme:all s ~~ stream[s->>integer] |: (string) --> s.
   scheme(implode(Scheme)) --> grabScheme(Scheme), ":"+.
 
-  grabScheme:(list[integer]) --> list[integer].
+  grabScheme:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   grabScheme([C,..S]) --> alpha(C), alphaStar(S).
 
-  alphaStar:(list[integer]) --> list[integer].
+  alphaStar:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   alphaStar([C,..S]) --> (alpha(C) | digit(C) | plus(C) | minus(C) | dot(C)), alphaStar(S).
   alphaStar([]) --> [].
 
-  relativeUri:(rsrcName,query) --> list[integer].
+  relativeUri:all s ~~ stream[s->>integer] |: (rsrcName,query) --> s.
   relativeUri(Hier,Query) --> netPath(Hier), query(Query).
   relativeUri(localRsrc(Rsrc),Query) --> absoluteRsrc(Rsrc), query(Query).
   relativeUri(localRsrc(Rsrc),Query) --> relativeRsrc(Rsrc), query(Query).
 
-  hierPart:(rsrcName,query) --> list[integer].
+  hierPart:all s ~~ stream[s->>integer] |: (rsrcName,query) --> s.
   hierPart(Hier,Query) --> netPath(Hier), query(Query).
   hierPart(localRsrc(Rsrc),Query) --> absoluteRsrc(Rsrc), query(Query).
 
-  absoluteRsrc:(resourcePath) --> list[integer].
+  absoluteRsrc:all s ~~ stream[s->>integer] |: (resourcePath) --> s.
   absoluteRsrc(absPath(Segments)) --> "/", pathSegments(Segments).
 
-  relativeRsrc:(resourcePath) --> list[integer].
+  relativeRsrc:all s ~~ stream[s->>integer] |: (resourcePath) --> s.
   relativeRsrc(relPath(Segments)) --> pathSegments(Segments).
 
-  pathSegments:(list[string]) --> list[integer].
+  pathSegments:all s ~~ stream[s->>integer] |: (list[string]) --> s.
   pathSegments([Seg,..M]) --> segment(Seg), ("/", pathSegments(M) | M=[]).
 
-  segment:(string) --> list[integer].
+  segment:all s ~~ stream[s->>integer] |: (string) --> s.
   segment(implode(C)) --> pChars(C,R), parameters(R).
 
-  pChars:(list[integer],list[integer]) --> list[integer].
+  pChars:all s ~~ stream[s->>integer] |: (list[integer],list[integer]) --> s.
   pChars([C,..M],R) --> unreserved(C), pChars(M,R).
   pChars([0c%,U,L,..M],R) --> escaped(U,L), pChars(M,R).
   pChars([C,..M],R) --> [C], { pChar(C)} , pChars(M,R).
@@ -72,32 +72,32 @@ lo.uri {
   pChar(0c$).
   pChar(0c<).
 
-  parameters:(list[integer]) --> list[integer].
+  parameters:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   parameters(P) --> parameter(P,S), parameters(S).
   parameters([]) --> [].
 
-  parameter:(list[integer],list[integer]) --> list[integer].
+  parameter:all s ~~ stream[s->>integer] |: (list[integer],list[integer]) --> s.
   parameter([0c;,..P],M) --> ";", pChars(P,M).
 
-  query:(query) --> list[integer].
+  query:all s ~~ stream[s->>integer] |: (query) --> s.
   query(qry(implode(Q))) --> "?", uricStar(Q).
   query(noQ) --> eof.
 
-  uricStar:(list[integer]) --> list[integer].
+  uricStar:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   uricStar(S) --> uric(S,M), uricStar(M).
   uricStar([]) --> [].
 
-  netPath:(rsrcName) --> list[integer].
+  netPath:all s ~~ stream[s->>integer] |: (rsrcName) --> s.
   netPath(netRsrc(A,P)) --> "//", authority(A), optAbsolutePath(P).
 
-  authority:(authority) --> list[integer].
+  authority:all s ~~ stream[s->>integer] |: (authority) --> s.
   authority(server(some(user(implode(U))),H)) --> userInfo(U), "@", hostNamePort(H).
   authority(server(none,H)) --> hostNamePort(H).
 
-  userInfo:(list[integer]) --> list[integer].
+  userInfo:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   userInfo(U) --> userStar(U).
 
-  userStar:(list[integer]) --> list[integer].
+  userStar:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   userStar([C,..S]) --> unreserved(C), userStar(S).
   userStar([0c%,U,L,..S]) --> escaped(U,L), userStar(S).
   userStar([0c$,..S]) --> "$", userStar(S).
@@ -109,70 +109,70 @@ lo.uri {
   userStar([0c+,..S]) --> "+", userStar(S).
   userStar([]) --> "@"+.
 
-  hostNamePort:(host) --> list[integer].
+  hostNamePort:all s ~~ stream[s->>integer] |: (host) --> s.
   hostNamePort(hostPort(H,P)) --> hostName(H), ":", port(P).
   hostNamePort(host(H)) --> hostName(H), \+":".
 
-  hostName:(string) --> list[integer].
+  hostName:all s ~~ stream[s->>integer] |: (string) --> s.
   hostName(implode(H)) --> alphaDashStar(H)!.
 
-  alphaDashStar:(list[integer]) --> list[integer].
+  alphaDashStar:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   alphaDashStar([C,..S]) --> (alpha(C) | digit(C) | minus(C) | dot(C)) , alphaDashStar(S).
   alphaDashStar([]) --> [].
 
-  port:(string) --> list[integer].
+  port:all s ~~ stream[s->>integer] |: (string) --> s.
   port(implode(P)) --> digits(P).
 
-  optAbsolutePath:(resourcePath) --> list[integer].
+  optAbsolutePath:all s ~~ stream[s->>integer] |: (resourcePath) --> s.
   optAbsolutePath(P) --> absoluteRsrc(P).
   optAbsolutePath(relPath([])) --> "?"+.
   optAbsolutePath(relPath([])) --> eof.
 
-  plus:(integer) --> list[integer].
+  plus:all s ~~ stream[s->>integer] |: (integer) --> s.
   plus(0c+) --> "+".
 
-  minus:(integer) --> list[integer].
+  minus:all s ~~ stream[s->>integer] |: (integer) --> s.
   minus(0c-) --> "-".
 
-  dot:(integer) --> list[integer].
+  dot:all s ~~ stream[s->>integer] |: (integer) --> s.
   dot(0c.) --> "-".
 
-  alpha:(integer)-->list[integer].
+  alpha:all s ~~ stream[s->>integer] |: (integer)-->s.
   alpha(C) --> [C] , {isLowAlpha(C)|isUpAlpha(C)}.
 
-  alphaNum:(integer) --> list[integer].
+  alphaNum:all s ~~ stream[s->>integer] |: (integer) --> s.
   alphaNum(C) --> alpha(C).
   alphaNum(C) --> digit(C).
 
-  digit:(integer) --> list[integer].
+  digit:all s ~~ stream[s->>integer] |: (integer) --> s.
   digit(X) --> [X], {isDigit(X)}.
 
-  digits:(list[integer]) --> list[integer].
+  digits:all s ~~ stream[s->>integer] |: (list[integer]) --> s.
   digits([C,..S]) --> digit(C), digits(S).
   digits([]) --> \+digit(_).
 
-  hex:(integer) --> list[integer].
+  hex:all s ~~ stream[s->>integer] |: (integer) --> s.
   hex(C) --> digit(C).
   hex(C) --> [C], { isHexDigit(C) }.
 
-  uric:(list[integer],list[integer]) --> list[integer].
+  uric:all s ~~ stream[s->>integer] |: (list[integer],list[integer]) --> s.
   uric([C,..M],M) --> (reserved(C) | unreserved(C)).
   uric([0c%,U,L,..M],M) --> escaped(U,L).
 
-  reserved:(integer) --> list[integer].
+  reserved:all s ~~ stream[s->>integer] |: (integer) --> s.
   reserved(C) --> [C], { isReserved(C) }.
 
-  unreserved:(integer) --> list[integer].
+  unreserved:all s ~~ stream[s->>integer] |: (integer) --> s.
   unreserved(C) --> alphaNum(C).
   unreserved(C) --> mark(C).
 
-  mark:(integer) --> list[integer].
+  mark:all s ~~ stream[s->>integer] |: (integer) --> s.
   mark(C) --> [C], { isMark(C) }.
 
-  escaped:(integer,integer) --> list[integer].
+  escaped:all s ~~ stream[s->>integer] |: (integer,integer) --> s.
   escaped(U,L) --> "%", hex(U), hex(L).
 
-  delim:(integer) --> list[integer].
+  delim:all s ~~ stream[s->>integer] |: (integer) --> s.
   delim(C) --> [C], { isDelim(C) }.
 
   isLowAlpha:(integer){}.

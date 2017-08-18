@@ -149,7 +149,6 @@ lo.comp.resolve{
   resolveGr(grOne(T),Dict,Rp,Rpx) => grOne(resolveGr(T,Dict,Rp,Rpx)).
   resolveGr(grNeg(T),Dict,Rp,Rpx) => grNeg(resolveGr(T,Dict,Rp,Rpx)).
   resolveGr(grAhed(T),Dict,Rp,Rpx) => grAhed(resolveGr(T,Dict,Rp,Rpx)).
-  resolveGr(grDip(T,C),Dict,Rp,Rpx) => grDip(resolveTerm(T,Dict,Rp,Rp0),resolveCond(C,Dict,Rp0,Rpx)).
   resolveGr(grTest(C),Dict,Rp,Rpx) => grTest(resolveCond(C,Dict,Rp,Rpx)).
   resolveGr(grCall(Lc0,over(Lc,T,Cx),tpl(Args)),Dict,Rp,Rpx) => grCall(Lc0,OverOp,tpl(NArgs)) :-
     resolveContracts(Lc,Cx,Dict,Dterms,Rp,Rp0),

@@ -182,11 +182,8 @@ dcgBody(guard(_,Lhs,Rhs),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   trGoal(Rhs,G0,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
 dcgBody(goal(_,Goal),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   joinStream(Strm,Strmx,G,G0),
-  trGoal(Goal,G0,Gx,Q,Qx,Map,Opts,Ex,Exx).
-dcgBody(dip(_,V,Cond),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
-  joinStream(Strm,Strmx,G,G0),
-  trExp(V,StrmVr,Q,Q0,G0,G1,G1,[unify(Strm,StrmVr)|G2],Map,Opts,Ex,Ex0),
-  trGoal(Cond,G2,Gx,Q0,Qx,Map,Opts,Ex0,Exx).
+  pushStreamVar(Map,Strm,MapG),
+  trGoal(Goal,G0,Gx,Q,Qx,MapG,Opts,Ex,Exx).
 dcgBody(call(Lc,NT,Args),G,Gx,Strm,Strmx,Q,Qx,Map,Opts,Ex,Exx) :-
   lineDebug(Lc,G,G0,Opts),
   trExps(Args,AG,[],Q,Q0,G0,Pr,Pr,G3,Map,Opts,Ex,Ex0),
@@ -508,6 +505,9 @@ trExps([P|More],[A|Args],Extra,Q,Qx,Pre,Prx,Post,Psx,Map,Opts,Ex,Exx) :-
 trExp(v(_,"this"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :-
   thisVar(Map,ThVr),!,
   merge([ThVr],Q,Qx).
+trExp(v(_,"stream"),ThVr,Q,Qx,Pre,Pre,Post,Post,Map,_,Ex,Ex) :-
+  streamVar(Map,ThVr),!,
+  merge([ThVr],Q,Qx).
 trExp(v(Lc,Nm),Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts,Ex,Ex) :-
   trVarExp(Lc,Nm,Vr,Q,Qx,Pre,Px,Post,Pstx,Map,Opts).
 trExp(intLit(Ix),intgr(Ix),Q,Q,Pre,Pre,Post,Post,_,_,Ex,Ex) :-!.
@@ -795,7 +795,7 @@ trGoalDot(Rec,C,G,Gx,Q,Qx,Map,Opts,Ex,Exx) :-
   trExp(Rec,NR,Q,Qx,G,G0,G0,G1,Map,Opts,Ex,Exx),
   G1 = [ocall(C,NR,NR)|Gx].
 
-genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr)|Map],Entry,En,Ex,Exx) :-
+genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,Lc,LblGl,LbVr,ThVr,void)|Map],Entry,En,Ex,Exx) :-
   genVar("LbV",LbVr),
   genVar("ThV",ThVr),
   pickAllFieldsFromFace(Face,Fields),

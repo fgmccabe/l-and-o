@@ -24,6 +24,7 @@ lo.comp.keywords{
   keyword("-->").
   keyword("->>").
   keyword("::=").
+  keyword("::-").
   keyword("<=").
   keyword("<~").
   keyword("~>").
@@ -34,7 +35,6 @@ lo.comp.keywords{
   keyword(".").
   keyword("%%").
   keyword("@").
-  keyword("@@").
   keyword("this").
   keyword("import").
   keyword("open").
@@ -43,7 +43,6 @@ lo.comp.keywords{
   keyword("contract").
   keyword("all").
   keyword("exists").
-  keyword("type").
   keyword("implementation").
   keyword("void").
   keyword("assert").
@@ -56,7 +55,6 @@ lo.comp.keywords{
   private
   ruleKeyword:(string){}.
 
-  ruleKeyword("@@").
   ruleKeyword("~~").
   ruleKeyword("=>").
   ruleKeyword("<=>").

@@ -1,4 +1,4 @@
-:- module(transUtils,[trCons/3,labelAccess/5,extraVars/2,thisVar/2,
+:- module(transUtils,[trCons/3,labelAccess/5,extraVars/2,thisVar/2,streamVar/2,pushStreamVar/3,
           lookupVarName/3,lookupRelName/3,lookupFunName/3,lookupClassName/3,
           makePkgMap/6,programAccess/5,
           genNewName/4,genVar/2,
@@ -28,13 +28,14 @@ genNewName(Map,Variant,Ar,prg(Nm,Ar)) :-
 
 /*
  * Each element in Layers defines a scope. It is a tuple of the form:
- * lyr(Prefix,Defs:list[(Name,Class),Loc,Label,Clvr,Thvr)
+ * lyr(Prefix,Defs:list[(Name,Class),Loc,Label,Clvr,Thvr,StreamVr)
  * Where Prefix is the current prefix
  * Defs is the set of local programs and other names defined in this scope
  * Loc is the file location of the defining label
  * Label is the full form of the label term.
  * Clvr is the variable holding the label
  * Thvr is the variable holding this
+ * StreamVr is valid in a grammar body, denotes the stream
  *
  * E.g., in
  * pk{
@@ -48,9 +49,9 @@ genNewName(Map,Variant,Ar,prg(Nm,Ar)) :-
  * }
  *
  * The inner-most layer will look like:
- *    lyr(pk#foo#bar#anon23,Defs,Lc,anon23(Free,bar(B,foo(A))),ClVar,ThVar)
+ *    lyr(pk#foo#bar#anon23,Defs,Lc,anon23(Free,bar(B,foo(A))),ClVar,ThVar,void)
  * the outermost class layer will look like
- *    lyr(pk#foo,Defs,Lc,foo(A),clVar,thVar)
+ *    lyr(pk#foo,Defs,Lc,foo(A),clVar,thVar,void)
  * the package layer will look like
  *    lyr(pk,Defs,Lc,void,void,void)
  */
@@ -61,7 +62,7 @@ makePkgMap(Pkg,Defs,Types,Imports,Enums,Map) :-
   makeTypesMap(Pkg,Types,R0,[]),
   pushMap(Pkg,DfList,[],Map).
 
-pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void)|Std]).
+pushMap(PkgName,Defs,Std,[lyr(PkgName,Defs,'',void,void,void,void)|Std]).
 
 makeModuleMap(Pkg,[Def|Rest],Map,Mx,Enums) :-
   makeMdlEntry(Pkg,Def,Map,M0,Enums,Clx),
@@ -162,7 +163,7 @@ makeImportEntry(_,_,Pkg,Nm,[(Nm,moduleVar(Pkg,LclName,AccessName))|Mx],Mx) :-
 makeTypesMap(_,_,List,List).
 
 lookup([],_,_,notInMap).
-lookup([lyr(_Prefix,Defns,_Lc,_Lbl,_LbVr,_ThVr)|_Layers],Nm,Filter,Reslt) :-
+lookup([lyr(_Prefix,Defns,_Lc,_Lbl,_LbVr,_ThVr,_StrmVr)|_Layers],Nm,Filter,Reslt) :-
   filteredSearch(Defns,Filter,Nm,Reslt),!.
 lookup([_|Layers],Nm,Filter,Reslt) :-
   lookup(Layers,Nm,Filter,Reslt).
@@ -215,19 +216,22 @@ programAccess(localRel(Prog,Access,Closure,Arity,_,_),Prog,Access,Closure,Arity)
 programAccess(moduleVar(_,Prog,Access),Prog,Access,Access,1).
 programAccess(localVar(Prog,Access,_,_),Prog,Access,Access,1).
 
-extraVars([lyr(_,_,_,_,void,void)|_],[]) :- !.
-extraVars([lyr(_,_,_,_,LbVr,ThVr)|_],[LbVr,ThVr]).
+extraVars([lyr(_,_,_,_,void,void,_)|_],[]) :- !.
+extraVars([lyr(_,_,_,_,LbVr,ThVr,_)|_],[LbVr,ThVr]).
 
-thisVar([lyr(_,_,_,_,_,ThVr)|_],ThVr) :- ThVr \= void.
+thisVar([lyr(_,_,_,_,_,ThVr,_)|_],ThVr) :- ThVr \= void.
 
-labelAccess(Q,Q,[lyr(_,_,_,_,void,void)|_],G,G) :- !.
-labelAccess(Q,Qx,[lyr(_,_,_,LblGl,LbVr,_)|_],G,Gx) :- concat(LblGl,Gx,G),merge([LbVr],Q,Qx).
+streamVar([lyr(_,_,_,_,_,_,StrmVr)|_],StrmVr) :- StrmVr \= void.
+pushStreamVar([lyr(Nm,Defs,Lc,GlVr,LbVr,ThVr,_)|Rest],StrmVr,[lyr(Nm,Defs,Lc,GlVr,LbVr,ThVr,StrmVr)|Rest]).
+
+labelAccess(Q,Q,[lyr(_,_,_,_,void,void,_)|_],G,G) :- !.
+labelAccess(Q,Qx,[lyr(_,_,_,LblGl,LbVr,_,_)|_],G,Gx) :- concat(LblGl,Gx,G),merge([LbVr],Q,Qx).
 
 pushOpt(Opts,Opt,[Opt|Opts]).
 
 isOption(Opt,Opts) :- is_member(Opt,Opts),!.
 
-layerName([lyr(Nm,_,_,_,_,_)|_],Nm).
+layerName([lyr(Nm,_,_,_,_,_,_)|_],Nm).
 
 genVar(Prefix,idnt(V)) :-
   genstr(Prefix,V).

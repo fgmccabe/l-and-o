@@ -11,9 +11,9 @@ tree{
   }.
 
   -- Define the tree type's interface
-  all a<~comp ~~ 
+  all a<~comp ~~
     tree[a] <~ {
-	    insert:(a)=>tree[a]. /* @@sorted(this). insert@@sorted(this)=>sorted(this). */ 
+	    insert:(a)=>tree[a]. /* assert sorted(this). */ 
 	    empty:(){}.
     }.
 
@@ -58,6 +58,6 @@ tree{
         stdout.outLine("T2=\(T2.show())").
         */
   }.
-        
+
   -- assert checkUnit(testree).
 }

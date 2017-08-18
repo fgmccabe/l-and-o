@@ -26,7 +26,7 @@ lo.comp.transutils {
   public trCons:(string,integer) => term.
   trCons(Nm,Ar) => strct(Nm+"%\(Ar)",Ar).
 
-  public lyr ::= lyr(string,list[(string,mapEntry)],list[pred],term,term).
+  public lyr ::= lyr(string,list[(string,mapEntry)],list[pred],term,term,term).
 
   public mapEntry ::= moduleFun(string,string,string,string,integer)
             | moduleRel(string,string,string,string,integer)
@@ -43,7 +43,7 @@ lo.comp.transutils {
             | notInMap.
 
   public makePkgMap:(string,list[canonDef],list[pkgSpec]) => (list[string],list[lyr]).
-  makePkgMap(Pkg,Defs,Imports) => (Enums,[lyr(Pkg,DfList,[],anon,anon)]) :-
+  makePkgMap(Pkg,Defs,Imports) => (Enums,[lyr(Pkg,DfList,[],anon,anon,anon)]) :-
     makeModuleMap(Pkg,Defs,DfList,Rest,Enums),
     makeImportsMap(Imports,Rest,[]).
 
@@ -120,7 +120,7 @@ lo.comp.transutils {
 
   private lookup:(list[lyr],string,(mapEntry){},mapEntry){}.
   lookup([],_,_,notInMap).
-  lookup([lyr(_,Defns,_,_,_),.._],Nm,Filter,Reslt) :-
+  lookup([lyr(_,Defns,_,_,_,_),.._],Nm,Filter,Reslt) :-
     filteredSearch(Defns,Filter,Nm,Reslt).
   lookup([_,..Layers],Nm,Filter,Reslt) :-
     lookup(Layers,Nm,Filter,Reslt).
@@ -182,7 +182,7 @@ lo.comp.transutils {
     lookupPkg(Map,Pkg,Nm,Df)!.
 
   private lookupPkg:(list[lyr],string,string,mapEntry){}.
-  lookupPkg([lyr(_,Defns,_,_,_),.._],Pkg,Nm,Reslt) :-
+  lookupPkg([lyr(_,Defns,_,_,_,_),.._],Pkg,Nm,Reslt) :-
     (Nm,Def) in Defns,
     samePkg(Defn,Pkg).
   lookupPkg([_,..Layers],Pkg,Nm,Reslt) :-
@@ -202,22 +202,28 @@ lo.comp.transutils {
   programAccess(localClass(Prog,Access,Arity,_,_),Prog,Access,Access,Arity).
 
   public extraVars:(list[lyr],list[term]){}.
-  extraVars([lyr(_,_,_,anon,anon),.._],[]).
-  extraVars([lyr(_,_,_,LbVr,ThVr),.._],[LbVr,ThVr]).
+  extraVars([lyr(_,_,_,anon,anon,_),.._],[]).
+  extraVars([lyr(_,_,_,LbVr,ThVr,_),.._],[LbVr,ThVr]).
 
   public thisVar:(list[lyr],term){}.
-  thisVar([lyr(_,_,_,_,ThVr),.._],ThVr) :- ThVr \= anon.
+  thisVar([lyr(_,_,_,_,ThVr,_),.._],ThVr) :- ThVr \= anon.
+
+  public streamVar:(list[lyr],term){}.
+  streamVar([lyr(_,_,_,_,_,StrmVr),.._],StrmVr) :- StrmVr\=anon.
+
+  public pushStreamVar:(list[lyr],term)=>list[lyr].
+  pushStreamVar([lyr(Nm,Defs,Gl,LbVr,ThVr,_),..L],StrmVr) => [lyr(Nm,Defs,Gl,LbVr,ThVr,StrmVr),..L].
 
   public labelAccess:(list[term],list[term],list[lyr],list[pred],list[pred]){}.
-  labelAccess(Q,Q,[lyr(_,_,_,anon,anon),.._],G,G).
-  labelAccess(Q,merge([LbVr],Q),[lyr(_,_,LblGl,LbVr,_),.._],G,Gx) :- G = LblGl<>Gx.
+  labelAccess(Q,Q,[lyr(_,_,_,anon,anon,_),.._],G,G).
+  labelAccess(Q,merge([LbVr],Q),[lyr(_,_,LblGl,LbVr,_,_),.._],G,Gx) :- G = LblGl<>Gx.
 
   public layerName:(list[lyr])=>string.
-  layerName([lyr(Nm,_,_,_,_),.._]) => Nm.
+  layerName([lyr(Nm,_,_,_,_,_),.._]) => Nm.
 
   public allLabelArgs:(list[lyr],list[term]) => list[term].
   allLabelArgs([],SoF) => SoF.
-  allLabelArgs([lyr(_,Entries,_,_,_),..L],SoF) => labelArgs(Entries,allLabelArgs(L,SoF)).
+  allLabelArgs([lyr(_,Entries,_,_,_,_),..L],SoF) => labelArgs(Entries,allLabelArgs(L,SoF)).
 
   labelArgs:(list[(string,mapEntry)],list[term]) => list[term].
   labelArgs([],L) => L.

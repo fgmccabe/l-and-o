@@ -61,30 +61,12 @@ lo.comp.lexer{
   allTokens([],0) --> [].
   allTokens([],_) --> eof.
   allTokens([tok(Tk,Lc),..More],Cx) -->
-    @currentLocation(Start),
+    { stream.currentLocation(Start) },
     nxtTok(Tk)!,
-    @currentLocation(End),
+    { stream.currentLocation(End) },
     Lc = makeLocation(Start,End),
     skipSpaces(),
     allTokens(More,Cx-1).
-
-  public
-  tokenizeForDoc:(list[token]) --> tokenState.
-  tokenizeForDoc(AllTokens) -->
-    docSpaces(AllTokens,R),
-    allDocTokens(R,-1).
-
-  private
-  allDocTokens : (list[token],integer) --> tokenState.
-  allDocTokens([],0) --> [].
-  allDocTokens([],_) --> eof.
-  allDocTokens([tok(Tk,Lc),..More],Cx) -->
-    @currentLocation(Start),
-    nxtTok(Tk)!,
-    @currentLocation(End),
-    Lc = makeLocation(Start,End),
-    docSpaces(More,R),
-    allDocTokens(R,Cx-1).
 
   public
   subTokenize:(location,string) => list[token].
@@ -107,6 +89,11 @@ lo.comp.lexer{
   nxtTok(period) --> [0c.], [0c}]+.
   nxtTok(idTok(Id)) --> idStart(C), readIden(R), { Id = implode([C,..R]) }.
   nxtTok(idQTok(Id)) --> [0c'], readQuoted(Q), [0c'], { Id = implode(Q)}.
+  nxtTok(stringTok([segment(makeLocation(Start,End),implode(Seg))])) --> [0c",0c",0c"],
+      { stream.currentLocation(Start) },
+      readBlob(Seg),
+      { stream.currentLocation(End) },
+      [0c",0c",0c"].
   nxtTok(stringTok(Text)) --> [0c"], readStringSegments(Text), [0c"].
   nxtTok(idTok(Op)) --> [Ch], { follows("",Ch,Next)}, followGraph(Next,Op)!.
 
@@ -136,9 +123,9 @@ lo.comp.lexer{
     interpolation(Seg),
     readStringSegments(Segs).
   readStringSegments([segment(Lc,Seg),..Segs]) -->
-    @currentLocation(Start), -- read the current location from the token state
+    {stream.currentLocation(Start)}, -- read the current location from the token state
     readStr(Chars)!,
-    @currentLocation(End),
+    {stream.currentLocation(End)},
     { Seg = implode(Chars),
       Lc = makeLocation(Start,End)},
     readStringSegments(Segs).
@@ -148,12 +135,17 @@ lo.comp.lexer{
   readStr([]) --> [0c\\,0c(]+.
   readStr([Ch,..More]) --> charRef(Ch), readStr(More).
 
+  readBlob:(list[integer]) --> tokenState.
+  readBlob([]) --> eof.
+  readBlob([]) --> [0c",0c",0c"]+.
+  readBlob([Ch,..More]) --> [Ch], readBlob(More).
+
   interpolation:(stringSegment) --> tokenState.
   interpolation(interpolate(Lc,implode(Text),implode(Format))) -->
-    @currentLocation(Start),
+    {stream.currentLocation(Start)},
     countBrackets(Text,[]),
     ([0c:],readFormat(Format) | Format=[]),
-    @currentLocation(End),
+    {stream.currentLocation(End)},
     Lc = makeLocation(Start,End).
 
   countBrackets:(list[integer],list[integer]) --> tokenState.
@@ -251,7 +243,6 @@ lo.comp.lexer{
   skipSpaces: () --> tokenState.
   skipSpaces() --> whiteSpace(), skipSpaces().
   skipSpaces() --> [0c-, 0c-], ([0c ] | [0c\t]), lineComment(_), skipSpaces().
-  skipSpaces() --> [0c/, 0c*, 0c*], docComment(_), skipSpaces().
   skipSpaces() --> [0c/, 0c*], blockComment(_), skipSpaces().
   skipSpaces() --> [].
 
@@ -264,33 +255,4 @@ lo.comp.lexer{
   blockComment([]) --> eof.
   blockComment([]) --> [0c*, 0c/].
   blockComment([Ch,..C]) --> [Ch], blockComment(C).
-
-  docComment:(list[integer]) --> tokenState.
-  docComment([]) --> eof.
-  docComment([]) --> [0c*, 0c/].
-  docComment(C) --> [0c\n], whiteSpace(), ([0c*],docComment(C) | docComment(C)).
-  docComment([Ch,..C]) --> [Ch], docComment(C).
-
-  -- docSpaces is used when parsing for loDoc generation
-  docSpaces: (list[token],list[token]) --> tokenState.
-  docSpaces(L,T) --> whiteSpace(), docSpaces(L,T).
-  docSpaces([tok(cmtTok(lineCmt,implode(Text)),Lc),..T],Tx) --> [0c-, 0c-], ([0c ] | [0c\t]),
-      @currentLocation(Start),
-      lineComment(Text)!,
-      @currentLocation(End),
-      Lc = makeLocation(Start,End),
-      docSpaces(T,Tx).
-  docSpaces([tok(cmtTok(docCmt,implode(Text)),Lc),..T],Tx) --> [0c/, 0c*, 0c*],
-      @currentLocation(Start),
-      docComment(Text)!,
-      @currentLocation(End),
-      Lc = makeLocation(Start,End),
-      docSpaces(T,Tx).
-  docSpaces([tok(cmtTok(blockCmt,implode(Text)),Lc),..T],Tx) --> [0c/, 0c*],
-      @currentLocation(Start),
-      blockComment(Text)!,
-      @currentLocation(End),
-      Lc = makeLocation(Start,End),
-      docSpaces(T,Tx).
-  docSpaces(Tx,Tx) --> [].
 }

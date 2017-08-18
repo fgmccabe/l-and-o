@@ -2,9 +2,9 @@ utest {
   import lo.
   import lo.uri.
 
---  show formatSS(uriDisp.display(U)) @@ parseUri(U) %% explode("www.example.com").
---  show formatSS(uriDisp.display(V)) @@ parseUri(V) %% explode("http://www.example.com").
---  show formatSS(uriDisp.display(W)) @@ parseUri(W) %% explode("ftp://www.example.com/foo/bar?help").
+--  show formatSS(uriDisp.display(U)) ::- parseUri(U) %% explode("www.example.com").
+--  show formatSS(uriDisp.display(V)) ::- parseUri(V) %% explode("http://www.example.com").
+--  show formatSS(uriDisp.display(W)) ::- parseUri(W) %% explode("ftp://www.example.com/foo/bar?help").
 
   parse:(string)=>uri.
   parse(S) =>  U :- parseUri(U) %% explode(S).

@@ -234,9 +234,6 @@ resolveGr(guard(Lc,L,T),Dict,guard(Lc,RL,RT)) :-
   resolveGr(L,Dict,RL).
 resolveGr(goal(Lc,T),Dict,goal(Lc,RT)) :-
   resolveCond(T,Dict,RT).
-resolveGr(dip(Lc,V,T),Dict,dip(Lc,RV,RT)) :-
-  resolveTerm(V,Dict,RV),
-  resolveCond(T,Dict,RT).
 resolveGr(call(Lc0,over(Lc,T,Cx),Args),Dict,call(Lc0,OverOp,NArgs)) :-
   resolveTerms(Args,Dict,RArgs),
   resolveContracts(Lc,Cx,Dict,DTerms),

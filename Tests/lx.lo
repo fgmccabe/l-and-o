@@ -55,7 +55,7 @@ lx{
 
   private
   makeLocation:(integer,integer) => location.
-  makeLocation(StartOff,EndOff) => 
+  makeLocation(StartOff,EndOff) =>
       loc(StartOff,EndOff-StartOff).
 
   tokenize:(list[(token,location)]-) --> tokenState.
@@ -67,9 +67,9 @@ lx{
   allTokens : (list[(token,location)]-) --> tokenState.
   allTokens([]) --> eof.
   allTokens([(Tk,Lc),..More]) -->
-    @currentLocation(Start),
+    { stream.currentLocation(Start) },
     nxtTok(Tk),
-    @currentLocation(End),
+    { stream.currentLocation(End) },
     Lc = makeLocation(Start,End),
     skipSpaces(),
     allTokens(More).
@@ -93,7 +93,7 @@ lx{
   readNatural(SoFar,SoFar) --> [].
 
   readMoreNumber:(token,integer) --> tokenState.
-  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr), 
+  readMoreNumber(fltTok(Fp),Decimal) --> [0c.], digit(_)+, fraction(0.1,1.0,Fr),
       exponent(_int2flt(Decimal)+Fr,Fp).
   readMoreNumber(intTok(Ix),Ix) --> [].
 
@@ -128,7 +128,7 @@ lx{
 
   assert tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
-  show formatSS(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) @@ tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
+  show formatSS(listDisp(pairDisp(tokDisp,locDisp)).display(Toks)) ::- tokenize(Toks) %% tkState(explode("(4+5)*6.4"),0).
 
   main:(list[string]+){}.
   main(Strs) :-

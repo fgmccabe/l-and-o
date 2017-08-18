@@ -186,11 +186,7 @@ lo.comp.transform{
     dcgAhead(Tst,Map,Opts,G0,Gx,Strm,Q,Qx,Ex,Exx,Rp,Rpx).
   dcgBody(grTest(Goal),Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     joinStream(Strm,Strmx,G,G0),
-    trGoal(Goal,G0,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
-  dcgBody(grDip(V,Cond),Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
-    joinStream(Strm,Strmx,G,[unfy(none,Strm,StrmVr),..G2]),
-    trExp(V,StrmVr,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
-    trGoal(Cond,G2,Gx,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
+    trGoal(Goal,G0,Gx,Q,Qx,pushStreamVar(Map,Strm),Opts,Ex,Exx,Rp,Rpx).
   dcgBody(grCall(Lc,NT,tpl(Args)),Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     lineDebug(Lc,G,G3,Opts),
     trExps(Args,AG,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rpx),
@@ -497,6 +493,8 @@ lo.comp.transform{
   trExp:(canonTerm,term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trExp(v(_,"this"),ThVr,Q,merge([ThVr],Q),Map,_,Ex,Ex,Rp,Rp) :-
     thisVar(Map,ThVr).
+  trExp(v(_,"stream"),ThVr,Q,merge([ThVr],Q),Map,_,Ex,Ex,Rp,Rp) :-
+    streamVar(Map,ThVr).
   trExp(v(Lc,Nm),Vr,Q,Qx,Map,Opts,Ex,Ex,Rp,Rpx) :-
     trVarExp(Lc,Nm,Vr,Q,Qx,Map,Opts,Rp,Rpx).
   trExp(int(Ix),intgr(Ix),Q,Q,_,_,Ex,Ex,Rp,Rp).
@@ -719,7 +717,7 @@ lo.comp.transform{
     trExp(Rec,NR,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
 
   genClassMap:(list[lyr],trOptions,location,string,list[canonRule],tipe,list[lyr],map[term,rel],map[term,rel],report,report){}.
-  genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,LblGl,LbVr,ThVr),..Map],P,Px,Rp,Rpx) :-
+  genClassMap(Map,Opts,Lc,LclName,Defs,Face,[lyr(LclName,List,LblGl,LbVr,ThVr,anon),..Map],P,Px,Rp,Rpx) :-
     genVarbl("LbV",LbVr),
     genVarbl("ThV",ThVr),
     pickAllFieldsFromFace(Face,Fields),

@@ -56,16 +56,16 @@ showCanon(prog(Pkg,Imports,Defs,Others,_Fields,Types,Cons,Impls),O,Ox) :-
 showCanonTerm(v(_,Nm),O,Ox) :- appStr(Nm,O,Ox).
 showCanonTerm(intLit(Ix),O,Ox) :- appInt(Ix,O,Ox).
 showCanonTerm(floatLit(Ix),O,Ox) :- appInt(Ix,O,Ox).
-showCanonTerm(stringLit(Str),O,Ox) :- 
+showCanonTerm(stringLit(Str),O,Ox) :-
   appStr("""",O,O1),
   appStr(Str,O1,O2),
   appStr("""",O2,Ox).
-showCanonTerm(apply(Op,Args),O,Ox) :- 
+showCanonTerm(apply(Op,Args),O,Ox) :-
   showCanonTerm(Op,O,O1),
   appStr("(",O1,O2),
   showTerms(Args,O2,O3),
   appStr(")",O3,Ox).
-showCanonTerm(call(_,Op,Args),O,Ox) :- 
+showCanonTerm(call(_,Op,Args),O,Ox) :-
   showCanonTerm(Op,O,O1),
   appStr("(",O1,O2),
   showTerms(Args,O2,O3),
@@ -225,7 +225,7 @@ showImpl(imp(ImplName,Spec),O,Ox) :-
   showConstraint(Spec,O3,O4),
   appStr("\n",O4,Ox).
 
-showImplementation(impl(Lc,_,_,_,Spec,OCx,implBody(_,Hd,ThDefs,Others,Types),_,_),O,Ox) :- 
+showImplementation(impl(Lc,_,_,_,Spec,OCx,implBody(_,Hd,ThDefs,Others,Types),_,_),O,Ox) :-
   appStr("implementation: ",O,O1),
   showCanonTerm(Hd,O1,O2),
   appStr("for",O2,O3),
@@ -448,9 +448,6 @@ showNonTerminal(ahead(_,Rhs),O,Ox) :-
   appStr("(",O,O1),
   showNonTerminal(Rhs,O1,O2),
   appStr(")+",O2,Ox).
-showNonTerminal(dip(_,_,Rhs),O,Ox) :-
-  appStr("@ ",O,O1),
-  showNonTerminal(Rhs,O1,Ox).
 showNonTerminal(goal(_,Rhs),O,Ox) :-
   appStr("{",O,O1),
   showCanonTerm(Rhs,O1,O2),

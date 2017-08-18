@@ -193,6 +193,12 @@ parseTypeFields([F|L],Env,Bound,C0,Cx,Flds,Fields) :-
   isIden(Nm,Fld),
   parseType(FT,Env,Bound,C0,C1,FldTp),
   parseTypeFields(L,Env,Bound,C1,Cx,[(Fld,FldTp)|Flds], Fields).
+parseTypeFields([F|L],Env,Bound,C,Cx,Flds,Fields) :-
+  isBinary(F,"@",_,_),
+  parseTypeFields(L,Env,Bound,C,Cx,Flds, Fields).
+parseTypeFields([F|L],Env,Bound,C,Cx,Flds,Fields) :-
+  isUnary(F,"@",_,_),
+  parseTypeFields(L,Env,Bound,C,Cx,Flds, Fields).
 
 parseContract(T,Env,Path,contract(Nm,ConNm,Spec,FullSpec,Face)) :-
   isUnary(T,"contract",TI),

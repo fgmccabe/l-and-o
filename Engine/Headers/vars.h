@@ -42,8 +42,9 @@ static inline ptrI deRefI(register ptrPo p)
   do{
     register ptrI q = *p;
 
-    if(!isvar(q))
+    if(!isvar(q)) {
       return q;
+    }
     else if((ptrPo)q==p)
       return q;
     p = (ptrPo)q;

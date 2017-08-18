@@ -3,6 +3,8 @@
 :-module(operators,[infixOp/4,prefixOp/3,postfixOp/3,isOperator/2,follows/3,final/2]).
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
+  infixOp("@",1254,1255,1255).	 /* meta annotation */
+  infixOp(";",1253,1254,1254).	 /* meta annotation */
   infixOp(":",1249,1250,1249).	 /* type annotation */
   infixOp("<=",1249,1250,1249).	 /* class rule arrow */
   infixOp("~~",1239,1240,1240).	 /* quantifier */
@@ -15,7 +17,7 @@
   infixOp("->>",1199,1200,1199).	 /* dependent type marker */
   infixOp("*>",1151,1152,1151).	 /* all solutions */
   infixOp("||",1059,1060,1059).	 /* bag of constructor */
-  infixOp("@@",1004,1005,1004).	 /* semantic guard */
+  infixOp("::-",1004,1005,1004).	 /* semantic guard */
   infixOp(",",999,1000,1000).	 /* tupling, conjunction */
   infixOp(",..",999,1000,1000).	 /* list cons */
   infixOp("<=>",949,950,949).	 /* class constructor type */
@@ -64,11 +66,11 @@
   prefixOp("show",1260,1259).	 /* display debug message */
   prefixOp("contract",1260,1259).	 /* contract definition */
   prefixOp("implementation",1260,1259).	 /* contract implementation */
+  prefixOp("@",1255,1255).	 /* meta annotation */
   prefixOp("type",1260,1259).	 /* type definition */
   prefixOp("all",1239,1238).	 /* universal quantifier */
   prefixOp("exists",1239,1238).	 /* existential quantifier */
   prefixOp("\\+",905,904).	 /* logical negation */
-  prefixOp("@",905,904).	 /* stream guard */
   prefixOp("open",900,899).	 /* import object */
   prefixOp("import",900,899).	 /* import module */
   prefixOp("return",899,890).	 /* wrap value in monad */
@@ -78,8 +80,8 @@
   prefixOp(".",1,0).	 /* label prefix */
   postfixOp(". ",1899,1900).	 /* statement terminator */
   postfixOp(";",1149,1150).	 /* action terminator */
-  postfixOp("+",759,760).	 /* lookahead in grammar rule */
   postfixOp("!",904,905).	 /* one solution operator */
+  postfixOp("+",759,760).	 /* lookahead in grammar rule */
 
   /* Define isOperator */  isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
   isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).
@@ -136,6 +138,7 @@
   follows('^/','/','^//').
   follows('',':',':').
   follows(':',':','::').
+  follows('::','-','::-').
   follows('::','=','::=').
   follows(':','-',':-').
   follows('',';',';').
@@ -154,7 +157,6 @@
   follows('>>','=','>>=').
   follows('','?','?').
   follows('','@','@').
-  follows('@','@','@@').
   follows('','!','!').
   follows('!','=','!=').
   follows('','#','#').
@@ -198,6 +200,7 @@
   final('^//',"^//").	 /* filter map */
   final(':',":").	 /* type annotation */
   final('::',"::").	 /* type coercion */
+  final('::-',"::-").	 /* semantic guard */
   final('::=',"::=").	 /* user type definition */
   final(':-',":-").	 /* clause arrow */
   final(';',";").	 /* action terminator */
@@ -214,8 +217,7 @@
   final('>=',">=").	 /* greater than or equal */
   final('>>=',">>=").	 /* monadic bind */
   final('?',"?").	 /* conditional operator */
-  final('@',"@").	 /* stream guard */
-  final('@@',"@@").	 /* semantic guard */
+  final('@',"@").	 /* meta annotation */
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */
   final('#',"#").	 /* package separator */

@@ -103,6 +103,7 @@ nxTok(St,NxSt,integerTok(Code,Lc)) :- lookingAt(St,St1,['0','c'],_), charRef(St1
 nxTok(St,NxSt,integerTok(Hx,Lc)) :- lookingAt(St,St1,['0','x'],_), readHex(St1,NxSt,0,Hx), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,Tk) :- hedChar(St,Ch), isDigit(Ch,_), readNumber(St,NxSt,Tk).
 nxTok(St,NxSt,idQTok(Id,Lc)) :- nextSt(St,St1,''''), readQuoted(St1,NxSt,Id), makeLoc(St,NxSt,Lc).
+nxTok(St,NxSt,stringTok([Seg],Lc)) :- lookingAt(St,St1,['"','"','"']), stringBlob(St1,St2,Txt),lookingAt(St2,NxSt,['"','"','"']),string_chars(Seg,Txt),makeLoc(St1,St2,Lc).
 nxTok(St,NxSt,Str) :- nextSt(St,St1,'"'), readString(St1,NxSt,Str).
 nxTok(St,NxSt,idTok(Id,Lc)) :- hedChar(St,Ch), idStart(Ch), readIden(St,NxSt,Id), makeLoc(St,NxSt,Lc).
 nxTok(St,NxSt,lpar(Lc)) :- lookingAt(St,NxSt,['('],Lc).
@@ -193,6 +194,9 @@ readStr(St,St1,[]) :- nextSt(St,St1,'\n'), !,
   makeLoc(St,St1,Lc),
   reportError("new line found in string",[],Lc).
 readStr(St,NxSt,[Ch|Seg]) :- charRef(St,St1,Ch), readStr(St1,NxSt,Seg).
+
+stringBlob(St,St,[]) :- lookingAt(St,_,['"','"','"']).
+stringBlob(St,NxSt,[Ch|L]) :- nextSt(St,St1,Ch), stringBlob(St1,NxSt,L).
 
 interpolation(St,NxSt,interpolate(Text,Fmt,Lc)) :-
     bracketCount(St,St1,[],Text),
