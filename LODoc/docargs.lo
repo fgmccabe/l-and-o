@@ -1,0 +1,90 @@
+lo.doc.args {
+  import lo.uri.
+  import lo.resources.
+  import lo.
+  import lo.either.
+  import lo.options.
+
+  import lo.comp.package.
+
+  public docOption <~ {
+    debugging : logical.
+    dryrun : logical.
+    wDir : uri.
+    repoDir : uri.
+    version : version.
+    pkgs : list[pkg].
+  }
+
+  private comp:(logical,logical,uri,uri,version,list[pkg])<=>docOption.
+  comp(d,p,w,r,v,pk) <= {
+    debugging = d.
+    dryrun = p.
+    wDir = w.
+    repoDir = r.
+    version = v.
+    pkgs = pk.
+  }
+
+  dbgOption:optionsProcessor[docOption].
+  dbgOption <= {
+    shortForm = "-g".
+    alternatives = ["--debug"].
+    usage = "-g -- enable debugging of doc generation".
+    validator = none.
+    setOption(_,comp(_,p,w,r,v,pk)) => comp(true,p,w,r,v,pk).
+  }
+
+  dryOption:optionsProcessor[docOption].
+  dryOption <= {
+    shortForm = "-d".
+    alternatives = ["--dry-run"].
+    usage = "-d -- dry run only: dont generate anything".
+    validator = none.
+    setOption(_,comp(d,_,w,r,v,pk)) => comp(d,true,w,r,v,pk).
+  }
+
+  wdOption:optionsProcessor[docOption].
+  wdOption <= {
+    shortForm = "-w".
+    alternatives = ["--wd"].
+    usage = "-w dir -- source directory".
+    validator = some(isDir).
+    setOption(w,comp(d,p,_,r,v,pk)) => comp(d,p,resolveUri(parseUri(cwd()),parseUri(w)),r,v,pk).
+  }
+
+  repoOption:optionsProcessor[docOption].
+  repoOption <= {
+    shortForm = "-r".
+    alternatives = ["--repo"].
+    usage = "-r dir -- directory of code repository".
+    validator = some(isDir).
+    setOption(r,comp(d,p,w,_,v,pk)) => comp(d,p,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk).
+  }
+
+  versionOption:optionsProcessor[docOption].
+  versionOption <= {
+    shortForm = "-v".
+    alternatives = ["--version"].
+    usage = "-v version -- request processing of specific version".
+    validator = some(((_):-true)).
+    setOption(v,comp(d,p,w,r,_,pk)) => comp(d,p,w,r,v::version,pk).
+  }
+
+  public parseFlags:(list[string]) => either[docOption,string].
+  parseFlags(args) =>
+    handleCmdLineOpts(processOptions(args,[dbgOption,dryOption,wdOption,repoOption,versionOption],
+    comp(false,false,W,W,defltVersion,[]))) :-
+      W=parseUri(cwd()).
+
+  handleCmdLineOpts:(either[(docOption,list[string]),string]) => either[docOption,string].
+  handleCmdLineOpts(either((Opts,PkgNms))) => either(updatePkgs(Opts,locatePkgs(Opts,PkgNms))).
+  handleCmdLineOpts(other(M)) => other(M).
+
+  locatePkgs:(docOption,list[string]) => list[pkg].
+  locatePkgs(Opts,[]) => [].
+  locatePkgs(Opts,[P,..L]) => [pkg(P,Opts.version),..locatePkgs(Opts,L)].
+
+  updatePkgs:(docOption,list[pkg]) => docOption.
+  updatePkgs(comp(d,p,w,r,v,_),pk) => comp(d,p,w,r,v,pk).
+}

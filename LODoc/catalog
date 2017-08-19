@@ -1,5 +1,6 @@
 {
 	"content": {
+	  "lo.doc.args" : "docargs.lo",
 	  "lo.doc.gen" : "docgen.lo",
 	  "lo.doc.parse" : "docparse.lo",
 		"lo.doc.template" : "template.lo"

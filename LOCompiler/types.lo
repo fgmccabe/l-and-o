@@ -5,6 +5,8 @@ lo.comp.types{
 
   public typeKind ::= simpleType | typeFun(integer).
 
+  public typeMode ::= inputMode | outputMode | biMode.
+
   public tipe ::= anonType
         | voidType
         | thisType

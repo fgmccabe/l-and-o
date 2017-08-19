@@ -1,7 +1,46 @@
 lo.doc.gen{
   import lo.
 
+  import lo.either.
+  import lo.repo.
+  import lo.repo.file.
+  import lo.resources.
+
+  import lo.comp.catalog.
+  import lo.comp.errors.
+  import lo.comp.grammar.
+  import lo.doc.args.
   import lo.doc.parse.
   import lo.doc.template.
 
+  _main:(list[string]){}.
+  _main(Args) :-
+    processArgs(parseFlags(Args)).
+
+  processArgs:(either[docOption,string]){}.
+  processArgs(either(Opts)) :-
+    Repo = openRepository(Opts.repoDir),
+    Cat = locateCatalog(Opts.wDir),
+    processPkgs(Cat,Repo,Opts.dryrun,Opts.debugging,Opts.pkgs,reportBase,Rp),
+    (errorFree(Rp) ? true | logMsg(formatSS(fullReport(Rpx)))).
+  processArgs(other(M)) :-
+    _logmsg(M).
+
+  processPkgs:(catalog,fileRepo,logical,logical,list[pkg],report,report){}.
+  processPkgs(_,_,_,_,[],Rp,Rp).
+  processPkgs(Cat,Repo,DryRun,Trace,[P,..S],Rp,Rpx) :-
+    processPkg(P,Cat,Repo,DryRun,Trace,Rp,Rp0),
+    processPkgs(Cat,Repo,DryRun,Trace,S,Rp0,Rpx).
+
+  processPkg:(pkg,catalog,fileRepo,logical,logical,report,report){}.
+  processPkg(P,Cat,Repo,Dry,Dbg,Rp,Rpx) :-
+    (resolveCatalog(Cat,P,U,_) ?
+      Src = explode(getResource(U)),
+      Term = parseSrc(U,Src,Rp,Rp0),
+      (errorFree(Rp0) ?
+        DocSpec = genPkgDoc(Term,Rp0,Rp1),
+        (Dbg ? logMsg("doc specs: \(DocSpec)") | true),
+        Rpx=Rp1
+      | Rpx=Rp0)
+    | reportError("cannot locate package \(P)",std,Rp,Rpx)).
 }

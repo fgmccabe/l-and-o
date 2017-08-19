@@ -69,7 +69,6 @@ infixOp(".>>.",600,600,599,"logical shift right")
 infixOp(".>>>.",600,600,599,"arithmetic shift right")
 infixOp(".#.",600,600,599,"test nth bit")
 infixOp("%%",499,500,499,"grammar parse")
-infixOp("^",499,500,499,"grammar iterator")
 infixOp("~",489,499,489,"grammar remainder")
 infixOp(".",450,450,449,"object access")
 lastInfOp
@@ -98,7 +97,11 @@ prefixOp(".",1,0,"label prefix")
 postfixOp(". ",1899,1900,"statement terminator")
 postfixOp(";",1149,1150,"action terminator")
 postfixOp("!",904,905,"one solution operator")
-lastPostOp
 postfixOp("+",759,760,"lookahead in grammar rule")
+postfixOp("^",49,50,"output mode marker")
+postfixOp("?",49,50,"input mode marker")
+postfixOp("^?",49,50,"bidirectional mode marker")
+lastPostOp
+postfixOp("?^",49,50,"bidirectional mode marker")
 
 token("$","Used for curried functions and types")

@@ -6,7 +6,6 @@ lo.doc.parse{
   import lo.comp.abstract.
   import lo.comp.ast.
   import lo.comp.errors.
-  import lo.comp.grammar.
   import lo.comp.location.
 
 
@@ -16,8 +15,19 @@ lo.doc.parse{
          | implSpec(string,ast,option[string])
          | pkgSpec(string,option[string],map[string,docSpec]).
 
-  public genPkgDoc:(ast) => docSpec.
-  genPkgDoc(P) => pkgSpec(PkgNm,findDescription(M,PkgNm),processStmts(Els,id,M,[])) :-
+  public implementation display[docSpec] <= {
+    disp(S) => dispDocSpec(S).
+  }
+
+  dispDocSpec:(docSpec) => ss.
+  dispDocSpec(varSpec(Nm,Tp,Desc)) => ssSeq([ss("var: "),ss(Nm),ss(":"),disp(Tp),disp(Desc)]).
+  dispDocSpec(typeSpec(Nm,Tp,Desc)) => ssSeq([ss("type: "),ss(Nm),ss("~>"),disp(Tp),disp(Desc)]).
+  dispDocSpec(contractSpec(Nm,Tp,Desc,ElSpecs)) => ssSeq([ss("contract: "),ss(Nm),ss("<~"),disp(Tp),disp(Desc),disp(ElSpecs)]).
+  dispDocSpec(implSpec(Nm,Tp,Desc)) => ssSeq([ss("impl: "),ss(Nm),ss(":"),disp(Tp),disp(Desc)]).
+  dispDocSpec(pkgSpec(Nm,Desc,ElSpecs)) => ssSeq([ss("pkg: "),ss(Nm),ss(":"),disp(Desc),disp(ElSpecs)]).
+
+  public genPkgDoc:(ast,report,report) => docSpec.
+  genPkgDoc(P,Rp,Rp) => pkgSpec(PkgNm,findDescription(M,PkgNm),processStmts(Els,id,M,[])) :-
     isBraceTerm(P,_,Pk,Els),
     PkgNm = packageName(Pk),
     M = collectDescriptions(Els,PkgNm,[]).

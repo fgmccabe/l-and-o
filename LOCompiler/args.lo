@@ -89,6 +89,15 @@ lo.comp.args {
     setOption(r,comp(d,p,l,i,w,_,v,pk,dp)) => comp(d,p,l,i,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk,dp).
   }
 
+  versionOption:optionsProcessor[compOption].
+  versionOption <= {
+    shortForm = "-v".
+    alternatives = ["--version"].
+    usage = "-v version -- request processing of specific version".
+    validator = some(((_):-true)).
+    setOption(v,comp(d,p,l,i,w,r,_,pk,dp)) => comp(d,p,l,i,w,r,v::version,pk,dp).
+  }
+
   dependencyOption:optionsProcessor[compOption].
   dependencyOption <= {
     shortForm = "-nd".

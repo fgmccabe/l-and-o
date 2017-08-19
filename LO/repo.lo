@@ -67,6 +67,11 @@ lo.repo {
     disp(vers(V)) => ss(V).
   }
 
+  public implementation coercion[string,version] <= {
+    _coerce("*") => defltVersion.
+    _coerce(V) => vers(V).
+  }
+
   public implementation coercion[pkg,string] <= {
     _coerce(pkg(P,defltVersion)) => P.
     _coerce(pkg(P,vers(V))) => P+"#"+V.
