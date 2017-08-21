@@ -49,10 +49,10 @@ lo.comp.freshen{
   frshn(tipe(Nm),_) => tipe(Nm).
   frshn(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
   frshn(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
-  frshn(funType(A,R),B) => funType(frshnType(A,B),frshnType(R,B)).
-  frshn(predType(A),B) => predType(frshnType(A,B)).
-  frshn(grammarType(A,R),B) => grammarType(frshnType(A,B),frshnType(R,B)).
-  frshn(classType(A,R),B) => classType(frshnType(A,B),frshnType(R,B)).
+  frshn(funType(A,R),B) => funType(frshnTypes(A,B),frshnType(R,B)).
+  frshn(predType(A),B) => predType(frshnTypes(A,B)).
+  frshn(grammarType(A,R),B) => grammarType(frshnTypes(A,B),frshnType(R,B)).
+  frshn(classType(A,R),B) => classType(frshnTypes(A,B),frshnType(R,B)).
   frshn(tupleType(A),B) => tupleType(frshnTypes(A,B)).
   frshn(faceType(F),B) => faceType(frshnFields(F,B)).
   frshn(univType(kVar(Nm),T),B) => univType(kVar(Nm),frshnType(T,B[\+Nm])).
@@ -109,15 +109,15 @@ lo.comp.freshen{
   frze(tipe(Nm),_,tipe(Nm)).
   frze(tpFun(F,A),_,tpFun(F,A)).
   frze(funType(A,R),B,funType(FA,FR)) :-
-    freeze(A,B,FA),
+    freezeTypes(A,B,FA),
     freeze(R,B,FR).
   frze(grammarType(A,R),B,grammarType(FA,FR)) :-
-    freeze(A,B,FA),
+    freezeTypes(A,B,FA),
     freeze(R,B,FR).
   frze(classType(A,R),B,classType(FA,FR)) :-
-    freeze(A,B,FA),
+    freezeTypes(A,B,FA),
     freeze(R,B,FR).
-  frze(predType(A),B,predType(FA)) :- freeze(A,B,FA).
+  frze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
   frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
   frze(typeExp(O,A),B,typeExp(FO,FA)) :- frze(O,B,FO),freezeTypes(A,B,FA).
   frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-

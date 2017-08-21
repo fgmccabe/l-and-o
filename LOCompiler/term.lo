@@ -64,7 +64,7 @@ lo.comp.term {
   }
 
   private dispRel:(rel) => ss.
-  dispRel(rel(Nm,Lc,Rules)) =>
+  dispRel(rel(Nm,_,Rules)) =>
     ssSeq(Rules//dispClause).
 
   public implementation display[clse] <= {

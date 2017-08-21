@@ -20,7 +20,7 @@ lo.comp.genprolog{
 
   genRel:(rel) => ss.
   genRel(rel(Nm,Lc,Clses)) => ssSeq((Clses<>[genFailsafe(Nm,Lc)])//genCl) :- eqn(_,_,_,_) in Clses.
-  genRel(rel(Nm,Lc,Clses)) => ssSeq(Clses//genCl).
+  genRel(rel(Nm,Lc,Clses)) => ssSeq((Clses//genCl)).
 
   genFailsafe:(term,option[tloc]) => clse.
   genFailsafe(prg(Nm,Ar),Lc) =>

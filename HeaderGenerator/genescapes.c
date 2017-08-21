@@ -79,8 +79,38 @@ static void dumpStr(char *str, bufferPo out);
 static char *dInt(char *sig, int *len);
 static char *dName(char *sig, bufferPo out);
 static char *dSequence(char *sig, bufferPo out);
+static char *dArgSequence(char *sig, bufferPo out);
 static char *dFields(char *sig, bufferPo out);
 static char *dumpSig(char *sig, bufferPo out);
+
+static char *dumpArgSig(char *sig, bufferPo out) {
+  if (genMode == genLO) {
+    switch (*sig++) {
+      case input_mode: {
+        //outStr(O_IO(out), "(inputMode,");
+        char *reslt = dumpSig(sig, out);
+        //outStr(O_IO(out), ")");
+        return reslt;
+      }
+      case output_mode: {
+        //outStr(O_IO(out), "(outputMode,");
+        char *reslt = dumpSig(sig, out);
+        //outStr(O_IO(out), ")");
+        return reslt;
+      }
+      case bi_mode: {
+        //outStr(O_IO(out), "(biMode,");
+        char *reslt = dumpSig(sig, out);
+        //outStr(O_IO(out), ")");
+        return reslt;
+      }
+      default:
+        fprintf(stderr, "illegal signature %s\n", sig);
+        exit(99);
+    }
+  } else
+    return dumpSig(++sig, out);
+}
 
 static char *dumpSig(char *sig, bufferPo out) {
   assert(sig != NULL && *sig != '\0');
@@ -159,69 +189,31 @@ static char *dumpSig(char *sig, bufferPo out) {
       outStr(O_IO(out), ")");
       break;
     case func_sig:
-      switch (genMode) {
-        case genProlog:
-          outStr(O_IO(out), "funType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), ",");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-        case genLO:
-          outStr(O_IO(out), "funType(tupleType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), "),");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-      }
+      outStr(O_IO(out), "funType(");
+      sig = dArgSequence(sig, out);
+      outStr(O_IO(out), ",");
+      sig = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return sig;
     case pred_sig:
-      switch (genMode) {
-        case genProlog:
-          outStr(O_IO(out), "predType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-        case genLO:
-          outStr(O_IO(out), "predType(tupleType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), "))");
-          return sig;
-      }
+      outStr(O_IO(out), "predType(");
+      sig = dArgSequence(sig, out);
+      outStr(O_IO(out), ")");
+      return sig;
     case grammar_sig:
-      switch (genMode) {
-        case genProlog:
-          outStr(O_IO(out), "grammarType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), ",");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-        case genLO:
-          outStr(O_IO(out), "grammarType(tupleType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), "),");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-      }
+      outStr(O_IO(out), "grammarType(");
+      sig = dArgSequence(sig, out);
+      outStr(O_IO(out), ",");
+      sig = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return sig;
     case class_sig:
-      switch (genMode) {
-        case genProlog:
-          outStr(O_IO(out), "classType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), ",");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-        case genLO:
-          outStr(O_IO(out), "classType(tupleType(");
-          sig = dSequence(sig, out);
-          outStr(O_IO(out), "),");
-          sig = dumpSig(sig, out);
-          outStr(O_IO(out), ")");
-          return sig;
-      }
+      outStr(O_IO(out), "classType(");
+      sig = dSequence(sig, out);
+      outStr(O_IO(out), ",");
+      sig = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return sig;
     case face_sig:
       outStr(O_IO(out), "faceType(");
       sig = dFields(sig, out);
@@ -289,6 +281,20 @@ static char *dSequence(char *sig, bufferPo out) {
   while (ar-- > 0) {
     outStr(O_IO(out), sep);
     sig = dumpSig(sig, out);
+    sep = ",";
+  }
+  outStr(O_IO(out), "]");
+  return sig;
+}
+
+static char *dArgSequence(char *sig, bufferPo out) {
+  int ar;
+  sig = dInt(sig, &ar);
+  char *sep = "";
+  outStr(O_IO(out), "[");
+  while (ar-- > 0) {
+    outStr(O_IO(out), sep);
+    sig = dumpArgSig(sig, out);
     sep = ",";
   }
   outStr(O_IO(out), "]");

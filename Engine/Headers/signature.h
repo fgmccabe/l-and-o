@@ -40,6 +40,12 @@ typedef enum{
   constrained_constraint = '|'
 } constraintSig;
 
+typedef enum {
+  input_mode = '+',
+  output_mode = '-',
+  bi_mode = '?'
+} typeModeSig;
+
 /* First L&O version */
 // First four bytes of any code sequence must be this magic number
 #define SIGNATURE 0x01030507L  /* code signature */

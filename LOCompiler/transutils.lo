@@ -64,7 +64,7 @@ lo.comp.transutils {
       [(Nm,moduleVar(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm))),..Mx],Mx,Clx,Clx).
   makeMdlEntry(Pkg,classDef(_,Nm,Tp,_,_,_),
       [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(Tp,0))),..Mx],Mx,[Nm,..Clx],Clx).
-  makeMdlEntry(Pkg,implDef(_,_,ImplNm,_,_,tpl(Deps),_,_),
+  makeMdlEntry(Pkg,implDef(_,_,ImplNm,_,_,Deps,_,_),
       [(ImplNm,moduleImpl(ImplNm,LclNm)),..Mx],Mx,Ens,Enx) :-
     (isEmpty(Deps) ? LclNm=enum(ImplNm), Ens=[ImplNm,..Enx] | LclNm=strct(ImplNm,length(Deps)), Ens=Enx).
   makeMdlEntry(Pkg,_,Mx,Mx,Clx,Clx).
@@ -90,13 +90,13 @@ lo.comp.transutils {
 
   makeImportEntry:(tipe,list[string],string,string,list[(string,mapEntry)],list[(string,mapEntry)]){}.
   makeImportEntry(funType(A,_),_,Pkg,Nm,
-      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+      [(Nm,moduleFun(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),length(A))),..Mx],Mx).
   makeImportEntry(grammarType(A,_),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),length(A))),..Mx],Mx).
   makeImportEntry(predType(A),_,Pkg,Nm,
-      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),effectiveArity(A,0))),..Mx],Mx).
+      [(Nm,moduleRel(Pkg,localName(Pkg,"@",Nm),localName(Pkg,"%",Nm),localName(Pkg,"^",Nm),length(A))),..Mx],Mx).
   makeImportEntry(classType(A,_),_,Pkg,Nm,
-      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),effectiveArity(A,0))),..Mx],Mx).
+      [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),length(A))),..Mx],Mx).
   makeImportEntry(_,Enums,Pkg,Nm,
       [(Nm,moduleClass(localName(Pkg,"#",Nm),localName(Pkg,"@",Nm),0)),..Mx],Mx) :-
     Nm in Enums!.
@@ -254,10 +254,10 @@ lo.comp.transutils {
   effectiveArity(Tp,Extra) => tpArity(Tp)+Extra.
 
   private tpArity:(tipe) => integer.
-  tpArity(funType(E,_)) => tpArity(E)+1.
-  tpArity(predType(E)) => tpArity(E).
-  tpArity(grammarType(E,_)) => tpArity(E)+2.
-  tpArity(classType(E,_)) => tpArity(E).
+  tpArity(funType(E,_)) => length(E)+1.
+  tpArity(predType(E)) => length(E).
+  tpArity(grammarType(E,_)) => length(E)+2.
+  tpArity(classType(E,_)) => length(E).
   tpArity(univType(_,T)) => tpArity(T).
   tpArity(constrained(T,_)) => tpArity(T).
   tpArity(tupleType(L)) => length(L).

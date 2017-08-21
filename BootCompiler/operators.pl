@@ -56,7 +56,6 @@
   infixOp(".>>>.",600,600,599).	 /* arithmetic shift right */
   infixOp(".#.",600,600,599).	 /* test nth bit */
   infixOp("%%",499,500,499).	 /* grammar parse */
-  infixOp("^",499,500,499).	 /* grammar iterator */
   infixOp("~",489,499,489).	 /* grammar remainder */
   infixOp(".",450,450,449).	 /* object access */
   infixOp("::",399,400,399).	 /* type coercion */
@@ -195,7 +194,6 @@
   final('\\+',"\\+").	 /* logical negation */
   final('\\=',"\\=").	 /* not unifyable */
   final('\\==',"\\==").	 /* not equals */
-  final('^',"^").	 /* grammar iterator */
   final('^/',"^/").	 /* filter */
   final('^//',"^//").	 /* filter map */
   final(':',":").	 /* type annotation */

@@ -227,7 +227,7 @@ lo.comp.dependencies{
   refsInType(T,All,So) => refsInTypes(Args,All,So) :- isBraceTerm(T,_,A,[]), isRoundTuple(A,_,Args).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"=>",_,L,R).
-  refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R).
+  refsInType(T,All,So) =>  refsInArgTypes(A,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R), isRoundTuple(L,_,A).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"<=>",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"->>",_,L,R).
   refsInType(T,All,So) =>  refsInType(R,All,So) :-  isBinary(T,"=",_,_,R).
@@ -241,6 +241,17 @@ lo.comp.dependencies{
   refsInTypes:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInTypes([],_,So) => So.
   refsInTypes([T,..L],All,So) => refsInTypes(L,All,refsInType(T,All,So)).
+
+  refsInArgTypes:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
+  refsInArgTypes([],_,So) => So.
+  refsInArgTypes([T,..L],All,So) => refsInArgTypes(L,All,refsInType(stripTypeMode(T),All,So)).
+
+  stripTypeMode:(ast)=>ast.
+  stripTypeMode(A) => I :- isUnary(A,"?",_,I).
+  stripTypeMode(A) => I :- isUnary(A,"^",_,I).
+  stripTypeMode(A) => I :- isUnary(A,"?^",_,I).
+  stripTypeMode(A) => I :- isUnary(A,"^?",_,I).
+  stripTypeMode(A) => A.
 
   refsInScope:(list[ast],list[(string,defnKind)],list[(string,defnKind)]) => list[(string,defnKind)].
   refsInScope([],_,So) => So.

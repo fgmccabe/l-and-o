@@ -21,7 +21,7 @@ lo.comp.singleton {
   countVars(int(_),M,_,Rp,Rp) => M.
   countVars(flt(_),M,_,Rp,Rp) => M.
   countVars(str(_),M,_,Rp,Rp) => M.
-  countVars(apply(_,Op,Arg),M,Excl,Rp,Rpx) => countVars(Arg,countVars(Op,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
+  countVars(apply(_,Op,Args),M,Excl,Rp,Rpx) => countVarsInEls(Args,countVars(Op,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countVars(tpl(Els),M,Excl,Rp,Rpx) => countVarsInEls(Els,M,Excl,Rp,Rpx).
   countVars(whre(T,C),M,Excl,Rp,Rpx) => countCondVars(C,countVars(T,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countVars(dot(_,T,_),M,Excl,Rp,Rpx) => countVars(T,M,Excl,Rp,Rpx).
@@ -44,13 +44,13 @@ lo.comp.singleton {
   countCondVars(oneCond(R),M,Excl,Rp,Rpx) => countCondVars(R,M,Excl,Rp,Rpx).
   countCondVars(negCond(R),M,Excl,Rp,Rpx) => countCondVars(R,M,Excl,Rp,Rpx).
   countCondVars(forallCond(L,R),M,Excl,Rp,Rpx) => countCondVars(R,countCondVars(L,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
-  countCondVars(callCond(_,O,A),M,Excl,Rp,Rpx) => countVars(A,countVars(O,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
+  countCondVars(callCond(_,O,A),M,Excl,Rp,Rpx) => countVarsInEls(A,countVars(O,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countCondVars(isTrue(A),M,Excl,Rp,Rpx) => countVars(A,M,Excl,Rp,Rpx).
   countCondVars(phraseCond(_,N,O,A),M,Excl,Rp,Rpx) => countNTVars(N,countVars(A,countVars(O,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
 
   countNTVars:(canonNT,map[string,(location,integer)],set[string],report,report) => map[string,(location,integer)].
   countNTVars(grTerms(Ts),M,Excl,Rp,Rpx) => countVarsInTerms(Ts,M,Excl,Rp,Rpx).
-  countNTVars(grCall(_,O,A),M,Excl,Rp,Rpx) => countVars(A,countVars(O,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
+  countNTVars(grCall(_,O,A),M,Excl,Rp,Rpx) => countVarsInEls(A,countVars(O,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
   countNTVars(grTest(C),M,Excl,Rp,Rpx) => countCondVars(C,M,Excl,Rp,Rpx).
   countNTVars(grOne(C),M,Excl,Rp,Rpx) => countNTVars(C,M,Excl,Rp,Rpx).
   countNTVars(grNeg(C),M,Excl,Rp,Rpx) => countNTVars(C,M,Excl,Rp,Rpx).
@@ -63,11 +63,11 @@ lo.comp.singleton {
   countVarsInTerms([(_,S,T),..L],M,Excl,Rp,Rpx) => countVarsInTerms(L,countVars(S,countVars(T,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
 
   countRlVars:(canonRule,map[string,(location,integer)],set[string],report,report) => map[string,(location,integer)].
-  countRlVars(clause(_,_,A,C),M,Excl,Rp,Rpx) => countCondVars(C,countVars(A,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
-  countRlVars(equation(_,_,A,R,C),M,Excl,Rp,Rpx) => countCondVars(C,countVars(R,countVars(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
+  countRlVars(clause(_,_,A,C),M,Excl,Rp,Rpx) => countCondVars(C,countVarsInEls(A,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
+  countRlVars(equation(_,_,A,R,C),M,Excl,Rp,Rpx) => countCondVars(C,countVars(R,countVarsInEls(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
   countRlVars(vrDef(_,_,T,C),M,Excl,Rp,Rpx) => countCondVars(C,countVars(T,M,Excl,Rp,Rp0),Excl,Rp0,Rpx).
-  countRlVars(clRule(_,_,A,R,C,_),M,Excl,Rp,Rpx) => countCondVars(C,countVars(R,countVars(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
-  countRlVars(grRule(_,_,A,C,P),M,Excl,Rp,Rpx) => countNTVars(P,countNTVars(C,countVars(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
+  countRlVars(clRule(_,_,A,R,C,_),M,Excl,Rp,Rpx) => countCondVars(C,countVars(R,countVarsInEls(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
+  countRlVars(grRule(_,_,A,C,P),M,Excl,Rp,Rpx) => countNTVars(P,countNTVars(C,countVarsInEls(A,M,Excl,Rp,Rp0),Excl,Rp0,Rp1),Excl,Rp1,Rpx).
   countRlVars(tpRule(_,_),M,_,Rp,Rp) => M.
 
   public excludeDefs:(list[canonDef],set[string]) => set[string].
@@ -111,7 +111,7 @@ lo.comp.singleton {
     checkOtherSingleton(O,M,Excl,Rp,Rpx).
   checkVarsInDef(cnDefn(_,_,_),_,_,Rp,Rp).
   checkVarsInDef(implDef(_,_,_,_,_,T,R,_),M,Excl,Rp,Rpx) :-
-    checkSingleton(tpl([T,R]),M,Excl,Rp,Rpx).
+    checkSingleton(tpl([R,..T]),M,Excl,Rp,Rpx).
   checkVarsInDef(typeDef(_,_,_,_),_,_,Rp,Rp).
 
   checkSingleton:(canonTerm,map[string,(location,integer)],set[string],report,report){}.

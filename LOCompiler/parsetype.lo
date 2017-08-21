@@ -43,14 +43,6 @@ lo.comp.parseType{
     parseHeadArgs(LArgs,B,Args,Rp,Rp0),
     prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
 
-  private prsArgType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
-  prsArgType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
-    checkKind(K,simpleType,T.loc,Rp,Rp0),
-    isRoundTuple(T,_,A),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rpx).
-  prsArgType(T,K,Env,Q,C,Cx,AT,Rp,Rpx) :-
-    prsType(T,K,Env,Q,C,Cx,AT,Rp,Rpx).
-
   private prsType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
   prsType(T,K,Env,Q,Cx,Cx,PT,Rp,Rpx) :-
     isQuantified(T,V,BT),
@@ -77,22 +69,26 @@ lo.comp.parseType{
   prsType(F,K,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    isRoundTuple(L,_,A),
+    prsTypes(A,Env,Q,C,C1,AT,Rp0,Rp1),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
   prsType(F,K,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
     isBinary(F,"-->",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    isRoundTuple(L,_,A),
+    prsTypes(A,Env,Q,C,C1,AT,Rp0,Rp1),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
   prsType(F,K,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
     isBinary(F,"<=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    prsArgType(L,simpleType,Env,Q,C,C1,AT,Rp0,Rp1),
+    isRoundTuple(L,_,A),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rp1),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
   prsType(T,K,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,Lc,L,[]),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    prsArgType(L,simpleType,Env,Q,C,Cx,AT,Rp0,Rpx).
+    isRoundTuple(L,_,A),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rpx).
   prsType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
     isRoundTuple(T,Lc,[A]),
     isRoundTuple(A,_,Inner),

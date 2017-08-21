@@ -5,8 +5,6 @@ lo.comp.types{
 
   public typeKind ::= simpleType | typeFun(integer).
 
-  public typeMode ::= inputMode | outputMode | biMode.
-
   public tipe ::= anonType
         | voidType
         | thisType
@@ -18,10 +16,10 @@ lo.comp.types{
         | tpFun(string,integer)
         | typeExp(tipe,list[tipe])
         | tupleType(list[tipe])
-        | funType(tipe,tipe)
-        | predType(tipe)
-        | grammarType(tipe,tipe)
-        | classType(tipe,tipe)
+        | funType(list[tipe],tipe)
+        | predType(list[tipe])
+        | grammarType(list[tipe],tipe)
+        | classType(list[tipe],tipe)
         | typeRule(tipe,tipe)
         | tpLambda(list[tipe],tipe)
         | faceType(list[(string,tipe)])
@@ -44,8 +42,7 @@ lo.comp.types{
     name = Nm.
   }
 
-  public
-  implementation display[tipe] <= {
+  public implementation display[tipe] <= {
     disp(T) => dispType(T).
   }
 
@@ -67,18 +64,21 @@ lo.comp.types{
   dispType(tFun(_,Ar,_,Nm)) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispType(tipe(Nm)) =>ss(Nm).
   dispType(tpFun(Nm,Ar)) => ssSeq([ss(Nm),ss("%"),disp(Ar)]).
-  dispType(typeExp(Nm,A)) => ssSeq([dispType(Nm), ss("["),ssSeq(dispTypeEls(A)),ss("]")]).
-  dispType(tupleType(A)) => ssSeq([ss("("),ssSeq(dispTypeEls(A)),ss(")")]).
-  dispType(funType(A,R)) => ssSeq([dispType(A),ss("=>"), dispType(R)]).
-  dispType(grammarType(A,R)) => ssSeq([dispType(A),ss("-->"), dispType(R)]).
-  dispType(classType(A,R)) => ssSeq([dispType(A),ss("<=>"), dispType(R)]).
-  dispType(predType(A)) => ssSeq([dispType(A),ss("{}")]).
+  dispType(typeExp(Nm,A)) => ssSeq([dispType(Nm), ss("["),ssSeq(dispTypes(A)),ss("]")]).
+  dispType(tupleType(A)) => ssSeq([ss("("),ssSeq(dispTypes(A)),ss(")")]).
+  dispType(funType(A,R)) => ssSeq([dispArgTypes(A),ss("=>"), dispType(R)]).
+  dispType(grammarType(A,R)) => ssSeq([dispArgTypes(A),ss("-->"), dispType(R)]).
+  dispType(classType(A,R)) => ssSeq([dispType(tupleType(A)),ss("<=>"), dispType(R)]).
+  dispType(predType(A)) => ssSeq([dispArgTypes(A),ss("{}")]).
   dispType(univType(V,Tp)) => ssSeq([ss("all "), dispType(V),.. showMoreUniv(Tp)]).
   dispType(existType(V,Tp)) => ssSeq([ss("exists "), dispType(V),.. showMoreExists(Tp)]).
   dispType(faceType(Els)) => ssSeq([ss("{ "), ssSeq(dispTypeFields(Els)), ss("}")]).
   dispType(typeRule(Hd,Bd)) => ssSeq([dispType(Hd), ss("<~"),dispType(Bd)]) :- Bd = faceType(_).
-  dispType(tpLambda(Hd,Bd)) => ssSeq([ss("("),ssSeq(dispTypeEls(Hd)),ss(")"), ss("~>"),dispType(Bd)]).
+  dispType(tpLambda(Hd,Bd)) => ssSeq([ss("("),ssSeq(dispTypes(Hd)),ss(")"), ss("~>"),dispType(Bd)]).
   dispType(constrained(Tp,Con)) => ssSeq([showConstraint(Con),.. showMoreConstraints(Tp)]).
+
+  dispArgTypes:(list[tipe]) => ss.
+  dispArgTypes(Tps) => ssSeq([ss("("),ssSeq(dispTypes(Tps)),ss(")")]).
 
   showMoreUniv:(tipe) => list[ss].
   showMoreUniv(univType(V,Tp)) => [ss(","), dispType(V),.. showMoreUniv(Tp)].
@@ -93,8 +93,8 @@ lo.comp.types{
   showMoreConstraints(Tp) => [ss("|:"),dispType(Tp)].
 
   showConstraint:(constraint) => ss.
-  showConstraint(conTract(Nm,Args,[])) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("]")]).
-  showConstraint(conTract(Nm,Args,Deps)) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypeEls(Args)),ss("->>"),ssSeq(dispTypeEls(Deps)),ss("]")]).
+  showConstraint(conTract(Nm,Args,[])) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypes(Args)),ss("]")]).
+  showConstraint(conTract(Nm,Args,Deps)) => ssSeq([ss(Nm),ss("["),ssSeq(dispTypes(Args)),ss("->>"),ssSeq(dispTypes(Deps)),ss("]")]).
   showConstraint(implementsFace(Tp,Els)) => ssSeq([dispType(Tp),ss("<~"),dispType(faceType(Els))]).
   showConstraint(conCon(Con,Extra)) => ssSeq([ssSeq(showMoreCons(Extra)),ss("|:"),showConstraint(Con)]).
   showConstraint(univCon(V,Con)) => ssSeq([ss("all "),dispType(V),..showMoreConQ(Con)]).
@@ -108,9 +108,9 @@ lo.comp.types{
   showMoreConQ(univCon(V,Con)) => [ss(", "),dispType(V),..showMoreConQ(Con)].
   showMoreConQ(Con) => [ss("~~"),showConstraint(Con)].
 
-  dispTypeEls:(list[tipe]) => list[ss].
-  dispTypeEls([]) => [].
-  dispTypeEls([T,..M]) => [dispType(T),..showMoreTypes(M)].
+  dispTypes:(list[tipe]) => list[ss].
+  dispTypes([]) => [].
+  dispTypes([T,..M]) => [dispType(T),..showMoreTypes(M)].
 
   showMoreTypes:(list[tipe]) => list[ss].
   showMoreTypes([]) => [].
@@ -260,12 +260,12 @@ lo.comp.types{
   idOccIn(Id,tVar(Curr,Id)) :- var(Curr).
   idOccIn(Id,typeExp(Op,A)) :- (idOccIn(Id,Op) | T in A, idOccIn(Id,T)).
   idOccIn(Id,tupleType(A)) :- T in A, idOccIn(Id,T).
-  idOccIn(Id,funType(A,_)) :- idOccIn(Id,A).
+  idOccIn(Id,funType(A,_)) :- AT in A, idOccIn(Id,AT).
   idOccIn(Id,funType(_,R)) :- idOccIn(Id,R).
-  idOccIn(Id,predType(A)) :- idOccIn(Id,A).
-  idOccIn(Id,classType(A,C)) :- idOccIn(Id,A).
+  idOccIn(Id,predType(A)) :- AT in A, idOccIn(Id,AT).
+  idOccIn(Id,classType(A,C)) :- T in A, idOccIn(Id,T).
   idOccIn(Id,classType(_,C)) :- idOccIn(Id,C).
-  idOccIn(Id,grammarType(A,_)) :- idOccIn(Id,A).
+  idOccIn(Id,grammarType(A,_)) :- AT in A, idOccIn(Id,AT).
   idOccIn(Id,grammarType(_,R)) :- idOccIn(Id,R).
   idOccIn(Id,univType(V,B)) :- \+idOccIn(Id,V), idOccIn(Id,B).
   idOccIn(Id,existType(V,B)) :- \+idOccIn(Id,V), idOccIn(Id,B).
@@ -312,10 +312,10 @@ lo.comp.types{
   bindAT([kFun(N,Ar),..L1],[anonType,..TL],Q) => bindAT(L1,TL,Q). -- error recovery case
 
   public typeArity:(tipe) => integer.
-  typeArity(funType(E,_)) => typeArity(E).
-  typeArity(predType(E)) => typeArity(E).
-  typeArity(grammarType(E,_)) => typeArity(E).
-  typeArity(classType(E,_)) => typeArity(E).
+  typeArity(funType(E,_)) => length(E).
+  typeArity(predType(E)) => length(E).
+  typeArity(grammarType(E,_)) => length(E).
+  typeArity(classType(E,_)) => length(E).
   typeArity(univType(_,T)) => typeArity(T).
   typeArity(existType(_,T)) => typeArity(T).
   typeArity(constrained(T,_)) => typeArity(T).

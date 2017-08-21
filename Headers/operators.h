@@ -97,11 +97,12 @@ prefixOp(".",1,0,"label prefix")
 postfixOp(". ",1899,1900,"statement terminator")
 postfixOp(";",1149,1150,"action terminator")
 postfixOp("!",904,905,"one solution operator")
-postfixOp("+",759,760,"lookahead in grammar rule")
-postfixOp("^",49,50,"output mode marker")
-postfixOp("?",49,50,"input mode marker")
-postfixOp("^?",49,50,"bidirectional mode marker")
 lastPostOp
-postfixOp("?^",49,50,"bidirectional mode marker")
+postfixOp("+",759,760,"lookahead in grammar rule")
+//postfixOp("^",49,50,"output mode marker")
+//postfixOp("?",49,50,"input mode marker")
+//postfixOp("^?",49,50,"bidirectional mode marker")
+//lastPostOp
+//postfixOp("?^",49,50,"bidirectional mode marker")
 
 token("$","Used for curried functions and types")
