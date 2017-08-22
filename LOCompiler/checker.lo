@@ -291,11 +291,11 @@ lo.comp.typecheck{
   private processStmt:(ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
   processStmt(St,ProgramType,Defs,Defx,E,_,Rp,Rpx) :-
     isBinary(St,"=>",Lc,L,R),
-    checkEquation(Lc,L,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Rp,Rpx).
+    checkEquation(L,iden(Lc,"true"),R,ProgramType,Defs,Defx,E,Rp,Rpx).
   processStmt(St,ProgramType,Defs,Defx,E,_,Rp,Rpx) :-
     isBinary(St,":-",Lc,L,G),
     isBinary(L,"=>",_,H,R),
-    checkEquation(Lc,H,G,R,ProgramType,Defs,Defx,E,Rp,Rpx).
+    checkEquation(H,G,R,ProgramType,Defs,Defx,E,Rp,Rpx).
   processStmt(St,ProgramType,Defs,Defx,E,Pth,Rp,Rpx) :-
     isBinary(St,":-",Lc,L,G),
     isBinary(L,"<=",_,H,R),
@@ -306,7 +306,7 @@ lo.comp.typecheck{
     checkDefn(Lc,H,G,R,Tp,Defs,Dx,Env,Rp,Rpx).
   processStmt(St,ProgramType,Defs,Dfx,E,_,Rp,Rpx) :-
     isBinary(St,":-",Lc,L,R),
-    checkClause(Lc,L,R,ProgramType,Defs,Dfx,E,Rp,Rpx).
+    checkClause(L,R,ProgramType,Defs,Dfx,E,Rp,Rpx).
   processStmt(St,predType(AT),[clause(Lc,Nm,Args,trueCond),..Defs],Defs,E,_,Rp,Rpx) :-
     splitHead(St,Lc,Nm,A),
     typeOfArgs(Lc,A,AT,E,E0,Args,Rp,Rpx).
@@ -326,17 +326,17 @@ lo.comp.typecheck{
   splitHead(T,Lc,Nm,A) :- isRoundTerm(T,Lc,N,A), isIden(N,_,Nm).
   splitHead(T,Lc,Nm,[]) :- isIden(T,Lc,Nm).
 
-  private checkEquation:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
-  checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Exp,Cond),..Defs],Defs,E,Rp,Rpx) :-
+  private checkEquation:(ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
+  checkEquation(H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Exp,Cond),..Defs],Defs,E,Rp,Rpx) :-
     splitHead(H,Lc,Nm,A),
     typeOfArgs(Lc,A,AT,pushScope(E),E0,Args,Rp,Rp0),
     checkCond(G,E0,E1,Cond,Rp0,Rp1),
     typeOfTerm(R,RT,E1,_,Exp,Rp1,Rpx).
-  checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_,Rp,Rpx) :-
-    reportError("equation not consistent with expected type: \(ProgramType)",Lc,Rp,Rpx).
+  checkEquation(H,_,_,ProgramType,Defs,Defs,_,Rp,Rpx) :-
+    reportError("equation not consistent with expected type: \(ProgramType)",H.loc,Rp,Rpx).
 
-  private checkClause:(location,ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
-  checkClause(Lc,L,R,predType(AT),[clause(Lc,Nm,Args,Body),..Defs],Defs,E,Rp,Rpx) :-
+  private checkClause:(ast,ast,tipe,list[canonRule],list[canonRule],list[env],report,report){}.
+  checkClause(L,R,predType(AT),[clause(Lc,Nm,Args,Body),..Defs],Defs,E,Rp,Rpx) :-
     splitHead(L,Lc,Nm,A),
     typeOfArgs(Lc,A,AT,pushScope(E),E0,Args,Rp,Rp0),
     checkCond(R,E0,_,Body,Rp0,Rpx).
@@ -578,14 +578,14 @@ lo.comp.typecheck{
     typeOfTerm(binary(Lc,"-",iden(Lc,"zero"),Arg),Tp,Env,Ev,Exp,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,"=>",Lc,Lhs,Rhs),
-    checkEquation(Lc,appl(Lc,iden(Lc,"fun"),Lhs),iden(Lc,"true"),Rhs,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
+    checkEquation(appl(Lc,iden(Lc,"fun"),Lhs),iden(Lc,"true"),Rhs,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Eqn),Rp,Rpx) :-
     isBinary(Term,":-",Lc,L,G),
     isBinary(L,"=>",_,H,R),
-    checkEquation(Lc,appl(Lc,iden(Lc,"fun"),H),G,R,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
+    checkEquation(appl(Lc,iden(Lc,"fun"),H),G,R,deRef(Tp),[Eqn,.._],_,Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Clse),Rp,Rpx) :-
     isBinary(Term,":-",Lc,Lhs,Rhs),
-    checkClause(Lc,appl(Lc,iden(Lc,"pred"),Lhs),Rhs,deRef(Tp),[Clse],[],Env,Rp,Rpx).
+    checkClause(appl(Lc,iden(Lc,"pred"),Lhs),Rhs,deRef(Tp),[Clse],[],Env,Rp,Rpx).
   typeOfTerm(Term,Tp,Env,Env,lambda(Rle),Rp,Rpx) :-
     isBinary(Term,"-->",Lc,Lhs,Rhs),
     checkGrammarRule(Lc,appl(Lc,iden(Lc,"grm"),Lhs),R,deRef(Tp),[Rle],[],Env,Rp,Rpx).

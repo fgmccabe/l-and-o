@@ -170,6 +170,7 @@ lo.comp.decode{
   decodeType(typeExp(tpFun("lo.core*list",1),[ElTp])) --> "L", decodeType(ElTp).
   decodeType(typeExp(Nm,ArgTypes)) --> "U", decodeType(Nm), typeLen(Ln), decodeTypes(Ln,ArgTypes).
   decodeType(univType(TV,Tp)) --> ":", decodeType(TV), decodeType(Tp).
+  decodeType(existType(TV,Tp)) --> "E", decodeType(TV), decodeType(Tp).
   decodeType(constrained(Tp,Con)) --> "|", decodeType(Tp), decConstraint(Con).
   decodeType(faceType(Fields)) --> "I", typeLen(Ln),decodeFields(Ln,Fields).
   decodeType(funType(A,T)) --> "F", typeLen(Ln), decodeArgTypes(Ln,A), decodeType(T).

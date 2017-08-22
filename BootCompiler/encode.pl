@@ -49,10 +49,10 @@ encodeType(kFun(Nm,Ar),['K'|O],Ox) :- encodeInt(Ar,O,O1),encodeText(Nm,O1,Ox).
 encodeType(type(Nm),['t'|O],Ox) :- encodeText(Nm,O,Ox).
 encodeType(tpFun(Nm,Ar),['z'|O],Ox) :- encodeInt(Ar,O,O1),encodeText(Nm,O1,Ox).
 encodeType(typeExp(T,Args),['U'|O],Ox) :- deRef(T,Tp),encodeType(Tp,O,O1), encodeTypes(Args,O1,Ox).
-encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeType(tupleType(Args),O,O1), encodeType(Tp,O1,Ox).
-encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeType(tupleType(Args),O,O1), encodeType(Tp,O1,Ox).
-encodeType(predType(Args),['P'|O],Ox) :- encodeType(tupleType(Args),O,Ox).
-encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeType(tupleType(Args),O,O1), encodeType(Tp,O1,Ox).
+encodeType(funType(Args,Tp),['F'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(grammarType(Args,Tp),['G'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
+encodeType(predType(Args),['P'|O],Ox) :- encodeTypes(Args,O,Ox).
+encodeType(classType(Args,Tp),['C'|O],Ox) :- encodeTypes(Args,O,O1), encodeType(Tp,O1,Ox).
 encodeType(tupleType(Args),['T'|O],Ox) :- encodeTypes(Args,O,Ox).
 encodeType(faceType(Fields),['I'|O],Ox) :- encodeFieldTypes(Fields,O,Ox).
 encodeType(univType(B,Tp),[':'|O],Ox) :- encodeType(B,O,O1),encodeType(Tp,O1,Ox).

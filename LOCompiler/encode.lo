@@ -129,6 +129,8 @@ lo.comp.encode{
   encTp(tpLambda(A,R),L) => [0cZ,..encTypes(A,encType(R,L))].
   encTp(faceType(Els),L) => [0cI,..encFieldTypes(Els,L)].
   encTp(constrained(T,C),L) => [0c|,..encTp(T,encConstraint(C,L))].
+  encTp(univType(V,T),L) => [0c:,..encTp(V,encType(T,L))].
+  encTp(existType(V,T),L) => [0cE,..encTp(V,encType(T,L))].
 
   private encTypes:(list[tipe],list[integer]) => list[integer].
   encTypes(Els,L) => encInt(length(Els),encTps(Els,L)).
