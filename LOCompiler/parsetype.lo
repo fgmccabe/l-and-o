@@ -39,9 +39,9 @@ lo.comp.parseType{
     faceOfType(Tp,Env,Rhs).
   parseTpRule(St,B,Env,Lhs,tpLambda(Args,Rhs),Path,Rp,Rpx) :-
     isBinary(St,"~>",_,L,R),
-    isRoundTuple(L,_,LArgs),
-    parseHeadArgs(LArgs,B,Args,Rp,Rp0),
-    prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp0,Rpx).
+    checkTuple(L,LArgs,Rp,Rp0),
+    parseHeadArgs(LArgs,B,Args,Rp0,Rp1),
+    prsType(R,simpleType,Env,B,C,Cx,Rhs,Rp1,Rpx).
 
   private prsType:(ast,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],tipe,report,report){}.
   prsType(T,K,Env,Q,Cx,Cx,PT,Rp,Rpx) :-
@@ -69,26 +69,26 @@ lo.comp.parseType{
   prsType(F,K,Env,Q,C,Cx,funType(AT,RT),Rp,Rpx) :-
     isBinary(F,"=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    isRoundTuple(L,_,A),
-    prsTypes(A,Env,Q,C,C1,AT,Rp0,Rp1),
-    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+    checkTuple(L,A,Rp0,Rp1),
+    prsTypes(A,Env,Q,C,C1,AT,Rp1,Rp2),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(F,K,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
     isBinary(F,"-->",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    isRoundTuple(L,_,A),
-    prsTypes(A,Env,Q,C,C1,AT,Rp0,Rp1),
-    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+    checkTuple(L,A,Rp0,Rp1),
+    prsTypes(A,Env,Q,C,C1,AT,Rp1,Rp2),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(F,K,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
     isBinary(F,"<=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    isRoundTuple(L,_,A),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rp1),
-    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp1,Rpx).
+    checkTuple(L,A,Rp0,Rp1),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp1,Rp2),
+    prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(T,K,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,Lc,L,[]),
     checkKind(K,simpleType,Lc,Rp,Rp0),
-    isRoundTuple(L,_,A),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp0,Rpx).
+    checkTuple(L,A,Rp0,Rp1),
+    prsTypes(A,Env,Q,C,Cx,AT,Rp1,Rpx).
   prsType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
     isRoundTuple(T,Lc,[A]),
     isRoundTuple(A,_,Inner),
@@ -105,7 +105,6 @@ lo.comp.parseType{
     isBraceTuple(T,Lc,L),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     prsTypeFields(L,Env,Q,C,Cx,AT,Rp0,Rpx).
-
   prsType(T,K,_,_,Cx,Cx,anonType,Rp,Rpx) :-
     reportError("cannot understand type \(T), expecting a \(K)",T.loc,Rp,Rpx).
 
@@ -127,6 +126,12 @@ lo.comp.parseType{
         typeOp(FrTp) = Tp)
     | reportError("type \(Id) not declared",Lc,Rp,Rpx),
       Tp = anonType).
+
+  private checkTuple:(ast,list[ast],report,report){}.
+  checkTuple(T,A,Rp,Rp) :-
+    isRoundTuple(T,_,A).
+  checkTuple(T,[],Rp,Rpx) :-
+    reportError("expecting a tuple, not \(T)",T.loc,Rp,Rpx).
 
   private checkCurrying:(list[ast]) => integer.
   checkCurrying([]) => 0.

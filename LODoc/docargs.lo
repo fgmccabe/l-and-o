@@ -12,27 +12,29 @@ lo.doc.args {
     dryrun : logical.
     wDir : uri.
     repoDir : uri.
+    tmplDir : uri.
     version : version.
     pkgs : list[pkg].
   }
 
-  private comp:(logical,logical,uri,uri,version,list[pkg])<=>docOption.
-  comp(d,p,w,r,v,pk) <= {
+  private comp:(logical,logical,uri,uri,uri,version,list[pkg])<=>docOption.
+  comp(d,p,w,r,t,v,pk) <= {
     debugging = d.
     dryrun = p.
     wDir = w.
     repoDir = r.
+    tmplDir = t.
     version = v.
     pkgs = pk.
   }
 
   dbgOption:optionsProcessor[docOption].
   dbgOption <= {
-    shortForm = "-g".
-    alternatives = ["--debug"].
-    usage = "-g -- enable debugging of doc generation".
+    shortForm = "-tr".
+    alternatives = ["--trace"].
+    usage = "-tr -- trace doc generation".
     validator = none.
-    setOption(_,comp(_,p,w,r,v,pk)) => comp(true,p,w,r,v,pk).
+    setOption(_,comp(_,p,w,r,t,v,pk)) => comp(true,p,w,r,t,v,pk).
   }
 
   dryOption:optionsProcessor[docOption].
@@ -41,7 +43,7 @@ lo.doc.args {
     alternatives = ["--dry-run"].
     usage = "-d -- dry run only: dont generate anything".
     validator = none.
-    setOption(_,comp(d,_,w,r,v,pk)) => comp(d,true,w,r,v,pk).
+    setOption(_,comp(d,_,w,r,t,v,pk)) => comp(d,true,w,r,t,v,pk).
   }
 
   wdOption:optionsProcessor[docOption].
@@ -50,7 +52,7 @@ lo.doc.args {
     alternatives = ["--wd"].
     usage = "-w dir -- source directory".
     validator = some(isDir).
-    setOption(w,comp(d,p,_,r,v,pk)) => comp(d,p,resolveUri(parseUri(cwd()),parseUri(w)),r,v,pk).
+    setOption(w,comp(d,p,_,r,t,v,pk)) => comp(d,p,resolveUri(parseUri(cwd()),parseUri(w)),r,t,v,pk).
   }
 
   repoOption:optionsProcessor[docOption].
@@ -59,7 +61,16 @@ lo.doc.args {
     alternatives = ["--repo"].
     usage = "-r dir -- directory of code repository".
     validator = some(isDir).
-    setOption(r,comp(d,p,w,_,v,pk)) => comp(d,p,w,resolveUri(parseUri(cwd()),parseUri(r)),v,pk).
+    setOption(r,comp(d,p,w,_,t,v,pk)) => comp(d,p,w,resolveUri(parseUri(cwd()),parseUri(r)),t,v,pk).
+  }
+
+  tmplOption:optionsProcessor[docOption].
+  tmplOption <= {
+    shortForm = "-t".
+    alternatives = ["--template"].
+    usage = "-t dir -- template directory".
+    validator = some(isDir).
+    setOption(t,comp(d,p,w,r,_,v,pk)) => comp(d,p,w,r,resolveUri(parseUri(cwd()),parseUri(t)),v,pk).
   }
 
   versionOption:optionsProcessor[docOption].
@@ -68,13 +79,13 @@ lo.doc.args {
     alternatives = ["--version"].
     usage = "-v version -- request processing of specific version".
     validator = some(((_):-true)).
-    setOption(v,comp(d,p,w,r,_,pk)) => comp(d,p,w,r,v::version,pk).
+    setOption(v,comp(d,p,w,r,t,_,pk)) => comp(d,p,w,r,t,v::version,pk).
   }
 
   public parseFlags:(list[string]) => either[docOption,string].
   parseFlags(args) =>
     handleCmdLineOpts(processOptions(args,[dbgOption,dryOption,wdOption,repoOption,versionOption],
-    comp(false,false,W,W,defltVersion,[]))) :-
+    comp(false,false,W,W,W,defltVersion,[]))) :-
       W=parseUri(cwd()).
 
   handleCmdLineOpts:(either[(docOption,list[string]),string]) => either[docOption,string].
@@ -86,5 +97,5 @@ lo.doc.args {
   locatePkgs(Opts,[P,..L]) => [pkg(P,Opts.version),..locatePkgs(Opts,L)].
 
   updatePkgs:(docOption,list[pkg]) => docOption.
-  updatePkgs(comp(d,p,w,r,v,_),pk) => comp(d,p,w,r,v,pk).
+  updatePkgs(comp(d,p,w,r,t,v,_),pk) => comp(d,p,w,r,t,v,pk).
 }

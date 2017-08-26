@@ -81,6 +81,10 @@
   postfixOp(";",1149,1150).	 /* action terminator */
   postfixOp("!",904,905).	 /* one solution operator */
   postfixOp("+",759,760).	 /* lookahead in grammar rule */
+  postfixOp("^",49,50).	 /* output mode marker */
+  postfixOp("?",49,50).	 /* input mode marker */
+  postfixOp("^?",49,50).	 /* bidirectional mode marker */
+  postfixOp("?^",49,50).	 /* bidirectional mode marker */
 
   /* Define isOperator */  isOperator(Op,Pr) :- prefixOp(Op,Pr,_).
   isOperator(Op,Pr) :- infixOp(Op,_,Pr,_).
@@ -133,6 +137,7 @@
   follows('\\','=','\\=').
   follows('\\=','=','\\==').
   follows('','^','^').
+  follows('^','?','^?').
   follows('^','/','^/').
   follows('^/','/','^//').
   follows('',':',':').
@@ -155,6 +160,7 @@
   follows('>','>','>>').
   follows('>>','=','>>=').
   follows('','?','?').
+  follows('?','^','?^').
   follows('','@','@').
   follows('','!','!').
   follows('!','=','!=').
@@ -194,6 +200,8 @@
   final('\\+',"\\+").	 /* logical negation */
   final('\\=',"\\=").	 /* not unifyable */
   final('\\==',"\\==").	 /* not equals */
+  final('^',"^").	 /* output mode marker */
+  final('^?',"^?").	 /* bidirectional mode marker */
   final('^/',"^/").	 /* filter */
   final('^//',"^//").	 /* filter map */
   final(':',":").	 /* type annotation */
@@ -214,7 +222,8 @@
   final('>',">").	 /* greater than */
   final('>=',">=").	 /* greater than or equal */
   final('>>=',">>=").	 /* monadic bind */
-  final('?',"?").	 /* conditional operator */
+  final('?',"?").	 /* input mode marker */
+  final('?^',"?^").	 /* bidirectional mode marker */
   final('@',"@").	 /* meta annotation */
   final('!',"!").	 /* one solution operator */
   final('!=',"!=").	 /* not equal */

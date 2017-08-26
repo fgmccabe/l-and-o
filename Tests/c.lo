@@ -8,4 +8,7 @@ test.c{
 
   x : option[integer].
   x = some(1).
+
+  y : option[integer].
+  y = none.
 }

@@ -43,4 +43,23 @@ lo.doc.gen{
         Rpx=Rp1
       | Rpx=Rp0)
     | reportError("cannot locate package \(P)",std,Rp,Rpx)).
+
+
+  genDoc:(map[string,string],docSpec,string) => ss.
+  genDoc(Tpls,varSpec(Nm,Tp,Desc),Lvl) =>
+    ss(stringTemplate(["Name"->Nm,"Intro"->"\(Nm)","Signature"->"\(Tp)","Blurb"->introDesc(Desc)],noDesc,template)):-
+      present(Tpls,"var.plate",template).
+
+  noDesc:(string)=>string.
+  noDesc(_) => "".
+
+  introDesc:(option[string]) => string.
+  introDesc(none) => "".
+  introDesc(some(D)) => D.
+
+    -- public docSpec
+    --        | typeSpec(string,ast,option[string])
+    --       | contractSpec(string,ast,option[string],map[string,docSpec])
+    --       | implSpec(string,ast,option[string])
+    --       | pkgSpec(string,option[string],map[string,docSpec]).
 }

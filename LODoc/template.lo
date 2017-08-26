@@ -3,19 +3,12 @@ lo.doc.template{
   import lo.resources.
   import lo.uri.
 
-  /**
-   Implement template processing.
+  stringTemplate@description("""Implement template processing from a string template.
+    Fragments of the form #(Id) are replaced by values in map. Fragments of the
+    form ##(Id) represent references to dynamic templates: the template is in the
+    dictionary.""").
+  public stringTemplate:(map[string,string], (string)=>string, string) => string.
 
-   Fragments of the form #(Id) are replaced by values in map. Fragments of the
-   form ##(Id) represent references to dynamic templates: the template is in the
-   dictionary.
-
-   @1 map of variables to replacement values
-   @2 default function in case that variable not in map
-   @3 template string
-   @return a string constructed by replacing #(V) by values in map.
-   */
-  public stringTemplate:(map[string,string],(string)=>string,string) => string.
   stringTemplate(M,D,T) => implode(procTemplate(M,D,explode(T))).
 
   public uriTemplate:(map[string,string],(string)=>string,uri) => string.

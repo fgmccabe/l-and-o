@@ -1,0 +1,11 @@
+#// Template for generating MD for variable definitions
+
+#(Lvl) #(Name)
+
+#(Intro)
+
+````
+#(Signature)
+````
+
+#(Blurb)

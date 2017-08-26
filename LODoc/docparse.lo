@@ -8,7 +8,6 @@ lo.doc.parse{
   import lo.comp.errors.
   import lo.comp.location.
 
-
   public docSpec ::= varSpec(string,ast,option[string])
          | typeSpec(string,ast,option[string])
          | contractSpec(string,ast,option[string],map[string,docSpec])
@@ -27,7 +26,7 @@ lo.doc.parse{
   dispDocSpec(pkgSpec(Nm,Desc,ElSpecs)) => ssSeq([ss("pkg: "),ss(Nm),ss(":"),disp(Desc),disp(ElSpecs)]).
 
   public genPkgDoc:(ast,report,report) => docSpec.
-  genPkgDoc(P,Rp,Rp) => pkgSpec(PkgNm,findDescription(M,PkgNm),processStmts(Els,id,M,[])) :-
+  genPkgDoc(P,Rp,Rp) => pkgSpec(PkgNm,findDescription(M,PkgNm),processStmts(Els,(X)=>X,M,[])) :-
     isBraceTerm(P,_,Pk,Els),
     PkgNm = packageName(Pk),
     M = collectDescriptions(Els,PkgNm,[]).
@@ -57,7 +56,7 @@ lo.doc.parse{
   processStmts([El,..L],F,D,M) => processStmts(L,F,D,processStmt(El,F,D,M)).
 
   processStmt:(ast,(ast)=>ast,map[string,string],map[string,docSpec]) => map[string,docSpec].
-  processStmt(St,TF,Descs,M) => M[Nm->varSpec(Nm,TF(TpSpec),findDescription(Descs,Nm))] :-
+  processStmt(St,TF,Descs,M) => M[Nm->varSpec(Nm,TF(Spec),findDescription(Descs,Nm))] :-
     isTypeAnnotation(St,_,Nm,Spec).
   processStmt(St,TF,Descs,M) => M[Nm->typeSpec(Nm,St,findDescription(Descs,Nm))] :-
     isAlgebraicTypeDef(St,_,_,_,Hd,_),

@@ -66,9 +66,9 @@ lo.comp.macro{
     bodyRule(Lc,roundTerm(Lc,Op,Args),[],BodyRule).
   convertConstructor(Con,Tp,Mark,Q,Constraints,[TpRule,BodyRule,..Tail],Tail) :-
     isBraceTerm(Con,Lc,Op,FldTps),      -- Construct con:{F1:T1,..Fn:Tn} <=>Tp
-    mark(Mark,Lc,binary(Lc,":",Op,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,binary(Lc,"<=>",braceTuple(Lc,FldTps),Tp)))),TpRule),
+    mark(Mark,Lc,binary(Lc,":",Op,wrapQuants(Q,Lc,wrapConstraints(Constraints,Lc,binary(Lc,"<=>",roundTuple(Lc,FldTps),Tp)))),TpRule),
     genFieldArgs(FldTps,Args,Defs),
-    bodyRule(Lc,braceTerm(Lc,Op,Defs),Defs,BodyRule),
+    bodyRule(Lc,roundTerm(Lc,Op,Defs),Defs,BodyRule),
     logMsg("brace constructor rule: \(BodyRule)").
 
   algebraicFace:(ast,list[ast],list[ast],report,report){}.

@@ -6,6 +6,7 @@
 		"test.append": "append.lo",
 		"test.ancestor": "ancestor.lo",
 		"test.arithmetic": "arithmetic.lo",
+		"test.b" : "b.lo",
 		"test.bench": "bench.lo",
 		"test.c": "c.lo",
 		"test.cc": "cc.lo",

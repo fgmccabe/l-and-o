@@ -18,9 +18,9 @@ lo.comp.flatten{
 
   -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
-  flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,Guard<>NBody) :-
-    flattenTerms(Args,Q,NArgs,Guard,[],NBody,Pst,Q1)!,
-    flattenBody(Body,Q1,Pst,[],NQ).
+  flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,NBody<>Guard<>Post) :-
+    flattenTerms(Args,Q,NArgs,Guard,[],Post,[],Q1)!,
+    flattenBody(Body,Q1,NBody,[],NQ).
   flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(conj(none,PrR)))),simplifyCond(conj(none,Guard)))) :-
     flattenTerms(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
     flattenPred(G,Q0,G1,Pr,[G1,..Pr0],Pr0,Prx,Q1),

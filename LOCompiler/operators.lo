@@ -86,6 +86,10 @@ lo.comp.operators{
   postfixOp(";",1149,1150).	 /* action terminator */
   postfixOp("!",904,905).	 /* one solution operator */
   postfixOp("+",759,760).	 /* lookahead in grammar rule */
+  postfixOp("^",49,50).	 /* output mode marker */
+  postfixOp("?",49,50).	 /* input mode marker */
+  postfixOp("^?",49,50).	 /* bidirectional mode marker */
+  postfixOp("?^",49,50).	 /* bidirectional mode marker */
 
   /* Define isOperator */
   public isOperator:(string,integer){}.
@@ -142,6 +146,7 @@ lo.comp.operators{
   follows("\\",0c=,"\\=").
   follows("\\=",0c=,"\\==").
   follows("",0c^,"^").
+  follows("^",0c?,"^?").
   follows("^",0c/,"^/").
   follows("^/",0c/,"^//").
   follows("",0c:,":").
@@ -164,6 +169,7 @@ lo.comp.operators{
   follows(">",0c>,">>").
   follows(">>",0c=,">>=").
   follows("",0c?,"?").
+  follows("?",0c^,"?^").
   follows("",0c@,"@").
   follows("",0c!,"!").
   follows("!",0c=,"!=").
@@ -205,6 +211,8 @@ lo.comp.operators{
   final("\\+").	 /* logical negation */
   final("\\=").	 /* not unifyable */
   final("\\==").	 /* not equals */
+  final("^").	 /* output mode marker */
+  final("^?").	 /* bidirectional mode marker */
   final("^/").	 /* filter */
   final("^//").	 /* filter map */
   final(":").	 /* type annotation */
@@ -225,7 +233,8 @@ lo.comp.operators{
   final(">").	 /* greater than */
   final(">=").	 /* greater than or equal */
   final(">>=").	 /* monadic bind */
-  final("?").	 /* conditional operator */
+  final("?").	 /* input mode marker */
+  final("?^").	 /* bidirectional mode marker */
   final("@").	 /* meta annotation */
   final("!").	 /* one solution operator */
   final("!=").	 /* not equal */

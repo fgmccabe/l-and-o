@@ -1,0 +1,61 @@
+lo.comp.meta{
+  import lo.
+  import lo.uri.
+  import lo.rdf.
+  import lo.repo.
+  import lo.resources.
+
+  import lo.comp.abstract.
+  import lo.comp.ast.
+  import lo.comp.catalog.
+  import lo.comp.errors.
+  import lo.comp.location.
+
+  -- Collect meta-data from a package as a set of RDF triples
+
+  public pkgMeta:(pkg,catalog,rdfStore,report,report) => rdfStore.
+  pkgMeta(P,Cat,Rdf,Rp,Rpx) => Rdfx :-
+    resolveCatalog(Cat,P,U,_),
+    Term = parseSrc(U,explode(getResource(U)),Rp,Rp0),
+    (errorFree(Rp0) ?
+      collectPkgMeta(Term,Rdf,Rdfx,Rp0,Rpx) |
+      Rpx = Rp0,
+      Rdfx = Rdf).
+  pkgMeta(P,Cat,Rdf,Rp,Rpx) => Rdf :-
+    reportError("cannot process package \(P)",std,Rp,Rpx).
+
+  collectPkgMeta:(ast,rdfStore,rdfStore,report,report){}.
+  collectPkgMeta(P,R,Rx,Rp,Rpx) :-
+    isBraceTerm(P,_,Pk,Els),
+    collectStmtsMeta(Els,packageName(Pk),R,Rx,Rp,Rpx).
+  collectPkgMeta(P,R,R,Rp,Rpx) :-
+    reportError("incorrect form of package",P.loc,Rp,Rpx).
+
+  collectStmtsMeta:(list[ast],string,rdfStore,rdfStore,report,report){}.
+  collectStmtsMeta([],_,R,R,Rp,Rp).
+  collectStmtsMeta([St,..Els],Nm,R,Rx,Rp,Rpx) :-
+    collectStmtMeta(St,Nm,R,R0,Rp,Rp0),
+    collectStmtsMeta(Els,Nm,R0,Rx,Rp0,Rpx).
+
+  collectStmtMeta:(ast,string,rdfStore,rdfStore,report,report){}.
+  collectStmtMeta(St,Nm,R,Rx,Rp,Rpx) :-
+    isUnary(St,"@",Lc,E),
+    collectRdf(E,Lc,Nm,R,Rx,Rp,Rpx).
+  collectStmtMeta(St,_,R,Rx,Rp,Rpx) :-
+    isBinary(St,"@",Lc,L,R),
+    isIden(L,_,Nm),
+    collectRdf(R,Lc,Nm,R,Rx,Rp,Rpx).
+  collectStmtMeta(St,Lc,R,Rx,Rp,Rpx) :-
+    isContractSpec(St,_,Q,C,Con,Els),
+    typeName(Con,Nm),
+    collectStmtsMeta(Els,Nm,R,Rx,Rp,Rpx).
+  collectStmtMeta(_,_,R,R,Rp,Rp).
+
+  typeName:(ast,string){}.
+  typeName(St,Nm) :- isIden(St,_,Nm).
+  typeName(St,Nm) :- isSquareTerm(St,_,O,_), isIden(O,_,Nm).
+
+  isPublic:(ast,ast){}.
+  isPublic(St,Inn) :-
+    isUnary(St,"public",_,Inn).
+}

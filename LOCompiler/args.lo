@@ -1,9 +1,9 @@
 lo.comp.args {
-  import lo.uri.
-  import lo.resources.
   import lo.
   import lo.either.
   import lo.options.
+  import lo.resources.
+  import lo.uri.
 
   import lo.comp.package.
   import lo.comp.errors.
@@ -55,7 +55,7 @@ lo.comp.args {
   inlineOption <= {
     shortForm = "-i".
     alternatives = ["--inline"].
-    usage = "--profile -- enable profiling".
+    usage = "--inline -- enable inlining".
     validator = none.
     setOption(_,comp(d,p,l,_,w,r,v,pk,dp)) => comp(d,p,l,true,w,r,v,pk,dp).
 
