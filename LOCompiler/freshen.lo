@@ -49,9 +49,9 @@ lo.comp.freshen{
   frshn(tipe(Nm),_) => tipe(Nm).
   frshn(tpFun(Nm,Ar),_) => tpFun(Nm,Ar).
   frshn(typeExp(Op,A),B) => typeExp(frshnType(Op,B),frshnTypes(A,B)).
-  frshn(funType(A,R),B) => funType(frshnTypes(A,B),frshnType(R,B)).
-  frshn(predType(A),B) => predType(frshnTypes(A,B)).
-  frshn(grammarType(A,R),B) => grammarType(frshnTypes(A,B),frshnType(R,B)).
+  frshn(funType(A,R),B) => funType(frshnArgTypes(A,B),frshnType(R,B)).
+  frshn(predType(A),B) => predType(frshnArgTypes(A,B)).
+  frshn(grammarType(A,R),B) => grammarType(frshnArgTypes(A,B),frshnType(R,B)).
   frshn(classType(A,R),B) => classType(frshnTypes(A,B),frshnType(R,B)).
   frshn(tupleType(A),B) => tupleType(frshnTypes(A,B)).
   frshn(faceType(F),B) => faceType(frshnFields(F,B)).
@@ -62,13 +62,16 @@ lo.comp.freshen{
   frshn(tpLambda(A,T),B) => tpLambda(frshnTypes(A,B),frshnType(T,B)).
   frshn(Tp,_) => Tp.
 
+  private frshnArgTypes:(list[(typeMode,tipe)],map[string,tipe]) => list[(typeMode,tipe)].
+  frshnArgTypes([],_) => [].
+  frshnArgTypes([(M,E),..R],B) => [(M,frshnType(E,B)),..frshnArgTypes(R,B)].
+
   private
   frshnTypes:(list[tipe],map[string,tipe]) => list[tipe].
   frshnTypes([],_) => [].
   frshnTypes([E,..R],B) => [frshnType(E,B),..frshnTypes(R,B)].
 
-  private
-  frshnFields:(list[(string,tipe)],map[string,tipe]) => list[(string,tipe)].
+  private frshnFields:(list[(string,tipe)],map[string,tipe]) => list[(string,tipe)].
   frshnFields([],_) => [].
   frshnFields([(F,E),..R],B) => [(F,frshnType(E,B)),..frshnFields(R,B)].
 
@@ -89,78 +92,10 @@ lo.comp.freshen{
   frshnConstraint(univCon(kVar(Nm),C),B) => frshnConstraint(C,B[\+Nm]).
   frshnConstraint(univCon(kFun(Nm,_),C),B) => frshnConstraint(C,B[\+Nm]).
 
-  public freezeType:(tipe,map[string,tipe],tipe){}.
-  freezeType(Tp,B,FrZ) :-
-    freeze(Tp,B,FT),
-    reQuant(pairs(B),B,FT,FrZ).
-
-  private freeze:(tipe,map[string,tipe],tipe){}.
-  freeze(T,B,Frzn) :-
-    frze(deRef(T),B,Frzn)!.
-
-  private frze:(tipe,map[string,tipe],tipe){}.
-  frze(voidType,_,voidType).
-  frze(anonType,_,anonType).
-  frze(thisType,_,thisType).
-  frze(kVar(TV),_,kVar(TV)).
-  frze(kFun(F,A),_,kFun(F,A)).
-  frze(V,B,kVar(TV)) :- isUnbound(V), present(B,TV,VV), isIdenticalVar(V,deRef(VV)).
-  frze(V,_,V) :- isUnbound(V).
-  frze(tipe(Nm),_,tipe(Nm)).
-  frze(tpFun(F,A),_,tpFun(F,A)).
-  frze(funType(A,R),B,funType(FA,FR)) :-
-    freezeTypes(A,B,FA),
-    freeze(R,B,FR).
-  frze(grammarType(A,R),B,grammarType(FA,FR)) :-
-    freezeTypes(A,B,FA),
-    freeze(R,B,FR).
-  frze(classType(A,R),B,classType(FA,FR)) :-
-    freezeTypes(A,B,FA),
-    freeze(R,B,FR).
-  frze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
-  frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
-  frze(typeExp(O,A),B,typeExp(FO,FA)) :- frze(O,B,FO),freezeTypes(A,B,FA).
-  frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
-    freeze(Tp,_remove(B,V),FTp).
-  frze(faceType(L),B,faceType(FL)) :-
-    freezeFields(L,B,FL).
-  frze(typeRule(A,R),B,typeRule(FA,FR)) :-
-    freeze(A,B,FA),
-    freeze(R,B,FR).
-  frze(tpLambda(A,R),B,tpLambda(FA,FR)) :-
-    freezeTypes(A,B,FA),
-    freeze(R,B,FR).
-  frze(constrained(Tp,Con),B,constrained(FTp,FCon)) :-
-    freeze(Tp,B,FTp),
-    freezeConstraint(Con,B,FCon).
-
-  freezeFields:(list[(string,tipe)],map[string,tipe],list[(string,tipe)]){}.
-  freezeFields([],_,[]).
-  freezeFields([(Nm,A),..L],B,[(Nm,FA),..FL]) :- freeze(A,B,FA), freezeFields(L,B,FL).
-
-  freezeTypes:(list[tipe],map[string,tipe],list[tipe]){}.
-  freezeTypes([],_,[]).
-  freezeTypes([A,..L],B,[FA,..FL]) :- freeze(A,B,FA), freezeTypes(L,B,FL).
-
   reQuant:(list[(string,tipe)],map[string,tipe],tipe,tipe){}.
   reQuant([],_,T,T).
   reQuant([(_,Tp),..R],BB,FT,FZT) :-
     V = deRef(Tp), isUnbound(V),
     reQuant(R,BB,FT,FZT).
   reQuant([_,..B],BB,T,FT) :- reQuant(B,BB,T,FT).
-
-  freezeConstraints:(list[constraint],map[string,tipe],tipe,tipe){}.
-  freezeConstraints(C,_,T,T) :- var(C)!.
-  freezeConstraints([C,.._],_,T,T) :- var(C)!.
-  freezeConstraints([C,..R],BB,T,FT) :-
-    freezeConstraint(C,BB,FC),
-    freezeConstraints(R,BB,constrained(T,FC),FT).
-
-  freezeConstraint:(constraint,map[string,tipe],constraint){}.
-  freezeConstraint(conTract(Nm,A,D),B,conTract(Nm,FA,FD)) :-
-    freezeTypes(A,B,FA),
-    freezeTypes(D,B,FD).
-  freezeConstraint(implementsFace(T,F),B,implementsFace(FT,FF)) :-
-    freeze(T,B,FT),
-    freezeFields(F,B,FF).
 }

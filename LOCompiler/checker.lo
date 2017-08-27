@@ -48,17 +48,17 @@ lo.comp.typecheck{
     StringTp = stdType("string",Lc,Env,Rp,Rp0),
     ListTp = typeExp(stdType("list",Lc,Env,Rp0,Rp1),[StringTp]),
     constructMainArgs(ArgTps,StringTp,ListTp,Lc,Env,HedArgs,CallArgs,Rp1,Rpx),
-    moveConstraints(MnTp,Cx,predType([ListTp])),
+    moveConstraints(MnTp,Cx,predType([(inMode,ListTp)])),
     moveQuants(FnlTp,Q,MnTp),
-    Cl = clause(Lc,"_main",[HedArgs],callCond(Lc,MV,CallArgs)),
+    Cl = clause(Lc,"_main",[(inMode,HedArgs)],callCond(Lc,MV,const0(CallArgs,inMode))),
     logMsg("generated main: \(Cl)"),
     MainDef = relDef(Lc,"_main",FnlTp,Cx,[Cl]).
   implementMain(Defs,_,Rp,Rp) => Defs.
 
-  private constructMainArgs:(list[tipe],tipe,tipe,location,list[env],canonTerm,list[canonTerm],report,report){}.
+  private constructMainArgs:(list[(typeMode,tipe)],tipe,tipe,location,list[env],canonTerm,list[canonTerm],report,report){}.
   constructMainArgs([],StrTp,LstTp,Lc,Env,H,[],Rp,Rpx) :-
     typeOfTerm(iden(Lc,"[]"),ListTp,Env,_,H,Rp,Rpx).
-  constructMainArgs([Tp,..TL],StrTp,LstTp,Lc,Env,apply(Lc,Op,[H,HL]),[C,..CL],Rp,Rpx) :-
+  constructMainArgs([(M,Tp),..TL],StrTp,LstTp,Lc,Env,apply(Lc,Op,[(M,H),(inMode,HL)]),[C,..CL],Rp,Rpx) :-
     Vr = iden(Lc,_str_gen("_")),
     typeOfTerm(Vr,StrTp,Env,E0,H,Rp,Rp0),
     typeOfTerm(unary(Lc,"_coerce",Vr),Tp,E0,E1,C,Rp0,Rp1),
@@ -353,7 +353,7 @@ lo.comp.typecheck{
     ElTp=newVar("_E"),
     typeOfArgs(Lc,A,AT,declareVar("stream",vr(v(Lc,"stream"),Tp),pushScope(E)),E2,Args,Rp,Rp0),
     checkNonTerminal(R,Tp,ElTp,E2,E3,Body,Rp0,Rp1),
-    typeOfTerm(iden(Lc,"_hdtl"),predType([StrmTp,ElTp,StrmTp]),E3,_,HDTL,Rp1,Rp2),
+    typeOfTerm(iden(Lc,"_hdtl"),predType([(inMode,StrmTp),(biMode,ElTp),(outMode,StrmTp)]),E3,_,HDTL,Rp1,Rp2),
     checkTerminals(P,HDTL,PB,ElTp,E3,_,Rp2,Rpx).
 
   private splitGrHead:(ast,string,list[ast],list[ast]){}.
@@ -368,12 +368,12 @@ lo.comp.typecheck{
     splitHead(Term,_,Nm,Args).
 
   private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
-  checkClassRule(_,H,G,R,ClassTp,[clRule(Lc,Nm,Args,theta(ClDefs,ClOthers),Cond,faceType(Types)),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(_,H,G,R,ClassTp,[clRule(Lc,Nm,const0(Args,biMode),theta(ClDefs,ClOthers),Cond,faceType(Types)),..Defs],Defs,E,Pth,Rp,Rpx) :-
     isBraceTuple(R,Lc,Els),
     checkClassHead(H,ClassTp,SuperTp,pushScope(E),E1,Nm,Args,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     checkThetaTerm(SuperTp,Lc,Els,E1,ClDefs,ClOthers,Types,subPath(Pth,marker(clss),Nm),Rp0,Rpx).
-  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,Args,Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,const0(Args,biMode),Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
     checkClassHead(H,ClassTp,_,pushScope(E),E1,Nm,Args,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     SuperTp = newVar("SpTp"),
@@ -562,7 +562,7 @@ lo.comp.typecheck{
   typeOfTerm(tupl(_,"()",[Inner]),Tp,Env,Ev,Exp,Rp,Rpx) :-  -- a unary round tuple might just be parenthetic expression
     \+ isRoundTuple(Inner,_,_),
     typeOfTerm(Inner,Tp,Env,Ev,Exp,Rp,Rpx).
-  typeOfTerm(Term,Tp,Env,Ev,tpl(Els),Rp,Rpx) :-
+  typeOfTerm(Term,Tp,Env,Ev,tpl(Lc,tplLbl(length(Els)),Els),Rp,Rpx) :-
     isRoundTuple(Term,Lc,A),
     ArgTps = genTpVars(A),
     checkType(Lc,tupleType(ArgTps),Tp,Env,Rp,Rp0),
@@ -613,11 +613,21 @@ lo.comp.typecheck{
     typeOfTerm(A,ElTp,Env,E0,Term,Rp,Rp0),
     typeOfTerms(As,ElTypes,E0,Ev,A.loc,Els,Rp0,Rpx).
 
-  typeOfArgs:(location,list[ast],list[tipe],list[env],list[env],list[canonTerm],report,report){}.
+  typeOfArgs:(location,list[ast],list[(typeMode,tipe)],list[env],list[env],list[(typeMode,canonTerm)],report,report){}.
   typeOfArgs(Lc,A,Tps,Env,Ev,Args,Rp,Rpx) :-
     ( length(A)==length(Tps) ?
-      typeOfTerms(A,Tps,Env,Ev,Lc,Args,Rp,Rpx)
+      typeOfAs(A,Tps,Env,Ev,Lc,Args,Rp,Rpx)
     | reportError("expecting \(length(Tps)) arguments",Lc,Rp,Rpx)).
+
+  typeOfAs:(list[ast],list[(typeMode,tipe)],list[env],list[env],location,list[(typeMode,canonTerm)],report,report){}.
+  typeOfAs([],[],Env,Env,_,[],Rp,Rp).
+  typeOfAs([],[(M,T),.._],Env,Env,Lc,[],Rp,Rpx) :-
+    reportError("insufficient arguments, expecting a \(T)",Lc,Rp,Rpx).
+  typeOfAs([A,.._],[],Env,Env,_,[],Rp,Rpx) :-
+    reportError("too many arguments: \(A)",A.loc,Rp,Rpx).
+  typeOfAs([A,..As],[(M,ElTp),..ElTypes],Env,Ev,_,[(M,Term),..Els],Rp,Rpx) :-
+    typeOfTerm(A,ElTp,Env,E0,Term,Rp,Rp0),
+    typeOfAs(As,ElTypes,E0,Ev,A.loc,Els,Rp0,Rpx).
 
   typeOfIndex:(location,ast,ast,tipe,list[env],list[env],canonTerm,report,report){}.
   typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp,Rp,Rpx) :-
@@ -666,12 +676,12 @@ lo.comp.typecheck{
   private typeOfListTerm:(list[ast],location,tipe,tipe,list[env],list[env],canonTerm,report,report){}.
   typeOfListTerm([],Lc,_,ListTp,Env,Ev,Exp,Rp,Rpx) :-
     typeOfTerm(iden(Lc,"[]"),ListTp,Env,Ev,Exp,Rp,Rpx).
-  typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[Hd,Tl]),Rp,Rpx) :-
+  typeOfListTerm([Last],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[(biMode,Hd),(biMode,Tl)]),Rp,Rpx) :-
     isBinary(Last,",..",Lc,L,R),
     knownType(iden(Lc,",.."),newVar("_"),Env,E0,Op,Rp,Rp0),
     typeOfTerm(L,ElTp,E0,E1,Hd,Rp0,Rp1),
     typeOfTerm(R,ListTp,E1,Ev,Tl,Rp1,Rpx).
-  typeOfListTerm([El,..More],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[Hd,Tl]),Rp,Rpx) :-
+  typeOfListTerm([El,..More],_,ElTp,ListTp,Env,Ev,apply(Lc,Op,[(biMode,Hd),(biMode,Tl)]),Rp,Rpx) :-
     Lc = El.loc,
     knownType(iden(Lc,",.."),newVar("_"),Env,E0,Op,Rp,Rp0),
     typeOfTerm(El,ElTp,E0,E1,Hd,Rp0,Rp1),
@@ -719,10 +729,10 @@ lo.comp.typecheck{
   private checkNonTerminal:(ast,tipe,tipe,list[env],list[env],canonNT,report,report){}.
   checkNonTerminal(Tpl,StrmTp,ElTp,E,Env,grTerms(Terms),Rp,Rpx) :-
     isSquareTuple(Tpl,Lc,Els),
-    typeOfTerm(iden(Lc,"_hdtl"),predType([StrmTp,ElTp,StrmTp]),E,E0,HDTL,Rp,Rp0),
+    typeOfTerm(iden(Lc,"_hdtl"),predType([(inMode,StrmTp),(biMode,ElTp),(outMode,StrmTp)]),E,E0,HDTL,Rp,Rp0),
     checkTerminals(Els,HDTL,Terms,ElTp,E0,Env,Rp0,Rpx).
   checkNonTerminal(strg(Lc,Text),StrmTp,ElTp,E,Env,grTerms(Terms),Rp,Rpx) :-
-    typeOfTerm(iden(Lc,"_hdtl"),predType([StrmTp,ElTp,StrmTp]),E,E0,HDTL,Rp,Rp0),
+    typeOfTerm(iden(Lc,"_hdtl"),predType([(inMode,StrmTp),(biMode,ElTp),(outMode,StrmTp)]),E,E0,HDTL,Rp,Rp0),
     checkTerminals(explodeStringLit(Lc,Text),HDTL,Terms,ElTp,E0,Env,Rp0,Rpx).  -- strings are exploded into code points
   checkNonTerminal(Term,Tp,ElTp,Env,Ex,GrNT,Rp,Rpx) :-
     isRoundTuple(Term,Lc,Els),
@@ -897,7 +907,7 @@ lo.comp.typecheck{
   typeOfCall(Lc,Fun,A,funType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args),Rp,Rpx) :-
     checkType(Lc,ResTp,Tp,Env,Rp,Rp0),
     typeOfArgs(Lc,A,ArgTp,Env,Ev,Args,Rp0,Rpx).
-  typeOfCall(Lc,Fun,A,classType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args),Rp,Rpx) :-
+  typeOfCall(Lc,Fun,A,classType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,const0(Args,biMode)),Rp,Rpx) :-
     checkType(Lc,ResTp,Tp,Env,Rp,Rp0),
     typeOfTerms(A,ArgTp,Env,Ev,Lc,Args,Rp0,Rpx).
   typeOfCall(Lc,Fun,_,Ftp,_,Env,Env,Fun,Rp,Rpx) :-

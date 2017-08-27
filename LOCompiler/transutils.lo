@@ -233,11 +233,6 @@ lo.comp.transutils {
   public genNewName:(list[lyr],string,integer,term){}.
   genNewName(Map,Variant,Ar,prg(localName(layerName(Map),"@",_str_gen(Variant)),Ar)).
 
-  public genAnons:(integer) => list[term].
-  genAnons(0) => [].
-  genAnons(K) => [anon,..genAnons(K-1)] :-
-    K>0.
-
   public genVars:(integer) => list[term].
   genVars(0) => [].
   genVars(K) => [V,..genVars(K-1)] :-

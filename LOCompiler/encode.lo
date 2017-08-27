@@ -21,12 +21,12 @@ lo.comp.encode{
   encodeClses(Clses,L) => encSequence(encClause,Clses,L).
 
   encClause:(clse,list[integer]) => list[integer].
-  encClause(clse(Q,Nm,Args,Body),L) => [0cC,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encSequence(encPred,Body,L))))].
-  encClause(eqn(Q,Nm,Args,Rep),L) => [0c>,..encTerm(Nm,encSequence(encTerm,Q,encSequence(encTerm,Args,encTerm(Rep,L))))].
+  encClause(clse(Q,Nm,Args,Body),L) => [0cC,..encTerm(Nm,encSequence(encTerm,Q,encArgs(Args,encSequence(encPred,Body,L))))].
+  encClause(eqn(Q,Nm,Args,Rep),L) => [0c>,..encTerm(Nm,encSequence(encTerm,Q,encArgs(Args,encTerm(Rep,L))))].
 
   encPred:(pred,list[integer]) => list[integer].
-  encPred(call(TLc,Op,Args),L) => [0cP,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
-  encPred(ecall(TLc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encSequence(encTerm,Args,L)))].
+  encPred(call(TLc,Op,Args),L) => [0cP,..encodeTLoc(TLc,encTerm(Op,encArgs(Args,L)))].
+  encPred(ecall(TLc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encArgs(Args,L)))].
   encPred(ocall(TLc,O,S,I),L) => [0cO,..encodeTLoc(TLc,encTerm(O,encTerm(S,encTerm(I,L))))].
   encPred(unfy(TLc,Lf,Rg),L) => [0c=,..encodeTLoc(TLc,encTerm(Lf,encTerm(Rg,L)))].
   encPred(dfne(TLc,Lf,Rg),L) => [0c$,..encodeTLoc(TLc,encTerm(Lf,encTerm(Rg,L)))].
@@ -36,6 +36,17 @@ lo.comp.encode{
   encPred(fail,L) => [0c#,..L].
   encPred(succ,L) => [0c+,..L].
   encPred(except(TLc,E),L) => [0c^,..encodeTLoc(TLc,encTerm(E,L))].
+
+  encArgs:(list[(typeMode,term)],list[integer]) => list[integer].
+  encArgs(A,L) => encSequence(encArg,A,L).
+
+  encArg:((typeMode,term),list[integer]) => list[integer].
+  encArg((M,T),L) => encMode(M,encTerm(T,L)).
+
+  encMode:(typeMode,list[integer]) => list[integer].
+  encMode(inMode,L) => [0c+,..L].
+  encMode(outMode,L) => [0c-,..L].
+  encMode(biMode,L) => [0c?,..L].
 
   encSequence:all t ~~ ((t,list[integer])=>list[integer],list[t],list[integer])=>list[integer].
   encSequence(F,S,L) => [0cL,..encInt(size(S),encSeq(F,S,L))].
@@ -64,8 +75,8 @@ lo.comp.encode{
   encTerm(strct(Nm,Ar),L) => [0co,..encInt(Ar,encodeText(Nm,L))].
   encTerm(prg(Nm,Ar),L) => [0cp,..encInt(Ar,encodeText(Nm,L))].
   encTerm(cons(Op,Els),L) => [0cn,..encInt(length(Els),encTerm(Op,encEls(Els,L)))].
-  encTerm(invoke(Lc,Op,Args),L) => [0cV,..encodeTLoc(TLc,encTerm(Op,encSequence(encTerm,Args,L)))].
-  encTerm(escvoke(Lc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encSequence(encTerm,Args,L)))].
+  encTerm(invoke(Lc,Op,Args),L) => [0cV,..encodeTLoc(TLc,encTerm(Op,encArgs(Args,L)))].
+  encTerm(escvoke(Lc,Op,Args),L) => [0cE,..encodeTLoc(TLc,encodeText(Op,encArgs(Args,L)))].
   encTerm(ovoke(TLc,O,S,I),L) => [0cO,..encodeTLoc(TLc,encTerm(O,encTerm(S,encTerm(I,L))))].
   encTerm(guarded(T,C),L) => [0cg,..encTerm(T,encPred(C,L))].
 
@@ -121,16 +132,23 @@ lo.comp.encode{
   encTp(tipe(Nm),L) => [0ct,..encodeText(Nm,L)].
   encTp(typeExp(Op,Els),L) => [0cU,..encType(Op,encTypes(Els,L))].
   encTp(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
-  encTp(funType(A,R),L) => [0cF,..encTypes(A,encType(R,L))].
+  encTp(funType(A,R),L) => [0cF,..encArgTypes(A,encType(R,L))].
   encTp(classType(A,R),L) => [0cC,..encTypes(A,encType(R,L))].
-  encTp(predType(A),L) => [0cP,..encTypes(A,L)].
-  encTp(grammarType(A,R),L) => [0cG,..encTypes(A,encType(R,L))].
+  encTp(predType(A),L) => [0cP,..encArgTypes(A,L)].
+  encTp(grammarType(A,R),L) => [0cG,..encArgTypes(A,encType(R,L))].
   encTp(typeRule(A,R),L) => [0cY,..encType(A,encType(R,L))].
   encTp(tpLambda(A,R),L) => [0cZ,..encTypes(A,encType(R,L))].
   encTp(faceType(Els),L) => [0cI,..encFieldTypes(Els,L)].
   encTp(constrained(T,C),L) => [0c|,..encTp(T,encConstraint(C,L))].
   encTp(univType(V,T),L) => [0c:,..encTp(V,encType(T,L))].
   encTp(existType(V,T),L) => [0cE,..encTp(V,encType(T,L))].
+
+  private encArgTypes:(list[(typeMode,tipe)],list[integer]) => list[integer].
+  encArgTypes(Els,L) => encInt(length(Els),encArgTps(Els,L)).
+
+  private encArgTps:(list[(typeMode,tipe)],list[integer]) => list[integer].
+  encArgTps([],L) => L.
+  encArgTps([(M,T),..R],L) => encMode(M,encType(T,encArgTps(R,L))).
 
   private encTypes:(list[tipe],list[integer]) => list[integer].
   encTypes(Els,L) => encInt(length(Els),encTps(Els,L)).

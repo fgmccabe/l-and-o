@@ -46,7 +46,7 @@ lo.comp.transform{
   transformMdlDef(typeDef(_,_,_,_),_,_,Rules,Rules,Rp,Rp).
   transformMdlDef(cnDefn(_,_,_),_,_,Rules,Rules,Rp,Rp).
   transformMdlDef(implDef(Lc,_,ImplName,_,_,Hd,Body,Face),Map,Opts,R,Rx,Rp,Rpx) :-
-    transformImplementation(Lc,ImplName,Hd,Body,Face,Map,Opts,R,Rx,Rp,Rpx).
+    transformImplementation(Lc,ImplName,const0(Hd,inMode),Body,Face,Map,Opts,R,Rx,Rp,Rpx).
 
   private extraArity:(integer,list[term],integer){}.
   extraArity(Arity,Vars,size(Vars)+Arity).
@@ -72,7 +72,7 @@ lo.comp.transform{
   transformEqn(equation(Lc,Nm,A,Value,Cond),Map,Opts,LclFun,Arity,Extra,QNo,
     [eqn(Q,prg(LclFun,Arity+size(Extra)),Args,simplifyGuard(guarded(Rep,simplifyCond(conj(none,Guard<>Body))))),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        -- are we debugging?
-    trPtns(A,Args,Extra,Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
+    trArgPtns(A,Args,const0(Extra,inMode),Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
     trGoal(Cond,PreG,[],Q1,Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1), -- condition goals
     trExp(Value,Rep,Q2,Q3,Map,ClOpts,Ex1,Exx,Rp1,Rpx),  -- replacement expression
     labelAccess(Q3,Q,Map,Guard,LbLx),                       -- generate label access goals
@@ -101,7 +101,7 @@ lo.comp.transform{
   transformClause:(canonRule,list[lyr],trOptions,string,integer,list[term],integer,list[clse],list[clse],map[term,rel],map[term,rel],report,report){}.
   transformClause(clause(Lc,Nm,A,Body),Map,Opts,PrdNme,Arity,Extra,QNo,[clse(Q,prg(PrdNme,Arity),Args,Goals),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),        -- are we debugging?
-    trPtns(A,Args,Extra,Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
+    trArgPtns(A,Args,const0(Extra,inMode),Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
     trGoal(Body,G4,G7,Q1,Q3,Map,ClOpts,Ex0,Exx,Rp0,Rpx),
     labelAccess(Q3,Q,Map,Goals,G0),                       -- generate label access goals
     frameDebug(Nm,QNo,Q,G1,G2,ClOpts),                    -- generate frame entry debugging
@@ -124,7 +124,7 @@ lo.comp.transform{
     lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
     deframeDebug(Nm,0,G7,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    Px = P1[LclPrg->rel(LclPrg,some(Lc::tloc),[eqn(Q,LclPrg,Extra,simplifyGuard(guarded(Rep,simplifyCond(conj(none,Guard<>G7)))))])].
+    Px = P1[LclPrg->rel(LclPrg,some(Lc::tloc),[eqn(Q,LclPrg,const0(Extra,inMode),simplifyGuard(guarded(Rep,simplifyCond(conj(none,Guard<>G7)))))])].
 
   varAccess:(list[lyr],string,map[term,rel],map[term,rel]){}.
   varAccess(Map,Nm,P,Px) :-
@@ -134,7 +134,7 @@ lo.comp.transform{
     genVarbl("This",ThVr),
     genVarbl("Lbl",LblVr),
     Vars = [LblVr,ThVr],
-    VarCl = eqn(Vars,prg(layerName(Map),3),[enum(Nm),LblVr,ThVr],invoke(none,LclPrg,Vars)),
+    VarCl = eqn(Vars,prg(layerName(Map),3),[(biMode,enum(Nm)),(inMode,LblVr),(inMode,ThVr)],invoke(none,LclPrg,const0(Vars,inMode))),
     Px = addCl(P,VarCl).
 
   transformGrammar:(canonDef,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
@@ -154,9 +154,9 @@ lo.comp.transform{
 
   transformGrammarRule:(canonRule,list[lyr],trOptions,string,integer,list[term],integer,list[clse],list[clse],map[term,rel],map[term,rel],report,report){}.
   transformGrammarRule(grRule(Lc,Nm,A,grTerms(PB),Body),Map,Opts,LclFun,Arity,Extra,QNo,
-        [clse(Q,prg(LclFun,Arity),[StIn,StX,..Args],Goals),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
+        [clse(Q,prg(LclFun,Arity),[(inMode,StIn),(outMode,StX),..Args],Goals),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,G0,G1,Opts,ClOpts),                     -- are we debugging?
-    trPtns(A,Args,Extra,Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0),  -- head args
+    trArgPtns(A,Args,const0(Extra,inMode),Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0),  -- head args
     genVarbl("StIn",StIn),
     dcgBody(Body,Map,ClOpts,G4,G6,StIn,StOut,[StIn,..Q1],Q2,Ex0,Ex1,Rp0,Rp1), -- grammar body
     pushTerminals(PB,Map,ClOpts,G6,G8,StOut,StX,Q2,Q4,Ex1,Exx,Rp1,Rpx),     -- push back
@@ -190,57 +190,57 @@ lo.comp.transform{
     trGoal(Goal,G0,Gx,Q,Qx,pushStreamVar(Map,Strm),Opts,Ex,Exx,Rp,Rpx).
   dcgBody(grCall(Lc,NT,Args),Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     lineDebug(Lc,G,G3,Opts),
-    trExps(Args,AG,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rpx),
+    trArgExps(Args,AG,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rpx),
     (var(Strmx) ? genVarbl("Stx",Strmx), Q1=[Strmx,..Q0] | Q0=Q1),
-    trGoalCall(NT,[Strm,Strmx,..AG],G3,Gx,Q1,Qx,Map,Opts,Ex0,Exx,Rp,Rpx).
+    trGoalCall(NT,[(inMode,Strm),(outMode,Strmx),..AG],G3,Gx,Q1,Qx,Map,Opts,Ex0,Exx,Rp,Rpx).
 
   dcgDisj:(canonNT,canonNT,list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
-  dcgDisj(Lhs,Rhs,Map,Opts,[call(none,DisProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q0),Ex,Exx,Rp,Rpx) :-
+  dcgDisj(Lhs,Rhs,Map,Opts,[call(none,DisProg,[(inMode,Strm),(outMode,Strmx),..const0(DQ,biMode)]),..G],G,Strm,Strmx,Q,merge(DQ,Q0),Ex,Exx,Rp,Rpx) :-
     (var(Strmx) ? genVarbl("DjOut",Strmx), Q0=[Strmx,..Q] | Q0=Q),
     genVarbl("DjStrm",DjStrm),
     dcgBody(Lhs,Map,Opts,LG,[],DjStrm,DjStrmx,[],LQ,Ex,Ex0,Rp,Rp0),
     dcgBody(Rhs,Map,Opts,RG,[],DjStrm,DjStrmy,LQ,DQ,Ex0,Ex1,Rp0,Rpx),
     genNewName(Map,"Disj",length(DQ)+2,DisProg),
-    C1 = clse([DjStrm,..DQ],DisProg,[DjStrm,DjStrmx,..DQ],LG),
-    C2 = clse([DjStrm,..DQ],DisProg,[DjStrm,DjStrmy,..DQ],RG),
+    C1 = clse([DjStrm,..DQ],DisProg,[(inMode,DjStrm),(outMode,DjStrmx),..const0(DQ,biMode)],LG),
+    C2 = clse([DjStrm,..DQ],DisProg,[(inMode,DjStrm),(outMode,DjStrmy),..const0(DQ,biMode)],RG),
     Exx = Ex1[DisProg->rel(DisProg,none,[C1,C2])].
 
   dcgOne:(canonNT,list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
-  dcgOne(Lhs,Map,Opts,[call(none,OneProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q),P,Px,Rp,Rpx) :-
+  dcgOne(Lhs,Map,Opts,[call(none,OneProg,[(inMode,Strm),(outMode,Strmx),..const0(DQ,biMode)]),..G],G,Strm,Strmx,Q,merge(DQ,Q),P,Px,Rp,Rpx) :-
     genVarbl("OneStm",OneStm),
     (var(Strmx) ? genVarbl("DjOut",Strmx) | true),
     dcgBody(Lhs,Map,Opts,LG,[neck],OneStm,OneStmx,[],DQ,P,P0,Rp,Rpx),
     genNewName(Map,"One",length(DQ)+2,OneProg),
-    C1 = clse([OneStm,..DQ],OneProg,[OneStm,OneStmx,..DQ],LG),
+    C1 = clse([OneStm,..DQ],OneProg,[(inMode,OneStm),(outMode,OneStmx),..const0(DQ,biMode)],LG),
     Px = P0[OneProg->rel(OneProg,none,[C1])].
 
   dcgNeg:(canonNT,list[lyr],trOptions,list[pred],list[pred],term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
-  dcgNeg(Tst,Map,Opts,[call(none,NegProg,[Strm,..TQ]),..G],G,Strm,Q,merge(TQ,Q),P,Px,Rp,Rpx) :-
+  dcgNeg(Tst,Map,Opts,[call(none,NegProg,[(inMode,Strm),..const0(TQ,inMode)]),..G],G,Strm,Q,merge(TQ,Q),P,Px,Rp,Rpx) :-
     genVarbl("NegStrm",NegStrm),
     dcgBody(Tst,Map,Opts,TG,[],NegStrm,_,[],TQ,P,P0,Rp,Rpx),
     genNewName(Map,"Neg",length(TQ)+1,NegProg),
-    C1 = clse([NegStrm,..TQ],NegProg,[NegStrm,..TQ],TG<>[neck,fail]),
-    C2 = clse([NegStrm,..TQ],NegProg,[NegStrm,..TQ],[]),
+    C1 = clse([NegStrm,..TQ],NegProg,[(inMode,NegStrm),..const0(TQ,inMode)],TG<>[neck,fail]),
+    C2 = clse([NegStrm,..TQ],NegProg,[(inMode,NegStrm),..const0(TQ,inMode)],[]),
     Px = P0[NegProg->rel(NegProg,none,[C1,C2])].
 
   dcgConditional:(canonNT,canonNT,canonNT,list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
-  dcgConditional(Tst,Lhs,Rhs,Map,Opts,[call(none,CondProg,[Strm,Strmx,..DQ]),..G],G,Strm,Strmx,Q,merge(DQ,Q),P,Px,Rp,Rpx) :-
+  dcgConditional(Tst,Lhs,Rhs,Map,Opts,[call(none,CondProg,[(inMode,Strm),(outMode,Strmx),..const0(DQ,biMode)]),..G],G,Strm,Strmx,Q,merge(DQ,Q),P,Px,Rp,Rpx) :-
     (var(Strmx) ? genVarbl("CndOut",Strmx) | true),
     genVarbl("CondStrm",CndStrm),
     dcgBody(Tst,Map,Opts,TG,[],CndStrm,CndStrm0,[],TQ,P,P0,Rp,Rp0),
     dcgBody(Lhs,Map,Opts,LG,[],CndStrm0,CndStrmx,TQ,LQ,P0,P1,Rp0,Rp1),
     dcgBody(Rhs,Map,Opts,RG,[],CndStrm,CndStrmy,LQ,DQ,P1,P2,Rp1,Rpx),
     genNewName(Map,"Cond",length(DQ)+2,CondProg),
-    C1 = clse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmx,..DQ],TG<>[neck,..LG]),
-    C2 = clse([CndStrm,..DQ],CondProg,[CndStrm,CndStrmy,..DQ],RG),
+    C1 = clse([CndStrm,..DQ],CondProg,[(inMode,CndStrm),(outMode,CndStrmx),..const0(DQ,biMode)],TG<>[neck,..LG]),
+    C2 = clse([CndStrm,..DQ],CondProg,[(inMode,CndStrm),(outMode,CndStrmy),..const0(DQ,biMode)],RG),
     Px = P2[CondProg->rel(CondProg,none,[C1,C2])].
 
   dcgAhead:(canonNT,list[lyr],trOptions,list[pred],list[pred],term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
-  dcgAhead(Tst,Map,Opts,[call(none,HdProg,[Strm,..TQ]),..G],G,Strm,Q,merge(TQ,Q),P,Px,Rp,Rpx) :-
+  dcgAhead(Tst,Map,Opts,[call(none,HdProg,[(inMode,Strm),..const0(TQ,inMode)]),..G],G,Strm,Q,merge(TQ,Q),P,Px,Rp,Rpx) :-
     genVarbl("HedStrm",HedStrm),
     dcgBody(Tst,Map,Opts,TG,[],HedStrm,_,[],TQ,P,P0,Rp,Rpx),
     genNewName(Map,"Hed",length(TQ)+1,HdProg),
-    C1 = clse([HedStrm,..TQ],HdProg,[HedStrm,..TQ],TG),
+    C1 = clse([HedStrm,..TQ],HdProg,[(inMode,HedStrm),..const0(TQ,inMode)],TG),
     Px = P0[HdProg->rel(HdProg,none,[C1])].
 
   pushTerminals:(list[(location,canonTerm,canonTerm)],list[lyr],trOptions,list[pred],list[pred],term,term,list[term],list[term],map[term,rel],map[term,rel],report,report){}.
@@ -248,7 +248,7 @@ lo.comp.transform{
     joinStream(Strm,Strmx,G,Gx).
   pushTerminals([(Lc,SV,T),..More],Map,Opts,G,Gx,Strm,Strmx,Q,Qx,Ex,Exx,Rp,Rpx) :-
     genVarbl("NStrm",NStrm),
-    trGoal(callCond(Lc,SV,[mkCanon(Strm),T,mkCanon(NStrm)]),G,G0,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trGoal(callCond(Lc,SV,[(inMode,mkCanon(Strm)),(biMode,T),(outMode,mkCanon(NStrm))]),G,G0,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     pushTerminals(More,Map,Opts,G0,Gx,NStrm,Strmx,[NStrm,..Q0],Qx,Ex0,Exx,Rp0,Rpx).
 
   mkCanon:(term)=>canonTerm.
@@ -294,11 +294,11 @@ lo.comp.transform{
     Px = addCl(P0,SCl).
 
   collectShow:(canonOther,canonCond)=>canonCond.
-  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),[S]).
-  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),[S]),O).
+  collectShow(expShow(Lc,S),trueCond) => callCond(Lc,v(Lc,"_logmsg"),[(inMode,S)]).
+  collectShow(expShow(Lc,S),O) => conjCond(callCond(Lc,v(Lc,"_logmsg"),[(inMode,S)]),O).
 
   trLocation:(location) => canonTerm.
-  trLocation(Lc) => tpl([int(lineOf(Lc)),int(columnOf(Lc)),int(widthOf(Lc))]).
+  trLocation(Lc) => tpl(Lc,tplLbl(3),[int(lineOf(Lc)),int(columnOf(Lc)),int(widthOf(Lc))]).
 
   thetaInit:(list[lyr],list[pred],map[term,rel],map[term,rel]){}.
   thetaInit(Map,Inits,P,Px) :-
@@ -365,7 +365,7 @@ lo.comp.transform{
     classAccess(Map,Nm,P0,Px).
 
   enumAccess:(list[lyr],string,list[clse],list[clse]){}.
-  enumAccess(Map,Name,[eqn(Extra,prg(AccessName,length(Extra)+1),Extra,LamCons),..Rx],Rx) :-
+  enumAccess(Map,Name,[eqn(Extra,prg(AccessName,length(Extra)+1),const0(Extra,inMode),LamCons),..Rx],Rx) :-
     lookupVarName(Map,Name,Reslt),
     programAccess(Reslt,LclName,AccessName,_,0),
     extraVars(Map,Extra),
@@ -377,7 +377,7 @@ lo.comp.transform{
     lookupVarName(Map,Nm,Spec),
     makeLabelTerm(Spec,Access,LblTerm,LclName),
     extraVars(Map,Extra),                              -- extra variables coming from labels
-    Px = addCl(P,eqn([ThVr,LblVr]<>Extra,prg(layerName(Map),4),[enum(Nm),..Extra],LblTerm)).
+    Px = addCl(P,eqn([ThVr,LblVr]<>Extra,prg(layerName(Map),4),[(inMode,enum(Nm)),..const0(Extra,inMode)],LblTerm)).
 
   closureAccess:(list[lyr],string,map[term,rel],map[term,rel]){}.
   closureAccess(Map,Name,P,Px) :-
@@ -386,7 +386,7 @@ lo.comp.transform{
     genVarbl("This",ThVr),
     genVarbl("Lbl",LblVr),
     LamCons = cons(strct(Closure,2),[LblVr,ThVr]),
-    Px = addCl(P,eqn([LblVr,ThVr],prg(layerName(Map),3),[enum(Name),LblVr,ThVr],LamCons)).
+    Px = addCl(P,eqn([LblVr,ThVr],prg(layerName(Map),3),[(biMode,enum(Name)),(inMode,LblVr),(inMode,ThVr)],LamCons)).
 
   predClosureEntry:(list[lyr],option[tloc],string,string,integer,map[term,rel],map[term,rel]){}.
   predClosureEntry(Map,TLc,Prog,Closure,Arity,P,Px) :-
@@ -395,7 +395,7 @@ lo.comp.transform{
     Q = Args<>Extra,
     CallStrct = cons(trCons("_call",Arity),Args),
     (Extra=[] ? ClosureCons = enum(Closure) | ClosureCons = cons(strct(Closure,size(Extra)),Extra)),
-    Px = addCl(P,clse(Q,prg(Closure,3),[CallStrct,ClosureCons,anon],[call(TLc,prg(Prog,length(Q)),Q)])).
+    Px = addCl(P,clse(Q,prg(Closure,3),[(biMode,CallStrct),(inMode,ClosureCons),(inMode,anon)],[call(TLc,prg(Prog,length(Q)),const0(Q,biMode))])).
 
   funClosureEntry:(list[lyr],option[tloc],string,string,integer,map[term,rel],map[term,rel]){}.
   funClosureEntry(Map,TLc,Prog,Closure,Arity,P,Px) :-
@@ -404,13 +404,19 @@ lo.comp.transform{
     Q = Args<>Extra,
     CallStrct = cons(trCons("_call",Arity),Args),
     (Extra=[] ? ClosureCons = enum(Closure) | ClosureCons = cons(strct(Closure,size(Extra)),Extra)),
-    Px = addCl(P,eqn(Q,prg(Closure,3),[CallStrct,ClosureCons,anon],invoke(TLc,prg(Prog,length(Q)),Q))).
+    Px = addCl(P,eqn(Q,prg(Closure,3),[(biMode,CallStrct),(inMode,ClosureCons),(inMode,anon)],invoke(TLc,prg(Prog,length(Q)),const0(Q,inMode)))).
 
-  transformImplementation:(location,string,list[canonTerm],canonTerm,tipe,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  transformImplementation:(location,string,list[(typeMode,canonTerm)],canonTerm,tipe,list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   transformImplementation(Lc,ImplName,[],Body,Face,Map,Opts,P,Px,Rp,Rpx) :-
     transformClass(Lc,ImplName,[clRule(Lc,ImplName,[],Body,trueCond,Face)],Face,Map,Opts,P,Px,Rp,Rpx).
   transformImplementation(Lc,ImplName,Args,Body,Face,Map,Opts,P,Px,Rp,Rpx) :-
     transformClass(Lc,ImplName,[clRule(Lc,ImplName,Args,Body,trueCond,Face)],Face,Map,Opts,P,Px,Rp,Rpx).
+
+  trArgPtns:(list[(typeMode,canonTerm)],list[(typeMode,term)],list[(typeMode,term)],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  trArgPtns([],Args,Args,Q,Q,_,_,Ex,Ex,Rp,Rp).
+  trArgPtns([(M,P),..More],[(M,A),..Args],Ax,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    trPtn(P,A,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0)!,
+    trArgPtns(More,Args,Ax,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
 
   trPtns:(list[canonTerm],list[term],list[term],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trPtns([],Args,Args,Q,Q,_,_,Ex,Ex,Rp,Rp).
@@ -430,10 +436,10 @@ lo.comp.transform{
   trPtn(str(Ix),strng(Ix),Q,Q,_,_,Ex,Ex,Rp,Rp).
   trPtn(dot(Lc,Rc,Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trDotExp(Lc,Rc,enum(Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
-  trPtn(tpl(Ptns),mkTpl(P),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trPtn(tpl(_,Nm,Ptns),mkTpl(P),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trPtns(Ptns,P,[],Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trPtn(apply(Lc,v(_,Nm),A),Ptn,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trPtns(A,Args,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trArgPtns(A,Args,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trPtnCallOp(Nm,some(Lc::tloc),Args,Ptn,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trPtn(whre(P,C),guarded(Ptn,simplifyCond(conj(none,CC))),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trPtn(P,Ptn,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
@@ -450,16 +456,16 @@ lo.comp.transform{
     reportError("'\(Nm)' not defined",Lc,Rp,Rpx).
 
   implementVarPtn:(mapEntry,string,option[tloc],term,list[term],list[term],report,report){}.
-  implementVarPtn(localVar(Vn,_,ClVr,TVr),Nm,TLc,guarded(X,dfne(TLc,X,invoke(TLc,prg(Vn,2),[ClVr,TVr]))),Q,merge([X,ClVr,TVr],Q),Rp,Rp) :- genVarbl(Nm,X).  -- instance var
+  implementVarPtn(localVar(Vn,_,ClVr,TVr),Nm,TLc,guarded(X,dfne(TLc,X,invoke(TLc,prg(Vn,2),[(inMode,ClVr),(inMode,TVr)]))),Q,merge([X,ClVr,TVr],Q),Rp,Rp) :- genVarbl(Nm,X).  -- instance var
   implementVarPtn(moduleVar(_,Vn,_),Nm,TLc,guarded(X,dfne(TLc,X,invoke(TLc,prg(Vn,0),[]))),Q,[X,..Q],Rp,Rp) :- genVarbl(Nm,X). -- module variable
   implementVarPtn(labelArg(N,ClVr,TVr),_,_,N,Q,merge([N,ClVr,TVr],Q),Rp,Rp).            -- argument from label
   implementVarPtn(moduleClass(Enum,_,0),_,_,enum(Enum),Q,Q,Rp,Rp).
   implementVarPtn(localClass(Enum,_,0,LbVr,ThVr),_,_,cons(strct(Enum,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
   implementVarPtn(inherit(Nm,_,LbVr,ThVr),_,_,cons(strct(Nm,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
-  implementVarPtn(inheritField(Super,LblVr,ThVr),Nm,Lc,guarded(X,dfne(Lc,X,invoke(Lc,Super,[enum(Nm),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
+  implementVarPtn(inheritField(Super,LblVr,ThVr),Nm,Lc,guarded(X,dfne(Lc,X,invoke(Lc,Super,[(inMode,enum(Nm)),(inMode,LblVr),(inMode,ThVr)]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
   implementVarPtn(notInMap,Nm,_,varbl(Nm),Q,merge([varbl(Nm)],Q),Rp,Rp).                -- variable local to clause
 
-  trPtnCallOp:(string,option[tloc],list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  trPtnCallOp:(string,option[tloc],list[(typeMode,term)],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trPtnCallOp(Nm,TLc,Args,guarded(X,dfne(TLc,X,escvoke(TLc,Nm,Args))),Q,merge([X],Q),_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm,_),
     genVarbl("Xa",X).
@@ -468,23 +474,29 @@ lo.comp.transform{
     genVarbl("Xb",X),
     implementPtnCall(Reslt,Nm,TLc,X,Args,Ptn,Q,Qx,Rp,Rpx).
 
-  implementPtnCall:(mapEntry,string,option[tloc],term,list[term],term,list[term],list[term],report,report){}.
-  implementPtnCall(localFun(Fn,_,_,Ar,LblVr,ThVr),_,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,prg(Fn,size(Args)+2),Args<>[LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
+  implementPtnCall:(mapEntry,string,option[tloc],term,list[(typeMode,term)],term,list[term],list[term],report,report){}.
+  implementPtnCall(localFun(Fn,_,_,Ar,LbVr,ThVr),_,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,prg(Fn,size(Args)+2),Args<>[(inMode,LbVr),(inMode,ThVr)]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
   implementPtnCall(moduleFun(_,Fn,_,_,Ar),_,TLc,X,Args,guarded(X,dfne(TLc,X,invoke(TLc,prg(Fn,size(Args)),Args))),Q,merge([X],Q),Rp,Rp).
-  implementPtnCall(inheritField(Super,LblVr,ThVr),Nm,TLc,X,Args,
-    guarded(X,dfne(TLc,X,invoke(TLc,Super,[cons(trCons(Nm,length(Args)),Args),LblVr,ThVr]))),Q,merge([X,LblVr,ThVr],Q),Rp,Rp).
-  implementPtnCall(moduleClass(Mdl,_,_),_,_,_,Args,cons(strct(Mdl,size(Args)),Args),Q,Q,Rp,Rp).
+  implementPtnCall(inheritField(Super,LbVr,ThVr),Nm,TLc,X,Args,
+    guarded(X,dfne(TLc,X,invoke(TLc,Super,[(inMode,cons(trCons(Nm,length(Args)),project1(Args))),(inMode,LbVr),(inMode,ThVr)]))),Q,merge([X,LbVr,ThVr],Q),Rp,Rp).
+  implementPtnCall(moduleClass(Mdl,_,_),_,_,_,Args,cons(strct(Mdl,size(Args)),project1(Args)),Q,Q,Rp,Rp).
   implementPtnCall(localClass(Acc,_,_,LbVr,ThVr),_,_,_,Args,
-        cons(strct(Acc,size(Args)+2),Args<>[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
+        cons(strct(Acc,size(Args)+2),project1(Args)<>[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
   implementPtnCall(inherit(Nm,_,LbVr,ThVr),_,_,_,Args,
-        cons(strct(Nm,size(Args)),Args),Q,merge([LbVr,ThVr],Q),Rp,Rp).
-  implementPtnCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,Args),Q,Q,Rp,Rp).
+        cons(strct(Nm,size(Args)),project1(Args)),Q,merge([LbVr,ThVr],Q),Rp,Rp).
+  implementPtnCall(moduleImpl(_,Mdl),_,_,_,Args,cons(Mdl,project1(Args)),Q,Q,Rp,Rp).
 
   implementPkgRefPtn:(mapEntry,location,string,string,term,term,list[term],list[term],report,report){}.
   implementPkgRefPtn(moduleVar(_,Vn,_),Lc,_,_,Xi,guarded(Xi,dfne(none,Xi,invoke(some(Lc::tloc),prg(Vn,0),[]))),Q,[Xi,..Q],Rp,Rp).
   implementPkgRefPtn(moduleClass(Enum,_,0),_,_,_,_,enum(Enum),Q,Q,Rp,Rp).
   implementPkgRefPtn(_,Lc,Pkg,Rf,_,anon,Q,Q,Rp,Rpx) :-
     reportError("illegal access to \(Pkg)#\(Rf)",Lc,Rp,Rpx).
+
+  trArgExps:(list[(typeMode,canonTerm)],list[(typeMode,term)],list[(typeMode,term)],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  trArgExps([],Args,Args,Q,Q,_,_,Ex,Ex,Rp,Rp).
+  trArgExps([(M,P),..More],[(M,A),..Args],Extra,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+    trExp(P,A,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0)!,
+    trArgExps(More,Args,Extra,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
 
   trExps:(list[canonTerm],list[term],list[term],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trExps([],Args,Args,Q,Q,_,_,Ex,Ex,Rp,Rp).
@@ -502,23 +514,23 @@ lo.comp.transform{
   trExp(int(Ix),intgr(Ix),Q,Q,_,_,Ex,Ex,Rp,Rp).
   trExp(flt(Ix),flot(Ix),Q,Q,_,_,Ex,Ex,Rp,Rp).
   trExp(str(Ix),strng(Ix),Q,Q,_,_,Ex,Ex,Rp,Rp).
-  trExp(tpl(A),mkTpl(TA),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExp(tpl(_,_,A),mkTpl(TA),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExps(A,TA,[],Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(apply(Lc,Op,A),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trExps(A,Args,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trArgExps(A,Args,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trExpCallOp(Lc,Op,Args,Exp,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trExp(dot(Lc,Rec,Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trDotExp(Lc,Rec,enum(Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trExp(whre(E,C),simplifyGuard(guarded(Ce,simplifyCond(conj(none,Cx)))),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(E,Ce,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(C,Cx,[],Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  trExp(condExp(Lc,T,L,R),invoke(some(Lc::tloc),CondFn,LQ),Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExp(condExp(Lc,T,L,R),invoke(some(Lc::tloc),CondFn,const0(LQ,inMode)),Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(T,TG,[],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trExp(L,LRslt,Q0,Q1,Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trExp(R,RRslt,Q1,LQ,Map,Opts,Ex1,Ex2,Rp1,Rpx),
     genNewName(Map,"condExp",length(LQ),CondFn),
-    Cl1 = eqn(LQ,CondFn,LQ,simplifyGuard(guarded(LRslt,simplifyCond(conj(none,TG))))),
-    Cl2 = eqn(LQ,CondFn,LQ,RRslt),
+    Cl1 = eqn(LQ,CondFn,const0(LQ,inMode),simplifyGuard(guarded(LRslt,simplifyCond(conj(none,TG))))),
+    Cl2 = eqn(LQ,CondFn,const0(LQ,inMode),RRslt),
     Exx = Ex2[CondFn->rel(CondFn,some(Lc::tloc),[Cl1,Cl2])].
   trExp(lambda(Rl),Rslt,Q,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trLambda(Rl,Rslt,merge(allLabelArgs(Map,[]),Q),Map,Opts,Ex,Exx,Rp,Rpx).
@@ -536,7 +548,7 @@ lo.comp.transform{
     trExp(R,Rc,[Rec,..Q],Q0,Map,Opts,Ex,Exx,Rp,Rpx).
 
   implementDotExp:(mapEntry,canonTerm,option[tloc],term,term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
-  implementDotExp(inherit(_,Super,ClVr,ThVr),_,TLc,C,invoke(TLc,C,[ClVr,ThVr]),Q,merge([ClVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+  implementDotExp(inherit(_,Super,ClVr,ThVr),_,TLc,C,invoke(TLc,C,[(inMode,ClVr),(inMode,ThVr)]),Q,merge([ClVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementDotExp(_,v(Lc,Nm),TLc,C,ovoke(TLc,C,Rc,Rc),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Nm),Rc,Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx).
   implementDotExp(_,R,TLc,C,guarded(ovoke(TLc,C,Rec,Rec),unfy(TLc,Rc,Rec)),Q,Q0,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -552,10 +564,10 @@ lo.comp.transform{
     reportError("'\(Nm)' not defined",Lc,Rp,Rpx).
 
   implementVarExp:(mapEntry,location,string,term,list[term],list[term],report,report){}.
-  implementVarExp(localVar(Vn,_,LblVr,ThVr),Lc,Nm,invoke(some(Lc::tloc),prg(Vn,2),[LblVr,ThVr]),Q,merge([LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
+  implementVarExp(localVar(Vn,_,LblVr,ThVr),Lc,Nm,invoke(some(Lc::tloc),prg(Vn,2),[(inMode,LblVr),(inMode,ThVr)]),Q,merge([LblVr,ThVr],Q),Rp,Rp) :- genVarbl(Nm,X).
   implementVarExp(moduleVar(_,V,_),Lc,Nm,invoke(some(Lc::tloc),prg(V,0),[]),Q,Q,Rp,Rp) :- genVarbl(Nm,X).
   implementVarExp(labelArg(N,LblVr,ThVar),_,_,N,Q,merge([N,LblVr,ThVar],Q),Rp,Rp).
-  implementVarExp(inheritField(Super,LblVr,ThVr),Lc,Nm,invoke(some(Lc::tloc),Super,[enum(Nm),LbVr,ThVr]),Q,merge([LblVr,ThVr],Q),Rp,Rp).
+  implementVarExp(inheritField(Super,LblVr,ThVr),Lc,Nm,invoke(some(Lc::tloc),Super,[(inMode,enum(Nm)),(inMode,LbVr),(inMode,ThVr)]),Q,merge([LblVr,ThVr],Q),Rp,Rp).
   implementVarExp(moduleClass(Enum,_,0),_,_,enum(Enum),Q,Q,Rp,Rp).
   implementVarExp(moduleImpl(_,enum(Enum)),_,_,enum(Enum),Q,Q,Rp,Rp).
   implementVarExp(localClass(Enum,_,_,LbVr,ThVr),_,_,cons(strct(Enum,2),[LbVr,ThVr]),Q,merge([LbVr,ThVr],Q),Rp,Rp).
@@ -567,7 +579,7 @@ lo.comp.transform{
   implementVarExp(_,Lc,Nm,varbl(Nm),Q,Q,Rp,Rpx) :-
     reportError("cannot handle \(Nm) in expression",Lc,Rp,Rpx).
 
-  trExpCallOp:(location,canonTerm,list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  trExpCallOp:(location,canonTerm,list[(typeMode,term)],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trExpCallOp(Lc,v(_,Nm),Args,escvoke(some(Lc::tloc),Nm,Args),Q,Q,_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm,_).
   trExpCallOp(Lc,v(_,Nm),Args,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -575,20 +587,20 @@ lo.comp.transform{
     implementFunCall(Reslt,Lc,Nm,Args,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   trExpCallOp(Lc,T,Args,ovoke(some(Lc::tloc),C,Cl,Cl),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(T,Cl,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx),
-    C = cons(trCons("_call",length(Args)),Args).
+    C = cons(trCons("_call",length(Args)),project1(Args)).
 
-  implementFunCall:(mapEntry,location,string,list[term],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
-  implementFunCall(localFun(Fn,_,_,Ar,LblVr,ThVr),Lc,_,Args,invoke(some(Lc::tloc),prg(Fn,size(Args)+2),Args<>[LblVr,ThVr]),Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+  implementFunCall:(mapEntry,location,string,list[(typeMode,term)],term,list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  implementFunCall(localFun(Fn,_,_,Ar,LblVr,ThVr),Lc,_,Args,invoke(some(Lc::tloc),prg(Fn,size(Args)+2),Args<>[(inMode,LblVr),(inMode,ThVr)]),Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementFunCall(moduleFun(_,Fn,_,_,Ar),Lc,_,Args,invoke(some(Lc::tloc),prg(Fn,size(Args)),Args),Q,Q,_,_,Ex,Ex,Rp,Rp).
 /*
   implementFunCall(inheritField(Super,LblVr,ThVr),Lc,Nm,Args,invoke(some(Lc::tloc),Super,[cons(trCons(Nm,length(Args)),Args),LblVr,ThVr]),Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
 */
-  implementFunCall(moduleClass(Mdl,_,_),_,_,Args,cons(strct(Mdl,size(Args)),Args),Q,Q,_,_,Ex,Ex,Rp,Rp).
-  implementFunCall(localClass(Mdl,_,_,LbVr,ThVr),_,_,Args,cons(strct(Mdl,size(Args)+2),Args<>[LbVr,ThVr]),Q,merge([Lbvr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+  implementFunCall(moduleClass(Mdl,_,_),_,_,Args,cons(strct(Mdl,size(Args)),project1(Args)),Q,Q,_,_,Ex,Ex,Rp,Rp).
+  implementFunCall(localClass(Mdl,_,_,LbVr,ThVr),_,_,Args,cons(strct(Mdl,size(Args)+2),project1(Args)<>[LbVr,ThVr]),Q,merge([Lbvr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementFunCall(inherit(Mdl,_,LbVr,ThVr),_,_,Args,
-        cons(strct(Mdl,size(Args)),Args),Q,merge([LbVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+        cons(strct(Mdl,size(Args)),project1(Args)),Q,merge([LbVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementFunCall(moduleImpl(_,Mdl),_,_,[],Mdl,Q,Q,_,_,Ex,Ex,Rp,Rp).
-  implementFunCall(moduleImpl(_,Mdl),_,_,Args,cons(Mdl,Args),Q,Q,_,_,Ex,Ex,Rp,Rp).
+  implementFunCall(moduleImpl(_,Mdl),_,_,Args,cons(Mdl,project1(Args)),Q,Q,_,_,Ex,Ex,Rp,Rp).
 
   implementPkgRefExp:(mapEntry,location,string,string,term,list[term],list[term],report,report){}.
   implementPkgRefExp(moduleVar(_,Vn,_),Lc,_,_,invoke(some(Lc::tloc),prg(Vn,0),[]),Q,Q,Rp,Rp).
@@ -601,32 +613,32 @@ lo.comp.transform{
   trLambda(equation(Lc,Nm,A,Exp,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(equation(Lc,Nm,A,Exp,Cond),Q,[]),
     genNewName(Map,Nm,3,prg(Lam,_)),
-    trPtns(A,Args,[],[],Q1,Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
+    trArgPtns(A,Args,[],[],Q1,Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
     trGoal(Cond,PreGx,[],Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rp1),       -- condition goals
     trExp(Exp,Rep,Q2,Q3,Map,Opts,Ex1,Ex2,Rp1,Rpx),      -- replacement expression
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    Code = [eqn(merge(FreeVars,Q3),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],simplifyGuard(guarded(Rep,simplifyCond(conj(none,PreGx)))))],
+    Code = [eqn(merge(FreeVars,Q3),LmPrg,[(inMode,cons(trCons("_call",size(Args)),project1(Args))),(inMode,Closure),(inMode,anon)],simplifyGuard(guarded(Rep,simplifyCond(conj(none,PreGx)))))],
     Exx = Ex2[LmPrg->rel(LmPrg,none,Code)].
   trLambda(clause(Lc,Nm,A,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(clause(Lc,Nm,A,Cond),Q,[]),
     genNewName(Map,Nm,3,prg(Lam,_)),
-    trPtns(A,Args,[],[],Q1,Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
+    trArgPtns(A,Args,[],[],Q1,Map,Opts,Ex,Ex0,Rp,Rp0), -- head of lambda
     trGoal(Cond,Goals,[],Q1,Q2,Map,Opts,Ex0,Ex1,Rp0,Rpx),       -- condition goals
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    Exx = Ex1[LmPrg->rel(LmPrg,none,[clse(merge(FreeVars,Q2),LmPrg,[cons(trCons("_call",size(Args)),Args),Closure,anon],Goals)])].
+    Exx = Ex1[LmPrg->rel(LmPrg,none,[clse(merge(FreeVars,Q2),LmPrg,[(biMode,cons(trCons("_call",size(Args)),project1(Args))),(inMode,Closure),(inMode,anon)],Goals)])].
   trLambda(grRule(Lc,Nm,A,grTerms(PB),Body),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(grRule(Lc,Nm,A,grTerms(PB),Body),Q,[]),
     genNewName(Map,Nm,3,prg(Lam,_)),
-    trPtns(A,Args,[],[],Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0),  -- head args
+    trArgPtns(A,Args,[],[],Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0),  -- head args
     genVarbl("StIn",StIn),
     dcgBody(Body,Map,Opts,Goals,PostG,StIn,StOut,[StIn,..Q1],Q2,Ex0,Ex1,Rp0,Rp1), -- grammar body
     pushTerminals(PB,Map,Opts,PostG,[],StOut,StX,Q2,Q4,Ex1,Ex2,Rp1,Rpx),     -- push back
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    CallStrct = cons(trCons("_call",size(Args)+2),[StIn,StX,..Args]),
-    Exx = Ex2[LmPrg->rel(LmPrg,none,[clse(merge(FreeVars,Q4),LmPrg,[CallStrct,Closure,anon],Goals)])].
+    CallStrct = cons(trCons("_call",size(Args)+2),[StIn,StX,..project1(Args)]),
+    Exx = Ex2[LmPrg->rel(LmPrg,none,[clse(merge(FreeVars,Q4),LmPrg,[(biMode,CallStrct),(inMode,Closure),(inMode,anon)],Goals)])].
 
   mkClosure:(string,list[term])=>term.
   mkClosure(Lam,[]) => enum(Lam).
@@ -638,42 +650,43 @@ lo.comp.transform{
   trGoal(conjCond(L,R),Goals,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(L,Goals,G0,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(R,G0,Gx,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  trGoal(disjCond(L,R),[call(none,DisjPr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trGoal(disjCond(L,R),[call(none,DisjPr,const0(LQ,biMode)),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(L,LG,[],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(R,RG,[],Q0,LQ,Map,Opts,Ex0,Ex1,Rp0,Rpx),
     genNewName(Map,"or",length(LQ),DisjPr),
-    Cl1 = clse(LQ,DisjPr,LQ,LG),
-    Cl2 = clse(LQ,DisjPr,LQ,RG),
+    Cl1 = clse(LQ,DisjPr,const0(LQ,biMode),LG),
+    Cl2 = clse(LQ,DisjPr,const0(LQ,biMode),RG),
     Exx = Ex1[DisjPr->rel(DisjPr,none,[Cl1,Cl2])].
-  trGoal(condCond(T,L,R),[call(none,CondPr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trGoal(condCond(T,L,R),[call(none,CondPr,const0(LQ,biMode)),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(T,TG,[],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(L,LG,[],Q0,Q1,Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trGoal(R,RG,[],Q1,LQ,Map,Opts,Ex1,Ex2,Rp1,Rpx),
     genNewName(Map,"cond",length(LQ),CondPr),
-    Cl1 = clse(LQ,CondPr,LQ,TG<>[neck,..LG]),
-    Cl2 = clse(LQ,CondPr,LQ,RG),
+    Cl1 = clse(LQ,CondPr,const0(LQ,biMode),TG<>[neck,..LG]),
+    Cl2 = clse(LQ,CondPr,const0(LQ,biMode),RG),
     Exx = Ex2[CondPr->rel(CondPr,none,[Cl1,Cl2])].
-  trGoal(oneCond(T),[call(none,OnePr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trGoal(oneCond(T),[call(none,OnePr,const0(LQ,biMode)),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(T,TG,[neck],[],LQ,Map,Opts,Ex,Ex0,Rp,Rpx),
     genNewName(Map,"one",length(LQ),OnePr),
-    Cl1 = clse(LQ,OnePr,LQ,TG),
+    Cl1 = clse(LQ,OnePr,const0(LQ,biMode),TG),
     Exx = Ex0[OnePr->rel(OnePr,none,[Cl1])].
-  trGoal(negCond(T),[call(none,NegPr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trGoal(negCond(T),[call(none,NegPr,const0(LQ,inMode)),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
     trGoal(T,TG,[],[],LQ,Map,Opts,Ex,Ex0,Rp,Rpx),
     genNewName(Map,"neg",length(LQ),NegPr),
-    Cl1 = clse(LQ,NegPr,LQ,TG<>[neck,fail]),
-    Cl2 = clse(LQ,NegPr,LQ,[]),
+    Cl1 = clse(LQ,NegPr,const0(LQ,inMode),TG<>[neck,fail]),
+    Cl2 = clse(LQ,NegPr,const0(LQ,inMode),[]),
     Exx = Ex0[NegPr->rel(NegPr,none,[Cl1,Cl2])].
-  trGoal(forallCond(L,R),[call(none,APr,LQ),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
-    trGoal(L,LG,[call(none,BPr,LQ)],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+  trGoal(forallCond(L,R),[call(none,APr,AArgs),..Gx],Gx,Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
+    trGoal(L,LG,[call(none,BPr,AArgs)],[],Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(R,RG,[],Q0,LQ,Map,Opts,Ex0,Ex1,Rp0,Rpx),
     QAr = length(LQ),
+    AArgs = const0(LQ,inMode),
     genNewName(Map,"forallA",QAr,APr),
     genNewName(Map,"forallB",QAr,BPr),
-    ACl1 = clse(LQ,APr,LQ,LG<>[neck,fail]),
-    ACl2 = clse(LQ,APr,LQ,[]),
-    BCl1 = clse(LQ,BPr,LQ,RG<>[neck,fail]),
-    BCl2 = clse(LQ,BPr,LQ,[]),
+    ACl1 = clse(LQ,APr,AArgs,LG<>[neck,fail]),
+    ACl2 = clse(LQ,APr,AArgs,[]),
+    BCl1 = clse(LQ,BPr,AArgs,RG<>[neck,fail]),
+    BCl2 = clse(LQ,BPr,AArgs,[]),
     Ex2 = Ex1[APr->rel(APr,none,[ACl1,ACl2])],
     Exx = Ex2[BPr->rel(BPr,none,[BCl1,BCl2])].
   trGoal(unifyCond(Lc,L,R),G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -688,32 +701,32 @@ lo.comp.transform{
     joinStream(Out,StOut,G3,Gx).
   trGoal(callCond(Lc,Pred,Args),G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lineDebug(Lc,G,G3,Opts),
-    trExps(Args,AG,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trArgExps(Args,AG,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoalCall(Pred,AG,G3,Gx,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trGoal(isTrue(E),[unfy(none,Exp,enum("lo.core#true")),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(E,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
 
-  trGoalCall:(canonTerm,list[term],list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  trGoalCall:(canonTerm,list[(typeMode,term)],list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
   trGoalCall(v(Lc,Nm),Args,[ecall(some(Lc::tloc),Nm,Args),..Tail],Tail,Q,Q,_,_,Ex,Ex,Rp,Rp) :-
     isEscape(Nm,_).
   trGoalCall(v(Lc,Nm),Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     lookupRelName(Map,Nm,RSpec),
     implementGoalCall(RSpec,Lc,Nm,Args,G,Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
-  trGoalCall(Pred,Args,[ocall(none,cons(trCons("_call",size(Args)),Args),PrdClos,PrdClos),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trGoalCall(Pred,Args,[ocall(none,cons(trCons("_call",size(Args)),project1(Args)),PrdClos,PrdClos),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(Pred,PrdClos,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
 
-  implementGoalCall:(mapEntry,location,string,list[term],list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
-  implementGoalCall(localRel(Fn,_,_,Ar,LblVr,ThVr),Lc,_,Args,[call(some(Lc::tloc),prg(Fn,size(Args)+2),Args<>[LblVr,ThVr]),..Tail],Tail,Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+  implementGoalCall:(mapEntry,location,string,list[(typeMode,term)],list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
+  implementGoalCall(localRel(Fn,_,_,Ar,LblVr,ThVr),Lc,_,Args,[call(some(Lc::tloc),prg(Fn,size(Args)+2),Args<>[(inMode,LblVr),(inMode,ThVr)]),..Tail],Tail,Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
   implementGoalCall(moduleRel(_,Fn,_,_,Ar),Lc,_,Args,[call(some(Lc::tloc),prg(Fn,size(Args)),Args),..Tail],Tail,Q,Q,_,_,Ex,Ex,Rp,Rp).
   implementGoalCall(inheritField(Super,LblVr,ThVr),Lc,Pred,Args,
-        [call(some(Lc::tloc),Super,[cons(trCons(Pred,length(Args)),Args),LblVr,ThVr]),..Tail],Tail,Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
-  implementGoalCall(notInMap,Lc,Pred,Args,[ocall(some(Lc::tloc),cons(trCons("_call",size(Args)),Args),PrdClos,PrdClos),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+        [call(some(Lc::tloc),Super,[(biMode,cons(trCons(Pred,length(Args)),project1(Args))),(inMode,LblVr),(inMode,ThVr)]),..Tail],Tail,Q,merge([LblVr,ThVr],Q),_,_,Ex,Ex,Rp,Rp).
+  implementGoalCall(notInMap,Lc,Pred,Args,[ocall(some(Lc::tloc),cons(trCons("_call",size(Args)),project1(Args)),PrdClos,PrdClos),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(v(Lc,Pred),PrdClos,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
   implementGoalCall(_,Lc,Pred,_,G,G,Q,Q,_,_,Ex,Ex,Rp,Rpx) :-
     reportError("cannot handle source for \(Pred)",Lc,Rp,Rpx).
 
   trGoalDot:(location,canonTerm,term,list[pred],list[pred],list[term],list[term],list[lyr],trOptions,map[term,rel],map[term,rel],report,report){}.
-  trGoalDot(_,v(Lc,Nm),C,[call(some(Lc::tloc),Super,[C,LbVr,ThVr]),..Gx],Gx,Q,merge([LbVr,ThVr],Q),Map,_,Ex,Ex,Rp,Rp) :-
+  trGoalDot(_,v(Lc,Nm),C,[call(some(Lc::tloc),Super,[(biMode,C),(inMode,LbVr),(inMode,ThVr)]),..Gx],Gx,Q,merge([LbVr,ThVr],Q),Map,_,Ex,Ex,Rp,Rp) :-
     lookupVarName(Map,Nm,inherit(_,Super,LbVr,ThVr)).
   trGoalDot(Lc,Rec,C,[ocall(some(Lc::tloc),C,NR,NR),..Gx],Gx,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(Rec,NR,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
@@ -744,9 +757,9 @@ lo.comp.transform{
   makeClassMtdMap([clRule(Lc,_,Hd,theta(Stmts,_),_,_),..Rules],LclName,LbVr,ThVr,[unfy(some(Lc::tloc),LbVr,LblTerm)],List,Lx,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
     collectMtds(Stmts,LclName,LbVr,ThVr,List,L0,Fields),
     extraVars(Map,Extra),
-    trPtns(Hd,Args,Extra,[],Vs,Map,Opts,Ex,Ex0,Rp,Rp0),
+    trArgPtns(Hd,Args,const0(Extra,inMode),[],Vs,Map,Opts,Ex,Ex0,Rp,Rp0),
     collectLabelVars(Vs,LbVr,ThVr,L0,L1),
-    makeLblTerm(LclName,Args,LblTerm),
+    makeLblTerm(LclName,project1(Args),LblTerm),
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,_,L1,Lx,Fields,Map,Opts,Ex0,Exx,Rp0,Rpx).
   makeClassMtdMap([clRule(Lc,_,_,_,_,_),..Rules],LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx) :-
     makeClassMtdMap(Rules,LclName,LbVr,ThVr,LblGl,List,L0,Fields,Map,Opts,Ex,Exx,Rp,Rpx).
@@ -764,11 +777,11 @@ lo.comp.transform{
     pickAllFieldsFromFace(FaceTp,InhFields),
     extraVars(Map,Extra),
     genVarbl("CV",CV),
-    trPtns(Ags,Args,Extra,Extra,Q0,Map,Opts,P,Pr0,Rp,Rp0),
+    trArgPtns(Ags,Args,const0(Extra,inMode),Extra,Q0,Map,Opts,P,Pr0,Rp,Rp0),
     trExp(R,Repl,Q0,Q1,Map,Opts,Pr0,Pr1,RP0,Rp1),
-    makeLblTerm(LclName,Args,Lbl),
+    makeLblTerm(LclName,project1(Args),Lbl),
     genNewName(Map,"^",3,Super),
-    Pr2 = addCl(Pr1,eqn(merge(Q1,[CV,ThVr]),Super,[CV,Lbl,ThVr],ovoke(some(Lc::tloc),CV,Repl,ThVr))),
+    Pr2 = addCl(Pr1,eqn(merge(Q1,[CV,ThVr]),Super,[(biMode,CV),(inMode,Lbl),(inMode,ThVr)],ovoke(some(Lc::tloc),CV,Repl,ThVr))),
     makeInheritFields(InhFields,LclName,some(Lc::tloc),Super,Fields,Map,LbVr,ThVr,Pr2,Pr3,List,L1),
     makeInheritanceMap(Defs,LclName,LbVr,ThVr,Map,Opts,L1,Lx,Fields,Pr3,Prx,Rp1,Rpx).
 
@@ -788,8 +801,7 @@ lo.comp.transform{
     genVarbl("Clos",ClV),
     genVarbl("This",ThVr),
     genVarbl("Lbl",LbVr),
-    Con = cons(trCons(Name,1),[ClV]),
-    Px =addCl(P,eqn(Args<>[LblVr,ThVr],prg(Prefix,3),[enum(Name),LbVr,ThVr],invoke(TLc,Super,[enum(Name),LbVr,ThVr]))).
+    Px =addCl(P,eqn([ClV,LblVr,ThVr],prg(Prefix,3),[(biMode,enum(Name)),(inMode,LbVr),(inMode,ThVr)],invoke(TLc,Super,[(biMode,enum(Name)),(inMode,LbVr),(inMode,ThVr)]))).
 
   collectMtds:(list[canonDef],string,term,term,list[(string,mapEntry)],list[(string,mapEntry)],list[(string,tipe)]){}.
   collectMtds([],_,_,_,List,List,_).

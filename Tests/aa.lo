@@ -29,9 +29,7 @@ test.aa{
     one = 1.
   }
 
-  fact:(integer)=>integer.
+  public fact:(integer)=>integer.
   fact(zero) => one.
   fact(N) => N*fact(N-one).
-
-  assert fact(6) = 720.
 }

@@ -7,49 +7,53 @@ lo.comp.freevars{
   import lo.comp.types.
 
   public freeVarsInRule:(canonRule,list[term],list[term]) => list[term].
-  freeVarsInRule(equation(_,_,A,Exp,Cond),Q,F) => freeVarsInGoal(Cond,Q,freeVars(Exp,Q,freeVarsList(A,Q,F))).
-  freeVarsInRule(clause(_,_,A,Body),Q,F) => freeVarsInGoal(Body,Q,freeVarsList(A,Q,F)).
-  freeVarsInRule(grRule(_,_,A,PB,Body),Q,F) => freeVarsInNT(PB,Q,freeVarsInNT(Body,Q,freeVarsList(A,Q,F))).
+  freeVarsInRule(equation(_,_,A,Exp,Cond),Q,F) => freeVarsInGoal(Cond,Q,freeVarsInTerm(Exp,Q,freeVarsInArgs(A,Q,F))).
+  freeVarsInRule(clause(_,_,A,Body),Q,F) => freeVarsInGoal(Body,Q,freeVarsInArgs(A,Q,F)).
+  freeVarsInRule(grRule(_,_,A,PB,Body),Q,F) => freeVarsInNT(PB,Q,freeVarsInNT(Body,Q,freeVarsInArgs(A,Q,F))).
 
   freeVarsInRules:(list[canonRule],list[term],list[term]) => list[term].
   freeVarsInRules([],_,FV) => FV.
   freeVarsInRules([Rl,..L],Q,F) => freeVarsInRules(L,Q,freeVarsInRule(Rl,Q,F)).
 
+  freeVarsInArgs:(list[(typeMode,canonTerm)],list[term],list[term]) => list[term].
+  freeVarsInArgs([],_,FV) => FV.
+  freeVarsInArgs([(_,T),..L],Q,F) => freeVarsInArgs(L,Q,freeVarsInTerm(T,Q,F)).
+
   freeVarsList:(list[canonTerm],list[term],list[term]) => list[term].
   freeVarsList([],_,FV) => FV.
-  freeVarsList([T,..L],Q,F) => freeVarsList(L,Q,freeVars(T,Q,F)).
+  freeVarsList([T,..L],Q,F) => freeVarsList(L,Q,freeVarsInTerm(T,Q,F)).
 
-  freeVars:(canonTerm,list[term],list[term]) => list[term].
-  freeVars(v(_,Lb),Q,F) => [varbl(Lb),..F] :- varbl(Lb) in Q.
-  freeVars(v(_,_),_,F) => F.
-  freeVars(int(_),_,F) => F.
-  freeVars(flt(_),_,F) => F.
-  freeVars(str(_),_,F) => F.
-  freeVars(tpl(Els),Q,F) => freeVarsList(Els,Q,F).
-  freeVars(apply(_,Op,A),Q,F) =>freeVars(Op,Q,freeVarsList(A,Q,F)).
-  freeVars(dot(_,Rc,_),Q,F) =>freeVars(Rc,Q,F).
-  freeVars(whre(T,C),Q,F) => freeVars(T,Q,freeVarsInGoal(C,Q,F)).
-  freeVars(condExp(_,C,T,E),Q,F) => freeVars(T,Q,freeVars(E,Q,freeVarsInGoal(C,Q,F))).
-  freeVars(lambda(Rl),Q,F) => freeVarsInRule(Rl,Q,F).
-  freeVars(theta(Defs,_),Q,F) => freeVarsInDefs(Defs,filterDefs(Defs,Q),F).
+  public freeVarsInTerm:(canonTerm,list[term],list[term]) => list[term].
+  freeVarsInTerm(v(_,Lb),Q,F) => [varbl(Lb),..F] :- varbl(Lb) in Q.
+  freeVarsInTerm(v(_,_),_,F) => F.
+  freeVarsInTerm(int(_),_,F) => F.
+  freeVarsInTerm(flt(_),_,F) => F.
+  freeVarsInTerm(str(_),_,F) => F.
+  freeVarsInTerm(tpl(_,_,Els),Q,F) => freeVarsList(Els,Q,F).
+  freeVarsInTerm(apply(_,Op,A),Q,F) =>freeVarsInTerm(Op,Q,freeVarsInArgs(A,Q,F)).
+  freeVarsInTerm(dot(_,Rc,_),Q,F) =>freeVarsInTerm(Rc,Q,F).
+  freeVarsInTerm(whre(T,C),Q,F) => freeVarsInTerm(T,Q,freeVarsInGoal(C,Q,F)).
+  freeVarsInTerm(condExp(_,C,T,E),Q,F) => freeVarsInTerm(T,Q,freeVarsInTerm(E,Q,freeVarsInGoal(C,Q,F))).
+  freeVarsInTerm(lambda(Rl),Q,F) => freeVarsInRule(Rl,Q,F).
+  freeVarsInTerm(theta(Defs,_),Q,F) => freeVarsInDefs(Defs,filterDefs(Defs,Q),F).
 
-  freeVarsInGoal:(canonCond,list[term],list[term]) => list[term].
+  public freeVarsInGoal:(canonCond,list[term],list[term]) => list[term].
   freeVarsInGoal(trueCond,_,F) => F.
   freeVarsInGoal(falseCond,_,F) => F.
   freeVarsInGoal(conjCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
   freeVarsInGoal(disjCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
   freeVarsInGoal(forallCond(L,R),Q,F) => freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F)).
   freeVarsInGoal(condCond(T,L,R),Q,F) => freeVarsInGoal(T,Q,freeVarsInGoal(L,Q,freeVarsInGoal(R,Q,F))).
-  freeVarsInGoal(unifyCond(_,L,R),Q,F) => freeVars(L,Q,freeVars(R,Q,F)).
+  freeVarsInGoal(unifyCond(_,L,R),Q,F) => freeVarsInTerm(L,Q,freeVarsInTerm(R,Q,F)).
   freeVarsInGoal(oneCond(L),Q,F) =>freeVarsInGoal(L,Q,F).
   freeVarsInGoal(negCond(L),Q,F) =>freeVarsInGoal(L,Q,F).
-  freeVarsInGoal(callCond(_,Op,A),Q,F) =>freeVars(Op,Q,freeVarsList(A,Q,F)).
-  freeVarsInGoal(isTrue(A),Q,F) => freeVars(A,Q,F).
-  freeVarsInGoal(phraseCond(_,NT,L,R),Q,F) => freeVarsInNT(NT,Q,freeVars(L,Q,freeVars(R,Q,F))).
+  freeVarsInGoal(callCond(_,Op,A),Q,F) =>freeVarsInTerm(Op,Q,freeVarsInArgs(A,Q,F)).
+  freeVarsInGoal(isTrue(A),Q,F) => freeVarsInTerm(A,Q,F).
+  freeVarsInGoal(phraseCond(_,NT,L,R),Q,F) => freeVarsInNT(NT,Q,freeVarsInTerm(L,Q,freeVarsInTerm(R,Q,F))).
 
   freeVarsInNT:(canonNT,list[term],list[term]) => list[term].
   freeVarsInNT(grTerms(Terms),Q,F) => freeVarsInTerminals(Terms,Q,F).
-  freeVarsInNT(grCall(_,Op,A),Q,F) =>freeVars(Op,Q,freeVarsList(A,Q,F)).
+  freeVarsInNT(grCall(_,Op,A),Q,F) =>freeVarsInTerm(Op,Q,freeVarsInArgs(A,Q,F)).
   freeVarsInNT(grTest(C),Q,F) => freeVarsInGoal(C,Q,F).
   freeVarsInNT(grOne(C),Q,F) => freeVarsInNT(C,Q,F).
   freeVarsInNT(grNeg(C),Q,F) => freeVarsInNT(C,Q,F).
@@ -60,7 +64,7 @@ lo.comp.freevars{
 
   freeVarsInTerminals:(list[(location,canonTerm,canonTerm)],list[term],list[term]) => list[term].
   freeVarsInTerminals([],_,F) => F.
-  freeVarsInTerminals([(_,_,T),..L],Q,F) => freeVarsInTerminals(L,Q,freeVars(T,Q,F)).
+  freeVarsInTerminals([(_,_,T),..L],Q,F) => freeVarsInTerminals(L,Q,freeVarsInTerm(T,Q,F)).
 
   freeVarsInDefs:(list[canonDef],list[term],list[term]) => list[term].
   freeVarsInDefs(Defs,Q,F) => findVarsInDefs(Defs,filterDefs(Defs,Q),F).
@@ -86,12 +90,12 @@ lo.comp.freevars{
   freeVarsInDef(relDef(_,_,_,_,Rls),Q,F) => freeVarsInRules(Rls,Q,F).
   freeVarsInDef(grammDef(_,_,_,_,Rls),Q,F) => freeVarsInRules(Rls,Q,F).
   freeVarsInDef(classDef(_,_,_,_,Rls,_),Q,F) => freeVarsInRules(Rls,Q,F).
-  freeVarsInDef(varDef(_,_,_,_,L,C),Q,F) => freeVars(L,Q,freeVarsInGoal(C,Q,F)).
+  freeVarsInDef(varDef(_,_,_,_,L,C),Q,F) => freeVarsInTerm(L,Q,freeVarsInGoal(C,Q,F)).
   freeVarsInDef(otherDef(_,Ot),Q,F) => freeVarsInOther(Ot,Q,F).
-  freeVarsInDef(implDef(_,_,_,_,_,L,R,_),Q,F) => freeVars(R,Q,freeVarsList(L,Q,F)).
+  freeVarsInDef(implDef(_,_,_,_,_,L,R,_),Q,F) => freeVarsInTerm(R,Q,freeVarsList(L,Q,F)).
   freeVarsInDef(_,_,F) => F.
 
   freeVarsInOther:(canonOther,list[term],list[term]) => list[term].
   freeVarsInOther(integrity(_,C),Q,F) => freeVarsInGoal(C,Q,F).
-  freeVarsInOther(expShow(_,E),Q,F) => freeVars(E,Q,F).
+  freeVarsInOther(expShow(_,E),Q,F) => freeVarsInTerm(E,Q,F).
 }

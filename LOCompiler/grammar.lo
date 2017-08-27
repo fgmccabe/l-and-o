@@ -41,7 +41,15 @@ lo.comp.grammar{
 
   termRight:(integer,ast,ast,integer,tokMark,tokMark,report,report) --> list[token].
   termRight(Pr,Left,Term,LeftPr,_,Mark,Rp,Rpx) -->
-    legalInfixOp(Op,Pr,LeftPr,InfPr,RightPr),
+    [tok(idTok(Op),_)],
+    { infixOp(Op,LPr,InfPr,RightPr),
+      postfixOp(Op,PostLPr,PostPr),
+      PostPr =< Pr,
+      PostLPr >= LeftPr,
+      InfPr =< Pr,
+      LPr >= LeftPr
+    },
+    followsInfix(RightPr)+,
     term(RightPr,Right,LMark,Rp,Rp0),
     M = binary(Left.loc.merge(Right.loc),Op,Left,Right),
     termRight(Pr,M,Term,InfPr,LMark,Mark,Rp0,Rpx).
@@ -50,18 +58,20 @@ lo.comp.grammar{
     { postfixOp(Op,LPr,PostPr),
         PostPr =< Pr,
         LPr >= LeftPr},
+    \+followsInfix(PostPr),
     M = unary(Left.loc.merge(Lc),Op,Left),
     termRight(Pr,M,Term,PostPr,otherMark,Mark,Rp,Rpx).
+  termRight(Pr,Left,Term,LeftPr,_,Mark,Rp,Rpx) -->
+    [tok(idTok(Op),_)],
+    { infixOp(Op,LPr,InfPr,RightPr),
+      InfPr =< Pr,
+      LPr >= LeftPr
+    },
+    followsInfix(RightPr)+,
+    term(RightPr,Right,LMark,Rp,Rp0),
+    M = binary(Left.loc.merge(Right.loc),Op,Left,Right),
+    termRight(Pr,M,Term,InfPr,LMark,Mark,Rp0,Rpx).
   termRight(_,Term,Term,_,Mark,Mark,Rp,Rp) --> [].
-
-  private
-  legalInfixOp:(string,integer,integer,integer,integer) --> list[token].
-  legalInfixOp(Op,Pr,LeftPr,OPr,RPr) -->
-      [tok(idTok(Op),_)],
-      { infixOp(Op,LPr,OPr,RPr),
-        OPr =< Pr,
-        LPr >= LeftPr },
-      followsInfix(RPr)+.
 
   private
   followsInfix:(integer) --> list[token].

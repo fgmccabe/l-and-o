@@ -45,4 +45,19 @@ lo.comp.misc{
   public trace:all x ~~ display[x] |: (string,x)=>x.
   trace(M,X) => X :-
     logMsg(M+"\(X)").
+
+  public project0:all t,u ~~ (list[(t,u)]) => list[t].
+  project0([]) => [].
+  project0([(X,_),..L]) => [X,..project0(L)].
+
+  public project1:all t,u ~~ (list[(t,u)]) => list[u].
+  project1([]) => [].
+  project1([(_,X),..L]) => [X,..project1(L)].
+
+  public const0:all u,t ~~ (list[t],u) => list[(u,t)].
+  const0([],_) => [].
+  const0([E,..L],P) => [(P,E),..const0(L,P)].
+
+  public tplLbl:(integer) => string.
+  tplLbl(Cnt) => "()\(Cnt)".
 }

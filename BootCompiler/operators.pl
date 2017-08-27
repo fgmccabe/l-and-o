@@ -4,7 +4,6 @@
 
   infixOp(". ",1899,1900,1900).	 /* statement separator */
   infixOp("@",1254,1255,1255).	 /* meta annotation */
-  infixOp(";",1253,1254,1254).	 /* meta annotation */
   infixOp(":",1249,1250,1249).	 /* type annotation */
   infixOp("<=",1249,1250,1249).	 /* class rule arrow */
   infixOp("~~",1239,1240,1240).	 /* quantifier */

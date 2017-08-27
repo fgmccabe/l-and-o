@@ -61,6 +61,18 @@ parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
 parseType(T,Env,B,C0,Cx,faceType(AT)) :-
   isBraceTuple(T,_,L),!,
   parseTypeFields(L,Env,B,C0,Cx,[],AT).
+parseType(T,Env,B,C0,Cx,AT) :-
+  isUnary(T,"?",L),!,
+  parseType(L,Env,B,C0,Cx,AT).
+parseType(T,Env,B,C0,Cx,AT) :-
+  isUnary(T,"^",L),!,
+  parseType(L,Env,B,C0,Cx,AT).
+parseType(T,Env,B,C0,Cx,AT) :-
+  isUnary(T,"?^",L),!,
+  parseType(L,Env,B,C0,Cx,AT).
+parseType(T,Env,B,C0,Cx,AT) :-
+  isUnary(T,"^?",L),!,
+  parseType(L,Env,B,C0,Cx,AT).
 parseType(T,_,_,Cx,Cx,anonType) :-
   locOfAst(T,Lc),
   reportError("cannot understand type %s",[T],Lc).

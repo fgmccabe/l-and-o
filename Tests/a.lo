@@ -1,6 +1,4 @@
 test.a{
-  -- import lo.
-
   -- Test predicates, backtracking and *>
 
   p:(string,string){}.

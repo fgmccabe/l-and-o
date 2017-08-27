@@ -3,7 +3,7 @@
  */
 
 tree{
-  all T ~~ tree[T] <~ thing.
+  all T ~~ tree[T] <~ {}.
   all T ~~ tree[T] <~ {
     leaves: () => list[T].
   }.

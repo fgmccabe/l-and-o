@@ -44,7 +44,7 @@ lo.comp.resolve{
   overloadDefn(Lc,Nm,Tp,[],Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],RExp,RCond) :-
     RCond = resolveCond(Cond,Dict,Rp,Rp0),
     RExp = resolveTerm(Exp,Dict,Rp0,Rpx).
-  overloadDefn(Lc,Nm,Tp,Cx,Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],lambda(equation(Lc,Nm,CVars,RExp,trueCond)),RCond) :-
+  overloadDefn(Lc,Nm,Tp,Cx,Exp,Cond,Dict,Rp,Rpx) => varDef(Lc,Nm,Tp,[],lambda(equation(Lc,Nm,const0(CVars,inMode),RExp,trueCond)),RCond) :-
     defineCVars(Lc,Cx,Dict,CVars,FDict),
     RCond = resolveCond(Cond,FDict,Rp,Rp0),
     RExp = resolveTerm(Exp,FDict,Rp0,Rpx).
@@ -79,14 +79,14 @@ lo.comp.resolve{
 
   private overloadRule:(canonRule,list[implEntry],list[canonTerm],report,report) => canonRule.
   overloadRule(equation(Lc,Nm,Args,Rep,Cond),Dict,Ex,Rp,Rpx) =>
-      equation(Lc,Nm,Ex<>resolveTerms(Args,Dict,Rp0,Rp1),resolveTerm(Rep,Dict,Rp1,Rpx),RCond) :-
+      equation(Lc,Nm,const0(Ex,inMode)<>resolveArgs(Args,Dict,Rp0,Rp1),resolveTerm(Rep,Dict,Rp1,Rpx),RCond) :-
         resolveCond(Cond,Dict,Rp,Rp0) = RCond.
   overloadRule(clause(Lc,Nm,Args,Cond),Dict,Ex,Rp,Rpx) =>
-      clause(Lc,Nm,Ex<>resolveTerms(Args,Dict,Rp,Rp0),resolveCond(Cond,Dict,Rp0,Rpx)).
+      clause(Lc,Nm,const0(Ex,inMode)<>resolveArgs(Args,Dict,Rp,Rp0),resolveCond(Cond,Dict,Rp0,Rpx)).
   overloadRule(grRule(Lc,Nm,Args,Hed,Body),Dict,Ex,Rp,Rpx) =>
-      grRule(Lc,Nm,Ex<>resolveTerms(Args,Dict,Rp,Rp0),resolveGr(Hed,Dict,Rp0,Rp1),resolveGr(Body,Dict,Rp1,Rpx)).
+      grRule(Lc,Nm,const0(Ex,inMode)<>resolveArgs(Args,Dict,Rp,Rp0),resolveGr(Hed,Dict,Rp0,Rp1),resolveGr(Body,Dict,Rp1,Rpx)).
   overloadRule(clRule(Lc,Nm,Args,Repl,Cond,Tp),Dict,Ex,Rp,Rpx) =>
-      clRule(Lc,Nm,Ex<>resolveTerms(Args,Dict,Rp,Rp0),resolveTerm(Repl,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx),Tp).
+      clRule(Lc,Nm,const0(Ex,inMode)<>resolveArgs(Args,Dict,Rp,Rp0),resolveTerm(Repl,Dict,Rp0,Rp1),resolveCond(Cond,Dict,Rp1,Rpx),Tp).
 
   private resolveTerm:(canonTerm,list[implEntry],report,report) => canonTerm.
   resolveTerm(v(Lc,Nm),_,Rp,Rp) => v(Lc,Nm).
@@ -94,14 +94,14 @@ lo.comp.resolve{
   resolveTerm(flt(Dx),_,Rp,Rp) => flt(Dx).
   resolveTerm(str(Sx),_,Rp,Rp) => str(Sx).
   resolveTerm(dot(Lc,Rc,Fld),Dict,Rp,Rpx) => dot(Lc,resolveTerm(Rc,Dict,Rp,Rpx),Fld).
-  resolveTerm(tpl(Args),Dict,Rp,Rpx) => tpl(resolveTerms(Args,Dict,Rp,Rpx)).
+  resolveTerm(tpl(Lc,Nm,Args),Dict,Rp,Rpx) => tpl(Lc,Nm,resolveTerms(Args,Dict,Rp,Rpx)).
   resolveTerm(whre(Trm,Cond),Dict,Rp,Rpx) => whre(resolveTerm(Trm,Dict,Rp,Rp0),resolveCond(Cond,Dict,Rp0,Rpx)).
   resolveTerm(condExp(Lc,Cond,Then,Else),Dict,Rp,Rpx) =>
       condExp(Lc,resolveCond(Cond,Dict,Rp,Rp0),resolveTerm(Then,Dict,Rp0,Rp1),resolveTerm(Else,Dict,Rp1,Rpx)).
   resolveTerm(apply(Lc,over(_,T,Cx),Args),Dict,Rp,Rpx) => apply(Lc,OverOp,RArgs) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
-    overloadRef(T,DTerms,resolveTerms(Args,Dict,Rp0,Rpx),OverOp,RArgs).
-  resolveTerm(apply(Lc,Op,Args),Dict,Rp,Rpx) => apply(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerms(Args,Dict,Rp0,Rpx)).
+    overloadRef(T,DTerms,resolveArgs(Args,Dict,Rp0,Rpx),OverOp,RArgs).
+  resolveTerm(apply(Lc,Op,Args),Dict,Rp,Rpx) => apply(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveArgs(Args,Dict,Rp0,Rpx)).
   resolveTerm(over(Lc,T,Cx),Dict,Rp,Rpx) => Over :-
     ( resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0) ?
         overloadRef(T,DTerms,[],OverOp,NArgs),
@@ -113,6 +113,13 @@ lo.comp.resolve{
     reportError("cannot find implementation for naked method \(Nm)",Lc,Rp,Rpx).
   resolveTerm(lambda(Rl),Dict,Rp,Rpx) => lambda(overloadRule(Rl,Dict,[],Rp,Rpx)).
   resolveTerm(theta(D,O),Dict,Rp,Rpx) => theta(overloadDefs(D,Dict,Rp,Rp0),overloadOthers(O,Dict,Rp0,Rpx)).
+
+  resolveArgs:(list[(typeMode,canonTerm)],list[implEntry],report,report) => list[(typeMode,canonTerm)].
+  resolveArgs([],_,Rp,Rp) => [].
+  resolveArgs([t,..l],D,Rp,Rpx) => [resolveArg(t,D,Rp,Rp0),..resolveArgs(l,D,Rp0,Rpx)].
+
+  resolveArg:((typeMode,canonTerm),list[implEntry],report,report) => (typeMode,canonTerm).
+  resolveArg((M,T),Dict,Rp,Rpx) => (M,resolveTerm(T,Dict,Rp,Rpx)).
 
   resolveTerms:(list[canonTerm],list[implEntry],report,report) => list[canonTerm].
   resolveTerms([],_,Rp,Rp) => [].
@@ -132,8 +139,8 @@ lo.comp.resolve{
       phraseCond(Lc,resolveGr(T,Dict,Rp,Rp0),resolveTerm(S,Dict,Rp0,Rp1),resolveTerm(R,Dict,Rp1,Rpx)).
   resolveCond(callCond(Lc,over(_,T,Cx),Args),Dict,Rp,Rpx) => callCond(Lc,OverOp,RArgs) :-
     resolveContracts(Lc,Cx,Dict,DTerms,Rp,Rp0),
-    overloadRef(T,DTerms,resolveTerms(Args,Dict,Rp0,Rpx),OverOp,RArgs).
-  resolveCond(callCond(Lc,P,A),Dict,Rp,Rpx) => callCond(Lc,resolveTerm(P,Dict,Rp,Rp0),resolveTerms(A,Dict,Rp0,Rpx)).
+    overloadRef(T,DTerms,resolveArgs(Args,Dict,Rp0,Rpx),OverOp,RArgs).
+  resolveCond(callCond(Lc,P,A),Dict,Rp,Rpx) => callCond(Lc,resolveTerm(P,Dict,Rp,Rp0),resolveArgs(A,Dict,Rp0,Rpx)).
   resolveCond(isTrue(C),Dict,Rp,Rpx) => isTrue(resolveTerm(C,Dict,Rp,Rpx)).
 
   resolveGr:(canonNT,list[implEntry],report,report) => canonNT.
@@ -148,26 +155,26 @@ lo.comp.resolve{
   resolveGr(grCall(Lc0,over(Lc,T,Cx),Args),Dict,Rp,Rpx) => grCall(Lc0,OverOp,NArgs) :-
     resolveContracts(Lc,Cx,Dict,Dterms,Rp,Rp0),
     overloadRef(T,Dterms,RArgs,OverOp,NArgs),
-    RArgs = resolveTerms(Args,Dict,Rp0,Rpx).
-  resolveGr(grCall(Lc,Op,Args),Dict,Rp,Rpx) => grCall(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerms(Args,Dict,Rp,Rpx)).
+    RArgs = resolveArgs(Args,Dict,Rp0,Rpx).
+  resolveGr(grCall(Lc,Op,Args),Dict,Rp,Rpx) => grCall(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveArgs(Args,Dict,Rp,Rpx)).
 
   resolveTerminals:(list[(location,canonTerm,canonTerm)],list[implEntry],report,report) => list[(location,canonTerm,canonTerm)].
   resolveTerminals([],_,Rp,Rp) => [].
   resolveTerminals([(Lc,Op,T),..L],Dict,Rp,Rpx) => [(Lc,resolveTerm(Op,Dict,Rp,Rp0),resolveTerm(T,Dict,Rp0,Rp1)),..resolveTerminals(L,Dict,Rp1,Rpx)].
 
-  overloadRef:(canonTerm,list[canonTerm],list[canonTerm],canonTerm,list[canonTerm]){}.
-  overloadRef(mtd(Lc,Nm),[DT],RArgs,dot(Lc,DT,Nm),RArgs).
+  overloadRef:(canonTerm,list[(typeMode,canonTerm)],list[(typeMode,canonTerm)],canonTerm,list[(typeMode,canonTerm)]){}.
+  overloadRef(mtd(Lc,Nm),[(_,DT)],RArgs,dot(Lc,DT,Nm),RArgs).
   overloadRef(v(Lc,Nm),DT,RArgs,v(Lc,Nm),DT<>RArgs).
   overloadRef(mtd(Lc,Nm),_,RArgs,v(Lc,Nm),RArgs). -- actually an error recovery step
 
-  resolveContracts:(location,list[constraint],list[implEntry],list[canonTerm],report,report){}.
+  resolveContracts:(location,list[constraint],list[implEntry],list[(typeMode,canonTerm)],report,report){}.
   resolveContracts(_,[],_,[],Rp,Rp).
   resolveContracts(Lc,[Con,..C],Dict,CV,Rp,Rpx) :-
     resolveContract(Lc,Con,Dict,CV,Vs,Rp,Rp0),
     resolveContracts(Lc,C,Dict,Vs,Rp0,Rpx).
 
-  resolveContract:(location,constraint,list[implEntry],list[canonTerm],list[canonTerm],report,report){}.
-  resolveContract(Lc,C,Dict,[Over,..Vs],Vs,Rp,Rpx) :-
+  resolveContract:(location,constraint,list[implEntry],list[(typeMode,canonTerm)],list[(typeMode,canonTerm)],report,report){}.
+  resolveContract(Lc,C,Dict,[(inMode,Over),..Vs],Vs,Rp,Rpx) :-
     C = conTract(_,_,_),
     findImplementation(implementationName(C),Dict,Impl)!,
     resolve(Impl,C,Lc,Dict,Over,Rp,Rpx)!.
@@ -185,13 +192,13 @@ lo.comp.resolve{
   resolve(I,C,Lc,_,v(Lc,_str_gen("void")),Rp,Rpx) :-
     reportError("cannot resolve contract \(C)",Lc,Rp,Rpx).
 
-  resolveDependents:(list[constraint],location,list[implEntry],list[canonTerm],list[canonTerm],report,report){}.
+  resolveDependents:(list[constraint],location,list[implEntry],list[(typeMode,canonTerm)],list[(typeMode,canonTerm)],report,report){}.
   resolveDependents([],_,_,Args,Args,Rp,Rp).
   resolveDependents([C,..L],Lc,Dict,A,Args,Rp,Rpx) :-
     resolveContract(Lc,C,Dict,A,As,Rp,Rp0),
     resolveDependents(L,Lc,Dict,As,Args,Rp0,Rpx).
 
-  formOver:(canonTerm,location,list[canonTerm]) => canonTerm.
+  formOver:(canonTerm,location,list[(typeMode,canonTerm)]) => canonTerm.
   formOver(V,_,[]) => V.
   formOver(V,_,Args) => apply(Lc,V,Args).
 

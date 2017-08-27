@@ -34,10 +34,10 @@ lo.comp.genprolog{
   genCl(clse(_,Nm,Args,[])) => ssSeq([genTerm(Nm),ss("("),genArgs(Args),ss(")"),ss(".\n")]).
   genCl(clse(_,Nm,Args,Body)) => ssSeq([genTerm(Nm),ss("("),genArgs(Args),ss("):-"),ssSeq(genPreds(Body,"",_)),ss(".\n")]).
   genCl(eqn(_,Nm,Args,guarded(Rep,Body))) =>
-    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- "),
+    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[(outMode,R)]),ss(") :- "),
           genPred(Body),ss(",!,"),genPred(dfne(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
   genCl(eqn(_,Nm,Args,Rep)) =>
-    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[R]),ss(") :- !,\n    "),genPred(dfne(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
+    ssSeq([genTerm(Nm),ss("("),genArgs(Args<>[(outMode,R)]),ss(") :- !,\n    "),genPred(dfne(_,R,Rep)),ss(".\n")]) :- genVarbl("_R",R).
 
   genPreds:(list[pred],string,string) => list[ss].
   genPreds([],S,S) => [].
@@ -60,8 +60,8 @@ lo.comp.genprolog{
 
   genFunCall:(pred) => ss.
   genFunCall(unfy(Lc,L,guarded(R,P))) => ssSeq([genPred(P),ss(", "),genFunCall(unfy(Lc,L,R))]).
-  genFunCall(unfy(_,L,invoke(Lc,Op,Args))) => ssSeq([genTerm(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
-  genFunCall(unfy(_,L,escvoke(Lc,Op,Args))) => ssSeq([genId(Op),ss("("),genArgs(Args<>[L]),ss(")")]).
+  genFunCall(unfy(_,L,invoke(Lc,Op,Args))) => ssSeq([genTerm(Op),ss("("),genArgs(Args<>[(outMode,L)]),ss(")")]).
+  genFunCall(unfy(_,L,escvoke(Lc,Op,Args))) => ssSeq([genId(Op),ss("("),genArgs(Args<>[(outMode,L)]),ss(")")]).
   genFunCall(unfy(_,L,ovoke(Lc,Cl,Lb,Th))) => ssSeq([ss("ofun("),genTerm(Cl),ss(","),genTerm(Lb),ss(","),genTerm(Th),ss(","),genTerm(L),ss(")")]).
   genFunCall(unfy(_,L,R)) => ssSeq([genTerm(L),ss(" = "),genTerm(R)]).
 
@@ -74,15 +74,23 @@ lo.comp.genprolog{
   genTerm(enum(Nm)) => genId(Nm).
   genTerm(strct(Nm,_)) => genId(Nm).
   genTerm(prg(Nm,_)) => genId(Nm).
-  genTerm(cons(Op,Args)) => ssSeq([genTerm(Op),ss("("),genArgs(Args),ss(")")]).
+  genTerm(cons(Op,Args)) => ssSeq([genTerm(Op),ss("("),genTerms(Args),ss(")")]).
 
-  genArgs:(list[term]) => ss.
+  genArgs:(list[(typeMode,term)]) => ss.
   genArgs([]) => ssSeq([]).
-  genArgs([T,..L]) => ssSeq([genTerm(T),..genMoreArgs(L)]).
+  genArgs([(_,T),..L]) => ssSeq([genTerm(T),..genMoreArgs(L)]).
 
-  genMoreArgs:(list[term]) => list[ss].
+  genMoreArgs:(list[(typeMode,term)]) => list[ss].
   genMoreArgs([]) => [].
-  genMoreArgs([T,..L]) => [ss(", "),genTerm(T),..genMoreArgs(L)].
+  genMoreArgs([(_,T),..L]) => [ss(", "),genTerm(T),..genMoreArgs(L)].
+
+  genTerms:(list[term]) => ss.
+  genTerms([]) => ssSeq([]).
+  genTerms([T,..L]) => ssSeq([genTerm(T),..genMoreTerms(L)]).
+
+  genMoreTerms:(list[term]) => list[ss].
+  genMoreTerms([]) => [].
+  genMoreTerms([T,..L]) => [ss(", "),genTerm(T),..genMoreTerms(L)].
 
   genId:(string) => ss.
   genId(Id) => ssSeq([ss("'"),ss(implode(genQuoted(explode(Id),0c'))),ss("'")]).
@@ -93,4 +101,9 @@ lo.comp.genprolog{
   genQuoted([0c",..L],Qt) => [0c\\,0c",..genQuoted(L,Qt)].
   genQuoted([0c\\,..L],Qt) => [0c\\,0c\\,..genQuoted(L,Qt)].
   genQuoted([C,..L],Qt) => [C,..genQuoted(L,Qt)].
+
+  genAnons:(integer) => list[(typeMode,term)].
+  genAnons(0) => [].
+  genAnons(K) => [(inMode,anon),..genAnons(K-1)] :-
+    K>0.
 }

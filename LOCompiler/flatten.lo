@@ -13,20 +13,20 @@ lo.comp.flatten{
   flattenProg(prProg(Spec,Rels)) => prProg(Spec,Rels///((Nm,Rel)=>flattenRel(Rel))).
 
   flattenRel:(rel) => rel.
-  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//flattenRule).
-  -- flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Cl)=>flowRewrite(flattenRule(Cl)))).
+  -- flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//flattenRule).
+  flattenRel(rel(Nm,Lc,Rls)) => rel(Nm,Lc,Rls//((Cl)=>flowRewrite(flattenRule(Cl)))).
 
   -- First phase - replace function invoke with special equality format
   flattenRule:(clse) => clse.
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,NBody<>Guard<>Post) :-
-    flattenTerms(Args,Q,NArgs,Guard,[],Post,[],Q1)!,
+    flattenArgs(Args,Q,NArgs,Guard,[],Post,[],Q1)!,
     flattenBody(Body,Q1,NBody,[],NQ).
   flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(conj(none,PrR)))),simplifyCond(conj(none,Guard)))) :-
-    flattenTerms(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
+    flattenArgs(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
     flattenPred(G,Q0,G1,Pr,[G1,..Pr0],Pr0,Prx,Q1),
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
   flattenRule(eqn(Q,Nm,Args,Rep)) => eqn(NQ,Nm,NArgs,simplifyGuard(guarded(NRep,conj(none,Guard)))) :-
-    flattenTerms(Args,Q,NArgs,Guard,Prx,Prx,PrR,Q0)!,
+    flattenArgs(Args,Q,NArgs,Guard,Prx,Prx,PrR,Q0)!,
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
 
   flattenTerm:(term,list[term],term,list[pred],list[pred],list[pred],list[pred],list[term]){}.
@@ -38,10 +38,10 @@ lo.comp.flatten{
   flattenTerm(invoke(Lc,Op,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Op,[Res,..Q],NOp,Pre,Pre0,Post,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pre0,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Prx],Pst0,Psx,Qx).
+    flattenArgs(Args,Q0,NArgs,Pre0,[dfne(Lc,Res,invoke(Lc,NOp,NArgs)),..Prx],Pst0,Psx,Qx).
   flattenTerm(escvoke(Lc,Es,Args),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
-    flattenTerms(Args,[Res,..Q],NArgs,Pre,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Prx],Post,Psx,Qx).
+    flattenArgs(Args,[Res,..Q],NArgs,Pre,[dfne(Lc,Res,escvoke(Lc,Es,NArgs)),..Prx],Post,Psx,Qx).
   flattenTerm(ovoke(Lc,Call,Lb,Th),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     genVarbl("_R",Res),
     flattenTerm(Call,[Res,..Q],NCall,Pre,Pre0,Post,Pst0,Q0),
@@ -50,6 +50,12 @@ lo.comp.flatten{
   flattenTerm(guarded(T,C),Q,Res,Pre,Prx,Post,Psx,Qx) :-
     flattenTerm(T,Q,Res,Pr0,Prx,Post,Ps0,Q1),
     flattenPred(C,Q1,C1,Pre,[C1,..Pr0],Ps0,Psx,Qx).
+
+  flattenArgs:(list[(typeMode,term)],list[term],list[(typeMode,term)],list[pred],list[pred],list[pred],list[pred],list[term]){}.
+  flattenArgs([],Q,[],Pre,Pre,Post,Post,Q).
+  flattenArgs([(M,A),..L],Q,[(M,NA),..NL],Pr,Prx,Po,Psx,Qx) :-
+    flattenTerm(A,Q,NA,Pr,Pr0,Po,Po0,Q0),
+    flattenArgs(L,Q0,NL,Pr0,Prx,Po0,Psx,Qx).
 
   flattenTerms:(list[term],list[term],list[term],list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenTerms([],Q,[],Pre,Pre,Post,Post,Q).
@@ -66,9 +72,9 @@ lo.comp.flatten{
   flattenPred:(pred,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenPred(call(TLc,Op,Args),Q,call(TLc,NOp,NArgs),Pre,Prx,Post,Psx,Qx) :-
     flattenTerm(Op,Q,NOp,Pre,Pr0,Post,Ps0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
+    flattenArgs(Args,Q0,NArgs,Pr0,Prx,Ps0,Psx,Qx).
   flattenPred(ecall(TLc,Op,Args),Q,ecall(TLc,Op,NArgs),Pr,Prx,Ps,Psx,Qx) :-
-    flattenTerms(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
+    flattenArgs(Args,Q,NArgs,Pr,Prx,Ps,Psx,Qx).
   flattenPred(ocall(TLc,Cl,Lb,Th),Q,ocall(TLc,NCl,NLb,NTh),Pre,Prx,Post,Psx,Qx) :-
     flattenTerm(Cl,Q,NCl,Pre,Pr0,Post,Ps0,Q0),
     flattenTerm(Lb,Q0,NLb,Pr0,Pr1,Ps0,Ps1,Q1),
@@ -94,10 +100,10 @@ lo.comp.flatten{
   flattenUnify:(option[tloc],term,term,list[term],pred,list[pred],list[pred],list[pred],list[pred],list[term]){}.
   flattenUnify(Lc,varbl(V),invoke(ILc,Op,Args),Q,dfne(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
+    flattenArgs(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
   flattenUnify(Lc,invoke(ILc,Op,Args),varbl(V),Q,dfne(Lc,varbl(V),invoke(ILc,NOp,NArgs)),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(Op,Q,NOp,Pre,Pr0,Pst,Pst0,Q0),
-    flattenTerms(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
+    flattenArgs(Args,Q0,NArgs,Pr0,Prx,Pst0,Pstx,Qx).
   flattenUnify(Lc,L,R,Q,unfy(Lc,NL,NR),Pre,Prx,Pst,Pstx,Qx) :-
     flattenTerm(L,Q,NL,Pre,Pr0,Pst,Pst0,Q0),
     flattenTerm(R,Q0,NR,Pr0,Prx,Pst0,Pstx,Qx).
@@ -134,28 +140,26 @@ lo.comp.flatten{
   flowPreds([P,..L],V) => [flowPred(P,V,V0),..flowPreds(L,V0)].
 
   flowPred:(pred,list[term],list[term]) => varDep.
-  flowPred(call(Lc,Op,Args),V,Vx) => vars(call(Lc,Op,Args),[],findVarsInTerms(Args,[])) :-
-    VS = toplevelVars(Args,[]),
+  flowPred(call(Lc,Op,Args),V,Vx) => vars(call(Lc,Op,Args),[],findVarsInArgs(Args,[])) :-
+    Vx = definedVars(Args,V).
+  flowPred(ecall(Lc,Op,Args),V,Vx) => vars(ecall(Lc,Op,Args),[],findVarsInArgs(Args,[])) :-
+    Vx = definedVars(Args,V).
+  flowPred(ocall(Lc,C,L,T),V,Vx) => vars(ocall(Lc,C,L,T),[],findVarsInTerms([C,L,T],[])) :-
+    Vx = definedVars([(biMode,C)],V).
+  flowPred(dfne(Lc,L,R),V,Vx) => vars(dfne(Lc,L,R),VS,findVarsInTerms([L,R],[])) :-
+    VS = definedVars([(outMode,L)],[]),
     Vx = merge(V,VS).
-  flowPred(ecall(Lc,Op,Args),V,Vx) => vars(ecall(Lc,Op,Args),[],findVarsInTerms(Args,[])) :-
-    VS = toplevelVars(Args,[]),
-    Vx = merge(V,VS).
-  flowPred(ocall(Lc,C,L,T),V,Vx) => vars(ocall(Lc,C,L,T),[],findVarsInTerms(Args,[])) :-
-    Args = [C,L,T],
-    VS = toplevelVars(Args,[]),
-    Vx = merge(V,VS).
-  flowPred(dfne(Lc,L,R),V,Vx) => vars(dfne(Lc,L,R),VS,findVarsInTerms(Args,[])) :-
-    Args = [L,R],
-    VS = toplevelVars([L],[]),
-    Vx = merge(V,VS).
-  flowPred(unfy(Lc,L,R),V,Vx) => vars(unfy(Lc,L,R),[],findVarsInTerms(Args,[])) :-
-    Args = [L,R],
-    VS = toplevelVars(Args,[]),
-    Vx = merge(V,VS).
+  flowPred(unfy(Lc,L,R),V,Vx) => vars(unfy(Lc,L,R),[],findVarsInTerms([L,R],[])) :-
+    Vx = definedVars([(biMode,L),(biMode,R)],V).
   flowPred(fail,Vs,Vs) => vars(fail,[],Vs).
   flowPred(succ,Vs,Vs) => vars(succ,[],Vs).
   flowPred(neck,Vs,Vs) => vars(neck,[],Vs).
   flowPred(except(Lc,E),Vx,Vx) => vars(except(Lc,E),[],findVarsInTerm(E,[])).
+
+  definedVars:(list[(typeMode,term)],list[term]) => list[term].
+  definedVars([],V) => V.
+  definedVars([(inMode,_),..L],V) => definedVars(L,V).
+  definedVars([(_,T),..L],V) => definedVars(L,toplevelVrs(T,V)).
 
   toplevelVars:(list[term],list[term]) => list[term].
   toplevelVars(Ts,Vs) => foldLeft(toplevelVrs,Vs,Ts).

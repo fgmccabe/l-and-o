@@ -13,11 +13,11 @@ tree{
   -- Define the tree type's interface
   all a<~comp ~~
     tree[a] <~ {
-	    insert:(a)=>tree[a]. /* assert sorted(this). */ 
+	    insert:(a)=>tree[a]. /* assert sorted(this). */
 	    empty:(){}.
     }.
 
-  comp <~ thing.
+  comp <~ {}.
 
   em : all a<~comp ~~ tree[a].
   em{

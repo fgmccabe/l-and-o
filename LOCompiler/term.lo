@@ -14,8 +14,8 @@ lo.comp.term {
                | prg(string,integer)
                | strng(string)
                | cons(term,list[term])
-               | invoke(option[tloc],term,list[term])
-               | escvoke(option[tloc],string,list[term])
+               | invoke(option[tloc],term,list[(typeMode,term)])
+               | escvoke(option[tloc],string,list[(typeMode,term)])
                | ovoke(option[tloc],term,term,term)
                | guarded(term,pred).
 
@@ -28,12 +28,12 @@ lo.comp.term {
     name = Nm.
   }
 
-  public clse ::= clse(list[term],term,list[term],list[pred])
-              | eqn(list[term],term,list[term],term).
+  public clse ::= clse(list[term],term,list[(typeMode,term)],list[pred])
+              | eqn(list[term],term,list[(typeMode,term)],term).
 
 
-  public pred ::= call(option[tloc],term,list[term])
-                    | ecall(option[tloc],string,list[term])
+  public pred ::= call(option[tloc],term,list[(typeMode,term)])
+                    | ecall(option[tloc],string,list[(typeMode,term)])
                     | ocall(option[tloc],term,term,term)
                     | unfy(option[tloc],term,term)
                     | dfne(option[tloc],term,term)
@@ -72,9 +72,12 @@ lo.comp.term {
   }
 
   private dispClause:(clse) => ss.
-  dispClause(clse(Q,Hd,Args,Body)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
-  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body))) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),displayPred(Body,Q),ss(".\n")]).
-  dispClause(eqn(Q,Hd,Args,Rep)) => ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(".\n")]).
+  dispClause(clse(Q,Hd,Args,Body)) =>
+    ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss(":-"),ssSeq(dispPreds("","\n    ",Body,Q)),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,guarded(Rep,Body))) =>
+    ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(":-"),displayPred(Body,Q),ss(".\n")]).
+  dispClause(eqn(Q,Hd,Args,Rep)) =>
+    ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(".\n")]).
 
   public implementation display[term] <= {
     disp(T) => dispTerm(T,[]).
@@ -90,7 +93,7 @@ lo.comp.term {
   dispTerm(strct(Nm,Ar),_) => ssSeq([ss(Nm),ss(":"),disp(Ar)]).
   dispTerm(prg(Nm,Ar),_) => ssSeq([ss(Nm),ss("/"),disp(Ar)]).
   dispTerm(strng(Sx),_) => disp(Sx).
-  dispTerm(cons(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispArgs(Args,Q)]).
+  dispTerm(cons(Op,Args),Q) => ssSeq([dispTerm(Op,Q),dispTerms(Args,Q)]).
   dispTerm(invoke(_,Op,Args),Q) => ssSeq([ss("<"),dispTerm(Op,Q),ss(">"),dispArgs(Args,Q)]).
   dispTerm(escvoke(_,Op,Args),Q) => ssSeq([ss(Op),dispArgs(Args,Q)]).
   dispTerm(ovoke(_,Call,Lbl,Ths),Q) => ssSeq([dispTerm(Lbl,Q),ss(":"),dispTerm(Ths,Q),ss("."),dispTerm(Call,Q)]).
@@ -100,8 +103,15 @@ lo.comp.term {
   dispGuard([],_,_) => [].
   dispGuard(G,M,V) => dispPreds(M,", ",G,V).
 
-  dispArgs:(list[term],list[term]) => ss.
-  dispArgs(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).
+  dispArgs:(list[(typeMode,term)],list[term]) => ss.
+  dispArgs(Args,Q) => ssSeq([ss("("),..dispAs("",")",Args,Q)]).
+
+  private dispAs:(string,string,list[(typeMode,term)],list[term]) => list[ss].
+  dispAs(_,Tail,[],_) => [ss(Tail)].
+  dispAs(Sep,Tail,[(m,e),..l],Q) => [ss(Sep),dispTerm(e,Q),disp(m),..dispAs(", ",Tail,l,Q)].
+
+  dispTerms:(list[term],list[term]) => ss.
+  dispTerms(Args,Q) => ssSeq([ss("("),..dispEls("",")",Args,Q)]).
 
   private dispEls:(string,string,list[term],list[term]) => list[ss].
   dispEls(_,Tail,[],_) => [ss(Tail)].
@@ -119,7 +129,8 @@ lo.comp.term {
   displayPred(unfy(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("="),dispTerm(R,Q)]).
   displayPred(dfne(_,L,R),Q) => ssSeq([dispTerm(L,Q),ss("<-"),dispTerm(R,Q)]).
   displayPred(conj(_,L),Q) => ssSeq(dispPreds("",", ",L,Q)).
-  displayPred(cond(_,T,L,R),Q) => ssSeq([ss("("),displayPred(T,Q),ss("?"),displayPred(L,Q),ss("|"),displayPred(R,Q),ss(")")]).
+  displayPred(cond(_,T,L,R),Q) =>
+    ssSeq([ss("("),displayPred(T,Q),ss("?"),displayPred(L,Q),ss("|"),displayPred(R,Q),ss(")")]).
   displayPred(fail,_) => ss("fail").
   displayPred(succ,_) => ss("succ").
   displayPred(except(_,T),Q) => ssSeq([ss("raise "),dispTerm(T,Q)]).
@@ -186,10 +197,10 @@ lo.comp.term {
     E in Els *> isGroundTerm(E).
 
   public tupleSig:(integer) => term.
-  tupleSig(Ar) => strct("()\(Ar)",Ar).
+  tupleSig(Ar) => strct(tplLbl(Ar),Ar).
 
   public isTupleSig:(term,integer){}.
-  isTupleSig(strct(Nm,Ar),Ar) :- Nm="()\(Ar)".
+  isTupleSig(strct(Nm,Ar),Ar) :- Nm=tplLbl(Ar).
 
   public mkTpl:(list[term]) => term.
   mkTpl(Els) => cons(tupleSig(size(Els)),Els).
@@ -198,7 +209,7 @@ lo.comp.term {
   clName(clse(_,Nm,_,_)) => Nm.
   clName(eqn(_,Nm,_,_)) => Nm.
 
-  public clArgs:(clse) => list[term].
+  public clArgs:(clse) => list[(typeMode,term)].
   clArgs(clse(_,_,Args,_)) => Args.
   clArgs(eqn(_,_,Args,_)) => Args.
 
@@ -221,26 +232,30 @@ lo.comp.term {
 
   -- Finding variables
   public findVarsInClse:(clse) => list[term].
-  findVarsInClse(clse(_,_,A,B)) => findVarsInPreds(B,findVarsInTerms(A,[])).
-  findVarsInClse(eqn(_,_,A,R)) => findVarsInTerm(R,findVarsInTerms(A,[])).
+  findVarsInClse(clse(_,_,A,B)) => findVarsInPreds(B,findVarsInArgs(A,[])).
+  findVarsInClse(eqn(_,_,A,R)) => findVarsInTerm(R,findVarsInArgs(A,[])).
 
   public findVarsInTerm:(term,list[term]) => list[term].
   findVarsInTerm(varbl(Nm),V) => mergeEl(V,varbl(Nm)).
   findVarsInTerm(T,V) => V :- isGroundTerm(T).
   findVarsInTerm(anon,V) => V.
   findVarsInTerm(cons(_,A),V) => findVarsInTerms(A,V).
-  findVarsInTerm(invoke(_,O,A),V) => findVarsInTerms(A,findVarsInTerm(O,V)).
-  findVarsInTerm(escvoke(_,O,A),V) => findVarsInTerms(A,V).
+  findVarsInTerm(invoke(_,O,A),V) => findVarsInArgs(A,findVarsInTerm(O,V)).
+  findVarsInTerm(escvoke(_,O,A),V) => findVarsInArgs(A,V).
   findVarsInTerm(ovoke(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
   findVarsInTerm(guarded(T,G),V) => findVarsInTerm(T,findVarsInPred(G,V)).
+
+  public findVarsInArgs:(list[(typeMode,term)],list[term]) => list[term].
+  findVarsInArgs([],V) => V.
+  findVarsInArgs([(_,T),..L],V) => findVarsInArgs(L,findVarsInTerm(T,V)).
 
   public findVarsInTerms:(list[term],list[term]) => list[term].
   findVarsInTerms([],V) => V.
   findVarsInTerms([T,..L],V) => findVarsInTerms(L,findVarsInTerm(T,V)).
 
   findVarsInPred:(pred,list[term]) => list[term].
-  findVarsInPred(call(_,_,A),V) => findVarsInTerms(A,V).
-  findVarsInPred(ecall(_,_,A),V) => findVarsInTerms(A,V).
+  findVarsInPred(call(_,_,A),V) => findVarsInArgs(A,V).
+  findVarsInPred(ecall(_,_,A),V) => findVarsInArgs(A,V).
   findVarsInPred(ocall(_,C,L,T),V) => findVarsInTerm(C,findVarsInTerm(L,findVarsInTerm(T,V))).
   findVarsInPred(unfy(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).
   findVarsInPred(dfne(_,L,T),V) => findVarsInTerm(L,findVarsInTerm(T,V)).

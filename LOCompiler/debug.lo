@@ -8,7 +8,7 @@ lo.comp.debug{
   -- Generate code that interfaces with a debugger
   -- are we debugging?
   public debugPreamble:(string,list[term],list[term],list[pred],list[pred],trOptions,trOptions){}.
-  debugPreamble(Nm,Q,[DgVr,FrVr,..Q],[call(none,prg("go.debug@current",1),[DgVr]),..Gx],Gx,Opts,pushOpt(dbgVars(Nm,DgVr,FrVr),Opts)) :-
+  debugPreamble(Nm,Q,[DgVr,FrVr,..Q],[call(none,prg("go.debug@current",1),[(outMode,DgVr)]),..Gx],Gx,Opts,pushOpt(dbgVars(Nm,DgVr,FrVr),Opts)) :-
     isOption(debugging,Opts),
     genVarbl("__D",DgVr),
     genVarbl("__F",FrVr).

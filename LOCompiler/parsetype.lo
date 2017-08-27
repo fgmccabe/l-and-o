@@ -70,13 +70,13 @@ lo.comp.parseType{
     isBinary(F,"=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     checkTuple(L,A,Rp0,Rp1),
-    prsTypes(A,Env,Q,C,C1,AT,Rp1,Rp2),
+    prsArgTypes(A,inMode,Env,Q,C,C1,AT,Rp1,Rp2),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(F,K,Env,Q,C,Cx,grammarType(AT,RT),Rp,Rpx) :-
     isBinary(F,"-->",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     checkTuple(L,A,Rp0,Rp1),
-    prsTypes(A,Env,Q,C,C1,AT,Rp1,Rp2),
+    prsArgTypes(A,biMode,Env,Q,C,C1,AT,Rp1,Rp2),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(F,K,Env,Q,C,Cx,classType(AT,RT),Rp,Rpx) :-
     isBinary(F,"<=>",Lc,L,R),
@@ -88,7 +88,7 @@ lo.comp.parseType{
     isBraceTerm(T,Lc,L,[]),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     checkTuple(L,A,Rp0,Rp1),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp1,Rpx).
+    prsArgTypes(A,biMode,Env,Q,C,Cx,AT,Rp1,Rpx).
   prsType(T,K,Env,Q,C,Cx,tupleType(AT),Rp,Rpx) :-
     isRoundTuple(T,Lc,[A]),
     isRoundTuple(A,_,Inner),
@@ -105,8 +105,33 @@ lo.comp.parseType{
     isBraceTuple(T,Lc,L),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     prsTypeFields(L,Env,Q,C,Cx,AT,Rp0,Rpx).
+  prsType(T,K,Env,Q,C,Cx,Tp,Rp,Rpx) :-
+    isBinary(T,"@",_,_,R),
+    prsType(R,K,Env,Q,C,Cx,Tp,Rp,Rpx).
   prsType(T,K,_,_,Cx,Cx,anonType,Rp,Rpx) :-
     reportError("cannot understand type \(T), expecting a \(K)",T.loc,Rp,Rpx).
+
+  prsArgType:(ast,typeMode,typeKind,list[env],map[string,tipe],list[constraint],list[constraint],(typeMode,tipe),report,report){}.
+  prsArgType(T,_,K,E,Q,C,Cx,(inMode,Tp),Rp,Rpx) :-
+    isUnary(T,"?",_,I),
+    prsType(I,K,E,Q,C,Cx,Tp,Rp,Rpx).
+  prsArgType(T,_,K,E,Q,C,Cx,(outMode,Tp),Rp,Rpx) :-
+    isUnary(T,"^",_,I),
+    prsType(I,K,E,Q,C,Cx,Tp,Rp,Rpx).
+  prsArgType(T,_,K,E,Q,C,Cx,(biMode,Tp),Rp,Rpx) :-
+    isUnary(T,"?^",_,I),
+    prsType(I,K,E,Q,C,Cx,Tp,Rp,Rpx).
+  prsArgType(T,_,K,E,Q,C,Cx,(biMode,Tp),Rp,Rpx) :-
+    isUnary(T,"^?",_,I),
+    prsType(I,K,E,Q,C,Cx,Tp,Rp,Rpx).
+  prsArgType(T,D,K,E,Q,C,Cx,(D,Tp),Rp,Rpx) :-
+    prsType(T,K,E,Q,C,Cx,Tp,Rp,Rpx).
+
+  prsArgTypes:(list[ast],typeMode,list[env],map[string,tipe],list[constraint],list[constraint],list[(typeMode,tipe)],report,report){}.
+  prsArgTypes([],_,_,_,C,C,[],Rp,Rp).
+  prsArgTypes([A,..L],D,E,Q,C,Cx,[T,..TL],Rp,Rpx) :-
+    prsArgType(A,D,simpleType,E,Q,C,C0,T,Rp,Rp0),
+    prsArgTypes(L,D,E,Q,C0,Cx,TL,Rp0,Rpx).
 
   prsTypeName:(location,string,typeKind,list[env],map[string,tipe],tipe,report,report){}.
   prsTypeName(_,"_",simpleType,_,_,anonType,Rp,Rp).

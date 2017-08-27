@@ -117,7 +117,7 @@ lo.comp.dependencies{
   headName(H) =>  Nm :-  isRoundTerm(H,_,O,_), isIden(O,_,Nm).
   headName(H) =>  Nm :-  isIden(H,_,Nm).
   headName(H) =>  headName(A) :-  isRoundTuple(H,_,[A]).
-  headName(H) =>  "()\(length(A))" :-  isRoundTuple(H,_,A). -- special handling for tuples
+  headName(H) =>  tplLbl(length(A)) :-  isRoundTuple(H,_,A). -- special handling for tuples
   headName(H) => Nm :- isBraceTerm(H,_,O,_), isIden(O,_,Nm).
 
   contractName:(ast,string){}.
@@ -157,7 +157,7 @@ lo.comp.dependencies{
   astImplName(S,formatSS(ssSeq([ss(Nm),..sfcNames(A,marker(con))]))) :-
     isSquareTerm(S,_,Op,A),
     isIden(Op,_,Nm).
-  astImplName(T,"()\(length(A))") :-
+  astImplName(T,tplLbl(length(A))) :-
     isRoundTuple(T,_,A).
 
   sfcNames:(list[ast],string) => list[ss].
@@ -169,7 +169,7 @@ lo.comp.dependencies{
   sfcName:(ast)=>ss.
   sfcName(N) =>  ss(Nm) :-  isIden(N,_,Nm).
   sfcName(S) =>  ss(Nm) :-  (isSquareTerm(S,_,Op,_), isIden(Op,_,Nm)).
-  sfcName(T) => ss("()\(length(Els))") :- isRoundTuple(T,_,Els).
+  sfcName(T) => ss(tplLbl(length(Els))) :- isRoundTuple(T,_,Els).
 
   collectDefines:(list[ast],string,defnKind,list[ast],list[ast]){}.
   collectDefines([],_,_,[],[]).
@@ -225,6 +225,10 @@ lo.comp.dependencies{
   refsInType(T,All,So) =>  (((Nm,tpe) in All, \+ (Nm,tpe) in So) ? [(Nm,tpe),..So] | So) :-  isIden(T,_,Nm).
   refsInType(T,All,So) =>  refsInTypes(Args,All,refsInType(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInType(T,All,So) => refsInTypes(Args,All,So) :- isBraceTerm(T,_,A,[]), isRoundTuple(A,_,Args).
+  refsInType(T,All,So) =>  refsInType(I,All,So) :-  isUnary(T,"?",_,I).
+  refsInType(T,All,So) =>  refsInType(I,All,So) :-  isUnary(T,"^",_,I).
+  refsInType(T,All,So) =>  refsInType(I,All,So) :-  isUnary(T,"?^",_,I).
+  refsInType(T,All,So) =>  refsInType(I,All,So) :-  isUnary(T,"^?",_,I).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,",",_,L,R).
   refsInType(T,All,So) =>  refsInType(L,All,refsInType(R,All,So)) :-  isBinary(T,"=>",_,L,R).
   refsInType(T,All,So) =>  refsInArgTypes(A,All,refsInType(R,All,So)) :-  isBinary(T,"-->",_,L,R), isRoundTuple(L,_,A).
@@ -320,6 +324,10 @@ lo.comp.dependencies{
   refsInTerm(T,All,So) => refsInTerm(L,All,refsInType(R,All,So)) :-  isBinary(T,"::",_,L,R).
   refsInTerm(T,All,So) => refsInTerm(L,All,refsInCond(R,All,So)) :-  isBinary(T,":-",_,L,R).
   refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isBinary(T,".",_,L,_).
+  refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isUnary(T,"?",_,L).
+  refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isUnary(T,"^",_,L).
+  refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isUnary(T,"?^",_,L).
+  refsInTerm(T,All,So) => refsInTerm(L,All,So) :-  isUnary(T,"^?",_,L).
   refsInTerm(T,All,So) => refsInTerm(R,All,refsInTerm(LR,All,refsInCond(LL,All,So))) :-  isBinary(T,"|",_,L,R), isBinary(L,"?",_,LL,LR).
   refsInTerm(T,All,So) => refsInIndex(Args,All,refsInTerm(Op,All,So)) :-  isSquareTerm(T,_,Op,Args).
   refsInTerm(T,All,So) => refsInTerms(Args,All,So) :-  isRoundTuple(T,_,Args).

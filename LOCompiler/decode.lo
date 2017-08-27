@@ -74,17 +74,17 @@ lo.comp.decode{
   decodeClause(clse(Q,Nm,Args,Body)) --> "C",
       decodeTerm(Nm),
       decodeSequence(decodeTerm,Q),
-      decodeSequence(decodeTerm,Args),
+      decodeArgs(Args),
       decodeSequence(decodePred,Body).
   decodeClause(eqn(Q,Nm,Args,Rep)) --> ">",
       decodeTerm(Nm),
       decodeSequence(decodeTerm,Q),
-      decodeSequence(decodeTerm,Args),
+      decodeArgs(Args),
       decodeTerm(Rep).
 
   decodePred:(pred) --> list[integer].
-  decodePred(call(TLc,Op,Args)) --> "P", decodeOptional(decodeTloc,TLc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
-  decodePred(ecall(TLc,Op,Args)) --> "E", decodeOptional(decodeTloc,TLc), decodeName(Op), decodeSequence(decodeTerm,Args).
+  decodePred(call(TLc,Op,Args)) --> "P", decodeOptional(decodeTloc,TLc), decodeTerm(Op), decodeArgs(Args).
+  decodePred(ecall(TLc,Op,Args)) --> "E", decodeOptional(decodeTloc,TLc), decodeName(Op), decodeArgs(Args).
   decodePred(ocall(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
   decodePred(unfy(TLc,L,R)) --> "=", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
   decodePred(dfne(TLc,L,R)) --> "$", decodeOptional(decodeTloc,TLc), decodeTerm(L), decodeTerm(R).
@@ -124,10 +124,21 @@ lo.comp.decode{
   decodeTerm(strct(Nm,Ar)) --> "o", decInt(Ar), decodeName(Nm).
   decodeTerm(prg(Nm,Ar)) --> "p", decInt(Ar), decodeName(Nm).
   decodeTerm(cons(Op,Args)) --> "n", decInt(Len), decodeTerm(Op), decTerms(Len,Args).
-  decodeTerm(invoke(Lc,Op,Args)) --> "V", decodeOptional(decodeTloc,Lc), decodeTerm(Op), decodeSequence(decodeTerm,Args).
-  decodeTerm(escvoke(Lc,Op,Args)) --> "E", decodeOptional(decodeTloc,Lc), decodeName(Op), decodeSequence(decodeTerm,Args).
+  decodeTerm(invoke(Lc,Op,Args)) --> "V", decodeOptional(decodeTloc,Lc), decodeTerm(Op), decodeArgs(Args).
+  decodeTerm(escvoke(Lc,Op,Args)) --> "E", decodeOptional(decodeTloc,Lc), decodeName(Op), decodeArgs(Args).
   decodeTerm(ovoke(TLc,O,S,I)) --> "O", decodeOptional(decodeTloc,TLc), decodeTerm(O), decodeTerm(S), decodeTerm(I).
   decodeTerm(guarded(T,C)) --> "g", decodeTerm(T), decodePred(C).
+
+  private decodeArgs:(list[(typeMode,term)]) --> list[integer].
+  decodeArgs(A) --> decodeSequence(decArg,A).
+
+  private decArg:((typeMode,term)) --> list[integer].
+  decArg((M,T)) --> decMode(M), decodeTerm(T).
+
+  private decMode:(typeMode) --> list[integer].
+  decMode(inMode) --> "+".
+  decMode(outMode) --> "-".
+  decMode(biMode) --> "?".
 
   private decTerms:(integer,list[term]) --> list[integer].
   decTerms(0,[]) --> [].
@@ -181,9 +192,9 @@ lo.comp.decode{
   decodeType(typeRule(L,R)) --> "Y", decodeType(L), decodeType(R).
   decodeType(tpLambda(A,R)) --> "Z", typeLen(Ln),decodeTypes(Ln,A), decodeType(R).
 
-  decodeArgTypes:(integer,list[tipe]) --> list[integer].
+  decodeArgTypes:(integer,list[(typeMode,tipe)]) --> list[integer].
   decodeArgTypes(0,[]) --> [].
-  decodeArgTypes(Ix,[T,..L]) --> decodeType(T), decodeArgTypes(Ix-1,L).
+  decodeArgTypes(Ix,[(M,T),..L]) --> decMode(M),decodeType(T), decodeArgTypes(Ix-1,L).
 
   private typeLen:(integer) --> list[integer].
   typeLen(Ix) --> digits(0,Ix).

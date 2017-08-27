@@ -28,9 +28,9 @@ lo.comp.unify{
   sm(tipe(Nm),tipe(Nm),_).
   sm(tpFun(Nm,Ar),tpFun(Nm,Ar),_).
   sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sm(deRef(O1),deRef(O2),Env), smList(A1,A2,Env).
-  sm(funType(A1,R1),funType(A2,R2),Env) :- smList(A1,A2,Env), sameType(R1,R2,Env).
-  sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- smList(A1,A2,Env), sameType(R1,R2,Env).
-  sm(predType(A1),predType(A2),Env) :- smList(A1,A2,Env).
+  sm(funType(A1,R1),funType(A2,R2),Env) :- smArgs(A1,A2,Env), sameType(R1,R2,Env).
+  sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- smArgs(A1,A2,Env), sameType(R1,R2,Env).
+  sm(predType(A1),predType(A2),Env) :- smArgs(A1,A2,Env).
   sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
   sm(classType(A1,C1),classType(A2,C2),Env) :- smList(A1,A2,Env), sameType(C1,C2,Env).
   sm(faceType(F1),faceType(F2),Env) :- length(F1)=length(F2), smFields(F1,F2,Env).
@@ -38,6 +38,10 @@ lo.comp.unify{
   smList:(list[tipe],list[tipe],list[env]){}.
   smList([],[],_).
   smList([E1,..L1],[E2,..L2],Env) :- sameType(E1,E2,Env), smList(L1,L2,Env).
+
+  smArgs:(list[(typeMode,tipe)],list[(typeMode,tipe)],list[env]){}.
+  smArgs([],[],_).
+  smArgs([(M,E1),..L1],[(M,E2),..L2],Env) :- sameType(E1,E2,Env), smArgs(L1,L2,Env).
 
   smFields:(list[(string,tipe)],list[(string,tipe)],list[env]){}.
   smFields([],_,_).

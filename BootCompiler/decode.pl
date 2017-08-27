@@ -68,12 +68,13 @@ decodeType(typeExp(Op,ArgTypes)) --> ['U'], decodeType(Op), decodeTypes(ArgTypes
 decodeType(univType(TV,Tp)) --> [':'], decodeType(TV), decodeType(Tp).
 decodeType(constrained(Tp,Con)) --> ['|'], decodeType(Tp), decodeConstraint(Con).
 decodeType(faceType(Fields)) --> ['I'], decodeFields(Fields).
-decodeType(funType(A,T)) --> ['F'], decodeTypes(A), decodeType(T).
-decodeType(grammarType(A,T)) --> ['G'], decodeTypes(A), decodeType(T).
-decodeType(predType(A)) --> ['P'], decodeTypes(A).
-decodeType(classType(A,T)) --> ['C'], decodeTypes(A), decodeType(T).
+decodeType(funType(A,T)) --> ['F'], decodeArgTypes(A), decodeType(T).
+decodeType(grammarType(A,T)) --> ['G'], decodeArgTypes(A), decodeType(T).
+decodeType(predType(A)) --> ['P'], decodeArgTypes(A).
+decodeType(classType(A,T)) --> ['C'], decodeArgTypes(A), decodeType(T).
 decodeType(tupleType(Tps)) --> ['T'], decodeTypes(Tps).
 decodeType(typeRule(L,R)) --> ['Y'], decodeType(L), decodeType(R).
+
 
 typeLen(Len) --> digits(0,Len).
 
@@ -81,9 +82,18 @@ decodeTypes(0,[]) --> [].
 decodeTypes(Ln,[A|More]) --> { Ln > 0 }, decodeType(A), {L1 is Ln-1}, decodeTypes(L1,More).
 decodeTypes(Types) --> typeLen(Len), decodeTypes(Len,Types).
 
+decodeArgTypes(0,[]) --> [].
+decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeMode(_), decodeType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).
+decodeArgTypes(Types) --> typeLen(Len), decodeArgTypes(Len,Types).
+
 decodeFields(0,[]) --> [].
 decodeFields(Ln,[(Nm,Tp)|More]) --> { Ln > 0 }, decodeText(Nm), decodeType(Tp), {L1 is Ln-1}, decodeFields(L1,More).
 decodeFields(Fields) --> typeLen(Len), decodeFields(Len,Fields).
+
+decodeMode(inMode) --> ['+'].
+decodeMode(outMode) --> ['-'].
+decodeMode(biMode) --> ['?'].
+decodeMode(biMode) --> [].
 
 decodeConstraint(S,Con) :-
   string_chars(S,Chrs),
