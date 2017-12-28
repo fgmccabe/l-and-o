@@ -1,7 +1,7 @@
 lo.topsort{
   import lo.
 
-  public contract all e,t ~~ depends[t ->> e] <~ {
+  public contract all e,t ~~ depends[t ->> e] ::= {
     defines:(t,e){}.
     references:(t) => list[e].
   }
@@ -35,7 +35,7 @@ lo.topsort{
     inStack(Rf,Stk,X),
     minPoint(X,Low,Pt).
   analyse(Rf,Defs,ODefs,Stack,OStack,G,OG,Low,Pt) :-
-    pickDef(Rf,Defs,RDefs,Def), 
+    pickDef(Rf,Defs,RDefs,Def),
     analyseDef(Def,RDefs,ODefs,Stack,OStack,G,OG,DfPt),
     minPoint(Low,DfPt,Pt).
   analyse(_,Defs,Defs,Stack,Stack,Groups,Groups,Low,Low).

@@ -8,7 +8,7 @@ lo.comp.location{
     merge:(location)=>location.
   }.
 
-  public contract all t ~~ located[t] <~ {
+  public contract all t ~~ located[t] ::= {
     locOf:(t)=>location.
   }
 
@@ -23,7 +23,7 @@ lo.comp.location{
   }.
 
   public
-  implementation display[location] <= {
+  implementation display[location] => {
     disp(L) => locDisp(L).
   }
 
@@ -41,14 +41,14 @@ lo.comp.location{
   public widthOf:(location) => integer.
   widthOf(loc(Line,Off,Col,Len,Pth)) => Len.
 
-  public implementation sizeable[location] <= {
+  public implementation sizeable[location] => {
     size(loc(_,_,_,Len,_)) => Len.
     size(std) => 0.
 
     isEmpty(std).
   }
 
-  public implementation comp[location] <= {
+  public implementation comp[location] => {
     L1 < L2 :- lessLoc(L1,L2).
     L1 >= L2 :- L1 = L2.
     L1 >= L2 :- lessLoc(L2,L1).
@@ -57,7 +57,7 @@ lo.comp.location{
   lessLoc:(location,location){}.
   lessLoc(loc(_,O1,_,L1,P),loc(_,O2,_,_,P)) :- O1+L1<O2.
 
-  public implementation coercion[location,json] <= {
+  public implementation coercion[location,json] => {
     _coerce(lc) => loc2json(lc).
   }
 

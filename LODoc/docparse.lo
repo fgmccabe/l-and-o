@@ -14,7 +14,7 @@ lo.doc.parse{
          | implSpec(string,ast,option[string])
          | pkgSpec(string,option[string],map[string,docSpec]).
 
-  public implementation display[docSpec] <= {
+  public implementation display[docSpec] => {
     disp(S) => dispDocSpec(S).
   }
 

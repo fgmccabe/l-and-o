@@ -5,11 +5,11 @@ test.opts{
 
   testOption ::= test(string,logical).
 
-  implementation display[testOption] <= {
+  implementation display[testOption] => {
     disp(test(A,L)) => ssSeq([ss("A="),ss(A),ss(", L="),(L?ss("true")|ss("false"))]).
   }
 
-  implementation equality[testOption] <= {
+  implementation equality[testOption] => {
     test(S,L) == test(S,L).
     hash(test(S,L)) => 0.
   }

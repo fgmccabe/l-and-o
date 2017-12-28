@@ -6,7 +6,7 @@ lo.json{
     jTxt(string) | jColl(map[string,json]) | jSeq(list[json]) |
     jNum(float).
 
-  public implementation display[json] <= {
+  public implementation display[json] => {
     disp(j) => dispJson(j,0).
   }
 
@@ -35,7 +35,7 @@ lo.json{
   spaces(0) => [].
   spaces(X) => [ss(" "),..spaces(X-1)].
 
-  public implementation equality[json] <= {
+  public implementation equality[json] => {
     T1 == T2 :- equalJson(T1,T2).
     hash(T) => hashJson(T).
   }
@@ -58,7 +58,7 @@ lo.json{
   hashJson(jSeq(L)) => hash(L).
   hashJson(jColl(C)) => hash(C).
 
-  public implementation coercion[string,json] <= {
+  public implementation coercion[string,json] => {
     _coerce(S) => J :- parseJson(J) %% explode(S).
   }
 
@@ -168,7 +168,7 @@ lo.json{
   parseField(implode(S)) --> "\"", parseStr(S), "\"".
 
   -- Some helpful coercions
-  public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] <= {
+  public implementation all v ~~ coercion[v,json] |: coercion[map[string,v],json] => {
     _coerce(M) => mapJson(M).
   }
 
@@ -178,7 +178,7 @@ lo.json{
   private entryCoerce:all v ~~ coercion[v,json] |: (v)=>json.
   entryCoerce(e) => e::json.
 
-  public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] <= {
+  public implementation all v ~~ coercion[v,json] |: coercion[list[v],json] => {
     _coerce(L) => jSeq(cList(L)).
   }
 

@@ -2,7 +2,7 @@ lo.option {
   import lo.
   import lo.monad.
 
-  public implementation monad[option->>()] <= {
+  public implementation monad[option->>()] => {
     none >>= _ => none.
     some(X) >>= F => F(X).
 
@@ -11,7 +11,7 @@ lo.option {
     raise () => none.
   }
 
-  public implementation execution[option->>()] <= {
+  public implementation execution[option->>()] => {
     _perform(some(X)) => X.
     _handle(some(X),_) => some(X).
     _handle(none,E) => E(()).

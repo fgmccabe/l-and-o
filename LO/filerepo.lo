@@ -13,7 +13,7 @@ lo.repo.file{
     resourcePresent(RepoUri).
   openRepository(Root) => repo(Root,manifest([])).
 
-  public implementation repository[fileRepo] <= {
+  public implementation repository[fileRepo] => {
     packagePresent(repo(Root,Man),Pkg,Kind) :-
       locateInManifest(Man,Pkg,"source",S),
       locateInManifest(Man,Pkg,"code",U),
@@ -76,7 +76,7 @@ lo.repo.file{
   extensionMapping("term",".term").
   extensionMapping("code","").
 
-  public implementation display[fileRepo] <= {
+  public implementation display[fileRepo] => {
     disp(F) => dispRepo(F).
   }
 

@@ -17,7 +17,7 @@ lo.rdf{
   addRes(Concepts,Id,Res) => Concepts[Res->[Id,..Others]] :- present(Concepts,Res,Others).
   addRes(Concepts,Id,Res) => Concepts[Res->[Id]] :- \+present(Concepts,Res,_).
 
-  public implementation equality[rdfResource] <= {
+  public implementation equality[rdfResource] => {
     L==R :- resEqual(L,R).
     hash(R) => resHash(R).
   }

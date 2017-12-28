@@ -22,13 +22,13 @@ lo.comp.inline{
   depends(M) => values(M) // ((R) => relEntry(getRelRefs(R,A),R)) :-
     A = keys(M).
 
-  implementation depends[relEntry->>term] <= {
+  implementation depends[relEntry->>term] => {
     defines(relEntry(_,rel(P,_,_)),P).
 
     references(relEntry(R,_)) => R.
   }
 
-  implementation display[relEntry] <= {
+  implementation display[relEntry] => {
     disp(R) => dispRelEntry(R).
   }
 

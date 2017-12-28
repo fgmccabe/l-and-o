@@ -24,7 +24,7 @@ lo{
   public formatSS:(ss) => string.
   formatSS(S) => _str_multicat(flatten(S)). -- temporary definition.
 
-  public implementation coercion[ss,string] <= {
+  public implementation coercion[ss,string] => {
     _coerce(S) => formatSS(S).
   }
 }

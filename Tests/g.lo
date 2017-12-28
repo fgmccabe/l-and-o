@@ -3,7 +3,7 @@ test.g{
 
   all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
-  implementation all e ~~ stream[cons[e] ->> e] <= {
+  implementation all e ~~ stream[cons[e] ->> e] => {
     _eof(nil).
 
     _hdtl(pair(E,L),E,L).

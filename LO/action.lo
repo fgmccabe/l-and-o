@@ -4,7 +4,7 @@ lo.action {
 
   public all a ~~ action[a] ::= done(a) | delay(()=>action[a]) | err(string).
 
-  public implementation monad[action->>string] <= {
+  public implementation monad[action->>string] => {
     err(E) >>= _ => err(E).
     done(A) >>= F => delay(()=>F(A)).
     delay(G) >>= F => delay(()=>G()>>=F).
@@ -14,7 +14,7 @@ lo.action {
     raise E => err(E).
   }
 
-  public implementation execution[action->>string] <= {
+  public implementation execution[action->>string] => {
     _perform(done(X)) => X.
     _perform(delay(F)) => _perform(F()).
 
@@ -23,14 +23,14 @@ lo.action {
     _handle(err(X),E) => E(X).
   }
 
-  public implementation all e ~~ coercion[e,string] |: coercion[action[e],string] <= {
+  public implementation all e ~~ coercion[e,string] |: coercion[action[e],string] => {
     _coerce(A) => _action_to_string(A).
   }
 
   _action_to_string:all a ~~ coercion[a,string] |: (action[a])=>string.
   _action_to_string(A) => _perform(A)::string.
 
-  public implementation all e ~~ display[e] |: display[action[e]] <= {
+  public implementation all e ~~ display[e] |: display[action[e]] => {
     disp(A) => dispAction(A).
   }
 

@@ -2,7 +2,7 @@ test.arithmetic{
   -- Lay out the arithmetic contracts
 
   public
-  contract all t ~~ equality[t] <~ { -- A contract rather than a regular interface
+  contract all t ~~ equality[t] ::= { -- A contract rather than a regular interface
     eq: (t,t){}.
     hash: (t)=>integer.
   }
@@ -12,26 +12,26 @@ test.arithmetic{
   nameOf(R) => R.name().
 
   public
-  contract all t ~~ equality[t] |: comp[t] <~ { -- another contract
+  contract all t ~~ equality[t] |: comp[t] ::= { -- another contract
     lt: (t,t){}.
     ge: (t,t){}.
   }
 
   public
-  contract all t ~~ additive[t] <~ {
+  contract all t ~~ additive[t] ::= {
     pl:  (t,t)=>t.
     mns: (t,t)=>t.
   }
 
   public
-  contract all t ~~ additive[t] |: arith[t] <~ {
+  contract all t ~~ additive[t] |: arith[t] ::= {
     tms: (t,t)=>t.
     dv:  (t,t)=>t.
     md: (t,t)=>t.
   }
 
   public
-  implementation arith[integer] <= {
+  implementation arith[integer] => {
     pl(X,Y) => _int_plus(X,Y).
     mns(X,Y) => _int_minus(X,Y).
     tms(X,Y) => _int_times(X,Y).
@@ -40,7 +40,7 @@ test.arithmetic{
   }
 
   public
-  implementation all u, v ~~ additive[u], additive[v] |: additive[(u,v)] <= {
+  implementation all u, v ~~ additive[u], additive[v] |: additive[(u,v)] => {
     pl((A,B),(U,V)) => (A+U,B+V).
     mns((A,B),(U,V)) => (A-U,B-V).
   }

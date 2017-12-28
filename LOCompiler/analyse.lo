@@ -84,7 +84,7 @@ lo.comp.code.analyse{
 
   private usageMap ::= usage(string,occMap,addr,set[integer],set[integer]).
 
-  implementation display[usageMap] <= {
+  implementation display[usageMap] => {
     disp(U) => dispUsage(U).
   }
 

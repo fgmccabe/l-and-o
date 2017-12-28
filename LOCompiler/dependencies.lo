@@ -13,12 +13,12 @@ lo.comp.dependencies{
   public
   defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
 
-  implementation all x,y ~~ depends[defn->>(string,defnKind)] <= {
+  implementation all x,y ~~ depends[defn->>(string,defnKind)] => {
     defines(defn(X,K,_,_,_),(X,K)).
     references(defn(_,_,_,R,_)) => R.
   }
 
-  implementation display[defn] <= {
+  implementation display[defn] => {
     disp(D) => dispDefn(D).
   }
 
@@ -30,7 +30,7 @@ lo.comp.dependencies{
   showRefs([],_) => [].
   showRefs([(Nm,K),..R],Sep) => [ss(Sep),ss(Nm),ss(":"),disp(K),..showRefs(R,",")].
 
-  implementation display[defnKind] <= {
+  implementation display[defnKind] => {
     disp(tpe) => ss("type").
     disp(con) => ss("contract").
     disp(impl) => ss("implementation").
@@ -202,7 +202,7 @@ lo.comp.dependencies{
   stmtRefs(S,All,So) =>  stmtRefs(I,All,So) :-  isUnary(S,"public",_,I).
   stmtRefs(S,All,So) =>  refsInType(S,All,So) :-  isTypeRule(S).
   stmtRefs(S,All,So) =>  refsInContract(I,All,So) :-  isUnary(S,"contract",_,I).
-  stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"<=",_,L,R)).
+  stmtRefs(S,All,So) =>  refsInConstraint(L,All,refsInTerm(R,All,So)) :-  (isUnary(S,"implementation",_,I),isBinary(I,"=>",_,L,R)).
   stmtRefs(S,All,So) =>  refsInHead(L,All,refsInTerm(R,All,So)) :-  isBinary(S,"=>",_,L,R).
   stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=>",_,H,E).
   stmtRefs(S,All,So) =>  refsInHead(H,All,refsInTerm(E,All,refsInCond(R,All,So))) :- isBinary(S,":-",_,L,R), isBinary(L,"=",_,H,E).

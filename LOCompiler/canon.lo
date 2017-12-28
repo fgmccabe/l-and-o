@@ -68,43 +68,43 @@ lo.comp.canon {
           | grConj(canonNT,canonNT)
           | grCond(canonNT,canonNT,canonNT).
 
-  public implementation display[canonPkg] <= {
+  public implementation display[canonPkg] => {
     disp(P) => dispPkg(P)
   }
 
-  public implementation display[pkgSpec] <= {
+  public implementation display[pkgSpec] => {
     disp(PSpec) => dispPkgSpec(PSpec).
   }
 
   private dispPkgSpec:(pkgSpec)=>ss.
   dispPkgSpec(pkgSpec(Pk,_,_,_,_,_,_)) => disp(Pk).
 
-  public implementation display[canonDef] <= {
+  public implementation display[canonDef] => {
     disp(C) => dispDef(C)
   }
 
-  public implementation display[canonTerm] <= {
+  public implementation display[canonTerm] => {
     disp(T) => dispTerm(T).
   }
 
-  public implementation display[canonCond] <= {
+  public implementation display[canonCond] => {
     disp(C) => dispCond(C)
   }
 
-  public implementation display[canonRule] <= {
+  public implementation display[canonRule] => {
     disp(C) => dispRule(C)
   }
 
-  public implementation display[canonNT] <= {
+  public implementation display[canonNT] => {
     disp(C) => dispNT(C)
   }
 
-  public implementation display[visibility] <= {
+  public implementation display[visibility] => {
     disp(priVate) => ss("private").
     disp(pUblic) => ss("public").
   }
 
-  public implementation display[canonOther] <= {
+  public implementation display[canonOther] => {
     disp(O) => dispOther(O).
   }
 
@@ -122,7 +122,7 @@ lo.comp.canon {
   dispDef(otherDef(Lc,C)) => ssSeq([ss("other @" ),disp(Lc),ss("\n"),disp(C),ss("\n")]).
   dispDef(cnDefn(Lc,_,conEntry(N,Nm,Con,B))) => ssSeq([ss(" contract: @ "),disp(Lc),ss("\n"),disp(Con),ss("<~"),disp(B)]).
   dispDef(implDef(Lc,_,ImplNm,Deps,_,Hd,T,_)) =>
-    ssSeq([ss(" implementation: "),ss(ImplNm),disp(Deps),ss("<="),dispTerms(Hd),ss("=>"),dispTerm(T)]).
+    ssSeq([ss(" implementation: "),ss(ImplNm),disp(Deps),ss("=>"),dispTerms(Hd),ss("=>"),dispTerm(T)]).
 
   private dispDefs:(list[canonDef]) => list[ss].
   dispDefs([]) => [].

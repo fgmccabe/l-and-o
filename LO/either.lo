@@ -5,7 +5,7 @@ lo.either{
   public all a,b ~~ either[a,b] ::= either(a) | other(b).
 
   -- Display either-or values
-  public implementation all x,y ~~ display[x], display[y] |: display[either[x,y]] <= {
+  public implementation all x,y ~~ display[x], display[y] |: display[either[x,y]] => {
     disp(T) => dispEither(T).
   }
 
@@ -13,7 +13,7 @@ lo.either{
   dispEither(either(a)) => ssSeq([ss("either("),disp(a),ss(")")]).
   dispEither(other(b)) => ssSeq([ss("or("),disp(b),ss(")")]).
 
-  public implementation all x,y ~~ equality[x], equality[y] |: equality[either[x,y]] <= {
+  public implementation all x,y ~~ equality[x], equality[y] |: equality[either[x,y]] => {
     X == Y :- eitherEquals(X,Y).
     hash(X) => eitherHash(X).
   }

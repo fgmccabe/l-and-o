@@ -1,6 +1,6 @@
 test.q{
   public
-  contract all x ~~ equality[x] <~ {
+  contract all x ~~ equality[x] ::= {
     (==): (x,x){}.
   }
 
@@ -8,7 +8,7 @@ test.q{
   x \== y :- \+ x==y.
 
   public
-  implementation equality[integer] <= {
+  implementation equality[integer] => {
     X == X.
   }
 }

@@ -6,7 +6,7 @@ lo.redblack{
 
   public import lo.redblack.impl.
 
-  public implementation all k,v ~~ equality[k],comp[k] |: map[redblack[k,v] ->> k,v] <= {
+  public implementation all k,v ~~ equality[k],comp[k] |: map[redblack[k,v] ->> k,v] => {
     present(M,K,V) :- inRB(M,K,V).
     _remove(M,K) => removeRB(M,K).
     _put(M,K,V) => insertRB(M,K,V).
@@ -25,7 +25,7 @@ lo.redblack{
     getValues(M) => foldRb((K,V,L) => [V,..L],[],M).
   }
 
-  public implementation all k,v ~~ equality[k],comp[k], equality[v] |: equality[redblack[k,v]] <= {
+  public implementation all k,v ~~ equality[k],comp[k], equality[v] |: equality[redblack[k,v]] => {
     M1 == M2 :- sameMaps(M1,M2).
     hash(M) => rbHash(M).
   }
@@ -36,12 +36,12 @@ lo.redblack{
   rbHash:all k,v ~~ equality[k], equality[v] |: (redblack[k,v]) => integer.
   rbHash(M) => foldRb((K,V,H) => (H*37+hash(K))*37+hash(V),0,M).
 
-  public implementation all k,v ~~ sizeable[redblack[k,v]] <= {
+  public implementation all k,v ~~ sizeable[redblack[k,v]] => {
     size(M) => foldRb((_,_,C)=>C+1,0,M).
     isEmpty(emptyRb).
   }
 
-  public implementation all k,v ~~ equality[k],comp[k] |: additive[redblack[k,v]] <= {
+  public implementation all k,v ~~ equality[k],comp[k] |: additive[redblack[k,v]] => {
     M1+M2 => addRb(M1,M2).
     M1-M2 => subRb(M1,M2).
 
@@ -52,20 +52,20 @@ lo.redblack{
     subRb(T1,T2) => foldRb((K,_,M)=>removeRB(M,K),T1,T2).
   }
 
-  public implementation all k,v ~~ equality[k],comp[k] |: folding[redblack[k,v]->>v] <= {
+  public implementation all k,v ~~ equality[k],comp[k] |: folding[redblack[k,v]->>v] => {
     foldRight(F,U,M) => foldRb((_,V,X)=>F(V,X),U,M).
     foldLeft(F,U,M) => foldRb((_,V,X)=>F(V,X),U,M).
   }
 
-  public implementation ixmap[redblack] <= {
+  public implementation ixmap[redblack] => {
     M///f => mapRb(f,M).
   }
 
-  public implementation all k,v ~~ equality[k],comp[k] |: ixfilter[redblack->>k,v] <= {
+  public implementation all k,v ~~ equality[k],comp[k] |: ixfilter[redblack->>k,v] => {
     M^//p => foldRb((K,V,X)=>(p(K,V) ? insertRB(X,K,V) | X), emptyRb, M).
   }
 
-  public implementation all k,v ~~ equality[k],comp[k] |: coercion[list[(k,v)],redblack[k,v]] <= {
+  public implementation all k,v ~~ equality[k],comp[k] |: coercion[list[(k,v)],redblack[k,v]] => {
     _coerce(L) => foldLeft(((k,v),x)=>insertRB(x,k,v),emptyRb,L).
   }
 }

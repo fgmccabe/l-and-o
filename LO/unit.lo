@@ -13,7 +13,7 @@ lo.unit{
     desc = Nm.
   }.
 
-  public implementation display[harness] <= {
+  public implementation display[harness] => {
     disp(H) => ss(H.desc).
   }
 

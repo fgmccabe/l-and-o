@@ -8,7 +8,7 @@ lo.comp.code.code{
   public assem ::= assem(term,list[instruction],list[litrl],list[(string,string,tloc)]).
   public litrl ::= litrl(string,term).
 
-  public implementation display[assem] <= {
+  public implementation display[assem] => {
     disp(Seg) => dispCodeSeg(Seg).
   }
 

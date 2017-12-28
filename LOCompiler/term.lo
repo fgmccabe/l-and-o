@@ -46,7 +46,7 @@ lo.comp.term {
 
   public prProg ::= prProg(pkgSpec,map[term,rel]).
 
-  public implementation display[prProg] <= {
+  public implementation display[prProg] => {
     disp(Prog) => dispProg(Prog).
   }
 
@@ -59,7 +59,7 @@ lo.comp.term {
   private dispProg:(prProg)=>ss.
   dispProg(prProg(_,Rels)) => ssSeq(values(Rels)//dispRel).
 
-  public implementation display[rel] <= {
+  public implementation display[rel] => {
     disp(R) => dispRel(R).
   }
 
@@ -67,7 +67,7 @@ lo.comp.term {
   dispRel(rel(Nm,_,Rules)) =>
     ssSeq(Rules//dispClause).
 
-  public implementation display[clse] <= {
+  public implementation display[clse] => {
     disp(Cl) => dispClause(Cl).
   }
 
@@ -79,7 +79,7 @@ lo.comp.term {
   dispClause(eqn(Q,Hd,Args,Rep)) =>
     ssSeq([dispTerm(Hd,Q),dispArgs(Args,Q),ss("=>"),dispTerm(Rep,Q),ss(".\n")]).
 
-  public implementation display[term] <= {
+  public implementation display[term] => {
     disp(T) => dispTerm(T,[]).
   }
 
@@ -117,7 +117,7 @@ lo.comp.term {
   dispEls(_,Tail,[],_) => [ss(Tail)].
   dispEls(Sep,Tail,[e,..l],Q) => [ss(Sep),dispTerm(e,Q),..dispEls(", ",Tail,l,Q)].
 
-  public implementation display[pred] <= {
+  public implementation display[pred] => {
     disp(P) => displayPred(P,[]).
   }
 
@@ -151,7 +151,7 @@ lo.comp.term {
   predLoc(dfne(Lc,_,_)) => Lc.
   predLoc(cond(Lc,_,_,_)) => Lc.
 
-  public implementation equality[term] <= {
+  public implementation equality[term] => {
     T1 == T2 :- eqTerm(T1,T2).
     hash(T) => hashTerm(T).
   }

@@ -10,7 +10,7 @@ lo.array{
   private array:all e ~~ (map[integer,e]) <=> array[e].
   array(Els) <= {}.
 
-  public implementation all e ~~ map[array[e] ->> integer,e] <= {
+  public implementation all e ~~ map[array[e] ->> integer,e] => {
     present(A,Ix,V) :- arrayPresent(A,Ix,V).
     _remove(A,Ix) => removeElement(A,ix).
     _put(A,Ix,V) => addElement(A,Ix,V).
@@ -38,7 +38,7 @@ lo.array{
   private arrayValues:all e ~~ (array[e]) => list[e].
   arrayValues(array(Els)) => values(Els).
 
-  public implementation all c ~~ sizeable[array[c]] <= {
+  public implementation all c ~~ sizeable[array[c]] => {
     size(A) => arraySize(A).
     isEmpty(A) :- arrayIsEmpty(A).
   }
@@ -52,7 +52,7 @@ lo.array{
   public emptyArray:all t ~~ array[t].
   emptyArray = array([]).
 
-  public implementation all e ~~ display[e] |: display[array[e]] <= {
+  public implementation all e ~~ display[e] |: display[array[e]] => {
     disp(A) => displayArray(A).
   }
 
@@ -62,7 +62,7 @@ lo.array{
   show2nd: all u,v ~~ display[v] |: ((u,v)) => ss.
   show2nd((_,v)) => disp(v).
 
-  public implementation all e ~~ coercion[array[e],list[e]] <= {
+  public implementation all e ~~ coercion[array[e],list[e]] => {
     _coerce(array(Els)) => values(Els).
   }
 }

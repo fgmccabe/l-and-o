@@ -10,13 +10,13 @@ lo.repo {
 
   public version ::= defltVersion | vers(string).
 
-  public contract all r ~~ repository[r] <~ {
+  public contract all r ~~ repository[r] ::= {
     packagePresent:(r,pkg,string){}.
 
     loadFromRepo:(r,pkg,string,string){}.
   }
 
-  public implementation all a,b ~~ repository[a], repository[b] |: repository[(a,b)] <= {
+  public implementation all a,b ~~ repository[a], repository[b] |: repository[(a,b)] => {
     packagePresent(C,P,K) :- comboPkgPrsnt(C,P,K).
 
     loadFromRepo(C,P,K,Txt) :- comboLoad(C,P,K,Txt).
@@ -38,11 +38,11 @@ lo.repo {
   public coreRepo:coreRepo.
   coreRepo <= {}.
 
-  public implementation display[coreRepo] <= {
+  public implementation display[coreRepo] => {
     disp(_) => ss("core repo").
   }
 
-  public implementation repository[coreRepo] <= {
+  public implementation repository[coreRepo] => {
     packagePresent(_,pkg(P,defltVersion),K) :- _pkg_is_present(P,"*",K,_).
     packagePresent(_,pkg(P,vers(V)),K) :- _pkg_is_present(P,V,K,_).
 
@@ -52,27 +52,27 @@ lo.repo {
       _pkg_is_present(P,V,K,Fn).
   }
 
-  public implementation equality[pkg] <= {
+  public implementation equality[pkg] => {
     P1 == P2 :- samePackage(P1,P2).
     hash(P) => packageHash(P).
   }
 
-  public implementation display[pkg] <= {
+  public implementation display[pkg] => {
     disp(pkg(P,defltVersion)) => ss(P).
     disp(pkg(P,vers(V))) => ssSeq([ss(P),ss("#"),ss(V)]).
   }
 
-  public implementation display[version] <= {
+  public implementation display[version] => {
     disp(defltVersion) => ss("*").
     disp(vers(V)) => ss(V).
   }
 
-  public implementation coercion[string,version] <= {
+  public implementation coercion[string,version] => {
     _coerce("*") => defltVersion.
     _coerce(V) => vers(V).
   }
 
-  public implementation coercion[pkg,string] <= {
+  public implementation coercion[pkg,string] => {
     _coerce(pkg(P,defltVersion)) => P.
     _coerce(pkg(P,vers(V))) => P+"#"+V.
   }

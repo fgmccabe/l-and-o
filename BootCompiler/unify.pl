@@ -24,14 +24,14 @@ sm(type(Nm),type(Nm),_).
 sm(tpFun(Nm,Ar),tpFun(Nm,Ar),_).
 sm(typeExp(O1,A1),typeExp(O2,A2),Env) :- sameType(O1,O2,Env),smList(A1,A2,Env).
 sm(tupleType(A1),tupleType(A2),Env) :- smList(A1,A2,Env).
-sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
-sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
-sm(classType(A1,R1),classType(A2,R2),Env) :- sameType(R1,R2,Env), smList(A2,A1,Env).
-sm(predType(A1),predType(A2),Env) :- smList(A2,A1,Env).
+sm(funType(A1,R1),funType(A2,R2),Env) :- sameType(R1,R2,Env), smModedList(A2,A1,Env).
+sm(grammarType(A1,R1),grammarType(A2,R2),Env) :- sameType(R1,R2,Env), smModedList(A2,A1,Env).
+sm(classType(A1,R1),classType(A2,R2),Env) :- sameType(R1,R2,Env), smModedList(A2,A1,Env).
+sm(predType(A1),predType(A2),Env) :- smModedList(A2,A1,Env).
 sm(faceType(E1),faceType(E2),Env) :- length(E1,L), length(E2,L), smFields(E1,E2,Env).
 
 varBinding(T1,T2,_) :- isIdenticalVar(T1,T2),!.
-varBinding(T1,T2,Env) :- 
+varBinding(T1,T2,Env) :-
   constraints(T1,C1),
   constraints(T2,C2),
   mergeConstraints(C2,C1,Env),
@@ -45,7 +45,7 @@ copyConstraints(_,C,_) :- var(C),!.
 copyConstraints(_,[C|_],_) :- var(C),!.
 copyConstraints([C|M],[C|R],Env) :- copyConstraints(M,R,Env).
 
-checkBinding(V,Tp,Env) :- 
+checkBinding(V,Tp,Env) :-
   constraints(V,C),
   bind(V,Tp),
   checkConstraints(C,Env).
@@ -82,6 +82,9 @@ checkFace([(Nm,ElTp)|R],TpFace,Env) :-
 
 smList([],[],_).
 smList([E1|L1],[E2|L2],Env) :- sameType(E1,E2,Env), smList(L1,L2,Env).
+
+smModedList([],[],_).
+smModedList([(Md,E1)|L1],[(Md,E2)|L2],Env) :- sameType(E1,E2,Env), smModedList(L1,L2,Env).
 
 smFields(_,[],_).
 smFields(L1,[(F2,E2)|L2],Env) :- is_member((F2,E1),L1), sameType(E1,E2,Env), smFields(L1,L2,Env).
@@ -124,4 +127,3 @@ mergeFace([(Nm,Tp)|R],Env,SoFar,Face) :- is_member((Nm,STp),SoFar),!,
   sameType(Tp,STp,Env),
   mergeFace(R,Env,SoFar,Face).
 mergeFace([(Nm,Tp)|R],Env,SoFar,Face) :- mergeFace(R,Env,[(Nm,Tp)|SoFar],Face).
-

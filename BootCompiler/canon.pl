@@ -211,7 +211,7 @@ showContract(contract(LclNm,Nm,_,FullSpec,Mtds),O,Ox) :-
   appStr(Nm,O2,O3),
   appStr(":",O3,O4),
   showConstraint(FullSpec,O4,O5),
-  appStr(" <~ ",O5,O6),
+  appStr(" ::= ",O5,O6),
   showType(Mtds,O6,O7),
   appStr(".\n",O7,Ox).
 
@@ -234,7 +234,7 @@ showImplementation(impl(Lc,_,_,_,Spec,OCx,implBody(_,Hd,ThDefs,Others,Types),_,_
   showLocation(Lc,O5,O6),
   appStr("\n:inherit: ",O6,O7),
   showConstraints(OCx,O7,O8),
-  appStr("<= {\n",O8,O9),
+  appStr("=> {\n",O8,O9),
   showTypeDefs(Types,O9,O10),
   showDefs(ThDefs,O10,O11),
   showOthers(Others,O11,O12),

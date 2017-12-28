@@ -18,7 +18,7 @@ lo.redblack.impl{
 
   private trColor ::= Rd | Bk | Dbl.
 
-  private implementation display[trColor] <= {
+  private implementation display[trColor] => {
     disp(Rd) => ss("red").
     disp(Bk) => ss("black").
     disp(Dbl) => ss("dbl-black").
@@ -106,7 +106,7 @@ lo.redblack.impl{
   mapRb(_,eTree) => eTree.
   mapRb(F,node(L,xk,xv,Cx,R)) => node(mapRb(F,L),xk,F(xk,xv),Cx,mapRb(F,R)).
 
-  public implementation all k,v ~~ display[k], display[v] |: display[redblack[k,v]] <= {
+  public implementation all k,v ~~ display[k], display[v] |: display[redblack[k,v]] => {
     disp(Tr) => ssSeq([ss("["),ssSeq(dRb(Tr,"",_)),ss("]")]).
   }
 
@@ -114,7 +114,7 @@ lo.redblack.impl{
   dRb(eTree,Sep,Sep) => [].
   dRb(node(L,k,v,_,R),Sep,Sx) => [ssSeq(dRb(L,Sep,S0)),ss(S0),disp(k),ss("->"),disp(v),ssSeq(dRb(R,", ",Sx))].
 
-  public implementation all k,v ~~ dump[k], dump[v] |: dump[redblack[k,v]] <= {
+  public implementation all k,v ~~ dump[k], dump[v] |: dump[redblack[k,v]] => {
     _dump(Tr,Lvl) => dumpRb(Tr,Lvl).
   }
 

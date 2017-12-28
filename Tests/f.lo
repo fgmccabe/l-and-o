@@ -1,12 +1,12 @@
 test.f{
   all t ~~ cons[t] ::= nil | pair(t,cons[t]).
 
-  contract all t ~~ additive[t] <~ {
+  contract all t ~~ additive[t] ::= {
     (+): (t,t)=>t.
     (-): (t,t)=>t.
   }
 
-  implementation additive[integer] <= {
+  implementation additive[integer] => {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
   }
@@ -26,7 +26,7 @@ test.f{
 
   assert double(fib(10)) = 110.
 
-  implementation all t ~~ additive[t] |: additive[cons[t]] <= {
+  implementation all t ~~ additive[t] |: additive[cons[t]] => {
     X+Y => addEls(X,Y).
     X-Y => subEls(X,Y).
   }

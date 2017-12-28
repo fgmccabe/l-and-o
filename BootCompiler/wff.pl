@@ -22,7 +22,7 @@ getQuantifiers(T,[],T).
 
 isContractSpec(St,Lc,Quants,Constraints,Con,Body) :-
   isUnary(St,Lc,"contract",I),
-  isBinary(I,"<~",L,R),
+  isBinary(I,"::=",L,R),
   isBraceTuple(R,_,Body),
   contractSpec(L,Quants,Constraints,Con).
 

@@ -8,7 +8,7 @@ lo.comp.genprolog{
   import lo.comp.transutils.
   import lo.comp.types.
 
-  public implementation coercion[prProg,string] <= {
+  public implementation coercion[prProg,string] => {
     _coerce(P) => formatSS(prog2code(flattenProg(P))).
   }
 

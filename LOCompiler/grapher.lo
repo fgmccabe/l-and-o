@@ -19,7 +19,7 @@ lo.comp.grapher{
   makeGraph(Pkgs,Repo,Cat,Rp,Rpx) => topsort(scanPkgs(Pkgs,Repo,Cat,[],Rp,Rpx)).
     -- showGroups(G).
 
-  private implementation depends[(pkg,list[pkg])->>pkg] <= {
+  private implementation depends[(pkg,list[pkg])->>pkg] => {
     defines((Pk,_),Rq) :- consistentPkg(Rq,Pk).
     references((Pk,I)) => I.
   }

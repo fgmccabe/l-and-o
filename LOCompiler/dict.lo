@@ -15,21 +15,21 @@ lo.comp.dict{
   public
   typeDef ::= tpDef(location,string,typeKind,tipe).
 
-  public implementation display[env] <= {
+  public implementation display[env] => {
     disp(E) => showEnv(E).
   }
 
   private showEnv:(env) => ss.
   showEnv(scope(Tps,Vars,Constraints,Contracts,Implementations)) => ssSeq([ss("scope types: "),disp(Tps),ss("\nvars: "),disp(Vars)]).
 
-  implementation display[typeDef] <= {
+  implementation display[typeDef] => {
     disp(D) => showTpDef(D).
   }
 
   private showTpDef:(typeDef)=>ss.
   showTpDef(tpDef(Lc,_,_,Face)) => ssSeq([ss("type @"),disp(Lc),ss("\nType def"),disp(Face),ss("\n")]).
 
-  public implementation display[vr] <= {
+  public implementation display[vr] => {
     disp(D) => showVr(D).
   }
 

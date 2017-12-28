@@ -41,14 +41,14 @@ lo.repo.manifest{
   versionJson((vers(V),R),M) => M[V->jColl(R///((_,S)=>jTxt(S)))].
 
   -- Displaying a manifest
-  public implementation display[manifest] <= {
+  public implementation display[manifest] => {
     disp(manifest(E)) => ssSeq([ss("manifest"),ss("{\n"),ssSeq(showEntries(E)),ss("}\n")]).
   }
 
   showEntries:(map[string,manifestEntry]) => list[ss].
   showEntries(M) => values(M)//showEntry.
 
-  public implementation display[manifestEntry] <= {
+  public implementation display[manifestEntry] => {
     disp(E) => showEntry(E).
   }
 

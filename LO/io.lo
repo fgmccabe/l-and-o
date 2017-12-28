@@ -89,7 +89,7 @@ lo.io {
   public ioEncoding ::= rawEncoding |
      utf8Encoding | unknownEncoding.
 
-  implementation coercion[ioEncoding,integer] <= {
+  implementation coercion[ioEncoding,integer] => {
     _coerce(rawEncoding) => 0.
     _coerce(utf8Encoding) => 3.
     _coerce(unknownEncoding) => 2.
@@ -137,7 +137,7 @@ lo.io {
   public fileType:(string)=>fileType.
   fileType(F) => _file_type(F)::fileType.
 
-  implementation coercion[integer,fileType] <= {
+  implementation coercion[integer,fileType] => {
     _coerce(0) => fifoSpecial.
     _coerce(1) => directory.
     _coerce(2) => charSpecial.

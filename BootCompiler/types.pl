@@ -76,13 +76,13 @@ occIn(Id,tVar(Curr,_,_,_)) :- nonvar(Curr), !, occIn(Id,Curr).
 occIn(Id,typeExp(O,_)) :- occIn(Id,O),!.
 occIn(Id,typeExp(_,L)) :- is_member(A,L), occIn(Id,A).
 occIn(Id,tupleType(L)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,funType(L,_)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,funType(_,R)) :- is_member(A,R), occIn(Id,A).
-occIn(Id,grammarType(L,_)) :- is_member(A,L), occIn(Id,A).
-occIn(Id,grammarType(_,R)) :- is_member(A,R), occIn(Id,A).
-occIn(Id,classType(L,_)) :- is_member(A,L), occIn(Id,A).
+occIn(Id,funType(L,_)) :- is_member((_,A),L), occIn(Id,A).
+occIn(Id,funType(_,R)) :- occIn(Id,R).
+occIn(Id,grammarType(L,_)) :- is_member((_,A),L), occIn(Id,A).
+occIn(Id,grammarType(_,R)) :- occIn(Id,R).
+occIn(Id,classType(L,_)) :- is_member((_,A),L), occIn(Id,A).
 occIn(Id,classType(_,R)) :- occIn(Id,R).
-occIn(Id,predType(L)) :- is_member(A,L), occIn(Id,A).
+occIn(Id,predType(L)) :- is_member((_,A),L), occIn(Id,A).
 occIn(Id,constrained(Tp,Con)) :- occIn(Id,Con) ; occIn(Id,Tp).
 occIn(Id,univType(_,Tp)) :- occIn(Id,Tp).
 occIn(Id,faceType(L)) :- is_member((_,A),L), occIn(Id,A).

@@ -118,7 +118,7 @@ lo.comp.flatten{
 
   varDep ::= vars(pred,list[term],list[term]).
 
-  implementation depends[varDep->>term] <= {
+  implementation depends[varDep->>term] => {
     defines(vars(_,Vs,_),V) :- V in Vs.
 
     references(vars(_,_,Vs)) => Vs.

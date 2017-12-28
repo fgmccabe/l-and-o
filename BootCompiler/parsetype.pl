@@ -32,22 +32,22 @@ parseType(Sq,Env,B,C0,Cx,Type) :-
 parseType(F,Env,B,C0,Cx,funType(AT,RT)) :-
   isBinary(F,"=>",L,R),
   isTuple(L,LA),!,
-  parseTypes(LA,Env,B,C0,C1,AT),
+  parseModedTypes(LA,Env,B,C0,C1,inMode,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(F,Env,B,C0,Cx,grammarType(AT,RT)) :-
   isBinary(F,"-->",L,R),
   isTuple(L,LA),!,
-  parseTypes(LA,Env,B,C0,C1,AT),
+  parseModedTypes(LA,Env,B,C0,C1,biMode,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(F,Env,B,C0,Cx,classType(AT,RT)) :-
   isBinary(F,"<=>",L,R),
   isTuple(L,LA),!,
-  parseTypes(LA,Env,B,C0,C1,AT),
+  parseModedTypes(LA,Env,B,C0,C1,biMode,AT),
   parseType(R,Env,B,C1,Cx,RT).
 parseType(C,Env,B,C0,Cx,predType(AT)) :-
   isBraceTerm(C,_,L,[]),
   isTuple(L,A),!,
-  parseTypes(A,Env,B,C0,Cx,AT).
+  parseModedTypes(A,Env,B,C0,Cx,biMode,AT).
 parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
   isTuple(T,[A]),
   isTuple(A,Inner),!,
@@ -61,18 +61,6 @@ parseType(T,Env,B,C0,Cx,tupleType(AT)) :-
 parseType(T,Env,B,C0,Cx,faceType(AT)) :-
   isBraceTuple(T,_,L),!,
   parseTypeFields(L,Env,B,C0,Cx,[],AT).
-parseType(T,Env,B,C0,Cx,AT) :-
-  isUnary(T,"?",L),!,
-  parseType(L,Env,B,C0,Cx,AT).
-parseType(T,Env,B,C0,Cx,AT) :-
-  isUnary(T,"^",L),!,
-  parseType(L,Env,B,C0,Cx,AT).
-parseType(T,Env,B,C0,Cx,AT) :-
-  isUnary(T,"?^",L),!,
-  parseType(L,Env,B,C0,Cx,AT).
-parseType(T,Env,B,C0,Cx,AT) :-
-  isUnary(T,"^?",L),!,
-  parseType(L,Env,B,C0,Cx,AT).
 parseType(T,_,_,Cx,Cx,anonType) :-
   locOfAst(T,Lc),
   reportError("cannot understand type %s",[T],Lc).
@@ -198,6 +186,26 @@ parseTypes([],_,_,C,C,[]).
 parseTypes([A|AT],Env,B,C0,Cx,[Atype|ArgTypes]) :-
   parseType(A,Env,B,C0,C1,Atype),
   parseTypes(AT,Env,B,C1,Cx,ArgTypes).
+
+parseModedTypes([],_,_,C,C,_,[]).
+parseModedTypes([A|AT],Env,B,C0,Cx,Md,[Atype|ArgTypes]) :-
+  parseModedType(A,Env,B,C0,C1,Md,Atype),
+  parseModedTypes(AT,Env,B,C1,Cx,Md,ArgTypes).
+
+parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
+  isUnary(T,"^",_,I),
+  parseModedType(T,Env,Q,C,Cx,outMode,Tp).
+parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
+  isUnary(T,"?",_,I),
+  parseModedType(T,Env,Q,C,Cx,inMode,Tp).
+parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
+  isUnary(T,"^?",_,I),
+  parseModedType(T,Env,Q,C,Cx,biMode,Tp).
+parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
+  isUnary(T,"?^",_,I),
+  parseModedType(T,Env,Q,C,Cx,biMode,Tp).
+parseModedType(T,Env,Q,C,Cx,Md,(Md,Tp)) :-
+  parseType(T,Env,Q,C,Cx,Tp).
 
 parseTypeFields([],_,_,Cx,Cx,Flds,Flds).
 parseTypeFields([F|L],Env,Bound,C0,Cx,Flds,Fields) :-

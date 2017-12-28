@@ -96,7 +96,7 @@ lo.comp.code.instructions{
    | iBkpt.		-- Break point
 
 
-  public implementation display[instruction] <= {
+  public implementation display[instruction] => {
     disp(I) => showIns(I,[]).
   }
 

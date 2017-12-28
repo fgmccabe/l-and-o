@@ -1,28 +1,28 @@
 lo.collection{
   import lo.core.
 
-  public contract all c,e ~~ folding[c->>e] <~ {
+  public contract all c,e ~~ folding[c->>e] ::= {
     foldRight:all x ~~ (((e,x)=>x),x,c) => x.
     foldLeft:all x ~~ (((e,x)=>x),x,c) => x.
   }
 
-  public contract all c,e ~~ filter[c->>e] <~ {
+  public contract all c,e ~~ filter[c->>e] ::= {
     (^/):(c,(e){}) => c.
   }
 
-  public contract all m/1,e,f ~~ mapping[m->>e,f] <~ {
+  public contract all m/1,e,f ~~ mapping[m->>e,f] ::= {
     (//):(m[e],(e)=>f) => m[f].
   }
 
-  public contract all m/2 ~~ ixmap[m] <~ {
+  public contract all m/2 ~~ ixmap[m] ::= {
     (///):all k,e,f ~~ (m[k,e],(k,e)=>f)=>m[k,f].
   }
 
-  public contract all k,v,m/2 ~~ ixfilter[m->>k,v] <~ {
+  public contract all k,v,m/2 ~~ ixfilter[m->>k,v] ::= {
     (^//):(m[k,v],(k,v){}) => m[k,v].
   }
 
-  public contract all m,k,v ~~ map[m ->> k,v] <~ {
+  public contract all m,k,v ~~ map[m ->> k,v] ::= {
     present:(m,k,v){}.
     _remove:(m,k) => m.
     _put:(m,k,v) => m.
@@ -32,14 +32,14 @@ lo.collection{
     _empty:m.
   }.
 
-  public contract all k,e ~~ membership[k->>e] <~ {
+  public contract all k,e ~~ membership[k->>e] ::= {
     empty: k.
     addMem:(e,k)=>k.
     delMem:(e,k)=>k.
     (in):(e,k){}.
   }
 
-  public contract all k,e ~~ setops[k->>e] <~ {
+  public contract all k,e ~~ setops[k->>e] ::= {
     union : (k,k)=>k.
     intersect : (k,k)=>k.
     difference : (k,k)=>k.

@@ -3,7 +3,7 @@ test.l{
 
 /*
   public
-  implementation all x ~~ stream[list[x] ->> x] <= {
+  implementation all x ~~ stream[list[x] ->> x] => {
     _eof([]).
     _hdtl([E,..L],E,L).
   }

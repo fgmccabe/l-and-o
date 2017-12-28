@@ -2,7 +2,7 @@ test.m{
   import lo.
   import lo.monad.
 
-  implementation monad[option->>()] <= {
+  implementation monad[option->>()] => {
     some(A) >>= F => F(A).
     none >>= _ => none.
 

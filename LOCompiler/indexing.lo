@@ -11,7 +11,7 @@ lo.comp.code.indexing{
 
   private ix ::= ix(term,list[(integer,string)]).
 
-  implementation display[ix] <= {
+  implementation display[ix] => {
     disp(Ix) => dispIx(Ix).
   }
 
@@ -20,7 +20,7 @@ lo.comp.code.indexing{
 
   private aoTr ::= eTree | aXN(list[aoTr]) | oXN(list[(ix,aoTr)]).
 
-  implementation display[aoTr] <= {
+  implementation display[aoTr] => {
     disp(T) => showTree(T).
   }
 

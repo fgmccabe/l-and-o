@@ -6,7 +6,7 @@ lo.comp.ast{
 
   public ast <~ hasLoc.
 
-  public implementation display[ast] <= {
+  public implementation display[ast] => {
     disp(T) => showAst(T,2000).
   }
 

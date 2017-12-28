@@ -44,15 +44,15 @@ lo.comp.types{
     name = Nm.
   }
 
-  public implementation display[tipe] <= {
+  public implementation display[tipe] => {
     disp(T) => dispType(T).
   }
 
-  public implementation display[constraint] <= {
+  public implementation display[constraint] => {
     disp(C) => showConstraint(C).
   }
 
-  public implementation display[typeMode] <= {
+  public implementation display[typeMode] => {
     disp(inMode) => ss("?").
     disp(outMode) => ss("^").
     disp(biMode) => ss("^?").
@@ -218,7 +218,7 @@ lo.comp.types{
   bind:(tipe,tipe){}.
   bind(T,Tp) :- (typeKind(T)=typeKind(Tp), \+ occursIn(T,Tp), bnd(T,Tp))!.
 
-  public implementation display[typeKind] <= {
+  public implementation display[typeKind] => {
     disp(K) => dispTpKind(K).
   }
 

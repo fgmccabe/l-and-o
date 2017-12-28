@@ -19,7 +19,7 @@ lo.comp.regexp{
          | reLiteral(location,integer)
          | reCat(location,regExp,regExp).
 
-  public implementation display[regExp] <= {
+  public implementation display[regExp] => {
     disp(RE) => dispRegexp(RE).
   }
 
@@ -41,7 +41,7 @@ lo.comp.regexp{
   dispSeq([]) => [].
   dispSeq([R,..M]) => [dispRegexp(R),..dispSeq(M)].
 
-  public implementation located[regExp] <= {
+  public implementation located[regExp] => {
     locOf(reChars(Lc,_)) => Lc.
     locOf(reNegChars(Lc,_)) => Lc.
     locOf(reGroup(Lc,_,_)) => Lc.

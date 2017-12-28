@@ -7,17 +7,17 @@ lo.finger{
   private all a ~~ node[a] ::= node2(a,a) | node3(a,a,a).
   public all a ~~ finger[a] ::= emp | single(a) | deep(list[a],finger[node[a]],list[a]).
 
-  contract all f/1 ~~ reduce[f] <~ {
+  contract all f/1 ~~ reduce[f] ::= {
     reducer : all a,b ~~ ((a,b)=>b, f[a], b) => b.
     reducel : all a,b ~~ ((b,a)=>b, b, f[a]) => b.
   }
 
-  implementation reduce[list] <= {
+  implementation reduce[list] => {
     reducer(F,x,z) => foldRight(F,z,x).
     reducel(F,x,z) => foldLeft((b,a)=>F(a,b),x,z).
   }
 
-  implementation reduce[node] <= {
+  implementation reduce[node] => {
     reducer(F,node2(a,b),z) => F(a,F(b,z)).
     reducer(F,node3(a,b,c),z) => F(a,F(b,F(c,z))).
 
@@ -25,7 +25,7 @@ lo.finger{
     reducel(F,z,node3(a,b,c)) => F(F(F(z,c),b),a).
   }
 
-  implementation reduce[finger] <= {
+  implementation reduce[finger] => {
     reducer(F,x,z) => fingerRedr(F,x,z).
     reducel(F,x,z) => fingerRedl(F,x,z).
   }
@@ -70,11 +70,11 @@ lo.finger{
   private rightLift:all a,f/1 ~~ reduce[f] |: (finger[a],f[a]) => finger[a].
   rightLift(S,D) => reducel(addRight,S,D).
 
-  public implementation all a ~~ coercion[list[a],finger[a]] <= {
+  public implementation all a ~~ coercion[list[a],finger[a]] => {
     _coerce(L) => leftLift(L,emp).
   }
 
-  public implementation all a ~~ coercion[finger[a],list[a]] <= {
+  public implementation all a ~~ coercion[finger[a],list[a]] => {
     _coerce(T) => toList(T).
   }
 
@@ -91,20 +91,20 @@ lo.finger{
     hdtlFinger(M,f,M1).
   fingerTl(Pr,M,Sf) => deep(Pr,M,Sf).
 
-  public implementation all a ~~ stream[finger[a]->>a] <= {
+  public implementation all a ~~ stream[finger[a]->>a] => {
     _eof(emp).
 
     _hdtl(T,E,R) :- hdtlFinger(T,E,R).
   }
 
-  public implementation all a ~~ display[a] |: display[finger[a]] <= {
+  public implementation all a ~~ display[a] |: display[finger[a]] => {
     disp(T) => ssSeq([ss("["),ssSeq(L),ss("]")]) :- (L,_) = reducer((A,B)=>dispEl(B,A),T,([],"")).
   }
 
   dispEl:all a ~~ display[a] |: ((list[ss],string),a) => (list[ss],string).
   dispEl((L,Sep),E) => ([disp(E),ss(Sep),..L],", ").
 
-  public implementation all a ~~ dump[a] |: dump[finger[a]] <= {
+  public implementation all a ~~ dump[a] |: dump[finger[a]] => {
     _dump(T,Lvl) => dumpFinger(T,Lvl).
   }
 
@@ -114,7 +114,7 @@ lo.finger{
   dumpFinger(deep(Pr,M,Sf),Lvl) => ssSeq([ss("<"),dump(Pr,Lv1),ss("|"),dump(M,Lv1),ss("|"),dump(Sf,Lv1),ss(">")]) :-
     Lv1 = Lvl-1.
 
-  implementation all a ~~ dump[a] |: dump[node[a]] <= {
+  implementation all a ~~ dump[a] |: dump[node[a]] => {
     _dump(T,Lvl) => dumpNode(T,Lvl).
   }
 

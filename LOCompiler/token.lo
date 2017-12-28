@@ -28,14 +28,14 @@ lo.comp.token{
     loc = Loc.
   }.
 
-  public implementation display[token] <= {
+  public implementation display[token] => {
     disp(Tk) => dispToken(Tk).
   }
 
   dispToken:(token)=>ss.
   dispToken(tok(Tk,Lc)) => ssSeq([disp(Tk),ss("@"),disp(Lc)]).
 
-  public implementation display[tok] <= {
+  public implementation display[tok] => {
     disp(Tk) => tokDisp(Tk).
   }
 
@@ -56,7 +56,7 @@ lo.comp.token{
   tokDisp(period) => ss(". ").
 
   private
-  implementation display[stringSegment] <= {
+  implementation display[stringSegment] => {
     disp(segment(_,T)) => ss(T).
     disp(interpolate(_,In,"")) => ssSeq([ss("display("),ss(In),ss(")")]).
     disp(interpolate(_,In,Fmt)) => ssSeq([ss("format("),ss(In),ss(":"),ss(Fmt),ss(")")]).

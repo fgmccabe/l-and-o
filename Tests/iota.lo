@@ -1,7 +1,7 @@
 test.iota{
   import lo.
 
-  implementation additive[integer] <= {
+  implementation additive[integer] => {
     X+Y => _int_plus(X,Y).
     X-Y => _int_minus(X,Y).
     zero = 0.

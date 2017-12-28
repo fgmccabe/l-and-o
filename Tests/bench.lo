@@ -78,7 +78,7 @@ test.bench{
   calculate_lips(Count,Time) => "\(Sp)\(Units) lips for \(Count) iterations, taking \(Time) seconds":- megaLip((496*Count)::float/Time,Sp,Units).
 
   scale ::= unit | kilo | mega.
-  implementation display[scale] <= {
+  implementation display[scale] => {
     disp(unit) => ss("").
     disp(kilo) => ss("K").
     disp(mega) => ss("M").

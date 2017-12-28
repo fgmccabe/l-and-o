@@ -3,12 +3,12 @@ lo.comp.freshen{
   import lo.comp.misc.
   import lo.comp.types.
 
-  public contract all s ~~ freshen[s] <~ {
+  public contract all s ~~ freshen[s] ::= {
     freshen:(s,map[string,tipe]) => (map[string,tipe],s).
     skolemize:(s,map[string,tipe]) =>(map[string,tipe],s).
   }.
 
-  public implementation freshen[tipe] <= {
+  public implementation freshen[tipe] => {
     freshen(T,M) => freshenType(deRef(T),M).
     skolemize(T,M) => skolemizeType(deRef(T),M).
   }
@@ -29,7 +29,7 @@ lo.comp.freshen{
   private skolemFun:(string,integer) => tipe.
   skolemFun(Nm,Ar) => kFun(_str_gen(Nm),Ar).
 
-  public implementation freshen[constraint] <= {
+  public implementation freshen[constraint] => {
     freshen(C,B) => freshenConstraint(C,B).
     skolemize(C,B) => skolemizeConstraint(C,B).
   }

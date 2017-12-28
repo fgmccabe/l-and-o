@@ -60,7 +60,7 @@ test.modsec{
     merge(M,[e,..l],i) => merge(M[e->[i]],l,i).
   }
 
-  implementation coercion[meta,json] <= {
+  implementation coercion[meta,json] => {
     _coerce(M) => meta2json(M).
   }
 
@@ -98,12 +98,12 @@ test.modsec{
   findTags([tag(T),..l],Tgs) => findTags(l,[T,..Tgs]).
   findTags([_,..l],Tgs) => findTags(l,Tgs).
 
-  implementation display[modSecRule] <= {
+  implementation display[modSecRule] => {
     disp(modSecRule(Tgt,Ptn,A)) => ssSeq([ss("SecRule:"),ssSeq(Tgt//dispTgt),ss(" "),ss(Ptn),ss("-->"),dispActions(A)]).
     disp(modSecMarker(Id)) => ssSeq([ss("SecMarker:"),ss(Id)]).
   }
 
-  implementation display[msAct] <= {
+  implementation display[msAct] => {
     disp(single(S)) => ss(S).
     disp(id(S)) => ssSeq([ss("id:'"),ss(S),sc(0c')]).
     disp(tag(S)) => ssSeq([ss("tag:'"),ss(S),sc(0c')]).
@@ -118,7 +118,7 @@ test.modsec{
   private dispActions:(list[msAct]) => ss.
   dispActions(A) => disp(A).
 
-  implementation coercion[modSecRule,json] <= {
+  implementation coercion[modSecRule,json] => {
     _coerce(modSecRule(Tgts,Ptn,[])) =>  jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgts//extractTgt)), "pattern"->jTxt(Ptn)])]).
     _coerce(modSecRule(Tgts,Ptn,Action)) => jColl(["SecRule" -> jColl(["target" -> jSeq(jStrings(Tgts//extractTgt)), "pattern"->jTxt(Ptn), "action"->jSeq(jActions(Action))])]).
     _coerce(modSecMarker(Id)) => jColl(["SecMarker" -> jTxt(Id)]).
@@ -128,7 +128,7 @@ test.modsec{
   jActions([]) => [].
   jActions([S,..L]) => [S::json,..jActions(L)].
 
-  implementation coercion[msAct,json] <= {
+  implementation coercion[msAct,json] => {
     _coerce(single(A)) => jColl(["verb"->jTxt(A)]).
     _coerce(id(I)) => jColl(["id" -> jTxt(I)]).
     _coerce(tag(T)) => jColl(["tag"->jTxt(T)]).
@@ -231,7 +231,7 @@ test.modsec{
   private secTkn ::= secRule | secAction | secDefaultAction | secMarker | secRuleUpdate
    | idn(list[integer]) | strg(list[integer]) | colon | bar | pling | lbra | rbra | amp.
 
-  implementation display[secTkn] <= {
+  implementation display[secTkn] => {
     disp(secAction) => ss("SecAction").
     disp(secRule) => ss("SecRule").
     disp(secMarker) => ss("SecMarker").

@@ -1,5 +1,5 @@
 test.eq{
-  contract all a ~~ equality[a] <~ {
+  contract all a ~~ equality[a] ::= {
     (==): (a,a){}.
   }
 
@@ -11,7 +11,7 @@ test.eq{
 
   -- Implement equality for lists
   public
-  implementation all x ~~ equality[x] |: equality[list[x]] <= {
+  implementation all x ~~ equality[x] |: equality[list[x]] => {
     L1 == L2 :- listEq(L1,L2).
   }
 
@@ -20,7 +20,7 @@ test.eq{
   listEq([],[]).
   listEq([E1,..L1],[E2,..L2]) :- E1==E2, listEq(L1,L2).
 
-  public implementation equality[integer] <= {
+  public implementation equality[integer] => {
     X == X.
   }
 

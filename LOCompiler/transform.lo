@@ -827,7 +827,7 @@ lo.comp.transform{
   collectLabelVars([varbl(Nm),..Args],LbVr,ThVr,List,Lx) :-
     collectLabelVars(Args,LbVr,ThVr,[(Nm,labelArg(varbl(Nm),LbVr,ThVr)),..List],Lx).
 
-  public implementation coercion[location,tloc] <= {
+  public implementation coercion[location,tloc] => {
     _coerce(loc(Line,Off,Col,Len,Pth)) => tloc(Line,Off,Col,Len).
   }
 
