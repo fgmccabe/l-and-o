@@ -372,7 +372,7 @@ retCode g__flt_format(processPo P, ptrPo a) {
   else {
     char buffer[MAX_MSG_LEN];
 
-    stringPo frmtP = stringV(a2);
+    strBuffPo frmtP = stringV(a2);
     char * format = stringVal(frmtP);
     long fLen = stringLen(frmtP);
     long endPos;

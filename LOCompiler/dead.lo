@@ -59,10 +59,6 @@ lo.comp.dead{
   findTermRefsInList:(list[term],list[term]) => list[term].
   findTermRefsInList(A,Refs) => foldLeft((T,Rfs)=>findTermRefs(T,Rfs),Refs,A).
 
-
-
-
-
   inlineGroup:(list[rel],map[term,rel],map[term,rel]) => map[term,rel].
   inlineGroup(Rels,P,I) => foldLeft(((R:rel),M) => M[R.name->R],P,relFxPt(Rels,P,I)).
 
@@ -111,7 +107,7 @@ lo.comp.dead{
   inlineTerm(escvoke(Lc,Op,A),P,I,F,Fx,U,Ux) => escvoke(Lc,Op,inlineTerms(A,P,I,F,Fx,U,Ux)).
   inlineTerm(invoke(Lc,Op,A),P,I,F,Fx,U,Ux) => checkInline(invoke(Lc,inlineTerm(Op,P,I,F,F0,U,U0),inlineTerms(A,P,I,F0,F1,U0,U1)),P,I,F1,Fx,U1,Ux).
   inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,F,Fx,U,Ux) => checkInline(ovoke(Lc,inlineTerm(Cl,P,I,F,F0,U,U0),inlineTerm(Lb,P,I,F0,F1,U0,U1),inlineTerm(Th,P,I,F1,F2,U1,U2)),P,I,F2,Fx,U2,Ux).
-  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(inlineTerm(T,P,I,F,F0,U,U0),simplifyCond(conj(none,inlinePred(C,P,I,F0,Fx,U0,Ux))))).
+  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(inlineTerm(T,P,I,F,F0,U,U0),simplifyCond(inlinePred(C,P,I,F0,Fx,U0,Ux)))).
 
   inlineTerms:(list[term],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[term].
   inlineTerms([],_,_,Fx,Fx,U,U) => [].

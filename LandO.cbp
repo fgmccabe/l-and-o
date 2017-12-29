@@ -833,6 +833,9 @@
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/stringBufferP.h">
 			<Option target="ooio"/>
 		</Unit>
+		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/strings.h">
+			<Option target="ooio"/>
+		</Unit>
 		<Unit filename="/Users/fgm/Projects/LandO/OOlib/Headers/timer.h">
 			<Option target="ooio"/>
 		</Unit>

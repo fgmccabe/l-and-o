@@ -45,7 +45,7 @@ retCode g__shell(processPo P, ptrPo a) {
   else if (isvar(ags) || aLen < 0 || isvar(env) || eLen < 0)
     return liberror(P, "__shell", eINSUFARG);
   else {
-    stringPo str = stringV(pth);
+    strBuffPo str = stringV(pth);
 
     char cmd[MAX_MSG_LEN];
     copyString2Buff(cmd,NumberOf(cmd),str);
@@ -66,7 +66,7 @@ retCode g__shell(processPo P, ptrPo a) {
 
       for (i = 1; IsList(ags); i++, ags = deRefI(listTail(objV(ags)))) {
         ptrPo l = listHead(objV(ags));
-        stringPo sp = stringV(deRefI(l));
+        strBuffPo sp = stringV(deRefI(l));
         char * s = stringVal(sp);
         long al = stringLen(sp);
 
@@ -88,10 +88,10 @@ retCode g__shell(processPo P, ptrPo a) {
         if (!isTuplePair(&El, &var, &val) || !IsString(deRefI(&val)) || !IsString(deRefI(&var)))
           return liberror(P, "__shell", eINSUFARG);
         else {
-          stringPo kp = stringV(deRefI(&var));
+          strBuffPo kp = stringV(deRefI(&var));
           char * k = stringVal(kp);
           long kl = stringLen(kp);
-          stringPo vp = stringV(deRefI(&val));
+          strBuffPo vp = stringV(deRefI(&val));
           char * v = stringVal(vp);
           long vl = stringLen(vp);
           long bSize = kl+vl + 10;

@@ -13,5 +13,5 @@ test.finger{
   tr2 = ["t","h","i","s","i","s","n","o","t","a","t","r","e","e"]::finger[string].
 
   show "\(tr2)".
-  show "\(dump(tr2,2))".
+  show "\(dump(tr2,5))".
 }

@@ -880,7 +880,7 @@ static retCode copyFlt(double dx, void *cl) {
 }
 
 static retCode encodeName(ioPo out, char * sx, integer len) {
-  codePoint delim = uniSearchDelims(sx, len,  ";\"|/%");
+  codePoint delim = uniSearchDelims(sx, len,  ";\"|/%'");
   if (delim == 0)
     delim = '"';
 

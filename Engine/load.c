@@ -541,7 +541,7 @@ retCode g__install_pkg(processPo P, ptrPo a) {
       &vl
     };
 
-    stringPo text = stringV(pkgText);
+    strBuffPo text = stringV(pkgText);
 
     retCode ret = installPackage(stringVal(text), stringLen(text), P->proc.errorMsg,
                                  NumberOf(P->proc.errorMsg), buildImport, &x);

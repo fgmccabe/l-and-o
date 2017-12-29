@@ -21,7 +21,7 @@ lo.comp.flatten{
   flattenRule(clse(Q,Nm,Args,Body)) => clse(NQ,Nm,NArgs,NBody<>Guard<>Post) :-
     flattenArgs(Args,Q,NArgs,Guard,[],Post,[],Q1)!,
     flattenBody(Body,Q1,NBody,[],NQ).
-  flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(conj(none,PrR)))),simplifyCond(conj(none,Guard)))) :-
+  flattenRule(eqn(Q,Nm,Args,guarded(Rep,G))) => eqn(NQ,Nm,NArgs,guarded(simplifyGuard(guarded(NRep,simplifyCond(PrR))),simplifyCond(Guard))) :-
     flattenArgs(Args,Q,NArgs,Guard,Pr,Prx,[],Q0)!,
     flattenPred(G,Q0,G1,Pr,[G1,..Pr0],Pr0,Prx,Q1),
     flattenTerm(Rep,Q0,NRep,PrR,PsR,PsR,[],NQ).
@@ -88,7 +88,7 @@ lo.comp.flatten{
   flattenPred(succ,Q,succ,Pr,Pr,Ps,Ps,Q).
   flattenPred(except(TLc,E),Q,except(TLc,NE),Pre,Prx,Pos,Psx,Qx) :-
     flattenTerm(E,Q,NE,Pre,Prx,Post,Psx,Qx).
-  flattenPred(cond(Lc,T,L,R),Q,cond(Lc,T1,simplifyCond(conj(Lc,LPs)),simplifyCond(conj(Lc,RPs))),Pre,Prx,Pos,Psx,Qx) :-
+  flattenPred(cond(Lc,T,L,R),Q,cond(Lc,T1,simplifyCond(LPs),simplifyCond(RPs)),Pre,Prx,Pos,Psx,Qx) :-
     flattenPred(T,Q,T1,Pre,Prx,Pos,Psx,Q0),
     flattenPred(L,Q0,L1,LPs,[L1,..LPx],LPx,[],Q1),
     flattenPred(R,Q1,R1,RPs,[R1,..RPx],RPx,[],Qx).
@@ -125,7 +125,7 @@ lo.comp.flatten{
   }
 
   reflowPred:(pred)=>pred.
-  reflowPred(conj(Lc,L)) => simplifyCond(conj(Lc,reflowPreds(topsort(flowDepends(L))))).
+  reflowPred(conj(Lc,L)) => simplifyCond(reflowPreds(topsort(flowDepends(L)))).
   reflowPred(P)=>P.
 
   reflowPreds:(list[list[varDep]]) => list[pred].

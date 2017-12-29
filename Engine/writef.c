@@ -90,7 +90,7 @@ static retCode outC(ioPo f, ptrPo x, long depth, int prec, logical alt) {
       else if (class == floatClass)
         r = outFloat(f, floatVal((floatPo) p));
       else if (class == stringClass) {
-        stringPo str = (stringPo)p;
+        strBuffPo str = (strBuffPo)p;
         long pos = 0;
         long end = stringLen(str);
         char * src = stringVal(str);

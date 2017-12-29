@@ -356,9 +356,9 @@ retCode g__pkg_is_present(processPo P, ptrPo a) {
   else if (!isvar(a4))
     return liberror(P, "_pkg_is_present", eVARNEEDD);
   else {
-    stringPo s1 = stringV(a1);
-    stringPo s2 = stringV(a2);
-    stringPo s3 = stringV(a3);
+    strBuffPo s1 = stringV(a1);
+    strBuffPo s2 = stringV(a2);
+    strBuffPo s3 = stringV(a3);
 
     char pkgNm[MAX_SYMB_LEN];
     copyString2Buff(pkgNm, NumberOf(pkgNm), s1);

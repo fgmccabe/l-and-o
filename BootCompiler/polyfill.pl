@@ -3,6 +3,7 @@
                     '_int_abs'/2,'_flt_abs'/2,
                     explode/2, implode/2,'_stringOf'/4,
                     '_str_find'/4, '_sub_str'/4, '_str_split'/4, '_str_concat'/3, '_str_multicat'/2,'_str_gen'/2,'_str_len'/2,'_str_start'/2,
+                    '_int_format'/3,'_flt_format'/3,
                     '_unify'/2,
                     '_isCcChar'/1,'_isCfChar'/1,'_isCnChar'/1,'_isCoChar'/1,'_isCsChar'/1,
                     '_isLlChar'/1,'_isLmChar'/1,'_isLoChar'/1,'_isLtChar'/1,'_isLuChar'/1,
@@ -107,6 +108,12 @@ implode(C,S) :- listify(L,C),string_codes(S,L).
 
 '_flt_lt'(X,Y) :- X<Y.
 '_flt_ge'(X,Y) :- X>=Y.
+
+'_int_format'(Ix,_,Str) :-
+  number_string(Ix,Str).
+
+'_flt_format'(Dx,_,Str) :-
+  number_string(Dx,Str).
 
 '_display'((Ln,Col,Sz),Term) :-
   writef("@%t:%t(%t) - %w\n",[Ln,Col,Sz,Term]).
@@ -229,6 +236,6 @@ stringify([],'lo.core#[]').
 stringify([E|L],'lo.core#,..'(S,LL)) :- atom_string(E,S), stringify(L,LL).
 
 '_stringOf'(T,_,_,S) :-
-  swritef(S,'%w',[T]).  
+  swritef(S,'%w',[T]).
 
 '_ticks'(X) :- get_time(X).

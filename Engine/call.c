@@ -31,7 +31,7 @@ retCode g__call(processPo P, ptrPo a) {
   else if (!IsString(PRG) || !IsInt(AR) || !isGroundTerm(&ARGS))
     return liberror(P, "__call", eINVAL);
   else {
-    stringPo pS = stringV(PRG);
+    strBuffPo pS = stringV(PRG);
     char prog[MAX_SYMB_LEN];
     copyString2Buff(prog, NumberOf(prog), pS);
 

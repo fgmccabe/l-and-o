@@ -70,7 +70,7 @@ lo.comp.transform{
 
   transformEqn:(canonRule,list[lyr],trOptions,string,integer,list[term],integer,list[clse],list[clse],map[term,rel],map[term,rel],report,report){}.
   transformEqn(equation(Lc,Nm,A,Value,Cond),Map,Opts,LclFun,Arity,Extra,QNo,
-    [eqn(Q,prg(LclFun,Arity+size(Extra)),Args,simplifyGuard(guarded(Rep,simplifyCond(conj(none,Guard<>Body))))),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
+    [eqn(Q,prg(LclFun,Arity+size(Extra)),Args,simplifyGuard(guarded(Rep,simplifyCond(Guard<>Body)))),..Rx],Rx,Ex,Exx,Rp,Rpx) :-
     debugPreamble(Nm,Extra,Q0,LbLx,FBg,Opts,ClOpts),        -- are we debugging?
     trArgPtns(A,Args,const0(Extra,inMode),Q0,Q1,Map,ClOpts,Ex,Ex0,Rp,Rp0), -- head args
     trGoal(Cond,PreG,[],Q1,Q2,Map,ClOpts,Ex0,Ex1,Rp0,Rp1), -- condition goals
@@ -124,7 +124,7 @@ lo.comp.transform{
     lineDebug(Lc,G2,G3,ClOpts),                           -- line debug after setting up frame
     deframeDebug(Nm,0,G7,[],ClOpts),                      -- generate frame exit debugging
     breakDebug(Nm,G3,G4,ClOpts),                          -- generate break point debugging
-    Px = P1[LclPrg->rel(LclPrg,some(Lc::tloc),[eqn(Q,LclPrg,const0(Extra,inMode),simplifyGuard(guarded(Rep,simplifyCond(conj(none,Guard<>G7)))))])].
+    Px = P1[LclPrg->rel(LclPrg,some(Lc::tloc),[eqn(Q,LclPrg,const0(Extra,inMode),simplifyGuard(guarded(Rep,simplifyCond(Guard<>G7))))])].
 
   varAccess:(list[lyr],string,map[term,rel],map[term,rel]){}.
   varAccess(Map,Nm,P,Px) :-
@@ -441,7 +441,7 @@ lo.comp.transform{
   trPtn(apply(Lc,v(_,Nm),A),Ptn,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trArgPtns(A,Args,[],Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trPtnCallOp(Nm,some(Lc::tloc),Args,Ptn,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
-  trPtn(whre(P,C),guarded(Ptn,simplifyCond(conj(none,CC))),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trPtn(whre(P,C),guarded(Ptn,simplifyCond(CC)),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trPtn(P,Ptn,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(C,CC,[],Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trPtn(XX,Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -521,7 +521,7 @@ lo.comp.transform{
     trExpCallOp(Lc,Op,Args,Exp,Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trExp(dot(Lc,Rec,Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trDotExp(Lc,Rec,enum(Fld),Exp,Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx).
-  trExp(whre(E,C),simplifyGuard(guarded(Ce,simplifyCond(conj(none,Cx)))),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
+  trExp(whre(E,C),simplifyGuard(guarded(Ce,simplifyCond(Cx))),Q,Qx,Map,Opts,Ex,Exx,Rp,Rpx) :-
     trExp(E,Ce,Q,Q0,Map,Opts,Ex,Ex0,Rp,Rp0),
     trGoal(C,Cx,[],Q0,Qx,Map,Opts,Ex0,Exx,Rp0,Rpx).
   trExp(condExp(Lc,T,L,R),invoke(some(Lc::tloc),CondFn,const0(LQ,inMode)),Q,merge(LQ,Q),Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -529,7 +529,7 @@ lo.comp.transform{
     trExp(L,LRslt,Q0,Q1,Map,Opts,Ex0,Ex1,Rp0,Rp1),
     trExp(R,RRslt,Q1,LQ,Map,Opts,Ex1,Ex2,Rp1,Rpx),
     genNewName(Map,"condExp",length(LQ),CondFn),
-    Cl1 = eqn(LQ,CondFn,const0(LQ,inMode),simplifyGuard(guarded(LRslt,simplifyCond(conj(none,TG))))),
+    Cl1 = eqn(LQ,CondFn,const0(LQ,inMode),simplifyGuard(guarded(LRslt,simplifyCond(TG)))),
     Cl2 = eqn(LQ,CondFn,const0(LQ,inMode),RRslt),
     Exx = Ex2[CondFn->rel(CondFn,some(Lc::tloc),[Cl1,Cl2])].
   trExp(lambda(Rl),Rslt,Q,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
@@ -618,7 +618,7 @@ lo.comp.transform{
     trExp(Exp,Rep,Q2,Q3,Map,Opts,Ex1,Ex2,Rp1,Rpx),      -- replacement expression
     Closure = mkClosure(Lam,FreeVars),
     LmPrg = prg(Lam,3),
-    Code = [eqn(merge(FreeVars,Q3),LmPrg,[(inMode,cons(trCons("_call",size(Args)),project1(Args))),(inMode,Closure),(inMode,anon)],simplifyGuard(guarded(Rep,simplifyCond(conj(none,PreGx)))))],
+    Code = [eqn(merge(FreeVars,Q3),LmPrg,[(inMode,cons(trCons("_call",size(Args)),project1(Args))),(inMode,Closure),(inMode,anon)],simplifyGuard(guarded(Rep,simplifyCond(PreGx))))],
     Exx = Ex2[LmPrg->rel(LmPrg,none,Code)].
   trLambda(clause(Lc,Nm,A,Cond),Closure,Q,Map,Opts,Ex,Exx,Rp,Rpx) :-
     FreeVars = freeVarsInRule(clause(Lc,Nm,A,Cond),Q,[]),

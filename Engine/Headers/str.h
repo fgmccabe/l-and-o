@@ -21,7 +21,7 @@ typedef struct _string_record_ {
   ptrI class;                             // == stringClass
   long size;                              // Length of the string
   char data[ZEROARRAYSIZE];               // The string contents
-} stringRec, *stringPo;
+} stringRec, *strBuffPo;
 
 extern ptrI stringClass;
 
@@ -35,24 +35,24 @@ static inline logical isString(objPo p) {
   return hasClass(p, stringClass);
 }
 
-static inline stringPo stringV(ptrI x) {
+static inline strBuffPo stringV(ptrI x) {
   assert(IsString(x));
-  return (stringPo) objV(x);
+  return (strBuffPo) objV(x);
 }
 
-static inline char * stringVal(stringPo p) {
+static inline char * stringVal(strBuffPo p) {
   assert(isString((objPo) p));
 
   return p->data;
 }
 
-static inline char * StringVal(stringPo p) {
+static inline char * StringVal(strBuffPo p) {
   assert(isString((objPo) p));
 
   return p->data;
 }
 
-static inline long stringLen(stringPo p) {
+static inline long stringLen(strBuffPo p) {
   assert(isString((objPo) p));
   return p->size;
 }
@@ -69,7 +69,7 @@ static inline uinteger stringHash(objPo p) {
 ptrI allocateString(heapPo H, const char *buff, long len);
 ptrI allocateCString(heapPo H, const char *buff);
 
-retCode copyString2Buff(char *buffer, long bLen, stringPo s);
+retCode copyString2Buff(char *buffer, long bLen, strBuffPo s);
 retCode strPrepare(char * tgt, long tLen, char * src, long sLen, codePoint pad, logical left, long width);
 retCode closeOutString(ioPo f, heapPo P, ptrPo tgt);
 

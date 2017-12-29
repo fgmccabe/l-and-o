@@ -309,7 +309,7 @@ retCode g__popen(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "_popen", eINSUFARG);
         } else {
-          stringPo ap = stringV(Arg);
+          strBuffPo ap = stringV(Arg);
           char * arg = stringVal(ap);
           long al = stringLen(ap);
 
@@ -327,8 +327,8 @@ retCode g__popen(processPo P, ptrPo a) {
           setProcessRunnable(P);
           return liberror(P, "__popen", eINVAL);
         } else {
-          stringPo kp = stringV(envKey);
-          stringPo vp = stringV(envVal);
+          strBuffPo kp = stringV(envKey);
+          strBuffPo vp = stringV(envVal);
           long al = stringLen(kp) + stringLen(vp) + 4;
           char buffer[al];
 
@@ -994,7 +994,7 @@ retCode g__intext(processPo P, ptrPo a) {
     ioPo file = filePtr(t1);
     codePoint chr;
 
-    stringPo sp = stringV(t2);
+    strBuffPo sp = stringV(t2);
     long tlen = stringLen(sp);
     char term[tlen + 1];
 
@@ -1195,7 +1195,7 @@ retCode g__outtext(processPo P, ptrPo a) {
       return liberror(P, "__outtext", eSTRNEEDD);
     else {
       switchProcessState(P, wait_io);
-      stringPo sp = stringV(deRefI(&a[2]));
+      strBuffPo sp = stringV(deRefI(&a[2]));
       char * s = stringVal(sp);
       long len = stringLen(sp);
 
@@ -1320,7 +1320,7 @@ static retCode stringMsg(ioPo f, void *data, long depth, long precision, logical
   if (ptr != NULL && IsString(*ptr)) {
     if (precision <= 0)
       precision = 32767;
-    stringPo s = stringV(*ptr);
+    strBuffPo s = stringV(*ptr);
     char * str = stringVal(s);
     long len = stringLen(s);
 

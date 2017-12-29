@@ -33,7 +33,7 @@ void initStringClass(void) {
 
 static long strSizeFun(specialClassPo class, objPo o) {
   assert(o->class == stringClass);
-  stringPo s = (stringPo) o;
+  strBuffPo s = (strBuffPo) o;
 
   return CellCount(sizeof(stringRec) + (s->size + 1) * sizeof(byte));
 }
@@ -42,8 +42,8 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
   if (o1 == o2)
     return same;
   else if (o1->class == stringClass && o2->class == stringClass) {
-    stringPo s1 = (stringPo) o1;
-    stringPo s2 = (stringPo) o2;
+    strBuffPo s1 = (strBuffPo) o1;
+    strBuffPo s2 = (strBuffPo) o2;
 
     long l1 = stringLen(s1);
     long l2 = stringLen(s2);
@@ -59,7 +59,7 @@ static comparison strCompFun(specialClassPo class, objPo o1, objPo o2) {
 }
 
 static retCode strOutFun(specialClassPo class, ioPo out, objPo o) {
-  stringPo s = (stringPo) o;
+  strBuffPo s = (strBuffPo) o;
   char * str = StringVal(s);
   long len = stringLen(s);
   retCode r = outChar(out, '\'');
@@ -91,7 +91,7 @@ static objPo strCopyFun(specialClassPo class, objPo dst, objPo src) {
 static uinteger strHashFun(specialClassPo class, objPo o) {
   assert(o->class == stringClass);
 
-  stringPo s = (stringPo) o;
+  strBuffPo s = (strBuffPo) o;
   return uniHash(StringVal(s));
 }
 
@@ -101,7 +101,7 @@ ptrI allocateCString(heapPo H, const char *m) {
 
 ptrI allocateString(heapPo H, const char *m, long count) {
   size_t len = CellCount(sizeof(stringRec) + (count + 1) * sizeof(byte));
-  stringPo new = (stringPo) allocate(H, len);
+  strBuffPo new = (strBuffPo) allocate(H, len);
 
   new->class = stringClass;
   new->size = count;
@@ -109,7 +109,7 @@ ptrI allocateString(heapPo H, const char *m, long count) {
   return objP(new);
 }
 
-retCode copyString2Buff(char *buffer, long bLen, stringPo s) {
+retCode copyString2Buff(char *buffer, long bLen, strBuffPo s) {
   long sLen = stringLen(s);
   long len = min(sLen, bLen - 1);
 
@@ -214,7 +214,7 @@ retCode g__trim(processPo P, ptrPo a) {
     return liberror(P, "__trim", eINVAL);
   else {
     long width = integerVal(intV(Width));
-    stringPo D = stringV(Data);
+    strBuffPo D = stringV(Data);
     char * data = stringVal(D);
     long len = stringLen(D);
     long awidth = labs(width);
@@ -307,7 +307,7 @@ retCode g_explode(processPo P, ptrPo a) {
   else if (!IsString(Str))
     return liberror(P, "explode", eINVAL);
   else {
-    stringPo s = stringV(Str);
+    strBuffPo s = stringV(Str);
     char * src = stringVal(s);
     long strLen = stringLen(s);
 
@@ -428,7 +428,7 @@ retCode g__str_len(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)))
     return liberror(P, "_str_len", eSTRNEEDD);
   else {
-    stringPo str = stringV(a1);
+    strBuffPo str = stringV(a1);
     integer slen = stringLen(str);
 
     if (isvar(a2)) {
@@ -450,7 +450,7 @@ retCode g__str_hash(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)))
     return liberror(P, "_str_hash", eSTRNEEDD);
   else {
-    stringPo str = stringV(a1);
+    strBuffPo str = stringV(a1);
     char * s = stringVal(str);
     long len = stringLen(str);
 
@@ -477,9 +477,9 @@ retCode g__str_concat(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_concat", eINVAL);
   else {
-    stringPo str1 = stringV(a1);
+    strBuffPo str1 = stringV(a1);
     char * s1 = stringVal(str1);
-    stringPo str2 = stringV(a2);
+    strBuffPo str2 = stringV(a2);
     char * s2 = stringVal(str2);
     long slen1 = stringLen(str1);
     long slen2 = stringLen(str2);
@@ -515,7 +515,7 @@ retCode g__str_multicat(processPo P, ptrPo a) {
       ptrI C = deRefI(h);
 
       if (IsString(C)) {
-        stringPo s = stringV(C);
+        strBuffPo s = stringV(C);
 
         ret = outText(O_IO(b), stringVal(s), stringLen(s));
         Ls = deRefI(h + 1);
@@ -576,8 +576,8 @@ retCode g__str_start(processPo P, ptrPo a) {
   else if (!isString(objV(a1)) || !isString(objV(a2)))
     return liberror(P, "_str_start", eINVAL);
   else {
-    stringPo str = stringV(a1);
-    stringPo tgt = stringV(a2);
+    strBuffPo str = stringV(a1);
+    strBuffPo tgt = stringV(a2);
 
     char * s1 = stringVal(str);
     char * s2 = stringVal(tgt);
@@ -598,8 +598,8 @@ retCode g__str_find(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isString(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
     return liberror(P, "_str_find", eINSUFARG);
   else {
-    stringPo src = stringV(a1);
-    stringPo tgt = stringV(a2);
+    strBuffPo src = stringV(a1);
+    strBuffPo tgt = stringV(a2);
     integer start = integerVal(intV(a3));
 
     integer pos = uniSearch(stringVal(src), stringLen(src), start, stringVal(tgt), stringLen(tgt));
@@ -627,7 +627,7 @@ retCode g__str_split(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)))
     return liberror(P, "_str_split", eINSUFARG);
   else {
-    stringPo S = stringV(a1);
+    strBuffPo S = stringV(a1);
     char * src = stringVal(S);
     integer start = integerVal(intV(a2));
     long len = stringLen(S);
@@ -668,7 +668,7 @@ retCode g__sub_str(processPo P, ptrPo a) {
   if (isvar(a1) || !isString(objV(a1)) || isvar(a2) || !isInteger(objV(a2)) || isvar(a3) || !isInteger(objV(a3)))
     return liberror(P, "_sub_str", eINSUFARG);
   else {
-    stringPo str = stringV(a1);
+    strBuffPo str = stringV(a1);
     char * src = stringVal(str);
     long len = stringLen(str);
     integer start = integerVal(intV(a2));

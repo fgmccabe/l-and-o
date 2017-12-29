@@ -217,18 +217,35 @@ lo.comp.term {
   clBody(clse(_,_,_,B)) => B.
 
   public simplifyGuard:(term) => term.
-  simplifyGuard(guarded(T,conj(_,G))) => simplifyGuard(T) :- isTrivialConj(G).
-  simplifyGuard(guarded(T,succ)) => simplifyGuard(T).
+  simplifyGuard(guarded(T,G)) => NT :-
+    NG = simplifyPred(G),
+    (isTrivialPred(NG) ? NT = T | NT = guarded(T,NG) ).
   simplifyGuard(T) => T.
 
   isTrivialConj:(list[pred]){}.
   isTrivialConj([]).
   isTrivialConj([succ,..G]) :- isTrivialConj(G).
 
-  public simplifyCond:(pred) => pred.
-  simplifyCond(conj(_,[])) => succ.
-  simplifyCond(conj(_,[P])) => simplifyCond(P).
-  simplifyCond(P) => P.
+  public isTrivialPred:(pred){}.
+  isTrivialPred(succ).
+  isTrivialPred(conj(_,C)) :- isTrivialConj(C).
+
+  public simplifyCond:(list[pred]) => pred.
+  simplifyCond([]) => succ.
+  simplifyCond([succ,..P]) => simplifyCond(P).
+  simplifyCond([P]) => P.
+  simplifyCond(P) => conj(none,P).
+
+  public simplifyPred:(pred) => pred.
+  simplifyPred(conj(Lc,C)) => NP :-
+    NC = simplifyConj(C),
+    (isTrivialConj(NC) ? NP = succ | NP=conj(Lc,NC)).
+  simplifyPred(P) => P.
+
+  simplifyConj:(list[pred]) => list[pred].
+  simplifyConj([]) => [].
+  simplifyConj([succ,..P]) => simplifyConj(P).
+  simplifyConj([P,..L]) => [P,..simplifyConj(L)].
 
   -- Finding variables
   public findVarsInClse:(clse) => list[term].

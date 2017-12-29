@@ -127,7 +127,9 @@ lo.comp.inline{
   inlineTerm(escvoke(Lc,Op,A),P,I,F,Fx,U,Ux) => escvoke(Lc,Op,inlineArgs(A,P,I,F,Fx,U,Ux)).
   inlineTerm(invoke(Lc,Op,A),P,I,F,Fx,U,Ux) => checkInline(invoke(Lc,inlineTerm(Op,P,I,F,F0,U,U0),inlineArgs(A,P,I,F0,F1,U0,U1)),P,I,F1,Fx,U1,Ux).
   inlineTerm(ovoke(Lc,Cl,Lb,Th),P,I,F,Fx,U,Ux) => checkInline(ovoke(Lc,simplifyGuard(inlineTerm(Cl,P,I,F,F0,U,U0)),simplifyGuard(inlineTerm(Lb,P,I,F0,F1,U0,U1)),simplifyGuard(inlineTerm(Th,P,I,F1,F2,U1,U2))),P,I,F2,Fx,U2,Ux).
-  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(inlineTerm(T,P,I,F,F0,U,U0),simplifyCond(conj(none,inlinePred(C,P,I,F0,Fx,U0,Ux))))).
+  inlineTerm(guarded(T,C),P,I,F,Fx,U,Ux) => simplifyGuard(guarded(NT,NC)) :-
+    NC = simplifyCond(inlinePred(C,P,I,F,F0,U,U0)),
+    NT = inlineTerm(T,P,I,F0,Fx,U0,Ux).
 
   inlineArgs:(list[(typeMode,term)],map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => list[(typeMode,term)].
   inlineArgs([],_,_,Fx,Fx,U,U) => [].
@@ -138,11 +140,21 @@ lo.comp.inline{
   inlineTerms([T,..A],P,I,F,Fx,U,Ux) => [inlineTerm(applyToTerm(T,U),P,I,F,F0,U,U0),..inlineTerms(A,P,I,F0,Fx,U0,Ux)].
 
   checkInline:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
-  checkInline(T,P,I,_,Fx,U,Ux) => inlineTerm(R,P,I,true,Fx,mergeTheta(Th,U),Ux):-
+  checkInline(T,P,I,_,Fx,U,Ux) => checkGuardedInline(R,P,I,true,Fx,mergeTheta(Th,U),Ux):-
     inlineableTerm(T,P,I) = [(Nt,Th)],
     R = applyToTerm(Nt,U),
-    validateRepl(R).
+    validateRepl(R),
+    logMsg("inline replacement is \e[31m\(R)\e[0m").
   checkInline(T,_,_,Fx,Fx,U,U) => T.
+
+  checkGuardedInline:(term,map[term,rel],map[term,rel],logical,logical,map[string,term],map[string,term]) => term.
+  checkGuardedInline(guarded(T,conj(Lc,C)),P,I,F,Fx,U,Ux) =>  NT :-
+    NC = simplifyCond(C),
+    (isTrivialPred(NC) ?
+      NT = inlineTerm(T,P,I,F,Fx,U,Ux) |
+      NT = guarded(T,NC),
+      Fx=F, Ux=U).
+  checkGuardedInline(T,P,I,F,Fx,U,Ux) => inlineTerm(T,P,I,F,Fx,U,Ux).
 
   inlineableTerm:(term,map[term,rel],map[term,rel]) => list[(term,map[string,term])].
   inlineableTerm(invoke(Lc,Op,Args),P,I) => Choices :-

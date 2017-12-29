@@ -280,7 +280,7 @@ retCode g__udpSend(processPo P, ptrPo a) {
     else if (!IsString(a2))
       return liberror(P, "_udpSend", eSTRNEEDD);
     else {
-      stringPo str = stringV(a2);
+      strBuffPo str = stringV(a2);
       char *text = stringVal(str);
       long tLen = stringLen(str);
 

@@ -49,7 +49,8 @@ set(SOURCE_FILES
         Headers/stringBuffer.h Headers/stringBufferP.h
         Headers/timer.h
         Headers/unicode.h Headers/unicodeP.h Headers/utils.h
-        Headers/jsonEvent.h Headers/udp.h Headers/udpP.h)
+        Headers/jsonEvent.h Headers/udp.h Headers/udpP.h
+        Headers/strings.h)
 
 add_library(ooio STATIC ${SOURCE_FILES})
 
