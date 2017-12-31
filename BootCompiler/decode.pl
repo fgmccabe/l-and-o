@@ -83,7 +83,7 @@ decodeTypes(Ln,[A|More]) --> { Ln > 0 }, decodeType(A), {L1 is Ln-1}, decodeType
 decodeTypes(Types) --> typeLen(Len), decodeTypes(Len,Types).
 
 decodeArgTypes(0,[]) --> [].
-decodeArgTypes(Ln,[A|More]) --> { Ln > 0 }, decodeMode(_), decodeType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).
+decodeArgTypes(Ln,[(M,A)|More]) --> { Ln > 0 }, decodeMode(M), decodeType(A), {L1 is Ln-1}, decodeArgTypes(L1,More).
 decodeArgTypes(Types) --> typeLen(Len), decodeArgTypes(Len,Types).
 
 decodeFields(0,[]) --> [].

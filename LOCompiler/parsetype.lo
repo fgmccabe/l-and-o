@@ -82,7 +82,7 @@ lo.comp.parseType{
     isBinary(F,"<=>",Lc,L,R),
     checkKind(K,simpleType,Lc,Rp,Rp0),
     checkTuple(L,A,Rp0,Rp1),
-    prsTypes(A,Env,Q,C,Cx,AT,Rp1,Rp2),
+    prsArgTypes(A,biMode,Env,Q,C,Cx,AT,Rp1,Rp2),
     prsType(R,simpleType,Env,Q,C1,Cx,RT,Rp2,Rpx).
   prsType(T,K,Env,Q,C,Cx,predType(AT),Rp,Rpx) :-
     isBraceTerm(T,Lc,L,[]),

@@ -80,17 +80,17 @@ processGroup([(P,Imps,Fl)|L],CP,CPx,Repo,Rx,CWD,Opts) :-
   processGroup(L,CP0,CPx,R0,Rx,CWD,Opts).
 
 processPkg(P,Imps,_,CP,CP,Repo,Repo,_) :-
-  importsOk(Imps,CP),
+  \+importCompiled(Imps,CP),
   pkgOk(P,Repo),!,
   reportMsg("skipping package %s",[P]).
 processPkg(P,_,Fl,CP,[P|CP],Repo,Rx,Opts) :-
   reportMsg("compiling package %s",[P]),
   processFile(Fl,P,Repo,Rx,Opts),!.
 
-importsOk([],_).
-importsOk([P|I],CP) :-
-  \+ (is_member(AP,CP), consistentPkg(P,AP)),
-  importsOk(I,CP).
+importCompiled(Imps,CP) :-
+  is_member(P,Imps),
+  is_member(AP,CP),
+  consistentPkg(P,AP).
 
 processFile(SrcUri,Pkg,Repo,Rx,Opts) :-
   packageVersion(Opts,Vers),

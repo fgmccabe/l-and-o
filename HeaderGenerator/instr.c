@@ -252,7 +252,7 @@ static void genInsDisp(FILE *out,char *op,opAndSpec A1,opAndSpec A2)
 #define lastInstruction
 
 static void dumpDisplay(FILE *out){
-  fprintf(out,"\n\n  public implementation display[instruction] <= {\n");
+  fprintf(out,"\n\n  public implementation display[instruction] => {\n");
   fprintf(out,"    disp(I) => showIns(I,[]).\n");
   fprintf(out,"  }\n");
 

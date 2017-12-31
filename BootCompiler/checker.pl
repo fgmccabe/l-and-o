@@ -294,14 +294,14 @@ processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,Body)|Defs],Defs,E,_) :-
   isBinary(St,Lc,":-",L,R),!,
   splitHead(L,Nm,A,C),
   pushScope(E,Env),
-  typeOfTerms(A,AT,Env,E0,Lc,Args),
+  typeOfArgs(A,AT,Env,E0,Lc,Args),
   checkCond(C,E0,E1,Cond),
   checkCond(R,E1,_,Body).
 processStmt(St,predType(AT),[clause(Lc,Nm,Args,Cond,true(Lc))|Defs],Defs,E,_) :-
   splitHead(St,Nm,A,C),!,
   pushScope(E,Env),
   locOfAst(St,Lc),
-  typeOfTerms(A,AT,Env,E0,Lc,Args),
+  typeOfArgs(A,AT,Env,E0,Lc,Args),
   checkCond(C,E0,_,Cond).
 processStmt(St,Tp,[Def|Defs],Defs,Env,_) :-
   isBinary(St,Lc,"=",L,R),!,
@@ -329,7 +329,7 @@ processStmt(St,Tp,Defs,Defs,_,_) :-
 checkEquation(Lc,H,G,R,funType(AT,RT),[equation(Lc,Nm,Args,Cond,Exp)|Defs],Defs,E) :-
   splitHead(H,Nm,A,_),
   pushScope(E,Env),
-  typeOfTerms(A,AT,Env,E0,Lc,Args),
+  typeOfArgs(A,AT,Env,E0,Lc,Args),
   checkCond(G,E0,E1,Cond),
   typeOfTerm(R,RT,E1,_,Exp).
 checkEquation(Lc,_,_,_,ProgramType,Defs,Defs,_) :-
@@ -347,7 +347,7 @@ checkClassHead(Term,classType(AT,Tp),Tp,Env,Ex,Nm,Ptn) :-
   splitHead(Term,Nm,A,C),!,
   locOfAst(Term,Lc),
   pushScope(Env,E0),
-  typeOfTerms(A,AT,E0,E1,Lc,Args),
+  typeOfArgs(A,AT,E0,E1,Lc,Args),
   checkCond(C,E1,Ex,Cond),
   Hd = apply(v(Lc,Nm),Args),
   (Cond=true(_), Ptn = Hd ; Ptn = where(Hd,Cond)),!.
@@ -473,16 +473,15 @@ implementationGroup([(imp(Nm),_,[Stmt])],Defs,Dfs,E,Env,Path) :-
   buildImplementation(Stmt,Nm,Defs,Dfs,E,Env,Path).
 
 buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
-  isUnary(Stmt,Lc,"implementation",I),
-  isBinary(I,"=>",Sq,Body),
-  isBraceTuple(Body,_,Els),
-  parseContractConstraint(Sq,Env,Nm,Spec),
+  isImplementationStmt(Stmt,Lc,Q,Cnx,Con,Body),
+  parseBoundVars(Q,SQ),
+  parseConstraints(Cnx,Env,SQ,[],AC),
+  parseContractConstraint(Con,SQ,Env,Nm,Spec),
   getContract(Nm,Env,contract(_,CNm,_,FullSpec,ConFace)),
   % We have to unify the implemented contract and the contract (spec)ification
   moveQuants(FullSpec,_,Qcon),
   moveConstraints(Qcon,OC,conTract(ConNm,OArgs,ODeps)),
-  moveQuants(Spec,SQ,ASpec),
-  moveConstraints(ASpec,AC,conTract(ConNm,AArgs,ADeps)),
+  moveConstraints(Spec,_,conTract(ConNm,AArgs,ADeps)),
   sameLength(OArgs,AArgs,Lc),
   sameLength(ODeps,ADeps,Lc),
   % match up the type variables of the original contract with the actual implemented contract
@@ -492,13 +491,16 @@ buildImplementation(Stmt,INm,[Impl|Dfs],Dfs,Env,Ex,Path) :-
   moveQuants(ConFace,_,Face),
   rewriteType(Face,QQ,EffType),
   pushScope(Env,E0),
-  moveQuants(FaceType,SQ,EffType),
+  reQuant(SQ,EffType,FaceType),
   evidence(FaceType,voidType,IQ,faceType(Fields)),
   declareTypeVars(IQ,Lc,E0,ThEnv),
+  isBraceTuple(Body,_,Els),
   thetaEnv(Path,nullRepo,Lc,Els,Fields,ThEnv,_,ThDefs,Public,_,Others),
   computeExport(ThDefs,Fields,Public,BodyDefs,Types,[],[]),
   implementationName(conTract(CNm,AArgs,ADeps),ImplName),
-  Impl = implementation(Lc,INm,ImplName,Spec,OCx,AC,ThDefs,BodyDefs,Types,Others),
+  moveConstraints(SpecC,AC,Spec),
+  reQuant(SQ,SpecC,QSpec),
+  Impl = implementation(Lc,INm,ImplName,QSpec,OCx,AC,ThDefs,BodyDefs,Types,Others),
   declareImplementation(Nm,Impl,Env,Ex),!.
 buildImplementation(Stmt,_,Defs,Defs,Env,Env,_) :-
   locOfAst(Stmt,Lc),
@@ -599,26 +601,26 @@ typeOfTerm(Term,Tp,Env,Env,lambda(equation(Lc,"$",Args,Cond,Exp))) :-
   isBinary(Term,Lc,":-",Hd,C),
   isBinary(Hd,_,"=>",H,R),
   isTuple(H,_,A),
-  genTpVars(A,AT),
+  genTpArgs(A,inMode,AT),
   newTypeVar("_E",RT),
   checkType(Lc,funType(AT,RT),Tp,Env),
-  typeOfTerms(A,AT,Env,E1,Lc,Args),
+  typeOfArgs(A,AT,Env,E1,Lc,Args),
   checkCond(C,E1,E2,Cond),
   typeOfTerm(R,RT,E2,_,Exp).
 typeOfTerm(Term,Tp,Env,Env,lambda(equation(Lc,"$",Args,true(Lc),Exp))) :-
   isBinary(Term,Lc,"=>",H,R),
   isTuple(H,_,A),
-  genTpVars(A,AT),
+  genTpArgs(A,inMode,AT),
   newTypeVar("_E",RT),
   checkType(Lc,funType(AT,RT),Tp,Env),
-  typeOfTerms(A,AT,Env,E1,Lc,Args),
+  typeOfArgs(A,AT,Env,E1,Lc,Args),
   typeOfTerm(R,RT,E1,_,Exp).
 typeOfTerm(Term,Tp,Env,Env,lambda(clause(Lc,"$",Args,true(Lc),Body))) :-
   isBinary(Term,Lc,":-",H,R),
   isTuple(H,_,A),
-  genTpVars(A,AT),
+  genTpArgs(A,biMode,AT),
   checkType(Lc,predType(AT),Tp,Env),
-  typeOfTerms(A,AT,Env,E1,Lc,Args),
+  typeOfArgs(A,AT,Env,E1,Lc,Args),
   checkCond(R,E1,_,Body).
 typeOfTerm(Term,Tp,Env,Env,void) :-
   locOfAst(Term,Lc),
@@ -626,10 +628,10 @@ typeOfTerm(Term,Tp,Env,Env,void) :-
 
 typeOfCall(Lc,Fun,A,funType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
-  typeOfTerms(A,ArgTps,Env,Ev,Lc,Args).
+  typeOfArgs(A,ArgTps,Env,Ev,Lc,Args).
 typeOfCall(Lc,Fun,A,classType(ArgTps,FnTp),Tp,Env,Ev,apply(Fun,Args)) :-
   checkType(Lc,FnTp,Tp,Env),
-  typeOfTerms(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
+  typeOfArgs(A,ArgTps,Env,Ev,Lc,Args). % small but critical difference
 
 typeOfIndex(Lc,Mp,Arg,Tp,Env,Ev,Exp) :-
   isBinary(Arg,"->",Ky,Vl),!,
@@ -647,6 +649,11 @@ genTpVars([],[]).
 genTpVars([_|I],[Tp|More]) :-
   newTypeVar("__",Tp),
   genTpVars(I,More).
+
+genTpArgs([],_,[]).
+genTpArgs([_|I],Md,[(Md,Tp)|More]) :-
+  newTypeVar("__",Tp),
+  genTpArgs(I,Md,More).
 
 recordAccessExp(Lc,Rc,Fld,ET,Env,Ev,dot(Rec,Fld)) :-
   newTypeVar("_R",AT),
@@ -710,6 +717,17 @@ typeOfTerms([A|As],[ElTp|ElTypes],Env,Ev,_,[Term|Els]) :-
   typeOfTerm(A,ElTp,Env,E0,Term),
   locOfAst(A,Lc),
   typeOfTerms(As,ElTypes,E0,Ev,Lc,Els).
+
+typeOfArgs([],[],Env,Env,_,[]).
+typeOfArgs([],[T|_],Env,Env,Lc,[]) :-
+  reportError("insufficient arguments, expecting a %s",[T],Lc).
+typeOfArgs([A|_],[],Env,Env,_,[]) :-
+  locOfAst(A,Lc),
+  reportError("too many arguments: %s",[A],Lc).
+typeOfArgs([A|As],[(_,ElTp)|ElTypes],Env,Ev,_,[Term|Els]) :-
+  typeOfTerm(A,ElTp,Env,E0,Term),
+  locOfAst(A,Lc),
+  typeOfArgs(As,ElTypes,E0,Ev,Lc,Els).
 
 % Analyse a list term to try to disambiguate maps from lists.
 
@@ -864,7 +882,7 @@ checkCondCall(Lc,Pred,_,Tp,true(Lc),Env,Env) :-
   reportError("type of %s:%s not a predicate",[Pred,Tp],Lc).
 
 checkCallArgs(Lc,Pred,A,ArgTps,Env,Ev,call(Lc,Pred,Args)) :-
-  typeOfTerms(A,ArgTps,Env,Ev,Lc,Args).
+  typeOfArgs(A,ArgTps,Env,Ev,Lc,Args).
 checkCallArgs(Lc,Pred,A,ArgTps,Env,Env,true(Lc)) :-
   reportError("arguments %s of %s not consistent with expected types %s",[A,Pred,tupleType(ArgTps)],Lc).
 
@@ -897,7 +915,7 @@ processGrammarRule(Lc,L,R,grammarType(AT,Tp),[grammarRule(Lc,Nm,Args,PB,Body)|De
   pushScope(E,E0),
   declareVar("stream",vr("stream",Lc,Tp),E0,E1),
   newTypeVar("_E",ElTp),
-  typeOfTerms(A,AT,E1,E2,Lc,Args),!,
+  typeOfArgs(A,AT,E1,E2,Lc,Args),!,
   checkNonTerminal(R,Tp,ElTp,E2,E3,Body),
   checkTerminals(P,"_hdtl",PB,ElTp,E3,_).
 

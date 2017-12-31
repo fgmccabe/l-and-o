@@ -84,32 +84,29 @@ static char *dFields(char *sig, bufferPo out);
 static char *dumpSig(char *sig, bufferPo out);
 
 static char *dumpArgSig(char *sig, bufferPo out) {
-  if (genMode == genLO) {
-    switch (*sig++) {
-      case input_mode: {
-        outStr(O_IO(out), "(inMode,");
-        char *reslt = dumpSig(sig, out);
-        outStr(O_IO(out), ")");
-        return reslt;
-      }
-      case output_mode: {
-        outStr(O_IO(out), "(outMode,");
-        char *reslt = dumpSig(sig, out);
-        outStr(O_IO(out), ")");
-        return reslt;
-      }
-      case bi_mode: {
-        outStr(O_IO(out), "(biMode,");
-        char *reslt = dumpSig(sig, out);
-        outStr(O_IO(out), ")");
-        return reslt;
-      }
-      default:
-        fprintf(stderr, "illegal signature %s\n", sig);
-        exit(99);
+  switch (*sig++) {
+    case input_mode: {
+      outStr(O_IO(out), "(inMode,");
+      char *reslt = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return reslt;
     }
-  } else
-    return dumpSig(++sig, out);
+    case output_mode: {
+      outStr(O_IO(out), "(outMode,");
+      char *reslt = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return reslt;
+    }
+    case bi_mode: {
+      outStr(O_IO(out), "(biMode,");
+      char *reslt = dumpSig(sig, out);
+      outStr(O_IO(out), ")");
+      return reslt;
+    }
+    default:
+      fprintf(stderr, "illegal signature %s\n", sig);
+      exit(99);
+  }
 }
 
 static char *dumpSig(char *sig, bufferPo out) {

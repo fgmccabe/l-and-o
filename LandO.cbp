@@ -11,70 +11,70 @@
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="install/local">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/local"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/local"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="install/strip">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/strip"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install/strip"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="install">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 install"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="list_install_components">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 list_install_components"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 list_install_components"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="rebuild_cache">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="edit_cache">
 				<Option working_dir="/Users/fgm/Projects/LandO"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="ooio">
@@ -86,19 +86,19 @@
 				<Compiler>
 					<Add directory="/Users/fgm/Projects/LandO/OOlib/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="ooio/fast">
@@ -110,29 +110,29 @@
 				<Compiler>
 					<Add directory="/Users/fgm/Projects/LandO/OOlib/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 ooio/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/OOlib/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="generate">
 				<Option working_dir="/Users/fgm/Projects/LandO/HeaderGenerator"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 generate"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 generate"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="mnem">
@@ -146,19 +146,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 mnem"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 mnem"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="mnem/fast">
@@ -172,19 +172,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 mnem/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 mnem/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="genins">
@@ -198,19 +198,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genins"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genins"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="genins/fast">
@@ -224,19 +224,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genins/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genins/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="genesc">
@@ -250,19 +250,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="genesc/fast">
@@ -276,19 +276,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 genesc/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="ops">
@@ -302,19 +302,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="ops/fast">
@@ -328,19 +328,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 ops/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="opcodes">
@@ -354,19 +354,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="opcodes/fast">
@@ -380,19 +380,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/HeaderGenerator/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 opcodes/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/HeaderGenerator/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="lo">
@@ -405,19 +405,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/Engine/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/Engine/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="lo/fast">
@@ -430,19 +430,19 @@
 					<Add directory="/Users/fgm/Projects/LandO/Engine/Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/Engine/../Headers"/>
 					<Add directory="/Users/fgm/Projects/LandO/Engine/../OOlib/Headers"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
 					<Add directory="/usr/local/include"/>
-					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/8.1.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
 					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
 					<Add directory="/usr/include"/>
 					<Add directory="/System/Library/Frameworks"/>
 					<Add directory="/Library/Frameworks"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 lo/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/fgm/Projects/LandO/Engine/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>

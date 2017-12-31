@@ -187,7 +187,7 @@ lo.comp.decode{
   decodeType(funType(A,T)) --> "F", typeLen(Ln), decodeArgTypes(Ln,A), decodeType(T).
   decodeType(grammarType(A,T)) --> "G", typeLen(Ln), decodeArgTypes(Ln,A), decodeType(T).
   decodeType(predType(A)) --> "P", typeLen(Ln), decodeArgTypes(Ln,A).
-  decodeType(classType(A,T)) --> "C", typeLen(Ln), decodeTypes(Ln,A), decodeType(T).
+  decodeType(classType(A,T)) --> "C", typeLen(Ln), decodeArgTypes(Ln,A), decodeType(T).
   decodeType(tupleType(Tps)) --> "T", typeLen(Ln),decodeTypes(Ln,Tps).
   decodeType(typeRule(L,R)) --> "Y", decodeType(L), decodeType(R).
   decodeType(tpLambda(A,R)) --> "Z", typeLen(Ln),decodeTypes(Ln,A), decodeType(R).

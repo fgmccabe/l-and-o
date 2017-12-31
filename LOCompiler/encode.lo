@@ -133,7 +133,7 @@ lo.comp.encode{
   encTp(typeExp(Op,Els),L) => [0cU,..encType(Op,encTypes(Els,L))].
   encTp(tupleType(Els),L) => [0cT,..encTypes(Els,L)].
   encTp(funType(A,R),L) => [0cF,..encArgTypes(A,encType(R,L))].
-  encTp(classType(A,R),L) => [0cC,..encTypes(A,encType(R,L))].
+  encTp(classType(A,R),L) => [0cC,..encArgTypes(A,encType(R,L))].
   encTp(predType(A),L) => [0cP,..encArgTypes(A,L)].
   encTp(grammarType(A,R),L) => [0cG,..encArgTypes(A,encType(R,L))].
   encTp(typeRule(A,R),L) => [0cY,..encType(A,encType(R,L))].

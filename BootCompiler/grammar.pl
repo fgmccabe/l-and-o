@@ -58,6 +58,7 @@ legalNextRight([idQTok(_,_)|_],_).
 legalNextRight([lpar(_)|_],_).
 legalNextRight([lbra(_)|_],_).
 legalNextRight([lbrce(_)|_],_).
+legalNextRight([lqbrce(_)|_],_).
 legalNextRight([lqpar(_)|_],_).
 legalNextRight([stringTok(_,_)|_],_).
 legalNextRight([integerTok(_,_)|_],_).
@@ -73,7 +74,12 @@ term0([lbrce(Lcx)|Tks],tuple(Lc,"{}",Seq),Toks,rbrce) :-
   terms(Tks,Tks2,Seq),
   checkToken(Tks2,Toks,rbrce(Lcy),Lcy,"missing close brace, got %s, left brace at %s",[Lcx]),
   mergeLoc(Lcx,Lcy,Lc).
-
+term0([lqbrce(Lc0),rqbrce(Lc2)|Toks],tuple(Lc,"{..}",[]),Toks,rbrce) :-
+  mergeLoc(Lc0,Lc2,Lc).
+term0([lqbrce(Lcx)|Tks],tuple(Lc,"{..}",Seq),Toks,rbrce) :-
+  terms(Tks,Tks2,Seq),
+  checkToken(Tks2,Toks,rqbrce(Lcy),Lcy,"missing close brace, got %s, left brace at %s",[Lcx]),
+  mergeLoc(Lcx,Lcy,Lc).
 term0([lqpar(Lcx)|Tks],unary(Lc,"<||>",T),Toks,rpar) :-
   term(Tks,2000,T,Tks2,_),
   checkToken(Tks2,Toks,rpar(Lcy),Lcy,"missing close quote, got %s",[]),

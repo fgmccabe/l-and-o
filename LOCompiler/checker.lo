@@ -368,24 +368,24 @@ lo.comp.typecheck{
     splitHead(Term,_,Nm,Args).
 
   private checkClassRule:(location,ast,ast,ast,tipe,list[canonRule],list[canonRule],list[env],string,report,report){}.
-  checkClassRule(_,H,G,R,ClassTp,[clRule(Lc,Nm,const0(Args,biMode),theta(ClDefs,ClOthers),Cond,faceType(Types)),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(_,H,G,R,ClassTp,[clRule(Lc,Nm,Args,theta(ClDefs,ClOthers),Cond,faceType(Types)),..Defs],Defs,E,Pth,Rp,Rpx) :-
     isBraceTuple(R,Lc,Els),
     checkClassHead(H,ClassTp,SuperTp,pushScope(E),E1,Nm,Args,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     checkThetaTerm(SuperTp,Lc,Els,E1,ClDefs,ClOthers,Types,subPath(Pth,marker(clss),Nm),Rp0,Rpx).
-  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,const0(Args,biMode),Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
+  checkClassRule(Lc,H,G,R,ClassTp,[clRule(Lc,Nm,Args,Repl,Cond,SuperFace),..Defs],Defs,E,Pth,Rp,Rpx) :-
     checkClassHead(H,ClassTp,_,pushScope(E),E1,Nm,Args,Rp,Rp0),
     checkCond(G,E1,E2,Cond,Rp0,Rp1),
     SuperTp = newVar("SpTp"),
     knownType(R,SuperTp,E2,_,Repl,Rp1,Rpx),
     faceOfType(SuperTp,E2,SuperFace).
 
-  private checkClassHead:(ast,tipe,tipe,list[env],list[env],string,list[canonTerm],report,report){}.
+  private checkClassHead:(ast,tipe,tipe,list[env],list[env],string,list[(typeMode,canonTerm)],report,report){}.
   checkClassHead(Term,Tp,Tp,Env,Env,Nm,[],Rp,Rp) :-
     isIden(Term,Lc,Nm).
   checkClassHead(Term,classType(AT,Tp),Tp,Env,Ev,Nm,Args,Rp,Rpx) :-
     splitHead(Term,Lc,Nm,A),
-    typeOfTerms(A,AT,Env,Ev,Lc,Args,Rp,Rpx).
+    typeOfArgs(Lc,A,AT,Env,Ev,Args,Rp,Rpx).
 
   private checkThetaTerm:(tipe,location,list[ast],list[env],list[canonDef],list[canonOther],list[(string,tipe)],string,report,report){}.
   checkThetaTerm(ClassTp,Lc,Els,Env,Defs,Others,Types,ClassPath,Rp,Rpx) :-
@@ -907,9 +907,9 @@ lo.comp.typecheck{
   typeOfCall(Lc,Fun,A,funType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args),Rp,Rpx) :-
     checkType(Lc,ResTp,Tp,Env,Rp,Rp0),
     typeOfArgs(Lc,A,ArgTp,Env,Ev,Args,Rp0,Rpx).
-  typeOfCall(Lc,Fun,A,classType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,const0(Args,biMode)),Rp,Rpx) :-
+  typeOfCall(Lc,Fun,A,classType(ArgTp,ResTp),Tp,Env,Ev,apply(Lc,Fun,Args),Rp,Rpx) :-
     checkType(Lc,ResTp,Tp,Env,Rp,Rp0),
-    typeOfTerms(A,ArgTp,Env,Ev,Lc,Args,Rp0,Rpx).
+    typeOfArgs(Lc,A,ArgTp,Env,Ev,Args,Rp0,Rpx).
   typeOfCall(Lc,Fun,_,Ftp,_,Env,Env,Fun,Rp,Rpx) :-
     reportError("\(Fun) : \(Ftp) is not a function",Lc,Rp,Rpx).
 

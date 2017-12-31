@@ -1,5 +1,5 @@
 :-module(wff,[isAlgebraicTypeDef/6,isQuantified/3,getQuantifiers/3,isConstrained/3,
-    isContractSpec/6,packageName/2,pkgName/2,sameLength/3,deComma/2,tupleize/4]).
+    isContractSpec/6,isImplementationStmt/6,packageName/2,pkgName/2,sameLength/3,deComma/2,tupleize/4]).
 :-use_module(abstract).
 :-use_module(misc).
 :-use_module(errors).
@@ -33,6 +33,22 @@ contractSpec(S,[],Constraints,Con) :-
   isBinary(S,"|:",L,Con),
   deComma(L,Constraints).
 contractSpec(S,[],[],S).
+
+isImplementationStmt(St,Lc,Q,Cx,Con,Body) :-
+  isUnary(St,Lc,"implementation",I),
+  implSpec(I,Q,Cx,Con,Body).
+
+implSpec(S,Quants,Constraints,Con,Body) :-
+  isQuantified(S,Q,B),
+  deComma(Q,Quants),
+  implSpec(B,_,Constraints,Con,Body).
+implSpec(S,[],Constraints,Con,Body) :-
+  isBinary(S,"|:",L,R),
+  deComma(L,Constraints),
+  implSpec(R,_,_,Con,Body).
+implSpec(S,[],[],Con,Body) :-
+  isBinary(S,"=>",Con,Body),
+  (isBraceTuple(Body,_,_) ; isQBraceTuple(Body,_,_)).
 
 isConstrained(T,C,R) :-
   isBinary(T,"|:",L,R),

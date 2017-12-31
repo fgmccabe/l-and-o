@@ -50,15 +50,15 @@ frshn(V,_,V) :- isUnbound(V),!.
 frshn(type(Nm),_,type(Nm)).
 frshn(tpFun(Nm,Ar),_,tpFun(Nm,Ar)).
 frshn(funType(A,R),B,funType(FA,FR)) :-
-  frshnTypes(A,B,FA),
+  frshnArgTypes(A,B,FA),
   rewriteType(R,B,FR).
 frshn(grammarType(A,R),B,grammarType(FA,FR)) :-
-  frshnTypes(A,B,FA),
+  frshnArgTypes(A,B,FA),
   rewriteType(R,B,FR).
 frshn(classType(A,R),B,classType(FA,FR)) :-
-  frshnTypes(A,B,FA),
+  frshnArgTypes(A,B,FA),
   rewriteType(R,B,FR).
-frshn(predType(A),B,predType(FA)) :- frshnTypes(A,B,FA).
+frshn(predType(A),B,predType(FA)) :- frshnArgTypes(A,B,FA).
 frshn(tupleType(L),B,tupleType(FL)) :- frshnTypes(L,B,FL).
 frshn(typeExp(O,A),B,typeExp(FO,FA)) :- frshn(O,B,FO),frshnTypes(A,B,FA).
 frshn(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
@@ -138,6 +138,9 @@ frshnFields([(Nm,A)|L],B,[(Nm,FA)|FL]) :- !, deRef(A,DA),frshn(DA,B,FA), frshnFi
 frshnTypes([],_,[]).
 frshnTypes([A|L],B,[FA|FL]) :- deRef(A,DA),frshn(DA,B,FA), frshnTypes(L,B,FL).
 
+frshnArgTypes([],_,[]).
+frshnArgTypes([(M,A)|L],B,[(M,FA)|FL]) :- deRef(A,DA),frshn(DA,B,FA), frshnArgTypes(L,B,FL).
+
 freezeType(Tp,B,FrZ) :-
   freeze(Tp,B,FT),
   reQuant(B,B,FT,FrZ).
@@ -156,15 +159,15 @@ frze(V,_,V) :- isUnbound(V),!.
 frze(type(Nm),_,type(Nm)).
 frze(tpFun(Nm,Ar),_,tpFun(Nm,Ar)).
 frze(funType(A,R),B,funType(FA,FR)) :-
-  freezeTypes(A,B,FA),
+  freezeArgTypes(A,B,FA),
   freeze(R,B,FR).
 frze(grammarType(A,R),B,grammarType(FA,FR)) :-
-  freezeTypes(A,B,FA),
+  freezeArgTypes(A,B,FA),
   freeze(R,B,FR).
 frze(classType(A,R),B,classType(FA,FR)) :-
-  freezeTypes(A,B,FA),
+  freezeArgTypes(A,B,FA),
   freeze(R,B,FR).
-frze(predType(A),B,predType(FA)) :- freezeTypes(A,B,FA).
+frze(predType(A),B,predType(FA)) :- freezeArgTypes(A,B,FA).
 frze(tupleType(L),B,tupleType(FL)) :- freezeTypes(L,B,FL).
 frze(typeExp(O,A),B,typeExp(FO,FA)) :- freeze(O,B,FO),freezeTypes(A,B,FA).
 frze(univType(kVar(V),Tp),B,univType(kVar(V),FTp)) :-
@@ -188,6 +191,9 @@ freezeFields([A|L],B,[FA|FL]) :- freeze(A,B,FA), freezeFields(L,B,FL).
 
 freezeTypes([],_,[]).
 freezeTypes([A|L],B,[FA|FL]) :- freeze(A,B,FA), freezeTypes(L,B,FL).
+
+freezeArgTypes([],_,[]).
+freezeArgTypes([(M,A)|L],B,[(M,FA)|FL]) :- freeze(A,B,FA), freezeArgTypes(L,B,FL).
 
 reQuant([],_,T,T).
 reQuant([(_,Tp)|R],BB,T,FZT) :-

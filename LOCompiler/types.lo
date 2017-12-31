@@ -21,7 +21,7 @@ lo.comp.types{
         | funType(list[(typeMode,tipe)],tipe)
         | predType(list[(typeMode,tipe)])
         | grammarType(list[(typeMode,tipe)],tipe)
-        | classType(list[tipe],tipe)
+        | classType(list[(typeMode,tipe)],tipe)
         | typeRule(tipe,tipe)
         | tpLambda(list[tipe],tipe)
         | faceType(list[(string,tipe)])
@@ -75,7 +75,7 @@ lo.comp.types{
   dispType(tupleType(A)) => ssSeq([ss("("),ssSeq(dispTypes(A)),ss(")")]).
   dispType(funType(A,R)) => ssSeq([dispArgTypes(A,inMode),ss("=>"), dispType(R)]).
   dispType(grammarType(A,R)) => ssSeq([dispArgTypes(A,biMode),ss("-->"), dispType(R)]).
-  dispType(classType(A,R)) => ssSeq([dispType(tupleType(A)),ss("<=>"), dispType(R)]).
+  dispType(classType(A,R)) => ssSeq([dispArgTypes(A,biMode),ss("<=>"), dispType(R)]).
   dispType(predType(A)) => ssSeq([dispArgTypes(A,biMode),ss("{}")]).
   dispType(univType(V,Tp)) => ssSeq([ss("all "), dispType(V),.. showMoreUniv(Tp)]).
   dispType(existType(V,Tp)) => ssSeq([ss("exists "), dispType(V),.. showMoreExists(Tp)]).
@@ -274,7 +274,7 @@ lo.comp.types{
   idOccIn(Id,funType(A,_)) :- (_,AT) in A, idOccIn(Id,AT).
   idOccIn(Id,funType(_,R)) :- idOccIn(Id,R).
   idOccIn(Id,predType(A)) :- (_,AT) in A, idOccIn(Id,AT).
-  idOccIn(Id,classType(A,C)) :- T in A, idOccIn(Id,T).
+  idOccIn(Id,classType(A,C)) :- (_,T) in A, idOccIn(Id,T).
   idOccIn(Id,classType(_,C)) :- idOccIn(Id,C).
   idOccIn(Id,grammarType(A,_)) :- (_,AT) in A, idOccIn(Id,AT).
   idOccIn(Id,grammarType(_,R)) :- idOccIn(Id,R).

@@ -1,5 +1,6 @@
-:- module(parsetype,[parseType/3,
-  parseTypeRule/4,parseTypeCore/3,parseContract/4,parseContractConstraint/4,rewriteConstraints/4,bindAT/4]).
+:- module(parsetype,[parseType/3,parseBound/5,parseBoundVars/2,parseConstraints/5,
+  parseTypeRule/4,parseTypeCore/3,parseContract/4,parseContractConstraint/5,rewriteConstraints/4,
+  bindAT/4,reQuant/3]).
 
 :- use_module(abstract).
 :- use_module(dict).
@@ -118,6 +119,16 @@ parseBound(T,B,B,Inner,Inner) :-
   locOfAst(T,Lc),
   reportError("invalid bound variable: %s",[T],Lc).
 
+parseBoundVars([],[]).
+parseBoundVars([V|L],[(N,kVar(N))|LL]) :-
+  isIden(V,N),
+  parseBoundVars(L,LL).
+parseBoundVars([V|L],[(Nm,kFun(Nm,Ar))|LL]) :-
+  isBinary(V,"/",L,R),
+  isInteger(R,Ar),
+  isIden(L,_,Nm),
+  parseBoundVars(L,LL).
+
 parseTypeFace(T,Env,Bound,C0,Cx,faceType(AT)) :-
   isBraceTuple(T,_,L),
   parseTypeFields(L,Env,Bound,C0,Cx,[],AT).
@@ -145,8 +156,13 @@ parseConstraint(T,_,B,B,C,C) :-
   locOfAst(T,Lc),
   reportError("invalid type constraint %s",[T],Lc).
 
-parseContractConstraint(T,Env,N,Con) :-
-  parseContractConstraint(T,Env,[],[],Cons,N,Tp),!,
+parseConstraints([],_,_,Cx,Cx).
+parseConstraints([Ct|L],Env,Q,C,Cx) :-
+  parseConstraint(Ct,Env,Q,C,C0),
+  parseConstraints(L,Env,Q,C0,Cx).
+
+parseContractConstraint(T,Q,Env,N,Con) :-
+  parseContractConstraint(T,Env,Q,[],Cons,N,Tp),!,
   wrapConstraints(Cons,Tp,Con).
 
 parseContractConstraint(Tp,Env,B,C,C,N,PT) :-
@@ -192,18 +208,18 @@ parseModedTypes([A|AT],Env,B,C0,Cx,Md,[Atype|ArgTypes]) :-
   parseModedType(A,Env,B,C0,C1,Md,Atype),
   parseModedTypes(AT,Env,B,C1,Cx,Md,ArgTypes).
 
-parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
-  isUnary(T,"^",_,I),
-  parseModedType(T,Env,Q,C,Cx,outMode,Tp).
-parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
-  isUnary(T,"?",_,I),
-  parseModedType(T,Env,Q,C,Cx,inMode,Tp).
-parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
-  isUnary(T,"^?",_,I),
-  parseModedType(T,Env,Q,C,Cx,biMode,Tp).
-parseModedType(T,Env,Q,C,Cx,Md,Tp) :-
-  isUnary(T,"?^",_,I),
-  parseModedType(T,Env,Q,C,Cx,biMode,Tp).
+parseModedType(T,Env,Q,C,Cx,_,Tp) :-
+  isUnary(T,"^",I),
+  parseModedType(I,Env,Q,C,Cx,outMode,Tp).
+parseModedType(T,Env,Q,C,Cx,_,Tp) :-
+  isUnary(T,"?",I),
+  parseModedType(I,Env,Q,C,Cx,inMode,Tp).
+parseModedType(T,Env,Q,C,Cx,_,Tp) :-
+  isUnary(T,"^?",I),
+  parseModedType(I,Env,Q,C,Cx,biMode,Tp).
+parseModedType(T,Env,Q,C,Cx,_,Tp) :-
+  isUnary(T,"?^",I),
+  parseModedType(I,Env,Q,C,Cx,biMode,Tp).
 parseModedType(T,Env,Q,C,Cx,Md,(Md,Tp)) :-
   parseType(T,Env,Q,C,Cx,Tp).
 
@@ -248,7 +264,7 @@ parseContractSpec(T,F,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
   parseConstraint(L,Env,Q,C0,C1),
   parseContractSpec(R,F,Q,C1,Cx,Env,Spec,Nm,ConNm,Path).
 parseContractSpec(T,F,Q,C0,Cx,Env,Spec,Nm,ConNm,Path) :-
-  isBinary(T,"<~",L,F),
+  isBinary(T,"::=",L,F),
   parseContractSpec(L,_,Q,C0,Cx,Env,Spec,Nm,ConNm,Path).
 parseContractSpec(T,_,Q,C0,Cx,Env,conTract(ConNm,ArgTps,Deps),Nm,ConNm,Path) :-
   isSquare(T,_,Nm,A),

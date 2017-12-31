@@ -12,7 +12,7 @@ dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
   topsort(Defs,Groups,misc:same).
-  % showGroups(Groups).
+  %showGroups(Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,I,Other) :-
   collectDefinition(St,Stmts,S0,Defs,D0,P,P0,A,A0,I,I0,Other,O0,dependencies:nop),
@@ -40,9 +40,8 @@ collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Expor
   contractName(Inner,Nm),
   call(Export,Nm,P,Px).
 collectDefinition(St,Stmts,Stmts,[(Nm,Lc,[St])|Defs],Defs,P,Px,A,A,I,I,O,O,Export) :-
-  isUnary(St,Lc,"implementation",Inner),
-  isBinary(Inner,"=>",Im,_),
-  implementationName(Im,Nm),
+  isImplementationStmt(St,Lc,_,_,Con,_),!,
+  implementationName(Con,Nm),
   call(Export,Nm,P,Px).
 collectDefinition(St,Stmts,Stmts,Defs,Defs,Px,Px,A,A,I,I,O,O,_) :-
   isBinary(St,"@",_,_).
@@ -79,9 +78,8 @@ ruleName(St,Nm,con) :-
   isUnary(St,"contract",I),
   contractName(I,Nm),!.
 ruleName(St,Nm,impl) :-
-  isUnary(St,"implementation",I),
-  isBinary(I,"=>",L,_),
-  implementationName(L,Nm),!.
+  isImplementationStmt(St,_,_,_,Con,_),!,
+  implementationName(Con,Nm),!.
 ruleName(St,Nm,type) :-
   isUnary(St,"type",I),
   ruleName(I,Nm,type).
@@ -105,12 +103,6 @@ contractName(St,con(Nm)) :-
   isSquare(St,Nm,_).
 
 %% Thus must mirror the definition in types.pl
-implementationName(St,Nm) :-
-  isQuantified(St,_,B),
-  implementationName(B,Nm).
-implementationName(St,Nm) :-
-  isBinary(St,"|:",_,R),
-  implementationName(R,Nm).
 implementationName(St,imp(Nm)) :-
   implementedContractName(St,Nm).
 
@@ -243,12 +235,10 @@ collRefs(St,All,Annots,SoFar,Refs) :-
 collRefs(St,All,_,R0,Refs) :-
   isBinary(St,"<~",_,Tp),
   collectTypeRefs(Tp,All,R0,Refs).
-collRefs(St,All,_,R0,Refs) :-
-  isUnary(St,"implementation",I),
-  isBinary(I,"=>",L,R),
-  collectContractRefs(L,All,R0,R1),
-  isBraceTuple(R,_,Defs),
-  collectClassRefs(Defs,All,R1,Refs).
+collRefs(St,All,_,R0,Rx) :-
+  isImplementationStmt(St,_,_,Cx,_,T),
+  collectContractRefs(Cx,All,R0,R1),
+  collectExpRefs(T,All,R1,Rx).
 
 collRefs(St,All,Annots,SoFar,Refs) :-
   collectAnnotRefs(St,All,Annots,SoFar,R0),
@@ -551,15 +541,10 @@ collectTypeName(Nm,All,[tpe(Nm)|SoFar],SoFar) :-
   is_member(tpe(Nm),All),!.
 collectTypeName(_,_,Refs,Refs).
 
-collectContractRefs(C,All,R0,Refs) :-
-  isQuantified(C,_,B),
-  collectContractRefs(B,All,R0,Refs).
-collectContractRefs(C,All,R0,Refs) :-
-  isBinary(C,"|:",L,R),
-  collConstraints(L,All,R0,R1),
-  collectTypeRefs(R,All,R1,Refs).
-collectContractRefs(C,All,R0,Refs) :-
-  collectTypeRefs(C,All,R0,Refs).
+collectContractRefs([],_,R,R).
+collectContractRefs([C|L],All,R,Rx) :-
+  collConstraints(C,All,R,R1),
+  collectContractRefs(L,All,R1,Rx).
 
 collectLabelRefs(Lb,All,R0,Refs) :- collectExpRefs(Lb,All,R0,Refs).
 
