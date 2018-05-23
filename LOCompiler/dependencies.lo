@@ -9,6 +9,7 @@ lo.comp.dependencies{
   import lo.comp.misc.
   import lo.comp.errors.
   import lo.comp.package.
+  import lo.comp.wff.
 
   public
   defn ::= defn(string,defnKind,location,list[(string,defnKind)],list[ast]).
@@ -42,8 +43,8 @@ lo.comp.dependencies{
   dependencies:(list[ast],list[list[defn]],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
   dependencies(Els,Groups,Public,Annots,Imports,Other,Rp,Rpx) :-
     collectDefinitions(Els,Dfs,Public,Annots,Imports,Other,Rp,Rpx),
-    Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)).
-    -- showGroups(Groups).
+    Groups = topsort(collectThetaRefs(Dfs,allRefs(Dfs),Annots)),
+    showGroups(Groups).
 
   collectDefinitions:(list[ast],list[defn],list[(string,defnKind)],list[(string,ast)],list[ast],list[ast],report,report){}.
   collectDefinitions([],[],[],[],[],[],Rp,Rp).
@@ -60,10 +61,10 @@ lo.comp.dependencies{
   collectDefn(St,_,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,[St,..Oth],Oth,_,Rp,Rp) :-
     isOther(St).
   collectDefn(St,OrigSt,Stmts,Stx,Defs,Dx,P,P,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
-    isUnary(St,"private",_,Inner),
+    isPrivate(St,_,Inner),
     collectDefn(Inner,OrigSt,Stmts,Stx,Defs,Dx,P,_,A,Ax,I,Ix,O,Ox,priVate,Rp,Rpx).
   collectDefn(St,OrigSt,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,_,Rp,Rpx) :-
-    isUnary(St,"public",_,Inner),
+    isPublic(St,_,Inner),
     collectDefn(Inner,OrigSt,Stmts,Stx,Defs,Dx,P,Px,A,Ax,I,Ix,O,Ox,pUblic,Rp,Rpx).
   collectDefn(St,OrigSt,Stmts,Stmts,Defs,Defs,P,Px,[(Nm,St),..A],A,I,I,Oth,Oth,Viz,Rp,Rp) :-
     isBinary(St,":",_,L,_),
@@ -80,28 +81,18 @@ lo.comp.dependencies{
   collectDefn(St,_,Stmts,Stmts,Defs,Defs,P,P,A,A,I,I,O,O,_,Rp,Rpx) :-
     reportError("cannot fathom \(St)",St.loc,Rp,Rpx).
 
-  isImport:(ast,string){}.
-  isImport(St,packageName(P)) :-
-    isUnary(St,"import",_,P).
-
-  isOther:(ast){}.
-  isOther(St) :-
-    isUnary(St,"assert",_,_).
-  isOther(St) :-
-    isUnary(St,"show",_,_).
-
   ruleNameKind:(ast,defnKind,string){}.
   ruleNameKind(S,con,Nm) :-
     isUnary(S,"contract",_,I),
     contractName(I,Nm).
   ruleNameKind(S,impl,Nm) :-
     isUnary(S,"implementation",_,I),
-    isBinary(I,"<=",_,L,_),
+    isBinary(I,"=>",_,L,_),
     astImplName(L,Nm).
   ruleNameKind(S,tpe,Nm) :-
     typeRuleName(S,Nm).
-  ruleNameKind(S,K,Nm) :- isUnary(S,"public",_,I), ruleNameKind(I,K,Nm).
-  ruleNameKind(S,K,Nm) :- isUnary(S,"private",_,I), ruleNameKind(I,K,Nm).
+  ruleNameKind(S,K,Nm) :- isPublic(S,_,I), ruleNameKind(I,K,Nm).
+  ruleNameKind(S,K,Nm) :- isPrivate(S,_,I), ruleNameKind(I,K,Nm).
   ruleNameKind(S,valu,Nm) :- ruleHead(S,H)!, Nm = headName(H).
 
   ruleHead:(ast,ast){}.

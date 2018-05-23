@@ -12,7 +12,7 @@ dependencies(Els,Groups,Public,Annots,Imports,Other) :-
   allRefs(Dfs,[],AllRefs),
   collectThetaRefs(Dfs,AllRefs,Annots,Defs),
   topsort(Defs,Groups,misc:same).
-  %showGroups(Groups).
+  % showGroups(Groups).
 
 collectDefinitions([St|Stmts],Defs,P,A,I,Other) :-
   collectDefinition(St,Stmts,S0,Defs,D0,P,P0,A,A0,I,I0,Other,O0,dependencies:nop),
@@ -488,17 +488,17 @@ collectTypeRefs(St,_,SoFar,SoFar) :-
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBinary(T,"=>",L,R),
   isTuple(L,A),
-  collectTypeList(A,All,SoFar,R0),
+  collectArgList(A,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBinary(T,"<=>",L,R),
   isTuple(L,A),
-  collectTypeList(A,All,SoFar,R0),
+  collectArgList(A,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBinary(T,"-->",L,R),
   isTuple(L,A),
-  collectTypeList(A,All,SoFar,R0),
+  collectArgList(A,All,SoFar,R0),
   collectTypeRefs(R,All,R0,Refs).
 collectTypeRefs(T,All,SoFar,Rest) :-
   isBinary(T,"|:",L,R),
@@ -515,7 +515,7 @@ collectTypeRefs(C,All,SoFar,Refs) :-
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTerm(T,_,L,[]),
   isTuple(L,A),
-  collectTypeList(A,All,SoFar,Refs).
+  collectArgList(A,All,SoFar,Refs).
 collectTypeRefs(T,All,SoFar,Refs) :-
   isBraceTuple(T,_,A),
   collectFaceTypes(A,All,SoFar,Refs).
@@ -530,6 +530,26 @@ collectTypeList([],_,Refs,Refs).
 collectTypeList([Tp|List],All,SoFar,Refs) :-
   collectTypeRefs(Tp,All,SoFar,R0),
   collectTypeList(List,All,R0,Refs).
+
+collectArgList([],_,Refs,Refs).
+collectArgList([Tp|List],All,SoFar,Refs) :-
+  collectArgRefs(Tp,All,SoFar,R0),
+  collectArgList(List,All,R0,Refs).
+
+collectArgRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"^",I),
+  collectArgRefs(I,All,SoFar,Refs).
+collectArgRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"?",I),
+  collectArgRefs(I,All,SoFar,Refs).
+collectArgRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"^?",I),
+  collectArgRefs(I,All,SoFar,Refs).
+collectArgRefs(T,All,SoFar,Refs) :-
+  isUnary(T,"?^",I),
+  collectArgRefs(I,All,SoFar,Refs).
+collectArgRefs(T,All,SoFar,Refs) :-
+  collectTypeRefs(T,All,SoFar,Refs).
 
 collectFaceTypes([],_,Refs,Refs).
 collectFaceTypes([T|List],All,SoFar,Refs) :-

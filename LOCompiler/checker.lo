@@ -396,10 +396,11 @@ lo.comp.typecheck{
 
   private implementationGroup:(list[defn],list[canonDef],list[canonDef],list[env],list[env],string,report,report){}.
   implementationGroup([defn(INm,impl,_,_,[Stmt])],[Impl,..Defs],Defs,Env,Ex,Path,Rp,Rpx) :-
-    isUnary(Stmt,"implementation",Lc,I),
-    isBinary(I,"<=",_,Sq,Body),
-    isBraceTuple(Body,_,Els),
-    parseContractConstraint(Sq,Env,Nm,Spec,Rp,Rp0),
+    isImplementationStmt(Stmt,Lc,Quants,Cons,Sq,Body),
+    parseContractConstraint(Quants,Cons,Sq,Env,Nm,Spec,Rp,Rp0),
+
+        (Q,PT) = skolemize(pickupVarType(N,Lc,Env,Rp,Rp0),pickupThisType(Env)),
+
     isContract(Nm,Env,conEntry(_,CNm,FullSpec,ConFace)),
     -- We have to unify the implemented contract and the contract (spec)ification
     moveConQuants(FullSpec,_,conTract(ConNm,OArgs,ODeps)),
@@ -424,6 +425,19 @@ lo.comp.typecheck{
   implementationGroup([defn(INm,impl,Lc,_,Stmt)],Defs,Defs,Env,E,Path,Rp,Rpx) :-
     reportError("could not check implementation statement \(Stmt)",Lc,Rp,Rpx).
 
+  /*checkImplementation(Stmt,INm,[Impl,ImplDef|Dfs],Dfs,Env,Ex,_,_) :-
+    isImplementationStmt(Stmt,Lc,Quants,Cons,Sq,IBody),
+    parseContractConstraint(Quants,Cons,Sq,Env,Nm,ConSpec),
+    evidence(ConSpec,Env,IQ,CnSpec),
+    moveConstraints(CnSpec,AC,contractExists(Spec,IFace)),
+    declareTypeVars(IQ,Lc,Env,ThEnv),
+    typeOfTerm(IBody,IFace,ThEnv,ThEv,ImplTerm),
+    implementationName(Spec,ImplName),
+    Impl = implDef(Lc,INm,ImplName,Spec),
+    ImplDef = funDef(Lc,ImplName,funType(tupleType([]),IFace),AC,[equation(Lc,ImplName,tple(Lc,[]),enm(Lc,"true"),ImplTerm)]),
+    declareImplementation(Nm,Impl,Env,Ex),
+    dischargeConstraints(Env,ThEv).
+*/
   private sameLength:all e~~(list[e],list[e],location,report,report){}.
   sameLength(L1,L2,_,Rp,Rp) :- length(L1)=length(L2).
   sameLength(L1,_,Lc,Rp,Rpx) :-

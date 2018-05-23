@@ -57,7 +57,8 @@
 		"lo.comp.transutils": "transutils.lo",
 		"lo.comp.typecheck": "checker.lo",
 		"lo.comp.types": "types.lo",
-		"lo.comp.unify": "unify.lo"
+		"lo.comp.unify": "unify.lo",
+		"lo.comp.wff" : "wff.lo"
 	},
 	"default": "../LO/catalog",
 	"version": "0.0.1"

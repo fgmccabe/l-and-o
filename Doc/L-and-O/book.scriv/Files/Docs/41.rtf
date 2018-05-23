@@ -1,0 +1,30 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\fonttbl\f0\fnil\fcharset0 Cochin;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\fi360\sl288\slmult1\pardirnatural
+
+\f0\fs28 \cf0 Since L&O is a Logic Programming language, it makes sense to ask how suitable it is for developing Ontologies.\
+\
+## Meta-order and object-order\
+\
+Unlike **Prolog**, L&O\'a0does not permit data to be directly interpreted as code. The standard **Prolog** approach of using the same language for meta-level names of programs and programs themselves \'96 which in turn allows program text to be manipulated like other data \'96 has a number of technical problems; especially when considering distributed and secure applications. However, as we shall see, L&O\'92s object oriented features allow us to emulate the important uses of Prolog\'92s meta-level features. Moreover, in L&O\'a0we can do this in a type safe way.\
+\
+## Threads and distribution\
+\
+L&O\'a0is a multi-tasking programming language. It is possible to spawn off computations as separate threads or tasks.\
+\
+In a multi-threaded environment there are two overlapping concerns \'96 sharing of resources and coordination of activities. In the cases of shared resources the primary requirement is that the different users of a resource see consistent views of the resource. In the case of coordination the primary requirement is a means of controlling the flow of execution in the different threads of activity.\
+\
+L&O threads may share access to objects, and to their state in the case of stateful objects \'96 within a single invocation of the system. L&O supports synchronized access to such shared objects to permit contention issues to be addressed.\
+\
+Synchronizing access to shared resources is important, however it is not sufficient to achieve coordination between concurrent activities. In L&O, coordination is achieved through *message communication*. Our message communication functionality is not built-in to the language but is made available via the use of standard *packages*, in particular the `go.mbox` package. The communications model in `go.mbox` is very simple: there are mailboxes and dropboxes: threads read their mail by querying their mailbox objects and can send messages to other threads using dropboxes linked to mailboxes. The model permits multiple implementations of the concept, indeed a single mailbox might receive mail delivered from a variety of kinds of dropboxes.\
+\
+Overall, the intention behind the design of L&O\'a0is to make programs more transparent: what you see in a L&O\'a0program is what you mean \'96 there can be no hidden semantics. This property is what makes L&O\'a0a reasonable language to use for high integrity applications \'96 such as agents that will be performing tasks that may involve real resources, or in safety critical areas.\
+\
+\
+##### Multiple paradigms\
+\
+L&O is a multi-paradigm language \'96 there are specialized notations for functions, action rules and grammar rules, as well as predicates. The reason for this is two fold: it allows us to have tailored syntax and semantics for the different kinds of programs being written. Secondly, by offering these different notations we can encapsulate a more suitable semantics without the use of ugly operators such as **Prolog**\'92s cut operator.\
+\
+In many cases a logic programmer knows full well whether their program is intended to be fully relational or is actually a function. By giving different notations for these cases it allows programmers to signal their intentions more clearly than if all kinds of program have to be expressed in the single formalism of a logic clause.}

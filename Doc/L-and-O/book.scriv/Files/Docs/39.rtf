@@ -1,0 +1,31 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\fonttbl\f0\fnil\fcharset0 Cochin;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\fi360\sl288\slmult1\pardirnatural
+
+\f0\fs28 \cf0 L&O\'a0is a strongly statically typed programming language. The purpose of using a static type system is to enhance programmers\'92 confidence in the correctness of the program \'96 it cannot replace a formal proof of correctness.\
+\
+The type system of L&O is quite rich and expressive; this is intentional -- in order to reduce the _temptation_ to step outside the strict confines of type safety. Some of the features of L&O types include:\
+\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\li720\fi-720\sl288\slmult1\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\uc0\u8226 	}Higher-order type terms that can denote function and other program values\
+{\listtext	\uc0\u8226 	}Universally and existentially quantified types\
+{\listtext	\uc0\u8226 	}Contracts and implementations\
+{\listtext	\uc0\u8226 	}Structural and nominative type terms\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\fi360\sl288\slmult1\pardirnatural
+\cf0 \
+For example, the L&O version of `find` above really needs a *type annotation* before it is complete:\
+\
+	find: all u,t ~~ searchable[u] |: (u,t)\{\}.\
+\
+where we both give an explicit (quantified) type and require that the entity being search is `searchable`.\
+\
+We use an approach based on Hindley & Milner\'92s @hindley:69 type term approach for representing types. However, type unification is augmented with a sub-type relation \'96 permitting types and classes to be defined as extensions of other types. In addition we require all programs and top-level variables and constants to have explicit type declarations. Variables in rules do not need type declarations \'96 although they are permitted.\
+\
+Having a static typed language can be quite constrictive compared to the untyped freedom one gets in languages such as **Prolog**. However, for applications requiring a strong sense of reliability, having a strongly typed language provides a better base than an untyped language.\
+\
+In addition to being statically typed, the reader might have noticed that the `find` program we introduced above had a *type annotation*. We believe that explicitly annotating program types is an effective compromise between declaring the type of *every* variable and declaring none of them.\
+}

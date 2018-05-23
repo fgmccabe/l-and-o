@@ -92,6 +92,10 @@ lo.comp.abstract{
   isBraceTuple(tupl(Lc,"{}",A),Lc,A).
 
   public
+  isQBraceTuple:(ast,location,list[ast]){}.
+  isQBraceTuple(tupl(Lc,"{..}",A),Lc,A).
+
+  public
   braceTuple:(location,list[ast]) => ast.
   braceTuple(Lc,Els) => tupl(Lc,"{}",Els).
 
@@ -141,11 +145,6 @@ lo.comp.abstract{
     sameTerm(A,B),
     sameTerms(L1,L2).
 
-  public isTypeAnnotation:(ast,location,string,ast){}.
-  isTypeAnnotation(St,Lc,Nm,Tp) :-
-    isBinary(St,":",Lc,L,Tp),
-    isIden(L,_,Nm).
-
   public isAlgebraicTypeDef:(ast,location,list[ast],list[ast],ast,ast){}.
   isAlgebraicTypeDef(Stmt,Lc,Quants,Constraints,Head,Body) :-
     getQuantifiers(Stmt,Quants,Inner),
@@ -187,6 +186,21 @@ lo.comp.abstract{
   contractSpec(S,[],deComma(L),Con) :-
     isBinary(S,"|:",_,L,Con).
   contractSpec(S,[],[],S).
+
+  public isImplementationStmt:(ast,location,list[ast],list[ast],ast,ast){}.
+  isImplementationStmt(Stmt,Lc,Q,Cx,Sq,Body) :-
+    isUnary(Stmt,"implementation",Lc,I),
+    implSpec(I,Q,Cx,Con,Body).
+
+  implSpec:(ast,list[ast],list[ast],ast,ast){}.
+  implSpec(S,deComma(Q),Constraints,Con,Body) :-
+    isQuantified(S,Q,B),
+    implSpec(B,_,Constraints,Con,Body).
+  implSpec(S,[],deComma(L),Con,Body) :-
+    isBinary(S,"|:",_,L,R),
+    implSpec(R,_,_,Con,Body).
+  implSpec(S,[],[],Con,Body) :-
+    isBinary(S,"=>",_,Con,Body).
 
   public isConstrained:(ast,list[ast],ast){}.
   isConstrained(T,deComma(L),R) :-

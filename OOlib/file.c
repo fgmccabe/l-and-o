@@ -694,7 +694,7 @@ retCode isDirectory(char * fname) {
 }
 
 /* Special macro for Windows 95 */
-#define FILE_ACCESS_MODE F_OK|R_OK
+#define FILE_ACCESS_MODE (F_OK|R_OK)
 
 /* Check if a file is present or not */
 retCode filePresent(char * name) {

@@ -267,7 +267,7 @@ lo.comp.parseType{
     ConNm = subPath(Path,marker(con),Nm),
     parseContractArgs(A,Env,Q,C,Cx,ArgTps,DepTps,Rp,Rpx).
 
-  public parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint],report,report){}.
+  parseConstraint:(ast,list[env],map[string,tipe],list[constraint],list[constraint],report,report){}.
   parseConstraint(T,Env,B,C0,Cx,Rp,Rpx) :-
     isBinary(T,",",_,L,R),
     parseConstraint(R,Env,B,C0,C1,Rp,Rp0),
@@ -286,6 +286,13 @@ lo.comp.parseType{
     addConstraint(conTract(ConNm,ArgTps,DepTps),C1,Cx).
   parseConstraint(T,_,B,C,C,Rp,Rpx) :-
     reportError("invalid type constraint \(T)",T.loc,Rp,Rpx).
+
+  parseConstraints:(list[ast],map[string,tipe],list[env],
+      list[constraint],list[constraint],report,report){}.
+  parseConstraints([],_,_,Cx,Cx,Rp,Rp).
+  parseConstraints([Cn,..L],Q,Env,C,Cx,Rp,Rpx) :-
+    parseConstraint(Cn,Env,Q,C,C0,Rp,Rp0),
+    parseConstraints(L,Q,Env,C0,Cx,Rp0,Rpx).
 
   mergeConstraints:(list[constraint],list[constraint],list[constraint]){}.
   mergeConstraints([],C,C).
@@ -312,24 +319,18 @@ lo.comp.parseType{
   parseContractArgs(A,Env,B,C0,Cx,Args,[],Rp,Rpx) :-
     prsTypes(A,Env,B,C0,Cx,Args,Rp,Rpx).
 
-  public parseContractConstraint:(ast,list[env],string,constraint,report,report){}.
-  parseContractConstraint(T,Env,N,Con,Rp,Rpx) :-
-    parseContractCon(T,Env,[],[],Cons,N,Tp,Rp,Rpx)!,
-    wrapConConstraints(Cons,Tp,Con).
+  public parseContractConstraint:(list[ast],list[ast],ast,list[env],string,constraint,report,report){}.
+  parseContractConstraint(Q,C,Sq,Env,Nm,Spec,Rp,Rpx) :-
+    isSquareTerm(Sq,Lc,N,Args),
+    isIden(N,_,Nm),
+    Qs = parseBoundVars(Q,[],Env,Rp,Rp0),
+    parseConstraints(C,Qs,Env,[],C0,Rp0,Rp1),
+    parseContractCon(Sq,Env,Qs,C0,Cx,Nm,Con,Rp1,Rpx)!,
+    wrapConConstraints(Cx,Con,CC),
+    reConQuant(pairs(Qs),CC,Spec).
 
-  private parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
-  parseContractCon(Tp,Env,B,C,C,N,PT,Rp,Rpx) :-
-    isQuantified(Tp,V,BT),
-    parseConBound(V,B,B0,Env,PT,Inner),
-    parseContractCon(BT,Env,B0,[],C0,N,BTp,Rp,Rpx),
-    wrapConConstraints(C0,BTp,Inner).
-  parseContractCon(Tp,Env,B,C0,Cx,N,Cn,Rp,Rpx) :-
-    isBinary(Tp,"|:",_,L,R),
-    parseConstraint(L,Env,B,C0,C1,Rp,Rp0),
-    parseContractCon(R,Env,B,C1,Cx,N,Cn,Rp0,Rpx).
+  parseContractCon:(ast,list[env],map[string,tipe],list[constraint],list[constraint],string,constraint,report,report){}.
   parseContractCon(Sq,Env,Q,C0,Cx,N,conTract(Op,ArgTps,DepTps),Rp,Rpx) :-
-    isSquareTerm(Sq,Lc,Nm,Args),
-    isIden(Nm,_,N),
     parseContractArgs(Args,Env,Q,C0,Cx,ArgTps,DepTps,Rp,Rp0),
     ( parseContractName(Lc,N,Env,conTract(Op,ATs,Dps),Rp0,Rpx) ?
         sameType(tupleType(ATs),tupleType(ArgTps),Env),
@@ -347,6 +348,20 @@ lo.comp.parseType{
     isIden(L,_,Nm).
   parseConBound(V,B,B[Nm->kVar(Nm)],Env,univCon(kVar(Nm),Inner),Inner) :-
     isIden(V,_,Nm).
+
+  parseBoundVars:(list[ast],map[string,tipe],list[env],report,report^)=>map[string,tipe].
+  parseBoundVars([],Q,_,Rp,Rp) => Q.
+  parseBoundVars([V,..Vs],Q,Env,Rp,Rpx) => parseBoundVars(Vs,parseBoundVr(V,Q,Env,Rp,Rp0),Env,Rp0,Rpx).
+
+  parseBoundVr:(ast,map[string,tipe],list[env],report,report^)=>map[string,tipe].
+  parseBoundVr(V,B,Env,Rp,Rp) => B[Nm->kFun(Nm,Ar)] :-
+    isBinary(V,"/",_,L,R),
+    isInteger(R,_,Ar),
+    isIden(L,_,Nm).
+  parseBoundVr(V,B,Env,Rp,Rp) => B[Nm->kVar(Nm)]:-
+    isIden(V,_,Nm).
+  parseBoundVr(V,B,_,Rp,Rpx) => B :-
+    reportError("illegal form of bound variable: \(V)",V.loc,Rp,Rpx).
 
   public parseTypeCore:(ast,tipe,string){}.
   parseTypeCore(St,Type,Path) :-

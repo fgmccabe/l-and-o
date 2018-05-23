@@ -1,0 +1,38 @@
+lo.comp.wff{
+  import lo.
+  import lo.comp.abstract.
+  import lo.comp.ast.
+  import lo.comp.keywords.
+  import lo.comp.location.
+
+  public isPublic:(ast,location,ast){}.
+  isPublic(T,Lc,I) :-
+    isUnary(T,"public",Lc,I).
+
+  public isPrivate:(ast,location,ast){}.
+  isPrivate(T,Lc,I) :-
+    isUnary(T,"private",Lc,I).
+
+  public isImport:(ast,string){}.
+  isImport(St,packageName(P)) :-
+    isUnary(St,"import",_,P).
+
+  public isOther:(ast){}.
+  isOther(St) :-
+    isAssert(St).
+  isOther(St) :-
+    isShow(St).
+
+  public isAssert:(ast){}.
+  isAssert(St) :-
+    isUnary(St,"assert",_,_).
+
+  public isShow:(ast){}.
+  isShow(St) :-
+    isUnary(St,"show",_,_).
+
+  public isTypeAnnotation:(ast,location,string,ast){}.
+  isTypeAnnotation(St,Lc,Nm,Tp) :-
+    isBinary(St,":",Lc,L,Tp),
+    isIden(L,_,Nm).
+}
