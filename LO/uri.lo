@@ -172,9 +172,6 @@ lo.uri {
   escaped:all s ~~ stream[s->>integer] |: (integer,integer) --> s.
   escaped(U,L) --> "%", hex(U), hex(L).
 
-  delim:all s ~~ stream[s->>integer] |: (integer) --> s.
-  delim(C) --> [C], { isDelim(C) }.
-
   isLowAlpha:(integer){}.
   isLowAlpha(0ca).
   isLowAlpha(0cb).
@@ -279,13 +276,6 @@ lo.uri {
   isMark(0c').
   isMark(0c().
   isMark(0c)).
-
-  isDelim:(integer){}.
-  isDelim(0c<).
-  isDelim(0c>).
-  isDelim(0c#).
-  isDelim(0c%).
-  isDelim(0c").
 
   -- Resolve a url against a base. The base must be an absolute URI, either net or local.
   public

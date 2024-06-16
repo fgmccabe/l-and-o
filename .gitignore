@@ -1,14 +1,2 @@
-CMakeFiles/
-.idea/
-*.cmake
-CMakeCache.txt
 cmake-build-debug
-Makefile
-Build/
-Tmp/
-HeaderGenerator/ops
-HeaderGenerator/genesc
-HeaderGenerator/opcodes
-HeaderGenerator/genins
-HeaderGenerator/mnem
-Engine/lo
+
